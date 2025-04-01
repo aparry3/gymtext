@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import SignUpForm from '@/components/SignUpForm';
 
 export default function Home() {
