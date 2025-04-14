@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createUser, CreateUserData } from '@/db/users';
+import { createUser, CreateUserData, getUserByPhoneNumber, updateUser } from '@/db/users';
 import { createFitnessProfile, CreateFitnessProfileData } from '@/db/users';
 
 // Initialize Stripe with the secret key
@@ -13,15 +13,18 @@ export async function POST(request: Request) {
     // Get the form data from the request
     const formData = await request.json();
     
-    // Store user data in database
-    let userData: CreateUserData = {
+    // Check if user already exists
+    let user = await getUserByPhoneNumber(formData.phoneNumber);
+    
+    // If user doesn't exist, create new user data
+    const userData: CreateUserData = {
       name: formData.name,
       phone_number: formData.phoneNumber,
       email: formData.email || null,
     };
 
     try {
-      // Create customer in Stripe
+      // Create or update customer in Stripe
       const customer = await stripe.customers.create({
         name: formData.name,
         phone: formData.phoneNumber,
@@ -38,20 +41,25 @@ export async function POST(request: Request) {
       // Add Stripe customer ID to user data
       userData.stripe_customer_id = customer.id;
 
-      // Save user to database
-      const user = await createUser(userData);
+      if (!user) {
+        // Save new user to database
+        user = await createUser(userData);
 
-      // Create fitness profile
-      const fitnessProfileData: CreateFitnessProfileData = {
-        user_id: user.id,
-        fitness_goals: formData.fitnessGoals,
-        skill_level: formData.skillLevel,
-        exercise_frequency: formData.exerciseFrequency,
-        gender: formData.gender,
-        age: parseInt(formData.age, 10),
-      };
+        // Create fitness profile for new user
+        const fitnessProfileData: CreateFitnessProfileData = {
+          user_id: user.id,
+          fitness_goals: formData.fitnessGoals,
+          skill_level: formData.skillLevel,
+          exercise_frequency: formData.exerciseFrequency,
+          gender: formData.gender,
+          age: parseInt(formData.age, 10),
+        };
 
-      await createFitnessProfile(fitnessProfileData);
+        await createFitnessProfile(fitnessProfileData);
+      } else {
+        // Update existing user with new Stripe customer ID
+        user = await updateUser(user.id, { stripe_customer_id: customer.id });
+      }
 
       // Create checkout session
       const session = await stripe.checkout.sessions.create({
@@ -60,7 +68,7 @@ export async function POST(request: Request) {
         customer: customer.id,
         line_items: [
           {
-            price: process.env.STRIPE_PRICE_ID, // Use the price ID from env
+            price: process.env.STRIPE_PRICE_ID,
             quantity: 1,
           },
         ],

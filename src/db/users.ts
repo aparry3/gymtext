@@ -90,6 +90,15 @@ export async function getUserWithProfile(userId: string) {
   };
 }
 
+// Function to get a user by phone number
+export async function getUserByPhoneNumber(phoneNumber: string) {
+  return await db
+    .selectFrom('users')
+    .where('phone_number', '=', phoneNumber)
+    .selectAll()
+    .executeTakeFirst();
+}
+
 // Function to update a user
 export async function updateUser(id: string, userData: Partial<CreateUserData>) {
   return await db

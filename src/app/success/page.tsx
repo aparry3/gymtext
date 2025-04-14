@@ -30,10 +30,10 @@ export default function SuccessPage() {
         </div>
         <h1 className="text-4xl font-bold text-[#2d3748] mb-4">Payment Successful!</h1>
         <p className="text-xl text-[#7a8599] mb-8">
-          Thank you for signing up with GYMTEXT. We're excited to help you achieve your fitness goals!
+          Thank you for signing up with GYMTEXT. We&apos;re excited to help you achieve your fitness goals!
         </p>
         <p className="text-lg text-[#7a8599] mb-8">
-          You'll receive your first workout plan via text message soon. Get ready to start your fitness journey!
+          You&apos;ll receive your first workout plan via text message soon. Get ready to start your fitness journey!
         </p>
         <div className="mt-8">
           <Link 
