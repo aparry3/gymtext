@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
-import { Database } from '../shared/types/schema';
+import { Database } from '../../../shared/types/schema';
 
 // Get the database URL from environment variables
 const databaseUrl = process.env.DATABASE_URL;

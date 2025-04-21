@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createUser, CreateUserData, getUserByPhoneNumber, updateUser } from '@/db/users';
-import { createFitnessProfile, CreateFitnessProfileData } from '@/db/users';
+import { createUser, CreateUserData, getUserByPhoneNumber, updateUser } from '@/server/db/postgres/users';
+import { createFitnessProfile, CreateFitnessProfileData } from '@/server/db/postgres/users';
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

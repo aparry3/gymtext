@@ -1,5 +1,5 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '../src/db/schema';
+import { Database } from '../src/shared/types/schema';
 
 export async function up(db: Kysely<Database>): Promise<void> {
   // Create extension for UUID generation
