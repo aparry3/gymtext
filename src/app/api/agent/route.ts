@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     switch (action) {
       case 'onboard': {
-        const outline = await onboardUser(body);
+        const outline = await onboardUser(body as { userId: string });
         return NextResponse.json({ outline });
       }
       case 'weekly': {
