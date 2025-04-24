@@ -6,11 +6,11 @@ const pinecone = new Pinecone({
 
 export const vectorIndex = pinecone.index(process.env.PINECONE_INDEX!);
 
-export async function remember(id: string, vector: number[], metadata: RecordMetadata) {
-  await vectorIndex.upsert([{ id, values: vector, metadata }]);
+export async function remember(userId: string, id: string, vector: number[], metadata: RecordMetadata) {
+  await vectorIndex.namespace(userId).upsert([{ id, values: vector, metadata: {...metadata, timestamp: new Date().toISOString()} }]);
 }
 
-export async function recall(vector: number[], topK = 5) {
-  const response = await vectorIndex.query({ vector, topK, includeMetadata: true });
+export async function recall(userId: string, vector: number[], topK = 5) {
+  const response = await vectorIndex.namespace(userId).query({ vector, topK, includeValues: false, includeMetadata: true });
   return response.matches;
 } 

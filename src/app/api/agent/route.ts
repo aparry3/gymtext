@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { onboardUser, generateWeeklyPlan, processUpdate } from '../../../server/agents/fitnessAgent';
+import { onboardUser } from '../../../server/agents/fitnessOutlineAgent';
+import { generateWeeklyPlan } from '@/server/agents/workoutGeneratorAgent';
+// import { processUpdate } from '@/server/agents/workoutUpdateAgentt';
 
 export async function POST(req: NextRequest) {
   const { action, ...body } = await req.json();
@@ -14,13 +16,13 @@ export async function POST(req: NextRequest) {
       case 'weekly': {
         const { userId } = body;
         const plan = await generateWeeklyPlan(userId);
-        return NextResponse.json({ plan });
+        return NextResponse.json({ ...plan });
       }
-      case 'update': {
-        const { userId, message } = body;
-        const result = await processUpdate(userId, message);
-        return NextResponse.json(result);
-      }
+    //   case 'update': {
+    //     const { userId, message } = body;
+    //     const result = await processUpdate(userId, message);
+    //     return NextResponse.json(result);
+    //   }
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

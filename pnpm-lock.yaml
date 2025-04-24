@@ -14,6 +14,9 @@ importers:
       '@langchain/core':
         specifier: ^0.3.45
         version: 0.3.45(openai@4.95.1(zod@3.24.2))
+      '@langchain/google-genai':
+        specifier: ^0.2.4
+        version: 0.2.4(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(zod@3.24.2)
       '@langchain/openai':
         specifier: ^0.5.6
         version: 0.5.6(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))
@@ -43,7 +46,7 @@ importers:
         version: 0.28.0
       langchain:
         specifier: ^0.3.23
-        version: 0.3.23(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(axios@1.8.4)(openai@4.95.1(zod@3.24.2))
+        version: 0.3.23(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(@langchain/google-genai@0.2.4(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(zod@3.24.2))(axios@1.8.4)(openai@4.95.1(zod@3.24.2))
       lucide-react:
         specifier: ^0.331.0
         version: 0.331.0(react@19.1.0)
@@ -328,6 +331,10 @@ packages:
     resolution: {integrity: sha512-ZAoA40rNMPwSm+AeHpCq8STiNAwzWLJuP8Xv4CHIc9wv/PSuExjMrmjfYNj682vW0OOiZ1HKxzvjQr9XZIisQA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@google/generative-ai@0.24.0':
+    resolution: {integrity: sha512-fnEITCGEB7NdX0BhoYZ/cq/7WPZ1QS5IzJJfC3Tg/OwkvBetMiVJciyaan297OvE4B9Jg1xvo0zIazX/9sGu1Q==}
+    engines: {node: '>=18.0.0'}
+
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
     peerDependencies:
@@ -461,6 +468,12 @@ packages:
   '@langchain/core@0.3.45':
     resolution: {integrity: sha512-4icCMCeuauVvwH43zgCE6Hk2Zbke5OccfVhFpTiIJPo8WoU/ALdaZlS22S+6+qZ9lFzFHsgZ6K33Av9aWhxkQA==}
     engines: {node: '>=18'}
+
+  '@langchain/google-genai@0.2.4':
+    resolution: {integrity: sha512-2w/QZMbSRpo6plKilqXXAmhdq5mB1gaDwOeN1tVpKBOwKtxsH9jOzxukKhs3QvXmfy/xod/WWLajBXxU+63/Dw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.3.17 <0.4.0'
 
   '@langchain/openai@0.5.6':
     resolution: {integrity: sha512-zN0iyJthPNmcefIBVybZwcTBgcqu/ElJFov42ZntxEncK4heOMAE9lkq9LQ5CaPU/SgrduibrM1oL57+tLUtaA==}
@@ -2391,6 +2404,10 @@ packages:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
   web-streams-polyfill@4.0.0-beta.3:
     resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
     engines: {node: '>= 14'}
@@ -2596,6 +2613,8 @@ snapshots:
       '@eslint/core': 0.13.0
       levn: 0.4.1
 
+  '@google/generative-ai@0.24.0': {}
+
   '@hookform/resolvers@3.10.0(react-hook-form@7.55.0(react@19.1.0))':
     dependencies:
       react-hook-form: 7.55.0(react@19.1.0)
@@ -2704,6 +2723,15 @@ snapshots:
       zod-to-json-schema: 3.24.5(zod@3.24.2)
     transitivePeerDependencies:
       - openai
+
+  '@langchain/google-genai@0.2.4(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(zod@3.24.2)':
+    dependencies:
+      '@google/generative-ai': 0.24.0
+      '@langchain/core': 0.3.45(openai@4.95.1(zod@3.24.2))
+      uuid: 11.1.0
+      zod-to-json-schema: 3.24.5(zod@3.24.2)
+    transitivePeerDependencies:
+      - zod
 
   '@langchain/openai@0.5.6(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))':
     dependencies:
@@ -4039,7 +4067,7 @@ snapshots:
 
   kysely@0.28.0: {}
 
-  langchain@0.3.23(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(axios@1.8.4)(openai@4.95.1(zod@3.24.2)):
+  langchain@0.3.23(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(@langchain/google-genai@0.2.4(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(zod@3.24.2))(axios@1.8.4)(openai@4.95.1(zod@3.24.2)):
     dependencies:
       '@langchain/core': 0.3.45(openai@4.95.1(zod@3.24.2))
       '@langchain/openai': 0.5.6(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))
@@ -4055,6 +4083,7 @@ snapshots:
       zod: 3.24.2
       zod-to-json-schema: 3.24.5(zod@3.24.2)
     optionalDependencies:
+      '@langchain/google-genai': 0.2.4(@langchain/core@0.3.45(openai@4.95.1(zod@3.24.2)))(zod@3.24.2)
       axios: 1.8.4
     transitivePeerDependencies:
       - encoding
@@ -4827,6 +4856,8 @@ snapshots:
       punycode: 2.3.1
 
   uuid@10.0.0: {}
+
+  uuid@11.1.0: {}
 
   web-streams-polyfill@4.0.0-beta.3: {}
 

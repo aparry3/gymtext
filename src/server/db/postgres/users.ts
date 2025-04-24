@@ -1,5 +1,4 @@
 import { db } from './db';
-import { ProgramOutline } from '../../../shared/types/schema';
 
 // Interface for database user entity
 export interface User {
@@ -28,7 +27,9 @@ export interface FitnessProfile {
 // Combined user with profile
 export interface UserWithProfile extends User {
   profile: FitnessProfile | null;
+  info: string[]
 }
+
 
 // Interface for user creation data
 export interface CreateUserData {
@@ -46,11 +47,6 @@ export interface CreateFitnessProfileData {
   exercise_frequency: string;
   gender: string;
   age: number;
-}
-
-// Interface for program outline database record
-export interface ProgramOutlineRecord {
-  outline: ProgramOutline;
 }
 
 // Function to create a new user
@@ -122,6 +118,7 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
   return {
     ...user,
     profile: profile || null,
+    info: []
   };
 }
 
@@ -145,29 +142,4 @@ export async function updateUser(id: string, userData: Partial<CreateUserData>):
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirstOrThrow();
-}
-
-// Function to get the latest program outline for a user
-export async function getLatestProgramOutline(userId: string): Promise<ProgramOutline | null> {
-  const result = await db
-    .selectFrom('program_outlines')
-    .where('user_id', '=', userId)
-    .orderBy('created_at', 'desc')
-    .select('outline')
-    .executeTakeFirst();
-
-  return result?.outline || null;
-}
-
-// Function to create a program outline for a user
-export async function createProgramOutline(userId: string, outline: ProgramOutline): Promise<void> {
-  console.log(outline);
-  await db
-    .insertInto('program_outlines')
-    .values({ 
-      user_id: userId, 
-      outline, 
-      created_at: new Date().toISOString() 
-    })
-    .execute();
-} 
+  }
