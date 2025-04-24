@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -26,9 +27,87 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+function PaymentRequestForm({ formData }: { formData: FormData }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [paymentRequest, setPaymentRequest] = useState<any>(null);
+  const [canMakePayment, setCanMakePayment] = useState(false);
+
+  useEffect(() => {
+    if (!stripe || !elements) return;
+
+    const pr = stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: {
+        label: 'GymText Monthly Subscription',
+        amount: 1999, // $19.99
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestPayerPhone: true,
+    });
+
+    pr.on('paymentmethod', async (ev) => {
+      // Create checkout session on the server
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          // Add subscription specific details
+          plan: 'monthly',
+          priceId: 'price_monthly_subscription',
+          // Add implicit consent to receive text messages
+          acceptTexts: true,
+          paymentMethodId: ev.paymentMethod.id
+        }),
+      });
+
+      if (!response.ok) {
+        ev.complete('fail');
+        return;
+      }
+
+      ev.complete('success');
+      window.location.href = '/success';
+    });
+
+    pr.canMakePayment().then(result => {
+      if (result) {
+        setCanMakePayment(true);
+        setPaymentRequest(pr);
+      }
+    });
+  }, [stripe, elements, formData]);
+
+  if (!canMakePayment) {
+    return null;
+  }
+
+  return (
+    <PaymentRequestButtonElement
+      options={{
+        paymentRequest,
+        style: {
+          paymentRequestButton: {
+            theme: 'dark',
+            height: '44px',
+          },
+        },
+      }}
+    />
+  );
+}
+
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [formValues, setFormValues] = useState<FormData | null>(null);
 
   const {
     register,
@@ -37,6 +116,11 @@ export default function SignupForm() {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
+
+  const handleContinue = (data: FormData) => {
+    setFormValues(data);
+    setShowPaymentOptions(true);
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -85,8 +169,56 @@ export default function SignupForm() {
     }
   };
 
+  if (showPaymentOptions && formValues) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-center mb-6">Choose Your Payment Method</h2>
+        
+        <Elements stripe={stripePromise}>
+          <div className="mb-8">
+            <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
+            <PaymentRequestForm formData={formValues} />
+          </div>
+        </Elements>
+        
+        <div className="relative mb-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or pay with card</span>
+          </div>
+        </div>
+        
+        <button
+          onClick={() => onSubmit(formValues)}
+          disabled={isLoading}
+          className="w-full bg-[#4338ca] text-white py-3 px-4 rounded-md hover:bg-[#3730a3] focus:outline-none focus:ring-2 focus:ring-[#4338ca] focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium tracking-wide"
+        >
+          {isLoading ? 'Processing...' : 'Continue to Card Payment'}
+        </button>
+        
+        <button
+          onClick={() => setShowPaymentOptions(false)}
+          className="w-full mt-4 py-2 px-4 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Back to Form
+        </button>
+        
+        <div className="text-center mt-4">
+          <p className="text-sm text-[#7a8599] mb-2">
+            Secure payment powered by Stripe
+          </p>
+          <p className="text-sm text-[#7a8599]">
+            By proceeding, you agree to receive text messages from GYMTEXT.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleContinue)} className="space-y-6">
       {errorMessage && (
         <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6">
           <p className="text-red-600">{errorMessage}</p>
@@ -95,7 +227,7 @@ export default function SignupForm() {
       
       {/* Fitness Goals */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals – What do you want to achieve?</label>
         <select
           {...register('fitnessGoals')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
@@ -114,15 +246,16 @@ export default function SignupForm() {
 
       {/* Skill Level */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Skill Level</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Skill Level – How familiar are you with working out?</label>
         <select
           {...register('skillLevel')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
         >
           <option value="">Select your level</option>
           <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
+          <option value="intermediate">Getting back into it</option>
+          <option value="advanced">Comfortable in the gym</option>
+          <option value="expert">Advanced</option>
         </select>
         {errors.skillLevel && (
           <p className="mt-1 text-sm text-red-500">{errors.skillLevel.message}</p>
@@ -131,16 +264,16 @@ export default function SignupForm() {
 
       {/* Exercise Frequency */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Frequency</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Frequency – How often are you moving your body right now?</label>
         <select
           {...register('exerciseFrequency')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
         >
           <option value="">Select frequency</option>
-          <option value="never">Never</option>
-          <option value="1-2">1-2 times per week</option>
-          <option value="3-4">3-4 times per week</option>
-          <option value="5+">5+ times per week</option>
+          <option value="never">Not at all yet</option>
+          <option value="1-2">Once a week</option>
+          <option value="3-4">2-3 times per week</option>
+          <option value="5+">4+ times per week</option>
         </select>
         {errors.exerciseFrequency && (
           <p className="mt-1 text-sm text-red-500">{errors.exerciseFrequency.message}</p>
@@ -149,7 +282,7 @@ export default function SignupForm() {
 
       {/* Gender */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Gender</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Gender – How do you identify? (This helps us personalize your plan – optional)</label>
         <select
           {...register('gender')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
@@ -167,7 +300,7 @@ export default function SignupForm() {
 
       {/* Age */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Age</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Age – What&apos;s your age range? (How young are you feeling these days?)</label>
         <input
           type="number"
           {...register('age')}
@@ -180,7 +313,7 @@ export default function SignupForm() {
 
       {/* Name */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name (What should we call you?)</label>
         <input
           type="text"
           {...register('name')}
@@ -193,7 +326,7 @@ export default function SignupForm() {
 
       {/* Phone Number */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number (What number should we text your workouts to?)</label>
         <input
           type="tel"
           {...register('phoneNumber')}
@@ -206,7 +339,7 @@ export default function SignupForm() {
 
       {/* Email (Optional) */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Email (Optional)</label>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Email (Where should we send additional information?)</label>
         <input
           type="email"
           {...register('email')}
@@ -242,7 +375,7 @@ export default function SignupForm() {
         disabled={isLoading}
         className="w-full bg-[#4338ca] text-white py-3 px-4 rounded-md hover:bg-[#3730a3] focus:outline-none focus:ring-2 focus:ring-[#4338ca] focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium tracking-wide mt-8"
       >
-        {isLoading ? 'Processing...' : 'Start Your Journey'}
+        {isLoading ? 'Processing...' : '💪 Send It'}
       </button>
       
       <div className="text-center mt-4">

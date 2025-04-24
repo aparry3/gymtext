@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Bebas_Neue } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const bn = Bebas_Neue({ weight: "400", subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "GymText - Daily Personalized Workouts via Text",
@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={bn.className}>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
