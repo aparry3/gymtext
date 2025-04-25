@@ -1,15 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    // Parse the form data from the request
+    const formData = await req.formData();
+    const body = Object.fromEntries(formData);
+    
+    // Extract message content
+    const incomingMessage = body.Body as string || '';
+    
     // Create a TwiML response
     const MessagingResponse = twilio.twiml.MessagingResponse;
     const twiml = new MessagingResponse();
     
     // Logic based on the message content
     twiml.message(
-    'Hello.'
+      `You said: ${incomingMessage}`
     );
     
     // Return the TwiML response with the appropriate content type
