@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     
     // Extract message content
     const incomingMessage = body.Body as string || '';
+    console.log(body);
     
     // Create a TwiML response
     const MessagingResponse = twilio.twiml.MessagingResponse;
