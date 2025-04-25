@@ -4,6 +4,7 @@ import { dailyPrompt } from '../prompts/templates';
 import { z } from 'zod';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { getDatesUntilSaturday } from '@/shared/utils';
+import { twilioClient } from '../clients/twilio';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: 'gemini-2.0-flash' });
 
@@ -30,7 +31,6 @@ export async function generateWeeklyPlan(userId: string) {
   // if (!outline) throw new Error('No program outline found');
 
   const profile = await recall({userId, text: 'workout plan outline'});
-  console.log(profile.map(record => record.metadata?.text).join('\n'));
   const modelWithStructuredOutput = llm.withStructuredOutput(daySchema);
 
   const dates = getDatesUntilSaturday(new Date());
@@ -39,6 +39,10 @@ export async function generateWeeklyPlan(userId: string) {
     const resp = await modelWithStructuredOutput.invoke(prompt);
     return {...resp, day: date.toLocaleDateString('en-US', { weekday: 'long' })};
   }))
-  
+  const workout = workouts.find(workout => workout.day === new Date().toLocaleDateString('en-US', { weekday: 'long' }))
+  if (!workout) throw new Error('No workout for today')
+
+  await twilioClient.sendSMS(user.phone_number, workout.workout);
+
   return workouts;
 }
