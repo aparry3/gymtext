@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createUser, CreateUserData, getUserByPhoneNumber, updateUser } from '@/server/db/postgres/users';
 import { createFitnessProfile, CreateFitnessProfileData } from '@/server/db/postgres/users';
+import { setUserCookie } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -82,10 +83,20 @@ export async function POST(request: Request) {
             expand: ['latest_invoice.payment_intent'],
           });
           
-          // Return subscription info
-          return NextResponse.json({ 
+          // Create a response with the user cookie and subscription info
+          const response = NextResponse.json({ 
             subscription,
-            status: 'success'
+            status: 'success',
+            userId: user.id,
+            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/success`
+          });
+          
+          return setUserCookie(response, {
+            id: user.id,
+            name: user.name,
+            isCustomer: true,
+            checkoutCompleted: true,
+            timestamp: new Date().toISOString(),
           });
         } catch (error) {
           console.error('Error creating subscription:', error);
@@ -103,7 +114,7 @@ export async function POST(request: Request) {
               quantity: 1,
             },
           ],
-          success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
+          success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/session?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
           cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?canceled=true`,
           metadata: {
             userId: user.id,

@@ -53,31 +53,47 @@ function PaymentRequestForm({ formData }: { formData: FormData }) {
       // Format phone number with +1 prefix if not already present
       const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
       
-      // Create checkout session on the server
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          phoneNumber: formattedPhoneNumber,
-          // Add subscription specific details
-          plan: 'monthly',
-          priceId: 'price_monthly_subscription',
-          // Add implicit consent to receive text messages
-          acceptTexts: true,
-          paymentMethodId: ev.paymentMethod.id
-        }),
-      });
+      try {
+        // Create checkout session on the server
+        const response = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            phoneNumber: formattedPhoneNumber,
+            // Add subscription specific details
+            plan: 'monthly',
+            priceId: 'price_monthly_subscription',
+            // Add implicit consent to receive text messages
+            acceptTexts: true,
+            paymentMethodId: ev.paymentMethod.id
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          ev.complete('fail');
+          console.error('Payment failed:', await response.text());
+          return;
+        }
+
+        const responseData = await response.json();
+        
+        // Mark the payment as successful
+        ev.complete('success');
+        
+        // Check if we have a redirectUrl and redirect to it
+        if (responseData.redirectUrl) {
+          window.location.href = responseData.redirectUrl;
+        } else {
+          // Fallback to success page
+          window.location.href = '/success';
+        }
+      } catch (error) {
+        console.error('Express checkout error:', error);
         ev.complete('fail');
-        return;
       }
-
-      ev.complete('success');
-      window.location.href = '/success';
     });
 
     pr.canMakePayment().then(result => {

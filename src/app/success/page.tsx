@@ -1,12 +1,26 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { isAuthenticated, getUserFromCookie } from '@/shared/utils/cookies';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Payment Successful - GYMTEXT',
   description: 'Your payment was successful. Welcome to GYMTEXT!',
 };
 
-export default function SuccessPage() {
+export default async function SuccessPage() {
+  
+  // Check if user is authenticated
+  const isAuth = await isAuthenticated();
+  const userData = await getUserFromCookie();
+  
+  console.log('isAuth', isAuth);
+  console.log('userData', userData);
+  // If not authenticated and no query params, redirect to home
+  if (!isAuth && !userData) {
+    redirect('/');
+  }
+  
   return (
     <main className="min-h-screen bg-white flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-10 text-center">
@@ -29,9 +43,15 @@ export default function SuccessPage() {
           </div>
         </div>
         <h1 className="text-4xl font-bold text-[#2d3748] mb-4">Payment Successful!</h1>
-        <p className="text-xl text-[#7a8599] mb-8">
-          Thank you for signing up with GYMTEXT. We&apos;re excited to help you achieve your fitness goals!
-        </p>
+        {userData ? (
+          <p className="text-xl text-[#7a8599] mb-8">
+            Thank you for signing up with GYMTEXT, {userData.name}! We&apos;re excited to help you achieve your fitness goals!
+          </p>
+        ) : (
+          <p className="text-xl text-[#7a8599] mb-8">
+            Thank you for signing up with GYMTEXT. We&apos;re excited to help you achieve your fitness goals!
+          </p>
+        )}
         <p className="text-lg text-[#7a8599] mb-8">
           You&apos;ll receive your first workout plan via text message soon. Get ready to start your fitness journey!
         </p>
