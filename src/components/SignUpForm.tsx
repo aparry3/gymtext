@@ -50,6 +50,9 @@ function PaymentRequestForm({ formData }: { formData: FormData }) {
     });
 
     pr.on('paymentmethod', async (ev) => {
+      // Format phone number with +1 prefix if not already present
+      const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
+      
       // Create checkout session on the server
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -58,6 +61,7 @@ function PaymentRequestForm({ formData }: { formData: FormData }) {
         },
         body: JSON.stringify({
           ...formData,
+          phoneNumber: formattedPhoneNumber,
           // Add subscription specific details
           plan: 'monthly',
           priceId: 'price_monthly_subscription',
@@ -118,7 +122,12 @@ export default function SignupForm() {
   });
 
   const handleContinue = (data: FormData) => {
-    setFormValues(data);
+    // Format phone number with +1 prefix
+    const formattedData = {
+      ...data,
+      phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
+    };
+    setFormValues(formattedData);
     setShowPaymentOptions(true);
   };
 
@@ -127,6 +136,9 @@ export default function SignupForm() {
     setErrorMessage(null);
     
     try {
+      // Format phone number with +1 prefix if not already present
+      const formattedPhoneNumber = data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`;
+      
       // Create checkout session on the server
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -135,6 +147,7 @@ export default function SignupForm() {
         },
         body: JSON.stringify({
           ...data,
+          phoneNumber: formattedPhoneNumber,
           // Add subscription specific details
           plan: 'monthly',
           priceId: 'price_monthly_subscription',
