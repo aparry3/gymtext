@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     // Create a TwiML response
     const MessagingResponse = twilio.twiml.MessagingResponse;
