@@ -1,4 +1,6 @@
 import { getUserByPhoneNumber } from '@/server/db/postgres/users';
+import { getUserWithProfile } from '@/server/db/postgres/users';
+import { generateChatResponse } from '@/server/services/chat';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
@@ -29,14 +31,26 @@ export async function POST(req: NextRequest) {
               'Content-Type': 'text/xml',
             },
           });
-          }
+    }
     
+    // Get user with profile for chat context
+    const userWithProfile = await getUserWithProfile(user.id);
     
+    if (!userWithProfile) {
+      twiml.message('Sorry, I had trouble loading your profile. Please try again later.');
+      return new NextResponse(twiml.toString(), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/xml',
+        },
+      });
+    }
     
-    // Logic based on the message content
-    twiml.message(
-      `${user.name} said: ${incomingMessage}`
-    );
+    // Generate chat response using LLM
+    const chatResponse = await generateChatResponse(userWithProfile, incomingMessage);
+    
+    // Send the chat response
+    twiml.message(chatResponse);
     
     // Return the TwiML response with the appropriate content type
     return new NextResponse(twiml.toString(), {
