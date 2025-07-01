@@ -10,7 +10,7 @@ config({ path: resolve(process.cwd(), '.env.local') });
 
 // Parse TwiML response to extract message content
 function parseTwiMLResponse(xml: string): string {
-  const messageMatch = xml.match(/<Message>(.*?)<\/Message>/s);
+  const messageMatch = xml.match(/<Message>([\s\S]*?)<\/Message>/);
   if (messageMatch && messageMatch[1]) {
     return messageMatch[1].trim();
   }
