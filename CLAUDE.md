@@ -79,6 +79,15 @@ The workout generation uses a multi-agent architecture in `/src/server/agents/`:
 3. **Path Aliases**: Use `@/` to import from `/src/`
 4. **Environment Variables**: Required variables include database URL, API keys for Stripe, Twilio, OpenAI/Gemini, and Pinecone
 
+### Conversation History System (Phase 1)
+The application now includes a conversation history system that stores all SMS interactions:
+- **Database Tables**: `conversations`, `messages`, `conversation_topics`
+- **Service**: `ConversationStorageService` handles message storage with circuit breaker pattern
+- **Integration**: SMS handler stores messages without blocking SMS delivery
+- **Configuration**: 
+  - `CONVERSATION_TIMEOUT_MINUTES`: Time before a new conversation starts (default: 30)
+  - `ENABLE_CONVERSATION_STORAGE`: Feature flag (default: true)
+
 ### Development Notes
 - No test suite currently exists
 - Database migrations use Kysely's migration system
