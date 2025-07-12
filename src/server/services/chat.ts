@@ -39,15 +39,11 @@ export async function generateChatResponse(
         systemPrompt
       );
       
-      // Ensure we don't exceed token limits
-      const truncatedMessages = await promptBuilder.truncateMessagesToFit(
-        messages,
-        2000, // Conservative token limit for context
-        true  // Preserve system message
-      );
+      // Skip token truncation for now due to tiktoken issue
+      // TODO: Re-enable once tiktoken WebAssembly issue is resolved
       
       // Generate response with conversation context
-      response = await llm.invoke(truncatedMessages);
+      response = await llm.invoke(messages);
     } else {
       // Fallback to simple prompt if no context available
       const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response (keep under 160 characters for SMS):`;
