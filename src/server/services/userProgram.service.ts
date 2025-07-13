@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/generated-schema';
+import { Database } from '@/shared/types/schema';
 import { BaseRepository } from '../repositories/base.repository';
 
 export interface CreateUserProgramParams {
@@ -8,13 +8,13 @@ export interface CreateUserProgramParams {
   startedAt?: Date;
   currentWeek?: number;
   currentPhaseId?: string;
-  adaptations?: any;
+  adaptations?: Record<string, unknown>;
 }
 
 export interface UpdateUserProgramParams {
   currentWeek?: number;
   currentPhaseId?: string;
-  adaptations?: any;
+  adaptations?: Record<string, unknown>;
   status?: string;
   completedAt?: Date;
 }
@@ -33,13 +33,13 @@ export interface UserProgramProgress {
 export class UserProgramRepository extends BaseRepository {
   async create(params: CreateUserProgramParams) {
     const result = await this.db
-      .insertInto('user_programs')
+      .insertInto('userPrograms')
       .values({
-        user_id: params.userId,
-        program_id: params.programId,
-        started_at: params.startedAt?.toISOString() || new Date().toISOString(),
-        current_week: params.currentWeek || 1,
-        current_phase_id: params.currentPhaseId,
+        userId: params.userId,
+        programId: params.programId,
+        startedAt: params.startedAt?.toISOString() || new Date().toISOString(),
+        currentWeek: params.currentWeek || 1,
+        currentPhaseId: params.currentPhaseId,
         adaptations: JSON.stringify(params.adaptations || {}),
       })
       .returningAll()
@@ -50,7 +50,7 @@ export class UserProgramRepository extends BaseRepository {
 
   async findById(id: string) {
     const result = await this.db
-      .selectFrom('user_programs')
+      .selectFrom('userPrograms')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
@@ -60,9 +60,9 @@ export class UserProgramRepository extends BaseRepository {
 
   async findByUserId(userId: string, status?: string) {
     let query = this.db
-      .selectFrom('user_programs')
+      .selectFrom('userPrograms')
       .selectAll()
-      .where('user_id', '=', userId);
+      .where('userId', '=', userId);
 
     if (status) {
       query = query.where('status', '=', status);
@@ -74,11 +74,11 @@ export class UserProgramRepository extends BaseRepository {
 
   async findActiveByUserId(userId: string) {
     const result = await this.db
-      .selectFrom('user_programs')
+      .selectFrom('userPrograms')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .where('status', '=', 'active')
-      .orderBy('started_at', 'desc')
+      .orderBy('startedAt', 'desc')
       .executeTakeFirst();
 
     return result ? this.parseUserProgram(result) : null;
@@ -86,27 +86,27 @@ export class UserProgramRepository extends BaseRepository {
 
   async findByUserAndProgram(userId: string, programId: string) {
     const result = await this.db
-      .selectFrom('user_programs')
+      .selectFrom('userPrograms')
       .selectAll()
-      .where('user_id', '=', userId)
-      .where('program_id', '=', programId)
-      .orderBy('started_at', 'desc')
+      .where('userId', '=', userId)
+      .where('programId', '=', programId)
+      .orderBy('startedAt', 'desc')
       .executeTakeFirst();
 
     return result ? this.parseUserProgram(result) : null;
   }
 
   async update(id: string, params: UpdateUserProgramParams) {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
-    if (params.currentWeek !== undefined) updateData.current_week = params.currentWeek;
-    if (params.currentPhaseId !== undefined) updateData.current_phase_id = params.currentPhaseId;
+    if (params.currentWeek !== undefined) updateData.currentWeek = params.currentWeek;
+    if (params.currentPhaseId !== undefined) updateData.currentPhaseId = params.currentPhaseId;
     if (params.adaptations !== undefined) updateData.adaptations = JSON.stringify(params.adaptations);
     if (params.status !== undefined) updateData.status = params.status;
-    if (params.completedAt !== undefined) updateData.completed_at = params.completedAt.toISOString();
+    if (params.completedAt !== undefined) updateData.completedAt = params.completedAt.toISOString();
 
     const result = await this.db
-      .updateTable('user_programs')
+      .updateTable('userPrograms')
       .set(updateData)
       .where('id', '=', id)
       .returningAll()
@@ -117,7 +117,7 @@ export class UserProgramRepository extends BaseRepository {
 
   async delete(id: string) {
     const result = await this.db
-      .deleteFrom('user_programs')
+      .deleteFrom('userPrograms')
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -125,19 +125,31 @@ export class UserProgramRepository extends BaseRepository {
     return result ? this.parseUserProgram(result) : null;
   }
 
-  private parseUserProgram(row: any) {
+  private parseUserProgram(row: {
+    id: string;
+    userId: string;
+    programId: string;
+    startedAt: string | Date;
+    currentWeek: number | null;
+    currentPhaseId: string | null;
+    adaptations: string | Record<string, unknown> | unknown;
+    status: string | null;
+    completedAt: string | Date | null;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  }) {
     return {
       id: row.id,
-      userId: row.user_id,
-      programId: row.program_id,
-      startedAt: new Date(row.started_at),
-      currentWeek: row.current_week,
-      currentPhaseId: row.current_phase_id,
+      userId: row.userId,
+      programId: row.programId,
+      startedAt: new Date(row.startedAt),
+      currentWeek: row.currentWeek || 1,
+      currentPhaseId: row.currentPhaseId,
       adaptations: typeof row.adaptations === 'string' ? JSON.parse(row.adaptations) : row.adaptations,
-      status: row.status,
-      completedAt: row.completed_at ? new Date(row.completed_at) : null,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      status: row.status || 'active',
+      completedAt: row.completedAt ? new Date(row.completedAt) : null,
+      createdAt: new Date(row.createdAt),
+      updatedAt: new Date(row.updatedAt),
     };
   }
 }
@@ -158,10 +170,10 @@ export class UserProgramService {
 
     // Get the first phase of the program
     const firstPhase = await this.db
-      .selectFrom('program_phases')
+      .selectFrom('programPhases')
       .select('id')
-      .where('program_id', '=', params.programId)
-      .where('phase_number', '=', 1)
+      .where('programId', '=', params.programId)
+      .where('phaseNumber', '=', 1)
       .executeTakeFirst();
 
     return await this.repository.create({
@@ -203,30 +215,30 @@ export class UserProgramService {
     
     // Get program details to check duration
     const program = await this.db
-      .selectFrom('workout_programs')
-      .select(['duration_type', 'duration_weeks'])
+      .selectFrom('workoutPrograms')
+      .select(['durationType', 'durationWeeks'])
       .where('id', '=', userProgram.programId)
       .executeTakeFirstOrThrow();
 
     const nextWeek = userProgram.currentWeek + 1;
 
     // Check if program is complete
-    if (program.duration_type === 'fixed' && program.duration_weeks && nextWeek > program.duration_weeks) {
+    if (program.durationType === 'fixed' && program.durationWeeks && nextWeek > program.durationWeeks) {
       return await this.completeUserProgram(userProgramId);
     }
 
     // Find the phase for the next week
     const nextPhase = await this.db
-      .selectFrom('program_phases')
+      .selectFrom('programPhases')
       .select('id')
-      .where('program_id', '=', userProgram.programId)
-      .where('start_week', '<=', nextWeek)
-      .where('end_week', '>=', nextWeek)
+      .where('programId', '=', userProgram.programId)
+      .where('startWeek', '<=', nextWeek)
+      .where('endWeek', '>=', nextWeek)
       .executeTakeFirst();
 
     return await this.updateUserProgram(userProgramId, {
       currentWeek: nextWeek,
-      currentPhaseId: nextPhase?.id || userProgram.currentPhaseId,
+      currentPhaseId: nextPhase?.id || userProgram.currentPhaseId || undefined,
     });
   }
 
@@ -252,7 +264,7 @@ export class UserProgramService {
     });
   }
 
-  async addAdaptation(userProgramId: string, adaptationType: string, adaptationData: any) {
+  async addAdaptation(userProgramId: string, adaptationType: string, adaptationData: Record<string, unknown>) {
     const userProgram = await this.getUserProgram(userProgramId);
     const adaptations = userProgram.adaptations || {};
     
@@ -275,26 +287,25 @@ export class UserProgramService {
     const completedWorkouts = await this.db
       .selectFrom('workouts')
       .select(this.db.fn.count('id').as('count'))
-      .where('user_program_id', '=', userProgramId)
-      .where('sent_at', 'is not', null)
+      .where('userProgramId', '=', userProgramId)
+      .where('sentAt', 'is not', null)
       .executeTakeFirstOrThrow();
 
     // Calculate expected workouts
-    const weeksCompleted = userProgram.currentWeek - 1;
     const currentWeekSessions = await this.db
-      .selectFrom('program_weeks')
-      .innerJoin('program_sessions', 'program_sessions.week_id', 'program_weeks.id')
-      .select(this.db.fn.count('program_sessions.id').as('count'))
-      .where('program_weeks.program_id', '=', userProgram.programId)
-      .where('program_weeks.week_number', '=', userProgram.currentWeek)
+      .selectFrom('programWeeks')
+      .innerJoin('programSessions', 'programSessions.weekId', 'programWeeks.id')
+      .select(this.db.fn.count('programSessions.id').as('count'))
+      .where('programWeeks.programId', '=', userProgram.programId)
+      .where('programWeeks.weekNumber', '=', userProgram.currentWeek)
       .executeTakeFirstOrThrow();
 
     const pastWeeksSessions = await this.db
-      .selectFrom('program_weeks')
-      .innerJoin('program_sessions', 'program_sessions.week_id', 'program_weeks.id')
-      .select(this.db.fn.count('program_sessions.id').as('count'))
-      .where('program_weeks.program_id', '=', userProgram.programId)
-      .where('program_weeks.week_number', '<', userProgram.currentWeek)
+      .selectFrom('programWeeks')
+      .innerJoin('programSessions', 'programSessions.weekId', 'programWeeks.id')
+      .select(this.db.fn.count('programSessions.id').as('count'))
+      .where('programWeeks.programId', '=', userProgram.programId)
+      .where('programWeeks.weekNumber', '<', userProgram.currentWeek)
       .executeTakeFirstOrThrow();
 
     const completedCount = Number(completedWorkouts.count);

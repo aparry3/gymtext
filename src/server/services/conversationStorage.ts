@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/schema';
+import { Database, JsonObject } from '@/shared/types/schema';
 import { ConversationRepository, Conversation } from '../repositories/conversation.repository';
 import { MessageRepository, Message } from '../repositories/message.repository';
 import { CircuitBreaker } from '../utils/circuitBreaker';
@@ -46,14 +46,14 @@ export class ConversationStorageService {
       
       // Store the message
       const message = await this.messageRepo.create({
-        conversation_id: conversation.id,
-        user_id: userId,
+        conversationId: conversation.id,
+        userId: userId,
         direction: 'inbound',
         content,
-        phone_from: from,
-        phone_to: to,
-        twilio_message_sid: (twilioData?.MessageSid as string) || null,
-        metadata: twilioData || {}
+        phoneFrom: from,
+        phoneTo: to,
+        twilioMessageSid: (twilioData?.MessageSid as string) || null,
+        metadata: (twilioData || {}) as JsonObject
       });
 
       return message;
@@ -69,14 +69,14 @@ export class ConversationStorageService {
       
       // Store the message
       const message = await this.messageRepo.create({
-        conversation_id: conversation.id,
-        user_id: userId,
+        conversationId: conversation.id,
+        userId: userId,
         direction: 'outbound',
         content,
-        phone_from: from,
-        phone_to: to,
-        twilio_message_sid: twilioMessageSid || null,
-        metadata: {}
+        phoneFrom: from,
+        phoneTo: to,
+        twilioMessageSid: twilioMessageSid || null,
+        metadata: {} as JsonObject
       });
 
       return message;
@@ -100,11 +100,11 @@ export class ConversationStorageService {
     // Create a new conversation
     const now = new Date();
     const newConversation = await this.conversationRepo.create({
-      user_id: userId,
-      started_at: now.toISOString(),
-      last_message_at: now.toISOString(),
+      userId: userId,
+      startedAt: now.toISOString(),
+      lastMessageAt: now.toISOString(),
       status: 'active',
-      message_count: 0,
+      messageCount: 0,
       metadata: {}
     });
     
@@ -118,7 +118,7 @@ export class ConversationStorageService {
     }
     
     // Check timeout
-    const lastMessageTime = new Date(conversation.last_message_at);
+    const lastMessageTime = new Date(conversation.lastMessageAt);
     const now = new Date();
     const diffMinutes = (now.getTime() - lastMessageTime.getTime()) / (1000 * 60);
     

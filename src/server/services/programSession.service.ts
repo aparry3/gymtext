@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/generated-schema';
+import { Database } from '@/shared/types/schema';
 import { BaseRepository } from '../repositories/base.repository';
 
 export interface CreateProgramSessionParams {
@@ -9,7 +9,7 @@ export interface CreateProgramSessionParams {
   name?: string;
   description?: string;
   durationMinutes?: number;
-  exercises?: any;
+  exercises?: Array<Record<string, unknown>>;
 }
 
 export interface UpdateProgramSessionParams {
@@ -17,7 +17,7 @@ export interface UpdateProgramSessionParams {
   name?: string;
   description?: string;
   durationMinutes?: number;
-  exercises?: any;
+  exercises?: Array<Record<string, unknown>>;
 }
 
 export interface CreateWeekSessionsParams {
@@ -28,14 +28,14 @@ export interface CreateWeekSessionsParams {
 export class ProgramSessionRepository extends BaseRepository {
   async create(params: CreateProgramSessionParams) {
     const result = await this.db
-      .insertInto('program_sessions')
+      .insertInto('programSessions')
       .values({
-        week_id: params.weekId,
-        day_of_week: params.dayOfWeek,
-        session_type: params.sessionType,
+        weekId: params.weekId,
+        dayOfWeek: params.dayOfWeek,
+        sessionType: params.sessionType,
         name: params.name,
         description: params.description,
-        duration_minutes: params.durationMinutes,
+        durationMinutes: params.durationMinutes,
         exercises: JSON.stringify(params.exercises || []),
       })
       .returningAll()
@@ -46,7 +46,7 @@ export class ProgramSessionRepository extends BaseRepository {
 
   async findById(id: string) {
     const result = await this.db
-      .selectFrom('program_sessions')
+      .selectFrom('programSessions')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
@@ -56,10 +56,10 @@ export class ProgramSessionRepository extends BaseRepository {
 
   async findByWeekId(weekId: string) {
     const results = await this.db
-      .selectFrom('program_sessions')
+      .selectFrom('programSessions')
       .selectAll()
-      .where('week_id', '=', weekId)
-      .orderBy('day_of_week', 'asc')
+      .where('weekId', '=', weekId)
+      .orderBy('dayOfWeek', 'asc')
       .execute();
 
     return results.map(this.parseSession);
@@ -67,26 +67,26 @@ export class ProgramSessionRepository extends BaseRepository {
 
   async findByWeekAndDay(weekId: string, dayOfWeek: number) {
     const result = await this.db
-      .selectFrom('program_sessions')
+      .selectFrom('programSessions')
       .selectAll()
-      .where('week_id', '=', weekId)
-      .where('day_of_week', '=', dayOfWeek)
+      .where('weekId', '=', weekId)
+      .where('dayOfWeek', '=', dayOfWeek)
       .executeTakeFirst();
 
     return result ? this.parseSession(result) : null;
   }
 
   async update(id: string, params: UpdateProgramSessionParams) {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
-    if (params.sessionType !== undefined) updateData.session_type = params.sessionType;
+    if (params.sessionType !== undefined) updateData.sessionType = params.sessionType;
     if (params.name !== undefined) updateData.name = params.name;
     if (params.description !== undefined) updateData.description = params.description;
-    if (params.durationMinutes !== undefined) updateData.duration_minutes = params.durationMinutes;
+    if (params.durationMinutes !== undefined) updateData.durationMinutes = params.durationMinutes;
     if (params.exercises !== undefined) updateData.exercises = JSON.stringify(params.exercises);
 
     const result = await this.db
-      .updateTable('program_sessions')
+      .updateTable('programSessions')
       .set(updateData)
       .where('id', '=', id)
       .returningAll()
@@ -97,7 +97,7 @@ export class ProgramSessionRepository extends BaseRepository {
 
   async delete(id: string) {
     const result = await this.db
-      .deleteFrom('program_sessions')
+      .deleteFrom('programSessions')
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -107,22 +107,32 @@ export class ProgramSessionRepository extends BaseRepository {
 
   async deleteByWeekId(weekId: string) {
     await this.db
-      .deleteFrom('program_sessions')
-      .where('week_id', '=', weekId)
+      .deleteFrom('programSessions')
+      .where('weekId', '=', weekId)
       .execute();
   }
 
-  private parseSession(row: any) {
+  private parseSession(row: {
+    id: string;
+    weekId: string;
+    dayOfWeek: number;
+    sessionType: string | null;
+    name: string | null;
+    description: string | null;
+    durationMinutes: number | null;
+    exercises: string | Array<Record<string, unknown>> | unknown;
+    createdAt: string | Date;
+  }) {
     return {
       id: row.id,
-      weekId: row.week_id,
-      dayOfWeek: row.day_of_week,
-      sessionType: row.session_type,
+      weekId: row.weekId,
+      dayOfWeek: row.dayOfWeek,
+      sessionType: row.sessionType,
       name: row.name,
       description: row.description,
-      durationMinutes: row.duration_minutes,
+      durationMinutes: row.durationMinutes,
       exercises: typeof row.exercises === 'string' ? JSON.parse(row.exercises) : row.exercises,
-      createdAt: new Date(row.created_at),
+      createdAt: new Date(row.createdAt),
     };
   }
 }
@@ -211,10 +221,16 @@ export class ProgramSessionService {
     const clonedSessions = [];
 
     for (const session of sourceSessions) {
-      const { id, weekId, createdAt, ...sessionData } = session;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, createdAt, ...sessionData } = session;
       const clonedSession = await this.repository.create({
-        ...sessionData,
         weekId: targetWeekId,
+        dayOfWeek: sessionData.dayOfWeek,
+        sessionType: sessionData.sessionType || undefined,
+        name: sessionData.name || undefined,
+        description: sessionData.description || undefined,
+        durationMinutes: sessionData.durationMinutes || undefined,
+        exercises: sessionData.exercises,
       });
       clonedSessions.push(clonedSession);
     }

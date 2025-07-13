@@ -69,10 +69,10 @@ export class ConversationContextService {
 
       // Build metadata
       const metadata: ConversationMetadata = {
-        startTime: activeConversation.started_at,
-        messageCount: activeConversation.message_count,
-        lastInteractionTime: activeConversation.last_message_at,
-        isNewConversation: activeConversation.message_count === 0,
+        startTime: activeConversation.startedAt,
+        messageCount: activeConversation.messageCount,
+        lastInteractionTime: activeConversation.lastMessageAt,
+        isNewConversation: activeConversation.messageCount === 0,
         conversationGapMinutes: this.config.conversationGapMinutes,
       };
 
@@ -82,7 +82,7 @@ export class ConversationContextService {
         recentMessages: recentMessages.map(msg => ({
           role: msg.direction === 'inbound' ? 'user' : 'assistant',
           content: msg.content,
-          timestamp: msg.created_at,
+          timestamp: msg.createdAt,
           messageId: msg.id,
         })),
         userProfile,
@@ -117,12 +117,12 @@ export class ConversationContextService {
       const fitnessProfile = await getUserFitnessProfile(userId);
 
       if (fitnessProfile) {
-        profile.fitnessGoals = fitnessProfile.fitness_goals;
-        profile.skillLevel = fitnessProfile.skill_level;
+        profile.fitnessGoals = fitnessProfile.fitnessGoals;
+        profile.skillLevel = fitnessProfile.skillLevel;
         profile.preferences = {
           age: fitnessProfile.age,
           gender: fitnessProfile.gender,
-          exerciseFrequency: fitnessProfile.exercise_frequency,
+          exerciseFrequency: fitnessProfile.exerciseFrequency,
         };
       }
     }
@@ -131,7 +131,7 @@ export class ConversationContextService {
       const recentWorkouts = await getRecentWorkouts(userId, 3);
       if (recentWorkouts.length > 0) {
         profile.lastWorkoutDate = recentWorkouts[0].date;
-        profile.currentProgram = recentWorkouts[0].workout_type;
+        profile.currentProgram = recentWorkouts[0].workoutType;
       }
     }
 

@@ -1,10 +1,10 @@
 import { BaseRepository } from './base.repository';
-import { ConversationsTable } from '@/shared/types/schema';
+import { Conversations } from '@/shared/types/schema';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
-export type Conversation = Selectable<ConversationsTable>;
-export type NewConversation = Insertable<ConversationsTable>;
-export type ConversationUpdate = Updateable<ConversationsTable>;
+export type Conversation = Selectable<Conversations>;
+export type NewConversation = Insertable<Conversations>;
+export type ConversationUpdate = Updateable<Conversations>;
 
 export class ConversationRepository extends BaseRepository {
   async create(conversation: NewConversation): Promise<Conversation> {
@@ -27,8 +27,8 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('last_message_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('lastMessageAt', 'desc')
       .execute();
   }
 
@@ -36,9 +36,9 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .where('status', '=', 'active')
-      .orderBy('last_message_at', 'desc')
+      .orderBy('lastMessageAt', 'desc')
       .executeTakeFirst();
   }
 
@@ -59,8 +59,8 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('last_message_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('lastMessageAt', 'desc')
       .executeTakeFirst();
   }
 }

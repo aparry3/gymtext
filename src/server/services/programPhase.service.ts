@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/generated-schema';
+import { Database } from '@/shared/types/schema';
 import { BaseRepository } from '../repositories/base.repository';
 
 export interface CreateProgramPhaseParams {
@@ -10,29 +10,29 @@ export interface CreateProgramPhaseParams {
   focus?: string;
   startWeek: number;
   endWeek: number;
-  trainingVariables?: any;
+  trainingVariables?: Record<string, unknown>;
 }
 
 export interface UpdateProgramPhaseParams {
   name?: string;
   description?: string;
   focus?: string;
-  trainingVariables?: any;
+  trainingVariables?: Record<string, unknown>;
 }
 
 export class ProgramPhaseRepository extends BaseRepository {
   async create(params: CreateProgramPhaseParams) {
     const result = await this.db
-      .insertInto('program_phases')
+      .insertInto('programPhases')
       .values({
-        program_id: params.programId,
-        phase_number: params.phaseNumber,
+        programId: params.programId,
+        phaseNumber: params.phaseNumber,
         name: params.name,
         description: params.description,
         focus: params.focus,
-        start_week: params.startWeek,
-        end_week: params.endWeek,
-        training_variables: JSON.stringify(params.trainingVariables || {}),
+        startWeek: params.startWeek,
+        endWeek: params.endWeek,
+        trainingVariables: JSON.stringify(params.trainingVariables || {}),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -42,7 +42,7 @@ export class ProgramPhaseRepository extends BaseRepository {
 
   async findById(id: string) {
     const result = await this.db
-      .selectFrom('program_phases')
+      .selectFrom('programPhases')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
@@ -52,10 +52,10 @@ export class ProgramPhaseRepository extends BaseRepository {
 
   async findByProgramId(programId: string) {
     const results = await this.db
-      .selectFrom('program_phases')
+      .selectFrom('programPhases')
       .selectAll()
-      .where('program_id', '=', programId)
-      .orderBy('phase_number', 'asc')
+      .where('programId', '=', programId)
+      .orderBy('phaseNumber', 'asc')
       .execute();
 
     return results.map(this.parsePhase);
@@ -63,26 +63,26 @@ export class ProgramPhaseRepository extends BaseRepository {
 
   async findByProgramAndWeek(programId: string, weekNumber: number) {
     const result = await this.db
-      .selectFrom('program_phases')
+      .selectFrom('programPhases')
       .selectAll()
-      .where('program_id', '=', programId)
-      .where('start_week', '<=', weekNumber)
-      .where('end_week', '>=', weekNumber)
+      .where('programId', '=', programId)
+      .where('startWeek', '<=', weekNumber)
+      .where('endWeek', '>=', weekNumber)
       .executeTakeFirst();
 
     return result ? this.parsePhase(result) : null;
   }
 
   async update(id: string, params: UpdateProgramPhaseParams) {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (params.name !== undefined) updateData.name = params.name;
     if (params.description !== undefined) updateData.description = params.description;
     if (params.focus !== undefined) updateData.focus = params.focus;
-    if (params.trainingVariables !== undefined) updateData.training_variables = JSON.stringify(params.trainingVariables);
+    if (params.trainingVariables !== undefined) updateData.trainingVariables = JSON.stringify(params.trainingVariables);
 
     const result = await this.db
-      .updateTable('program_phases')
+      .updateTable('programPhases')
       .set(updateData)
       .where('id', '=', id)
       .returningAll()
@@ -93,7 +93,7 @@ export class ProgramPhaseRepository extends BaseRepository {
 
   async delete(id: string) {
     const result = await this.db
-      .deleteFrom('program_phases')
+      .deleteFrom('programPhases')
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -103,23 +103,34 @@ export class ProgramPhaseRepository extends BaseRepository {
 
   async deleteByProgramId(programId: string) {
     await this.db
-      .deleteFrom('program_phases')
-      .where('program_id', '=', programId)
+      .deleteFrom('programPhases')
+      .where('programId', '=', programId)
       .execute();
   }
 
-  private parsePhase(row: any) {
+  private parsePhase(row: {
+    id: string;
+    programId: string;
+    phaseNumber: number;
+    name: string;
+    description: string | null;
+    focus: string | null;
+    startWeek: number;
+    endWeek: number;
+    trainingVariables: string | Record<string, unknown> | unknown;
+    createdAt: string | Date;
+  }) {
     return {
       id: row.id,
-      programId: row.program_id,
-      phaseNumber: row.phase_number,
+      programId: row.programId,
+      phaseNumber: row.phaseNumber,
       name: row.name,
       description: row.description,
       focus: row.focus,
-      startWeek: row.start_week,
-      endWeek: row.end_week,
-      trainingVariables: typeof row.training_variables === 'string' ? JSON.parse(row.training_variables) : row.training_variables,
-      createdAt: new Date(row.created_at),
+      startWeek: row.startWeek,
+      endWeek: row.endWeek,
+      trainingVariables: typeof row.trainingVariables === 'string' ? JSON.parse(row.trainingVariables) : row.trainingVariables,
+      createdAt: new Date(row.createdAt),
     };
   }
 }

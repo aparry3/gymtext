@@ -117,14 +117,14 @@ async function seedWorkoutPrograms() {
     
     // Create week 1
     const week1 = await db
-      .insertInto('program_weeks')
+      .insertInto('programWeeks')
       .values({
-        program_id: strengthProgram.id,
-        phase_id: phase1.id,
-        week_number: 1,
+        programId: strengthProgram.id,
+        phaseId: phase1.id,
+        weekNumber: 1,
         name: 'Introduction Week',
         description: 'Establish baseline and practice form',
-        weekly_volume_target: JSON.stringify({
+        weeklyVolumeTarget: JSON.stringify({
           totalSets: 20,
           setsPerMuscleGroup: {
             chest: 6,
@@ -134,7 +134,7 @@ async function seedWorkoutPrograms() {
             arms: 4
           }
         }),
-        training_split: JSON.stringify({
+        trainingSplit: JSON.stringify({
           type: 'upper_lower',
           schedule: [
             { day: 1, focus: 'upper_body', type: 'strength' },
@@ -146,7 +146,7 @@ async function seedWorkoutPrograms() {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    console.log(`Created week ${week1.week_number}`);
+    console.log(`Created week ${week1.weekNumber}`);
 
     // Create sessions for week 1
     const sessions = await programSessionService.createWeekSessions({
@@ -322,11 +322,11 @@ async function seedWorkoutPrograms() {
 
     // Create a hypertrophy program template
     const hypertrophyTemplate = await db
-      .insertInto('program_templates')
+      .insertInto('programTemplates')
       .values({
         name: '8-Week Muscle Building',
         description: 'High-volume program for muscle growth',
-        template_data: JSON.stringify({
+        templateData: JSON.stringify({
           programType: 'hypertrophy',
           durationType: 'fixed',
           durationWeeks: 8,
@@ -353,9 +353,9 @@ async function seedWorkoutPrograms() {
           trainingSplit: 'push_pull_legs'
         }),
         category: 'hypertrophy',
-        experience_level: 'intermediate',
-        equipment_required: JSON.stringify(['barbell', 'dumbbells', 'cables', 'machines']),
-        is_public: true
+        experienceLevel: 'intermediate',
+        equipmentRequired: JSON.stringify(['barbell', 'dumbbells', 'cables', 'machines']),
+        isPublic: true
       })
       .returningAll()
       .executeTakeFirstOrThrow();

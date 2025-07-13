@@ -2,12 +2,12 @@ import { db } from './db';
 
 // Interface for subscription creation data
 export interface CreateSubscriptionData {
-  user_id: string;
-  stripe_subscription_id: string;
+  userId: string;
+  stripeSubscriptionId: string;
   status: string;
-  plan_type: string;
-  current_period_start: string;
-  current_period_end: string;
+  planType: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
 }
 
 // Function to create a new subscription
@@ -15,15 +15,15 @@ export async function createSubscription(subscriptionData: CreateSubscriptionDat
   return await db
     .insertInto('subscriptions')
     .values({
-      user_id: subscriptionData.user_id,
-      stripe_subscription_id: subscriptionData.stripe_subscription_id,
+      userId: subscriptionData.userId,
+      stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
       status: subscriptionData.status,
-      plan_type: subscriptionData.plan_type,
-      current_period_start: subscriptionData.current_period_start,
-      current_period_end: subscriptionData.current_period_end,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      canceled_at: null,
+      planType: subscriptionData.planType,
+      currentPeriodStart: subscriptionData.currentPeriodStart,
+      currentPeriodEnd: subscriptionData.currentPeriodEnd,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      canceledAt: null,
     })
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -33,7 +33,7 @@ export async function createSubscription(subscriptionData: CreateSubscriptionDat
 export async function getSubscriptionByStripeId(stripeSubscriptionId: string) {
   return await db
     .selectFrom('subscriptions')
-    .where('stripe_subscription_id', '=', stripeSubscriptionId)
+    .where('stripeSubscriptionId', '=', stripeSubscriptionId)
     .selectAll()
     .executeTakeFirst();
 }
@@ -42,7 +42,7 @@ export async function getSubscriptionByStripeId(stripeSubscriptionId: string) {
 export async function getUserSubscriptions(userId: string) {
   return await db
     .selectFrom('subscriptions')
-    .where('user_id', '=', userId)
+    .where('userId', '=', userId)
     .selectAll()
     .execute();
 }
@@ -53,13 +53,13 @@ export async function updateSubscription(id: string, subscriptionData: Partial<C
     .updateTable('subscriptions')
     .set({
       ...subscriptionData,
-      current_period_start: subscriptionData.current_period_start
-      ? new Date(subscriptionData.current_period_start)
+      currentPeriodStart: subscriptionData.currentPeriodStart
+      ? new Date(subscriptionData.currentPeriodStart)
       : undefined,
-      current_period_end: subscriptionData.current_period_end
-      ? new Date(subscriptionData.current_period_end)
+      currentPeriodEnd: subscriptionData.currentPeriodEnd
+      ? new Date(subscriptionData.currentPeriodEnd)
       : undefined,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     })
     .where('id', '=', id)
     .returningAll()
@@ -72,8 +72,8 @@ export async function cancelSubscription(id: string) {
     .updateTable('subscriptions')
     .set({
       status: 'canceled',
-      canceled_at: new Date(),
-      updated_at: new Date(),
+      canceledAt: new Date(),
+      updatedAt: new Date(),
     })
     .where('id', '=', id)
     .returningAll()

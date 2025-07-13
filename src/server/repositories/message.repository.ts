@@ -1,9 +1,9 @@
 import { BaseRepository } from './base.repository';
-import { MessagesTable } from '@/shared/types/schema';
+import { Messages } from '@/shared/types/schema';
 import { Insertable, Selectable } from 'kysely';
 
-export type Message = Selectable<MessagesTable>;
-export type NewMessage = Insertable<MessagesTable>;
+export type Message = Selectable<Messages>;
+export type NewMessage = Insertable<Messages>;
 
 export class MessageRepository extends BaseRepository {
   async create(message: NewMessage): Promise<Message> {
@@ -26,8 +26,8 @@ export class MessageRepository extends BaseRepository {
     return await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('conversation_id', '=', conversationId)
-      .orderBy('created_at', 'asc')
+      .where('conversationId', '=', conversationId)
+      .orderBy('createdAt', 'asc')
       .execute();
   }
 
@@ -35,8 +35,8 @@ export class MessageRepository extends BaseRepository {
     return await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('created_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
   }
@@ -45,7 +45,7 @@ export class MessageRepository extends BaseRepository {
     const result = await this.db
       .selectFrom('messages')
       .select(({ fn }) => fn.count('id').as('count'))
-      .where('conversation_id', '=', conversationId)
+      .where('conversationId', '=', conversationId)
       .executeTakeFirst();
     
     return Number(result?.count ?? 0);

@@ -2,49 +2,49 @@ import { db } from './db';
 
 export interface Conversation {
   id: string;
-  user_id: string;
-  started_at: Date;
-  last_message_at: Date;
+  userId: string;
+  startedAt: Date;
+  lastMessageAt: Date;
   status: 'active' | 'inactive' | 'archived';
-  message_count: number;
+  messageCount: number;
   metadata: unknown;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Message {
   id: string;
-  conversation_id: string;
-  user_id: string;
+  conversationId: string;
+  userId: string;
   direction: 'inbound' | 'outbound';
   content: string;
-  phone_from: string;
-  phone_to: string;
-  twilio_message_sid: string | null;
+  phoneFrom: string;
+  phoneTo: string;
+  twilioMessageSid: string | null;
   metadata: unknown;
-  created_at: Date;
+  createdAt: Date;
 }
 
 export interface FitnessProfile {
   id: string;
-  user_id: string;
-  fitness_goals: string;
-  skill_level: string;
-  exercise_frequency: string;
+  userId: string;
+  fitnessGoals: string;
+  skillLevel: string;
+  exerciseFrequency: string;
   gender: string;
   age: number;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Workout {
   id: string;
-  user_id: string;
+  userId: string;
   date: Date;
-  workout_type: string;
+  workoutType: string;
   exercises: unknown;
-  sent_at: Date | null;
-  created_at: Date;
+  sentAt: Date | null;
+  createdAt: Date;
 }
 
 // Get the most recent active conversation for a user
@@ -56,14 +56,17 @@ export async function getActiveConversation(
   
   const conversation = await db
     .selectFrom('conversations')
-    .where('user_id', '=', userId)
+    .where('userId', '=', userId)
     .where('status', '=', 'active')
-    .where('last_message_at', '>=', cutoffTime)
-    .orderBy('last_message_at', 'desc')
+    .where('lastMessageAt', '>=', cutoffTime)
+    .orderBy('lastMessageAt', 'desc')
     .selectAll()
     .executeTakeFirst();
 
-  return conversation || null;
+  return conversation ? {
+    ...conversation,
+    status: conversation.status as 'active' | 'inactive' | 'archived'
+  } : null;
 }
 
 // Get recent messages from a conversation
@@ -73,14 +76,17 @@ export async function getRecentMessages(
 ): Promise<Message[]> {
   const messages = await db
     .selectFrom('messages')
-    .where('conversation_id', '=', conversationId)
-    .orderBy('created_at', 'desc')
+    .where('conversationId', '=', conversationId)
+    .orderBy('createdAt', 'desc')
     .limit(limit)
     .selectAll()
     .execute();
 
   // Reverse to get chronological order
-  return messages.reverse();
+  return messages.reverse().map(msg => ({
+    ...msg,
+    direction: msg.direction as 'inbound' | 'outbound'
+  }));
 }
 
 // Get recent messages for a user across all conversations
@@ -90,13 +96,16 @@ export async function getRecentMessagesForUser(
 ): Promise<Message[]> {
   const messages = await db
     .selectFrom('messages')
-    .where('user_id', '=', userId)
-    .orderBy('created_at', 'desc')
+    .where('userId', '=', userId)
+    .orderBy('createdAt', 'desc')
     .limit(limit)
     .selectAll()
     .execute();
 
-  return messages.reverse();
+  return messages.reverse().map(msg => ({
+    ...msg,
+    direction: msg.direction as 'inbound' | 'outbound'
+  }));
 }
 
 // Get user's fitness profile
@@ -104,8 +113,8 @@ export async function getUserFitnessProfile(
   userId: string
 ): Promise<FitnessProfile | null> {
   const profile = await db
-    .selectFrom('fitness_profiles')
-    .where('user_id', '=', userId)
+    .selectFrom('fitnessProfiles')
+    .where('userId', '=', userId)
     .selectAll()
     .executeTakeFirst();
 
@@ -119,7 +128,7 @@ export async function getRecentWorkouts(
 ): Promise<Workout[]> {
   return await db
     .selectFrom('workouts')
-    .where('user_id', '=', userId)
+    .where('userId', '=', userId)
     .orderBy('date', 'desc')
     .limit(limit)
     .selectAll()
@@ -136,7 +145,10 @@ export async function getConversationById(
     .selectAll()
     .executeTakeFirst();
 
-  return conversation || null;
+  return conversation ? {
+    ...conversation,
+    status: conversation.status as 'active' | 'inactive' | 'archived'
+  } : null;
 }
 
 // Get message count for a conversation
@@ -145,7 +157,7 @@ export async function getConversationMessageCount(
 ): Promise<number> {
   const result = await db
     .selectFrom('messages')
-    .where('conversation_id', '=', conversationId)
+    .where('conversationId', '=', conversationId)
     .select(db.fn.count('id').as('count'))
     .executeTakeFirst();
 
@@ -157,8 +169,8 @@ export async function getConversationTopics(
   conversationId: string
 ): Promise<string[]> {
   const topics = await db
-    .selectFrom('conversation_topics')
-    .where('conversation_id', '=', conversationId)
+    .selectFrom('conversationTopics')
+    .where('conversationId', '=', conversationId)
     .orderBy('confidence', 'desc')
     .select('topic')
     .execute();
@@ -170,10 +182,15 @@ export async function getConversationTopics(
 export async function getAllConversationMessages(
   conversationId: string
 ): Promise<Message[]> {
-  return await db
+  const messages = await db
     .selectFrom('messages')
-    .where('conversation_id', '=', conversationId)
-    .orderBy('created_at', 'asc')
+    .where('conversationId', '=', conversationId)
+    .orderBy('createdAt', 'asc')
     .selectAll()
     .execute();
+
+  return messages.map(msg => ({
+    ...msg,
+    direction: msg.direction as 'inbound' | 'outbound'
+  }));
 }

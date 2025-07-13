@@ -4,24 +4,24 @@ import { db } from './db';
 export interface User {
   id: string;
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email: string | null;
-  stripe_customer_id: string | null;
-  created_at: Date;
-  updated_at: Date;
+  stripeCustomerId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Interface for database fitness profile entity
 export interface FitnessProfile {
   id: string;
-  user_id: string;
-  fitness_goals: string;
-  skill_level: string;
-  exercise_frequency: string;
+  userId: string;
+  fitnessGoals: string;
+  skillLevel: string;
+  exerciseFrequency: string;
   gender: string;
   age: number;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Combined user with profile
@@ -34,17 +34,17 @@ export interface UserWithProfile extends User {
 // Interface for user creation data
 export interface CreateUserData {
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email?: string | null;
-  stripe_customer_id?: string | null;
+  stripeCustomerId?: string | null;
 }
 
 // Interface for fitness profile creation data
 export interface CreateFitnessProfileData {
-  user_id: string;
-  fitness_goals: string;
-  skill_level: string;
-  exercise_frequency: string;
+  userId: string;
+  fitnessGoals: string;
+  skillLevel: string;
+  exerciseFrequency: string;
   gender: string;
   age: number;
 }
@@ -55,11 +55,11 @@ export async function createUser(userData: CreateUserData): Promise<User> {
     .insertInto('users')
     .values({
       name: userData.name,
-      phone_number: userData.phone_number,
+      phoneNumber: userData.phoneNumber,
       email: userData.email || null,
-      stripe_customer_id: userData.stripe_customer_id || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      stripeCustomerId: userData.stripeCustomerId || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -68,16 +68,16 @@ export async function createUser(userData: CreateUserData): Promise<User> {
 // Function to create a fitness profile for a user
 export async function createFitnessProfile(profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
   return await db
-    .insertInto('fitness_profiles')
+    .insertInto('fitnessProfiles')
     .values({
-      user_id: profileData.user_id,
-      fitness_goals: profileData.fitness_goals,
-      skill_level: profileData.skill_level,
-      exercise_frequency: profileData.exercise_frequency,
+      userId: profileData.userId,
+      fitnessGoals: profileData.fitnessGoals,
+      skillLevel: profileData.skillLevel,
+      exerciseFrequency: profileData.exerciseFrequency,
       gender: profileData.gender,
       age: profileData.age,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -96,7 +96,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
 export async function getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
   return await db
     .selectFrom('users')
-    .where('stripe_customer_id', '=', stripeCustomerId)
+    .where('stripeCustomerId', '=', stripeCustomerId)
     .selectAll()
     .executeTakeFirst();
 }
@@ -110,8 +110,8 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
   }
 
   const profile = await db
-    .selectFrom('fitness_profiles')
-    .where('user_id', '=', userId)
+    .selectFrom('fitnessProfiles')
+    .where('userId', '=', userId)
     .selectAll()
     .executeTakeFirst();
 
@@ -126,7 +126,7 @@ export async function getUserWithProfile(userId: string): Promise<UserWithProfil
 export async function getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
   return await db
     .selectFrom('users')
-    .where('phone_number', '=', phoneNumber)
+    .where('phoneNumber', '=', phoneNumber)
     .selectAll()
     .executeTakeFirst();
 }
@@ -137,7 +137,7 @@ export async function updateUser(id: string, userData: Partial<CreateUserData>):
     .updateTable('users')
     .set({
       ...userData,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     })
     .where('id', '=', id)
     .returningAll()
