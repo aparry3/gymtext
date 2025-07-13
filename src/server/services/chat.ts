@@ -4,10 +4,14 @@ import { fitnessCoachPrompt } from '../prompts/templates';
 import { ConversationContextService } from './conversation-context';
 import { PromptBuilder } from './prompt-builder';
 
+// Configuration from environment variables
+const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');
+const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
+
 const llm = new ChatGoogleGenerativeAI({ 
   temperature: 0.7, 
   model: 'gemini-2.0-flash',
-  maxOutputTokens: 150 // Keep responses concise for SMS
+  maxOutputTokens: MAX_OUTPUT_TOKENS
 });
 
 // Initialize context services
@@ -46,17 +50,18 @@ export async function generateChatResponse(
       response = await llm.invoke(messages);
     } else {
       // Fallback to simple prompt if no context available
-      const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response (keep under 160 characters for SMS):`;
+      const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response:`;
       response = await llm.invoke(fullPrompt);
     }
     
     // Extract text content from response
     const responseText = response.content.toString().trim();
     
-    // Ensure response fits SMS constraints
-    if (responseText.length > 160) {
-      // Truncate and add ellipsis if too long
-      return responseText.substring(0, 157) + '...';
+    // Modern phones support concatenated SMS
+    // Twilio automatically handles message segmentation
+    if (responseText.length > SMS_MAX_LENGTH) {
+      // Only truncate very long responses
+      return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
     }
     
     return responseText;
