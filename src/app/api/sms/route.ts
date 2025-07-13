@@ -2,7 +2,7 @@ import { getUserByPhoneNumber } from '@/server/db/postgres/users';
 import { getUserWithProfile } from '@/server/db/postgres/users';
 import { generateChatResponse } from '@/server/services/chat';
 import { ConversationStorageService } from '@/server/services/conversationStorage';
-import { db } from '@/server/clients/dbClient';
+import { db } from '@/server/db/postgres/db';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
