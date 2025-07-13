@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
-import { generateWeeklyPlan } from '@/server/agents/workoutGeneratorAgent';
+import { generateDailyWorkout } from '@/server/agents/workoutGeneratorAgent';
 import { getUserById } from '@/server/db/postgres/users';
-// import { processUpdate } from '@/server/agents/workoutUpdateAgentt';
+import { WorkoutOrchestrator } from '@/server/agents/orchestrator';
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,18 +29,70 @@ export async function POST(req: NextRequest) {
     // Handle different actions
     switch (action) {
       case 'onboard':
+        // Onboarding now includes program generation
         await onboardUser({ userId: user.id });
-        return NextResponse.json({ success: true, message: 'User onboarded successfully' });
         
-      case 'weekly':
-        await generateWeeklyPlan(user.id);
-        return NextResponse.json({ success: true, message: 'Weekly plan generated successfully' });
+        // Generate initial program for the user
+        const orchestrator = new WorkoutOrchestrator();
+        const programResult = await orchestrator.orchestrate({
+          userId: user.id,
+          mode: 'program_generation'
+        });
         
-      //   case 'update': {
-      //     const { userId, message } = body;
-      //     const result = await processUpdate(userId, message);
-      //     return NextResponse.json(result);
-      //   }
+        if (!programResult.success) {
+          return NextResponse.json(
+            { error: 'User onboarded but program generation failed' },
+            { status: 500 }
+          );
+        }
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'User onboarded and program generated successfully',
+          programId: programResult.data?.program?.id
+        });
+        
+      case 'daily-workout':
+        const workout = await generateDailyWorkout(user.id);
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Daily workout delivered successfully',
+          workout
+        });
+        
+      case 'adapt-program': {
+        const { programId, reason, feedback } = body;
+        
+        if (!programId || !reason) {
+          return NextResponse.json(
+            { error: 'Program ID and adaptation reason are required' },
+            { status: 400 }
+          );
+        }
+        
+        const adaptOrchestrator = new WorkoutOrchestrator();
+        const adaptResult = await adaptOrchestrator.orchestrate({
+          userId: user.id,
+          mode: 'adapt_program',
+          programId,
+          adaptationRequest: reason,
+          userFeedback: feedback
+        });
+        
+        if (!adaptResult.success) {
+          return NextResponse.json(
+            { error: adaptResult.error || 'Failed to adapt program' },
+            { status: 500 }
+          );
+        }
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Program adapted successfully',
+          program: adaptResult.data?.program
+        });
+      }
+        
       default:
         return NextResponse.json(
           { error: 'Invalid action' },
