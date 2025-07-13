@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const migrationsDir = join(process.cwd(), 'src/db/migrations');
+const migrationsDir = join(process.cwd(), 'migrations');
 
 // Ensure migrations directory exists
 if (!existsSync(migrationsDir)) {

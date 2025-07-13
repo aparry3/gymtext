@@ -7,6 +7,9 @@ export interface Database {
   subscriptions: SubscriptionsTable;
   workouts: WorkoutsTable;
   workout_logs: WorkoutLogsTable;
+  conversations: ConversationsTable;
+  messages: MessagesTable;
+  conversation_topics: ConversationTopicsTable;
 }
 
 // Users table schema
@@ -68,4 +71,40 @@ export interface WorkoutLogsTable {
   rating: number | null;
   completed_at: ColumnType<Date, string , never> | null;
   created_at: ColumnType<Date, string , never>;
+}
+
+// Conversations table schema
+export interface ConversationsTable {
+  id: Generated<string>;
+  user_id: string;
+  started_at: ColumnType<Date, string>;
+  last_message_at: ColumnType<Date, string>;
+  status: 'active' | 'inactive' | 'archived';
+  message_count: number;
+  metadata: unknown;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, never>;
+}
+
+// Messages table schema
+export interface MessagesTable {
+  id: Generated<string>;
+  conversation_id: string;
+  user_id: string;
+  direction: 'inbound' | 'outbound';
+  content: string;
+  phone_from: string;
+  phone_to: string;
+  twilio_message_sid: string | null;
+  metadata: unknown;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+// Conversation topics table schema
+export interface ConversationTopicsTable {
+  id: Generated<string>;
+  conversation_id: string;
+  topic: string;
+  confidence: number;
+  created_at: ColumnType<Date, string | undefined, never>;
 }
