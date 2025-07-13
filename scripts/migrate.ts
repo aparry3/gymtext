@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect, FileMigrationProvider, Migrator } from 'kysely';
+import { Kysely, PostgresDialect, FileMigrationProvider, Migrator, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -22,6 +22,7 @@ const db = new Kysely<Database>({
   dialect: new PostgresDialect({
     pool,
   }),
+  plugins: [new CamelCasePlugin()],
 });
 
 // Create the migrator

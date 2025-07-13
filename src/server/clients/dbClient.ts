@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { Database } from '../../shared/types/schema';
 
@@ -8,4 +8,5 @@ if (!databaseUrl) throw new Error('DATABASE_URL environment variable is not set'
 const pool = new Pool({ connectionString: databaseUrl, max: 10 });
 export const db = new Kysely<Database>({
   dialect: new PostgresDialect({ pool }),
+  plugins: [new CamelCasePlugin()],
 }); 
