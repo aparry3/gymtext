@@ -11,7 +11,8 @@
     "migrate:create": "tsx scripts/create-migration.ts",
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
-    "sms:test": "tsx scripts/test-sms.ts"
+    "sms:test": "tsx scripts/test-sms.ts",
+    "db:generate-types": "dotenv -e .env.local -- kysely-codegen --out-file=src/shared/types/generated-schema.ts"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
@@ -51,8 +52,10 @@
     "autoprefixer": "^10.4.17",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "kysely-codegen": "^0.18.5",
     "postcss": "^8.4.35",
     "tailwindcss": "^4",
     "tsx": "^4.7.1",
