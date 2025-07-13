@@ -33,28 +33,28 @@ Implemented:
 
 ### 3. Service Layer Implementation
 
-#### WorkoutProgramService (`/src/server/services/workoutProgram.service.ts`)
+#### WorkoutProgramService (`/src/server/services/workoutProgram.ts`)
 Key features:
 - CRUD operations for workout programs
 - Automatic end date calculation for fixed programs
 - Status management (active, paused, completed)
 - JSON parsing for goals and equipment data
 
-#### ProgramPhaseService (`/src/server/services/programPhase.service.ts`)
+#### ProgramPhaseService (`/src/server/services/programPhase.ts`)
 Key features:
 - Phase management with overlap validation
 - Find phase by week number
 - Batch phase creation
 - Maintains phase ordering
 
-#### ProgramSessionService (`/src/server/services/programSession.service.ts`)
+#### ProgramSessionService (`/src/server/services/programSession.ts`)
 Key features:
 - Session management by week and day
 - Prevents duplicate sessions per day
 - Week session cloning capability
 - Structured exercise data storage
 
-#### UserProgramService (`/src/server/services/userProgram.service.ts`)
+#### UserProgramService (`/src/server/services/userProgram.ts`)
 Key features:
 - User enrollment with active program validation
 - Progress tracking and week advancement
@@ -64,9 +64,12 @@ Key features:
 
 ### 4. Repository Pattern
 - Implemented base repository pattern for consistent data access
-- Each service has a corresponding repository class
+- Each service has a corresponding repository class in `/src/server/repositories/`
+- Services in `/src/server/services/` handle business logic
+- Repositories handle database operations
 - Proper data transformation between database and application formats
 - Type-safe queries using Kysely
+- Index files for convenient imports
 
 ### 5. Seed Data
 **File**: `/scripts/seed-workout-programs.ts`

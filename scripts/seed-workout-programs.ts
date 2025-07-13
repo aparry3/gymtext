@@ -1,8 +1,8 @@
 import { db } from '@/server/db/postgres/db';
-import { WorkoutProgramService } from '@/server/services/workoutProgram.service';
-import { ProgramPhaseService } from '@/server/services/programPhase.service';
-import { ProgramSessionService } from '@/server/services/programSession.service';
-import { UserProgramService } from '@/server/services/userProgram.service';
+import { WorkoutProgramService } from '@/server/services/workoutProgram';
+import { ProgramPhaseService } from '@/server/services/programPhase';
+import { ProgramSessionService } from '@/server/services/programSession';
+import { UserProgramService } from '@/server/services/userProgram';
 
 async function seedWorkoutPrograms() {
   console.log('Starting workout program seed...');
