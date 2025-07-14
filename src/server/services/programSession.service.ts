@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { Database } from '@/shared/types/schema';
-import { ProgramSessionRepository, CreateProgramSessionParams, UpdateProgramSessionParams, CreateWeekSessionsParams } from '../repositories/program-session.repository';
+import { ProgramSessionRepository, CreateProgramSessionParams, UpdateProgramSessionParams, CreateWeekSessionsParams } from '../repositories/programSession.repository';
 
 export class ProgramSessionService {
   private repository: ProgramSessionRepository;

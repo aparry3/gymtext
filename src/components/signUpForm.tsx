@@ -55,7 +55,7 @@ function PaymentRequestForm({ formData }: { formData: FormData }) {
       
       try {
         // Create checkout session on the server
-        const response = await fetch('/api/create-checkout-session', {
+        const response = await fetch('/api/createCheckoutSession', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ export default function SignupForm() {
       const formattedPhoneNumber = data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`;
       
       // Create checkout session on the server
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/createCheckoutSession', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 import { generateChatResponse } from '@/server/services/chat.service';
-import { ConversationStorageService } from '@/server/services/conversation-storage.service';
+import { ConversationStorageService } from '@/server/services/conversationStorage.service';
 import { UserRepository } from '@/server/repositories/user.repository';
 import { db } from '@/server/db/postgres/db';
 import { NextRequest, NextResponse } from 'next/server';

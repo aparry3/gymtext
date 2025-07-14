@@ -37,17 +37,28 @@ This document tracks the progress of the repository cleanup implementation based
 - [x] Add proper typing for all methods
 
 ### Phase 4: Fix Naming and Organization ✅
-- [x] Rename service files to use `.service.ts` suffix
-- [x] Ensure all repository files use `.repository.ts` suffix
-- [x] Reorganize clients directory (keep only external service clients)
-- [x] Move vectorClient.ts if it's internal (renamed to pinecone.ts for clarity)
+
+#### 1. **Rename Files** for consistency:
+- [x] Use camelCase for all TypeScript files
+- [x] Add `.service.ts` suffix to all service files
+- [x] Add `.repository.ts` suffix to all repository files
+
+#### 2. **Reorganize Clients**:
+- [x] Keep only external service clients in `/clients/`
+- [x] Move vector client to appropriate location if it's internal (confirmed Pinecone is external, renamed to pinecone.ts)
+
+#### 3. **Consolidate Types**:
 - [x] Create `/server/types/` directory for shared interfaces
 - [x] Remove duplicate interface definitions
 - [x] Export types from repositories for reuse
 
 ### Phase 5: Implement Missing Features (Optional) ⏳
-- [ ] Implement Redis caching or remove placeholder methods in ConversationContextService
+
+#### 1. **Caching in ConversationContextService**
+- [ ] Implement Redis caching or remove placeholder methods
 - [ ] Add proper cache invalidation logic
+
+#### 2. **Error Handling**
 - [ ] Standardize error handling across services
 - [ ] Add proper logging
 

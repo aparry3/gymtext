@@ -4,7 +4,7 @@ import {
   ConversationMetadata,
   ContextRetrievalOptions,
   CachedContext,
-} from '@/shared/types/conversation-context';
+} from '@/shared/types/conversationContext';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
 import { ConversationRepository } from '@/server/repositories/conversation.repository';
 import { MessageRepository } from '@/server/repositories/message.repository';

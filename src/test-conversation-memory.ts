@@ -1,5 +1,5 @@
-import { ConversationContextService } from './server/services/conversation-context.service';
-import { PromptBuilder } from './server/services/prompt-builder.service';
+import { ConversationContextService } from './server/services/conversationContext.service';
+import { PromptBuilder } from './server/services/promptBuilder.service';
 import { UserRepository } from './server/repositories/user.repository';
 import { generateChatResponse } from './server/services/chat.service';
 

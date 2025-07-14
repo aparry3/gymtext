@@ -8,7 +8,7 @@ import {
   ConversationContext,
   UserContextProfile,
   ConversationMetadata,
-} from '@/shared/types/conversation-context';
+} from '@/shared/types/conversationContext';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
 
 export class PromptBuilder {
@@ -172,7 +172,7 @@ ${contextInfo}`;
     preserveSystemMessage: boolean = true
   ): Promise<BaseMessage[]> {
     // Dynamic import to avoid circular dependencies
-    const { TokenManager } = await import('../utils/token-manager');
+    const { TokenManager } = await import('../utils/tokenManager');
     const tokenManager = new TokenManager();
 
     return tokenManager.truncateMessagesToLimit(messages, maxTokens, {

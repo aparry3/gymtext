@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { Database } from '@/shared/types/schema';
-import { UserProgramRepository, CreateUserProgramParams, UpdateUserProgramParams, UserProgramProgress } from '../repositories/user-program.repository';
+import { UserProgramRepository, CreateUserProgramParams, UpdateUserProgramParams, UserProgramProgress } from '../repositories/userProgram.repository';
 
 export class UserProgramService {
   private repository: UserProgramRepository;

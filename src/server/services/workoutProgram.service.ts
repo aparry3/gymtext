@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { Database } from '@/shared/types/schema';
-import { WorkoutProgramRepository, CreateWorkoutProgramParams, UpdateWorkoutProgramParams } from '../repositories/workout-program.repository';
+import { WorkoutProgramRepository, CreateWorkoutProgramParams, UpdateWorkoutProgramParams } from '../repositories/workoutProgram.repository';
 
 export class WorkoutProgramService {
   private repository: WorkoutProgramRepository;

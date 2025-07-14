@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { isAuthenticated, getUserFromCookie } from '@/shared/utils/cookies';
 import { redirect } from 'next/navigation';
-import WorkoutSetupClient from './WorkoutSetupClient';
+import WorkoutSetupClient from './workoutSetupClient';
 
 export const metadata: Metadata = {
   title: 'Payment Successful - GYMTEXT',

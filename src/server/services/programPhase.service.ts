@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { Database } from '@/shared/types/schema';
-import { ProgramPhaseRepository, CreateProgramPhaseParams, UpdateProgramPhaseParams } from '../repositories/program-phase.repository';
+import { ProgramPhaseRepository, CreateProgramPhaseParams, UpdateProgramPhaseParams } from '../repositories/programPhase.repository';
 
 export class ProgramPhaseService {
   private repository: ProgramPhaseRepository;
