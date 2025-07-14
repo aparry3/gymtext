@@ -6,7 +6,7 @@ This document tracks the progress of the repository cleanup implementation based
 
 - **Phase 1**: ✅ Complete (Remove Dead Code)
 - **Phase 2**: ✅ Complete (Extract Repositories)
-- **Phase 3**: ⏳ Pending (Consolidate Database Access)
+- **Phase 3**: ✅ Complete (Consolidate Database Access)
 - **Phase 4**: ⏳ Pending (Fix Naming and Organization)
 - **Phase 5**: ⏳ Pending (Implement Missing Features - Optional)
 
@@ -27,14 +27,14 @@ This document tracks the progress of the repository cleanup implementation based
 - [x] Create `user.repository.ts`
 - [x] Update all service files to use extracted repositories
 
-### Phase 3: Consolidate Database Access ⏳
-- [ ] Move functions from `/db/postgres/conversation-context.ts` to appropriate repositories
-- [ ] Move functions from `/db/postgres/subscriptions.ts` to `subscription.repository.ts`
-- [ ] Move functions from `/db/postgres/users.ts` to `user.repository.ts`
-- [ ] Update services to use repositories instead of direct DB functions
-- [ ] Ensure all repositories extend BaseRepository
-- [ ] Implement consistent CRUD methods
-- [ ] Add proper typing for all methods
+### Phase 3: Consolidate Database Access ✅
+- [x] Move functions from `/db/postgres/conversation-context.ts` to appropriate repositories
+- [x] Move functions from `/db/postgres/subscriptions.ts` to `subscription.repository.ts`
+- [x] Move functions from `/db/postgres/users.ts` to `user.repository.ts`
+- [x] Update services to use repositories instead of direct DB functions
+- [x] Ensure all repositories extend BaseRepository
+- [x] Implement consistent CRUD methods
+- [x] Add proper typing for all methods
 
 ### Phase 4: Fix Naming and Organization ⏳
 - [ ] Rename service files to use `.service.ts` suffix
@@ -72,6 +72,18 @@ This document tracks the progress of the repository cleanup implementation based
   - `src/server/services/programSession.service.ts` (removed embedded repository)
   - `src/server/services/userProgram.service.ts` (removed embedded repository)
   - `src/server/services/workoutProgram.service.ts` (removed embedded repository)
+
+### Phase 3 (Completed)
+- **Created**:
+  - `src/server/repositories/workout.repository.ts` (for workout-related functions)
+- **Modified**:
+  - `src/server/repositories/conversation.repository.ts` (added missing methods, fixed return types)
+  - `src/server/repositories/message.repository.ts` (added update/delete methods, fixed return types)
+  - `src/server/repositories/user.repository.ts` (fixed return types to use null instead of undefined)
+  - `src/server/repositories/workout.repository.ts` (fixed type safety issue)
+  - `src/server/services/conversation-context.ts` (updated to use repositories instead of direct DB functions)
+  - `src/server/services/chat.ts` (updated to pass db instance to ConversationContextService)
+  - `src/test-conversation-memory.ts` (updated to pass db instance)
 
 ## Notes
 

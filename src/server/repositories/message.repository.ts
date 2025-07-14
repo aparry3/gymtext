@@ -14,12 +14,14 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirstOrThrow();
   }
 
-  async findById(id: string): Promise<Message | undefined> {
-    return await this.db
+  async findById(id: string): Promise<Message | null> {
+    const result = await this.db
       .selectFrom('messages')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
+    
+    return result || null;
   }
 
   async findByConversationId(conversationId: string): Promise<Message[]> {
@@ -49,5 +51,68 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirst();
     
     return Number(result?.count ?? 0);
+  }
+
+  async getRecentMessages(
+    conversationId: string,
+    limit: number = 5
+  ): Promise<Message[]> {
+    const messages = await this.db
+      .selectFrom('messages')
+      .where('conversationId', '=', conversationId)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .selectAll()
+      .execute();
+
+    // Reverse to get chronological order
+    return messages.reverse();
+  }
+
+  async getRecentMessagesForUser(
+    userId: string,
+    limit: number = 10
+  ): Promise<Message[]> {
+    const messages = await this.db
+      .selectFrom('messages')
+      .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .selectAll()
+      .execute();
+
+    return messages.reverse();
+  }
+
+  async getAllConversationMessages(
+    conversationId: string
+  ): Promise<Message[]> {
+    return await this.db
+      .selectFrom('messages')
+      .where('conversationId', '=', conversationId)
+      .orderBy('createdAt', 'asc')
+      .selectAll()
+      .execute();
+  }
+
+  async update(id: string, update: Partial<NewMessage>): Promise<Message | null> {
+    const result = await this.db
+      .updateTable('messages')
+      .set(update)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+    
+    return result || null;
+  }
+
+  async delete(id: string): Promise<Message | null> {
+    const result = await this.db
+      .deleteFrom('messages')
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+    
+    return result || null;
   }
 }

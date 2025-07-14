@@ -12,7 +12,8 @@ async function testConversationMemory() {
   try {
     // 1. Test Context Service
     console.log('1. Testing ConversationContextService...');
-    const contextService = new ConversationContextService();
+    const { db } = await import('./server/db/postgres/db');
+    const contextService = new ConversationContextService(db);
     
     // Get test user
     const user = await getUserByPhoneNumber(testPhoneNumber);

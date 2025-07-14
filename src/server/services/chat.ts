@@ -3,6 +3,7 @@ import { UserWithProfile } from '../db/postgres/users';
 import { fitnessCoachPrompt } from '../prompts/templates';
 import { ConversationContextService } from './conversation-context';
 import { PromptBuilder } from './prompt-builder';
+import { db } from '@/server/db/postgres/db';
 
 // Configuration from environment variables
 const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');
@@ -15,7 +16,7 @@ const llm = new ChatGoogleGenerativeAI({
 });
 
 // Initialize context services
-const contextService = new ConversationContextService();
+const contextService = new ConversationContextService(db);
 const promptBuilder = new PromptBuilder();
 
 export async function generateChatResponse(

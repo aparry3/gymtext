@@ -91,36 +91,44 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirstOrThrow();
   }
 
-  async findById(id: string): Promise<User | undefined> {
-    return await this.db
+  async findById(id: string): Promise<User | null> {
+    const result = await this.db
       .selectFrom('users')
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst();
+    
+    return result || null;
   }
 
-  async findByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
-    return await this.db
+  async findByStripeCustomerId(stripeCustomerId: string): Promise<User | null> {
+    const result = await this.db
       .selectFrom('users')
       .where('stripeCustomerId', '=', stripeCustomerId)
       .selectAll()
       .executeTakeFirst();
+    
+    return result || null;
   }
 
-  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
-    return await this.db
+  async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
+    const result = await this.db
       .selectFrom('users')
       .where('phoneNumber', '=', phoneNumber)
       .selectAll()
       .executeTakeFirst();
+    
+    return result || null;
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return await this.db
+  async findByEmail(email: string): Promise<User | null> {
+    const result = await this.db
       .selectFrom('users')
       .where('email', '=', email)
       .selectAll()
       .executeTakeFirst();
+    
+    return result || null;
   }
 
   async findWithProfile(userId: string): Promise<UserWithProfile | null> {
@@ -141,6 +149,16 @@ export class UserRepository extends BaseRepository {
       profile: profile || null,
       info: []
     };
+  }
+
+  async getUserFitnessProfile(userId: string): Promise<FitnessProfile | null> {
+    const profile = await this.db
+      .selectFrom('fitnessProfiles')
+      .where('userId', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+
+    return profile || null;
   }
 
   async updateUser(id: string, userData: UpdateUserData): Promise<User> {

@@ -6,19 +6,26 @@ import {
   CachedContext,
 } from '@/shared/types/conversation-context';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
-import {
-  getActiveConversation,
-  getRecentMessages,
-  getUserFitnessProfile,
-  getRecentWorkouts,
-  getAllConversationMessages,
-} from '@/server/db/postgres/conversation-context';
+import { ConversationRepository } from '@/server/repositories/conversation.repository';
+import { MessageRepository } from '@/server/repositories/message.repository';
+import { UserRepository } from '@/server/repositories/user.repository';
+import { WorkoutRepository } from '@/server/repositories/workout.repository';
+import { Kysely } from 'kysely';
+import { Database } from '@/shared/types/schema';
 
 export class ConversationContextService {
   private config: ContextConfig;
+  private conversationRepository: ConversationRepository;
+  private messageRepository: MessageRepository;
+  private userRepository: UserRepository;
+  private workoutRepository: WorkoutRepository;
 
-  constructor(config?: Partial<ContextConfig>) {
+  constructor(db: Kysely<Database>, config?: Partial<ContextConfig>) {
     this.config = { ...getContextConfig(), ...config };
+    this.conversationRepository = new ConversationRepository(db);
+    this.messageRepository = new MessageRepository(db);
+    this.userRepository = new UserRepository(db);
+    this.workoutRepository = new WorkoutRepository(db);
   }
 
   async getContext(
@@ -35,7 +42,7 @@ export class ConversationContextService {
       }
 
       // Get or create active conversation
-      const activeConversation = await getActiveConversation(
+      const activeConversation = await this.conversationRepository.getActiveConversation(
         userId,
         this.config.conversationGapMinutes
       );
@@ -59,7 +66,7 @@ export class ConversationContextService {
 
       // Get recent messages
       const messageLimit = options.messageLimit || this.config.messageHistoryLimit;
-      const recentMessages = await getRecentMessages(
+      const recentMessages = await this.messageRepository.getRecentMessages(
         activeConversation.id,
         messageLimit
       );
@@ -114,7 +121,7 @@ export class ConversationContextService {
     };
 
     if (options.includeUserProfile !== false) {
-      const fitnessProfile = await getUserFitnessProfile(userId);
+      const fitnessProfile = await this.userRepository.getUserFitnessProfile(userId);
 
       if (fitnessProfile) {
         profile.fitnessGoals = fitnessProfile.fitnessGoals;
@@ -128,7 +135,7 @@ export class ConversationContextService {
     }
 
     if (options.includeWorkoutHistory) {
-      const recentWorkouts = await getRecentWorkouts(userId, 3);
+      const recentWorkouts = await this.workoutRepository.getRecentWorkouts(userId, 3);
       if (recentWorkouts.length > 0) {
         profile.lastWorkoutDate = recentWorkouts[0].date;
         profile.currentProgram = recentWorkouts[0].workoutType;
@@ -153,7 +160,7 @@ export class ConversationContextService {
 
   async summarizeConversation(conversationId: string): Promise<string | null> {
     try {
-      const messages = await getAllConversationMessages(conversationId);
+      const messages = await this.messageRepository.getAllConversationMessages(conversationId);
       
       if (messages.length === 0) {
         return null;
