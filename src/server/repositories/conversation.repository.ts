@@ -1,10 +1,9 @@
 import { BaseRepository } from './base.repository';
-import { Conversations } from '@/shared/types/schema';
-import { Insertable, Selectable, Updateable } from 'kysely';
-
-export type Conversation = Selectable<Conversations>;
-export type NewConversation = Insertable<Conversations>;
-export type ConversationUpdate = Updateable<Conversations>;
+import {
+  Conversation,
+  NewConversation,
+  ConversationUpdate,
+} from '@/server/types';
 
 export class ConversationRepository extends BaseRepository {
   async create(conversation: NewConversation): Promise<Conversation> {
@@ -119,3 +118,6 @@ export class ConversationRepository extends BaseRepository {
     return topics.map(t => t.topic);
   }
 }
+
+// Re-export types for backward compatibility
+export type { Conversation, NewConversation, ConversationUpdate } from '@/server/types';

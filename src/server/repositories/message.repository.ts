@@ -1,9 +1,5 @@
 import { BaseRepository } from './base.repository';
-import { Messages } from '@/shared/types/schema';
-import { Insertable, Selectable } from 'kysely';
-
-export type Message = Selectable<Messages>;
-export type NewMessage = Insertable<Messages>;
+import { Message, NewMessage } from '@/server/types';
 
 export class MessageRepository extends BaseRepository {
   async create(message: NewMessage): Promise<Message> {
@@ -116,3 +112,6 @@ export class MessageRepository extends BaseRepository {
     return result || null;
   }
 }
+
+// Re-export types for backward compatibility
+export type { Message, NewMessage } from '@/server/types';

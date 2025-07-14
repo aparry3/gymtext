@@ -1,7 +1,7 @@
-import { ConversationContextService } from './server/services/conversation-context';
-import { PromptBuilder } from './server/services/prompt-builder';
-import { getUserByPhoneNumber, getUserWithProfile } from './server/db/postgres/users';
-import { generateChatResponse } from './server/services/chat';
+import { ConversationContextService } from './server/services/conversation-context.service';
+import { PromptBuilder } from './server/services/prompt-builder.service';
+import { UserRepository } from './server/repositories/user.repository';
+import { generateChatResponse } from './server/services/chat.service';
 
 async function testConversationMemory() {
   console.log('Testing Conversation Memory System...\n');
@@ -14,16 +14,17 @@ async function testConversationMemory() {
     console.log('1. Testing ConversationContextService...');
     const { db } = await import('./server/db/postgres/db');
     const contextService = new ConversationContextService(db);
+    const userRepository = new UserRepository(db);
     
     // Get test user
-    const user = await getUserByPhoneNumber(testPhoneNumber);
+    const user = await userRepository.findByPhoneNumber(testPhoneNumber);
     if (!user) {
       console.log('❌ No test user found with phone:', testPhoneNumber);
       console.log('Please create a test user first or update the phone number.');
       return;
     }
 
-    const userWithProfile = await getUserWithProfile(user.id);
+    const userWithProfile = await userRepository.findWithProfile(user.id);
     if (!userWithProfile) {
       console.log('❌ Could not get user with profile');
       return;

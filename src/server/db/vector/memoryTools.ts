@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
-import { recall as vectorRecall, remember as vectorRemember } from '../../clients/vectorClient';
+import { recall as vectorRecall, remember as vectorRemember } from '../../clients/pinecone';
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
 import { RecordMetadata } from '@pinecone-database/pinecone';

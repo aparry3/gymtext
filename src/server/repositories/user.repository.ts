@@ -1,31 +1,9 @@
 import { BaseRepository } from './base.repository';
-
-export interface User {
-  id: string;
-  name: string;
-  phoneNumber: string;
-  email: string | null;
-  stripeCustomerId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface FitnessProfile {
-  id: string;
-  userId: string;
-  fitnessGoals: string;
-  skillLevel: string;
-  exerciseFrequency: string;
-  gender: string;
-  age: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserWithProfile extends User {
-  profile: FitnessProfile | null;
-  info: string[];
-}
+import {
+  User,
+  FitnessProfile,
+  UserWithProfile,
+} from '@/server/types';
 
 export interface CreateUserData {
   name: string;
@@ -199,3 +177,6 @@ export class UserRepository extends BaseRepository {
       .execute();
   }
 }
+
+// Re-export types for backward compatibility
+export type { User, FitnessProfile, UserWithProfile } from '@/server/types';

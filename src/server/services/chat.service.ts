@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { UserWithProfile } from '../db/postgres/users';
+import { UserWithProfile } from '@/server/repositories/user.repository';
 import { fitnessCoachPrompt } from '../prompts/templates';
-import { ConversationContextService } from './conversation-context';
-import { PromptBuilder } from './prompt-builder';
+import { ConversationContextService } from './conversation-context.service';
+import { PromptBuilder } from './prompt-builder.service';
 import { db } from '@/server/db/postgres/db';
 
 // Configuration from environment variables

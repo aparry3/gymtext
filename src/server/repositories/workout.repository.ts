@@ -1,15 +1,6 @@
 import { BaseRepository } from './base.repository';
+import { Workout } from '@/server/types';
 import { JsonValue } from '@/shared/types/generated-schema';
-
-export interface Workout {
-  id: string;
-  userId: string;
-  date: Date;
-  workoutType: string;
-  exercises: JsonValue;
-  sentAt: Date | null;
-  createdAt: Date;
-}
 
 export interface CreateWorkoutParams {
   userId: string;
@@ -40,7 +31,7 @@ export class WorkoutRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return this.parseWorkout(result);
+    return result;
   }
 
   async findById(id: string): Promise<Workout | null> {
@@ -50,7 +41,7 @@ export class WorkoutRepository extends BaseRepository {
       .where('id', '=', id)
       .executeTakeFirst();
 
-    return result ? this.parseWorkout(result) : null;
+    return result || null;
   }
 
   async findByUserId(userId: string, limit?: number): Promise<Workout[]> {
@@ -64,20 +55,17 @@ export class WorkoutRepository extends BaseRepository {
       query = query.limit(limit);
     }
 
-    const results = await query.execute();
-    return results.map(this.parseWorkout);
+    return await query.execute();
   }
 
   async getRecentWorkouts(userId: string, limit: number = 5): Promise<Workout[]> {
-    const results = await this.db
+    return await this.db
       .selectFrom('workouts')
       .where('userId', '=', userId)
       .orderBy('date', 'desc')
       .limit(limit)
       .selectAll()
       .execute();
-
-    return results.map(this.parseWorkout);
   }
 
   async update(id: string, params: UpdateWorkoutParams): Promise<Workout | null> {
@@ -94,7 +82,7 @@ export class WorkoutRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirst();
 
-    return result ? this.parseWorkout(result) : null;
+    return result || null;
   }
 
   async delete(id: string): Promise<Workout | null> {
@@ -104,26 +92,9 @@ export class WorkoutRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirst();
 
-    return result ? this.parseWorkout(result) : null;
-  }
-
-  private parseWorkout(row: {
-    id: string;
-    userId: string;
-    date: string | Date;
-    workoutType: string;
-    exercises: JsonValue;
-    sentAt: string | Date | null;
-    createdAt: string | Date;
-  }): Workout {
-    return {
-      id: row.id,
-      userId: row.userId,
-      date: new Date(row.date),
-      workoutType: row.workoutType,
-      exercises: row.exercises,
-      sentAt: row.sentAt ? new Date(row.sentAt) : null,
-      createdAt: new Date(row.createdAt),
-    };
+    return result || null;
   }
 }
+
+// Re-export types for backward compatibility
+export type { Workout } from '@/server/types';

@@ -7,7 +7,7 @@ This document tracks the progress of the repository cleanup implementation based
 - **Phase 1**: ✅ Complete (Remove Dead Code)
 - **Phase 2**: ✅ Complete (Extract Repositories)
 - **Phase 3**: ✅ Complete (Consolidate Database Access)
-- **Phase 4**: ⏳ Pending (Fix Naming and Organization)
+- **Phase 4**: ✅ Complete (Fix Naming and Organization)
 - **Phase 5**: ⏳ Pending (Implement Missing Features - Optional)
 
 ## Detailed Progress Checklist
@@ -36,14 +36,14 @@ This document tracks the progress of the repository cleanup implementation based
 - [x] Implement consistent CRUD methods
 - [x] Add proper typing for all methods
 
-### Phase 4: Fix Naming and Organization ⏳
-- [ ] Rename service files to use `.service.ts` suffix
-- [ ] Ensure all repository files use `.repository.ts` suffix
-- [ ] Reorganize clients directory (keep only external service clients)
-- [ ] Move vectorClient.ts if it's internal
-- [ ] Create `/server/types/` directory for shared interfaces
-- [ ] Remove duplicate interface definitions
-- [ ] Export types from repositories for reuse
+### Phase 4: Fix Naming and Organization ✅
+- [x] Rename service files to use `.service.ts` suffix
+- [x] Ensure all repository files use `.repository.ts` suffix
+- [x] Reorganize clients directory (keep only external service clients)
+- [x] Move vectorClient.ts if it's internal (renamed to pinecone.ts for clarity)
+- [x] Create `/server/types/` directory for shared interfaces
+- [x] Remove duplicate interface definitions
+- [x] Export types from repositories for reuse
 
 ### Phase 5: Implement Missing Features (Optional) ⏳
 - [ ] Implement Redis caching or remove placeholder methods in ConversationContextService
@@ -84,6 +84,21 @@ This document tracks the progress of the repository cleanup implementation based
   - `src/server/services/conversation-context.ts` (updated to use repositories instead of direct DB functions)
   - `src/server/services/chat.ts` (updated to pass db instance to ConversationContextService)
   - `src/test-conversation-memory.ts` (updated to pass db instance)
+
+### Phase 4 (Completed)
+- **Created**:
+  - `src/server/types/index.ts` (central type definitions to avoid duplication)
+- **Renamed**:
+  - `chat.ts` → `chat.service.ts`
+  - `conversation-context.ts` → `conversation-context.service.ts`
+  - `conversationStorage.ts` → `conversation-storage.service.ts`
+  - `prompt-builder.ts` → `prompt-builder.service.ts`
+  - `vectorClient.ts` → `pinecone.ts` (for clarity)
+- **Modified**:
+  - All service imports updated to use new filenames
+  - Repositories updated to use central types from `/server/types/`
+  - Repositories now re-export types for backward compatibility
+  - `chat.service.ts` updated to import types from repository instead of db/postgres/users
 
 ## Notes
 
