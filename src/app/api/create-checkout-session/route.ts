@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     // If user doesn't exist, create new user data
     const userData: CreateUserData = {
       name: formData.name,
-      phone_number: formData.phoneNumber,
+      phoneNumber: formData.phoneNumber,
       email: formData.email || null,
     };
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       });
 
       // Add Stripe customer ID to user data
-      userData.stripe_customer_id = customer.id;
+      userData.stripeCustomerId = customer.id;
 
       if (!user) {
         // Save new user to database
@@ -49,10 +49,10 @@ export async function POST(request: Request) {
 
         // Create fitness profile for new user
         const fitnessProfileData: CreateFitnessProfileData = {
-          user_id: user.id,
-          fitness_goals: formData.fitnessGoals,
-          skill_level: formData.skillLevel,
-          exercise_frequency: formData.exerciseFrequency,
+          userId: user.id,
+          fitnessGoals: formData.fitnessGoals,
+          skillLevel: formData.skillLevel,
+          exerciseFrequency: formData.exerciseFrequency,
           gender: formData.gender,
           age: parseInt(formData.age, 10),
         };
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         await userRepository.createFitnessProfile(fitnessProfileData);
       } else {
         // Update existing user with new Stripe customer ID
-        user = await userRepository.update(user.id, { stripe_customer_id: customer.id });
+        user = await userRepository.update(user.id, { stripeCustomerId: customer.id });
       }
 
       // Check if we have a direct payment method ID (Apple Pay/Google Pay)

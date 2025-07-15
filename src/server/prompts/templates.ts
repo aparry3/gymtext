@@ -3,11 +3,11 @@ import { UserWithProfile } from "@/shared/types/user";
 
 export const fitnessProfileSubstring = (user: UserWithProfile) => `Client profile:
 - Name: ${user.name}
-- Experience level: ${user.profile?.skill_level || 'Not specified'}
-- Workout frequency: ${user.profile?.exercise_frequency || 'Not specified'} times per week
+- Experience level: ${user.profile?.skillLevel || 'Not specified'}
+- Workout frequency: ${user.profile?.exerciseFrequency || 'Not specified'} times per week
 - Age: ${user.profile?.age || 'Not specified'}
 - Gender: ${user.profile?.gender || 'Not specified'}
-- Fitness goals: ${user.profile?.fitness_goals || 'Not specified'}
+- Fitness goals: ${user.profile?.fitnessGoals || 'Not specified'}
 `
 export const outlinePrompt = (user: UserWithProfile, fitnessProfile: string) => `
 You are a personal fitness coach. 
@@ -234,7 +234,7 @@ Guidelines:
 - Be encouraging and supportive
 - Use simple, clear language
 - Include relevant emojis sparingly (💪 🏃 ✅)
-- Focus on their specific goals: ${user.profile?.fitness_goals || 'general fitness'}
+- Focus on their specific goals: ${user.profile?.fitnessGoals || 'general fitness'}
 
 Do NOT:
 - Give medical advice

@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         from: to, // Our Twilio number is the from
         to: from, // User's number is the to
-        content: chatResponse
+        messageContent: chatResponse
       });
       if (!stored) {
         console.warn('Circuit breaker prevented storing outbound message');

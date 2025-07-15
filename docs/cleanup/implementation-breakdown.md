@@ -92,7 +92,7 @@ mv src/shared/types/conversation-context.ts src/shared/types/conversation.ts
 export interface User {
   id: string;
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email: string | null;
   stripe_customer_id: string | null;
   created_at: Date;
@@ -118,7 +118,7 @@ export interface UserWithProfile extends User {
 
 export interface CreateUserData {
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email?: string | null;
   stripe_customer_id?: string | null;
 }
@@ -287,7 +287,7 @@ import { z } from 'zod';
 
 export const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  phone_number: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
+  phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
   email: z.string().email('Invalid email').optional().nullable(),
   stripe_customer_id: z.string().optional().nullable(),
 });
@@ -505,7 +505,7 @@ export class UserRepository extends BaseRepository {
       .insertInto('users')
       .values({
         name: userData.name,
-        phone_number: userData.phone_number,
+        phoneNumber: userData.phoneNumber,
         email: userData.email || null,
         stripe_customer_id: userData.stripe_customer_id || null,
         created_at: new Date().toISOString(),
@@ -526,7 +526,7 @@ export class UserRepository extends BaseRepository {
   async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
     return await this.db
       .selectFrom('users')
-      .where('phone_number', '=', phoneNumber)
+      .where('phoneNumber', '=', phoneNumber)
       .selectAll()
       .executeTakeFirst();
   }

@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { Database } from '@/shared/types/database';
 
@@ -20,6 +20,7 @@ export const postgresDb = new Kysely<Database>({
   dialect: new PostgresDialect({
     pool,
   }),
+  plugins: [new CamelCasePlugin()],
 });
 
 // Export pool for direct access if needed

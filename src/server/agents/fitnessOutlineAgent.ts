@@ -58,7 +58,7 @@ export async function onboardUser({ userId }: { userId: string }): Promise<strin
   const messageText = String(result.message);
   const outlineText = String(result.outline);
   console.log('messageText', messageText);
-  console.log('result.user.phone_number', result.user.phone_number);
-  await twilioClient.sendSMS(result.user.phone_number, messageText);
+  console.log('result.user.phoneNumber', result.user.phoneNumber);
+  await twilioClient.sendSMS(result.user.phoneNumber, messageText);
   return outlineText;
 }

@@ -17,11 +17,11 @@ export class UserRepository extends BaseRepository {
       .insertInto('users')
       .values({
         name: userData.name,
-        phone_number: userData.phone_number,
+        phoneNumber: userData.phoneNumber,
         email: userData.email || null,
-        stripe_customer_id: userData.stripe_customer_id || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        stripeCustomerId: userData.stripeCustomerId || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -38,7 +38,7 @@ export class UserRepository extends BaseRepository {
   async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
     return await this.db
       .selectFrom('users')
-      .where('phone_number', '=', phoneNumber)
+      .where('phoneNumber', '=', phoneNumber)
       .selectAll()
       .executeTakeFirst();
   }
@@ -46,7 +46,7 @@ export class UserRepository extends BaseRepository {
   async findByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
     return await this.db
       .selectFrom('users')
-      .where('stripe_customer_id', '=', stripeCustomerId)
+      .where('stripeCustomerId', '=', stripeCustomerId)
       .selectAll()
       .executeTakeFirst();
   }
@@ -56,7 +56,7 @@ export class UserRepository extends BaseRepository {
       .updateTable('users')
       .set({
         ...userData,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .where('id', '=', id)
       .returningAll()
@@ -65,19 +65,19 @@ export class UserRepository extends BaseRepository {
 
   async createFitnessProfile(profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
     return await this.db
-      .insertInto('fitness_profiles')
+      .insertInto('fitnessProfiles')
       .values({
-        user_id: profileData.user_id,
-        fitness_goals: profileData.fitness_goals,
-        skill_level: profileData.skill_level,
-        exercise_frequency: profileData.exercise_frequency,
+        userId: profileData.userId,
+        fitnessGoals: profileData.fitnessGoals,
+        skillLevel: profileData.skillLevel,
+        exerciseFrequency: profileData.exerciseFrequency,
         gender: profileData.gender,
         age: profileData.age,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirstOrThrow() as FitnessProfile;
   }
 
   async findWithProfile(userId: string): Promise<UserWithProfile | null> {
@@ -88,8 +88,8 @@ export class UserRepository extends BaseRepository {
     }
 
     const profile = await this.db
-      .selectFrom('fitness_profiles')
-      .where('user_id', '=', userId)
+      .selectFrom('fitnessProfiles')
+      .where('userId', '=', userId)
       .selectAll()
       .executeTakeFirst();
 

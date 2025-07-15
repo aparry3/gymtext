@@ -1,23 +1,23 @@
 export interface User {
   id: string;
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email: string | null;
-  stripe_customer_id: string | null;
-  created_at: Date;
-  updated_at: Date;
+  stripeCustomerId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface FitnessProfile {
   id: string;
-  user_id: string;
-  fitness_goals: string;
-  skill_level: string;
-  exercise_frequency: string;
+  userId: string;
+  fitnessGoals: string;
+  skillLevel: string;
+  exerciseFrequency: string;
   gender: string;
   age: number;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface UserWithProfile extends User {
@@ -27,16 +27,18 @@ export interface UserWithProfile extends User {
 
 export interface CreateUserData {
   name: string;
-  phone_number: string;
+  phoneNumber: string;
   email?: string | null;
-  stripe_customer_id?: string | null;
+  stripeCustomerId?: string | null;
 }
 
 export interface CreateFitnessProfileData {
-  user_id: string;
-  fitness_goals: string;
-  skill_level: string;
-  exercise_frequency: string;
+  userId: string;
+  fitnessGoals: string;
+  skillLevel: string;
+  exerciseFrequency: string;
   gender: string;
   age: number;
+  createdAt?: string;
+  updatedAt?: string;
 }

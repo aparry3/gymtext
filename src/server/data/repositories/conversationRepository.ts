@@ -27,8 +27,8 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('last_message_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('lastMessageAt', 'desc')
       .execute();
   }
 
@@ -36,9 +36,9 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .where('status', '=', 'active')
-      .orderBy('last_message_at', 'desc')
+      .orderBy('lastMessageAt', 'desc')
       .executeTakeFirst();
   }
 
@@ -60,8 +60,8 @@ export class ConversationRepository extends BaseRepository {
     return await this.db
       .selectFrom('conversations')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('last_message_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('lastMessageAt', 'desc')
       .executeTakeFirst();
   }
 }

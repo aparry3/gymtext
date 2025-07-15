@@ -43,7 +43,7 @@ export async function generateWeeklyPlan(userId: string) {
   const workout = workouts.find(workout => workout.day === new Date().toLocaleDateString('en-US', { weekday: 'long' }))
   if (!workout) throw new Error('No workout for today')
 
-  await twilioClient.sendSMS(user.phone_number, workout.workout);
+  await twilioClient.sendSMS(user.phoneNumber, workout.workout);
 
   return workouts;
 }

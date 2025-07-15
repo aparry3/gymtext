@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      // Python/FastAPI commands
       "Bash(python *)",
       "Bash(python3 *)",
       "Bash(pip *)",
@@ -15,14 +14,12 @@
       "Bash(ruff *)",
       "Bash(uvicorn *)",
       
-      // Virtual environment
       "Bash(python -m venv *)",
       "Bash(python3 -m venv *)",
       "Bash(source */bin/activate)",
       "Bash(. */bin/activate)",
       "Bash(deactivate)",
       
-      // File system operations
       "Bash(ls *)",
       "Bash(pwd)",
       "Bash(cd *)",
@@ -36,17 +33,14 @@
       "Bash(find *)",
       "Bash(tree *)",
       
-      // Git commands
       "Bash(git *)",
       
-      // Node/TypeScript commands (using pnpm)
       "Bash(node *)",
       "Bash(pnpm *)",
       "Bash(pnpx *)",
       "Bash(tsc *)",
       "Bash(tsx *)",
       
-      // Build commands
       "Bash(make *)",
       "Bash(pnpm install)",
       "Bash(pnpm add *)",
@@ -60,11 +54,9 @@
       "Bash(pnpm format)",
       "Bash(pnpm run *)",
       
-      // Docker
       "Bash(docker *)",
       "Bash(docker-compose *)",
       
-      // File reading
       "Read(**/*.py)",
       "Read(**/*.json)",
       "Read(**/*.yaml)",
@@ -85,7 +77,6 @@
       "Read(**/*.tsx)",
       "Read(**/*.jsx)",
       
-      // File writing
       "Write(**/*.py)",
       "Write(**/*.json)",
       "Write(**/*.yaml)",
@@ -103,7 +94,6 @@
       "Write(**/docker-compose.yml)"
     ],
     "deny": [
-      // Prevent potentially dangerous operations
       "Bash(rm -rf /)",
       "Bash(rm *)",
       "Bash(sudo rm -rf *)",

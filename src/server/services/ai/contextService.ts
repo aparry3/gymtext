@@ -50,8 +50,8 @@ export class ConversationContextService {
       if (currentConversation) {
         conversationId = currentConversation.id;
         isNewConversation = false;
-        startTime = new Date(currentConversation.created_at);
-        lastInteractionTime = new Date(currentConversation.last_message_at);
+        startTime = new Date(currentConversation.createdAt);
+        lastInteractionTime = new Date(currentConversation.lastMessageAt);
 
         // Get recent messages for this conversation
         const messages = await this.messageRepo.findByConversationId(
@@ -67,7 +67,7 @@ export class ConversationContextService {
           .map(msg => ({
             role: msg.direction === 'inbound' ? 'user' as const : 'assistant' as const,
             content: msg.content,
-            timestamp: new Date(msg.created_at),
+            timestamp: new Date(msg.createdAt),
             messageId: msg.id,
           }));
       } else {
@@ -91,8 +91,8 @@ export class ConversationContextService {
         if (userWithProfile?.profile) {
           userProfile = {
             ...userProfile,
-            fitnessGoals: userWithProfile.profile.fitness_goals,
-            skillLevel: userWithProfile.profile.skill_level,
+            fitnessGoals: userWithProfile.profile.fitnessGoals,
+            skillLevel: userWithProfile.profile.skillLevel,
             // TODO: Add currentProgram and other fields as needed
           };
         }
@@ -139,7 +139,7 @@ export class ConversationContextService {
       // Update conversation metadata if provided
       if (updates.metadata && updates.conversationId && !updates.conversationId.startsWith('temp-')) {
         await this.conversationRepo.update(updates.conversationId, {
-          last_message_at: updates.metadata.lastInteractionTime || new Date(),
+          lastMessageAt: updates.metadata.lastInteractionTime || new Date(),
         });
       }
 

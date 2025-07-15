@@ -26,8 +26,8 @@ export class MessageRepository extends BaseRepository {
     return await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('conversation_id', '=', conversationId)
-      .orderBy('created_at', 'asc')
+      .where('conversationId', '=', conversationId)
+      .orderBy('createdAt', 'asc')
       .execute();
   }
 
@@ -35,8 +35,8 @@ export class MessageRepository extends BaseRepository {
     return await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('created_at', 'desc')
+      .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
   }
@@ -45,7 +45,7 @@ export class MessageRepository extends BaseRepository {
     const result = await this.db
       .selectFrom('messages')
       .select(({ fn }) => fn.count('id').as('count'))
-      .where('conversation_id', '=', conversationId)
+      .where('conversationId', '=', conversationId)
       .executeTakeFirst();
     
     return Number(result?.count ?? 0);
