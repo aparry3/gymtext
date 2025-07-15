@@ -1,5 +1,5 @@
-import { BaseRepository } from './base.repository';
-import { MessagesTable } from '@/shared/types/schema';
+import { BaseRepository } from './baseRepository';
+import { MessagesTable } from '@/shared/types/database';
 import { Insertable, Selectable } from 'kysely';
 
 export type Message = Selectable<MessagesTable>;

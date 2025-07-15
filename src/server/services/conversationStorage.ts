@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/schema';
-import { ConversationRepository, Conversation } from '../repositories/conversation.repository';
-import { MessageRepository, Message } from '../repositories/message.repository';
+import { Database } from '@/shared/types/database';
+import { ConversationRepository, Conversation } from '../data/repositories/conversationRepository';
+import { MessageRepository, Message } from '../data/repositories/messageRepository';
 import { CircuitBreaker } from '../utils/circuitBreaker';
 
 interface StoreInboundMessageParams {

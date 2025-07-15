@@ -1,4 +1,4 @@
-import { db } from './db';
+import { postgresDb as db } from '@/server/core/database/postgres';
 
 export interface Conversation {
   id: string;

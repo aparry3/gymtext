@@ -1,5 +1,5 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '@/shared/types/schema';
+import { Database } from '@/shared/types/database';
 
 export async function up(db: Kysely<Database>): Promise<void> {
   // Create conversations table

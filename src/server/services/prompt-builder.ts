@@ -8,7 +8,7 @@ import {
   ConversationContext,
   UserContextProfile,
   ConversationMetadata,
-} from '@/shared/types/conversation-context';
+} from '@/shared/types/conversation';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
 
 export class PromptBuilder {

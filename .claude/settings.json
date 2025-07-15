@@ -1,0 +1,120 @@
+{
+  "permissions": {
+    "allow": [
+      // Python/FastAPI commands
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(poetry *)",
+      "Bash(pipenv *)",
+      "Bash(pytest *)",
+      "Bash(mypy *)",
+      "Bash(black *)",
+      "Bash(flake8 *)",
+      "Bash(ruff *)",
+      "Bash(uvicorn *)",
+      
+      // Virtual environment
+      "Bash(python -m venv *)",
+      "Bash(python3 -m venv *)",
+      "Bash(source */bin/activate)",
+      "Bash(. */bin/activate)",
+      "Bash(deactivate)",
+      
+      // File system operations
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(cd *)",
+      "Bash(mkdir *)",
+      "Bash(touch *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(tree *)",
+      
+      // Git commands
+      "Bash(git *)",
+      
+      // Node/TypeScript commands (using pnpm)
+      "Bash(node *)",
+      "Bash(pnpm *)",
+      "Bash(pnpx *)",
+      "Bash(tsc *)",
+      "Bash(tsx *)",
+      
+      // Build commands
+      "Bash(make *)",
+      "Bash(pnpm install)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm remove *)",
+      "Bash(pnpm build)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm start)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm run *)",
+      
+      // Docker
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      
+      // File reading
+      "Read(**/*.py)",
+      "Read(**/*.json)",
+      "Read(**/*.yaml)",
+      "Read(**/*.yml)",
+      "Read(**/*.toml)",
+      "Read(**/*.txt)",
+      "Read(**/*.md)",
+      "Read(**/*.env)",
+      "Read(**/.env.*)",
+      "Read(**/requirements.txt)",
+      "Read(**/pyproject.toml)",
+      "Read(**/Pipfile)",
+      "Read(**/.gitignore)",
+      "Read(**/Dockerfile)",
+      "Read(**/docker-compose.yml)",
+      "Read(**/*.ts)",
+      "Read(**/*.js)",
+      "Read(**/*.tsx)",
+      "Read(**/*.jsx)",
+      
+      // File writing
+      "Write(**/*.py)",
+      "Write(**/*.json)",
+      "Write(**/*.yaml)",
+      "Write(**/*.yml)",
+      "Write(**/*.toml)",
+      "Write(**/*.txt)",
+      "Write(**/*.md)",
+      "Write(**/.env)",
+      "Write(**/.env.*)",
+      "Write(**/requirements.txt)",
+      "Write(**/pyproject.toml)",
+      "Write(**/Pipfile)",
+      "Write(**/.gitignore)",
+      "Write(**/Dockerfile)",
+      "Write(**/docker-compose.yml)"
+    ],
+    "deny": [
+      // Prevent potentially dangerous operations
+      "Bash(rm -rf /)",
+      "Bash(sudo rm -rf *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(ssh *)",
+      "Bash(scp *)"
+    ]
+  },
+  "env": {
+    "PYTHONPATH": ".",
+    "VIRTUAL_ENV": "./venv"
+  }
+}

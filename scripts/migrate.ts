@@ -2,7 +2,7 @@ import { Kysely, PostgresDialect, FileMigrationProvider, Migrator } from 'kysely
 import { Pool } from 'pg';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { Database } from '../src/shared/types/schema';
+import { Database } from '../src/shared/types/database';
 
 // Get the database URL from environment variables
 const databaseUrl = process.env.DATABASE_URL;

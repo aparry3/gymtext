@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
-import { Database } from '../../../shared/types/database';
+import { Database } from '@/shared/types/database';
 
 // Get the database URL from environment variables
 const databaseUrl = process.env.DATABASE_URL;
@@ -16,8 +16,11 @@ const pool = new Pool({
 });
 
 // Create and export the database instance
-export const db = new Kysely<Database>({
+export const postgresDb = new Kysely<Database>({
   dialect: new PostgresDialect({
     pool,
   }),
-}); 
+});
+
+// Export pool for direct access if needed
+export { pool };
