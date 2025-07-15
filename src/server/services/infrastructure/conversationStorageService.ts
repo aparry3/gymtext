@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { Database } from '@/shared/types/database';
+import type { DB, Json } from '@/shared/types/generated';
 import { ConversationRepository, Conversation } from '../../data/repositories/conversationRepository';
 import { MessageRepository, Message } from '../../data/repositories/messageRepository';
 import { CircuitBreaker } from '../../utils/circuitBreaker';
@@ -26,7 +26,7 @@ export class ConversationStorageService {
   private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
-  constructor(db: Kysely<Database>) {
+  constructor(db: Kysely<DB>) {
     this.conversationRepo = new ConversationRepository(db);
     this.messageRepo = new MessageRepository(db);
     this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
@@ -53,7 +53,7 @@ export class ConversationStorageService {
         phoneFrom: from,
         phoneTo: to,
         twilioMessageSid: (twilioData?.MessageSid as string) || null,
-        metadata: twilioData || {}
+        metadata: (twilioData || {}) as Json
       });
 
       return message;
@@ -76,7 +76,7 @@ export class ConversationStorageService {
         phoneFrom: from,
         phoneTo: to,
         twilioMessageSid: twilioMessageSid,
-        metadata: {},
+        metadata: {} as Json,
       });
 
       return message;
@@ -106,7 +106,7 @@ export class ConversationStorageService {
       lastMessageAt: now.toISOString(),
       status: 'active',
       messageCount: 0,
-      metadata: {}
+      metadata: {} as Json
     });
     
     return newConversation;

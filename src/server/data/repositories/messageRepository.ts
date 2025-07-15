@@ -1,9 +1,9 @@
 import { BaseRepository } from './baseRepository';
-import { MessagesTable } from '@/shared/types/database';
+import type { Messages } from '@/shared/types/generated';
 import { Insertable, Selectable } from 'kysely';
 
-export type Message = Selectable<MessagesTable>;
-export type NewMessage = Insertable<MessagesTable>;
+export type Message = Selectable<Messages>;
+export type NewMessage = Insertable<Messages>;
 
 export class MessageRepository extends BaseRepository {
   async create(message: NewMessage): Promise<Message> {

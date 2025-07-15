@@ -1,10 +1,10 @@
 import { BaseRepository } from './baseRepository';
-import { ConversationsTable } from '@/shared/types/database';
+import type { Conversations } from '@/shared/types/generated';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
-export type Conversation = Selectable<ConversationsTable>;
-export type NewConversation = Insertable<ConversationsTable>;
-export type ConversationUpdate = Updateable<ConversationsTable>;
+export type Conversation = Selectable<Conversations>;
+export type NewConversation = Insertable<Conversations>;
+export type ConversationUpdate = Updateable<Conversations>;
 
 export class ConversationRepository extends BaseRepository {
   async create(conversation: NewConversation): Promise<Conversation> {
