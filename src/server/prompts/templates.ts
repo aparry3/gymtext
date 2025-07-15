@@ -1,5 +1,5 @@
 import { formatDate } from "@/shared/utils";
-import {  UserWithProfile } from "../db/postgres/users";
+import { UserWithProfile } from "@/shared/types/user";
 
 export const fitnessProfileSubstring = (user: UserWithProfile) => `Client profile:
 - Name: ${user.name}

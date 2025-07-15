@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { UserWithProfile } from '../db/postgres/users';
-import { fitnessCoachPrompt } from '../prompts/templates';
-import { ConversationContextService } from './conversation-context';
-import { PromptBuilder } from './prompt-builder';
+import { UserWithProfile } from '@/shared/types/user';
+import { fitnessCoachPrompt } from '../../prompts/templates';
+import { ConversationContextService } from './contextService';
+import { PromptBuilder } from './promptService';
 
 // Configuration from environment variables
 const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');
@@ -34,7 +34,7 @@ export async function generateChatResponse(
     const systemPrompt = fitnessCoachPrompt(user);
     
     let response;
-    
+    console.log('context', context);
     if (context && context.recentMessages.length > 0) {
       // Build messages with conversation history
       const messages = promptBuilder.buildMessagesWithContext(
@@ -42,9 +42,6 @@ export async function generateChatResponse(
         context,
         systemPrompt
       );
-      
-      // Skip token truncation for now due to tiktoken issue
-      // TODO: Re-enable once tiktoken WebAssembly issue is resolved
       
       // Generate response with conversation context
       response = await llm.invoke(messages);

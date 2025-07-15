@@ -56,6 +56,7 @@ export class ConversationRepository extends BaseRepository {
   }
 
   async getLastConversationForUser(userId: string): Promise<Conversation | undefined> {
+    console.log('userId', userId);
     return await this.db
       .selectFrom('conversations')
       .selectAll()

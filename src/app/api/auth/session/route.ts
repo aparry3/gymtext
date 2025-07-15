@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getUserById } from '@/server/db/postgres/users';
+import { UserRepository } from '@/server/data/repositories/userRepository';
 import { UserCookieData } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key
@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Get the user from the database
-    const user = await getUserById(userId);
+    const userRepository = new UserRepository();
+    const user = await userRepository.findById(userId);
 
     if (!user) {
       return NextResponse.json(

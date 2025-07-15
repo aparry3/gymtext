@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createUser, CreateUserData, getUserByPhoneNumber, updateUser } from '@/server/db/postgres/users';
-import { createFitnessProfile, CreateFitnessProfileData } from '@/server/db/postgres/users';
+import { UserRepository } from '@/server/data/repositories/userRepository';
+import { CreateUserData, CreateFitnessProfileData } from '@/shared/types/user';
 import { setUserCookie } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key
@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     const formData = await request.json();
     
     // Check if user already exists
-    let user = await getUserByPhoneNumber(formData.phoneNumber);
+    const userRepository = new UserRepository();
+    let user = await userRepository.findByPhoneNumber(formData.phoneNumber);
     
     // If user doesn't exist, create new user data
     const userData: CreateUserData = {
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
       if (!user) {
         // Save new user to database
-        user = await createUser(userData);
+        user = await userRepository.create(userData);
 
         // Create fitness profile for new user
         const fitnessProfileData: CreateFitnessProfileData = {
@@ -56,10 +57,10 @@ export async function POST(request: Request) {
           age: parseInt(formData.age, 10),
         };
 
-        await createFitnessProfile(fitnessProfileData);
+        await userRepository.createFitnessProfile(fitnessProfileData);
       } else {
         // Update existing user with new Stripe customer ID
-        user = await updateUser(user.id, { stripe_customer_id: customer.id });
+        user = await userRepository.update(user.id, { stripe_customer_id: customer.id });
       }
 
       // Check if we have a direct payment method ID (Apple Pay/Google Pay)

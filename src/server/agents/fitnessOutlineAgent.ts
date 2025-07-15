@@ -1,16 +1,18 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { fitnessProfileSubstring, outlinePrompt, welcomePrompt } from '../prompts/templates';
-import { getUserWithProfile, UserWithProfile } from '../db/postgres/users';
-import { twilioClient } from '../clients/twilio';
-import { remember } from '../db/vector/memoryTools';
+import { UserRepository } from '../data/repositories/userRepository';
+import { UserWithProfile } from '@/shared/types/user';
+import { twilioClient } from '../core/clients/twilio';
+import { remember } from '../services/ai/memoryService';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 
 export const onboardUserChain = RunnableSequence.from([
   // Step 1: Fetch user info and profile
   async (userId: string) => {
-    const user = await getUserWithProfile(userId);
+    const userRepository = new UserRepository();
+    const user = await userRepository.findWithProfile(userId);
     if (!user || !user.profile) throw new Error('User or fitness profile not found');
     return { user };
   },
@@ -55,7 +57,8 @@ export async function onboardUser({ userId }: { userId: string }): Promise<strin
   // At this point message should already be a string from our chain
   const messageText = String(result.message);
   const outlineText = String(result.outline);
-
+  console.log('messageText', messageText);
+  console.log('result.user.phone_number', result.user.phone_number);
   await twilioClient.sendSMS(result.user.phone_number, messageText);
   return outlineText;
 }

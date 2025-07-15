@@ -30,7 +30,6 @@
       "Bash(touch *)",
       "Bash(cp *)",
       "Bash(mv *)",
-      "Bash(rm *)",
       "Bash(cat *)",
       "Bash(echo *)",
       "Bash(grep *)",
@@ -106,6 +105,7 @@
     "deny": [
       // Prevent potentially dangerous operations
       "Bash(rm -rf /)",
+      "Bash(rm *)",
       "Bash(sudo rm -rf *)",
       "Bash(curl *)",
       "Bash(wget *)",

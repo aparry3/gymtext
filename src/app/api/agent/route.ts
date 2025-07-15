@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
 import { generateWeeklyPlan } from '@/server/agents/workoutGeneratorAgent';
-import { getUserById } from '@/server/db/postgres/users';
-// import { processUpdate } from '@/server/agents/workoutUpdateAgentt';
+import { UserRepository } from '@/server/data/repositories/userRepository';
+// import { processUpdate } from '@/server/agents/workoutUpdateAgent';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     }
     
     // Fetch the user from the database
-    const user = await getUserById(userId);
+    const userRepository = new UserRepository();
+    const user = await userRepository.findById(userId);
     
     if (!user) {
       return NextResponse.json(

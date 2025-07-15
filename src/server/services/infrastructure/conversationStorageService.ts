@@ -1,8 +1,8 @@
 import { Kysely } from 'kysely';
 import { Database } from '@/shared/types/database';
-import { ConversationRepository, Conversation } from '../data/repositories/conversationRepository';
-import { MessageRepository, Message } from '../data/repositories/messageRepository';
-import { CircuitBreaker } from '../utils/circuitBreaker';
+import { ConversationRepository, Conversation } from '../../data/repositories/conversationRepository';
+import { MessageRepository, Message } from '../../data/repositories/messageRepository';
+import { CircuitBreaker } from '../../utils/circuitBreaker';
 
 interface StoreInboundMessageParams {
   userId: string;
@@ -29,7 +29,7 @@ export class ConversationStorageService {
   constructor(db: Kysely<Database>) {
     this.conversationRepo = new ConversationRepository(db);
     this.messageRepo = new MessageRepository(db);
-    this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '30');
+    this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000, // 1 minute
@@ -43,7 +43,7 @@ export class ConversationStorageService {
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
-      
+      console.log('INBOUND CONVERSATION', conversation);
       // Store the message
       const message = await this.messageRepo.create({
         conversation_id: conversation.id,
@@ -86,7 +86,7 @@ export class ConversationStorageService {
   async getOrCreateConversation(userId: string): Promise<Conversation> {
     // Get the user's last conversation
     const lastConversation = await this.conversationRepo.getLastConversationForUser(userId);
-    
+
     // Check if we should continue the existing conversation
     if (lastConversation && this.shouldContinueConversation(lastConversation)) {
       return lastConversation;
@@ -96,7 +96,8 @@ export class ConversationStorageService {
     if (lastConversation && lastConversation.status === 'active') {
       await this.conversationRepo.markAsInactive(lastConversation.id);
     }
-    
+    // console.log('conversation', lastConversation);
+
     // Create a new conversation
     const now = new Date();
     const newConversation = await this.conversationRepo.create({

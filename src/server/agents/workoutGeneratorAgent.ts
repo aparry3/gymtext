@@ -1,10 +1,10 @@
-import { recall } from '../db/vector/memoryTools';
-import { getUserWithProfile } from '../db/postgres/users';
+import { recall } from '../services/ai/memoryService';
+import { UserRepository } from '../data/repositories/userRepository';
 import { dailyPrompt } from '../prompts/templates';
 import { z } from 'zod';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { getDatesUntilSaturday } from '@/shared/utils';
-import { twilioClient } from '../clients/twilio';
+import { twilioClient } from '../core/clients/twilio';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: 'gemini-2.0-flash' });
 
@@ -26,7 +26,8 @@ const daySchema = z.object({
 // })
 
 export async function generateWeeklyPlan(userId: string) {
-  const user = await getUserWithProfile(userId);
+  const userRepository = new UserRepository();
+  const user = await userRepository.findWithProfile(userId);
   if (!user) throw new Error('User not found');
   // if (!outline) throw new Error('No program outline found');
 

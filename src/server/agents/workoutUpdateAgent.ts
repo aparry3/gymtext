@@ -1,6 +1,6 @@
 // import { ChatOpenAI } from '@langchain/openai';
 // import { updatePrompt } from '../prompts/templates';
-// import { recall } from '../db/vector/memoryTools';
+// import { recall } from '../services/ai/memoryService';
 // import { UpdateContext } from '../types/updateContext';
 
 
