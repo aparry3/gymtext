@@ -217,6 +217,51 @@ The prompt should include:
 2. **Consistency**: Ensure workout progression aligns with weeklyTargets
 3. **Flexibility**: Allow for user preferences and constraints
 4. **Validation**: Verify dates, workout counts, and schema compliance
+5. **Start Date Handling**: Account for mid-week signups with transition microcycles
+
+## Handling Mid-Week Signups
+
+### The Challenge
+- Users may sign up on any day of the week and should start their program immediately
+- Standard microcycles run Monday-Sunday for consistency
+- First mesocycle needs special handling for non-Monday start dates
+
+### Solution: Transition Microcycle
+When a user signs up on any day except Monday, the first mesocycle will include an additional "transition microcycle" at the beginning:
+
+1. **Transition Microcycle Structure**:
+   - Duration: From signup day to the following Sunday
+   - Content: Adapted workouts that prepare for the full program
+   - Purpose: Allows immediate start while maintaining week alignment
+
+2. **Implementation Details**:
+   - If signup is Monday: Standard mesocycle (no transition needed)
+   - If signup is Tuesday-Sunday: Add transition microcycle + standard weeks
+   - Transition microcycle uses the first week's split pattern, adjusted for fewer days
+
+3. **Example Scenarios**:
+   - **Wednesday signup**: 5-day transition (Wed-Sun) + full weeks
+   - **Friday signup**: 3-day transition (Fri-Sun) + full weeks
+   - **Sunday signup**: 1-day transition (Sun only) + full weeks
+
+4. **Workout Distribution**:
+   - Prioritize key workouts for the available days
+   - Maintain rest day ratios
+   - Ensure progressive entry into the program
+
+### Prompt Modifications
+The `mesocycleBreakdownPrompt` should include:
+```typescript
+// Additional context for transition handling
+const daysUntilMonday = (8 - startDate.getDay()) % 7;
+const needsTransition = daysUntilMonday > 0;
+const transitionDays = needsTransition ? daysUntilMonday : 0;
+```
+
+### Schema Considerations
+- First mesocycle may have `weeks + 1` microcycles if transition is needed
+- Transition microcycle has fewer than 7 workout instances
+- Date calculations must account for the transition period
 
 ## Next Steps
 

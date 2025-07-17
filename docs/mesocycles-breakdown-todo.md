@@ -57,9 +57,14 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
 
 ### Phase 4: Integration Logic
 - [ ] Create orchestration function for processing all mesocycles
-  - [ ] Call breakdownMesocycleChain for the first Medocycle in the FitnessPlan
+  - [ ] Call breakdownMesocycleChain for the first Mesocycle in the FitnessPlan
   - [ ] Handle sequential date calculations
-    - [ ] Dates should consider the currnt daty of the week. Microcycles should be Sunday - Saturday
+    - [ ] Dates should consider the current day of the week. Microcycles should be Monday - Sunday
+    - [ ] Implement transition microcycle logic for non-Monday signups:
+      - [ ] Calculate days until next Monday
+      - [ ] Generate transition microcycle if needed (Tuesday-Sunday signups)
+      - [ ] Adjust first mesocycle to include transition + standard weeks
+      - [ ] Ensure workout distribution maintains program integrity
   - [ ] Aggregate results into complete program
 - [ ] Add caching mechanism:
   - [ ] Cache generated microcycles by mesocycle ID
@@ -72,14 +77,20 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
 
 ### Phase 5: Validation & Testing
 - [ ] Create validation functions:
-  - [ ] Verify microcycle count matches mesocycle weeks
+  - [ ] Verify microcycle count matches mesocycle weeks (accounting for transition)
   - [ ] Check workout dates are sequential
+  - [ ] Validate transition microcycle has correct number of days
+  - [ ] Ensure transition microcycle ends on Sunday
   - [ ] Validate session types match split patterns
   - [ ] Ensure progressive overload is applied
 - [ ] Write unit tests:
   - [ ] Schema transformation tests
   - [ ] Prompt generation tests
   - [ ] Date calculation tests
+  - [ ] Transition microcycle generation tests:
+    - [ ] Test Monday signup (no transition)
+    - [ ] Test mid-week signups (Wed, Fri)
+    - [ ] Test weekend signups (Sat, Sun)
   - [ ] Split pattern matching tests
 - [ ] Integration testing:
   - [ ] Test with various user profiles
@@ -94,6 +105,10 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
 - [ ] Support schedule constraints (limited days)
 - [ ] Implement fallback exercises
 - [ ] Add user preference overrides
+- [ ] Handle transition microcycle edge cases:
+  - [ ] Single-day transitions (Sunday signups)
+  - [ ] Holiday/special date considerations
+  - [ ] Time zone handling for signup dates
 
 ### Phase 7: Documentation & Deployment
 - [ ] Document new API endpoints
@@ -116,3 +131,5 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
 - Consider parallel processing for multiple mesocycles after initial sequential implementation
 - Monitor token usage and optimize prompts if needed
 - Gather user feedback on generated workouts for future improvements
+- Transition microcycles ensure users can start immediately while maintaining consistent Monday-Sunday week structure
+- The transition period helps users ease into the program with appropriate workout density
