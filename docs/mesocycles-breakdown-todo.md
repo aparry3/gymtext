@@ -40,26 +40,26 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
   - [x] Hybrid programs
 
 ### Phase 3: Agent Function Implementation
-- [ ] Create `breakdownMesocycleChain` function
-  - [ ] Set up in `fitnessOutlineAgent.ts` or new agent file
-  - [ ] Implement RunnableSequence structure
-  - [ ] Add context preparation step
-  - [ ] Implement LLM structured output call
-  - [ ] Create MesocycleDetailed assembly step
-- [ ] Define `MicrocyclesSchema` for structured output
-  - [ ] Use z.array(Microcycle) validation
-  - [ ] Set appropriate min/max constraints
-- [ ] Add error handling:
-  - [ ] LLM timeout handling
-  - [ ] Schema validation failures
+- [x] Create `breakdownMesocycleChain` function
+  - [x] Set up in `fitnessOutlineAgent.ts` or new agent file
+  - [x] Implement RunnableSequence structure
+  - [x] Add context preparation step
+  - [x] Implement LLM structured output call
+  - [x] Create MesocycleDetailed assembly step
+- [x] Define `MicrocyclesSchema` for structured output
+  - [x] Use z.array(Microcycle) validation
+  - [x] Set appropriate min/max constraints
+- [x] Add error handling:
+  - [x] LLM timeout handling
+  - [x] Schema validation failures
   - [ ] Retry logic with exponential backoff
-- [ ] Implement logging for debugging
+- [x] Implement logging for debugging
 
 ### Phase 4: Integration Logic
 - [ ] Create orchestration function for processing all mesocycles
-  - [ ] Iterate through each mesocycle plan
-  - [ ] Call breakdownMesocycleChain for each
+  - [ ] Call breakdownMesocycleChain for the first Medocycle in the FitnessPlan
   - [ ] Handle sequential date calculations
+    - [ ] Dates should consider the currnt daty of the week. Microcycles should be Sunday - Saturday
   - [ ] Aggregate results into complete program
 - [ ] Add caching mechanism:
   - [ ] Cache generated microcycles by mesocycle ID

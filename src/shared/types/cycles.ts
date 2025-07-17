@@ -126,6 +126,8 @@ export const FitnessProgramSchema = z.object({
     "Complete periodised training program with an embedded plain-text overview."
   );
   
+export const WorkoutInstanceSchema = WorkoutInstance;
+
 // Export types for use in other modules
 export type MesocyclePlan = z.infer<typeof MesocyclePlan>;
 export type MesocycleDetailed = z.infer<typeof MesocycleDetailed>;
@@ -134,3 +136,6 @@ export type Microcycle = z.infer<typeof Microcycle>;
 export type WorkoutInstance = z.infer<typeof WorkoutInstance>;
 export type WeeklyTarget = z.infer<typeof WeeklyTarget>;
 export type FitnessProgram = z.infer<typeof FitnessProgramSchema>;
+// Define the Microcycles schema for structured output
+export const MicrocyclesSchema = z.array(Microcycle).min(1);
+
