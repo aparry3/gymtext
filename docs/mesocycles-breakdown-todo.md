@@ -20,24 +20,24 @@ This checklist tracks the implementation of the mesocycle breakdown functionalit
 - [x] Test schema changes compile without errors
 
 ### Phase 2: Prompt Template Development
-- [ ] Create `mesocycleBreakdownPrompt` in `src/server/prompts/templates.ts`
-  - [ ] Define function signature with proper parameters
-  - [ ] Include user profile context
-  - [ ] Add mesocycle plan details
-  - [ ] Incorporate fitness profile string
-  - [ ] Handle start date for workout scheduling
-- [ ] Design prompt content structure:
-  - [ ] System role definition (elite fitness coach)
-  - [ ] Clear task instructions
-  - [ ] Schema requirements and constraints
-  - [ ] Progressive overload guidelines
-  - [ ] Exercise selection criteria
-  - [ ] Example output format
-- [ ] Add prompt variations for different program types:
-  - [ ] Strength-focused programs
-  - [ ] Endurance programs
-  - [ ] Shred/cutting programs
-  - [ ] Hybrid programs
+- [x] Create `mesocycleBreakdownPrompt` in `src/server/prompts/templates.ts`
+  - [x] Define function signature with proper parameters
+  - [x] Include user profile context
+  - [x] Add mesocycle plan details
+  - [x] Incorporate fitness profile string
+  - [x] Handle start date for workout scheduling
+- [x] Design prompt content structure:
+  - [x] System role definition (elite fitness coach)
+  - [x] Clear task instructions
+  - [x] Schema requirements and constraints
+  - [x] Progressive overload guidelines
+  - [x] Exercise selection criteria
+  - [x] Example output format
+- [x] Add prompt variations for different program types:
+  - [x] Strength-focused programs
+  - [x] Endurance programs
+  - [x] Shred/cutting programs
+  - [x] Hybrid programs
 
 ### Phase 3: Agent Function Implementation
 - [ ] Create `breakdownMesocycleChain` function

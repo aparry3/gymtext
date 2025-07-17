@@ -1,5 +1,6 @@
 import { formatDate } from "@/shared/utils";
 import { UserWithProfile } from "@/shared/types/user";
+import { MesocyclePlan } from "@/shared/types/cycles";
 
 export const fitnessProfileSubstring = (user: UserWithProfile) => `Client profile:
 - Name: ${user.name}
@@ -89,6 +90,132 @@ export const outlinePrompt = (
   **Now reply with the single JSON object only — no additional text.**
   `;
     
+export const mesocycleBreakdownPrompt = (
+  user: UserWithProfile,
+  mesocyclePlan: MesocyclePlan,
+  fitnessProfile: string,
+  programType: string,
+  startDate: Date
+) => `
+You are an elite personal fitness coach and periodization expert tasked with creating detailed weekly workout plans.
+
+<Goal>
+Generate **exactly one JSON array** of Microcycle objects that fully populates the mesocycle with detailed workouts.
+</Goal>
+
+<Context>
+- Client: ${user.name}
+- Mesocycle phase: ${mesocyclePlan.phase}
+- Duration: ${mesocyclePlan.weeks} weeks
+- Program type: ${programType}
+- Start date: ${formatDate(startDate)}
+</Context>
+
+<Schema Requirements>
+Each Microcycle must include:
+• weekNumber: Human-friendly week number (1, 2, 3, etc.)
+• workouts: Array of 7 WorkoutInstance objects (one per day)
+
+Each WorkoutInstance must include:
+• id: Unique identifier (e.g., "week1-day1")
+• date: YYYY-MM-DD format (calculate from start date)
+• sessionType: "run", "lift", "metcon", "mobility", "rest", or "other"
+• blocks: Array of WorkoutBlock objects (warmup, main, cooldown)
+• targets: Optional array of {key, value} pairs for workout metrics
+
+Each WorkoutBlock must include:
+• label: Block name (e.g., "Warm-up", "Main Work", "Cool-down")
+• activities: Array of exercise descriptions with sets/reps/rest
+</Schema Requirements>
+
+<Progressive Overload Guidelines>
+${mesocyclePlan.weeklyTargets.map((target, idx) => `
+Week ${idx + 1} (${target.deload ? 'DELOAD' : 'BUILD'}):
+- Split pattern: ${target.split || 'Not specified'}
+- Intensity: ${target.avgIntensityPct1RM || 'N/A'}% 1RM
+- Main lift sets: ${target.totalSetsMainLifts || 'N/A'}
+- Weekly mileage: ${target.totalMileage || 'N/A'}
+- Long run: ${target.longRunMileage || 'N/A'} miles
+`).join('')}
+</Progressive Overload Guidelines>
+
+<Exercise Selection Criteria>
+1. Match exercises to the mesocycle phase ("${mesocyclePlan.phase}")
+2. Consider user's skill level: ${user.profile?.skillLevel || 'intermediate'}
+3. Available equipment: standard gym equipment (adjust based on user feedback)
+4. Respect user preferences and limitations
+5. Include appropriate variety week-to-week
+6. For deload weeks, reduce volume by 40-50% and intensity by 10-20%
+</Exercise Selection Criteria>
+
+<Content Guidelines>
+- Follow the split pattern exactly as specified in weeklyTargets
+- Include specific exercises, sets, reps, rest periods, and tempo where applicable
+- Warm-ups should be 5-10 minutes, progressive in nature
+- Main work should align with the mesocycle phase and daily focus
+- Cool-downs should include stretching and mobility work
+- Rest days should have sessionType "rest" with light mobility work only
+- For strength work, use percentage-based loading when avgIntensityPct1RM is provided
+- For endurance work, include pace/effort guidelines
+</Content Guidelines>
+
+<Fitness Profile>
+${fitnessProfile}
+</Fitness Profile>
+
+<Example Output Structure>
+\`\`\`json
+[
+  {
+    "weekNumber": 1,
+    "workouts": [
+      {
+        "id": "week1-day1",
+        "date": "2025-01-20",
+        "sessionType": "lift",
+        "blocks": [
+          {
+            "label": "Warm-up",
+            "activities": [
+              "5 min bike or row at easy pace",
+              "Dynamic stretching: leg swings, arm circles, hip circles (2x10 each)",
+              "Activation: 2x15 band pull-aparts, 2x10 goblet squats"
+            ]
+          },
+          {
+            "label": "Main Work - Upper Body",
+            "activities": [
+              "Bench Press: 4x8 @ 65% 1RM, 90s rest",
+              "Bent-Over Row: 4x10, 75s rest",
+              "Overhead Press: 3x10 @ 60% 1RM, 60s rest",
+              "Pull-ups: 3x8-12, 90s rest",
+              "Superset: DB Curls + Tricep Dips 3x12-15, 45s rest"
+            ]
+          },
+          {
+            "label": "Cool-down",
+            "activities": [
+              "5 min walk on treadmill",
+              "Static stretching: chest, shoulders, lats (30s each)",
+              "Foam rolling: upper back and lats (2 min)"
+            ]
+          }
+        ],
+        "targets": [
+          {"key": "volumeKg", "value": 4500},
+          {"key": "duration", "value": 60}
+        ]
+      },
+      // ... 6 more days
+    ]
+  },
+  // ... more weeks
+]
+\`\`\`
+</Example Output Structure>
+
+**Output only the JSON array wrapped in \`\`\`json ... \`\`\` with no additional text.**
+`;
 
 // Add a welcomePrompt template for generating a personalized welcome message
 export const welcomePrompt = (user: UserWithProfile, outline: string) => `
