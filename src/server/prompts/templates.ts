@@ -9,52 +9,86 @@ export const fitnessProfileSubstring = (user: UserWithProfile) => `Client profil
 - Gender: ${user.profile?.gender || 'Not specified'}
 - Fitness goals: ${user.profile?.fitnessGoals || 'Not specified'}
 `
-export const outlinePrompt = (user: UserWithProfile, fitnessProfile: string) => `
-You are a personal fitness coach. 
-Your task is to write a workout plan overview for your new client, ${user.name}. You should use ${user.name}'s fitness profile provided in to construct a workout plan overview.
-
-
-<Instructions>
-- Your workout plan should include a high level breakdown of weekly schedules that you can use to generate detailed weekly workout schedules.
-- Your workout plan should take into account ${user.name}'s fitness goals, skill level, and how often they plan to exercise, and equipment that they have access to.
-- For each day of the the week Please mention the primary types of workouts that will likely be included (e.g., strength training, cardiovascular exercise, HIIT, flexibility work, specific classes if applicable).
-- Please ensure the tone of the overview is encouraging and motivating.
-</Instructions>
-
-<Example>
-<Fitness Profile>
-- Name: John Smith
-- Experience level: Advanced
-- Workout frequency: 4-5 times per week
-- Age: 29
-- Gender: Male
-- Fitness goals: Endurance, Muscle Gain
-</Fitness Profile>
-
-<Workout Plan Overview>
-Monday: Upper Body Strength Focus. We'll kick off the week targeting major upper body muscle groups. Expect exercises focusing on pushing and pulling movements with compound lifts and isolation work to maximize muscle growth.
-Tuesday: Lower Body Strength & Power. Time to build those legs and explosive power! This day will involve compound exercises like squats and deadlifts, along with variations to target different leg muscles.
-Wednesday: Active Recovery & Endurance. This day is crucial for recovery and building your cardiovascular engine. We'll incorporate activities like longer duration cardio (running, cycling, swimming) at a moderate intensity, or perhaps a dynamic stretching and mobility session.
-Thursday: Upper Body Strength & Hypertrophy. We'll hit the upper body again, but with a slightly different focus, potentially incorporating higher volume and varied exercises to stimulate further muscle growth.
-Friday: Lower Body Strength & Plyometrics (Optional). Another lower body day, where we might include more unilateral work and potentially some explosive plyometric exercises to enhance power and athleticism, depending on how you're feeling and your recovery.
-Saturday/Sunday: Rest or Active Recovery/Endurance (Optional). Depending on whether you worked out 4 or 5 times during the week, these days can be for complete rest, light active recovery like a leisurely walk or yoga, or an additional endurance-focused activity if you're feeling up to it.
-Key Considerations:
-
-Progressive Overload: We'll consistently aim to challenge your muscles by gradually increasing weight, reps, sets, or decreasing rest periods over time.
-Proper Form: Maintaining excellent form will be paramount to prevent injuries and maximize the effectiveness of each exercise.
-Listen to Your Body: Rest and recovery are just as important as the workouts themselves. We'll adjust the plan as needed based on how you're feeling.
-Nutrition: Remember that proper nutrition is crucial for both muscle gain and endurance. We can discuss this further if you'd like.
-I'm really excited to start this journey with you, John. Your dedication combined with a well-structured plan will lead to fantastic results. Let's get to work!
-</Workout Plan Overview>
-</Example>
-
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
-
-Please write a workout plan for ${user.name}.
-`;
-
+export const outlinePrompt = (
+    user: UserWithProfile,
+    fitnessProfile: string
+  ) => `
+  You are an elite personal fitness coach and periodisation expert.
+  
+  <Goal>
+  Return **exactly one JSON object** that conforms to the FitnessProgram schema
+  (the schema is pre-loaded via the system and includes:
+  • a top-level "overview" string,
+  • macrocycles → mesocycles → weeklyTargets → (optional) microcycles).
+  </Goal>
+  
+  <Schema highlights>
+  • Each \`WeeklyTarget\` must now include **split** — a short text blueprint of
+    the weekly pattern (e.g. "Upper-Lower-HIIT-Rest").  
+  • \`metrics\` and \`targets\` use arrays of { key, value } pairs (Gemini-safe).  
+  • Objects are strict – no extra keys; no \`$ref\`; depth ≤ 5.  
+  </Schema highlights>
+  
+  <Content guidelines>
+  - Use ${user.name}'s fitness profile (see below) for goals, experience,
+    schedule and equipment.
+  - Build **one macrocycle** that spans the requested timeframe.
+  - Inside it, create **mesocycles** of 3-6 weeks.
+    • Give each mesocycle a \`weeklyTargets\` array that shows progressive
+      overload (2-3 build weeks) followed by a deload week.  
+    • Every element **must** contain \`split\`.
+  - Leave \`microcycles\` as empty arrays – they will be generated later.
+  - The \`overview\` (plain English) should be upbeat, ≤ 120 words.
+  - Output **only** the JSON object wrapped in a single \`\`\`json … \`\`\` block.
+  </Content guidelines>
+  
+  <Example output>
+  \`\`\`json
+  {
+    "overview": "Welcome, Alex! Over the next six weeks we'll alternate metabolic-strength sessions with HIIT to drop body-fat while maintaining muscle. Each week follows an Upper-Lower-HIIT-Rest rhythm, rising in intensity for two weeks, then deloading before the next push. Let’s crush Labor Day together!",
+    "programId": "shred-labor-day-alex-2025-07",
+    "programType": "shred",
+    "macrocycles": [
+      {
+        "id": "macro-1",
+        "lengthWeeks": 6,
+        "mesocycles": [
+          {
+            "id": "meso-A",
+            "phase": "Metabolic Strength",
+            "weeks": 3,
+            "weeklyTargets": [
+              { "weekOffset": 0, "split": "Upper-Lower-HIIT-Rest", "avgIntensityPct1RM": 65 },
+              { "weekOffset": 1, "split": "Upper-Lower-HIIT-Rest", "avgIntensityPct1RM": 70 },
+              { "weekOffset": 2, "split": "Upper-Lower-HIIT-Rest", "deload": true, "avgIntensityPct1RM": 60 }
+            ],
+            "microcycles": []
+          },
+          {
+            "id": "meso-B",
+            "phase": "HIIT Cut",
+            "weeks": 3,
+            "weeklyTargets": [
+              { "weekOffset": 0, "split": "HIIT-Upper-Lower-Rest", "avgIntensityPct1RM": 60 },
+              { "weekOffset": 1, "split": "HIIT-Upper-Lower-Rest", "avgIntensityPct1RM": 65 },
+              { "weekOffset": 2, "split": "HIIT-Upper-Lower-Rest", "deload": true, "avgIntensityPct1RM": 55 }
+            ],
+            "microcycles": []
+          }
+        ]
+      }
+    ]
+  }
+  \`\`\`
+  </Example output>
+  
+  <Fitness Profile>
+  ${fitnessProfile}
+  </Fitness Profile>
+  
+  **Now reply with the single JSON object only — no additional text.**
+  `;
+    
 
 // Add a welcomePrompt template for generating a personalized welcome message
 export const welcomePrompt = (user: UserWithProfile, outline: string) => `

@@ -5,8 +5,11 @@ import { UserRepository } from '../data/repositories/userRepository';
 import { UserWithProfile } from '@/shared/types/user';
 import { twilioClient } from '../core/clients/twilio';
 import { remember } from '../services/ai/memoryService';
+import { FitnessProgramSchema } from '@/shared/types/cycles';
+// import { ChatOpenAI } from '@langchain/openai';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
+// const llm = new ChatOpenAI({ temperature: 0.3, model: "o3-mini-2025-01-31" });
 
 export const onboardUserChain = RunnableSequence.from([
   // Step 1: Fetch user info and profile
@@ -22,31 +25,28 @@ export const onboardUserChain = RunnableSequence.from([
     const fitnessProfile = fitnessProfileSubstring(user);
     await remember({userId: user.id, key: 'fitness_profile',text: fitnessProfile});
     const prompt = outlinePrompt(user, fitnessProfile);
-
-    const outlineResp = await llm.invoke(prompt);
-    const outlineContent = typeof outlineResp.content === 'string' 
-      ? outlineResp.content 
-      : String(outlineResp.content);
-
-    return { user, outline: outlineContent };
+    const structuredModel = llm.withStructuredOutput(FitnessProgramSchema);
+    const program = await structuredModel.invoke(prompt);
+    console.log('program', JSON.stringify(program, null, 2));
+    return { user, program };
   },
 
   // Step 3: Store the workout plan outline in the DB and remember it
-  async ({ user, outline }) => {
+  async ({ user, program }) => {
     // await createProgramOutline(user.id, outline);
-    await remember({userId: user.id, key: 'outline', text: `Outline: ${outline}`});
-    return { user, outline };
+    await remember({userId: user.id, key: 'outline', text: `Outline: ${program}`});
+    return { user, program };
   },
 
   // Step 4: Summarize the outline and create a welcome message for the user
-  async ({ user, outline }) => {
-    const welcomePromptText = welcomePrompt(user, outline);
+  async ({ user, program }) => {
+    const welcomePromptText = welcomePrompt(user, program);
     const welcomeResp = await llm.invoke(welcomePromptText);
     const welcomeContent = typeof welcomeResp.content === 'string'
       ? welcomeResp.content
       : String(welcomeResp.content);
     
-    return { user, outline, message: welcomeContent };
+    return { user, program, message: welcomeContent };
   },
   // Step 5: Return the welcome message
 ]);
@@ -56,7 +56,7 @@ export async function onboardUser({ userId }: { userId: string }): Promise<strin
   
   // At this point message should already be a string from our chain
   const messageText = String(result.message);
-  const outlineText = String(result.outline);
+  const outlineText = String(result.program);
   console.log('messageText', messageText);
   console.log('result.user.phoneNumber', result.user.phoneNumber);
   await twilioClient.sendSMS(result.user.phoneNumber, messageText);
