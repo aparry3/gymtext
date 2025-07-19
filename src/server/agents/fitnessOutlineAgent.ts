@@ -4,9 +4,10 @@ import { fitnessProfileSubstring, outlinePrompt, welcomePrompt, mesocycleBreakdo
 import { UserRepository } from '../data/repositories/userRepository';
 import { UserWithProfile } from '@/shared/types/user';
 import { twilioClient } from '../core/clients/twilio';
-import { remember } from '../services/ai/memoryService';
 import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, MicrocyclesSchema, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
 import { z } from 'zod';
+import { FitnessPlanService } from '../services/fitness/FitnessPlanService';
+import { FitnessPlanRepository } from '../data/repositories/FitnessPlanRepository';
 // import { ChatOpenAI } from '@langchain/openai';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
@@ -24,7 +25,8 @@ export const onboardUserChain = RunnableSequence.from([
   // Step 2: Use the profile to create a workout plan outline
   async ({ user }: { user: UserWithProfile }) => {
     const fitnessProfile = fitnessProfileSubstring(user);
-    await remember({userId: user.id, key: 'fitness_profile',text: fitnessProfile});
+    // Remove vector memory storage - database is our single source of truth
+    // await remember({userId: user.id, key: 'fitness_profile',text: fitnessProfile});
     const prompt = outlinePrompt(user, fitnessProfile);
     const structuredModel = llm.withStructuredOutput(FitnessProgramSchema);
     const program = await structuredModel.invoke(prompt);
@@ -32,11 +34,32 @@ export const onboardUserChain = RunnableSequence.from([
     return { user, program };
   },
 
-  // Step 3: Store the workout plan outline in the DB and remember it
-  async ({ user, program }) => {
-    // await createProgramOutline(user.id, outline);
-    await remember({userId: user.id, key: 'outline', text: `Outline: ${program}`});
-    return { user, program };
+  // Step 3: Store the workout plan in the database
+  async ({ user, program }: { user: UserWithProfile; program: FitnessProgram }) => {
+    const fitnessPlanService = new FitnessPlanService(
+      new FitnessPlanRepository()
+    );
+    
+    // Determine start date (today for now, could be customized)
+    const startDate = new Date();
+    
+    // Extract goal statement from fitness goals
+    const goalStatement = user.profile?.fitnessGoals || undefined;
+    
+    // Save to database using the service
+    const savedPlan = await fitnessPlanService.createFromProgram(
+      user.id,
+      program,
+      startDate,
+      goalStatement
+    );
+    
+    console.log('Saved fitness plan to database:', savedPlan.id);
+    
+    // Remove vector memory storage - database is our single source of truth
+    // await remember({userId: user.id, key: 'outline', text: `Outline: ${program}`});
+    
+    return { user, program, savedPlan };
   },
 
   // Step 4: Summarize the outline and create a welcome message for the user

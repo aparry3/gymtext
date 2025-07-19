@@ -34,7 +34,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
   await sql`
     ALTER TABLE fitness_plans 
     ADD CONSTRAINT check_program_type 
-    CHECK (program_type IN ('strength', 'hypertrophy', 'powerlifting', 'weightloss', 'general_fitness', 'athletic_performance'))
+    CHECK (program_type IN ('endurance', 'strength', 'shred', 'hybrid', 'rehab', 'other'))
   `.execute(db);
 
   // Create index for fitness_plans

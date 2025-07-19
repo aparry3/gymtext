@@ -162,6 +162,16 @@ export interface WorkoutLogs {
   workoutId: string;
 }
 
+export interface Workouts {
+  createdAt: Generated<Timestamp>;
+  date: Timestamp;
+  exercises: Json;
+  id: Generated<string>;
+  sentAt: Timestamp | null;
+  userId: string;
+  workoutType: string;
+}
+
 export interface DB {
   conversations: Conversations;
   conversationTopics: ConversationTopics;
@@ -174,4 +184,5 @@ export interface DB {
   users: Users;
   workoutInstances: WorkoutInstances;
   workoutLogs: WorkoutLogs;
+  workouts: Workouts;
 }
