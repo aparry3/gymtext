@@ -43,6 +43,18 @@ export interface ConversationTopics {
   topic: string;
 }
 
+export interface FitnessPlans {
+  clientId: string;
+  createdAt: Generated<Timestamp>;
+  goalStatement: string | null;
+  id: Generated<string>;
+  macrocycles: Json;
+  overview: string | null;
+  programType: string;
+  startDate: Timestamp;
+  updatedAt: Generated<Timestamp>;
+}
+
 export interface FitnessProfiles {
   age: number;
   createdAt: Generated<Timestamp>;
@@ -53,6 +65,19 @@ export interface FitnessProfiles {
   skillLevel: string;
   updatedAt: Generated<Timestamp>;
   userId: string;
+}
+
+export interface Mesocycles {
+  clientId: string;
+  createdAt: Generated<Timestamp>;
+  cycleOffset: number;
+  fitnessPlanId: string;
+  id: Generated<string>;
+  lengthWeeks: number;
+  phase: string;
+  startDate: Timestamp;
+  status: Generated<string>;
+  updatedAt: Generated<Timestamp>;
 }
 
 export interface Messages {
@@ -66,6 +91,22 @@ export interface Messages {
   phoneTo: string;
   twilioMessageSid: string | null;
   userId: string;
+}
+
+export interface Microcycles {
+  actualMetrics: Json | null;
+  clientId: string;
+  createdAt: Generated<Timestamp>;
+  cycleOffset: number;
+  endDate: Timestamp;
+  fitnessPlanId: string;
+  id: Generated<string>;
+  mesocycleId: string;
+  startDate: Timestamp;
+  status: Generated<string>;
+  targets: Json | null;
+  updatedAt: Generated<Timestamp>;
+  weekNumber: number;
 }
 
 export interface Subscriptions {
@@ -91,6 +132,25 @@ export interface Users {
   updatedAt: Generated<Timestamp>;
 }
 
+export interface WorkoutInstances {
+  alterations: Json | null;
+  clientId: string;
+  completedAt: Timestamp | null;
+  createdAt: Generated<Timestamp>;
+  date: Timestamp;
+  details: Json;
+  feedback: Json | null;
+  fitnessPlanId: string;
+  goal: string | null;
+  id: Generated<string>;
+  mesocycleId: string;
+  metrics: Json | null;
+  microcycleId: string;
+  sessionType: string;
+  status: Generated<string>;
+  updatedAt: Generated<Timestamp>;
+}
+
 export interface WorkoutLogs {
   completed: Generated<boolean>;
   completedAt: Timestamp | null;
@@ -102,23 +162,16 @@ export interface WorkoutLogs {
   workoutId: string;
 }
 
-export interface Workouts {
-  createdAt: Generated<Timestamp>;
-  date: Timestamp;
-  exercises: Json;
-  id: Generated<string>;
-  sentAt: Timestamp | null;
-  userId: string;
-  workoutType: string;
-}
-
 export interface DB {
   conversations: Conversations;
   conversationTopics: ConversationTopics;
+  fitnessPlans: FitnessPlans;
   fitnessProfiles: FitnessProfiles;
+  mesocycles: Mesocycles;
   messages: Messages;
+  microcycles: Microcycles;
   subscriptions: Subscriptions;
   users: Users;
+  workoutInstances: WorkoutInstances;
   workoutLogs: WorkoutLogs;
-  workouts: Workouts;
 }
