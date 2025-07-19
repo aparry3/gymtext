@@ -1,0 +1,78 @@
+{
+    "title": "FitnessPlan",
+    "programId": "string",
+    "programType": {
+      "type": "array",
+      "items": {
+          "enum": ["endurance", "strength", "shred", "hybrid", "rehab", "other"]
+      }
+    },
+    "clientId": "string",
+    "goalStatement": "string",
+    "overview": "string",
+    "startDate": "string",
+    "macrocycles": [{ //MacrocyclePlan
+      "lengthWeeks":{ "type": "integer", "minimum": 1 },
+      "mesocycles": [{ //MesocyclePlan
+        "offset": "integer",
+        "phase": "string",
+        "lengthWeeks": "integer",
+        "weeklyTargets": [{
+          "weekOffset": "integer",
+          "split": "string",
+          "totalMileage": "number",
+          "longRunMileage": "number",
+          "avgIntensityPct1RM": "number",
+          "totalSetsMainLifts": "number",
+          "deload": "boolean"
+        }]
+      }]
+    }]
+  }
+  
+  {
+    "title": "Mesocycle",
+    "id": "string",
+    "clientId": "string",
+    "programId": "string",
+    "startDate": "string",
+    "offset": "integer",
+    "phase": { "type": "string" },
+    "lengthWeeks": { "type": "integer", "minimum": 1 },
+  }
+  
+  {
+    "title": "Microcycle",
+    "id": "string",
+    "clientId": "string",
+    "programId": "string",
+    "mesocycleId": "string",
+    "offset": "integer",
+    "startDate": "string",
+    "endDate": "string",
+    "targets": {
+      "split": "string",
+      "totalMileage": "number",
+      "longRunMileage": "number",
+      "avgIntensityPct1RM": "number",
+      "totalSetsMainLifts": "number",
+      "deload": "boolean"
+    }
+  }
+
+{
+    "title": "WorkoutInstance",
+    "id": "string",
+    "clientId": "string",
+    "programId": "string",
+    "mesocycleId": "string",
+    "microcycleId": "string",
+    "date": "string",
+    "sessionType": {
+      "type": "string",
+      "enum": ["run", "lift", "metcon", "mobility", "rest", "other"]
+    },
+    "goal": "string",
+    "details": "json"
+  }
+  
