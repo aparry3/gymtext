@@ -7,9 +7,11 @@ import {
   microcycleToDb,
   workoutInstanceToDb,
   calculateMicrocycleDates,
-  type NewMesocycle,
   type NewMicrocycle,
-  type NewWorkoutInstance
+  type NewWorkoutInstance,
+  type MesocycleRow,
+  type MicrocycleRow,
+  type WorkoutInstanceRow
 } from '@/server/data/types/cycleTypes';
 import type { MesocyclePlan, MesocycleDetailed } from '@/shared/types/cycles';
 import type { UserWithProfile } from '@/shared/types/user';
@@ -195,8 +197,8 @@ export class MesocycleGenerationService {
         mesocycleIds.push(mesocycleId);
 
         // Advance dates
-        macrocycleCurrentDate.setDate(
-          macrocycleCurrentDate.getDate() + (mesocyclePlan.weeks * 7)
+        macrocycleCurrentDate = new Date(
+          macrocycleCurrentDate.getTime() + (mesocyclePlan.weeks * 7 * 24 * 60 * 60 * 1000)
         );
         globalCycleOffset += mesocyclePlan.weeks;
       }
@@ -212,16 +214,16 @@ export class MesocycleGenerationService {
    * Retrieves a complete mesocycle with all its microcycles and workouts
    */
   async getCompleteMesocycle(mesocycleId: string): Promise<{
-    mesocycle: any;
-    microcycles: any[];
-    workouts: any[];
+    mesocycle: MesocycleRow;
+    microcycles: MicrocycleRow[];
+    workouts: WorkoutInstanceRow[];
   } | null> {
     const mesocycle = await this.mesocycleRepo.getMesocycleById(mesocycleId);
     if (!mesocycle) return null;
 
     const microcycles = await this.microcycleRepo.getMicrocyclesByMesocycleId(mesocycleId);
     
-    const workouts: any[] = [];
+    const workouts: WorkoutInstanceRow[] = [];
     for (const microcycle of microcycles) {
       const microcycleWorkouts = await this.workoutInstanceRepo.getWorkoutsByMicrocycleId(microcycle.id);
       workouts.push(...microcycleWorkouts);

@@ -4,7 +4,7 @@ import { fitnessProfileSubstring, outlinePrompt, welcomePrompt, mesocycleBreakdo
 import { UserRepository } from '../data/repositories/userRepository';
 import { UserWithProfile } from '@/shared/types/user';
 import { twilioClient } from '../core/clients/twilio';
-import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, MicrocyclesSchema, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
+import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
 import { MicrocyclesGeminiSchema } from '@/shared/types/cyclesGemini';
 import { z } from 'zod';
 import { FitnessPlanService } from '../services/fitness/fitnessPlanService';
