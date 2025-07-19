@@ -6,6 +6,7 @@ import type {
   WorkoutInstance,
   WeeklyTarget 
 } from "@/shared/types/cycles";
+import { v4 as uuidv4 } from 'uuid';
 
 // Type aliases for Kysely operations
 export type MesocycleRow = Selectable<Mesocycles>;
@@ -35,14 +36,14 @@ export function mesocycleDetailedToDb(
   const lengthWeeks = mesocycle.weeks;
   
   return {
-    id: mesocycle.id,
+    id: uuidv4(), // Generate a proper UUID instead of using the AI-generated ID
     fitnessPlanId,
     clientId,
     phase: mesocycle.phase,
     lengthWeeks,
     cycleOffset,
     startDate,
-    status: "pending"
+    status: "planned"
   };
 }
 
@@ -76,13 +77,29 @@ export function microcycleToDb(
     endDate,
     targets,
     actualMetrics: null,
-    status: "pending"
+    status: "planned"
   };
 }
 
 /**
  * Converts a WorkoutInstance (from AI) to a database insert object
  */
+/**
+ * Map AI session types to database session types
+ */
+function mapSessionType(aiType: string): string {
+  const typeMap: Record<string, string> = {
+    'run': 'cardio',
+    'lift': 'strength',
+    'metcon': 'cardio',
+    'mobility': 'mobility',
+    'rest': 'recovery',
+    'other': 'recovery'
+  };
+  
+  return typeMap[aiType] || 'recovery';
+}
+
 export function workoutInstanceToDb(
   workout: WorkoutInstance,
   microcycleId: string,
@@ -101,17 +118,18 @@ export function workoutInstanceToDb(
   // Convert blocks to details JSON
   const details = {
     blocks: workout.blocks,
-    originalId: workout.id // Preserve original ID from AI
+    originalId: workout.id, // Preserve original ID from AI
+    originalSessionType: workout.sessionType // Preserve original session type
   };
 
   return {
-    id: workout.id, // Use the AI-generated ID
+    id: uuidv4(), // Generate a proper UUID instead of using the AI-generated ID
     microcycleId,
     mesocycleId,
     fitnessPlanId,
     clientId,
     date: new Date(workout.date),
-    sessionType: workout.sessionType,
+    sessionType: mapSessionType(workout.sessionType), // Map to DB-compatible type
     details,
     metrics,
     goal: null,

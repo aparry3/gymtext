@@ -7,6 +7,11 @@ import { resolve } from 'path';
 import { UserRepository } from '@/server/data/repositories/userRepository';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
 import { FitnessProgram } from '@/shared/types/cycles';
+import { FitnessPlanRepository } from '@/server/data/repositories/fitnessPlanRepository';
+import { MesocycleRepository } from '@/server/data/repositories/mesocycleRepository';
+import { MicrocycleRepository } from '@/server/data/repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '@/server/data/repositories/workoutInstanceRepository';
+import { MesocycleGenerationService } from '@/server/services/fitness/mesocycleGenerationService';
 
 // Load environment variables
 config({ path: resolve(process.cwd(), '.env.local') });
@@ -95,6 +100,140 @@ async function createProgram(options: {
 
   } catch (error) {
     console.log(chalk.red('\n❌ Error:'), (error as Error).message);
+    process.exit(1);
+  }
+}
+
+// Function to test database storage of mesocycles
+async function testDatabaseStorage(options: {
+  phone: string;
+  verbose?: boolean;
+}) {
+  const startTime = performance.now();
+  
+  console.log(chalk.blue('💾 Testing mesocycle database storage...'));
+  console.log(chalk.gray(`Phone: ${options.phone}`));
+  
+  try {
+    // Initialize repositories
+    const userRepository = new UserRepository();
+    const fitnessPlanRepository = new FitnessPlanRepository();
+    const mesocycleRepository = new MesocycleRepository();
+    const microcycleRepository = new MicrocycleRepository();
+    const workoutInstanceRepository = new WorkoutInstanceRepository();
+    
+    // Initialize service
+    const mesocycleService = new MesocycleGenerationService(
+      mesocycleRepository,
+      microcycleRepository,
+      workoutInstanceRepository
+    );
+    
+    // Find user
+    const user = await userRepository.findByPhoneNumber(options.phone);
+    if (!user) {
+      console.log(chalk.red('❌ Error: User not found with phone number'), options.phone);
+      process.exit(1);
+    }
+    
+    const userWithProfile = await userRepository.findWithProfile(user.id);
+    if (!userWithProfile?.profile) {
+      console.log(chalk.red('❌ Error: User does not have a fitness profile'));
+      process.exit(1);
+    }
+    
+    console.log(chalk.gray(`Found user: ${user.name} (${user.id})`));
+    
+    // Get the latest fitness plan
+    const activePlan = await fitnessPlanRepository.findActiveByClientId(user.id);
+    if (!activePlan) {
+      console.log(chalk.red('❌ Error: No active fitness plan found'));
+      console.log(chalk.yellow('Create a fitness plan first using --create'));
+      process.exit(1);
+    }
+    
+    console.log(chalk.gray(`Active fitness plan: ${activePlan.id}`));
+    console.log(chalk.gray(`Program Type: ${activePlan.programType}`));
+    
+    // Check if mesocycles already exist
+    const existingMesocycles = await mesocycleRepository.getMesocyclesByProgramId(activePlan.id);
+    console.log(chalk.gray(`Existing mesocycles: ${existingMesocycles.length}`));
+    
+    if (existingMesocycles.length > 0) {
+      console.log(chalk.yellow('⚠️  Mesocycles already exist for this plan'));
+      
+      // Show existing data
+      for (const meso of existingMesocycles) {
+        console.log(chalk.white(`\nMesocycle: ${meso.phase}`));
+        console.log(chalk.gray(`  ID: ${meso.id}`));
+        console.log(chalk.gray(`  Status: ${meso.status}`));
+        console.log(chalk.gray(`  Weeks: ${meso.lengthWeeks}`));
+        
+        const microcycles = await microcycleRepository.getMicrocyclesByMesocycleId(meso.id);
+        console.log(chalk.gray(`  Microcycles: ${microcycles.length}`));
+        
+        let totalWorkouts = 0;
+        for (const micro of microcycles) {
+          const workouts = await workoutInstanceRepository.getWorkoutsByMicrocycleId(micro.id);
+          totalWorkouts += workouts.length;
+        }
+        console.log(chalk.gray(`  Total Workouts: ${totalWorkouts}`));
+      }
+      
+      return;
+    }
+    
+    // Generate mesocycles from the fitness plan
+    console.log(chalk.yellow('\nGenerating mesocycles from fitness plan...'));
+    
+    const mesocycleIds = await mesocycleService.generateAllMesocycles(
+      userWithProfile,
+      activePlan.id,
+      activePlan.macrocycles,
+      activePlan.startDate,
+      activePlan.programType
+    );
+    
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
+    
+    console.log(chalk.green(`\n✅ Generated ${mesocycleIds.length} mesocycles in ${duration}ms`));
+    
+    // Verify the data was stored correctly
+    console.log(chalk.yellow('\nVerifying stored data...'));
+    
+    for (const mesocycleId of mesocycleIds) {
+      const data = await mesocycleService.getCompleteMesocycle(mesocycleId);
+      if (!data) {
+        console.log(chalk.red(`❌ Failed to retrieve mesocycle ${mesocycleId}`));
+        continue;
+      }
+      
+      console.log(chalk.white(`\nMesocycle: ${data.mesocycle.phase}`));
+      console.log(chalk.gray(`  ID: ${data.mesocycle.id}`));
+      console.log(chalk.gray(`  Status: ${data.mesocycle.status}`));
+      console.log(chalk.gray(`  Weeks: ${data.mesocycle.lengthWeeks}`));
+      console.log(chalk.gray(`  Microcycles: ${data.microcycles.length}`));
+      console.log(chalk.gray(`  Total Workouts: ${data.workouts.length}`));
+      
+      // Show first workout as example
+      if (data.workouts.length > 0 && options.verbose) {
+        const firstWorkout = data.workouts[0];
+        console.log(chalk.gray(`\n  Example Workout:`));
+        console.log(chalk.gray(`    ID: ${firstWorkout.id}`));
+        console.log(chalk.gray(`    Date: ${firstWorkout.date}`));
+        console.log(chalk.gray(`    Type: ${firstWorkout.sessionType}`));
+        console.log(chalk.gray(`    Status: ${firstWorkout.status}`));
+      }
+    }
+    
+    console.log(chalk.green('\n✅ Database storage test completed successfully!'));
+    
+  } catch (error) {
+    console.log(chalk.red('\n❌ Error:'), (error as Error).message);
+    if (options.verbose) {
+      console.error(error);
+    }
     process.exit(1);
   }
 }
@@ -241,6 +380,7 @@ program
   .requiredOption('-p, --phone <phone>', 'Phone number of the user')
   .option('-c, --create', 'Create a new fitness program')
   .option('-b, --breakdown', 'Breakdown mesocycles into detailed workouts')
+  .option('-s, --storage', 'Test database storage of mesocycles')
   .option('-m, --mesocycle <index>', 'Specific mesocycle index to breakdown (0-based)', parseInt)
   .option('-d, --date <date>', 'Start date (YYYY-MM-DD format)')
   .option('-u, --url <url>', 'API endpoint URL', 'http://localhost:3000/api/agent')
@@ -265,14 +405,23 @@ program
       const program = await createProgram(options);
       console.log(chalk.cyan('\n---\n'));
       await breakdownMesocycle({ ...options, program });
+    } else if (options.create && options.storage) {
+      // Create then test storage
+      console.log(chalk.cyan('🔄 Creating program and testing database storage...\n'));
+      await createProgram(options);
+      console.log(chalk.cyan('\n---\n'));
+      await testDatabaseStorage(options);
     } else if (options.create) {
       // Just create
       await createProgram(options);
     } else if (options.breakdown) {
       // Just breakdown (uses last created or needs manual program input)
       await breakdownMesocycle(options);
+    } else if (options.storage) {
+      // Just test storage
+      await testDatabaseStorage(options);
     } else {
-      console.log(chalk.red('Error: Specify --create and/or --breakdown'));
+      console.log(chalk.red('Error: Specify --create, --breakdown, and/or --storage'));
       process.exit(1);
     }
   });
@@ -283,7 +432,9 @@ program.on('--help', () => {
   console.log('Examples:');
   console.log('  $ pnpm test:mesocycle -p +1234567890 --create');
   console.log('  $ pnpm test:mesocycle -p +1234567890 --breakdown');
+  console.log('  $ pnpm test:mesocycle -p +1234567890 --storage');
   console.log('  $ pnpm test:mesocycle -p +1234567890 --create --breakdown');
+  console.log('  $ pnpm test:mesocycle -p +1234567890 --create --storage');
   console.log('  $ pnpm test:mesocycle -p +1234567890 --breakdown --mesocycle 0 --date 2025-01-22');
   console.log('  $ pnpm test:mesocycle -p +1234567890 --create --breakdown --date 2025-01-24 -v');
 });

@@ -207,62 +207,9 @@ For the transition microcycle:
 </Transition Microcycle Requirements>
 ` : ''}
 
-<Example Output Structure>
-\`\`\`json
-[${needsTransition && isTransitionMesocycle ? `
-  {
-    "weekNumber": 0,
-    "workouts": [
-      // ${daysUntilMonday} workout instances for transition period
-    ]
-  },` : ''}
-  {
-    "weekNumber": 1,
-    "workouts": [
-      {
-        "id": "${idPrefix}-w1-d1",
-        "date": "${needsTransition ? new Date(transitionEndDate.getTime() + 86400000).toISOString().split('T')[0] : startDate.toISOString().split('T')[0]}",
-        "sessionType": "lift",
-        "blocks": [
-          {
-            "label": "Warm-up",
-            "activities": [
-              "5 min bike or row at easy pace",
-              "Dynamic stretching: leg swings, arm circles, hip circles (2x10 each)",
-              "Activation: 2x15 band pull-aparts, 2x10 goblet squats"
-            ]
-          },
-          {
-            "label": "Main Work - Upper Body",
-            "activities": [
-              "Bench Press: 4x8 @ 65% 1RM, 90s rest",
-              "Bent-Over Row: 4x10, 75s rest",
-              "Overhead Press: 3x10 @ 60% 1RM, 60s rest",
-              "Pull-ups: 3x8-12, 90s rest",
-              "Superset: DB Curls + Tricep Dips 3x12-15, 45s rest"
-            ]
-          },
-          {
-            "label": "Cool-down",
-            "activities": [
-              "5 min walk on treadmill",
-              "Static stretching: chest, shoulders, lats (30s each)",
-              "Foam rolling: upper back and lats (2 min)"
-            ]
-          }
-        ],
-        "targets": [
-          {"key": "volumeKg", "value": 4500},
-          {"key": "duration", "value": 60}
-        ]
-      },
-      // ... 6 more days
-    ]
-  },
-  // ... more weeks
-]
-\`\`\`
-</Example Output Structure>
+<Important>
+Generate a JSON array of Microcycle objects. Each Microcycle contains workouts array with 7 WorkoutInstance objects (one per day).
+</Important>
 
 **Output only the JSON array wrapped in \`\`\`json ... \`\`\` with no additional text.**
 `;

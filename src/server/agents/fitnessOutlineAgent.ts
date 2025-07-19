@@ -5,6 +5,7 @@ import { UserRepository } from '../data/repositories/userRepository';
 import { UserWithProfile } from '@/shared/types/user';
 import { twilioClient } from '../core/clients/twilio';
 import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, MicrocyclesSchema, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
+import { MicrocyclesGeminiSchema } from '@/shared/types/cyclesGemini';
 import { z } from 'zod';
 import { FitnessPlanService } from '../services/fitness/fitnessPlanService';
 import { FitnessPlanRepository } from '../data/repositories/fitnessPlanRepository';
@@ -100,7 +101,7 @@ export const breakdownMesocycleChain = RunnableSequence.from([
       startDate
     );
     
-    const structuredModel = llm.withStructuredOutput(MicrocyclesSchema);
+    const structuredModel = llm.withStructuredOutput(MicrocyclesGeminiSchema);
     const microcycles = await structuredModel.invoke(prompt);
     
     return { mesocyclePlan, microcycles };
@@ -109,7 +110,7 @@ export const breakdownMesocycleChain = RunnableSequence.from([
   // Step 3: Create complete MesocycleDetailed object
   async ({ mesocyclePlan, microcycles }: { 
     mesocyclePlan: MesocyclePlan; 
-    microcycles: z.infer<typeof MicrocyclesSchema>;
+    microcycles: z.infer<typeof MicrocyclesGeminiSchema>;
   }) => {
     const mesocycleDetailed: MesocycleDetailed = {
       ...mesocyclePlan,
@@ -144,6 +145,12 @@ export async function breakdownMesocycle({
     return result;
   } catch (error) {
     console.error(`Failed to breakdown mesocycle ${mesocyclePlan.id}:`, error);
+    
+    // Add more detailed error logging
+    if (error instanceof Error && error.message.includes('JSON')) {
+      console.error('JSON parsing error - the LLM may have returned incomplete or invalid JSON');
+    }
+    
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     throw new Error(`Failed to generate detailed workouts for mesocycle: ${errorMessage}`);
   }
