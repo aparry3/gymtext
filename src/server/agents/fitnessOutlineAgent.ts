@@ -6,8 +6,8 @@ import { UserWithProfile } from '@/shared/types/user';
 import { twilioClient } from '../core/clients/twilio';
 import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, MicrocyclesSchema, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
 import { z } from 'zod';
-import { FitnessPlanService } from '../services/fitness/FitnessPlanService';
-import { FitnessPlanRepository } from '../data/repositories/FitnessPlanRepository';
+import { FitnessPlanService } from '../services/fitness/fitnessPlanService';
+import { FitnessPlanRepository } from '../data/repositories/fitnessPlanRepository';
 // import { ChatOpenAI } from '@langchain/openai';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });

@@ -1,7 +1,7 @@
+import { FitnessPlanService } from '@/server/services/fitness/fitnessPlanService';
 import { BaseRepository } from './baseRepository';
 import { FitnessProgram, Macrocycle } from '@/shared/types/cycles';
 import { FitnessPlanDB } from '@/shared/types/fitnessPlan';
-import { FitnessPlanService } from '@/server/services/fitness/FitnessPlanService';
 
 export class FitnessPlanRepository extends BaseRepository {
   async createFromProgram(
