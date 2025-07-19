@@ -132,6 +132,7 @@ export const WorkoutInstanceSchema = WorkoutInstance;
 export type MesocyclePlan = z.infer<typeof MesocyclePlan>;
 export type MesocycleDetailed = z.infer<typeof MesocycleDetailed>;
 export type Mesocycle = z.infer<typeof Mesocycle>;
+export type Macrocycle = z.infer<typeof Macrocycle>;
 export type Microcycle = z.infer<typeof Microcycle>;
 export type WorkoutInstance = z.infer<typeof WorkoutInstance>;
 export type WeeklyTarget = z.infer<typeof WeeklyTarget>;

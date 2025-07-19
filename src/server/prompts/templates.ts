@@ -96,7 +96,18 @@ export const mesocycleBreakdownPrompt = (
   fitnessProfile: string,
   programType: string,
   startDate: Date
-) => `
+) => {
+  // Calculate transition microcycle requirements
+  const dayOfWeek = startDate.getDay();
+  const daysUntilMonday = dayOfWeek === 1 ? 0 : (8 - dayOfWeek) % 7;
+  const needsTransition = daysUntilMonday > 0;
+  const transitionEndDate = new Date(startDate);
+  transitionEndDate.setDate(transitionEndDate.getDate() + daysUntilMonday - 1);
+  
+  // Check if this is a transition mesocycle based on the phase name
+  const isTransitionMesocycle = mesocyclePlan.phase.includes('transition');
+  
+  return `
 You are an elite personal fitness coach and periodization expert tasked with creating detailed weekly workout plans.
 
 <Goal>
@@ -163,15 +174,38 @@ Week ${idx + 1} (${target.deload ? 'DELOAD' : 'BUILD'}):
 ${fitnessProfile}
 </Fitness Profile>
 
+${needsTransition && isTransitionMesocycle ? `
+<Transition Microcycle Requirements>
+IMPORTANT: The user is starting on ${formatDate(startDate)} (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]}).
+- Create a TRANSITION microcycle first with ${daysUntilMonday} workout days (from ${formatDate(startDate)} to ${formatDate(transitionEndDate)})
+- This transition microcycle should have weekNumber: 0
+- It should contain exactly ${daysUntilMonday} WorkoutInstance objects
+- After the transition, create ${mesocyclePlan.weeks} standard full-week microcycles (Monday-Sunday)
+- Total microcycles: ${mesocyclePlan.weeks + 1} (1 transition + ${mesocyclePlan.weeks} standard)
+
+For the transition microcycle:
+- Use a modified version of Week 1's split pattern
+- Focus on assessment, movement quality, and gradual introduction
+- Include at least one rest day if transition is 3+ days
+- Prioritize key workouts from the split pattern
+</Transition Microcycle Requirements>
+` : ''}
+
 <Example Output Structure>
 \`\`\`json
-[
+[${needsTransition && isTransitionMesocycle ? `
+  {
+    "weekNumber": 0,
+    "workouts": [
+      // ${daysUntilMonday} workout instances for transition period
+    ]
+  },` : ''}
   {
     "weekNumber": 1,
     "workouts": [
       {
         "id": "week1-day1",
-        "date": "2025-01-20",
+        "date": "${needsTransition ? new Date(transitionEndDate.getTime() + 86400000).toISOString().split('T')[0] : startDate.toISOString().split('T')[0]}",
         "sessionType": "lift",
         "blocks": [
           {
@@ -216,6 +250,7 @@ ${fitnessProfile}
 
 **Output only the JSON array wrapped in \`\`\`json ... \`\`\` with no additional text.**
 `;
+};
 
 // Add a welcomePrompt template for generating a personalized welcome message
 export const welcomePrompt = (user: UserWithProfile, outline: string) => `
