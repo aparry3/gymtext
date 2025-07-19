@@ -4,7 +4,7 @@ import type {
   NewWorkoutInstance, 
   WorkoutInstanceUpdate 
 } from '../types/cycleTypes';
-import type { Json } from '@/shared/types/generated';
+import type { Json, JsonValue } from '@/shared/types/generated';
 
 export class WorkoutInstanceRepository extends BaseRepository {
   /**
@@ -161,7 +161,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
    */
   async addWorkoutFeedback(
     id: string, 
-    feedback: Record<string, any>
+    feedback: Record<string, JsonValue>
   ): Promise<void> {
     await this.updateWorkoutInstance(id, { 
       feedback: feedback as Json 
@@ -176,7 +176,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
     metrics: Record<string, number>
   ): Promise<void> {
     await this.updateWorkoutInstance(id, { 
-      metrics: metrics as unknown as Json 
+      metrics: metrics as Json 
     });
   }
 
@@ -185,7 +185,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
    */
   async addWorkoutAlterations(
     id: string, 
-    alterations: Record<string, any>
+    alterations: Record<string, JsonValue>
   ): Promise<void> {
     await this.updateWorkoutInstance(id, { 
       alterations: alterations as Json 

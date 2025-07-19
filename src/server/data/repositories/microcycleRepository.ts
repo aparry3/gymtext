@@ -107,7 +107,7 @@ export class MicrocycleRepository extends BaseRepository {
    */
   async updateMicrocycleMetrics(id: string, metrics: Record<string, number>): Promise<void> {
     await this.updateMicrocycle(id, { 
-      actualMetrics: metrics as unknown as Json 
+      actualMetrics: metrics as Json 
     });
   }
 

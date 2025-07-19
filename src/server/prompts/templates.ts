@@ -107,6 +107,9 @@ export const mesocycleBreakdownPrompt = (
   // Check if this is a transition mesocycle based on the phase name
   const isTransitionMesocycle = mesocyclePlan.phase.includes('transition');
   
+  // Generate consistent ID prefix for this mesocycle
+  const idPrefix = mesocyclePlan.id.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  
   return `
 You are an elite personal fitness coach and periodization expert tasked with creating detailed weekly workout plans.
 
@@ -120,23 +123,36 @@ Generate **exactly one JSON array** of Microcycle objects that fully populates t
 - Duration: ${mesocyclePlan.weeks} weeks
 - Program type: ${programType}
 - Start date: ${formatDate(startDate)}
+- Mesocycle ID: ${mesocyclePlan.id}
 </Context>
 
 <Schema Requirements>
 Each Microcycle must include:
 • weekNumber: Human-friendly week number (1, 2, 3, etc.)
-• workouts: Array of 7 WorkoutInstance objects (one per day)
+• workouts: Array of WorkoutInstance objects (exactly 7 for full weeks)
 
 Each WorkoutInstance must include:
-• id: Unique identifier (e.g., "week1-day1")
-• date: YYYY-MM-DD format (calculate from start date)
+• id: UNIQUE identifier using format: "${idPrefix}-w{weekNumber}-d{dayNumber}" (e.g., "${idPrefix}-w1-d1", "${idPrefix}-w1-d2", etc.)
+• date: YYYY-MM-DD format string (calculate sequentially from start date)
 • sessionType: "run", "lift", "metcon", "mobility", "rest", or "other"
-• blocks: Array of WorkoutBlock objects (warmup, main, cooldown)
+• blocks: Array of WorkoutBlock objects (at least 1, typically warmup/main/cooldown)
 • targets: Optional array of {key, value} pairs for workout metrics
 
 Each WorkoutBlock must include:
 • label: Block name (e.g., "Warm-up", "Main Work", "Cool-down")
 • activities: Array of exercise descriptions with sets/reps/rest
+
+CRITICAL ID GENERATION RULES:
+- Each workout ID must be globally unique
+- Use the format: "${idPrefix}-w{weekNumber}-d{dayNumber}"
+- Week numbers start at 1 (or 0 for transition week)
+- Day numbers go from 1-7 (Monday=1, Sunday=7)
+- For transition weeks, use day numbers starting from 1
+
+DATE CALCULATION RULES:
+- Start from ${formatDate(startDate)} and increment by 1 day for each workout
+- Dates must be in YYYY-MM-DD format (e.g., "2025-01-15")
+- Each microcycle should have consecutive dates with no gaps
 </Schema Requirements>
 
 <Progressive Overload Guidelines>
@@ -204,7 +220,7 @@ For the transition microcycle:
     "weekNumber": 1,
     "workouts": [
       {
-        "id": "week1-day1",
+        "id": "${idPrefix}-w1-d1",
         "date": "${needsTransition ? new Date(transitionEndDate.getTime() + 86400000).toISOString().split('T')[0] : startDate.toISOString().split('T')[0]}",
         "sessionType": "lift",
         "blocks": [

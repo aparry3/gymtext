@@ -1,7 +1,6 @@
-import { z } from "zod";
 import type { Insertable, Selectable, Updateable } from "kysely";
 import type { Mesocycles, Microcycles, WorkoutInstances } from "@/shared/types/generated";
-import { 
+import type { 
   MesocycleDetailed, 
   Microcycle, 
   WorkoutInstance,
@@ -124,11 +123,24 @@ export function workoutInstanceToDb(
 }
 
 /**
+ * Type for WeeklyTarget JSON representation
+ */
+export interface WeeklyTargetJson {
+  weekOffset: number;
+  split?: string;
+  totalMileage?: number;
+  longRunMileage?: number;
+  avgIntensityPct1RM?: number;
+  totalSetsMainLifts?: number;
+  deload?: boolean;
+}
+
+/**
  * Converts WeeklyTargets from AI format to database JSON format
  */
-export function weeklyTargetsToJson(targets: WeeklyTarget[]): Record<string, any>[] {
+export function weeklyTargetsToJson(targets: WeeklyTarget[]): WeeklyTargetJson[] {
   return targets.map(target => {
-    const result: Record<string, any> = {
+    const result: WeeklyTargetJson = {
       weekOffset: target.weekOffset
     };
     
