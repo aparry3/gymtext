@@ -4,7 +4,8 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
 import { UserRepository } from '@/server/data/repositories/userRepository';
-import { FitnessPlanRepository } from '@/server/data/repositories/FitnessPlanRepository';
+import { FitnessPlanRepository } from '@/server/data/repositories/fitnessPlanRepository';
+import { Macrocycle } from '@/shared/types/cycles';
 
 // Load environment variables
 config({ path: resolve(process.cwd(), '.env.local') });
@@ -64,7 +65,7 @@ async function testFitnessPlanDatabase() {
       console.log(`   - Macrocycles: ${latestPlan.macrocycles.length}`);
       
       // Show macrocycle details
-      latestPlan.macrocycles.forEach((macro, i) => {
+      (latestPlan.macrocycles as Macrocycle[]).forEach((macro, i) => {
         console.log(`\n   Macrocycle ${i + 1}:`);
         console.log(`   - ID: ${macro.id}`);
         console.log(`   - Length: ${macro.lengthWeeks} weeks`);
