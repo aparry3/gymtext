@@ -7,7 +7,7 @@ import { twilioClient } from '../core/clients/twilio';
 import { FitnessProgramSchema, MesocyclePlan, MesocycleDetailed, FitnessProgram, Macrocycle } from '@/shared/types/cycles';
 import { MicrocyclesGeminiSchema } from '@/shared/types/cyclesGemini';
 import { z } from 'zod';
-import { FitnessPlanService } from '../services/fitness/fitnessPlanService';
+import { FitnessPlanService } from '@/server/services/fitness/fitnessPlanService';
 import { FitnessPlanRepository } from '../data/repositories/fitnessPlanRepository';
 // import { ChatOpenAI } from '@langchain/openai';
 
