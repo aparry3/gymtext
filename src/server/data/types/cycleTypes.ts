@@ -163,18 +163,58 @@ export function weeklyTargetsToJson(targets: WeeklyTarget[]): WeeklyTargetJson[]
 
 /**
  * Helper to calculate microcycle dates based on mesocycle start and week number
+ * Enhanced to properly handle transition weeks (week 0) for non-Monday starts
  */
 export function calculateMicrocycleDates(
   mesocycleStartDate: Date,
-  weekNumber: number
+  weekNumber: number,
+  isTransitionWeek?: boolean
 ): { startDate: Date; endDate: Date } {
   const startDate = new Date(mesocycleStartDate);
-  startDate.setDate(startDate.getDate() + (weekNumber - 1) * 7);
   
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 6);
-  
-  return { startDate, endDate };
+  if (isTransitionWeek || weekNumber === 0) {
+    // Transition week: runs from start date to Sunday (or Saturday if starting Sunday)
+    const endDate = new Date(startDate);
+    const dayOfWeek = startDate.getDay();
+    
+    if (dayOfWeek === 0) {
+      // Sunday start: transition week goes to next Saturday
+      endDate.setDate(endDate.getDate() + 6);
+    } else {
+      // Any other day: transition week goes to Sunday
+      const daysUntilSunday = 7 - dayOfWeek;
+      endDate.setDate(endDate.getDate() + daysUntilSunday);
+    }
+    
+    return { startDate, endDate };
+  } else {
+    // Regular weeks: calculate from the Monday after transition
+    const dayOfWeek = mesocycleStartDate.getDay();
+    let daysToMonday: number;
+    
+    if (dayOfWeek === 1) {
+      // Already Monday, no offset needed
+      daysToMonday = 0;
+    } else if (dayOfWeek === 0) {
+      // Sunday: next Monday is 1 day away
+      daysToMonday = 1;
+    } else {
+      // Tuesday-Saturday: calculate days until next Monday
+      daysToMonday = 8 - dayOfWeek;
+    }
+    
+    const mondayStart = new Date(mesocycleStartDate);
+    mondayStart.setDate(mondayStart.getDate() + daysToMonday);
+    
+    // Now calculate based on adjusted week number
+    const adjustedStartDate = new Date(mondayStart);
+    adjustedStartDate.setDate(adjustedStartDate.getDate() + (weekNumber - 1) * 7);
+    
+    const endDate = new Date(adjustedStartDate);
+    endDate.setDate(endDate.getDate() + 6);
+    
+    return { startDate: adjustedStartDate, endDate };
+  }
 }
 
 /**
