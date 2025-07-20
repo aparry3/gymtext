@@ -1,5 +1,5 @@
 import { FitnessProgram } from '@/shared/types/cycles';
-import { FitnessPlanDB, NewFitnessPlan } from '@/shared/types/fitnessPlan';
+import { FitnessPlanDB } from '@/shared/types/fitnessPlan';
 import { FitnessPlanRepository } from '@/server/data/repositories/fitnessPlanRepository';
 
 export class FitnessPlanService {
@@ -47,24 +47,5 @@ export class FitnessPlanService {
    */
   async getAllPlans(clientId: string): Promise<FitnessPlanDB[]> {
     return this.fitnessPlanRepo.findByClientId(clientId);
-  }
-
-  /**
-   * Transforms a FitnessProgram into the format needed for database insertion
-   */
-  static transformProgramForDb(
-    clientId: string,
-    program: FitnessProgram,
-    startDate: Date,
-    goalStatement?: string
-  ): NewFitnessPlan {
-    return {
-      clientId,
-      programType: program.programType,
-      goalStatement: goalStatement ?? null,
-      overview: program.overview,
-      startDate,
-      macrocycles: program.macrocycles,
-    };
   }
 }

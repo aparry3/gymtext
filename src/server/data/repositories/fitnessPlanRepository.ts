@@ -1,7 +1,6 @@
 import { BaseRepository } from './baseRepository';
 import { FitnessProgram, Macrocycle } from '@/shared/types/cycles';
-import { FitnessPlanDB } from '@/shared/types/fitnessPlan';
-import { FitnessPlanService } from '@/server/services/fitness/fitnessPlanService';
+import { FitnessPlanDB, NewFitnessPlan } from '@/shared/types/fitnessPlan';
 
 export class FitnessPlanRepository extends BaseRepository {
   async createFromProgram(
@@ -10,7 +9,14 @@ export class FitnessPlanRepository extends BaseRepository {
     startDate: Date,
     goalStatement?: string
   ): Promise<FitnessPlanDB> {
-    const newPlan = FitnessPlanService.transformProgramForDb(clientId, program, startDate, goalStatement);
+    const newPlan: NewFitnessPlan = {
+      clientId,
+      programType: program.programType,
+      goalStatement: goalStatement ?? null,
+      overview: program.overview,
+      startDate,
+      macrocycles: program.macrocycles,
+    };
     
     const result = await this.db
       .insertInto('fitnessPlans')
