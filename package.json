@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/shared/types/generated.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
+    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
     "predev": "pnpm db:codegen",
     "dev": "next dev --turbopack",
     "prebuild": "pnpm db:codegen",

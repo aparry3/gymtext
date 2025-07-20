@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 import { CreateUserData, CreateFitnessProfileData } from '@/shared/types/user';
 import { setUserCookie } from '@/shared/utils/cookies';
 

@@ -1,11 +1,55 @@
-import { BaseRepository } from './baseRepository';
-import type { 
-  MesocycleRow, 
-  NewMesocycle, 
-  MesocycleUpdate 
-} from '../types/cycleTypes';
+import { BaseRepository } from '@/server/repositories/baseRepository';
+import type { Mesocycle as MesocycleRow, NewMesocycle, MesocycleUpdate } from '@/server/models/mesocycleModel';
 
 export class MesocycleRepository extends BaseRepository {
+  /**
+   * Create a new mesocycle
+   */
+  async create(data: Partial<MesocycleRow>): Promise<MesocycleRow> {
+    const result = await this.db
+      .insertInto('mesocycles')
+      .values(data as NewMesocycle)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    
+    return result;
+  }
+
+  /**
+   * Find a mesocycle by ID
+   */
+  async findById(id: string): Promise<MesocycleRow | undefined> {
+    return await this.db
+      .selectFrom('mesocycles')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Update a mesocycle
+   */
+  async update(id: string, updates: Partial<MesocycleRow>): Promise<MesocycleRow> {
+    return await this.db
+      .updateTable('mesocycles')
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Delete a mesocycle
+   */
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom('mesocycles')
+      .where('id', '=', id)
+      .execute();
+  }
   /**
    * Create a new mesocycle
    */

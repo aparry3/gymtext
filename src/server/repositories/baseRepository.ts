@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import type { DB } from '@/shared/types/generated';
-import { postgresDb } from '@/server/core/database/postgres';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export abstract class BaseRepository {
   protected db: Kysely<DB>;

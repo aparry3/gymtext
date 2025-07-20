@@ -1,4 +1,4 @@
-import { UserWithProfile } from "../../models/_types";
+import { UserWithProfile } from "@/server/models/_types";
 
 export const welcomePrompt = (user: UserWithProfile) => `
 Create a warm welcome message for ${user.name} who just signed up for GymText.

@@ -1,15 +1,15 @@
-import { BaseRepository } from './baseRepository';
-import { User, FitnessProfile, UserWithProfile, CreateUserData, CreateFitnessProfileData } from '@/shared/types/user';
-import type { Users, FitnessProfiles } from '@/shared/types/generated';
-import { Insertable, Selectable, Updateable } from 'kysely';
-
-export type UserRecord = Selectable<Users>;
-export type NewUser = Insertable<Users>;
-export type UserUpdate = Updateable<Users>;
-
-export type FitnessProfileRecord = Selectable<FitnessProfiles>;
-export type NewFitnessProfile = Insertable<FitnessProfiles>;
-export type FitnessProfileUpdate = Updateable<FitnessProfiles>;
+import { BaseRepository } from '@/server/repositories/baseRepository';
+import type { 
+  User, 
+  NewUser, 
+  UserUpdate, 
+  FitnessProfile, 
+  NewFitnessProfile, 
+  FitnessProfileUpdate, 
+  UserWithProfile, 
+  CreateUserData, 
+  CreateFitnessProfileData 
+} from '@/server/models/userModel';
 
 export class UserRepository extends BaseRepository {
   async create(userData: CreateUserData): Promise<User> {

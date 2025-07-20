@@ -1,9 +1,9 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { dailyMotivationPrompt, workoutReminderPrompt, progressCheckPrompt } from './prompts';
-import { UserRepository } from '../../repositories/userRepository';
-import { WorkoutInstanceRepository } from '../../repositories/workoutInstanceRepository';
-import { twilioClient } from '../../connections/twilio/twilio';
+import { dailyMotivationPrompt, workoutReminderPrompt, progressCheckPrompt } from '@/server/agents/dailyMessage/prompts';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { twilioClient } from '@/server/connections/twilio/twilio';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.8, model: "gemini-2.0-flash" });
 
@@ -129,7 +129,7 @@ async function calculateWorkoutStreak(userId: string): Promise<number> {
   const workoutRepo = new WorkoutInstanceRepository();
   const today = new Date();
   let streak = 0;
-  let currentDate = new Date(today);
+  const currentDate = new Date(today);
   
   // Look back up to 30 days to calculate streak
   for (let i = 0; i < 30; i++) {

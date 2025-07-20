@@ -1,10 +1,10 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { chatPrompt, contextPrompt } from './prompts';
-import { ConversationRepository } from '../../repositories/conversationRepository';
-import { MessageRepository } from '../../repositories/messageRepository';
-import { UserRepository } from '../../repositories/userRepository';
-import { ContextService } from '../../services/ai/contextService';
+import { chatPrompt, contextPrompt } from '@/server/agents/chat/prompts';
+import { ConversationRepository } from '@/server/repositories/conversationRepository';
+import { MessageRepository } from '@/server/repositories/messageRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { ConversationContextService } from '@/server/services/contextService';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
 
@@ -28,14 +28,21 @@ export const chatChain = RunnableSequence.from([
     }
     
     if (!conversation) {
-      conversation = await conversationRepo.create(userId);
+      conversation = await conversationRepo.create({
+        userId,
+        lastMessageAt: new Date(),
+        startedAt: new Date()
+      });
     }
     
     // Store user message
     await messageRepo.create({
       conversationId: conversation.id,
-      role: 'user',
-      content: message
+      userId,
+      direction: 'inbound',
+      content: message,
+      phoneFrom: 'user_phone', // TODO: Get from user
+      phoneTo: 'system_phone' // TODO: Get from config
     });
     
     // Get conversation history
@@ -54,9 +61,13 @@ export const chatChain = RunnableSequence.from([
     const userRepo = new UserRepository();
     const user = await userRepo.findWithProfile(userId);
     
-    // Get relevant context using vector search
-    const contextService = new ContextService();
-    const context = await contextService.getRelevantContext(userId, message);
+    // Get conversation context
+    const contextService = new ConversationContextService();
+    const context = await contextService.getContext(userId, {
+      includeUserProfile: true,
+      includeWorkoutHistory: true,
+      messageLimit: 5
+    });
     
     return { user, message, conversation, messages, context };
   },
@@ -70,13 +81,16 @@ export const chatChain = RunnableSequence.from([
     const messageRepo = new MessageRepository();
     await messageRepo.create({
       conversationId: conversation.id,
-      role: 'assistant',
-      content: response.content
+      userId,
+      direction: 'outbound',
+      content: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
+      phoneFrom: 'system_phone', // TODO: Get from config
+      phoneTo: 'user_phone' // TODO: Get from user
     });
     
     return {
       conversationId: conversation.id,
-      response: response.content,
+      response: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
       context
     };
   }
@@ -96,11 +110,13 @@ export const contextualChatChain = RunnableSequence.from([
     const userRepo = new UserRepository();
     const user = await userRepo.findWithProfile(userId);
     
-    // Get specific context if keys provided
-    const contextService = new ContextService();
-    const context = contextKeys 
-      ? await contextService.getContextByKeys(userId, contextKeys)
-      : await contextService.getRelevantContext(userId, message);
+    // Get conversation context
+    const contextService = new ConversationContextService();
+    const context = await contextService.getContext(userId, {
+      includeUserProfile: true,
+      includeWorkoutHistory: true,
+      messageLimit: 5
+    });
     
     return { user, message, context };
   },
@@ -110,7 +126,7 @@ export const contextualChatChain = RunnableSequence.from([
     const response = await llm.invoke(prompt);
     
     return {
-      response: response.content,
+      response: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
       context
     };
   }

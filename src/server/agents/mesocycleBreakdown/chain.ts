@@ -1,10 +1,10 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { mesocycleBreakdownPrompt } from './prompts';
-import { MesocycleRepository } from '../../repositories/mesocycleRepository';
-import { MicrocycleRepository } from '../../repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '../../repositories/workoutInstanceRepository';
-import { MesocyclePlan, MicrocyclePlan, WeeklyTarget } from '../../models/_types';
+import { mesocycleBreakdownPrompt } from '@/server/agents/mesocycleBreakdown/prompts';
+import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { MesocyclePlan, MicrocyclePlan, WeeklyTarget } from '@/server/models/_types';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 

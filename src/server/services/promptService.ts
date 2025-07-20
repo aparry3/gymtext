@@ -172,7 +172,7 @@ ${contextInfo}`;
     preserveSystemMessage: boolean = true
   ): Promise<BaseMessage[]> {
     // Dynamic import to avoid circular dependencies
-    const { TokenManager } = await import('../../utils/token-manager');
+    const { TokenManager } = await import('@/server/utils/token-manager');
     const tokenManager = new TokenManager();
 
     return tokenManager.truncateMessagesToLimit(messages, maxTokens, {

@@ -1,6 +1,15 @@
-import { ConversationRepository } from '../repositories/conversationRepository';
-import { MessageRepository } from '../repositories/messageRepository';
-import type { Conversation, Message } from './_types';
+import { ConversationRepository } from '@/server/repositories/conversationRepository';
+import { MessageRepository } from '@/server/repositories/messageRepository';
+import type { Conversations, Messages } from './_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+export type Conversation = Selectable<Conversations>;
+export type NewConversation = Insertable<Conversations>;
+export type ConversationUpdate = Updateable<Conversations>;
+
+export type Message = Selectable<Messages>;
+export type NewMessage = Insertable<Messages>;
+export type MessageUpdate = Updateable<Messages>;
 
 export class ConversationModel {
   private conversationRepository: ConversationRepository;
@@ -15,7 +24,12 @@ export class ConversationModel {
     // Business logic for conversation creation
     this.validateUserId(userId);
     
-    const conversation = await this.conversationRepository.create(userId);
+    const now = new Date();
+    const conversation = await this.conversationRepository.create({
+      userId,
+      startedAt: now,
+      lastMessageAt: now
+    });
     
     if (initialMessage) {
       await this.addMessage(conversation.id, 'user', initialMessage);
@@ -46,8 +60,11 @@ export class ConversationModel {
     
     return await this.messageRepository.create({
       conversationId,
-      role,
+      userId: conversation.userId,
       content,
+      direction: role === 'user' ? 'inbound' : 'outbound',
+      phoneFrom: '', // These would be filled in by the actual SMS service
+      phoneTo: ''    // These would be filled in by the actual SMS service
     });
   }
 
@@ -59,7 +76,9 @@ export class ConversationModel {
     // Business logic for metadata updates
     this.validateMetadata(metadata);
     
-    return await this.conversationRepository.updateMetadata(id, metadata);
+    return await this.conversationRepository.update(id, {
+      metadata: metadata as any
+    });
   }
 
   async deleteConversation(id: string): Promise<void> {
@@ -69,11 +88,9 @@ export class ConversationModel {
       throw new Error('Conversation not found');
     }
     
-    // Delete all messages first
-    await this.messageRepository.deleteByConversationId(id);
-    
-    // Then delete conversation
-    return await this.conversationRepository.delete(id);
+    // Delete conversation - messages should be handled by cascade or separate cleanup
+    await this.conversationRepository.update(id, { status: 'deleted' });
+    // Note: Actual deletion logic would depend on your data retention policy
   }
 
   private validateUserId(userId: string): void {

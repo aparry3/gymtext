@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 import { UserCookieData, setUserCookie } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key

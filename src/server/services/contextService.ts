@@ -6,9 +6,9 @@ import {
   UserContextProfile,
 } from '@/shared/types/conversation';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
-import { ConversationRepository } from '@/server/data/repositories/conversationRepository';
-import { MessageRepository } from '@/server/data/repositories/messageRepository';
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { ConversationRepository } from '@/server/repositories/conversationRepository';
+import { MessageRepository } from '@/server/repositories/messageRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 
 export class ConversationContextService {
   private config: ContextConfig;

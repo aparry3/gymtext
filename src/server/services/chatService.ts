@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/shared/types/user';
-import { fitnessCoachPrompt } from '../../prompts/templates';
-import { ConversationContextService } from './contextService';
-import { PromptBuilder } from './promptService';
+import { fitnessCoachPrompt } from '@/server/prompts/templates';
+import { ConversationContextService } from '@/server/services/contextService';
+import { PromptBuilder } from '@/server/services/promptService';
 
 // Configuration from environment variables
 const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');

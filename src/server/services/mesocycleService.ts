@@ -1,20 +1,21 @@
-import { MesocycleRepository } from '@/server/data/repositories/mesocycleRepository';
-import { MicrocycleRepository } from '@/server/data/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/data/repositories/workoutInstanceRepository';
-import { 
-  mesocycleDetailedToDb,
-  microcycleToDb,
-  workoutInstanceToDb,
-  calculateMicrocycleDates,
-  type NewMicrocycle,
-  type NewWorkoutInstance,
-  type MesocycleRow,
-  type MicrocycleRow,
-  type WorkoutInstanceRow
-} from '@/server/data/types/cycleTypes';
+import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import type { 
+  Mesocycles, 
+  Microcycles, 
+  WorkoutInstances 
+} from '@/server/models/_types';
+import { Insertable, Selectable } from 'kysely';
+
+type NewMicrocycle = Insertable<Microcycles>;
+type NewWorkoutInstance = Insertable<WorkoutInstances>;
+type MesocycleRow = Selectable<Mesocycles>;
+type MicrocycleRow = Selectable<Microcycles>;
+type WorkoutInstanceRow = Selectable<WorkoutInstances>;
 import type { MesocyclePlan, MesocycleDetailed } from '@/shared/types/cycles';
 import type { UserWithProfile } from '@/shared/types/user';
-import { postgresDb } from '@/server/core/database/postgres';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 import type { Kysely } from 'kysely';
 import type { DB } from '@/shared/types/generated';
 import { v4 as uuidv4 } from 'uuid';
@@ -235,4 +236,75 @@ export class MesocycleGenerationService {
       workouts
     };
   }
+}
+
+// Helper functions
+function mesocycleDetailedToDb(
+  mesocycle: MesocycleDetailed,
+  fitnessPlanId: string,
+  clientId: string,
+  cycleOffset: number,
+  startDate: Date
+): NewMesocycle {
+  return {
+    fitnessPlanId,
+    clientId,
+    phase: mesocycle.phase,
+    lengthWeeks: mesocycle.weeks,
+    cycleOffset,
+    startDate
+  };
+}
+
+function microcycleToDb(
+  microcycle: any,
+  mesocycleId: string,
+  fitnessPlanId: string,
+  clientId: string,
+  cycleOffset: number,
+  startDate: Date,
+  endDate: Date
+): NewMicrocycle {
+  return {
+    mesocycleId,
+    fitnessPlanId,
+    clientId,
+    weekNumber: microcycle.weekNumber,
+    cycleOffset,
+    startDate,
+    endDate,
+    targets: microcycle.weeklyTargets || null
+  };
+}
+
+function workoutInstanceToDb(
+  workout: any,
+  microcycleId: string,
+  mesocycleId: string,
+  fitnessPlanId: string,
+  clientId: string
+): NewWorkoutInstance {
+  return {
+    microcycleId,
+    mesocycleId,
+    fitnessPlanId,
+    clientId,
+    date: new Date(workout.date),
+    sessionType: workout.sessionType,
+    details: workout.details,
+    goal: workout.goal || null
+  };
+}
+
+function calculateMicrocycleDates(
+  mesocycleStartDate: Date,
+  weekNumber: number
+): { startDate: Date; endDate: Date } {
+  const startDate = new Date(mesocycleStartDate);
+  startDate.setDate(startDate.getDate() + (weekNumber - 1) * 7);
+  
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 6);
+  
+  return { startDate, endDate };
 }

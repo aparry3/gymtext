@@ -1,6 +1,12 @@
-import { BaseRepository } from './baseRepository';
-import { FitnessProgram, Macrocycle } from '@/shared/types/cycles';
-import { FitnessPlanDB, NewFitnessPlan } from '@/shared/types/fitnessPlan';
+import { BaseRepository } from '@/server/repositories/baseRepository';
+import type { 
+  FitnessPlan,
+  NewFitnessPlan,
+  FitnessPlanUpdate,
+  FitnessPlanDB,
+  FitnessProgram,
+  Macrocycle
+} from '@/server/models/fitnessPlanModel';
 import type { 
   FitnessPlanWithHierarchy, 
   MesocycleWithMicrocycles, 
@@ -72,14 +78,14 @@ export class FitnessPlanRepository extends BaseRepository {
     };
   }
 
-  async findById(id: string): Promise<FitnessPlanDB | null> {
+  async findById(id: string): Promise<FitnessPlanDB | undefined> {
     const result = await this.db
       .selectFrom('fitnessPlans')
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst();
     
-    if (!result) return null;
+    if (!result) return undefined;
     
     return {
       ...result,
@@ -176,5 +182,29 @@ export class FitnessPlanRepository extends BaseRepository {
     );
 
     return plansWithHierarchy;
+  }
+
+  async update(id: string, updates: Partial<FitnessPlan>): Promise<FitnessPlanDB> {
+    const result = await this.db
+      .updateTable('fitnessPlans')
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    
+    return {
+      ...result,
+      macrocycles: result.macrocycles as Macrocycle[],
+    };
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom('fitnessPlans')
+      .where('id', '=', id)
+      .execute();
   }
 }

@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import SignUpForm from '@/components/SignUpForm'
+import SignUpForm from '@/components/pages/SignUp'
 import { Bebas_Neue } from 'next/font/google'
 
 const bn = Bebas_Neue({ weight: "400", subsets: ["latin"] });

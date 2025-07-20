@@ -1,5 +1,10 @@
-import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
-import type { WorkoutInstance } from './_types';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import type { WorkoutInstances } from './_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+export type WorkoutInstance = Selectable<WorkoutInstances>;
+export type NewWorkoutInstance = Insertable<WorkoutInstances>;
+export type WorkoutInstanceUpdate = Updateable<WorkoutInstances>;
 
 export class WorkoutModel {
   private workoutRepository: WorkoutInstanceRepository;
@@ -41,22 +46,21 @@ export class WorkoutModel {
     }
     
     return await this.workoutRepository.update(id, {
-      completedAt: completedAt || new Date(),
-      status: 'completed'
+      completedAt: completedAt || new Date()
     });
   }
 
   private validateWorkoutData(data: Partial<WorkoutInstance>): void {
-    if (data.name !== undefined && (!data.name || data.name.trim().length < 2)) {
-      throw new Error('Workout name must be at least 2 characters');
+    if (data.sessionType !== undefined && !data.sessionType) {
+      throw new Error('Session type is required');
     }
     
-    if (data.dayOfWeek !== undefined && (data.dayOfWeek < 1 || data.dayOfWeek > 7)) {
-      throw new Error('Day of week must be between 1 and 7');
+    if (data.date !== undefined && !data.date) {
+      throw new Error('Workout date is required');
     }
     
-    if (data.scheduledDate !== undefined && data.scheduledDate < new Date()) {
-      throw new Error('Scheduled date cannot be in the past');
+    if (data.goal !== undefined && data.goal && data.goal.length > 500) {
+      throw new Error('Goal description cannot exceed 500 characters');
     }
   }
 }

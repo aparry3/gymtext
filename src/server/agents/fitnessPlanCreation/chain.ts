@@ -1,12 +1,12 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { fitnessProfileSubstring, outlinePrompt, welcomePrompt } from '../prompts';
-import { UserRepository } from '../../repositories/userRepository';
-import { UserWithProfile } from '../../models/_types';
-import { twilioClient } from '../../connections/twilio/twilio';
-import { FitnessProgramSchema, FitnessProgram } from '../../models/_types';
-import { FitnessPlanService } from '../../services/fitness/FitnessPlanService';
-import { FitnessPlanRepository } from '../../repositories/fitnessPlanRepository';
+import { fitnessProfileSubstring, outlinePrompt, welcomePrompt } from '@/server/prompts/templates';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { UserWithProfile } from '@/server/models/_types';
+import { twilioClient } from '@/server/connections/twilio/twilio';
+import { FitnessProgramSchema, FitnessProgram } from '@/server/models/_types';
+import { FitnessPlanService } from '@/server/services/fitnessPlanService';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 

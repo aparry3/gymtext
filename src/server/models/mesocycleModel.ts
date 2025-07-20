@@ -1,5 +1,10 @@
-import { MesocycleRepository } from '../repositories/mesocycleRepository';
-import type { Mesocycle } from './_types';
+import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
+import type { Mesocycles } from './_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+export type Mesocycle = Selectable<Mesocycles>;
+export type NewMesocycle = Insertable<Mesocycles>;
+export type MesocycleUpdate = Updateable<Mesocycles>;
 
 export class MesocycleModel {
   private mesocycleRepository: MesocycleRepository;
@@ -21,9 +26,7 @@ export class MesocycleModel {
 
   async updateMesocycle(id: string, updates: Partial<Mesocycle>): Promise<Mesocycle> {
     // Business logic for updates
-    if (updates.name || updates.description || updates.durationWeeks) {
-      this.validateMesocycleData(updates);
-    }
+    this.validateMesocycleData(updates);
     
     return await this.mesocycleRepository.update(id, updates);
   }
@@ -33,16 +36,16 @@ export class MesocycleModel {
   }
 
   private validateMesocycleData(data: Partial<Mesocycle>): void {
-    if (data.name !== undefined && (!data.name || data.name.trim().length < 2)) {
-      throw new Error('Mesocycle name must be at least 2 characters');
+    if (data.phase !== undefined && (!data.phase || data.phase.trim().length < 2)) {
+      throw new Error('Mesocycle phase must be at least 2 characters');
     }
     
-    if (data.description !== undefined && (!data.description || data.description.trim().length < 10)) {
-      throw new Error('Mesocycle description must be at least 10 characters');
+    if (data.lengthWeeks !== undefined && (!data.lengthWeeks || data.lengthWeeks < 1 || data.lengthWeeks > 52)) {
+      throw new Error('Mesocycle length must be between 1 and 52 weeks');
     }
     
-    if (data.durationWeeks !== undefined && (!data.durationWeeks || data.durationWeeks < 1 || data.durationWeeks > 52)) {
-      throw new Error('Mesocycle duration must be between 1 and 52 weeks');
+    if (data.cycleOffset !== undefined && data.cycleOffset < 0) {
+      throw new Error('Cycle offset cannot be negative');
     }
   }
 }

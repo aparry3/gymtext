@@ -1,12 +1,60 @@
-import { BaseRepository } from './baseRepository';
+import { BaseRepository } from '@/server/repositories/baseRepository';
 import type { 
-  WorkoutInstanceRow, 
+  WorkoutInstance as WorkoutInstanceRow, 
   NewWorkoutInstance, 
   WorkoutInstanceUpdate 
-} from '../types/cycleTypes';
-import type { Json, JsonValue } from '@/shared/types/generated';
+} from '@/server/models/workoutModel';
+import type { Json, JsonValue } from '@/server/models/_types';
 
 export class WorkoutInstanceRepository extends BaseRepository {
+  /**
+   * Create a new workout instance
+   */
+  async create(data: Partial<WorkoutInstanceRow>): Promise<WorkoutInstanceRow> {
+    const result = await this.db
+      .insertInto('workoutInstances')
+      .values(data as NewWorkoutInstance)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    
+    return result;
+  }
+
+  /**
+   * Find a workout instance by ID
+   */
+  async findById(id: string): Promise<WorkoutInstanceRow | undefined> {
+    return await this.db
+      .selectFrom('workoutInstances')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Update a workout instance
+   */
+  async update(id: string, updates: Partial<WorkoutInstanceRow>): Promise<WorkoutInstanceRow> {
+    return await this.db
+      .updateTable('workoutInstances')
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Delete a workout instance
+   */
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom('workoutInstances')
+      .where('id', '=', id)
+      .execute();
+  }
   /**
    * Create a new workout instance
    */
@@ -222,5 +270,30 @@ export class WorkoutInstanceRepository extends BaseRepository {
       completed,
       notCompleted: workouts.length - completed
     };
+  }
+
+  /**
+   * Find workouts by user and date
+   */
+  async findByUserAndDate(userId: string, date: Date): Promise<WorkoutInstanceRow[]> {
+    return await this.getWorkoutsByClientAndDate(userId, date);
+  }
+
+  /**
+   * Find workouts by user within a date range
+   */
+  async findByUserDateRange(
+    userId: string, 
+    startDate: Date, 
+    endDate: Date
+  ): Promise<WorkoutInstanceRow[]> {
+    return await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
+      .orderBy('date', 'asc')
+      .selectAll()
+      .execute();
   }
 }

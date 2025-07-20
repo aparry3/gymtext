@@ -2,12 +2,12 @@
 
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { UserRepository } from '@/server/data/repositories/userRepository';
-import { FitnessPlanRepository } from '@/server/data/repositories/fitnessPlanRepository';
-import { MesocycleRepository } from '@/server/data/repositories/mesocycleRepository';
-import { MicrocycleRepository } from '@/server/data/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/data/repositories/workoutInstanceRepository';
-import { MesocycleGenerationService } from '@/server/services/fitness/mesocycleGenerationService';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { MesocycleGenerationService } from '@/server/services/mesocycleService';
 import type { Macrocycle } from '@/shared/types/cycles';
 
 // Load environment variables

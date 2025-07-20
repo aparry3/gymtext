@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { welcomePrompt, onboardingPrompt } from './prompts';
-import { UserRepository } from '../../repositories/userRepository';
-import { twilioClient } from '../../connections/twilio/twilio';
+import { welcomePrompt, onboardingPrompt } from '@/server/agents/welcomeMessage/prompts';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { twilioClient } from '@/server/connections/twilio/twilio';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
 

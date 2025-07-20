@@ -1,6 +1,24 @@
-import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
-import { FitnessProgram, Macrocycle } from './_types';
-import { FitnessPlanDB } from './_types';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import type { FitnessPlans } from './_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+export type FitnessPlan = Selectable<FitnessPlans>;
+export type NewFitnessPlan = Insertable<FitnessPlans>;
+export type FitnessPlanUpdate = Updateable<FitnessPlans>;
+
+// These types are likely defined elsewhere, keeping them for now
+export type FitnessPlanDB = FitnessPlan;
+export interface FitnessProgram {
+  programType: string;
+  macrocycles: Macrocycle[];
+  overview: string;
+}
+export interface Macrocycle {
+  name: string;
+  description: string;
+  durationWeeks: number;
+  mesocycles: any[];
+}
 
 export class FitnessPlanModel {
   private fitnessPlanRepository: FitnessPlanRepository;

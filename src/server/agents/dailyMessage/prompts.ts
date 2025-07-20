@@ -1,4 +1,4 @@
-import { UserWithProfile } from "../../models/_types";
+import { UserWithProfile } from "@/server/models/_types";
 
 export const dailyMotivationPrompt = (
   user: UserWithProfile,

@@ -1,4 +1,4 @@
-import { WeeklyTarget } from "../../models/_types";
+import { WeeklyTarget } from "@/server/models/_types";
 import { formatDate } from "@/shared/utils";
 
 export const mesocycleBreakdownPrompt = (

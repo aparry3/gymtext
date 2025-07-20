@@ -1,11 +1,59 @@
-import { BaseRepository } from './baseRepository';
+import { BaseRepository } from '@/server/repositories/baseRepository';
 import type { 
-  MicrocycleRow, 
+  Microcycle as MicrocycleRow, 
   NewMicrocycle, 
   MicrocycleUpdate 
-} from '../types/cycleTypes';
+} from '@/server/models/microcycleModel';
 
 export class MicrocycleRepository extends BaseRepository {
+  /**
+   * Create a new microcycle
+   */
+  async create(data: Partial<MicrocycleRow>): Promise<MicrocycleRow> {
+    const result = await this.db
+      .insertInto('microcycles')
+      .values(data as NewMicrocycle)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    
+    return result;
+  }
+
+  /**
+   * Find a microcycle by ID
+   */
+  async findById(id: string): Promise<MicrocycleRow | undefined> {
+    return await this.db
+      .selectFrom('microcycles')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Update a microcycle
+   */
+  async update(id: string, updates: Partial<MicrocycleRow>): Promise<MicrocycleRow> {
+    return await this.db
+      .updateTable('microcycles')
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Delete a microcycle
+   */
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom('microcycles')
+      .where('id', '=', id)
+      .execute();
+  }
   /**
    * Create a new microcycle
    */

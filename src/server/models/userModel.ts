@@ -1,5 +1,21 @@
-import { UserRepository } from '../repositories/userRepository';
-import { User, FitnessProfile, UserWithProfile, CreateUserData, CreateFitnessProfileData } from './_types';
+import { UserRepository } from '@/server/repositories/userRepository';
+import type { Users, FitnessProfiles } from './_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+export type User = Selectable<Users>;
+export type NewUser = Insertable<Users>;
+export type UserUpdate = Updateable<Users>;
+
+export type FitnessProfile = Selectable<FitnessProfiles>;
+export type NewFitnessProfile = Insertable<FitnessProfiles>;
+export type FitnessProfileUpdate = Updateable<FitnessProfiles>;
+
+export interface UserWithProfile extends User {
+  profile: FitnessProfile | null;
+  info: string[];
+}
+export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreateFitnessProfileData = Omit<NewFitnessProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
 
 export class UserModel {
   private userRepository: UserRepository;

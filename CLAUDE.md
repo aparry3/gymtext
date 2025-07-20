@@ -272,3 +272,9 @@ pnpm onboard          # Run user onboarding script
 ## Best Practices for Code Quality
 
 - All implementations should ensure that `pnpm build` and `pnpm lint` both pass
+
+## Import Guidelines
+
+- **Imports**: Always use "@" scoped imports for the /src directory, not relative imports
+  - This ensures consistent and predictable import paths across the project
+  - Example: Use `@/server/services/fitness` instead of `../../../server/services/fitness`

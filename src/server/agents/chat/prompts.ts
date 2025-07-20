@@ -1,4 +1,4 @@
-import { UserWithProfile, Message } from "../../models/_types";
+import { UserWithProfile, Message } from "@/server/models/_types";
 
 export const chatPrompt = (
   user: UserWithProfile,

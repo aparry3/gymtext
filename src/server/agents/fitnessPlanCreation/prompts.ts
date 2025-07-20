@@ -1,6 +1,6 @@
 import { formatDate } from "@/shared/utils";
-import { UserWithProfile } from "../../models/_types";
-import { MesocyclePlan, FitnessProgram } from "../../models/_types";
+import { UserWithProfile } from "@/server/models/_types";
+import { MesocyclePlan, FitnessProgram } from "@/server/models/_types";
 
 export const fitnessProfileSubstring = (user: UserWithProfile) => `Client profile:
 - Name: ${user.name}
