@@ -1,7 +1,6 @@
 import { MesocycleRepository } from '@/server/data/repositories/mesocycleRepository';
 import { MicrocycleRepository } from '@/server/data/repositories/microcycleRepository';
 import { WorkoutInstanceRepository } from '@/server/data/repositories/workoutInstanceRepository';
-import { breakdownMesocycle } from '@/server/agents/fitnessOutlineAgent';
 import { 
   mesocycleDetailedToDb,
   microcycleToDb,
@@ -19,6 +18,7 @@ import { postgresDb } from '@/server/core/database/postgres';
 import type { Kysely } from 'kysely';
 import type { DB } from '@/shared/types/generated';
 import { v4 as uuidv4 } from 'uuid';
+import { breakdownMesocycle } from '@/server/agents/workoutGeneratorAgent';
 
 export class MesocycleGenerationService {
   constructor(
