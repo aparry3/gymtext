@@ -42,8 +42,7 @@ export function mesocycleDetailedToDb(
     phase: mesocycle.phase,
     lengthWeeks,
     cycleOffset,
-    startDate,
-    status: "planned"
+    startDate
   };
 }
 
@@ -75,9 +74,7 @@ export function microcycleToDb(
     cycleOffset,
     startDate,
     endDate,
-    targets,
-    actualMetrics: null,
-    status: "planned"
+    targets
   };
 }
 
@@ -107,19 +104,12 @@ export function workoutInstanceToDb(
   fitnessPlanId: string,
   clientId: string
 ): NewWorkoutInstance {
-  // Convert targets array to JSON object if present
-  const metrics = workout.targets
-    ? workout.targets.reduce((acc, kv) => {
-        acc[kv.key] = kv.value;
-        return acc;
-      }, {} as Record<string, number>)
-    : null;
-
   // Convert blocks to details JSON
   const details = {
     blocks: workout.blocks,
     originalId: workout.id, // Preserve original ID from AI
-    originalSessionType: workout.sessionType // Preserve original session type
+    originalSessionType: workout.sessionType, // Preserve original session type
+    targets: workout.targets // Store targets in details since metrics field is removed
   };
 
   return {
@@ -131,12 +121,9 @@ export function workoutInstanceToDb(
     date: new Date(workout.date),
     sessionType: mapSessionType(workout.sessionType), // Map to DB-compatible type
     details,
-    metrics,
     goal: null,
     alterations: null,
-    feedback: null,
-    completedAt: null,
-    status: "scheduled"
+    completedAt: null
   };
 }
 

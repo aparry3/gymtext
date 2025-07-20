@@ -70,19 +70,27 @@ export class MesocycleRepository extends BaseRepository {
   }
 
   /**
-   * Get the active mesocycle for a client
+   * Get the current mesocycle for a client based on date
    */
-  async getActiveMesocycleByClientId(clientId: string): Promise<MesocycleRow | null> {
+  async getCurrentMesocycleByClientId(clientId: string): Promise<MesocycleRow | null> {
     const now = new Date();
     
     const result = await this.db
       .selectFrom('mesocycles')
       .where('clientId', '=', clientId)
       .where('startDate', '<=', now)
-      .where('status', '=', 'active')
       .orderBy('startDate', 'desc')
       .selectAll()
       .executeTakeFirst();
+    
+    // Check if it's still within the mesocycle duration
+    if (result) {
+      const endDate = new Date(result.startDate);
+      endDate.setDate(endDate.getDate() + (result.lengthWeeks * 7));
+      if (now > endDate) {
+        return null;
+      }
+    }
     
     return result || null;
   }
@@ -101,12 +109,6 @@ export class MesocycleRepository extends BaseRepository {
       .execute();
   }
 
-  /**
-   * Update mesocycle status
-   */
-  async updateMesocycleStatus(id: string, status: string): Promise<void> {
-    await this.updateMesocycle(id, { status });
-  }
 
   /**
    * Delete a mesocycle (and cascade to microcycles and workout instances)
@@ -118,40 +120,4 @@ export class MesocycleRepository extends BaseRepository {
       .execute();
   }
 
-  /**
-   * Get mesocycles that should be activated based on start date
-   */
-  async getMesocyclesToActivate(): Promise<MesocycleRow[]> {
-    const now = new Date();
-    
-    return await this.db
-      .selectFrom('mesocycles')
-      .where('status', '=', 'pending')
-      .where('startDate', '<=', now)
-      .selectAll()
-      .execute();
-  }
-
-  /**
-   * Get mesocycles that should be completed based on calculated end date
-   * Note: This is a simplified version - you may want to add an endDate column
-   * to the mesocycles table for more accurate date calculations
-   */
-  async getMesocyclesToComplete(): Promise<MesocycleRow[]> {
-    const now = new Date();
-    
-    // Get all active mesocycles and filter in application code
-    const activeMesocycles = await this.db
-      .selectFrom('mesocycles')
-      .where('status', '=', 'active')
-      .selectAll()
-      .execute();
-    
-    // Filter mesocycles where start date + weeks has passed
-    return activeMesocycles.filter(mesocycle => {
-      const endDate = new Date(mesocycle.startDate);
-      endDate.setDate(endDate.getDate() + (mesocycle.lengthWeeks * 7));
-      return endDate < now;
-    });
-  }
 }

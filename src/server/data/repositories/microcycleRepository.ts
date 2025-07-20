@@ -4,7 +4,6 @@ import type {
   NewMicrocycle, 
   MicrocycleUpdate 
 } from '../types/cycleTypes';
-import type { Json } from '@/shared/types/generated';
 
 export class MicrocycleRepository extends BaseRepository {
   /**
@@ -71,9 +70,9 @@ export class MicrocycleRepository extends BaseRepository {
   }
 
   /**
-   * Get the current active microcycle for a client
+   * Get the current microcycle for a client based on date
    */
-  async getActiveMicrocycleByClientId(clientId: string): Promise<MicrocycleRow | null> {
+  async getCurrentMicrocycleByClientId(clientId: string): Promise<MicrocycleRow | null> {
     const now = new Date();
     
     const result = await this.db
@@ -81,7 +80,6 @@ export class MicrocycleRepository extends BaseRepository {
       .where('clientId', '=', clientId)
       .where('startDate', '<=', now)
       .where('endDate', '>=', now)
-      .where('status', '=', 'active')
       .selectAll()
       .executeTakeFirst();
     
@@ -102,21 +100,6 @@ export class MicrocycleRepository extends BaseRepository {
       .execute();
   }
 
-  /**
-   * Update microcycle metrics (actual performance data)
-   */
-  async updateMicrocycleMetrics(id: string, metrics: Record<string, number>): Promise<void> {
-    await this.updateMicrocycle(id, { 
-      actualMetrics: metrics as Json 
-    });
-  }
-
-  /**
-   * Update microcycle status
-   */
-  async updateMicrocycleStatus(id: string, status: string): Promise<void> {
-    await this.updateMicrocycle(id, { status });
-  }
 
   /**
    * Delete a microcycle (and cascade to workout instances)
@@ -128,33 +111,6 @@ export class MicrocycleRepository extends BaseRepository {
       .execute();
   }
 
-  /**
-   * Get microcycles that should be activated based on date
-   */
-  async getMicrocyclesToActivate(): Promise<MicrocycleRow[]> {
-    const now = new Date();
-    
-    return await this.db
-      .selectFrom('microcycles')
-      .where('status', '=', 'pending')
-      .where('startDate', '<=', now)
-      .selectAll()
-      .execute();
-  }
-
-  /**
-   * Get microcycles that should be completed based on date
-   */
-  async getMicrocyclesToComplete(): Promise<MicrocycleRow[]> {
-    const now = new Date();
-    
-    return await this.db
-      .selectFrom('microcycles')
-      .where('status', '=', 'active')
-      .where('endDate', '<', now)
-      .selectAll()
-      .execute();
-  }
 
   /**
    * Get upcoming microcycles for a client within a date range

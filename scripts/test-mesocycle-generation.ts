@@ -68,7 +68,6 @@ async function testMesocycleGeneration() {
       for (const meso of existingMesocycles) {
         console.log(`\n   Mesocycle: ${meso.phase}`);
         console.log(`   - ID: ${meso.id}`);
-        console.log(`   - Status: ${meso.status}`);
         console.log(`   - Weeks: ${meso.lengthWeeks}`);
         
         const microcycles = await microcycleRepository.getMicrocyclesByMesocycleId(meso.id);
@@ -112,7 +111,6 @@ async function testMesocycleGeneration() {
       
       console.log(`\n✅ Mesocycle: ${data.mesocycle.phase}`);
       console.log(`   - ID: ${data.mesocycle.id}`);
-      console.log(`   - Status: ${data.mesocycle.status}`);
       console.log(`   - Weeks: ${data.mesocycle.lengthWeeks}`);
       console.log(`   - Microcycles: ${data.microcycles.length}`);
       console.log(`   - Total Workouts: ${data.workouts.length}`);
@@ -124,7 +122,6 @@ async function testMesocycleGeneration() {
         console.log(`   - ID: ${firstWorkout.id}`);
         console.log(`   - Date: ${firstWorkout.date}`);
         console.log(`   - Type: ${firstWorkout.sessionType}`);
-        console.log(`   - Status: ${firstWorkout.status}`);
       }
     }
     

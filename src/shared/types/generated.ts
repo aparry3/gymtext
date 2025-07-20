@@ -76,7 +76,6 @@ export interface Mesocycles {
   lengthWeeks: number;
   phase: string;
   startDate: Timestamp;
-  status: Generated<string>;
   updatedAt: Generated<Timestamp>;
 }
 
@@ -94,7 +93,6 @@ export interface Messages {
 }
 
 export interface Microcycles {
-  actualMetrics: Json | null;
   clientId: string;
   createdAt: Generated<Timestamp>;
   cycleOffset: number;
@@ -103,7 +101,6 @@ export interface Microcycles {
   id: Generated<string>;
   mesocycleId: string;
   startDate: Timestamp;
-  status: Generated<string>;
   targets: Json | null;
   updatedAt: Generated<Timestamp>;
   weekNumber: number;
@@ -139,15 +136,12 @@ export interface WorkoutInstances {
   createdAt: Generated<Timestamp>;
   date: Timestamp;
   details: Json;
-  feedback: Json | null;
   fitnessPlanId: string;
   goal: string | null;
   id: Generated<string>;
   mesocycleId: string;
-  metrics: Json | null;
   microcycleId: string;
   sessionType: string;
-  status: Generated<string>;
   updatedAt: Generated<Timestamp>;
 }
 

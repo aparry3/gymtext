@@ -166,7 +166,6 @@ async function testDatabaseStorage(options: {
       for (const meso of existingMesocycles) {
         console.log(chalk.white(`\nMesocycle: ${meso.phase}`));
         console.log(chalk.gray(`  ID: ${meso.id}`));
-        console.log(chalk.gray(`  Status: ${meso.status}`));
         console.log(chalk.gray(`  Weeks: ${meso.lengthWeeks}`));
         
         const microcycles = await microcycleRepository.getMicrocyclesByMesocycleId(meso.id);
@@ -211,7 +210,6 @@ async function testDatabaseStorage(options: {
       
       console.log(chalk.white(`\nMesocycle: ${data.mesocycle.phase}`));
       console.log(chalk.gray(`  ID: ${data.mesocycle.id}`));
-      console.log(chalk.gray(`  Status: ${data.mesocycle.status}`));
       console.log(chalk.gray(`  Weeks: ${data.mesocycle.lengthWeeks}`));
       console.log(chalk.gray(`  Microcycles: ${data.microcycles.length}`));
       console.log(chalk.gray(`  Total Workouts: ${data.workouts.length}`));
@@ -223,7 +221,6 @@ async function testDatabaseStorage(options: {
         console.log(chalk.gray(`    ID: ${firstWorkout.id}`));
         console.log(chalk.gray(`    Date: ${firstWorkout.date}`));
         console.log(chalk.gray(`    Type: ${firstWorkout.sessionType}`));
-        console.log(chalk.gray(`    Status: ${firstWorkout.status}`));
       }
     }
     

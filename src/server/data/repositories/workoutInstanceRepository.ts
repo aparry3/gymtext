@@ -120,7 +120,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .where('clientId', '=', clientId)
       .where('date', '>=', now)
       .where('date', '<=', futureDate)
-      .where('status', '=', 'scheduled')
+      .where('completedAt', 'is', null) // Not completed yet
       .orderBy('date', 'asc')
       .selectAll()
       .execute();
@@ -141,42 +141,11 @@ export class WorkoutInstanceRepository extends BaseRepository {
   }
 
   /**
-   * Update workout status
+   * Mark workout as completed
    */
-  async updateWorkoutStatus(
-    id: string, 
-    status: 'scheduled' | 'completed' | 'skipped'
-  ): Promise<void> {
-    const update: WorkoutInstanceUpdate = { status };
-    
-    if (status === 'completed') {
-      update.completedAt = new Date();
-    }
-    
-    await this.updateWorkoutInstance(id, update);
-  }
-
-  /**
-   * Add feedback to a workout
-   */
-  async addWorkoutFeedback(
-    id: string, 
-    feedback: Record<string, JsonValue>
-  ): Promise<void> {
-    await this.updateWorkoutInstance(id, { 
-      feedback: feedback as Json 
-    });
-  }
-
-  /**
-   * Update workout metrics (actual performance data)
-   */
-  async updateWorkoutMetrics(
-    id: string, 
-    metrics: Record<string, number>
-  ): Promise<void> {
-    await this.updateWorkoutInstance(id, { 
-      metrics: metrics as Json 
+  async markWorkoutCompleted(id: string): Promise<void> {
+    await this.updateWorkoutInstance(id, {
+      completedAt: new Date()
     });
   }
 
@@ -213,7 +182,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
     return await this.db
       .selectFrom('workoutInstances')
       .where('clientId', '=', clientId)
-      .where('status', '=', 'completed')
+      .where('completedAt', 'is not', null)
       .where('completedAt', '>=', startDate)
       .where('completedAt', '<=', endDate)
       .orderBy('completedAt', 'desc')
@@ -231,8 +200,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
   ): Promise<{
     total: number;
     completed: number;
-    skipped: number;
-    scheduled: number;
+    notCompleted: number;
   }> {
     let query = this.db
       .selectFrom('workoutInstances')
@@ -245,21 +213,14 @@ export class WorkoutInstanceRepository extends BaseRepository {
       query = query.where('date', '<=', endDate);
     }
     
-    const workouts = await query.select('status').execute();
+    const workouts = await query.select('completedAt').execute();
     
-    const stats = {
+    const completed = workouts.filter(w => w.completedAt !== null).length;
+    
+    return {
       total: workouts.length,
-      completed: 0,
-      skipped: 0,
-      scheduled: 0
+      completed,
+      notCompleted: workouts.length - completed
     };
-    
-    workouts.forEach(w => {
-      if (w.status === 'completed') stats.completed++;
-      else if (w.status === 'skipped') stats.skipped++;
-      else if (w.status === 'scheduled') stats.scheduled++;
-    });
-    
-    return stats;
   }
 }
