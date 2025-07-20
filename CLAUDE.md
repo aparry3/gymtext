@@ -1,4 +1,6 @@
-# CLAUDE.md - GymText Development Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -28,15 +30,22 @@ pnpm build            # Build for production
 pnpm start            # Start production server
 pnpm lint             # Run ESLint
 
-# Database migrations
+# Database operations
 pnpm migrate          # Run all pending migrations
 pnpm migrate:create   # Create a new migration file
 pnpm migrate:up       # Run migrations up
 pnpm migrate:down     # Run migrations down
+pnpm db:codegen       # Generate TypeScript types from database schema
 
 # Testing
 pnpm sms:test         # Test SMS functionality
+pnpm test:mesocycle   # Test mesocycle generation functionality
+
+# Utilities
+pnpm onboard          # Run user onboarding script
 ```
+
+Note: `db:codegen` runs automatically before `dev`, `build`, and `migrate` commands to ensure TypeScript types are always in sync with the database schema.
 
 ## Directory Structure
 
@@ -44,10 +53,13 @@ pnpm sms:test         # Test SMS functionality
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes
+│   │   ├── admin/         # Admin API endpoints
 │   │   ├── agent/         # AI agent endpoints
 │   │   ├── auth/          # Authentication endpoints
 │   │   ├── sms/           # Twilio SMS webhook
 │   │   └── webhook/       # Stripe webhooks
+│   ├── admin/             # Admin pages
+│   │   └── fitness-plans/ # Fitness plan management
 │   ├── success/           # Post-signup success page
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Homepage
@@ -61,6 +73,7 @@ src/
 │   │   └── repositories/ # Data repositories
 │   ├── services/        # Business services
 │   │   ├── ai/          # AI/LLM services
+│   │   ├── fitness/     # Fitness plan and program services
 │   │   └── infrastructure/ # Storage & infrastructure services
 │   └── utils/           # Server utilities
 └── shared/              # Shared code between client/server
@@ -101,9 +114,15 @@ All database operations go through repositories that extend `BaseRepository`:
 - `UserRepository` - User and profile management
 - `ConversationRepository` - Chat conversation storage
 - `MessageRepository` - Individual message storage
+- `FitnessPlanRepository` - Fitness plan management
+- `MesocycleRepository` - Mesocycle (training phase) management
+- `MicrocycleRepository` - Microcycle (weekly plan) management
+- `WorkoutInstanceRepository` - Individual workout tracking
 
 #### 3. Service Layer
 - **AI Services**: Chat, context, memory, and prompt services
+- **Fitness Services**: Fitness plan service, mesocycle generation service
+- **Admin Services**: Admin fitness plan service for management operations
 - **Infrastructure Services**: Conversation storage with circuit breaker pattern
 
 #### 4. AI Agent Pattern
@@ -128,6 +147,14 @@ The application uses PostgreSQL with the following main tables:
 ### Workout System
 - `workouts` - Generated workout plans
 - `workout_logs` - User feedback and completion tracking
+
+### Fitness Program System
+- `fitness_plans` - Comprehensive fitness plans with macrocycles
+- `mesocycles` - Training phases (4-6 weeks) with specific focus (strength, endurance, etc.)
+- `microcycles` - Weekly training blocks within mesocycles
+- `workout_instances` - Individual workout sessions with specific dates and details
+
+The fitness program tables support various program types ('endurance', 'strength', 'shred', 'hybrid', 'rehab', 'other') and session types ('strength', 'cardio', 'mobility', 'recovery', 'assessment', 'deload').
 
 ## Environment Variables
 
@@ -223,6 +250,7 @@ pnpm dev
 pnpm migrate:create "add_new_table"
 pnpm migrate:up
 pnpm migrate:down
+pnpm db:codegen      # Regenerate TypeScript types from database
 
 # Code quality
 pnpm lint
@@ -232,4 +260,15 @@ pnpm build  # Verify production build
 ngrok http 3000
 # Update Twilio webhook URL to: https://your-ngrok-url.ngrok.io/api/sms
 pnpm sms:test
+
+# Testing fitness features
+pnpm test:mesocycle   # Test mesocycle generation
+node scripts/test-fitness-plan-db.ts    # Test fitness plan database operations
+
+# User management
+pnpm onboard          # Run user onboarding script
 ```
+
+## Best Practices for Code Quality
+
+- All implementations should ensure that `pnpm build` and `pnpm lint` both pass

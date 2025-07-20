@@ -99,4 +99,12 @@ export class UserRepository extends BaseRepository {
       info: []
     };
   }
+
+  async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {
+    return await this.db
+      .selectFrom('fitnessProfiles')
+      .where('userId', '=', userId)
+      .selectAll()
+      .executeTakeFirst();
+  }
 }

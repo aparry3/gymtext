@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { onboardUser, processFitnessProgramMesocycles } from '@/server/agents/fitnessOutlineAgent';
-import { generateWeeklyPlan } from '@/server/agents/workoutGeneratorAgent';
+import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
 import { UserRepository } from '@/server/data/repositories/userRepository';
+import { processFitnessProgramMesocycles } from '@/server/agents/workoutGeneratorAgent';
 // import { processUpdate } from '@/server/agents/workoutUpdateAgent';
 
 export async function POST(req: NextRequest) {
@@ -32,10 +32,6 @@ export async function POST(req: NextRequest) {
       case 'onboard':
         await onboardUser({ userId: user.id });
         return NextResponse.json({ success: true, message: 'User onboarded successfully' });
-        
-      case 'weekly':
-        await generateWeeklyPlan(user.id);
-        return NextResponse.json({ success: true, message: 'Weekly plan generated successfully' });
         
       case 'breakdown-mesocycles': {
         const { program, startDate } = body;
