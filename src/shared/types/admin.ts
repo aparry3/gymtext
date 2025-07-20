@@ -16,20 +16,34 @@ export type MesocycleRecord = Selectable<Mesocycles>;
 export type MicrocycleRecord = Selectable<Microcycles>;
 export type WorkoutInstanceRecord = Selectable<WorkoutInstances>;
 
-// Exercise type for workout details
-export interface Exercise {
-  name: string;
-  sets: number;
-  reps: string;
-  weight?: string;
-  rest?: string;
-  notes?: string;
+// Workout block structure
+export interface WorkoutBlock {
+  label: string;
+  activities: string[];
 }
 
-// Workout details structure
+// Workout target structure
+export interface WorkoutTarget {
+  key: string;
+  value: number;
+}
+
+// Workout details structure - matches actual database structure
 export interface WorkoutDetails {
-  exercises: Exercise[];
-  duration: string;
+  blocks?: WorkoutBlock[];
+  originalId?: string;
+  originalSessionType?: string;
+  targets?: WorkoutTarget[];
+  // Legacy structure support
+  exercises?: Array<{
+    name: string;
+    sets: number;
+    reps: string;
+    weight?: string;
+    rest?: string;
+    notes?: string;
+  }>;
+  duration?: string;
   notes?: string;
 }
 
