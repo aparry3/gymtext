@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 import { processFitnessProgramMesocycles } from '@/server/agents/workoutGeneratorAgent';
 // import { processUpdate } from '@/server/agents/workoutUpdateAgent';
 

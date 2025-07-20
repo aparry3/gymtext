@@ -1,4 +1,4 @@
-import { WorkoutPlanViewer } from "@/components/admin/WorkoutPlanViewer";
+import { WorkoutPlanViewer } from "@/components/pages/FitnessPlanViewer";
 
 export default function AdminFitnessPlansPage() {
   return <WorkoutPlanViewer />;

@@ -1,6 +1,6 @@
 import { FitnessProgram } from '@/shared/types/cycles';
 import { FitnessPlanDB } from '@/shared/types/fitnessPlan';
-import { FitnessPlanRepository } from '@/server/data/repositories/fitnessPlanRepository';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 
 export class FitnessPlanService {
   constructor(

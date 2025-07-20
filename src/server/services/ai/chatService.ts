@@ -1,6 +1,6 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/shared/types/user';
-import { fitnessCoachPrompt } from '../../prompts/templates';
+import { fitnessCoachPrompt } from '../../agents/chat/prompts';
 import { ConversationContextService } from './contextService';
 import { PromptBuilder } from './promptService';
 

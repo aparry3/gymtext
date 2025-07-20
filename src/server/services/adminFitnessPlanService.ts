@@ -1,5 +1,5 @@
-import { UserRepository } from '../data/repositories/userRepository';
-import { FitnessPlanRepository } from '../data/repositories/fitnessPlanRepository';
+import { UserRepository } from '../repositories/userRepository';
+import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
 import type { 
   UserFitnessPlanData, 
   FitnessPlanDetails,

@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely';
-import type { DB, Json } from '@/shared/types/generated';
-import { ConversationRepository, Conversation } from '../../data/repositories/conversationRepository';
-import { MessageRepository, Message } from '../../data/repositories/messageRepository';
+import type { DB, Json } from '@/server/models/_types';
+import { ConversationRepository, Conversation } from '../../repositories/conversationRepository';
+import { MessageRepository, Message } from '../../repositories/messageRepository';
 import { CircuitBreaker } from '../../utils/circuitBreaker';
 
 interface StoreInboundMessageParams {

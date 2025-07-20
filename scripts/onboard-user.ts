@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 
 // Load environment variables
 config({ path: resolve(process.cwd(), '.env.local') });

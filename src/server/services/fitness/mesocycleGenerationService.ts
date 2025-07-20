@@ -1,6 +1,6 @@
-import { MesocycleRepository } from '@/server/data/repositories/mesocycleRepository';
-import { MicrocycleRepository } from '@/server/data/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/data/repositories/workoutInstanceRepository';
+import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { 
   mesocycleDetailedToDb,
   microcycleToDb,
@@ -14,9 +14,9 @@ import {
 } from '@/server/data/types/cycleTypes';
 import type { MesocyclePlan, MesocycleDetailed } from '@/shared/types/cycles';
 import type { UserWithProfile } from '@/shared/types/user';
-import { postgresDb } from '@/server/core/database/postgres';
+import { postgresDb } from '@/server/connections/postgres';
 import type { Kysely } from 'kysely';
-import type { DB } from '@/shared/types/generated';
+import type { DB } from '@/server/models/_types';
 import { v4 as uuidv4 } from 'uuid';
 import { breakdownMesocycle } from '@/server/agents/workoutGeneratorAgent';
 

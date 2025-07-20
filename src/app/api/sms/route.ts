@@ -1,7 +1,7 @@
-import { UserRepository } from '@/server/data/repositories/userRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
 import { generateChatResponse } from '@/server/services/ai/chatService';
 import { ConversationStorageService } from '@/server/services/infrastructure/conversationStorageService';
-import { postgresDb as db } from '@/server/core/database/postgres';
+import { postgresDb as db } from '@/server/connections/postgres';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
