@@ -4,17 +4,19 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import type { 
   Mesocycles, 
   Microcycles, 
-  WorkoutInstances 
+  WorkoutInstances,
+  JsonValue
 } from '@/server/models/_types';
 import { Insertable, Selectable } from 'kysely';
 
+type NewMesocycle = Insertable<Mesocycles>;
 type NewMicrocycle = Insertable<Microcycles>;
 type NewWorkoutInstance = Insertable<WorkoutInstances>;
 type MesocycleRow = Selectable<Mesocycles>;
 type MicrocycleRow = Selectable<Microcycles>;
 type WorkoutInstanceRow = Selectable<WorkoutInstances>;
-import type { MesocyclePlan, MesocycleDetailed } from '@/shared/types/cycles';
-import type { UserWithProfile } from '@/shared/types/user';
+import type { MesocyclePlan, MesocycleDetailed } from '@/server/models/mesocycleModel';
+import type { UserWithProfile } from '@/server/models/userModel';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import type { Kysely } from 'kysely';
 import type { DB } from '@/shared/types/generated';
@@ -257,7 +259,7 @@ function mesocycleDetailedToDb(
 }
 
 function microcycleToDb(
-  microcycle: any,
+  microcycle: { weekNumber: number; weeklyTargets?: unknown },
   mesocycleId: string,
   fitnessPlanId: string,
   clientId: string,
@@ -273,12 +275,12 @@ function microcycleToDb(
     cycleOffset,
     startDate,
     endDate,
-    targets: microcycle.weeklyTargets || null
+    targets: (microcycle.weeklyTargets as unknown as JsonValue) || null
   };
 }
 
 function workoutInstanceToDb(
-  workout: any,
+  workout: { date: string; sessionType: string; details: unknown; goal?: string },
   microcycleId: string,
   mesocycleId: string,
   fitnessPlanId: string,
@@ -291,7 +293,7 @@ function workoutInstanceToDb(
     clientId,
     date: new Date(workout.date),
     sessionType: workout.sessionType,
-    details: workout.details,
+    details: workout.details as JsonValue,
     goal: workout.goal || null
   };
 }

@@ -2,7 +2,6 @@ import { BaseRepository } from '@/server/repositories/baseRepository';
 import type { 
   Message, 
   NewMessage, 
-  MessageUpdate 
 } from '@/server/models/messageModel';
 
 export class MessageRepository extends BaseRepository {

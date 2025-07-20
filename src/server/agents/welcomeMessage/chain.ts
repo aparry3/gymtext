@@ -39,11 +39,7 @@ export const welcomeMessageChain = RunnableSequence.from([
   async ({ user, message, messageType }) => {
     // Send SMS
     try {
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: user.phoneNumber,
-      });
+      await twilioClient.sendSMS(user.phoneNumber, message);
       
       return {
         sent: true,
@@ -56,7 +52,7 @@ export const welcomeMessageChain = RunnableSequence.from([
       console.error('Failed to send welcome message:', error);
       return {
         sent: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         userId: user.id
       };
     }
@@ -64,7 +60,7 @@ export const welcomeMessageChain = RunnableSequence.from([
 ]);
 
 export const programWelcomeChain = RunnableSequence.from([
-  async ({ userId, program }: { userId: string; program: any }) => {
+  async ({ userId, program }: { userId: string; program: { overview: string; macrocycles: Array<{ name: string; phase: string; focus: string; weeks: number }> } }) => {
     const userRepo = new UserRepository();
     const user = await userRepo.findWithProfile(userId);
     if (!user) throw new Error('User not found');
@@ -88,11 +84,7 @@ Ready to crush your fitness goals? Reply with any questions or just say "START" 
 
     // Send SMS
     try {
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: user.phoneNumber,
-      });
+      await twilioClient.sendSMS(user.phoneNumber, message);
       
       return {
         sent: true,
@@ -105,9 +97,11 @@ Ready to crush your fitness goals? Reply with any questions or just say "START" 
       console.error('Failed to send program welcome message:', error);
       return {
         sent: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         userId: user.id
       };
     }
-  }
+  },
+  // Identity function to satisfy RunnableSequence requirement
+  (result) => result
 ]);

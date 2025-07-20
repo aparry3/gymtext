@@ -81,7 +81,7 @@ export const chatChain = RunnableSequence.from([
     const messageRepo = new MessageRepository();
     await messageRepo.create({
       conversationId: conversation.id,
-      userId,
+      userId: user.id,
       direction: 'outbound',
       content: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
       phoneFrom: 'system_phone', // TODO: Get from config
@@ -99,12 +99,10 @@ export const chatChain = RunnableSequence.from([
 export const contextualChatChain = RunnableSequence.from([
   async ({ 
     userId, 
-    message,
-    contextKeys 
+    message
   }: { 
     userId: string;
     message: string;
-    contextKeys?: string[];
   }) => {
     // Get user info
     const userRepo = new UserRepository();

@@ -75,11 +75,7 @@ export const dailyMessageChain = RunnableSequence.from([
     
     // Send SMS
     try {
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: user.phoneNumber,
-      });
+      await twilioClient.sendSMS(user.phoneNumber, message);
       
       return {
         sent: true,
@@ -92,7 +88,7 @@ export const dailyMessageChain = RunnableSequence.from([
       console.error('Failed to send daily message:', error);
       return {
         sent: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         userId: user.id
       };
     }
@@ -100,18 +96,18 @@ export const dailyMessageChain = RunnableSequence.from([
 ]);
 
 export const bulkDailyMessageChain = RunnableSequence.from([
-  async ({ userIds, messageType = 'motivation' }: { userIds: string[]; messageType?: string }) => {
+  async ({ userIds, messageType = 'motivation' }: { userIds: string[]; messageType?: 'motivation' | 'reminder' | 'progress' }) => {
     const results = [];
     
     for (const userId of userIds) {
       try {
-        const result = await dailyMessageChain.invoke({ userId, messageType });
+        const result = await dailyMessageChain.invoke({ userId, messageType: messageType as 'motivation' | 'reminder' | 'progress' });
         results.push(result);
       } catch (error) {
         results.push({
           sent: false,
           userId,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         });
       }
     }
@@ -122,7 +118,9 @@ export const bulkDailyMessageChain = RunnableSequence.from([
       successCount: results.filter(r => r.sent).length,
       failureCount: results.filter(r => !r.sent).length
     };
-  }
+  },
+  // Identity function to satisfy RunnableSequence requirement of at least 2 items
+  (result) => result
 ]);
 
 async function calculateWorkoutStreak(userId: string): Promise<number> {

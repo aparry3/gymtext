@@ -9,6 +9,7 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 // These types are likely defined elsewhere, keeping them for now
 export type FitnessPlanDB = FitnessPlan;
 export interface FitnessProgram {
+  programId?: string;
   programType: string;
   macrocycles: Macrocycle[];
   overview: string;
@@ -17,7 +18,7 @@ export interface Macrocycle {
   name: string;
   description: string;
   durationWeeks: number;
-  mesocycles: any[];
+  mesocycles: Array<{ name: string; phase: string; focus: string; weeks: number }>;
 }
 
 export class FitnessPlanModel {

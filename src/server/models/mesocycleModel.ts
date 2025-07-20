@@ -1,10 +1,32 @@
 import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
 import type { Mesocycles } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
+import type { MicrocyclePlan } from '@/server/models/microcycleModel';
 
 export type Mesocycle = Selectable<Mesocycles>;
 export type NewMesocycle = Insertable<Mesocycles>;
 export type MesocycleUpdate = Updateable<Mesocycles>;
+
+export interface MesocyclePlan {
+  id: string;
+  phase: string;
+  weeks: number;
+  weeklyTargets: WeeklyTarget[];
+}
+
+export interface MesocycleDetailed extends MesocyclePlan {
+  microcycles: MicrocyclePlan[];
+}
+
+export interface WeeklyTarget {
+  weekOffset: number;
+  split?: string;
+  totalMileage?: number;
+  longRunMileage?: number;
+  avgIntensityPct1RM?: number;
+  totalSetsMainLifts?: number;
+  deload?: boolean;
+}
 
 export class MesocycleModel {
   private mesocycleRepository: MesocycleRepository;

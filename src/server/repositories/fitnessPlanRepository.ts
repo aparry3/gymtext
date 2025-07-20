@@ -1,11 +1,10 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
+import type { JsonValue } from '@/server/models/_types';
 import type { 
   FitnessPlan,
   NewFitnessPlan,
-  FitnessPlanUpdate,
   FitnessPlanDB,
   FitnessProgram,
-  Macrocycle
 } from '@/server/models/fitnessPlanModel';
 import type { 
   FitnessPlanWithHierarchy, 
@@ -28,7 +27,7 @@ export class FitnessPlanRepository extends BaseRepository {
       goalStatement: goalStatement ?? null,
       overview: program.overview,
       startDate,
-      macrocycles: program.macrocycles,
+      macrocycles: program.macrocycles as unknown as JsonValue,
     };
     
     const result = await this.db
@@ -40,10 +39,7 @@ export class FitnessPlanRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
     
-    return {
-      ...result,
-      macrocycles: program.macrocycles, // Return typed version
-    };
+    return result;
   }
 
   async findByClientId(clientId: string): Promise<FitnessPlanDB[]> {
@@ -54,10 +50,7 @@ export class FitnessPlanRepository extends BaseRepository {
       .selectAll()
       .execute();
     
-    return results.map(r => ({
-      ...r,
-      macrocycles: r.macrocycles as Macrocycle[],
-    }));
+    return results as FitnessPlanDB[];
   }
 
   async findActiveByClientId(clientId: string): Promise<FitnessPlanDB | null> {
@@ -72,10 +65,7 @@ export class FitnessPlanRepository extends BaseRepository {
     
     if (!result) return null;
     
-    return {
-      ...result,
-      macrocycles: result.macrocycles as Macrocycle[],
-    };
+    return result;
   }
 
   async findById(id: string): Promise<FitnessPlanDB | undefined> {
@@ -87,10 +77,7 @@ export class FitnessPlanRepository extends BaseRepository {
     
     if (!result) return undefined;
     
-    return {
-      ...result,
-      macrocycles: result.macrocycles as Macrocycle[],
-    };
+    return result;
   }
 
   async getFitnessPlanWithFullHierarchy(planId: string): Promise<FitnessPlanWithHierarchy | null> {
@@ -159,7 +146,6 @@ export class FitnessPlanRepository extends BaseRepository {
 
     return {
       ...plan,
-      macrocycles: plan.macrocycles as Macrocycle[],
       mesocycles: mesocyclesWithData
     };
   }
@@ -195,10 +181,7 @@ export class FitnessPlanRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
     
-    return {
-      ...result,
-      macrocycles: result.macrocycles as Macrocycle[],
-    };
+    return result;
   }
 
   async delete(id: string): Promise<void> {

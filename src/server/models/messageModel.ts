@@ -13,7 +13,7 @@ export class MessageModel {
     this.messageRepository = new MessageRepository();
   }
 
-  async createMessage(messageData: Partial<Message>): Promise<Message> {
+  async createMessage(messageData: NewMessage): Promise<Message> {
     // Business logic validation
     this.validateMessageData(messageData);
     
@@ -34,20 +34,23 @@ export class MessageModel {
       this.validateMessageContent(updates.content);
     }
     
-    return await this.messageRepository.update(id, updates);
+    // TODO: Implement update in repository when needed
+    throw new Error('Message updates not yet implemented');
   }
 
-  async deleteMessage(id: string): Promise<void> {
-    return await this.messageRepository.delete(id);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteMessage(_id: string): Promise<void> {
+    // TODO: Implement delete in repository when needed
+    throw new Error('Message deletion not yet implemented');
   }
 
-  private validateMessageData(data: Partial<Message>): void {
+  private validateMessageData(data: NewMessage): void {
     if (!data.conversationId) {
       throw new Error('Conversation ID is required');
     }
     
-    if (!data.role || !['user', 'assistant'].includes(data.role)) {
-      throw new Error('Role must be either "user" or "assistant"');
+    if (!data.direction || !['inbound', 'outbound'].includes(data.direction)) {
+      throw new Error('Direction must be either "inbound" or "outbound"');
     }
     
     if (!data.content) {

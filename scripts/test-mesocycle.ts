@@ -6,7 +6,8 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
-import { FitnessProgram } from '@/shared/types/cycles';
+import { FitnessProgram } from '@/server/models/fitnessPlanModel';
+import { MesocyclePlan } from '@/server/models/mesocycleModel';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
@@ -56,14 +57,16 @@ async function createProgram(options: {
     
     // Parse the program from the result
     // The result might be a stringified object or have "Outline: " prefix
-    let programStr = programResult;
-    if (programStr.startsWith('Outline: ')) {
-      programStr = programStr.replace('Outline: ', '');
-    }
-    
-    // Handle case where the program might already be an object toString'd
-    if (programStr.startsWith('[object Object]')) {
-      console.log(chalk.red('❌ Error: Program returned as [object Object]. Check the onboardUser function.'));
+    let programStr = '';
+    if (typeof programResult === 'string') {
+      programStr = programResult;
+      if (programStr.startsWith('Outline: ')) {
+        programStr = programStr.replace('Outline: ', '');
+      }
+    } else if (programResult && typeof programResult === 'object' && 'message' in programResult) {
+      programStr = (programResult as { message: string }).message;
+    } else {
+      console.log(chalk.red('❌ Error: Unexpected program result format'));
       process.exit(1);
     }
     
@@ -188,7 +191,12 @@ async function testDatabaseStorage(options: {
     const mesocycleIds = await mesocycleService.generateAllMesocycles(
       userWithProfile,
       activePlan.id,
-      activePlan.macrocycles,
+      (activePlan.macrocycles as unknown) as Array<{
+        id: string;
+        mesocycles: MesocyclePlan[];
+        startDate?: string;
+        lengthWeeks: number;
+      }>,
       activePlan.startDate,
       activePlan.programType
     );

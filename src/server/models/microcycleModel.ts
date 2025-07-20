@@ -6,6 +6,29 @@ export type Microcycle = Selectable<Microcycles>;
 export type NewMicrocycle = Insertable<Microcycles>;
 export type MicrocycleUpdate = Updateable<Microcycles>;
 
+export interface MicrocyclePlan {
+  weekNumber: number;
+  workouts: WorkoutPlan[];
+  weeklyTargets?: WeeklyTarget;
+}
+
+export interface WorkoutPlan {
+  date: string;
+  sessionType: string;
+  details: unknown;
+  goal?: string;
+}
+
+export interface WeeklyTarget {
+  weekOffset: number;
+  split?: string;
+  totalMileage?: number;
+  longRunMileage?: number;
+  avgIntensityPct1RM?: number;
+  totalSetsMainLifts?: number;
+  deload?: boolean;
+}
+
 export class MicrocycleModel {
   private microcycleRepository: MicrocycleRepository;
 

@@ -1,4 +1,4 @@
-import { WeeklyTarget } from "@/server/models/_types";
+import { WeeklyTarget } from "@/server/models/microcycleModel";
 import { formatDate } from "@/shared/utils";
 
 export const mesocycleBreakdownPrompt = (
@@ -14,11 +14,13 @@ Create a detailed weekly workout schedule based on the provided weekly target an
 
 <Weekly Target Information>
 - Week Number: ${weekNumber}
-- Focus: ${weeklyTarget.focus}
-- Training Split: ${weeklyTarget.split}
+- Training Split: ${weeklyTarget.split || 'Not specified'}
 - Start Date: ${formatDate(startDate)}
-- Targets: ${weeklyTarget.targets.map(t => `${t.key}: ${t.value}`).join(', ')}
-- Metrics: ${weeklyTarget.metrics.map(m => `${m.key}: ${m.value}`).join(', ')}
+- Intensity: ${weeklyTarget.avgIntensityPct1RM || 'N/A'}% 1RM
+- Main Lift Sets: ${weeklyTarget.totalSetsMainLifts || 'N/A'}
+- Weekly Mileage: ${weeklyTarget.totalMileage || 'N/A'}
+- Long Run: ${weeklyTarget.longRunMileage || 'N/A'} miles
+- Deload Week: ${weeklyTarget.deload ? 'Yes' : 'No'}
 </Weekly Target Information>
 
 <Requirements>
@@ -55,7 +57,7 @@ Return a JSON array of workout objects, each containing:
 }
 </Output Format>
 
-Create workouts that align with the "${weeklyTarget.split}" split pattern and "${weeklyTarget.focus}" focus for week ${weekNumber}.
+Create workouts that align with the "${weeklyTarget.split || 'standard'}" split pattern for week ${weekNumber}.
 `;
 
 export const workoutGenerationPrompt = (

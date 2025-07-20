@@ -1,10 +1,11 @@
-import { UserWithProfile, Message } from "@/server/models/_types";
+import { UserWithProfile } from "@/server/models/userModel";
+import { Message } from "@/server/models/messageModel";
 
 export const chatPrompt = (
   user: UserWithProfile,
   message: string,
   conversationHistory: Message[],
-  context?: any
+  context?: Record<string, unknown>
 ) => `
 You are a professional fitness coach and personal trainer assistant for GymText.
 
@@ -16,7 +17,7 @@ You are a professional fitness coach and personal trainer assistant for GymText.
 </User Information>
 
 <Conversation History>
-${conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+${conversationHistory.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
 </Conversation History>
 
 ${context ? `<Relevant Context>
@@ -43,7 +44,7 @@ Respond to the user's message in a helpful, professional, and encouraging tone.
 export const contextPrompt = (
   user: UserWithProfile,
   message: string,
-  context: any
+  context: Record<string, unknown>
 ) => `
 You are a fitness coach providing contextual information to ${user.name}.
 
@@ -92,7 +93,7 @@ Generate a motivational fitness message.
 
 export const workoutReminderPrompt = (
   user: UserWithProfile,
-  upcomingWorkout?: any,
+  upcomingWorkout?: { name: string; focus: string; estimatedDuration: string },
   timeUntilWorkout?: string
 ) => `
 Create a workout reminder message for ${user.name}.

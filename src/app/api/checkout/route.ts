@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { CreateUserData, CreateFitnessProfileData } from '@/shared/types/user';
+import { CreateUserData, CreateFitnessProfileData } from '@/server/models/userModel';
 import { setUserCookie } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key
@@ -49,7 +49,6 @@ export async function POST(request: Request) {
 
         // Create fitness profile for new user
         const fitnessProfileData: CreateFitnessProfileData = {
-          userId: user.id,
           fitnessGoals: formData.fitnessGoals,
           skillLevel: formData.skillLevel,
           exerciseFrequency: formData.exerciseFrequency,
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
           age: parseInt(formData.age, 10),
         };
 
-        await userRepository.createFitnessProfile(fitnessProfileData);
+        await userRepository.createFitnessProfile(user.id, fitnessProfileData);
       } else {
         // Update existing user with new Stripe customer ID
         user = await userRepository.update(user.id, { stripeCustomerId: customer.id });

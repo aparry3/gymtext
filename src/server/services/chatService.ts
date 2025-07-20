@@ -1,5 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { UserWithProfile } from '@/shared/types/user';
+import { UserWithProfile } from '@/server/models/userModel';
 import { fitnessCoachPrompt } from '@/server/prompts/templates';
 import { ConversationContextService } from '@/server/services/contextService';
 import { PromptBuilder } from '@/server/services/promptService';

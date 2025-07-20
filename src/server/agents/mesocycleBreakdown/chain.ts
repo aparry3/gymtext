@@ -1,10 +1,10 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { mesocycleBreakdownPrompt } from '@/server/agents/mesocycleBreakdown/prompts';
-import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MesocyclePlan, MicrocyclePlan, WeeklyTarget } from '@/server/models/_types';
+import { MicrocyclePlan, WeeklyTarget } from '@/server/models/microcycleModel';
+import type { JsonValue } from '@/server/models/_types';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 
@@ -30,12 +30,9 @@ export const mesocycleBreakdownChain = RunnableSequence.from([
       const microcycle = await llm.invoke(prompt);
       
       microcycles.push({
-        name: `Week ${i + 1}: ${weeklyTarget.focus}`,
         weekNumber: i + 1,
-        startDate: weekStartDate,
-        workouts: JSON.parse(microcycle.content), // Assuming LLM returns structured workout data
-        targets: weeklyTarget.targets,
-        metrics: weeklyTarget.metrics
+        workouts: JSON.parse(typeof microcycle.content === 'string' ? microcycle.content : JSON.stringify(microcycle.content)), // Assuming LLM returns structured workout data
+        weeklyTargets: weeklyTarget
       });
     }
     
@@ -57,16 +54,19 @@ export const mesocycleBreakdownChain = RunnableSequence.from([
       
       // Create workout instances for this microcycle
       const savedWorkouts = [];
+      
       for (let i = 0; i < microcycle.workouts.length; i++) {
         const workout = microcycle.workouts[i];
-        const workoutDate = new Date(microcycle.startDate);
-        workoutDate.setDate(microcycle.startDate.getDate() + i);
         
         const savedWorkout = await workoutRepository.create({
-          ...workout,
           microcycleId: savedMicrocycle.id,
-          scheduledDate: workoutDate,
-          status: 'scheduled'
+          mesocycleId: mesocycleId,
+          fitnessPlanId: '', // TODO: Need to pass this through
+          clientId: '', // TODO: Need to pass this through
+          date: new Date(workout.date),
+          sessionType: workout.sessionType,
+          details: workout.details as JsonValue,
+          goal: workout.goal
         });
         
         savedWorkouts.push(savedWorkout);
@@ -96,12 +96,13 @@ export const generateMicrocycleChain = RunnableSequence.from([
     const workouts = await llm.invoke(prompt);
     
     return {
-      name: `Week ${weekNumber}: ${weeklyTarget.focus}`,
+      name: `Week ${weekNumber}`,
       weekNumber,
       startDate,
-      workouts: JSON.parse(workouts.content),
-      targets: weeklyTarget.targets,
-      metrics: weeklyTarget.metrics
+      workouts: JSON.parse(typeof workouts.content === 'string' ? workouts.content : JSON.stringify(workouts.content)),
+      weeklyTargets: weeklyTarget
     };
-  }
+  },
+  // Identity function to satisfy RunnableSequence requirement
+  (result) => result
 ]);

@@ -62,10 +62,12 @@ async function testFitnessPlanDatabase() {
       console.log(`   - Program Type: ${latestPlan.programType}`);
       console.log(`   - Start Date: ${latestPlan.startDate}`);
       console.log(`   - Overview: ${latestPlan.overview?.substring(0, 100)}...`);
-      console.log(`   - Macrocycles: ${latestPlan.macrocycles.length}`);
+      const macrocycles = latestPlan.macrocycles as Macrocycle[];
+      console.log(`   - Macrocycles: ${macrocycles ? macrocycles.length : 0}`);
       
       // Show macrocycle details
-      (latestPlan.macrocycles as Macrocycle[]).forEach((macro, i) => {
+      if (macrocycles) {
+        macrocycles.forEach((macro, i) => {
         console.log(`\n   Macrocycle ${i + 1}:`);
         console.log(`   - ID: ${macro.id}`);
         console.log(`   - Length: ${macro.lengthWeeks} weeks`);
@@ -77,6 +79,7 @@ async function testFitnessPlanDatabase() {
           console.log(`     - Weekly Targets: ${meso.weeklyTargets.length}`);
         });
       });
+      }
     } else {
       console.error('❌ No new fitness plan was created!');
     }

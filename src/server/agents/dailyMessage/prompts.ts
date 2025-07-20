@@ -1,4 +1,4 @@
-import { UserWithProfile } from "@/server/models/_types";
+import { UserWithProfile } from "@/server/models/userModel";
 
 export const dailyMotivationPrompt = (
   user: UserWithProfile,
@@ -34,13 +34,13 @@ Generate a daily motivation message that inspires action.
 
 export const workoutReminderPrompt = (
   user: UserWithProfile,
-  todaysWorkout: any
+  todaysWorkout: { name?: string; type: string; focus?: string; estimatedDuration?: string; exercises: Array<{ name: string; sets: number; reps: string }> }
 ) => `
 Create a workout reminder message for ${user.name}.
 
 <Today's Workout>
-- Name: ${todaysWorkout.name}
-- Focus: ${todaysWorkout.focus}
+- Name: ${todaysWorkout.name || todaysWorkout.type}
+- Focus: ${todaysWorkout.focus || 'General workout'}
 - Duration: ${todaysWorkout.estimatedDuration || 'Not specified'}
 - Day: ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}
 </Today's Workout>

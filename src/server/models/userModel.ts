@@ -39,7 +39,8 @@ export class UserModel {
   }
 
   async getUserWithProfile(userId: string): Promise<UserWithProfile | undefined> {
-    return await this.userRepository.findWithProfile(userId);
+    const result = await this.userRepository.findWithProfile(userId);
+    return result ?? undefined;
   }
 
   async createFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
@@ -68,11 +69,11 @@ export class UserModel {
   }
 
   private validateFitnessProfile(profileData: CreateFitnessProfileData): void {
-    if (!profileData.fitnessLevel || !['beginner', 'intermediate', 'advanced'].includes(profileData.fitnessLevel)) {
-      throw new Error('Valid fitness level is required');
+    if (!profileData.skillLevel || !['beginner', 'intermediate', 'advanced'].includes(profileData.skillLevel)) {
+      throw new Error('Valid skill level is required');
     }
     
-    if (!profileData.goals || profileData.goals.length === 0) {
+    if (!profileData.fitnessGoals || profileData.fitnessGoals.length === 0) {
       throw new Error('At least one fitness goal is required');
     }
   }

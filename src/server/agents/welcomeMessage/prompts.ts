@@ -1,4 +1,4 @@
-import { UserWithProfile } from "@/server/models/_types";
+import { UserWithProfile } from "@/server/models/userModel";
 
 export const welcomePrompt = (user: UserWithProfile) => `
 Create a warm welcome message for ${user.name} who just signed up for GymText.
@@ -72,7 +72,7 @@ ${programOverview}
 Generate a program announcement message.
 `;
 
-export const firstWorkoutPrompt = (user: UserWithProfile, firstWorkout: any) => `
+export const firstWorkoutPrompt = (user: UserWithProfile, firstWorkout: { name?: string; focus?: string; estimatedDuration?: string }) => `
 Create a message for ${user.name}'s first workout.
 
 <User Info>

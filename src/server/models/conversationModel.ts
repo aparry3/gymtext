@@ -1,6 +1,6 @@
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
 import { MessageRepository } from '@/server/repositories/messageRepository';
-import type { Conversations, Messages } from './_types';
+import type { Conversations, Messages, JsonValue } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
 export type Conversation = Selectable<Conversations>;
@@ -72,12 +72,12 @@ export class ConversationModel {
     return await this.messageRepository.findByConversationId(conversationId);
   }
 
-  async updateConversationMetadata(id: string, metadata: Record<string, any>): Promise<Conversation> {
+  async updateConversationMetadata(id: string, metadata: Record<string, unknown>): Promise<Conversation> {
     // Business logic for metadata updates
     this.validateMetadata(metadata);
     
     return await this.conversationRepository.update(id, {
-      metadata: metadata as any
+      metadata: metadata as JsonValue
     });
   }
 
@@ -115,7 +115,7 @@ export class ConversationModel {
     }
   }
 
-  private validateMetadata(metadata: Record<string, any>): void {
+  private validateMetadata(metadata: Record<string, unknown>): void {
     if (!metadata || typeof metadata !== 'object') {
       throw new Error('Metadata must be a valid object');
     }

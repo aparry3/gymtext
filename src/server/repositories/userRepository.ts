@@ -1,11 +1,7 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import type { 
   User, 
-  NewUser, 
-  UserUpdate, 
   FitnessProfile, 
-  NewFitnessProfile, 
-  FitnessProfileUpdate, 
   UserWithProfile, 
   CreateUserData, 
   CreateFitnessProfileData 
@@ -63,11 +59,11 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirstOrThrow();
   }
 
-  async createFitnessProfile(profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
+  async createFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
     return await this.db
       .insertInto('fitnessProfiles')
       .values({
-        userId: profileData.userId,
+        userId: userId,
         fitnessGoals: profileData.fitnessGoals,
         skillLevel: profileData.skillLevel,
         exerciseFrequency: profileData.exerciseFrequency,

@@ -1,5 +1,4 @@
-import { FitnessProgram } from '@/shared/types/cycles';
-import { FitnessPlanDB } from '@/shared/types/fitnessPlan';
+import { FitnessProgram, FitnessPlanDB } from '@/server/models/fitnessPlanModel';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 
 export class FitnessPlanService {

@@ -2,10 +2,16 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { fitnessProfileSubstring, outlinePrompt, welcomePrompt } from '@/server/prompts/templates';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { UserWithProfile } from '@/server/models/_types';
+import { UserWithProfile } from '@/server/models/userModel';
 import { twilioClient } from '@/server/connections/twilio/twilio';
-import { FitnessProgramSchema, FitnessProgram } from '@/server/models/_types';
-import { FitnessPlanService } from '@/server/services/fitnessPlanService';
+import { FitnessProgram } from '@/server/models/fitnessPlanModel';
+import { z } from 'zod';
+
+const FitnessProgramSchema = z.object({
+  programType: z.string(),
+  macrocycles: z.array(z.any()),
+  overview: z.string()
+});
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
@@ -42,31 +48,27 @@ export const onboardUserChain = RunnableSequence.from([
     );
 
     // Send welcome message via SMS
-    const welcomeMessage = welcomePrompt(user, program);
-    await twilioClient.messages.create({
-      body: welcomeMessage,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: user.phoneNumber,
-    });
+    const welcomeMessage = welcomePrompt(user, program.overview);
+    await twilioClient.sendSMS(user.phoneNumber, welcomeMessage);
 
     return { user, program, savedPlan, welcomeMessage };
   }
 ]);
 
 export const createFitnessPlanChain = RunnableSequence.from([
-  async ({ userId, customGoals }: { userId: string; customGoals?: string }) => {
+  async ({ userId }: { userId: string; customGoals?: string }) => {
     const userRepository = new UserRepository();
     const user = await userRepository.findWithProfile(userId);
     if (!user || !user.profile) throw new Error('User or fitness profile not found');
     
     const fitnessProfile = fitnessProfileSubstring(user);
-    const prompt = customGoals 
-      ? outlinePrompt(user, fitnessProfile, customGoals)
-      : outlinePrompt(user, fitnessProfile);
+    const prompt = outlinePrompt(user, fitnessProfile);
     
     const structuredModel = llm.withStructuredOutput(FitnessProgramSchema);
     const program = await structuredModel.invoke(prompt);
     
     return { user, program };
-  }
+  },
+  // Identity function to satisfy RunnableSequence requirement
+  (result) => result
 ]);
