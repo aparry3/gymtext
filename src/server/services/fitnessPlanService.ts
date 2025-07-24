@@ -13,6 +13,7 @@ export class FitnessPlanService {
 
     // TODO: Save the fitness plan to the database
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse.program);
+    console.log('fitnessPlan', JSON.stringify(fitnessPlan, null, 2));
     const savedFitnessPlan = await this.fitnessPlanRepo.insertFitnessPlan(fitnessPlan);
     if (!fitnessPlan.macrocycles.length || !fitnessPlan.macrocycles[0].mesocycles.length) {
       throw new Error('Fitness plan does not have any mesocycles');

@@ -56,7 +56,7 @@ export class MicrocycleModel implements NewMicrocycle {
     this.targets = microcycle.targets;
   }
 
-  public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: MicrocycleBreakdown): NewMicrocycle {
+  public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Omit<MicrocycleBreakdown, 'workouts'>): NewMicrocycle {
     return {
       ...microcycle,
       clientId: user.id,

@@ -33,13 +33,14 @@ export class MesocycleService {
     const nextMesocycleIndex = mesocycles.length;
 
     const mesocycleOverview = macrocycle.mesocycles[nextMesocycleIndex];
-    const _mesocycle = MesocycleModel.fromOverview(user, fitnessPlan, mesocycleOverview);
+    const _mesocycle = MesocycleModel.fromOverview(user, fitnessPlan, {...mesocycleOverview, index: nextMesocycleIndex});
     const mesocycle = await this.mesocycleRepo.create(_mesocycle);
 
     const mesocycleAgentResponse = await mesocycleAgent.invoke({ user, context: { mesocycleOverview, fitnessPlan } });
 
     const microcyclesWithIds = await Promise.all(mesocycleAgentResponse.value.map(async (microcycleBreakdown) => {
-      const newMicrocycle = MicrocycleModel.fromLLM(user, fitnessPlan, mesocycle, microcycleBreakdown);
+      const {workouts: _workouts, ...microcycleBreakdownWithoutWorkouts} = microcycleBreakdown;
+      const newMicrocycle = MicrocycleModel.fromLLM(user, fitnessPlan, mesocycle, microcycleBreakdownWithoutWorkouts);
       const microcycle = await this.microcycleRepo.create(newMicrocycle);
       const workoutPromises = microcycleBreakdown.workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
         const newWorkout = WorkoutInstanceModel.fromLLM(user, fitnessPlan, mesocycle, microcycle, workoutBreakdown);

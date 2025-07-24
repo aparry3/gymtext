@@ -24,6 +24,7 @@ Return **exactly one JSON object** that conforms to the FitnessProgram schema
 - Use ${user.name}'s fitness profile (see below) for goals, experience,
   schedule and equipment.
 - Build **one macrocycle** that spans the requested timeframe.
+- Program type should be based on the user's fitness profile, and should be one of the following: "endurance", "strength", "shred", "hybrid", "rehab", or "other".
 - Inside it, create **mesocycles** of 3-6 weeks.
   • Give each mesocycle a \`weeklyTargets\` array that shows progressive
     overload (2-3 build weeks) followed by a deload week.  
