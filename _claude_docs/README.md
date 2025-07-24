@@ -51,6 +51,24 @@ Concrete test examples for:
 - Database operations
 - Performance testing
 
+### 6. [unit-test-creation-plan.md](./unit-test-creation-plan.md)
+Comprehensive unit test creation plan with:
+- Priority-based implementation phases
+- Detailed testing checklist for all components
+- Coverage targets by component type
+- Mock strategies and test data builders
+- Implementation timeline (5 weeks)
+- Success metrics and next steps
+
+### 7. [unit-test-checklist.md](./unit-test-checklist.md)
+Actionable daily checklist for test implementation:
+- 25-day implementation schedule
+- Phase-by-phase task breakdown
+- Quick reference progress tracker
+- Coverage tracking table
+- Definition of done criteria
+- Quick command reference
+
 ## 🚀 Quick Start
 
 1. **Install dependencies:**
@@ -148,13 +166,16 @@ gymtext/
 
 ## 📝 Next Steps
 
-1. Review all documentation files
+1. Review all documentation files, especially:
+   - [unit-test-creation-plan.md](./unit-test-creation-plan.md) for the comprehensive strategy
+   - [unit-test-checklist.md](./unit-test-checklist.md) for daily implementation tasks
 2. Install required dependencies
 3. Set up test configuration files
-4. Create test utilities and helpers
-5. Begin with high-priority unit tests
-6. Add integration tests for critical paths
-7. Set up CI/CD pipeline
-8. Monitor and improve coverage
+4. Create test utilities and helpers following the mock strategy in the plan
+5. Begin with Phase 1: Repositories (following the priority order)
+6. Track progress using the unit test checklist
+7. Add integration tests for critical paths after unit tests
+8. Set up CI/CD pipeline once core tests are in place
+9. Monitor and improve coverage using the defined success metrics
 
 For questions or clarifications, refer to the detailed documentation files or the GymText team.

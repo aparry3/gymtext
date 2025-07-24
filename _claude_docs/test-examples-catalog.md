@@ -238,49 +238,222 @@ describe('Fitness Plan Generation', () => {
   });
 });
 
+// Real fitness plan response from the agent
 const mockFitnessPlanResponse = {
-  plan: {
-    name: "Intermediate Muscle Building Program",
-    description: "12-week progressive muscle building program",
-    mesocycles: [
-      {
-        phase_type: "hypertrophy",
-        name: "Volume Accumulation",
-        week_number: 1,
-        duration_weeks: 4,
-        microcycles: [
-          {
-            week_number: 1,
-            workouts: [
-              {
-                name: "Upper Body A",
-                day_of_week: 1,
-                exercises: [
-                  {
-                    name: "Bench Press",
-                    sets: 4,
-                    reps: 8,
-                    weight: 185,
-                    rest_seconds: 120,
-                  },
-                  // ... more exercises
-                ],
-              },
-              // ... more workouts
-            ],
-          },
-          // ... more microcycles
-        ],
-      },
-      // ... more mesocycles
-    ],
-  },
+  macrocycles: [
+    {
+      description: "This macrocycle focuses on weight loss through a combination of strength training and cardio. We'll build intensity over two weeks, followed by a deload week to ensure optimal recovery and prevent overtraining.",
+      durationWeeks: 6,
+      mesocycles: [
+        {
+          microcycleOverviews: [
+            {
+              weekNumber: 0,
+              split: "Upper-Lower-Cardio-Rest",
+              totalSetsMainLifts: 12
+            },
+            {
+              weekNumber: 1,
+              split: "Upper-Lower-Cardio-Rest",
+              totalSetsMainLifts: 15
+            },
+            {
+              weekNumber: 2,
+              split: "Upper-Lower-Cardio-Rest",
+              totalSetsMainLifts: 10
+            }
+          ],
+          phase: "Strength & Cardio Blend",
+          weeks: 3
+        },
+        {
+          microcycleOverviews: [
+            {
+              weekNumber: 0,
+              split: "Cardio-Upper-Lower-Rest",
+              totalMileage: 5
+            },
+            {
+              weekNumber: 1,
+              split: "Cardio-Upper-Lower-Rest",
+              totalMileage: 7
+            },
+            {
+              weekNumber: 2,
+              split: "Cardio-Upper-Lower-Rest",
+              totalMileage: 3,
+              totalSetsMainLifts: 8
+            }
+          ],
+          phase: "Increased Cardio Focus",
+          weeks: 3
+        }
+      ],
+      name: "Weight Loss Accelerator"
+    }
+  ],
+  overview: "Aaron, get ready to shred! This 6-week program is designed to maximize weight loss by combining strength training with targeted cardio sessions. We'll follow a progressive overload approach, increasing intensity for two weeks, then deloading to allow your body to recover and adapt. Expect a mix of upper and lower body workouts, along with cardio to torch those calories. Let's achieve your weight loss goals together!",
+  programType: "shred",
+  startDate: "2024-01-01T00:00:00Z"
 };
+```
+
+## Mesocycle Breakdown Tests
+
+### 4. Mesocycle to Microcycle Breakdown Test
+
+```typescript
+// tests/unit/server/agents/mesocycleBreakdown.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mesocycleAgent } from '@/server/agents/mesocycleBreakdown/chain';
+import { createMockLLM } from '@tests/mocks/external-services';
+
+describe('Mesocycle Breakdown Agent', () => {
+  it('should break down mesocycle into detailed microcycles', async () => {
+    const mockUser = {
+      id: 'user-123',
+      name: 'Test User',
+      phoneNumber: '+1234567890',
+      fitnessProfile: {
+        fitnessLevel: 'intermediate',
+        primaryGoal: 'weight_loss',
+        exerciseFrequency: '4 times per week',
+        gender: 'male',
+        age: 28,
+      },
+    };
+
+    const mesocycleOverview = {
+      phase: "Strength & Cardio Blend",
+      weeks: 3,
+      microcycleOverviews: [
+        {
+          split: "Upper-Lower-Cardio-Rest",
+          weekNumber: 0,
+          totalSetsMainLifts: 12
+        },
+        {
+          split: "Upper-Lower-Cardio-Rest",
+          weekNumber: 1,
+          totalSetsMainLifts: 15
+        },
+        {
+          split: "Upper-Lower-Cardio-Rest",
+          weekNumber: 2,
+          totalSetsMainLifts: 10
+        }
+      ]
+    };
+
+    const result = await mesocycleAgent.invoke({
+      user: mockUser,
+      context: {
+        mesocycleOverview,
+        fitnessPlan: {
+          programType: 'shred',
+          startDate: new Date().toISOString(),
+        },
+      },
+    });
+
+    // Verify the breakdown structure
+    expect(result.value).toHaveLength(3); // 3 microcycles
+    expect(result.value[0]).toMatchObject({
+      index: expect.any(Number),
+      workouts: expect.arrayContaining([
+        expect.objectContaining({
+          sessionType: expect.stringMatching(/lift|run|mobility|rest/),
+          details: expect.arrayContaining([
+            expect.objectContaining({
+              label: expect.any(String),
+              activities: expect.any(Array),
+            }),
+          ]),
+        }),
+      ]),
+    });
+  });
+});
+
+// Real mesocycle breakdown output from the agent
+const mockMesocycleBreakdownResponse = [
+  {
+    index: 1,
+    workouts: [
+      {
+        details: [
+          {
+            activities: ["5 min light cardio, dynamic stretching"],
+            label: "Warm-up"
+          },
+          {
+            activities: [
+              "Bench Press 4x6",
+              "Pull-ups 4xAMRAP",
+              "Overhead Press 3x8",
+              "Bent-Over Rows 3x8",
+              "Dumbbell Lateral Raises 3x10",
+              "Dumbbell Bicep Curls 3x10"
+            ],
+            label: "Main Work"
+          },
+          {
+            activities: ["Stretching, foam rolling"],
+            label: "Cool-down"
+          }
+        ],
+        sessionType: "lift"
+      },
+      {
+        details: [
+          {
+            activities: ["5 min light cardio, dynamic stretching"],
+            label: "Warm-up"
+          },
+          {
+            activities: [
+              "Back Squats 4x6",
+              "Deadlifts 1x5, 1x3, 1x1",
+              "Lunges 3x10 per leg",
+              "Leg Press 3x12",
+              "Calf Raises 4x15"
+            ],
+            label: "Main Work"
+          },
+          {
+            activities: ["Stretching, foam rolling"],
+            label: "Cool-down"
+          }
+        ],
+        sessionType: "lift"
+      },
+      {
+        details: [
+          {
+            activities: ["5 min light cardio, dynamic stretching"],
+            label: "Warm-up"
+          },
+          {
+            activities: ["30 min moderate-intensity run"],
+            label: "Main Work"
+          },
+          {
+            activities: ["Stretching"],
+            label: "Cool-down"
+          }
+        ],
+        sessionType: "run"
+      },
+      // ... more workouts for the week
+    ]
+  },
+  // ... more microcycles
+];
 ```
 
 ## Payment and Subscription Tests
 
-### 4. Stripe Webhook Handler Test
+### 5. Stripe Webhook Handler Test
 
 ```typescript
 // tests/integration/api/checkout-callback.test.ts
@@ -384,7 +557,7 @@ describe('Stripe Webhook Handler', () => {
 
 ## AI Agent Tests
 
-### 5. Chat Agent Context Building Test
+### 6. Chat Agent Context Building Test
 
 ```typescript
 // tests/unit/server/agents/chat/chain.test.ts
@@ -453,7 +626,7 @@ describe('ChatAgent', () => {
 
 ## React Component Tests
 
-### 6. Sign Up Form Component Test
+### 7. Sign Up Form Component Test
 
 ```typescript
 // tests/unit/components/pages/SignUp/index.test.tsx
@@ -550,7 +723,7 @@ describe('SignUp Component', () => {
 
 ## Error Handling Tests
 
-### 7. Circuit Breaker Test
+### 8. Circuit Breaker Test
 
 ```typescript
 // tests/unit/server/utils/circuitBreaker.test.ts
@@ -616,7 +789,7 @@ describe('CircuitBreaker', () => {
 
 ## Database Repository Tests
 
-### 8. Complex Query Test
+### 9. Complex Query Test
 
 ```typescript
 // tests/unit/server/repositories/workoutRepository.test.ts
@@ -703,7 +876,7 @@ describe('WorkoutRepository', () => {
 
 ## Performance Tests
 
-### 9. Load Testing Example
+### 10. Load Testing Example
 
 ```typescript
 // tests/integration/performance/concurrent-messages.test.ts
@@ -762,7 +935,7 @@ describe('Performance Tests', () => {
 
 ## Test Utilities and Helpers
 
-### 10. Custom Test Matchers
+### 11. Custom Test Matchers
 
 ```typescript
 // tests/setup/custom-matchers.ts

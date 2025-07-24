@@ -18,7 +18,11 @@
     "sms:test": "tsx scripts/test-sms.ts",
     "checkout:test": "tsx scripts/test-checkout.ts",
     "programs:test": "tsx scripts/test-programs.ts",
-    "flow:test": "tsx scripts/test-user-flow.ts"
+    "flow:test": "tsx scripts/test-user-flow.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
