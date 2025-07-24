@@ -5,7 +5,7 @@ export { ConversationModel } from './conversation';
 export { MessageModel } from './messageModel';
 export { MesocycleModel } from './mesocycle';
 export { MicrocycleModel } from './microcycle';
-export { WorkoutModel } from './workout/schema';
+export { WorkoutInstanceModel } from './workout';
 
 // Type exports from models
 export type { 
@@ -21,7 +21,7 @@ export type {
 
 export type { 
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
-  FitnessPlanDB, FitnessProgram, Macrocycle
+  FitnessPlanDB, FitnessPlanOverview, MacrocycleOverview
 } from './fitnessPlan';
 
 export type { 
@@ -33,8 +33,9 @@ export type {
 } from './microcycle';
 
 export type { 
-  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate 
-} from './workout/schema';
+  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
+  WorkoutInstanceBreakdown
+} from './workout';
 
 // Re-export database types from _types
 export * from './_types';

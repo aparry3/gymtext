@@ -4,12 +4,8 @@ import {
   HumanMessage,
   AIMessage,
 } from '@langchain/core/messages';
-import {
-  ConversationContext,
-  UserContextProfile,
-  ConversationMetadata,
-} from '@/shared/types/conversation';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
+import { ConversationContext, ConversationMetadata, UserContextProfile } from '../models/conversation';
 
 export class PromptBuilder {
   private config: ContextConfig;

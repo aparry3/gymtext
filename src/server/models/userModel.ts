@@ -17,6 +17,12 @@ export interface UserWithProfile extends User {
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Omit<NewFitnessProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
 
+
+export interface UserWithProfile extends User {
+  profile: FitnessProfile | null;
+  info: string[];
+}
+
 export class UserModel {
   private userRepository: UserRepository;
 

@@ -1,8 +1,3 @@
-import type { 
-  Mesocycles, 
-  JsonValue,
-  DB
-} from '@/server/models/_types';
 import { UserWithProfile } from '../models/userModel';
 import { FitnessPlan } from '../models/fitnessPlan';
 import { mesocycleAgent } from '../agents/mesocycleBreakdown/chain';

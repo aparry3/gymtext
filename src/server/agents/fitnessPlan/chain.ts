@@ -7,7 +7,7 @@ import { FitnessProfileContext } from '@/server/services/context/fitnessProfileC
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 
 export const fitnessPlanAgent = {
-  invoke: async ({ user, context }: { user: UserWithProfile, context?: { } }): Promise<{ user: UserWithProfile, context?: { }, program: FitnessPlanOverview }> => {
+  invoke: async ({ user, context }: { user: UserWithProfile, context?: object }): Promise<{ user: UserWithProfile, context?: object, program: FitnessPlanOverview }> => {
     const fitnessProfileContextService = new FitnessProfileContext(user);
     const fitnessProfile = await fitnessProfileContextService.getContext();
     

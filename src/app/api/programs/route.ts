@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
     const mesocycleService = new MesocycleService();
     const nextMesocycle = await mesocycleService.getNextMesocycle(user, fitnessPlan);
     const workout = nextMesocycle.microcycles[0].workouts[0];
-    await messageService.sendMessage(user, welcomeMessage);
-
+    const dailyMessage = await messageService.buildDailyMessage(user, workout);
+    await messageService.sendMessage(user, dailyMessage);
+    
     return NextResponse.json({ success: true, message: 'User onboarded successfully' })
   } catch (error) {
     console.error('Error in fitness program creation:', error);

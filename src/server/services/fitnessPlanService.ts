@@ -1,9 +1,7 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { FitnessPlan, FitnessPlanModel, FitnessPlanOverview } from '../models/fitnessPlan';
+import { FitnessPlan, FitnessPlanModel } from '../models/fitnessPlan';
 import { UserWithProfile } from '../models/userModel';
-import { FitnessProfileContext } from './context/fitnessProfileContext';
 import { fitnessPlanAgent } from '../agents/fitnessPlan/chain';
-import { welcomeMessageAgent } from '../agents/welcomeMessage/chain';
 
 export class FitnessPlanService {
   constructor(
@@ -11,8 +9,6 @@ export class FitnessPlanService {
   ) {}
 
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-    const fitnessProfileContextService = new FitnessProfileContext(user);
-    const fitnessProfile = await fitnessProfileContextService.getContext();
     const agentResponse = await fitnessPlanAgent.invoke({ user });
 
     // TODO: Save the fitness plan to the database

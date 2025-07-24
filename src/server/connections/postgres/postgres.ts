@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
-import type { DB } from '@/shared/types/generated';
+import type { DB } from '@/server/models/_types';
 
 // Get the database URL from environment variables
 const databaseUrl = process.env.DATABASE_URL;

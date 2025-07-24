@@ -1,5 +1,4 @@
 import { RunnableSequence } from "@langchain/core/runnables";
-import { z } from 'zod';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { mesocycleBreakdownPrompt, transitionMicrocyclePrompt } from "./prompts";
 import { MesocycleModel, MesocycleOverview } from "@/server/models/mesocycle";

@@ -1,6 +1,5 @@
 import { MesocycleOverview } from "@/server/models/mesocycle";
 import { UserWithProfile } from "@/server/models/userModel";
-import { formatDate } from "@/shared/utils/dateUtils";
 
 export const mesocycleBreakdownPrompt = (
   user: UserWithProfile,

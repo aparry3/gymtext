@@ -114,7 +114,7 @@ export async function POST(request: Request) {
               quantity: 1,
             },
           ],
-          success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/session?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
+          success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
           cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?canceled=true`,
           metadata: {
             userId: user.id,

@@ -12,14 +12,6 @@ interface StoreInboundMessageParams {
   twilioData?: Record<string, unknown>;
 }
 
-interface StoreOutboundMessageParams {
-  userId: string;
-  from?: string;
-  to: string;
-  messageContent: string;
-  twilioMessageSid?: string;
-}
-
 export class ConversationService {
   private conversationRepo: ConversationRepository;
   private messageRepo: MessageRepository;
