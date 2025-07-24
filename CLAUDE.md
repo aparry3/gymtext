@@ -99,3 +99,9 @@ Required environment variables (see .env.example):
 - The project uses Vitest for testing
 - Test files should be colocated with the code they test
 - Use `pnpm sms:test` to test SMS functionality locally
+
+### Environment Variable Management
+- Use source .env.local for environment variables
+
+### Code Quality and Validation
+- Be sure that any implementations continue to pass pnpm build and pnpm lint
