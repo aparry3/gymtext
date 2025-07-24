@@ -1,108 +1,127 @@
+import { RunnableSequence } from "@langchain/core/runnables";
+import { z } from 'zod';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { RunnableSequence } from '@langchain/core/runnables';
-import { mesocycleBreakdownPrompt } from '@/server/agents/mesocycleBreakdown/prompts';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MicrocyclePlan, WeeklyTarget } from '@/server/models/microcycleModel';
-import type { JsonValue } from '@/server/models/_types';
+import { mesocycleBreakdownPrompt, transitionMicrocyclePrompt } from "./prompts";
+import { MesocycleModel, MesocycleOverview } from "@/server/models/mesocycle";
+import { FitnessPlan, MicrocycleModel, UserWithProfile } from "@/server/models";
+import { FitnessProfileContext } from "@/server/services/context/fitnessProfileContext";
+import { LLMMicrocycle } from "@/server/models/microcycle/schema";
+import { MicrocycleBreakdown } from "@/server/models/microcycle";
+
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 
-export const mesocycleBreakdownChain = RunnableSequence.from([
-  async ({ 
-    mesocycleId, 
-    weeklyTargets,
-    startDate 
-  }: { 
-    mesocycleId: string;
-    weeklyTargets: WeeklyTarget[];
-    startDate: Date;
+export const mesocycleAgent = RunnableSequence.from([
+  // Step 1: Prepare context
+  async ({ user, context }: {
+    user: UserWithProfile;
+    context: {
+      mesocycleOverview: MesocycleOverview;
+      fitnessPlan: FitnessPlan;
+    }
   }) => {
-    // Generate detailed microcycles from weekly targets
-    const microcycles: MicrocyclePlan[] = [];
+    const fitnessProfileContextService = new FitnessProfileContext(user);
+    const fitnessProfile = await fitnessProfileContextService.getContext();
+
+    const prompt = mesocycleBreakdownPrompt(
+      user, 
+      context.mesocycleOverview, 
+      fitnessProfile, 
+      context.fitnessPlan.programType,
+    );
     
-    for (let i = 0; i < weeklyTargets.length; i++) {
-      const weeklyTarget = weeklyTargets[i];
-      const weekStartDate = new Date(startDate);
-      weekStartDate.setDate(startDate.getDate() + (i * 7));
-      
-      const prompt = mesocycleBreakdownPrompt(weeklyTarget, weekStartDate, i + 1);
-      const microcycle = await llm.invoke(prompt);
-      
-      microcycles.push({
-        weekNumber: i + 1,
-        workouts: JSON.parse(typeof microcycle.content === 'string' ? microcycle.content : JSON.stringify(microcycle.content)), // Assuming LLM returns structured workout data
-        weeklyTargets: weeklyTarget
-      });
-    }
+    const structuredModel = llm.withStructuredOutput(MesocycleModel.microcyclesSchema);
+    const microcycles = await structuredModel.invoke(prompt);
     
-    return { mesocycleId, microcycles };
+    return { user, context: { ...context, fitnessProfile }, value: microcycles };
   },
-  
-  async ({ mesocycleId, microcycles }: { mesocycleId: string; microcycles: MicrocyclePlan[] }) => {
-    // Save microcycles to database
-    const microcycleRepository = new MicrocycleRepository();
-    const workoutRepository = new WorkoutInstanceRepository();
-    
-    const savedMicrocycles = [];
-    
-    for (const microcycle of microcycles) {
-      const savedMicrocycle = await microcycleRepository.create({
+
+  async ({ user, context, value }: { 
+    user: UserWithProfile; 
+    context: {
+      mesocycleOverview: MesocycleOverview;
+      fitnessPlan: FitnessPlan;
+      fitnessProfile: string;
+    };
+    value: LLMMicrocycle[];
+  }): Promise<{
+    user: UserWithProfile;
+    context: {
+      mesocycleOverview: MesocycleOverview;
+      fitnessPlan: FitnessPlan;
+      fitnessProfile: string;
+    };
+    value: LLMMicrocycle[];
+  }> => {
+    const startDate = context.fitnessPlan.startDate;
+    const daysUntilNextMonday = getDaysUntilNextMonday(new Date(startDate));
+    let microcycles = value;
+    if (daysUntilNextMonday > 0) {
+      const transitionModel = llm.withStructuredOutput(MicrocycleModel.schema)
+      const transitionPrompt = transitionMicrocyclePrompt(
+        user, 
+        context.mesocycleOverview, 
+        context.fitnessProfile, 
+        context.fitnessPlan.programType,
+        daysUntilNextMonday
+      )
+      const transitionMicrocycle = await transitionModel.invoke(transitionPrompt)
+      value.unshift(transitionMicrocycle)
+      microcycles = value.map((microcycle, index) => ({
         ...microcycle,
-        mesocycleId
-      });
-      
-      // Create workout instances for this microcycle
-      const savedWorkouts = [];
-      
-      for (let i = 0; i < microcycle.workouts.length; i++) {
-        const workout = microcycle.workouts[i];
-        
-        const savedWorkout = await workoutRepository.create({
-          microcycleId: savedMicrocycle.id,
-          mesocycleId: mesocycleId,
-          fitnessPlanId: '', // TODO: Need to pass this through
-          clientId: '', // TODO: Need to pass this through
-          date: new Date(workout.date),
-          sessionType: workout.sessionType,
-          details: workout.details as JsonValue,
-          goal: workout.goal
-        });
-        
-        savedWorkouts.push(savedWorkout);
-      }
-      
-      savedMicrocycles.push({
-        ...savedMicrocycle,
-        workouts: savedWorkouts
-      });
+        index: index
+      }))
     }
-    
-    return { mesocycleId, microcycles: savedMicrocycles };
+    return { user, context, value: microcycles }
+  },
+
+  async ({ user, context, value }: { 
+    user: UserWithProfile; 
+    context: {
+      mesocycleOverview: MesocycleOverview;
+      fitnessPlan: FitnessPlan;
+      fitnessProfile: string;
+    };
+    value: LLMMicrocycle[];
+  }): Promise<{
+    user: UserWithProfile;
+    context: {
+      mesocycleOverview: MesocycleOverview;
+      fitnessPlan: FitnessPlan;
+      fitnessProfile: string;
+    };
+    value: MicrocycleBreakdown[];
+  }>   => {
+    let currentDate = new Date(context.fitnessPlan.startDate);
+    const microcyclesWithDates = value.map((microcycle: LLMMicrocycle) => {
+      const microcycleWithDates: Partial<MicrocycleBreakdown> = {
+        ...microcycle,
+        startDate: currentDate,
+        workouts: microcycle.workouts.map((workout) => {
+          const workoutWithDate = {
+            ...workout,
+            date: currentDate,
+          }
+          currentDate = addDays(currentDate, 1);
+          return workoutWithDate;
+        })
+      };
+      microcycleWithDates.endDate = currentDate;
+      return microcycleWithDates as MicrocycleBreakdown;
+    })
+    return { user, context, value: microcyclesWithDates }
   }
 ]);
 
-export const generateMicrocycleChain = RunnableSequence.from([
-  async ({ 
-    weeklyTarget,
-    weekNumber,
-    startDate 
-  }: { 
-    weeklyTarget: WeeklyTarget;
-    weekNumber: number;
-    startDate: Date;
-  }) => {
-    const prompt = mesocycleBreakdownPrompt(weeklyTarget, startDate, weekNumber);
-    const workouts = await llm.invoke(prompt);
-    
-    return {
-      name: `Week ${weekNumber}`,
-      weekNumber,
-      startDate,
-      workouts: JSON.parse(typeof workouts.content === 'string' ? workouts.content : JSON.stringify(workouts.content)),
-      weeklyTargets: weeklyTarget
-    };
-  },
-  // Identity function to satisfy RunnableSequence requirement
-  (result) => result
-]);
+// Date utility functions for microcycle alignment
+function getDaysUntilNextMonday(date: Date): number {
+  const dayOfWeek = date.getDay();
+  // If it's Monday (1), return 0. Otherwise calculate days until next Monday
+  return dayOfWeek === 1 ? 0 : (8 - dayOfWeek) % 7;
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}

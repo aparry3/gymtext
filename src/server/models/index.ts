@@ -1,11 +1,11 @@
 // Model exports for clean imports
 export { UserModel } from './userModel';
-export { FitnessPlanModel } from './fitnessPlanModel';
-export { ConversationModel } from './conversationModel';
+export { FitnessPlanModel } from './fitnessPlan';
+export { ConversationModel } from './conversation';
 export { MessageModel } from './messageModel';
-export { MesocycleModel } from './mesocycleModel';
-export { MicrocycleModel } from './microcycleModel';
-export { WorkoutModel } from './workoutModel';
+export { MesocycleModel } from './mesocycle';
+export { MicrocycleModel } from './microcycle';
+export { WorkoutModel } from './workout/schema';
 
 // Type exports from models
 export type { 
@@ -17,24 +17,24 @@ export type {
 export type { 
   Conversation, NewConversation, ConversationUpdate,
   Message, NewMessage, MessageUpdate 
-} from './conversationModel';
+} from './conversation';
 
 export type { 
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
   FitnessPlanDB, FitnessProgram, Macrocycle
-} from './fitnessPlanModel';
+} from './fitnessPlan';
 
 export type { 
   Mesocycle, NewMesocycle, MesocycleUpdate 
-} from './mesocycleModel';
+} from './mesocycle';
 
 export type { 
   Microcycle, NewMicrocycle, MicrocycleUpdate 
-} from './microcycleModel';
+} from './microcycle';
 
 export type { 
   WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate 
-} from './workoutModel';
+} from './workout/schema';
 
 // Re-export database types from _types
 export * from './_types';

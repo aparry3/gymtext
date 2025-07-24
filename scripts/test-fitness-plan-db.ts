@@ -2,7 +2,7 @@
 
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
+import { onboardUser } from '@/server/agents/fitnessPlan/chain';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { Macrocycle } from '@/shared/types/cycles';

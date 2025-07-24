@@ -1,7 +1,7 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '@/shared/types/database';
+import { DB } from '../src/server/models/_types';
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   // Create function to update conversation when message is inserted
   await sql`
     CREATE OR REPLACE FUNCTION update_conversation_last_message()
@@ -45,7 +45,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
   `.execute(db);
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   // Drop triggers
   await sql`DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;`.execute(db);
   await sql`DROP TRIGGER IF EXISTS update_conversation_on_message ON messages;`.execute(db);

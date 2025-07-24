@@ -1,7 +1,7 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '../src/shared/types/database';
+import { DB } from '../src/server/models/_types';
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   // Create extensions if not exists
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`.execute(db);
   
@@ -59,7 +59,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
     .addColumn('fitness_plan_id', 'uuid', (col) => col.notNull().references('fitness_plans.id').onDelete('cascade'))
     .addColumn('start_date', 'date', (col) => col.notNull())
-    .addColumn('cycle_offset', 'integer', (col) => col.notNull())
+    .addColumn('index', 'integer', (col) => col.notNull())
     .addColumn('phase', 'varchar(255)', (col) => col.notNull())
     .addColumn('length_weeks', 'integer', (col) => col.notNull())
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
@@ -77,14 +77,14 @@ export async function up(db: Kysely<Database>): Promise<void> {
   await db.schema
     .createIndex('idx_mesocycles_fitness_plan')
     .on('mesocycles')
-    .columns(['fitness_plan_id', 'cycle_offset'])
+    .columns(['fitness_plan_id', 'index'])
     .execute();
 
   // Add unique constraint for mesocycles
   await sql`
     ALTER TABLE mesocycles
     ADD CONSTRAINT unique_mesocycle_plan_offset
-    UNIQUE (client_id, fitness_plan_id, cycle_offset)
+    UNIQUE (client_id, fitness_plan_id, index)
   `.execute(db);
 
   // Create trigger for mesocycles updated_at
@@ -102,8 +102,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
     .addColumn('fitness_plan_id', 'uuid', (col) => col.notNull().references('fitness_plans.id').onDelete('cascade'))
     .addColumn('mesocycle_id', 'uuid', (col) => col.notNull().references('mesocycles.id').onDelete('cascade'))
-    .addColumn('cycle_offset', 'integer', (col) => col.notNull())
-    .addColumn('week_number', 'integer', (col) => col.notNull())
+    .addColumn('index', 'integer', (col) => col.notNull())
     .addColumn('start_date', 'date', (col) => col.notNull())
     .addColumn('end_date', 'date', (col) => col.notNull())
     .addColumn('targets', 'jsonb')
@@ -121,14 +120,14 @@ export async function up(db: Kysely<Database>): Promise<void> {
   await db.schema
     .createIndex('idx_microcycles_mesocycle')
     .on('microcycles')
-    .columns(['mesocycle_id', 'week_number'])
+    .columns(['mesocycle_id', 'index'])
     .execute();
 
   // Add unique constraint for microcycles
   await sql`
     ALTER TABLE microcycles
     ADD CONSTRAINT unique_microcycle_plan_offset
-    UNIQUE (client_id, fitness_plan_id, cycle_offset)
+    UNIQUE (client_id, fitness_plan_id, mesocycle_id, index)
   `.execute(db);
 
   // Create trigger for microcycles updated_at
@@ -151,7 +150,6 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .addColumn('session_type', 'varchar(50)', (col) => col.notNull())
     .addColumn('goal', 'text')
     .addColumn('details', 'jsonb', (col) => col.notNull())
-    .addColumn('alterations', 'jsonb')
     .addColumn('completed_at', 'timestamptz')
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
     .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
@@ -193,7 +191,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
   `.execute(db);
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+  export async function down(db: Kysely<DB>): Promise<void> {
   // Drop triggers
   await sql`DROP TRIGGER IF EXISTS update_workout_instances_updated_at ON workout_instances;`.execute(db);
   await sql`DROP TRIGGER IF EXISTS update_microcycles_updated_at ON microcycles;`.execute(db);

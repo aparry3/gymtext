@@ -3,7 +3,7 @@ import type {
   Conversation, 
   NewConversation, 
   ConversationUpdate 
-} from '@/server/models/conversationModel';
+} from '@/server/models/conversation';
 
 export class ConversationRepository extends BaseRepository {
   async create(conversation: NewConversation): Promise<Conversation> {

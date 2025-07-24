@@ -1,312 +1,62 @@
-import { MesocycleRepository } from '@/server/repositories/mesocycleRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import type { 
   Mesocycles, 
-  Microcycles, 
-  WorkoutInstances,
-  JsonValue
+  JsonValue,
+  DB
 } from '@/server/models/_types';
-import { Insertable, Selectable } from 'kysely';
+import { UserWithProfile } from '../models/userModel';
+import { FitnessPlan } from '../models/fitnessPlan';
+import { mesocycleAgent } from '../agents/mesocycleBreakdown/chain';
+import { DetailedMesocycle, MesocycleModel } from '../models/mesocycle';
+import { MesocycleRepository } from '../repositories/mesocycleRepository';
+import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
+import { MicrocycleRepository } from '../repositories/microcycleRepository';
+import { MicrocycleModel } from '../models/microcycle';
+import { WorkoutInstanceBreakdown, WorkoutInstanceModel } from '../models/workout';
 
-type NewMesocycle = Insertable<Mesocycles>;
-type NewMicrocycle = Insertable<Microcycles>;
-type NewWorkoutInstance = Insertable<WorkoutInstances>;
-type MesocycleRow = Selectable<Mesocycles>;
-type MicrocycleRow = Selectable<Microcycles>;
-type WorkoutInstanceRow = Selectable<WorkoutInstances>;
-import type { MesocyclePlan, MesocycleDetailed } from '@/server/models/mesocycleModel';
-import type { UserWithProfile } from '@/server/models/userModel';
-import { postgresDb } from '@/server/connections/postgres/postgres';
-import type { Kysely } from 'kysely';
-import type { DB } from '@/shared/types/generated';
-import { v4 as uuidv4 } from 'uuid';
-import { breakdownMesocycle } from '@/server/agents/workoutGeneratorAgent';
+export class MesocycleService {
+  private mesocycleRepo: MesocycleRepository;
+  private microcycleRepo: MicrocycleRepository;
+  private workoutInstanceRepo: WorkoutInstanceRepository;
 
-export class MesocycleGenerationService {
   constructor(
-    private mesocycleRepo: MesocycleRepository,
-    private microcycleRepo: MicrocycleRepository,
-    private workoutInstanceRepo: WorkoutInstanceRepository,
-    private db: Kysely<DB> = postgresDb
-  ) {}
+  ) {
+    this.mesocycleRepo = new MesocycleRepository();
+    this.microcycleRepo = new MicrocycleRepository();
+    this.workoutInstanceRepo = new WorkoutInstanceRepository();
+  }
 
-  /**
-   * Generates a detailed mesocycle from a plan and stores it in the database
-   */
-  async generateAndStoreMesocycle(
-    user: UserWithProfile,
-    mesocyclePlan: MesocyclePlan,
-    fitnessProgramId: string,
-    macrocycleId: string,
-    startDate: Date,
-    programType: string,
-    cycleOffset: number
-  ): Promise<string> {
-    try {
-      // Step 1: Generate detailed mesocycle using AI
-      const mesocycleDetailed = await breakdownMesocycle({
-        userId: user.id,
-        mesocyclePlan,
-        programType,
-        startDate
-      });
-
-      // Step 2: Store everything in a transaction
-      const mesocycleId = await this.storeMesocycleData(
-        mesocycleDetailed,
-        fitnessProgramId,
-        user.id,
-        cycleOffset,
-        startDate
-      );
-
-      return mesocycleId;
-    } catch (error) {
-      console.error(`Failed to generate and store mesocycle ${mesocyclePlan.id}:`, error);
-      throw error;
+  public async getNextMesocycle(user: UserWithProfile, fitnessPlan: FitnessPlan): Promise<DetailedMesocycle> {
+    if (!fitnessPlan.macrocycles.length || !fitnessPlan.macrocycles[0].mesocycles.length) {
+      throw new Error('Fitness plan does not have any mesocycles');
     }
-  }
-
-  /**
-   * Stores mesocycle data in the database within a transaction
-   */
-  private async storeMesocycleData(
-    mesocycleDetailed: MesocycleDetailed,
-    fitnessProgramId: string,
-    clientId: string,
-    cycleOffset: number,
-    startDate: Date
-  ): Promise<string> {
-    return await this.db.transaction().execute(async (trx) => {
-      // 1. Create mesocycle
-      const mesocycleData = mesocycleDetailedToDb(
-        mesocycleDetailed,
-        fitnessProgramId,
-        clientId,
-        cycleOffset,
-        startDate
-      );
-
-      const mesocycleResult = await trx
-        .insertInto('mesocycles')
-        .values(mesocycleData)
-        .returning('id')
-        .executeTakeFirstOrThrow();
-
-      const mesocycleId = mesocycleResult.id;
-
-      // 2. Create microcycles and workout instances
-      const microcycleInserts: NewMicrocycle[] = [];
-      const workoutInserts: NewWorkoutInstance[] = [];
-
-      let currentMicrocycleOffset = cycleOffset;
-
-      for (const microcycle of mesocycleDetailed.microcycles) {
-        const { startDate: microcycleStart, endDate: microcycleEnd } = 
-          calculateMicrocycleDates(startDate, microcycle.weekNumber);
-
-        const microcycleData = microcycleToDb(
-          microcycle,
-          mesocycleId,
-          fitnessProgramId,
-          clientId,
-          currentMicrocycleOffset,
-          microcycleStart,
-          microcycleEnd
-        );
-
-        // Generate a proper UUID for the microcycle
-        const microcycleId = uuidv4();
-        microcycleInserts.push({
-          ...microcycleData,
-          id: microcycleId
-        });
-
-        // Prepare workout instances
-        for (const workout of microcycle.workouts) {
-          const workoutData = workoutInstanceToDb(
-            workout,
-            microcycleId,
-            mesocycleId,
-            fitnessProgramId,
-            clientId
-          );
-          workoutInserts.push(workoutData);
-        }
-
-        currentMicrocycleOffset++;
-      }
-
-      // 3. Batch insert microcycles
-      if (microcycleInserts.length > 0) {
-        await trx
-          .insertInto('microcycles')
-          .values(microcycleInserts)
-          .execute();
-      }
-
-      // 4. Batch insert workout instances
-      if (workoutInserts.length > 0) {
-        await trx
-          .insertInto('workoutInstances')
-          .values(workoutInserts)
-          .execute();
-      }
-
-      console.log(`Successfully stored mesocycle ${mesocycleId} with ${microcycleInserts.length} microcycles and ${workoutInserts.length} workouts`);
-
-      return mesocycleId;
-    });
-  }
-
-  /**
-   * Generates all mesocycles for a fitness program
-   */
-  async generateAllMesocycles(
-    user: UserWithProfile,
-    fitnessProgramId: string,
-    macrocycles: Array<{
-      id: string;
-      mesocycles: MesocyclePlan[];
-      startDate?: string;
-      lengthWeeks: number;
-    }>,
-    programStartDate: Date,
-    programType: string
-  ): Promise<string[]> {
-    const mesocycleIds: string[] = [];
-    let currentDate = new Date(programStartDate);
-    let globalCycleOffset = 0;
-
-    for (const macrocycle of macrocycles) {
-      const macrocycleStartDate = macrocycle.startDate 
-        ? new Date(macrocycle.startDate) 
-        : currentDate;
-
-      let macrocycleCurrentDate = new Date(macrocycleStartDate);
-
-      for (const mesocyclePlan of macrocycle.mesocycles) {
-        const mesocycleId = await this.generateAndStoreMesocycle(
-          user,
-          mesocyclePlan,
-          fitnessProgramId,
-          macrocycle.id,
-          macrocycleCurrentDate,
-          programType,
-          globalCycleOffset
-        );
-
-        mesocycleIds.push(mesocycleId);
-
-        // Advance dates
-        macrocycleCurrentDate = new Date(
-          macrocycleCurrentDate.getTime() + (mesocyclePlan.weeks * 7 * 24 * 60 * 60 * 1000)
-        );
-        globalCycleOffset += mesocyclePlan.weeks;
-      }
-
-      // Update current date for next macrocycle
-      currentDate = new Date(macrocycleCurrentDate);
+    if (!fitnessPlan.id ) {
+      throw new Error('Fitness plan does not have an id');
     }
+    const macrocycle = fitnessPlan.macrocycles[0];
 
-    return mesocycleIds;
+    const mesocycles = await this.mesocycleRepo.getMesocyclesByFitnessPlanId(fitnessPlan.id);
+    const nextMesocycleIndex = mesocycles.length;
+
+    const mesocycleOverview = macrocycle.mesocycles[nextMesocycleIndex];
+    const _mesocycle = MesocycleModel.fromOverview(user, fitnessPlan, mesocycleOverview);
+    const mesocycle = await this.mesocycleRepo.create(_mesocycle);
+
+    const mesocycleAgentResponse = await mesocycleAgent.invoke({ user, context: { mesocycleOverview, fitnessPlan } });
+
+    const microcyclesWithIds = await Promise.all(mesocycleAgentResponse.value.map(async (microcycleBreakdown) => {
+      const newMicrocycle = MicrocycleModel.fromLLM(user, fitnessPlan, mesocycle, microcycleBreakdown);
+      const microcycle = await this.microcycleRepo.create(newMicrocycle);
+      const workouts = microcycleBreakdown.workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
+        const newWorkout = WorkoutInstanceModel.fromLLM(user, fitnessPlan, mesocycle, microcycle, workoutBreakdown);
+        return this.workoutInstanceRepo.create(newWorkout);
+      })
+      await Promise.all(workouts);
+      return {
+        ...microcycle,
+        clientId: user.id,
+        mesocycleId: mesocycle.id,
+      }
+    }))
+    return {...mesocycle, microcycles: microcyclesWithIds};
   }
-
-  /**
-   * Retrieves a complete mesocycle with all its microcycles and workouts
-   */
-  async getCompleteMesocycle(mesocycleId: string): Promise<{
-    mesocycle: MesocycleRow;
-    microcycles: MicrocycleRow[];
-    workouts: WorkoutInstanceRow[];
-  } | null> {
-    const mesocycle = await this.mesocycleRepo.getMesocycleById(mesocycleId);
-    if (!mesocycle) return null;
-
-    const microcycles = await this.microcycleRepo.getMicrocyclesByMesocycleId(mesocycleId);
-    
-    const workouts: WorkoutInstanceRow[] = [];
-    for (const microcycle of microcycles) {
-      const microcycleWorkouts = await this.workoutInstanceRepo.getWorkoutsByMicrocycleId(microcycle.id);
-      workouts.push(...microcycleWorkouts);
-    }
-
-    return {
-      mesocycle,
-      microcycles,
-      workouts
-    };
-  }
-}
-
-// Helper functions
-function mesocycleDetailedToDb(
-  mesocycle: MesocycleDetailed,
-  fitnessPlanId: string,
-  clientId: string,
-  cycleOffset: number,
-  startDate: Date
-): NewMesocycle {
-  return {
-    fitnessPlanId,
-    clientId,
-    phase: mesocycle.phase,
-    lengthWeeks: mesocycle.weeks,
-    cycleOffset,
-    startDate
-  };
-}
-
-function microcycleToDb(
-  microcycle: { weekNumber: number; weeklyTargets?: unknown },
-  mesocycleId: string,
-  fitnessPlanId: string,
-  clientId: string,
-  cycleOffset: number,
-  startDate: Date,
-  endDate: Date
-): NewMicrocycle {
-  return {
-    mesocycleId,
-    fitnessPlanId,
-    clientId,
-    weekNumber: microcycle.weekNumber,
-    cycleOffset,
-    startDate,
-    endDate,
-    targets: (microcycle.weeklyTargets as unknown as JsonValue) || null
-  };
-}
-
-function workoutInstanceToDb(
-  workout: { date: string; sessionType: string; details: unknown; goal?: string },
-  microcycleId: string,
-  mesocycleId: string,
-  fitnessPlanId: string,
-  clientId: string
-): NewWorkoutInstance {
-  return {
-    microcycleId,
-    mesocycleId,
-    fitnessPlanId,
-    clientId,
-    date: new Date(workout.date),
-    sessionType: workout.sessionType,
-    details: workout.details as JsonValue,
-    goal: workout.goal || null
-  };
-}
-
-function calculateMicrocycleDates(
-  mesocycleStartDate: Date,
-  weekNumber: number
-): { startDate: Date; endDate: Date } {
-  const startDate = new Date(mesocycleStartDate);
-  startDate.setDate(startDate.getDate() + (weekNumber - 1) * 7);
-  
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 6);
-  
-  return { startDate, endDate };
 }

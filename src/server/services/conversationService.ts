@@ -1,9 +1,8 @@
-import { Kysely } from 'kysely';
-import type { DB, Json } from '@/shared/types/generated';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
 import { MessageRepository } from '@/server/repositories/messageRepository';
-import type { Conversation, Message } from '@/server/models/conversationModel';
+import type { Conversation, Message } from '@/server/models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
+import { Json } from '../models/_types';
 
 interface StoreInboundMessageParams {
   userId: string;
@@ -15,21 +14,21 @@ interface StoreInboundMessageParams {
 
 interface StoreOutboundMessageParams {
   userId: string;
-  from: string;
+  from?: string;
   to: string;
   messageContent: string;
   twilioMessageSid?: string;
 }
 
-export class ConversationStorageService {
+export class ConversationService {
   private conversationRepo: ConversationRepository;
   private messageRepo: MessageRepository;
   private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
-  constructor(db: Kysely<DB>) {
-    this.conversationRepo = new ConversationRepository(db);
-    this.messageRepo = new MessageRepository(db);
+  constructor() {
+    this.conversationRepo = new ConversationRepository();
+    this.messageRepo = new MessageRepository();
     this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
@@ -61,9 +60,8 @@ export class ConversationStorageService {
     });
   }
 
-  async storeOutboundMessage(params: StoreOutboundMessageParams): Promise<Message | null> {
+  async storeOutboundMessage(userId: string, to: string, messageContent: string, from: string = process.env.TWILIO_NUMBER || '', twilioMessageSid?: string): Promise<Message | null> {
     return await this.circuitBreaker.execute(async () => {
-      const { userId, from, to, messageContent, twilioMessageSid } = params;
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);

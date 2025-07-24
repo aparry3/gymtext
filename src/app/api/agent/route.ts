@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { onboardUser } from '@/server/agents/fitnessOutlineAgent';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { processFitnessProgramMesocycles } from '@/server/agents/workoutGeneratorAgent';
+import { onboardUser } from '@/server/agents/fitnessPlan/chain';
 // import { processUpdate } from '@/server/agents/workoutUpdateAgent';
 
 export async function POST(req: NextRequest) {

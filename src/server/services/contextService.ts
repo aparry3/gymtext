@@ -4,7 +4,7 @@ import {
   CachedContext,
   RecentMessage,
   UserContextProfile,
-} from '@/shared/types/conversation';
+} from '@/server/models/conversation';
 import { ContextConfig, getContextConfig } from '@/shared/config/context.config';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
 import { MessageRepository } from '@/server/repositories/messageRepository';

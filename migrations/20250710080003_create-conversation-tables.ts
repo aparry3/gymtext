@@ -1,7 +1,7 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '@/shared/types/database';
+import { DB } from '../src/server/models/_types';
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   // Create conversations table
   await db.schema
     .createTable('conversations')
@@ -94,7 +94,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .execute();
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   // Drop indexes first
   await db.schema.dropIndex('idx_messages_user_id_created_at').execute();
   await db.schema.dropIndex('idx_messages_created_at').execute();

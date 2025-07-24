@@ -1,27 +1,34 @@
+import { FitnessPlan } from "@/server/models/fitnessPlan";
 import { UserWithProfile } from "@/server/models/userModel";
 
-export const welcomePrompt = (user: UserWithProfile) => `
-Create a warm welcome message for ${user.name} who just signed up for GymText.
+// Add a welcomePrompt template for generating a personalized welcome message
+export const welcomePrompt = (user: UserWithProfile, fitnessPlan: FitnessPlan) => `
+You are a friendly and motivating fitness coach. Your task is to write a welcome message for a new client, using their name and a summary of their fitness plan.
 
-<User Information>
-- Name: ${user.name}
-- Fitness Level: ${user.profile?.skillLevel || 'Not specified'}
-- Goals: ${user.profile?.fitnessGoals || 'General fitness'}
-- Experience: ${user.profile?.exerciseFrequency || 'Not specified'} workouts per week
-</User Information>
+Here's the information you should use:
 
-<Instructions>
-1. Create a friendly, enthusiastic welcome
-2. Reference their specific fitness goals if provided
-3. Briefly explain what GymText offers
-4. Set expectations for personalized coaching
-5. Include a call to action for next steps
-6. Keep under 200 characters for SMS
-7. Use welcoming emojis (👋, 🎯, 💪)
-8. Make them feel excited about their fitness journey
+* Client Name: ${user.name}
+* Fitness Plan Overview: ${fitnessPlan.overview}
 
-Generate a welcoming onboarding message.
-`;
+Your message should:
+
+* Be addressed to the client using their name.
+* Start with an enthusiastic and welcoming tone.
+* Briefly summarize the key components of their fitness plan, highlighting the variety of workouts (e.g., strength training, cardio, HIIT).
+* Emphasize how the plan is designed to help them achieve their specific fitness goals (e.g., weight loss, muscle gain, improved endurance).
+* Express your excitement about working with them and your confidence in their success.
+* Maintain a professional but encouraging and supportive tone.
+* Be no more than 900 characters in length.
+
+Example:
+
+Client Name: Aaron
+Fitness Plan Overview: Hey Aaron, great to connect with you! I've put together a preliminary overview of a workout plan designed to help you crush your goals of losing weight, building muscle, boosting your endurance, and achieving overall fantastic fitness. Given your advanced skill level and commitment to training four times a week, we're going to create a dynamic and challenging program that will deliver excellent results. Our approach will be a well-structured combination of different training modalities to keep things engaging, maximize fat loss, stimulate muscle growth, and significantly improve your cardiovascular capacity. Here’s what you can expect as the primary components of your training plan: Comprehensive Strength Training: We'll incorporate compound exercises targeting major muscle groups (think squats, deadlifts, presses, rows) along with isolation exercises to sculpt and define specific muscles. Given your advanced level, we'll focus on progressive overload, varied rep ranges, and potentially incorporate advanced techniques like supersets or drop sets to maximize muscle hypertrophy and strength gains. Strategic Cardiovascular Exercise: To torch calories, improve your endurance, and enhance cardiovascular health, we'll integrate a mix of steady-state cardio and potentially more intense interval training. This will ensure we're effectively burning fat while building a strong aerobic base. High-Intensity Interval Training (HIIT): Knowing your advanced level, HIIT will be a powerful tool in our arsenal. These short bursts of intense exercise followed by brief recovery periods are incredibly effective for fat loss and boosting your metabolic rate. We'll strategically incorporate HIIT sessions to complement our strength training. Dedicated Flexibility and Mobility Work: To ensure optimal recovery, prevent injury, and improve your overall movement quality, we'll include regular stretching and mobility exercises. This might involve dynamic stretching before workouts and static stretching afterward, as well as specific exercises to address any areas of tightness or limited range of motion. This overview provides a general framework. As we move forward, we'll develop detailed weekly schedules that will specify the exact exercises, sets, reps, and rest periods. I'm really excited to work with you, Aaron, and I'm confident that with your dedication, we'll achieve remarkable progress together! Let's get started!
+
+Expected Output:
+
+Hey Aaron, great to connect! I'm thrilled to introduce you to your personalized fitness journey, designed to help you achieve your goals of losing weight, building muscle, boosting endurance, and achieving overall fantastic fitness. This plan, tailored to your advanced skill level and commitment to training four times a week, incorporates a dynamic combination of training approaches to maximize your results. You can expect a well-structured program that includes comprehensive strength training, strategic cardiovascular exercise, high-intensity interval training (HIIT), and dedicated flexibility and mobility work. I'm really excited to work with you, and I'm confident that with your dedication, we'll achieve remarkable progress together! Let's get started!
+`; 
 
 export const onboardingPrompt = (user: UserWithProfile) => `
 Create an onboarding guidance message for ${user.name}.

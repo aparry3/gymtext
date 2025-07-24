@@ -70,9 +70,9 @@ export interface FitnessProfiles {
 export interface Mesocycles {
   clientId: string;
   createdAt: Generated<Timestamp>;
-  cycleOffset: number;
   fitnessPlanId: string;
   id: Generated<string>;
+  index: number;
   lengthWeeks: number;
   phase: string;
   startDate: Timestamp;
@@ -95,15 +95,14 @@ export interface Messages {
 export interface Microcycles {
   clientId: string;
   createdAt: Generated<Timestamp>;
-  cycleOffset: number;
   endDate: Timestamp;
   fitnessPlanId: string;
   id: Generated<string>;
+  index: number;
   mesocycleId: string;
   startDate: Timestamp;
   targets: Json | null;
   updatedAt: Generated<Timestamp>;
-  weekNumber: number;
 }
 
 export interface Subscriptions {
@@ -130,7 +129,6 @@ export interface Users {
 }
 
 export interface WorkoutInstances {
-  alterations: Json | null;
   clientId: string;
   completedAt: Timestamp | null;
   createdAt: Generated<Timestamp>;
@@ -145,27 +143,6 @@ export interface WorkoutInstances {
   updatedAt: Generated<Timestamp>;
 }
 
-export interface WorkoutLogs {
-  completed: Generated<boolean>;
-  completedAt: Timestamp | null;
-  createdAt: Generated<Timestamp>;
-  feedback: string | null;
-  id: Generated<string>;
-  rating: number | null;
-  userId: string;
-  workoutId: string;
-}
-
-export interface Workouts {
-  createdAt: Generated<Timestamp>;
-  date: Timestamp;
-  exercises: Json;
-  id: Generated<string>;
-  sentAt: Timestamp | null;
-  userId: string;
-  workoutType: string;
-}
-
 export interface DB {
   conversations: Conversations;
   conversationTopics: ConversationTopics;
@@ -177,6 +154,4 @@ export interface DB {
   subscriptions: Subscriptions;
   users: Users;
   workoutInstances: WorkoutInstances;
-  workoutLogs: WorkoutLogs;
-  workouts: Workouts;
 }

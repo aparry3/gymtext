@@ -2,6 +2,7 @@ import { ConversationRepository } from '@/server/repositories/conversationReposi
 import { MessageRepository } from '@/server/repositories/messageRepository';
 import type { Conversations, Messages, JsonValue } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
+import { BaseMessage } from '@langchain/core/messages';
 
 export type Conversation = Selectable<Conversations>;
 export type NewConversation = Insertable<Conversations>;
@@ -10,6 +11,61 @@ export type ConversationUpdate = Updateable<Conversations>;
 export type Message = Selectable<Messages>;
 export type NewMessage = Insertable<Messages>;
 export type MessageUpdate = Updateable<Messages>;
+
+export interface ConversationContext {
+  conversationId: string;
+  summary?: string;
+  recentMessages: RecentMessage[];
+  userProfile: UserContextProfile;
+  metadata: ConversationMetadata;
+}
+
+export interface RecentMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  messageId?: string;
+}
+
+export interface UserContextProfile {
+  userId: string;
+  fitnessGoals?: string;
+  skillLevel?: string;
+  currentProgram?: string;
+  recentTopics?: string[];
+  preferences?: Record<string, unknown>;
+  lastWorkoutDate?: Date;
+}
+
+export interface ConversationMetadata {
+  startTime: Date;
+  messageCount: number;
+  lastInteractionTime: Date;
+  isNewConversation: boolean;
+  conversationGapMinutes: number;
+}
+
+export interface CachedContext {
+  context: ConversationContext;
+  formattedMessages?: BaseMessage[];
+  tokenCount?: number;
+  timestamp: number;
+  ttl: number;
+}
+
+export interface TokenUsage {
+  contextTokens: number;
+  systemMessageTokens: number;
+  messageHistoryTokens: number;
+  totalTokens: number;
+}
+
+export interface ContextRetrievalOptions {
+  includeWorkoutHistory?: boolean;
+  includeUserProfile?: boolean;
+  messageLimit?: number;
+  skipCache?: boolean;
+}
 
 export class ConversationModel {
   private conversationRepository: ConversationRepository;

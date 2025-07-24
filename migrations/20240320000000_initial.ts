@@ -1,7 +1,7 @@
 import { Kysely, sql } from 'kysely';
-import { Database } from '../src/shared/types/database';
+import { DB } from '../src/server/models/_types';
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   // Create extension for UUID generation
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`.execute(db);
 
@@ -46,31 +46,6 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .addColumn('canceled_at', 'timestamptz')
     .execute();
 
-  // Create workouts table
-  await db.schema
-    .createTable('workouts')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`uuid_generate_v4()`))
-    .addColumn('user_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('date', 'date', (col) => col.notNull())
-    .addColumn('workout_type', 'varchar(50)', (col) => col.notNull())
-    .addColumn('exercises', 'jsonb', (col) => col.notNull())
-    .addColumn('sent_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
-
-  // Create workout logs table
-  await db.schema
-    .createTable('workout_logs')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`uuid_generate_v4()`))
-    .addColumn('user_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('workout_id', 'uuid', (col) => col.notNull().references('workouts.id').onDelete('cascade'))
-    .addColumn('completed', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('feedback', 'text')
-    .addColumn('rating', 'integer', (col) => col.check(sql`rating >= 1 AND rating <= 5`))
-    .addColumn('completed_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
-
   // Create indexes
   await db.schema
     .createIndex('idx_users_stripe_customer_id')
@@ -95,46 +70,16 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .on('subscriptions')
     .column('stripe_subscription_id')
     .execute();
-
-  await db.schema
-    .createIndex('idx_workouts_user_id')
-    .on('workouts')
-    .column('user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_workouts_date')
-    .on('workouts')
-    .column('date')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_workout_logs_user_id')
-    .on('workout_logs')
-    .column('user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_workout_logs_workout_id')
-    .on('workout_logs')
-    .column('workout_id')
-    .execute();
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   // Drop indexes
-  await db.schema.dropIndex('idx_workout_logs_workout_id').execute();
-  await db.schema.dropIndex('idx_workout_logs_user_id').execute();
-  await db.schema.dropIndex('idx_workouts_date').execute();
-  await db.schema.dropIndex('idx_workouts_user_id').execute();
   await db.schema.dropIndex('idx_subscriptions_stripe_subscription_id').execute();
   await db.schema.dropIndex('idx_subscriptions_user_id').execute();
   await db.schema.dropIndex('idx_fitness_profiles_user_id').execute();
   await db.schema.dropIndex('idx_users_stripe_customer_id').execute();
 
   // Drop tables
-  await db.schema.dropTable('workout_logs').execute();
-  await db.schema.dropTable('workouts').execute();
   await db.schema.dropTable('subscriptions').execute();
   await db.schema.dropTable('fitness_profiles').execute();
   await db.schema.dropTable('users').execute();

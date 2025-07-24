@@ -1,11 +1,8 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import type { JsonValue } from '@/server/models/_types';
-import type { 
-  FitnessPlan,
-  NewFitnessPlan,
-  FitnessPlanDB,
-  FitnessProgram,
-} from '@/server/models/fitnessPlanModel';
+import { 
+  FitnessPlanModel,
+  type FitnessPlan,
+} from '@/server/models/fitnessPlan';
 import type { 
   FitnessPlanWithHierarchy, 
   MesocycleWithMicrocycles, 
@@ -15,34 +12,22 @@ import type {
 } from '@/shared/types/admin';
 
 export class FitnessPlanRepository extends BaseRepository {
-  async createFromProgram(
-    clientId: string,
-    program: FitnessProgram,
-    startDate: Date,
-    goalStatement?: string
-  ): Promise<FitnessPlanDB> {
-    const newPlan: NewFitnessPlan = {
-      clientId,
-      programType: program.programType,
-      goalStatement: goalStatement ?? null,
-      overview: program.overview,
-      startDate,
-      macrocycles: program.macrocycles as unknown as JsonValue,
-    };
-    
+  async insertFitnessPlan(
+    fitnessPlan: FitnessPlan
+  ): Promise<FitnessPlan> {    
     const result = await this.db
       .insertInto('fitnessPlans')
       .values({
-        ...newPlan,
-        macrocycles: JSON.stringify(newPlan.macrocycles), // Convert to JSONB
+        ...fitnessPlan,
+        macrocycles: JSON.stringify(fitnessPlan.macrocycles),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
     
-    return result;
+    return FitnessPlanModel.fromDB(result);
   }
 
-  async findByClientId(clientId: string): Promise<FitnessPlanDB[]> {
+  async findByClientId(clientId: string): Promise<FitnessPlan[]> {
     const results = await this.db
       .selectFrom('fitnessPlans')
       .where('clientId', '=', clientId)
@@ -50,10 +35,10 @@ export class FitnessPlanRepository extends BaseRepository {
       .selectAll()
       .execute();
     
-    return results as FitnessPlanDB[];
+    return results.map(FitnessPlanModel.fromDB) as FitnessPlan[];
   }
 
-  async findActiveByClientId(clientId: string): Promise<FitnessPlanDB | null> {
+  async findActiveByClientId(clientId: string): Promise<FitnessPlan | null> {
     // Find the most recent plan that has started but not ended
     const result = await this.db
       .selectFrom('fitnessPlans')
@@ -65,10 +50,10 @@ export class FitnessPlanRepository extends BaseRepository {
     
     if (!result) return null;
     
-    return result;
+    return FitnessPlanModel.fromDB(result);
   }
 
-  async findById(id: string): Promise<FitnessPlanDB | undefined> {
+  async findById(id: string): Promise<FitnessPlan | undefined> {
     const result = await this.db
       .selectFrom('fitnessPlans')
       .where('id', '=', id)
@@ -77,7 +62,7 @@ export class FitnessPlanRepository extends BaseRepository {
     
     if (!result) return undefined;
     
-    return result;
+    return FitnessPlanModel.fromDB(result);
   }
 
   async getFitnessPlanWithFullHierarchy(planId: string): Promise<FitnessPlanWithHierarchy | null> {
@@ -94,7 +79,7 @@ export class FitnessPlanRepository extends BaseRepository {
     const mesocycles = await this.db
       .selectFrom('mesocycles')
       .where('fitnessPlanId', '=', planId)
-      .orderBy('cycleOffset', 'asc')
+      .orderBy('index', 'asc')
       .selectAll()
       .execute();
 
@@ -104,7 +89,7 @@ export class FitnessPlanRepository extends BaseRepository {
       ? await this.db
           .selectFrom('microcycles')
           .where('mesocycleId', 'in', mesocycleIds)
-          .orderBy('weekNumber', 'asc')
+          .orderBy('index', 'asc')
           .selectAll()
           .execute()
       : [];
@@ -170,18 +155,19 @@ export class FitnessPlanRepository extends BaseRepository {
     return plansWithHierarchy;
   }
 
-  async update(id: string, updates: Partial<FitnessPlan>): Promise<FitnessPlanDB> {
+  async update(id: string, updates: Partial<FitnessPlan>): Promise<FitnessPlan> {
     const result = await this.db
       .updateTable('fitnessPlans')
       .set({
         ...updates,
+        macrocycles: JSON.stringify(updates.macrocycles),
         updatedAt: new Date()
       })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirstOrThrow();
     
-    return result;
+    return FitnessPlanModel.fromDB(result);
   }
 
   async delete(id: string): Promise<void> {
