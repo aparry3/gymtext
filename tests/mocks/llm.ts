@@ -198,22 +198,3 @@ export function setupLLMMockScenario(
   }
 }
 
-/**
- * Verify prompt was called with expected content
- */
-export function expectPromptContains(mockInvoke: Mock, expectedContent: string | string[]) {
-  const contents = Array.isArray(expectedContent) ? expectedContent : [expectedContent];
-  
-  expect(mockInvoke).toHaveBeenCalled();
-  const lastCall = mockInvoke.mock.calls[mockInvoke.mock.calls.length - 1];
-  const prompt = lastCall[0];
-  
-  // Handle different prompt formats (string, HumanMessage, array, etc.)
-  const promptText = typeof prompt === 'string' 
-    ? prompt 
-    : prompt.content || JSON.stringify(prompt);
-  
-  contents.forEach(content => {
-    expect(promptText).toContain(content);
-  });
-}

@@ -1,4 +1,4 @@
-import type { FitnessProfile, NewFitnessProfile } from '@/server/models/fitnessProfileModel';
+import type { FitnessProfile, NewFitnessProfile } from '@/server/models/userModel';
 
 export class FitnessProfileBuilder {
   private profile: FitnessProfile;

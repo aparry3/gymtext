@@ -61,7 +61,7 @@ async function testFullUserFlow(options: {
     console.log(chalk.gray(JSON.stringify(userData, null, 2)));
   }
 
-  let userId: string;
+  let userId: string = '';
 
   try {
     const checkoutResponse = await fetch(`${baseUrl}/api/checkout`, {
@@ -113,6 +113,12 @@ async function testFullUserFlow(options: {
   // Add delay between steps
   console.log(chalk.gray(`\nWaiting ${delayMs}ms before next step...`));
   await delay(delayMs);
+
+  // Ensure we have a userId before proceeding
+  if (!userId) {
+    console.log(chalk.red('❌ No user ID available. Cannot proceed with program creation.'));
+    process.exit(1);
+  }
 
   // Step 2: Create fitness program
   console.log(chalk.cyan('\nStep 2: Creating fitness program...'));

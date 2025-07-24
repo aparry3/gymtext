@@ -39,19 +39,19 @@ export class MesocycleService {
     const mesocycleAgentResponse = await mesocycleAgent.invoke({ user, context: { mesocycleOverview, fitnessPlan } });
 
     const microcyclesWithIds = await Promise.all(mesocycleAgentResponse.value.map(async (microcycleBreakdown) => {
-      const {workouts: _workouts, ...microcycleBreakdownWithoutWorkouts} = microcycleBreakdown;
+      const {workouts, ...microcycleBreakdownWithoutWorkouts} = microcycleBreakdown;
       const newMicrocycle = MicrocycleModel.fromLLM(user, fitnessPlan, mesocycle, microcycleBreakdownWithoutWorkouts);
       const microcycle = await this.microcycleRepo.create(newMicrocycle);
-      const workoutPromises = microcycleBreakdown.workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
+      const workoutPromises = workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
         const newWorkout = WorkoutInstanceModel.fromLLM(user, fitnessPlan, mesocycle, microcycle, workoutBreakdown);
         return this.workoutInstanceRepo.create(newWorkout);
       })
-      const workouts = await Promise.all(workoutPromises);
+      const createdWorkouts = await Promise.all(workoutPromises);
       return {
         ...microcycle,
         clientId: user.id,
         mesocycleId: mesocycle.id,
-        workouts: workouts,
+        workouts: createdWorkouts,
       } as DetailedMicrocycle;
     }))
     return {...mesocycle, microcycles: microcyclesWithIds};

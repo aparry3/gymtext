@@ -14,7 +14,7 @@ async function getTestUser() {
     const user = await db
       .selectFrom('users')
       .selectAll()
-      .where('phone_number', '=', '+13392223571')
+      .where('phoneNumber', '=', '+13392223571')
       .executeTakeFirst();
     
     if (user) {
@@ -23,9 +23,9 @@ async function getTestUser() {
       
       // Also get fitness profile
       const profile = await db
-        .selectFrom('fitness_profiles')
+        .selectFrom('fitnessProfiles')
         .selectAll()
-        .where('user_id', '=', user.id)
+        .where('userId', '=', user.id)
         .executeTakeFirst();
         
       if (profile) {

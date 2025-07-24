@@ -1,4 +1,5 @@
-import type { FitnessPlan, NewFitnessPlan, FitnessPlanOverview, MacrocycleOverview, MesocycleOverview } from '@/server/models/fitnessPlan';
+import type { FitnessPlan, NewFitnessPlan, FitnessPlanOverview, MacrocycleOverview } from '@/server/models/fitnessPlan';
+import type { MesocycleOverview } from '@/server/models/mesocycle';
 
 export class FitnessPlanBuilder {
   private fitnessPlan: FitnessPlan;
@@ -92,16 +93,16 @@ export class FitnessPlanBuilder {
         durationWeeks: 4,
         mesocycles: [
           {
-            name: 'Adaptation',
-            description: 'Get accustomed to regular training',
-            durationWeeks: 2,
+            index: 0,
             phase: 'Foundation',
+            weeks: 2,
+            microcycleOverviews: [],
           },
           {
-            name: 'Base Building',
-            description: 'Build basic strength and endurance',
-            durationWeeks: 2,
+            index: 1,
             phase: 'Foundation',
+            weeks: 2,
+            microcycleOverviews: [],
           },
         ],
       },
@@ -110,10 +111,10 @@ export class FitnessPlanBuilder {
 }
 
 export const createMesocycleOverview = (overrides: Partial<MesocycleOverview> = {}): MesocycleOverview => ({
-  name: 'Strength Building',
-  description: 'Focus on progressive overload and strength gains',
-  durationWeeks: 4,
+  index: 0,
   phase: 'Strength',
+  weeks: 4,
+  microcycleOverviews: [],
   ...overrides,
 });
 
@@ -122,10 +123,10 @@ export const createMacrocycleOverview = (overrides: Partial<MacrocycleOverview> 
   description: 'Develop overall strength through progressive training',
   durationWeeks: 12,
   mesocycles: [
-    createMesocycleOverview({ name: 'Adaptation', durationWeeks: 3 }),
-    createMesocycleOverview({ name: 'Accumulation', durationWeeks: 4 }),
-    createMesocycleOverview({ name: 'Intensification', durationWeeks: 3 }),
-    createMesocycleOverview({ name: 'Deload', durationWeeks: 2 }),
+    createMesocycleOverview({ index: 0, phase: 'Adaptation', weeks: 3 }),
+    createMesocycleOverview({ index: 1, phase: 'Accumulation', weeks: 4 }),
+    createMesocycleOverview({ index: 2, phase: 'Intensification', weeks: 3 }),
+    createMesocycleOverview({ index: 3, phase: 'Deload', weeks: 2 }),
   ],
   ...overrides,
 });
@@ -141,8 +142,8 @@ export const mockFitnessPlans = {
         name: 'Strength Foundation',
         durationWeeks: 8,
         mesocycles: [
-          createMesocycleOverview({ name: 'Base Building', durationWeeks: 4 }),
-          createMesocycleOverview({ name: 'Strength Focus', durationWeeks: 4 }),
+          createMesocycleOverview({ index: 0, phase: 'Base Building', weeks: 4 }),
+          createMesocycleOverview({ index: 1, phase: 'Strength Focus', weeks: 4 }),
         ],
       }),
     ])
@@ -191,14 +192,14 @@ export const mockFitnessPlans = {
         durationWeeks: 6,
         mesocycles: [
           createMesocycleOverview({ 
-            name: 'Initial Recovery', 
+            index: 0,
             phase: 'Recovery',
-            durationWeeks: 3 
+            weeks: 3 
           }),
           createMesocycleOverview({ 
-            name: 'Strength Rebuilding', 
+            index: 1,
             phase: 'Recovery',
-            durationWeeks: 3 
+            weeks: 3 
           }),
         ],
       },
@@ -215,8 +216,8 @@ export const mockFitnessPlans = {
         description: 'Build base strength and technique',
         durationWeeks: 4,
         mesocycles: [
-          createMesocycleOverview({ name: 'Week 1-2', durationWeeks: 2 }),
-          createMesocycleOverview({ name: 'Week 3-4', durationWeeks: 2 }),
+          createMesocycleOverview({ index: 0, phase: 'Week 1-2', weeks: 2 }),
+          createMesocycleOverview({ index: 1, phase: 'Week 3-4', weeks: 2 }),
         ],
       },
       {
@@ -224,8 +225,8 @@ export const mockFitnessPlans = {
         description: 'Progressive overload phase',
         durationWeeks: 8,
         mesocycles: [
-          createMesocycleOverview({ name: 'Volume Phase', durationWeeks: 4 }),
-          createMesocycleOverview({ name: 'Intensity Phase', durationWeeks: 4 }),
+          createMesocycleOverview({ index: 0, phase: 'Volume Phase', weeks: 4 }),
+          createMesocycleOverview({ index: 1, phase: 'Intensity Phase', weeks: 4 }),
         ],
       },
       {
@@ -233,8 +234,8 @@ export const mockFitnessPlans = {
         description: 'Peak performance and testing',
         durationWeeks: 4,
         mesocycles: [
-          createMesocycleOverview({ name: 'Taper', durationWeeks: 2 }),
-          createMesocycleOverview({ name: 'Test Week', durationWeeks: 2 }),
+          createMesocycleOverview({ index: 0, phase: 'Taper', weeks: 2 }),
+          createMesocycleOverview({ index: 1, phase: 'Test Week', weeks: 2 }),
         ],
       },
     ])

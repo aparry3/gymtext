@@ -1,8 +1,6 @@
 import { UserBuilder, mockUsers } from './users';
 import { FitnessProfileBuilder, mockProfiles } from './fitnessProfiles';
-import type { User } from '@/server/models/userModel';
-import type { FitnessProfile } from '@/server/models/fitnessProfileModel';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { User, FitnessProfile, UserWithProfile } from '@/server/models/userModel';
 
 export class UserWithProfileBuilder {
   private userBuilder: UserBuilder;

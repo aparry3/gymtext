@@ -11,6 +11,7 @@ export class ConversationBuilder {
       startedAt: now,
       lastMessageAt: now,
       status: 'active',
+      messageCount: 0,
       metadata: null,
       createdAt: now,
       updatedAt: now,
