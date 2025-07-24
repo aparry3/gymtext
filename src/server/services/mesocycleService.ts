@@ -10,7 +10,7 @@ import { DetailedMesocycle, MesocycleModel } from '../models/mesocycle';
 import { MesocycleRepository } from '../repositories/mesocycleRepository';
 import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
 import { MicrocycleRepository } from '../repositories/microcycleRepository';
-import { MicrocycleModel } from '../models/microcycle';
+import { DetailedMicrocycle, MicrocycleModel } from '../models/microcycle';
 import { WorkoutInstanceBreakdown, WorkoutInstanceModel } from '../models/workout';
 
 export class MesocycleService {
@@ -46,16 +46,17 @@ export class MesocycleService {
     const microcyclesWithIds = await Promise.all(mesocycleAgentResponse.value.map(async (microcycleBreakdown) => {
       const newMicrocycle = MicrocycleModel.fromLLM(user, fitnessPlan, mesocycle, microcycleBreakdown);
       const microcycle = await this.microcycleRepo.create(newMicrocycle);
-      const workouts = microcycleBreakdown.workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
+      const workoutPromises = microcycleBreakdown.workouts.map((workoutBreakdown: WorkoutInstanceBreakdown) => {
         const newWorkout = WorkoutInstanceModel.fromLLM(user, fitnessPlan, mesocycle, microcycle, workoutBreakdown);
         return this.workoutInstanceRepo.create(newWorkout);
       })
-      await Promise.all(workouts);
+      const workouts = await Promise.all(workoutPromises);
       return {
         ...microcycle,
         clientId: user.id,
         mesocycleId: mesocycle.id,
-      }
+        workouts: workouts,
+      } as DetailedMicrocycle;
     }))
     return {...mesocycle, microcycles: microcyclesWithIds};
   }

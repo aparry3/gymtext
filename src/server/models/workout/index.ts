@@ -26,6 +26,7 @@ export class WorkoutInstanceModel implements NewWorkoutInstance {
   id: string | undefined;
   updatedAt: Date | string | undefined;
   targets: JsonValue | undefined;
+  details: JsonValue | undefined;
 
   constructor(workoutInstance: NewWorkoutInstance) {
     this.clientId = workoutInstance.clientId;
@@ -36,6 +37,7 @@ export class WorkoutInstanceModel implements NewWorkoutInstance {
     this.microcycleId = workoutInstance.microcycleId;
     this.mesocycleId = workoutInstance.mesocycleId;
     this.sessionType = workoutInstance.sessionType;
+    this.details = workoutInstance.details;
   }
 
   public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Microcycle, workoutBreakdown: WorkoutInstanceBreakdown): NewWorkoutInstance {

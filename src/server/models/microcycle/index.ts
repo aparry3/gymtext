@@ -4,7 +4,7 @@ import { _MicrocycleOverviewSchema, _MicrocycleSchema, LLMMicrocycle } from "./s
 import { UserWithProfile } from '../userModel';
 import { FitnessPlan } from '../fitnessPlan';
 import { Mesocycle } from '../mesocycle';
-import { WorkoutInstanceBreakdown } from '../workout';
+import { WorkoutInstance, WorkoutInstanceBreakdown } from '../workout';
 
 
 export type Microcycle = Selectable<Microcycles>;
@@ -25,6 +25,10 @@ export interface MicrocycleOverview {
   avgIntensityPct1RM?: number;
   totalSetsMainLifts?: number;
   deload?: boolean;
+}
+
+export interface DetailedMicrocycle extends Microcycle {
+  workouts: WorkoutInstance[];
 }
 
 export class MicrocycleModel implements NewMicrocycle {

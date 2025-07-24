@@ -1,6 +1,6 @@
 import type { Mesocycles } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { Microcycle, MicrocycleModel, type MicrocycleOverview } from '@/server/models/microcycle';
+import { Microcycle, MicrocycleModel, type MicrocycleOverview, DetailedMicrocycle } from '@/server/models/microcycle';
 import { z } from 'zod';
 import { UserWithProfile } from '../userModel';
 import { FitnessPlan } from '../fitnessPlan';
@@ -18,7 +18,7 @@ export interface MesocycleOverview {
 }
 
 export interface DetailedMesocycle extends Mesocycle {
-  microcycles: Microcycle[];
+  microcycles: DetailedMicrocycle[];
 }
 
 export class MesocycleModel implements Mesocycle {
