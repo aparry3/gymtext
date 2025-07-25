@@ -1,7 +1,6 @@
-import { UserRepository } from '@/server/data/repositories/userRepository';
-import { generateChatResponse } from '@/server/services/ai/chatService';
-import { ConversationStorageService } from '@/server/services/infrastructure/conversationStorageService';
-import { postgresDb as db } from '@/server/core/database/postgres';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { generateChatResponse } from '@/server/services/chatService';
+import { ConversationService } from '@/server/services/conversationService';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
@@ -49,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Initialize conversation storage service
-    const conversationStorage = new ConversationStorageService(db);
+    const conversationStorage = new ConversationService();
     
     // Store the inbound message (non-blocking)
     try {
@@ -73,12 +72,12 @@ export async function POST(req: NextRequest) {
     
     // Store the outbound message (non-blocking)
     try {
-      const stored = await conversationStorage.storeOutboundMessage({
-        userId: user.id,
-        from: to, // Our Twilio number is the from
-        to: from, // User's number is the to
-        messageContent: chatResponse
-      });
+      const stored = await conversationStorage.storeOutboundMessage(
+        user.id,
+        from, // User's number is the to
+        chatResponse,
+        to // Our Twilio number is the from
+      );
       if (!stored) {
         console.warn('Circuit breaker prevented storing outbound message');
       }

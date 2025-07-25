@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { UserCookieData } from '@/shared/utils/cookies';
 
-type Status = 'initial' | 'onboarding' | 'planning' | 'completed' | 'error';
+type Status = 'initial' | 'onboarding' | 'completed' | 'error';
 
 export default function WorkoutSetupClient({ user }: { user: UserCookieData | null }) {
   const [status, setStatus] = useState<Status>('initial');
@@ -20,13 +20,12 @@ export default function WorkoutSetupClient({ user }: { user: UserCookieData | nu
       try {
         // Step 1: Onboard the user
         setStatus('onboarding');
-        const onboardResponse = await fetch('/api/agent', {
+        const onboardResponse = await fetch('/api/programs', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            action: 'onboard',
             userId: user.id,
           }),
         });
@@ -35,24 +34,6 @@ export default function WorkoutSetupClient({ user }: { user: UserCookieData | nu
           throw new Error('Failed to onboard user');
         }
 
-        // Step 2: Generate weekly plan
-        setStatus('planning');
-        const planResponse = await fetch('/api/agent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'weekly',
-            userId: user.id,
-          }),
-        });
-
-        if (!planResponse.ok) {
-          throw new Error('Failed to generate weekly plan');
-        }
-
-        // All done!
         setStatus('completed');
       } catch (err) {
         console.error('Error setting up workout plan:', err);
@@ -107,17 +88,6 @@ export default function WorkoutSetupClient({ user }: { user: UserCookieData | nu
           </div>
           <div className="mt-4 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
             <div className="h-full bg-[#4338ca] rounded-full w-1/3"></div>
-          </div>
-        </div>
-      )}
-
-      {status === 'planning' && (
-        <div className="my-6">
-          <div className="animate-pulse text-xl text-[#4338ca] font-medium">
-            Putting together your first few workouts...
-          </div>
-          <div className="mt-4 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#4338ca] rounded-full w-2/3"></div>
           </div>
         </div>
       )}

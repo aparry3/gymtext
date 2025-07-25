@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely';
+import { DB } from '../src/server/models/_types';
 
-export async function up(db: Kysely<any>): Promise<void> {
+export async function up(db: Kysely<DB>): Promise<void> {
   // Index on users.phone_number for quick phone number lookups
   await db.schema
     .createIndex('users_phone_number_idx')
@@ -44,7 +45,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 }
 
-export async function down(db: Kysely<any>): Promise<void> {
+export async function down(db: Kysely<DB>): Promise<void> {
   await db.schema.dropIndex('users_phone_number_idx').execute();
   await db.schema.dropIndex('fitness_plans_client_id_idx').execute();
   await db.schema.dropIndex('mesocycles_fitness_plan_id_idx').execute();

@@ -4,271 +4,104 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GymText is a fitness coaching application that delivers personalized workouts and coaching via SMS messages using AI agents. It's built with Next.js 15, TypeScript, and includes Twilio integration for SMS functionality, AI/LLM integration for intelligent responses, and a PostgreSQL database for data persistence.
+GymText is a personalized fitness coaching application that delivers workout plans via SMS. It uses AI to provide intelligent coaching conversations and generates customized fitness plans based on user profiles.
 
-## Package Manager
-
-This project uses **pnpm** as the package manager. The presence of `pnpm-lock.yaml` confirms this.
-
-```bash
-# Install dependencies
-pnpm install
-
-# Add a dependency
-pnpm add package-name
-
-# Add a dev dependency
-pnpm add -D package-name
-```
-
-## Available Scripts
+## Essential Commands
 
 ```bash
 # Development
-pnpm dev              # Start development server with Turbopack
-pnpm build            # Build for production
-pnpm start            # Start production server
-pnpm lint             # Run ESLint
+pnpm dev                # Start dev server with Turbopack on localhost:3000
+pnpm build              # Create production build
+pnpm start              # Start production server
 
-# Database operations
-pnpm migrate          # Run all pending migrations
-pnpm migrate:create   # Create a new migration file
-pnpm migrate:up       # Run migrations up
-pnpm migrate:down     # Run migrations down
-pnpm db:codegen       # Generate TypeScript types from database schema
+# Database Management
+pnpm db:codegen         # Generate TypeScript types from PostgreSQL schema
+pnpm migrate:create     # Create new migration (interactive)
+pnpm migrate:up         # Apply pending migrations
+pnpm migrate:down       # Rollback last migration
 
 # Testing
-pnpm sms:test         # Test SMS functionality
-pnpm test:mesocycle   # Test mesocycle generation functionality
+pnpm test               # Run Vitest tests
+pnpm test:ui            # Run tests with Vitest UI
+pnpm sms:test           # Test SMS functionality (requires Twilio config)
 
-# Utilities
-pnpm onboard          # Run user onboarding script
+# Linting
+pnpm lint               # Run ESLint with Next.js rules
 ```
 
-Note: `db:codegen` runs automatically before `dev`, `build`, and `migrate` commands to ensure TypeScript types are always in sync with the database schema.
+## Architecture Overview
 
-## Directory Structure
+### Tech Stack
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4
+- **Backend**: Next.js API routes, PostgreSQL with Kysely ORM
+- **AI/LLM**: LangChain with OpenAI and Google Gemini
+- **External Services**: Twilio (SMS), Stripe (payments), Pinecone (vector DB)
 
+### Directory Structure
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── admin/         # Admin API endpoints
-│   │   ├── agent/         # AI agent endpoints
-│   │   ├── auth/          # Authentication endpoints
-│   │   ├── sms/           # Twilio SMS webhook
-│   │   └── webhook/       # Stripe webhooks
-│   ├── admin/             # Admin pages
-│   │   └── fitness-plans/ # Fitness plan management
-│   ├── success/           # Post-signup success page
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Homepage
-├── components/            # React components
-├── server/               # Server-side business logic
-│   ├── agents/           # AI agents (fitness, workout generation)
-│   ├── core/            # Core infrastructure
-│   │   ├── clients/     # External service clients (Twilio)
-│   │   └── database/    # Database connections (Postgres, Vector)
-│   ├── data/            # Data access layer
-│   │   └── repositories/ # Data repositories
-│   ├── services/        # Business services
-│   │   ├── ai/          # AI/LLM services
-│   │   ├── fitness/     # Fitness plan and program services
-│   │   └── infrastructure/ # Storage & infrastructure services
+├── app/                    # Next.js App Router pages and API routes
+├── components/            # React components (pages/ and ui/)
+├── server/               # Backend logic
+│   ├── agents/          # AI/LLM chain implementations
+│   ├── connections/     # External service integrations
+│   ├── models/          # Database schema and types
+│   ├── repositories/    # Data access layer
+│   ├── services/        # Business logic layer
 │   └── utils/           # Server utilities
-└── shared/              # Shared code between client/server
-    ├── config/          # Configuration files
-    ├── schemas/         # Zod validation schemas
-    ├── types/           # TypeScript type definitions
-    └── utils/           # Shared utilities
-
-migrations/              # Database migration files
-scripts/                # Build and utility scripts
-docs/                   # Project documentation
+└── shared/              # Shared utilities and configs
 ```
-
-## Architecture
-
-### Core Technologies
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4
-- **Database**: PostgreSQL with Kysely ORM
-- **SMS**: Twilio
-- **AI**: LangChain with OpenAI & Google GenAI
-- **Payments**: Stripe
-- **Vector Store**: Pinecone
-- **Forms**: React Hook Form with Zod validation
 
 ### Key Architectural Patterns
+- **Repository Pattern**: All database operations go through repositories
+- **Service Layer**: Business logic is isolated in services
+- **Agent Pattern**: Each AI task has a dedicated agent with specific prompts
+- **Type Safety**: Full TypeScript with Kysely codegen for database types
 
-#### 1. Layered Architecture
-- **Presentation Layer**: React components in `src/components/` and `src/app/`
-- **API Layer**: Next.js API routes in `src/app/api/`
-- **Business Logic**: Services in `src/server/services/`
-- **Data Access**: Repositories in `src/server/data/repositories/`
-- **Infrastructure**: Database and external clients in `src/server/core/`
-
-#### 2. Repository Pattern
-All database operations go through repositories that extend `BaseRepository`:
-- `UserRepository` - User and profile management
-- `ConversationRepository` - Chat conversation storage
-- `MessageRepository` - Individual message storage
-- `FitnessPlanRepository` - Fitness plan management
-- `MesocycleRepository` - Mesocycle (training phase) management
-- `MicrocycleRepository` - Microcycle (weekly plan) management
-- `WorkoutInstanceRepository` - Individual workout tracking
-
-#### 3. Service Layer
-- **AI Services**: Chat, context, memory, and prompt services
-- **Fitness Services**: Fitness plan service, mesocycle generation service
-- **Admin Services**: Admin fitness plan service for management operations
-- **Infrastructure Services**: Conversation storage with circuit breaker pattern
-
-#### 4. AI Agent Pattern
-Specialized agents for different fitness coaching tasks:
-- `fitnessOutlineAgent` - Initial fitness assessment
-- `workoutGeneratorAgent` - Workout plan creation
-- `workoutUpdateAgent` - Workout modifications
-
-## Database Schema
-
-The application uses PostgreSQL with the following main tables:
-
-### Core Tables
-- `users` - User accounts and basic information
-- `fitness_profiles` - User fitness goals, experience level, preferences
+### Database Schema
+Core tables include:
+- `users` - User accounts and authentication
+- `fitness_profiles` - User fitness data and preferences  
+- `conversations` & `messages` - SMS conversation history
+- `fitness_plans` → `mesocycles` → `microcycles` → `workouts` - Hierarchical fitness plan structure
 - `subscriptions` - Stripe subscription tracking
 
-### Conversation System
-- `conversations` - Chat conversation metadata
-- `messages` - Individual SMS messages (inbound/outbound)
+### AI Agent System
+Specialized agents in `src/server/agents/`:
+- `chatAgent` - General conversation responses
+- `generateFitnessPlanAgent` - Creates complete fitness plans
+- `dailyMessageAgent` - Generates daily workout messages
+- `welcomeMessageAgent` - Onboarding messages
+- `mesocycleBreakdownAgent` - Breaks mesocycles into microcycles
 
-### Workout System
-- `workouts` - Generated workout plans
-- `workout_logs` - User feedback and completion tracking
+### Environment Variables
+Required environment variables (see .env.example):
+- Database: `DATABASE_URL`
+- Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_NUMBER`
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
+- AI: `OPENAI_API_KEY`, `GOOGLE_API_KEY`
+- Pinecone: `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME`
 
-### Fitness Program System
-- `fitness_plans` - Comprehensive fitness plans with macrocycles
-- `mesocycles` - Training phases (4-6 weeks) with specific focus (strength, endurance, etc.)
-- `microcycles` - Weekly training blocks within mesocycles
-- `workout_instances` - Individual workout sessions with specific dates and details
+## Development Guidelines
 
-The fitness program tables support various program types ('endurance', 'strength', 'shred', 'hybrid', 'rehab', 'other') and session types ('strength', 'cardio', 'mobility', 'recovery', 'assessment', 'deload').
+### Working with the Database
+- Always run `pnpm db:codegen` after schema changes to update TypeScript types
+- Use repositories for all database operations
+- Migrations are in the `migrations/` directory
 
-## Environment Variables
+### Adding New Features
+- Follow the existing service/repository pattern
+- Place business logic in services, not in API routes
+- Use the appropriate AI agent for LLM tasks
+- Add proper TypeScript types for all new code
 
-Required environment variables (create `.env.local`):
+### Testing Considerations
+- The project uses Vitest for testing
+- Test files should be colocated with the code they test
+- Use `pnpm sms:test` to test SMS functionality locally
 
-```bash
-# Database
-DATABASE_URL=postgres://username:password@localhost:5432/gymtext
+### Environment Variable Management
+- Use source .env.local for environment variables
 
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PRICE_ID=price_...
-
-# Twilio
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_NUMBER=+1234567890
-
-# AI/LLM
-OPENAI_API_KEY=sk-...
-GOOGLE_AI_API_KEY=...
-
-# Vector Database
-PINECONE_API_KEY=...
-PINECONE_INDEX_NAME=...
-
-# Redis (for caching)
-REDIS_URL=redis://localhost:6379
-```
-
-## Best Practices
-
-### Code Organization
-1. Use the established layered architecture
-2. Keep business logic in services, not in API routes
-3. Use repositories for all database operations
-4. Implement proper error handling and circuit breakers
-5. Follow the existing TypeScript patterns and naming conventions
-
-### Database Migrations
-1. Always create migrations for schema changes: `pnpm migrate:create`
-2. Test both up and down migrations
-3. Use meaningful migration names with timestamps
-
-### AI/LLM Integration
-1. Use the existing agent pattern for new AI functionality
-2. Implement proper context management and memory services
-3. Handle token limits and rate limiting appropriately
-4. Store conversation history for context continuity
-
-### SMS Integration
-1. All SMS handling goes through `/api/sms/route.ts`
-2. Use TwiML for responses
-3. Implement proper error handling for Twilio webhooks
-4. Store all messages for conversation history
-
-### Type Safety
-1. Define types in `src/shared/types/`
-2. Use Zod schemas for validation in `src/shared/schemas/`
-3. Leverage TypeScript's strict mode
-4. Use the `@/*` path alias for imports
-
-### Testing
-1. Use the `pnpm sms:test` script to test SMS functionality
-2. Test payment flows in Stripe test mode
-3. Verify database migrations in development before production
-
-### Development Workflow
-1. Start development server: `pnpm dev`
-2. Use Turbopack for fast rebuilds
-3. Run linting: `pnpm lint`
-4. Test SMS integration locally with ngrok for Twilio webhooks
-5. Monitor database performance with proper indexing
-
-### Security
-1. Never commit secrets to the repository
-2. Use environment variables for all sensitive configuration
-3. Implement proper input validation with Zod
-4. Follow OWASP security guidelines for web applications
-
-## Common Commands
-
-```bash
-# Setup new development environment
-pnpm install
-cp .env.local.example .env.local
-# Edit .env.local with your values
-pnpm migrate
-pnpm dev
-
-# Database operations
-pnpm migrate:create "add_new_table"
-pnpm migrate:up
-pnpm migrate:down
-pnpm db:codegen      # Regenerate TypeScript types from database
-
-# Code quality
-pnpm lint
-pnpm build  # Verify production build
-
-# Testing SMS locally (requires ngrok)
-ngrok http 3000
-# Update Twilio webhook URL to: https://your-ngrok-url.ngrok.io/api/sms
-pnpm sms:test
-
-# Testing fitness features
-pnpm test:mesocycle   # Test mesocycle generation
-node scripts/test-fitness-plan-db.ts    # Test fitness plan database operations
-
-# User management
-pnpm onboard          # Run user onboarding script
-```
-
-## Best Practices for Code Quality
-
-- All implementations should ensure that `pnpm build` and `pnpm lint` both pass
+### Code Quality and Validation
+- Be sure that any implementations continue to pass pnpm build and pnpm lint

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/shared/types/generated.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
+    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
     "predev": "pnpm db:codegen",
     "dev": "next dev --turbopack",
     "prebuild": "pnpm db:codegen",
@@ -16,10 +16,17 @@
     "migrate:down": "tsx scripts/migrate.ts down",
     "premigrate": "pnpm db:codegen",
     "sms:test": "tsx scripts/test-sms.ts",
-    "onboard": "tsx scripts/onboard-user.ts",
-    "test:mesocycle": "tsx scripts/test-mesocycle.ts",
+    "checkout:test": "tsx scripts/test-checkout.ts",
+    "programs:test": "tsx scripts/test-programs.ts",
+    "flow:test": "tsx scripts/test-user-flow.ts",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:unit": "vitest run --config vitest.config.mts",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:integration:watch": "vitest --config vitest.config.integration.ts",
+    "test:all": "pnpm test:unit && pnpm test:integration"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
