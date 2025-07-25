@@ -24,8 +24,8 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "test:unit": "vitest run --config vitest.config.mts",
-    "test:integration": "vitest run --config vitest.config.integration.ts",
-    "test:integration:watch": "vitest --config vitest.config.integration.ts",
+    "test:integration": "vitest run --config vitest.config.integration.mts",
+    "test:integration:watch": "vitest --config vitest.config.integration.mts",
     "test:all": "pnpm test:unit && pnpm test:integration"
   },
   "dependencies": {
