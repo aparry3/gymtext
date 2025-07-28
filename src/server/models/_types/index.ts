@@ -124,7 +124,9 @@ export interface Users {
   id: Generated<string>;
   name: string;
   phoneNumber: string;
+  preferredSendHour: Generated<number>;
   stripeCustomerId: string | null;
+  timezone: Generated<string>;
   updatedAt: Generated<Timestamp>;
 }
 
