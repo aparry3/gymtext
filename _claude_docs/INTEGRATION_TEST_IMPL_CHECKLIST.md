@@ -26,25 +26,25 @@
 ## Critical Bug Fixes (Must Complete First)
 
 ### Session Type Mapping
-- [ ] Implement session type mapping layer
-  - [ ] Create `SESSION_TYPE_MAP` constant mapping LLM types to DB types
-  - [ ] Update `WorkoutInstanceModel.fromLLM()` to use mapping
-  - [ ] Add validation to ensure only valid DB enum values are inserted
-  - [ ] Write unit tests for session type mapping
+- [x] Implement session type mapping layer
+  - [x] Create `SESSION_TYPE_MAP` constant mapping LLM types to DB types
+  - [x] Update `WorkoutInstanceModel.fromLLM()` to use mapping
+  - [x] Add validation to ensure only valid DB enum values are inserted
+  - [x] Write unit tests for session type mapping
 
 ### Model-Database Alignment
-- [ ] Fix WorkoutInstanceModel schema mismatches
-  - [ ] Add missing `goal` field to model
-  - [ ] Remove non-existent `targets` field from model
-  - [ ] Make `details` field required (non-nullable) in model
-  - [ ] Regenerate types with `pnpm db:codegen`
+- [x] Fix WorkoutInstanceModel schema mismatches
+  - [x] Add missing `goal` field to model
+  - [x] Remove non-existent `targets` field from model
+  - [x] Make `details` field required (non-nullable) in model
+  - [x] Regenerate types with `pnpm db:codegen`
 
 ### API Error Standardization
-- [ ] Ensure all API routes return JSON errors
-  - [ ] Update checkout API error handling
-  - [ ] Create standard error response format
-  - [ ] Add middleware for consistent error formatting
-  - [ ] Test all error paths return proper JSON
+- [x] Ensure all API routes return JSON errors
+  - [x] Update checkout API error handling
+  - [x] Create standard error response format
+  - [x] Add middleware for consistent error formatting
+  - [x] Test all error paths return proper JSON
 
 ## Core Integration Test Suites
 

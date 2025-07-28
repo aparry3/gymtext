@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-messages",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/cron/daily-messages/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}
