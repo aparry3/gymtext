@@ -19,7 +19,14 @@ export class WorkoutInstanceRepository extends BaseRepository {
     
     const result = await this.db
       .insertInto('workoutInstances')
-      .values(serializedData as any)
+      .values(serializedData)
+      .onConflict((oc) => oc
+        .columns(['clientId', 'date', 'sessionType'])
+        .doUpdateSet({
+          details: serializedData.details,
+          updatedAt: new Date()
+        })
+      )
       .returningAll()
       .executeTakeFirstOrThrow();
     
