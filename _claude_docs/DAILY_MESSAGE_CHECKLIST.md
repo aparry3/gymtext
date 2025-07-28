@@ -43,33 +43,34 @@ This checklist tracks the implementation of the daily message timing feature bas
 ## Phase 2: Service Layer Implementation
 
 ### 2.1 Create DailyMessageService
-- [ ] Create `src/server/services/dailyMessageService.ts`
-- [ ] Implement core methods:
-  - [ ] `processHourlyBatch()` - Main entry point for cron
-  - [ ] `getUsersForHour(utcHour: number)` - Timezone-aware user query
-  - [ ] `processBatch(users: User[], batchSize: number)` - Batch processor
-  - [ ] `sendDailyMessage(user: UserWithProfile)` - Individual message sender
-- [ ] Add error handling and retry logic
-- [ ] Implement batch size limits and timeouts
+- [x] Create `src/server/services/dailyMessageService.ts`
+- [x] Implement core methods:
+  - [x] `processHourlyBatch()` - Main entry point for cron
+  - [x] `getUsersForHour(utcHour: number)` - Timezone-aware user query
+  - [x] `processBatch(users: User[], batchSize: number)` - Batch processor
+  - [x] `sendDailyMessage(user: UserWithProfile)` - Individual message sender
+- [x] Add error handling and retry logic
+- [x] Implement batch size limits and timeouts
 
 ### 2.2 Integrate with Existing Services
-- [ ] Import and use existing MessageService methods
-- [ ] Use WorkoutService to get today's workout for each user
-- [ ] Add logging for monitoring and debugging
-- [ ] Handle edge cases (no workout, inactive subscription, etc.)
+- [x] Import and use existing MessageService methods
+- [x] Use WorkoutService to get today's workout for each user
+- [x] Add logging for monitoring and debugging
+- [x] Handle edge cases (no workout, inactive subscription, etc.)
 
 ### 2.3 Timezone Utilities
-- [ ] Install Luxon library: `pnpm add luxon @types/luxon`
+- [x] Install Luxon library: `pnpm add luxon @types/luxon`
 - [x] Create timezone helper functions
-  - [x] `isValidIANATimezone(timezone: string): boolean` using Luxon's IANAZone (placeholder)
-  - [x] `getLocalHourForTimezone(utcDate: Date, timezone: string): number` (placeholder)
-  - [x] `convertPreferredHourToUTC(localHour: number, timezone: string): number` (placeholder)
+  - [x] `isValidIANATimezone(timezone: string): boolean` using Luxon's IANAZone
+  - [x] `getLocalHourForTimezone(utcDate: Date, timezone: string): number`
+  - [x] `convertPreferredHourToUTC(localHour: number, timezone: string): number`
   - [x] `getCommonTimezones(): string[]` for UI selection
+  - [x] `getAllUTCHoursForLocalHour()` for DST handling
 - [ ] Add comprehensive timezone tests
   - [ ] Test valid IANA timezone validation
   - [ ] Test invalid timezone rejection
   - [ ] Test DST transitions for major timezones
-- [ ] Handle DST transitions properly
+- [x] Handle DST transitions properly
 
 ## Phase 3: API Endpoints
 
@@ -305,4 +306,4 @@ This checklist tracks the implementation of the daily message timing feature bas
 **Checklist Version**: 1.0  
 **Based on RFC**: DAILY_MESSAGE_IMPL_RFC.md v1.0  
 **Last Updated**: 2025-07-28  
-**Status**: Phase 1 Complete - Database and Model Updates
+**Status**: Phase 2 Complete - Service Layer Implementation

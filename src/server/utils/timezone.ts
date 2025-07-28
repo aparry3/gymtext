@@ -1,6 +1,7 @@
 /**
  * Timezone utilities for handling IANA timezone validation and conversions
  */
+import { DateTime, IANAZone } from 'luxon';
 
 // Common IANA timezones for UI selection
 export const COMMON_TIMEZONES = [
@@ -39,32 +40,67 @@ export const COMMON_TIMEZONES = [
 
 export type CommonTimezone = typeof COMMON_TIMEZONES[number];
 
-// We'll implement the actual validation after installing Luxon
+/**
+ * Validates if a string is a valid IANA timezone identifier
+ */
 export function isValidIANATimezone(timezone: string): boolean {
-  // Temporary implementation - will be replaced with Luxon
-  // Basic format check: Region/City
-  const timezoneRegex = /^[A-Za-z]+\/[A-Za-z_]+$/;
-  return timezoneRegex.test(timezone);
+  return IANAZone.isValidZone(timezone);
 }
 
+/**
+ * Gets the local hour for a given UTC date in a specific timezone
+ */
 export function getLocalHourForTimezone(utcDate: Date, timezone: string): number {
-  // Temporary implementation - will be replaced with Luxon
-  // This is a placeholder that assumes UTC for now
   if (!isValidIANATimezone(timezone)) {
     throw new Error(`Invalid IANA timezone: ${timezone}`);
   }
-  return utcDate.getHours();
+  
+  const dt = DateTime.fromJSDate(utcDate, { zone: 'utc' }).setZone(timezone);
+  return dt.hour;
 }
 
+/**
+ * Converts a preferred local hour to UTC hour for a given timezone
+ * Returns the UTC hour when it's the specified local hour in the given timezone
+ */
 export function convertPreferredHourToUTC(localHour: number, timezone: string): number {
-  // Temporary implementation - will be replaced with Luxon
   if (!isValidIANATimezone(timezone)) {
     throw new Error(`Invalid IANA timezone: ${timezone}`);
   }
   if (localHour < 0 || localHour > 23) {
     throw new Error(`Invalid hour: ${localHour}. Must be between 0 and 23`);
   }
-  return localHour;
+  
+  // Get current date in the target timezone
+  const now = DateTime.now().setZone(timezone);
+  // Set to the desired local hour
+  const targetTime = now.set({ hour: localHour, minute: 0, second: 0, millisecond: 0 });
+  // Convert to UTC and get the hour
+  const utcTime = targetTime.setZone('utc');
+  return utcTime.hour;
+}
+
+/**
+ * Gets all UTC hours when it's the specified local hour in the given timezone
+ * This accounts for DST transitions where a local hour might occur at different UTC hours
+ */
+export function getAllUTCHoursForLocalHour(localHour: number, timezone: string): number[] {
+  if (!isValidIANATimezone(timezone)) {
+    throw new Error(`Invalid IANA timezone: ${timezone}`);
+  }
+  
+  const hours = new Set<number>();
+  const now = DateTime.now();
+  
+  // Check for the next 365 days to cover all DST transitions
+  for (let i = 0; i < 365; i++) {
+    const date = now.plus({ days: i }).setZone(timezone);
+    const targetTime = date.set({ hour: localHour, minute: 0, second: 0, millisecond: 0 });
+    const utcTime = targetTime.setZone('utc');
+    hours.add(utcTime.hour);
+  }
+  
+  return Array.from(hours).sort((a, b) => a - b);
 }
 
 export function getCommonTimezones(): readonly string[] {

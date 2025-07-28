@@ -32,4 +32,41 @@ export class WorkoutInstanceRepository extends BaseRepository {
     
     return result;
   }
+
+  /**
+   * Find workout instances for a client within a date range
+   */
+  async findByClientIdAndDateRange(
+    clientId: string, 
+    startDate: Date, 
+    endDate: Date
+  ): Promise<WorkoutInstance[]> {
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', clientId)
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
+      .orderBy('date', 'asc')
+      .selectAll()
+      .execute();
+    
+    return results;
+  }
+
+  /**
+   * Find a single workout instance by client ID and date
+   */
+  async findByClientIdAndDate(
+    clientId: string,
+    date: Date
+  ): Promise<WorkoutInstance | undefined> {
+    const result = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', clientId)
+      .where('date', '=', date)
+      .selectAll()
+      .executeTakeFirst();
+    
+    return result;
+  }
 }
