@@ -106,8 +106,8 @@ This checklist tracks the implementation of the daily message timing feature bas
 ## Phase 4: Vercel Configuration
 
 ### 4.1 Cron Job Setup
-- [ ] Create `vercel.json` in project root
-- [ ] Add cron configuration:
+- [x] Create `vercel.json` in project root
+- [x] Add cron configuration:
   ```json
   {
     "crons": [{
@@ -120,9 +120,11 @@ This checklist tracks the implementation of the daily message timing feature bas
 - [ ] Verify cron appears in Vercel dashboard
 
 ### 4.2 Function Configuration
-- [ ] Set appropriate timeout for cron function
-- [ ] Configure memory limits if needed
+- [x] Set appropriate timeout for cron function (300 seconds)
+- [x] Configure memory limits if needed
 - [ ] Test function logs in Vercel dashboard
+- [x] Create test script for local cron testing
+- [x] Document deployment process
 
 ## Phase 5: Frontend Updates
 
@@ -306,4 +308,4 @@ This checklist tracks the implementation of the daily message timing feature bas
 **Checklist Version**: 1.0  
 **Based on RFC**: DAILY_MESSAGE_IMPL_RFC.md v1.0  
 **Last Updated**: 2025-07-28  
-**Status**: Phase 3 Complete - API Endpoints
+**Status**: Phase 4 Complete - Vercel Configuration
