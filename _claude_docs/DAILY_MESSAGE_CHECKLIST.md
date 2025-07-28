@@ -17,9 +17,11 @@ This checklist tracks the implementation of the daily message timing feature bas
   - [ ] Add `preferred_send_hour` column (INTEGER, 0-23, default 8)
   - [ ] Add `timezone` column (VARCHAR(50), default 'America/Los_Angeles')
   - [ ] Add CHECK constraints for valid values
+  - [ ] Add IANA timezone validation constraint using `pg_timezone_names`
   - [ ] Create indexes on both new columns
 - [ ] Run migration in development environment
 - [ ] Test rollback functionality
+- [ ] Verify PostgreSQL timezone support with `SELECT * FROM pg_timezone_names`
 
 ### 1.2 TypeScript Types and Models
 - [ ] Update database types after running codegen
@@ -28,6 +30,9 @@ This checklist tracks the implementation of the daily message timing feature bas
 - [ ] Update User model interface to include new fields
 - [ ] Update UserWithProfile interface if needed
 - [ ] Add timezone validation constants/enums
+  - [ ] Create IANA timezone constants for common zones
+  - [ ] Add timezone validation function using Luxon
+  - [ ] Create TypeScript type for valid timezones
 
 ### 1.3 Repository Layer Updates
 - [ ] Add method to UserRepository for querying by send hour
@@ -54,11 +59,16 @@ This checklist tracks the implementation of the daily message timing feature bas
 - [ ] Handle edge cases (no workout, inactive subscription, etc.)
 
 ### 2.3 Timezone Utilities
+- [ ] Install Luxon library: `pnpm add luxon @types/luxon`
 - [ ] Create timezone helper functions
+  - [ ] `isValidIANATimezone(timezone: string): boolean` using Luxon's IANAZone
   - [ ] `getLocalHourForTimezone(utcDate: Date, timezone: string): number`
   - [ ] `convertPreferredHourToUTC(localHour: number, timezone: string): number`
-  - [ ] `validateTimezone(timezone: string): boolean`
+  - [ ] `getCommonTimezones(): string[]` for UI selection
 - [ ] Add comprehensive timezone tests
+  - [ ] Test valid IANA timezone validation
+  - [ ] Test invalid timezone rejection
+  - [ ] Test DST transitions for major timezones
 - [ ] Handle DST transitions properly
 
 ## Phase 3: API Endpoints
@@ -78,10 +88,12 @@ This checklist tracks the implementation of the daily message timing feature bas
   - [ ] Return current preferences
   - [ ] Include formatted local time display
 - [ ] Implement PUT endpoint
-  - [ ] Validate timezone input
+  - [ ] Validate timezone input against IANA database
+  - [ ] Use Luxon's IANAZone.isValidZone() for validation
   - [ ] Validate hour input (0-23)
   - [ ] Update user record
   - [ ] Return updated preferences
+  - [ ] Return error for invalid IANA timezone
 - [ ] Add authentication middleware
 - [ ] Add rate limiting if needed
 
@@ -115,13 +127,17 @@ This checklist tracks the implementation of the daily message timing feature bas
 
 ### 5.1 Signup Flow Enhancement
 - [ ] Add timezone detection to signup form
-  - [ ] Use browser API to detect timezone
+  - [ ] Use browser API: `Intl.DateTimeFormat().resolvedOptions().timeZone`
+  - [ ] Validate detected timezone is IANA compliant
   - [ ] Show detected timezone to user
+  - [ ] Provide dropdown with common IANA timezones as fallback
 - [ ] Add preferred time selector
   - [ ] Create hour dropdown (12-hour format with AM/PM)
   - [ ] Default to 8:00 AM
   - [ ] Add explanatory text about daily messages
 - [ ] Update form validation
+  - [ ] Ensure timezone is valid IANA identifier
+  - [ ] Validate hour is 0-23
 - [ ] Update signup API call to include new fields
 
 ### 5.2 User Profile Settings
@@ -162,13 +178,23 @@ This checklist tracks the implementation of the daily message timing feature bas
 - [ ] Error scenarios and retries
 
 ### 6.3 Manual Testing
-- [ ] Test with users in different timezones
+- [ ] Test with users in different IANA timezones
+  - [ ] America/New_York
+  - [ ] Europe/London
+  - [ ] Asia/Tokyo
+  - [ ] Australia/Sydney
 - [ ] Test timezone edge cases
-  - [ ] UTC+14 (Kiribati)
-  - [ ] UTC-12 (Baker Island)
-  - [ ] Half-hour timezones (India, UTC+5:30)
+  - [ ] UTC+14 (Pacific/Kiritimati)
+  - [ ] UTC-12 (Etc/GMT+12)
+  - [ ] Half-hour timezones (Asia/Kolkata, UTC+5:30)
+  - [ ] 45-minute offset (Asia/Kathmandu, UTC+5:45)
 - [ ] Test during DST transitions
+  - [ ] Spring forward (2nd Sunday in March for US)
+  - [ ] Fall back (1st Sunday in November for US)
 - [ ] Test with invalid timezone data
+  - [ ] Non-IANA strings (e.g., "EST", "PST")
+  - [ ] Malformed strings
+  - [ ] Empty/null values
 - [ ] Test cron job reliability over 24 hours
 
 ## Phase 7: Monitoring and Observability

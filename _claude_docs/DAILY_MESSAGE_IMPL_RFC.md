@@ -47,10 +47,21 @@ ALTER TABLE users
 ADD COLUMN timezone VARCHAR(50) DEFAULT 'America/Los_Angeles' 
 CHECK (timezone IS NOT NULL);
 
+-- Add constraint to ensure valid IANA timezone
+ALTER TABLE users ADD CONSTRAINT valid_timezone 
+CHECK (timezone IN (SELECT name FROM pg_timezone_names));
+
 -- Create index for efficient querying
 CREATE INDEX idx_users_send_hour ON users(preferred_send_hour);
 CREATE INDEX idx_users_timezone ON users(timezone);
 ```
+
+#### Timezone Standard
+The timezone column MUST contain a valid IANA Time Zone Database identifier:
+- Format: `Region/City` (e.g., `America/New_York`, `Europe/London`)
+- Full list: https://www.iana.org/time-zones
+- PostgreSQL validation: Uses `pg_timezone_names` system view
+- Library validation: Use Luxon's `IANAZone.isValidZone()` or similar
 
 ### 3.3 Implementation Options
 
@@ -206,14 +217,36 @@ Use a message queue (e.g., Vercel Queue or external service) for more precise ti
 ## 8. Technical Considerations
 
 ### 8.1 Timezone Library
-Use `date-fns-tz` or `luxon` for reliable timezone handling:
+Recommended: Use **Luxon** for IANA timezone support and validation:
 ```typescript
-import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import { DateTime, IANAZone } from 'luxon';
 
-function getUserLocalHour(utcDate: Date, timezone: string): number {
-  const zonedDate = utcToZonedTime(utcDate, timezone);
-  return zonedDate.getHours();
+// Validate timezone
+function isValidTimezone(timezone: string): boolean {
+  return IANAZone.isValidZone(timezone);
 }
+
+// Get user's current local hour
+function getUserLocalHour(utcDate: Date, timezone: string): number {
+  if (!isValidTimezone(timezone)) {
+    throw new Error(`Invalid IANA timezone: ${timezone}`);
+  }
+  const dt = DateTime.fromJSDate(utcDate).setZone(timezone);
+  return dt.hour;
+}
+
+// Common IANA timezones for UI
+const COMMON_TIMEZONES = [
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'Europe/London',
+  'Europe/Paris',
+  'Asia/Tokyo',
+  'Australia/Sydney'
+];
 ```
 
 ### 8.2 Database Query Optimization
