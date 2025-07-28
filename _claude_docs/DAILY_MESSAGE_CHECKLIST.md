@@ -129,19 +129,19 @@ This checklist tracks the implementation of the daily message timing feature bas
 ## Phase 5: Frontend Updates
 
 ### 5.1 Signup Flow Enhancement
-- [ ] Add timezone detection to signup form
-  - [ ] Use browser API: `Intl.DateTimeFormat().resolvedOptions().timeZone`
-  - [ ] Validate detected timezone is IANA compliant
-  - [ ] Show detected timezone to user
-  - [ ] Provide dropdown with common IANA timezones as fallback
-- [ ] Add preferred time selector
-  - [ ] Create hour dropdown (12-hour format with AM/PM)
-  - [ ] Default to 8:00 AM
-  - [ ] Add explanatory text about daily messages
-- [ ] Update form validation
-  - [ ] Ensure timezone is valid IANA identifier
-  - [ ] Validate hour is 0-23
-- [ ] Update signup API call to include new fields
+- [x] Add timezone detection to signup form
+  - [x] Use browser API: `Intl.DateTimeFormat().resolvedOptions().timeZone`
+  - [x] Validate detected timezone is IANA compliant
+  - [x] Show detected timezone to user
+  - [x] Provide dropdown with common IANA timezones as fallback
+- [x] Add preferred time selector
+  - [x] Create hour dropdown (12-hour format with AM/PM)
+  - [x] Default to 8:00 AM
+  - [x] Add explanatory text about daily messages
+- [x] Update form validation
+  - [x] Ensure timezone is valid IANA identifier
+  - [x] Validate hour is 0-23
+- [x] Update signup API call to include new fields
 
 ### 5.2 User Profile Settings
 - [ ] Create settings section for "Daily Message Preferences"
@@ -157,11 +157,11 @@ This checklist tracks the implementation of the daily message timing feature bas
 - [ ] Update profile API integration
 
 ### 5.3 UI Components
-- [ ] Create reusable TimeSelector component
-- [ ] Create TimezoneDisplay component
-- [ ] Ensure mobile responsiveness
-- [ ] Add loading states
-- [ ] Add error states
+- [x] Create reusable TimeSelector component
+- [x] Create TimezoneDisplay component
+- [x] Ensure mobile responsiveness
+- [x] Add loading states
+- [x] Add error states
 
 ## Phase 6: Testing
 
@@ -308,4 +308,4 @@ This checklist tracks the implementation of the daily message timing feature bas
 **Checklist Version**: 1.0  
 **Based on RFC**: DAILY_MESSAGE_IMPL_RFC.md v1.0  
 **Last Updated**: 2025-07-28  
-**Status**: Phase 4 Complete - Vercel Configuration
+**Status**: Phase 5 Partial - Signup Form Complete, Profile Settings Pending

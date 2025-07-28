@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { TimeSelector } from '@/components/ui/TimeSelector';
+import { TimezoneDisplay } from '@/components/ui/TimezoneDisplay';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -20,6 +22,8 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
   email: z.string().email().optional().or(z.literal('')),
+  preferredSendHour: z.number().min(0).max(23),
+  timezone: z.string().min(1, 'Timezone is required'),
   acceptRisks: z.boolean().refine((val) => val === true, {
     message: 'You must accept the risks associated with exercise',
   }),
@@ -128,14 +132,37 @@ export default function SignupForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [formValues, setFormValues] = useState<FormData | null>(null);
+  const [detectedTimezone, setDetectedTimezone] = useState<string>('America/New_York');
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      preferredSendHour: 8,
+      timezone: 'America/New_York',
+    },
   });
+
+  const preferredSendHour = watch('preferredSendHour');
+  const timezone = watch('timezone');
+
+  // Detect user's timezone on mount
+  useEffect(() => {
+    try {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (userTimezone) {
+        setDetectedTimezone(userTimezone);
+        setValue('timezone', userTimezone);
+      }
+    } catch (error) {
+      console.error('Error detecting timezone:', error);
+    }
+  }, [setValue]);
 
   const handleContinue = (data: FormData) => {
     // Format phone number with +1 prefix
@@ -377,6 +404,32 @@ export default function SignupForm() {
         {errors.email && (
           <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
         )}
+      </div>
+
+      {/* Daily Message Time */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Daily Message Time (When should we send your workout?)</label>
+        <TimeSelector
+          value={preferredSendHour}
+          onChange={(hour) => setValue('preferredSendHour', hour)}
+          error={errors.preferredSendHour?.message}
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Messages will be sent at this time in your local timezone
+        </p>
+      </div>
+
+      {/* Timezone */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Your Timezone</label>
+        <TimezoneDisplay
+          value={timezone}
+          onChange={(tz) => setValue('timezone', tz)}
+          error={errors.timezone?.message}
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Detected: {detectedTimezone}
+        </p>
       </div>
 
       {/* Accept Risks Checkbox */}
