@@ -75,33 +75,33 @@ This checklist tracks the implementation of the daily message timing feature bas
 ## Phase 3: API Endpoints
 
 ### 3.1 Cron Endpoint
-- [ ] Create `/api/cron/daily-messages/route.ts`
-- [ ] Implement GET handler for Vercel cron
-- [ ] Add authentication check for cron secret
-- [ ] Call DailyMessageService.processHourlyBatch()
-- [ ] Return metrics (processed, failed, duration)
-- [ ] Add comprehensive error handling
-- [ ] Set appropriate timeout for function
+- [x] Create `/api/cron/daily-messages/route.ts`
+- [x] Implement GET handler for Vercel cron
+- [x] Add authentication check for cron secret
+- [x] Call DailyMessageService.processHourlyBatch()
+- [x] Return metrics (processed, failed, duration)
+- [x] Add comprehensive error handling
+- [x] Set appropriate timeout for function
 
 ### 3.2 User Preference Endpoints
-- [ ] Create `/api/user/preferences/route.ts`
-- [ ] Implement GET endpoint
-  - [ ] Return current preferences
-  - [ ] Include formatted local time display
-- [ ] Implement PUT endpoint
-  - [ ] Validate timezone input against IANA database
-  - [ ] Use Luxon's IANAZone.isValidZone() for validation
-  - [ ] Validate hour input (0-23)
-  - [ ] Update user record
-  - [ ] Return updated preferences
-  - [ ] Return error for invalid IANA timezone
-- [ ] Add authentication middleware
+- [x] Create `/api/user/preferences/route.ts`
+- [x] Implement GET endpoint
+  - [x] Return current preferences
+  - [x] Include formatted local time display
+- [x] Implement PUT endpoint
+  - [x] Validate timezone input against IANA database
+  - [x] Use Luxon's IANAZone.isValidZone() for validation
+  - [x] Validate hour input (0-23)
+  - [x] Update user record
+  - [x] Return updated preferences
+  - [x] Return error for invalid IANA timezone
+- [ ] Add authentication middleware (mock auth for now)
 - [ ] Add rate limiting if needed
 
 ### 3.3 Environment Variables
-- [ ] Add `CRON_SECRET` to `.env.example`
-- [ ] Add `CRON_SECRET` to Vercel environment variables
-- [ ] Document the purpose of new environment variables
+- [x] Add `CRON_SECRET` to `.env.example`
+- [ ] Add `CRON_SECRET` to Vercel environment variables (deployment step)
+- [x] Document the purpose of new environment variables
 
 ## Phase 4: Vercel Configuration
 
@@ -306,4 +306,4 @@ This checklist tracks the implementation of the daily message timing feature bas
 **Checklist Version**: 1.0  
 **Based on RFC**: DAILY_MESSAGE_IMPL_RFC.md v1.0  
 **Last Updated**: 2025-07-28  
-**Status**: Phase 2 Complete - Service Layer Implementation
+**Status**: Phase 3 Complete - API Endpoints
