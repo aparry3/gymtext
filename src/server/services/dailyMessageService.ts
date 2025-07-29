@@ -24,10 +24,15 @@ export class DailyMessageService {
   private messageService: MessageService;
   private batchSize: number;
 
-  constructor(batchSize: number = 10) {
-    this.userRepository = new UserRepository();
-    this.workoutRepository = new WorkoutInstanceRepository();
-    this.messageService = new MessageService();
+  constructor(
+    userRepository: UserRepository,
+    workoutRepository: WorkoutInstanceRepository,
+    messageService: MessageService,
+    batchSize: number = 10
+  ) {
+    this.userRepository = userRepository;
+    this.workoutRepository = workoutRepository;
+    this.messageService = messageService;
     this.batchSize = batchSize;
   }
 

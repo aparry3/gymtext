@@ -12,87 +12,87 @@ This checklist tracks the implementation of tests for the daily message timing f
 ## Phase 1: Test Infrastructure Updates
 
 ### 1.1 Update Test Fixtures
-- [ ] Extend UserBuilder in `tests/fixtures/users.ts`
-  - [ ] Add `withPreferredSendHour(hour: number)` method
-  - [ ] Add `withTimezone(timezone: string)` method
-- [ ] Create timezone-specific mock users
-  - [ ] New York user (UTC-5/4)
-  - [ ] Los Angeles user (UTC-8/7)
-  - [ ] London user (UTC+0/1)
-  - [ ] Tokyo user (UTC+9)
-  - [ ] Sydney user (UTC+10/11)
-  - [ ] Mumbai user (UTC+5:30)
-  - [ ] Edge case users (UTC+14, UTC-12)
+- [x] Extend UserBuilder in `tests/fixtures/users.ts`
+  - [x] Add `withPreferredSendHour(hour: number)` method
+  - [x] Add `withTimezone(timezone: string)` method
+- [x] Create timezone-specific mock users
+  - [x] New York user (UTC-5/4)
+  - [x] Los Angeles user (UTC-8/7)
+  - [x] London user (UTC+0/1)
+  - [x] Tokyo user (UTC+9)
+  - [x] Sydney user (UTC+10/11)
+  - [x] Mumbai user (UTC+5:30)
+  - [x] Edge case users (UTC+14, UTC-12)
 
 ### 1.2 Create Test Utilities
-- [ ] Create `tests/utils/daily-message-helpers.ts`
-  - [ ] `mockCurrentTime(date: Date)` function
-  - [ ] `advanceTimeByHours(hours: number)` function
-  - [ ] `createTestUserGrid()` function
-  - [ ] `createMessageTracker()` mock helper
-  - [ ] `expectMessageSentForUser()` assertion helper
-  - [ ] `expectDeliveredAtHour()` assertion helper
+- [x] Create `tests/utils/daily-message-helpers.ts`
+  - [x] `mockCurrentTime(date: Date)` function
+  - [x] `advanceTimeByHours(hours: number)` function
+  - [x] `createTestUserGrid()` function
+  - [x] `createMessageTracker()` mock helper
+  - [x] `expectMessageSentForUser()` assertion helper
+  - [x] `expectDeliveredAtHour()` assertion helper
 
 ### 1.3 Update Mocks
-- [ ] Create/update Twilio mock for message tracking
-- [ ] Ensure MessageService mock captures sent messages
-- [ ] Mock workout instance queries appropriately
+- [x] Create/update Twilio mock for message tracking
+- [x] Ensure MessageService mock captures sent messages
+- [x] Mock workout instance queries appropriately
 
 ## Phase 2: Unit Tests
 
 ### 2.1 Timezone Utilities Tests
-- [ ] Create `tests/unit/server/utils/timezone.test.ts`
-  - [ ] Test `isValidIANATimezone()`
-    - [ ] Valid timezone strings
-    - [ ] Invalid timezone strings
-    - [ ] Edge cases (null, undefined, empty)
-  - [ ] Test `getLocalHourForTimezone()`
-    - [ ] All 24 UTC hours conversion
-    - [ ] Multiple timezone scenarios
-    - [ ] Date boundary handling
-    - [ ] DST transition cases
-  - [ ] Test `convertPreferredHourToUTC()`
-    - [ ] Standard timezone conversions
-    - [ ] Half-hour offset timezones
-    - [ ] DST aware conversions
-  - [ ] Test `getAllUTCHoursForLocalHour()`
-    - [ ] DST transition detection
-    - [ ] Year-round consistency check
+- [x] Create `tests/unit/server/utils/timezone.test.ts`
+  - [x] Test `isValidIANATimezone()`
+    - [x] Valid timezone strings
+    - [x] Invalid timezone strings
+    - [x] Edge cases (null, undefined, empty)
+  - [x] Test `getLocalHourForTimezone()`
+    - [x] All 24 UTC hours conversion
+    - [x] Multiple timezone scenarios
+    - [x] Date boundary handling
+    - [x] DST transition cases
+  - [x] Test `convertPreferredHourToUTC()`
+    - [x] Standard timezone conversions
+    - [x] Half-hour offset timezones
+    - [x] DST aware conversions
+  - [x] Test `getAllUTCHoursForLocalHour()`
+    - [x] DST transition detection
+    - [x] Year-round consistency check
 
 ### 2.2 UserRepository Tests
-- [ ] Update `tests/unit/server/repositories/userRepository.test.ts`
-  - [ ] Test `findUsersForHour()`
-    - [ ] Returns correct users for given UTC hour
-    - [ ] Filters out users with different preferred hours
-    - [ ] Only includes active subscriptions
-    - [ ] Handles multiple timezones correctly
-    - [ ] Returns empty array when no matches
-    - [ ] Handles invalid timezone data gracefully
-  - [ ] Test `updatePreferences()`
-    - [ ] Updates preferred send hour
-    - [ ] Updates timezone
-    - [ ] Validates hour range (0-23)
-    - [ ] Handles partial updates
-    - [ ] Updates timestamp correctly
+- [x] Update `tests/unit/server/repositories/userRepository.test.ts`
+  - [x] Test `findUsersForHour()`
+    - [x] Returns correct users for given UTC hour
+    - [x] Filters out users with different preferred hours
+    - [x] Only includes active subscriptions
+    - [x] Handles multiple timezones correctly
+    - [x] Returns empty array when no matches
+    - [x] Handles invalid timezone data gracefully
+  - [x] Test `updatePreferences()`
+    - [x] Updates preferred send hour
+    - [x] Updates timezone
+    - [x] Validates hour range (0-23)
+    - [x] Handles partial updates
+    - [x] Updates timestamp correctly
 
 ### 2.3 DailyMessageService Tests
-- [ ] Create `tests/unit/server/services/dailyMessageService.test.ts`
-  - [ ] Test `processHourlyBatch()`
-    - [ ] Processes all eligible users
-    - [ ] Respects batch size limits
-    - [ ] Returns correct metrics
-    - [ ] Handles errors gracefully
-    - [ ] Logs appropriate information
-  - [ ] Test `sendDailyMessage()` (private method via processHourlyBatch)
-    - [ ] Sends message when workout exists
-    - [ ] Skips when no workout found
-    - [ ] Uses correct timezone for date calculation
-    - [ ] Handles message service errors
-    - [ ] Returns correct success/failure status
-  - [ ] Test `getTodaysWorkout()` (private method)
-    - [ ] Finds workout for correct date
-    - [ ] Respects timezone boundaries
-    - [ ] Returns null when no workout
+- [x] Create `tests/unit/server/services/dailyMessageService.test.ts`
+  - [x] Test `processHourlyBatch()`
+    - [x] Processes all eligible users
+    - [x] Respects batch size limits
+    - [x] Returns correct metrics
+    - [x] Handles errors gracefully
+    - [x] Logs appropriate information
+  - [x] Test `sendDailyMessage()` (private method via processHourlyBatch)
+    - [x] Sends message when workout exists
+    - [x] Skips when no workout found
+    - [x] Uses correct timezone for date calculation
+    - [x] Handles message service errors
+    - [x] Returns correct success/failure status
+  - [x] Test `getTodaysWorkout()` (private method)
+    - [x] Finds workout for correct date
+    - [x] Respects timezone boundaries
+    - [x] Returns null when no workout
 
 ## Phase 3: Integration Tests
 
