@@ -215,6 +215,7 @@ export async function seedTestData(db: Kysely<DB>, data: {
   workoutInstances?: any[];
   conversations?: any[];
   messages?: any[];
+  subscriptions?: any[];
 }): Promise<void> {
   // Insert data in the correct order to respect foreign keys
   if (data.users) {
@@ -223,6 +224,10 @@ export async function seedTestData(db: Kysely<DB>, data: {
   
   if (data.fitnessProfiles) {
     await db.insertInto('fitnessProfiles').values(data.fitnessProfiles).execute();
+  }
+  
+  if (data.subscriptions) {
+    await db.insertInto('subscriptions').values(data.subscriptions).execute();
   }
   
   if (data.fitnessPlans) {

@@ -86,15 +86,23 @@ export interface MessageTracker {
 /**
  * Create a message tracker for testing
  */
-export function createMessageTracker(): MessageTracker {
-  const tracker: MessageTracker = {
-    sentMessages: [],
+export function createMessageTracker() {
+  const sentMessages: Array<{
+    userId: string;
+    phoneNumber?: string;
+    message: string;
+    sentAt: Date;
+    localHour?: number;
+  }> = [];
+  
+  return {
+    sentMessages,
     
     addMessage(userId: string, phoneNumber: string, message: string) {
       const sentAt = new Date();
       const localHour = sentAt.getHours();
       
-      tracker.sentMessages.push({
+      sentMessages.push({
         userId,
         phoneNumber,
         message,
@@ -103,20 +111,42 @@ export function createMessageTracker(): MessageTracker {
       });
     },
     
+    recordMessage(userId: string, message: string, sentAt?: Date) {
+      sentMessages.push({
+        userId,
+        message,
+        sentAt: sentAt || new Date(),
+      });
+    },
+    
     getMessagesForUser(userId: string) {
-      return tracker.sentMessages.filter(msg => msg.userId === userId);
+      return sentMessages.filter(msg => msg.userId === userId);
+    },
+    
+    getMessages(userId: string) {
+      return sentMessages.filter(msg => msg.userId === userId);
     },
     
     getMessagesAtHour(utcHour: number) {
-      return tracker.sentMessages.filter(msg => msg.sentAt.getUTCHours() === utcHour);
+      return sentMessages.filter(msg => msg.sentAt.getUTCHours() === utcHour);
+    },
+    
+    hasReceivedMessage(userId: string): boolean {
+      return sentMessages.some(msg => msg.userId === userId);
+    },
+    
+    getMessageCount(userId: string): number {
+      return sentMessages.filter(msg => msg.userId === userId).length;
+    },
+    
+    getTotalMessageCount(): number {
+      return sentMessages.length;
     },
     
     reset() {
-      tracker.sentMessages = [];
+      sentMessages.length = 0;
     },
   };
-  
-  return tracker;
 }
 
 /**

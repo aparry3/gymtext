@@ -1,14 +1,17 @@
-import type { User, NewUser, CreateUserData } from '@/server/models/userModel';
+import type { User, UserWithProfile, FitnessProfile, NewUser, CreateUserData } from '@/server/models/userModel';
 
 export class UserBuilder {
   private user: User;
+  private profile: FitnessProfile;
 
   constructor(overrides: Partial<User> = {}) {
     const now = new Date();
+    const userId = this.generateUuid();
+    const randomSuffix = Math.floor(Math.random() * 9000) + 1000; // Random 4-digit number
     this.user = {
-      id: this.generateUuid(),
+      id: userId,
       name: 'John Doe',
-      phoneNumber: '+1234567890',
+      phoneNumber: `+1555555${randomSuffix}`, // Generates unique phone numbers
       email: null,
       stripeCustomerId: null,
       preferredSendHour: 8,
@@ -16,6 +19,17 @@ export class UserBuilder {
       createdAt: now,
       updatedAt: now,
       ...overrides,
+    };
+    this.profile = {
+      id: this.generateUuid(),
+      userId: userId,
+      fitnessGoals: 'General fitness',
+      skillLevel: 'intermediate',
+      exerciseFrequency: '3-4 days/week',
+      gender: 'male',
+      age: 30,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 
@@ -77,8 +91,14 @@ export class UserBuilder {
     return createData;
   }
 
-  build(): User {
-    return { ...this.user };
+  build(): UserWithProfile {
+    // Update profile userId to match user id in case it was changed
+    this.profile.userId = this.user.id;
+    return { 
+      ...this.user,
+      profile: this.profile,
+      info: []
+    };
   }
 
   private generateUuid(): string {
