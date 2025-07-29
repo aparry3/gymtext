@@ -97,52 +97,52 @@ This checklist tracks the implementation of tests for the daily message timing f
 ## Phase 3: Integration Tests
 
 ### 3.1 Create Test Directory Structure
-- [ ] Create `tests/integration/daily-messages/` directory
-- [ ] Create `tests/integration/system/` directory
+- [x] Create `tests/integration/daily-messages/` directory
+- [x] Create `tests/integration/system/` directory
 
 ### 3.2 Timezone Scenarios Tests
-- [ ] Create `tests/integration/daily-messages/timezone-scenarios.test.ts`
-  - [ ] Test "Same Local Time, Different UTC Hours"
-    - [ ] 8 AM delivery for users in different timezones
-    - [ ] Verify only correct users receive messages
-    - [ ] Check no users receive messages at wrong time
-  - [ ] Test "Multiple Users Same UTC Hour"
-    - [ ] Users in different timezones with coinciding delivery times
-    - [ ] All eligible users receive messages
-    - [ ] Batch processing handles volume
-  - [ ] Test "No Users Should Receive"
-    - [ ] UTC hours where no deliveries scheduled
-    - [ ] Verify zero messages sent
-    - [ ] System handles empty results gracefully
+- [x] Create `tests/integration/daily-messages/timezone-scenarios.test.ts`
+  - [x] Test "Same Local Time, Different UTC Hours"
+    - [x] 8 AM delivery for users in different timezones
+    - [x] Verify only correct users receive messages
+    - [x] Check no users receive messages at wrong time
+  - [x] Test "Multiple Users Same UTC Hour"
+    - [x] Users in different timezones with coinciding delivery times
+    - [x] All eligible users receive messages
+    - [x] Batch processing handles volume
+  - [x] Test "No Users Should Receive"
+    - [x] UTC hours where no deliveries scheduled
+    - [x] Verify zero messages sent
+    - [x] System handles empty results gracefully
 
 ### 3.3 DST Transition Tests
-- [ ] Create `tests/integration/daily-messages/dst-transitions.test.ts`
-  - [ ] Test Spring Forward (March)
-    - [ ] 2 AM gap handling
-    - [ ] Messages delivered at correct adjusted time
-    - [ ] No duplicate messages
-    - [ ] Users with 2 AM preference handled correctly
-  - [ ] Test Fall Back (November)
-    - [ ] 2 AM occurring twice handling
-    - [ ] Only one message sent per user
-    - [ ] Correct hour selection
-    - [ ] No missed messages
+- [x] Create `tests/integration/daily-messages/dst-transitions.test.ts`
+  - [x] Test Spring Forward (March)
+    - [x] 2 AM gap handling
+    - [x] Messages delivered at correct adjusted time
+    - [x] No duplicate messages
+    - [x] Users with 2 AM preference handled correctly
+  - [x] Test Fall Back (November)
+    - [x] 2 AM occurring twice handling
+    - [x] Only one message sent per user
+    - [x] Correct hour selection
+    - [x] No missed messages
 
 ### 3.4 Edge Case Tests
-- [ ] Create `tests/integration/daily-messages/edge-cases.test.ts`
-  - [ ] Test Midnight Boundary
-    - [ ] 11 PM local = next day UTC
-    - [ ] 1 AM local = previous day UTC
-    - [ ] Correct date assignment
-  - [ ] Test Half-Hour Timezones
-    - [ ] India (UTC+5:30)
-    - [ ] Newfoundland (UTC-3:30)
-    - [ ] Nepal (UTC+5:45)
-    - [ ] Correct hour calculations
-  - [ ] Test International Date Line
-    - [ ] Kiribati (UTC+14)
-    - [ ] Baker Island (UTC-12)
-    - [ ] 26-hour spread handling
+- [x] Create `tests/integration/daily-messages/edge-cases.test.ts`
+  - [x] Test Midnight Boundary
+    - [x] 11 PM local = next day UTC
+    - [x] 1 AM local = previous day UTC
+    - [x] Correct date assignment
+  - [x] Test Half-Hour Timezones
+    - [x] India (UTC+5:30)
+    - [x] Newfoundland (UTC-3:30)
+    - [x] Nepal (UTC+5:45)
+    - [x] Correct hour calculations
+  - [x] Test International Date Line
+    - [x] Kiribati (UTC+14)
+    - [x] Baker Island (UTC-12)
+    - [x] 26-hour spread handling
 
 ## Phase 4: System Tests
 
