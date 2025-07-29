@@ -39,7 +39,7 @@ const command = process.argv[2];
 
 async function main() {
   if (command === 'up') {
-    const { error, results } = await migrator.migrateUp();
+    const { error, results } = await migrator.migrateToLatest();
     results?.forEach((it) => {
       if (it.status === 'Success') {
         console.log(`migration "${it.migrationName}" was executed successfully`);

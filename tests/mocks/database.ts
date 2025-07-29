@@ -24,6 +24,16 @@ export function createMockDatabase(): Kysely<DB> {
   const createInsertQueryBuilder = <T extends keyof DB>(table: T) => {
     const mockInsertQueryBuilder: any = {
       values: vi.fn().mockReturnThis(),
+      onConflict: vi.fn().mockImplementation((callback) => {
+        // Mock the onConflict builder
+        const conflictBuilder = {
+          columns: vi.fn().mockReturnThis(),
+          doUpdateSet: vi.fn().mockReturnThis(),
+          doNothing: vi.fn().mockReturnThis(),
+        };
+        if (callback) callback(conflictBuilder);
+        return mockInsertQueryBuilder;
+      }),
       returning: vi.fn().mockReturnThis(),
       returningAll: vi.fn().mockReturnThis(),
       execute: vi.fn().mockResolvedValue([]),
@@ -84,6 +94,15 @@ export function createMockQueryBuilder<T = any>() {
     limit: vi.fn().mockReturnThis(),
     offset: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
+    onConflict: vi.fn().mockImplementation((callback) => {
+      const conflictBuilder = {
+        columns: vi.fn().mockReturnThis(),
+        doUpdateSet: vi.fn().mockReturnThis(),
+        doNothing: vi.fn().mockReturnThis(),
+      };
+      if (callback) callback(conflictBuilder);
+      return mockQueryBuilder;
+    }),
     set: vi.fn().mockReturnThis(),
     returning: vi.fn().mockReturnThis(),
     returningAll: vi.fn().mockReturnThis(),
