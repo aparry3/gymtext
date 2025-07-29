@@ -126,8 +126,8 @@ export class UserRepository extends BaseRepository {
     const users = await this.db
       .selectFrom('users')
       .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
-      .leftJoin('subscriptions', 'users.id', 'subscriptions.userId')
-      .where('subscriptions.status', '=', 'active')
+      // .leftJoin('subscriptions', 'users.id', 'subscriptions.userId')
+      // .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .select([
         'fitnessProfiles.id as profileId',
