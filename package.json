@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/shared/types/generated.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
-    "predev": "pnpm db:codegen",
-    "dev": "next dev --turbopack",
+    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
+    "predev": "source .env.local && pnpm db:codegen",
+    "dev": "source .env.local && next dev --turbopack",
     "prebuild": "pnpm db:codegen",
     "build": "next build",
     "start": "next start",
@@ -16,8 +16,22 @@
     "migrate:down": "tsx scripts/migrate.ts down",
     "premigrate": "pnpm db:codegen",
     "sms:test": "tsx scripts/test-sms.ts",
-    "onboard": "tsx scripts/onboard-user.ts",
-    "test:mesocycle": "tsx scripts/test-mesocycle.ts"
+    "checkout:test": "tsx scripts/test-checkout.ts",
+    "programs:test": "source .env.local && tsx scripts/test-programs.ts",
+    "flow:test": "tsx scripts/test-user-flow.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:unit": "vitest run --config vitest.config.mts",
+    "test:integration": "vitest run --config vitest.config.integration.mts",
+    "test:integration:watch": "vitest --config vitest.config.integration.mts",
+    "test:all": "pnpm test:unit && pnpm test:integration",
+    "test:docker": "./scripts/run-tests.sh",
+    "test:docker:unit": "./scripts/run-tests.sh unit",
+    "test:docker:integration": "./scripts/run-tests.sh integration",
+    "test:docker:watch": "./scripts/run-tests.sh watch keep",
+    "test:docker:coverage": "./scripts/run-tests.sh coverage"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
@@ -28,6 +42,7 @@
     "@pinecone-database/pinecone": "^5.1.1",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.4.0",
+    "@types/luxon": "^3.7.0",
     "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -36,6 +51,7 @@
     "kysely": "^0.28.0",
     "langchain": "^0.3.23",
     "lucide-react": "^0.331.0",
+    "luxon": "^3.7.1",
     "next": "15.2.4",
     "openai": "^4.95.1",
     "pg": "^8.14.1",
@@ -56,6 +72,7 @@
     "@types/pg": "^8.10.9",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.17",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
@@ -65,6 +82,7 @@
     "postcss": "^8.4.35",
     "tailwindcss": "^4",
     "tsx": "^4.7.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

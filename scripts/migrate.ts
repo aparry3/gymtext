@@ -2,7 +2,7 @@ import { Kysely, PostgresDialect, FileMigrationProvider, Migrator } from 'kysely
 import { Pool } from 'pg';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { Database } from '../src/shared/types/database';
+import { DB } from '@/server/models';
 
 // Get the database URL from environment variables
 const databaseUrl = process.env.DATABASE_URL;
@@ -18,7 +18,7 @@ const pool = new Pool({
 });
 
 // Create the database instance
-const db = new Kysely<Database>({
+const db = new Kysely<DB>({
   dialect: new PostgresDialect({
     pool,
   }),
@@ -39,7 +39,7 @@ const command = process.argv[2];
 
 async function main() {
   if (command === 'up') {
-    const { error, results } = await migrator.migrateUp();
+    const { error, results } = await migrator.migrateToLatest();
     results?.forEach((it) => {
       if (it.status === 'Success') {
         console.log(`migration "${it.migrationName}" was executed successfully`);
