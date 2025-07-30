@@ -17,6 +17,8 @@ export class UserRepository extends BaseRepository {
         phoneNumber: userData.phoneNumber,
         email: userData.email || null,
         stripeCustomerId: userData.stripeCustomerId || null,
+        timezone: userData.timezone,
+        preferredSendHour: userData.preferredSendHour,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
