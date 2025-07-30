@@ -23,6 +23,8 @@ export async function POST(request: Request) {
       name: formData.name,
       phoneNumber: formData.phoneNumber,
       email: formData.email || null,
+      timezone: formData.timezone,
+      preferredSendHour: formData.preferredSendHour,
     };
 
     try {
@@ -36,7 +38,9 @@ export async function POST(request: Request) {
           skillLevel: formData.skillLevel,
           exerciseFrequency: formData.exerciseFrequency,
           gender: formData.gender,
-          age: formData.age
+          age: formData.age,
+          timezone: formData.timezone,
+          preferredSendHour: formData.preferredSendHour.toString()
         }
       });
 
@@ -58,8 +62,12 @@ export async function POST(request: Request) {
 
         await userRepository.createFitnessProfile(user.id, fitnessProfileData);
       } else {
-        // Update existing user with new Stripe customer ID
-        user = await userRepository.update(user.id, { stripeCustomerId: customer.id });
+        // Update existing user with new Stripe customer ID and time preferences
+        user = await userRepository.update(user.id, { 
+          stripeCustomerId: customer.id,
+          timezone: formData.timezone,
+          preferredSendHour: formData.preferredSendHour
+        });
       }
 
       // Check if we have a direct payment method ID (Apple Pay/Google Pay)
