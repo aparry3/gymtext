@@ -103,17 +103,29 @@ export function getAllUTCHoursForLocalHour(localHour: number, timezone: string):
   return Array.from(hours).sort((a, b) => a - b);
 }
 
-export function getCommonTimezones(): readonly string[] {
-  return COMMON_TIMEZONES;
+/**
+ * Formats a timezone identifier for display in UI
+ * Example: "America/New_York" -> "New York (EST/EDT)"
+ */
+export function formatTimezoneForDisplay(timezone: string): string {
+  if (!isValidIANATimezone(timezone)) {
+    return timezone;
+  }
+  
+  try {
+    const now = DateTime.now().setZone(timezone);
+    const offset = now.toFormat('ZZZ'); // e.g., "EST" or "-05:00"
+    
+    // Extract city name from timezone
+    const parts = timezone.split('/');
+    const city = parts[parts.length - 1].replace(/_/g, ' ');
+    
+    return `${city} (${offset})`;
+  } catch {
+    return timezone;
+  }
 }
 
-// Helper to format timezone for display
-export function formatTimezoneForDisplay(timezone: string): string {
-  // Convert America/New_York to "New York (America)"
-  const parts = timezone.split('/');
-  if (parts.length === 2) {
-    const city = parts[1].replace(/_/g, ' ');
-    return `${city} (${parts[0]})`;
-  }
-  return timezone;
+export function getCommonTimezones(): readonly string[] {
+  return COMMON_TIMEZONES;
 }

@@ -21,7 +21,7 @@ interface MockUpsertResponse {
  */
 export class MockPineconeIndex {
   private vectors: Map<string, MockVector> = new Map();
-  private namespace: string = '';
+  private currentNamespace: string = '';
 
   public upsert: Mock;
   public query: Mock;
@@ -171,7 +171,7 @@ export class MockPineconeIndex {
    * Set namespace for operations
    */
   namespace(ns: string): MockPineconeIndex {
-    this.namespace = ns;
+    this.currentNamespace = ns;
     return this;
   }
 

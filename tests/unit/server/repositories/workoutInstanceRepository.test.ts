@@ -27,7 +27,10 @@ describe('WorkoutInstanceRepository', () => {
       const result = await workoutInstanceRepository.create(workoutData);
 
       expect(mockDb.insertInto).toHaveBeenCalledWith('workoutInstances');
-      expect(insertBuilder.values).toHaveBeenCalledWith(workoutData);
+      expect(insertBuilder.values).toHaveBeenCalledWith({
+        ...workoutData,
+        details: JSON.stringify(workoutData.details)
+      });
       expect(insertBuilder.returningAll).toHaveBeenCalled();
       expect(result).toEqual(expectedWorkout);
     });

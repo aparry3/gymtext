@@ -10,17 +10,16 @@ import type { WorkoutInstanceBreakdown } from '@/server/models/workout';
 
 describe('Workout Instance Creation Integration Tests', () => {
   const mockUser: UserWithProfile = {
-    id: 'user_test_123',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     name: 'Test User',
     phoneNumber: '+15555551234',
     email: 'test@example.com',
     stripeCustomerId: 'cus_test',
-    isActive: true,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     profile: {
-      id: 'profile_test_123',
-      userId: 'user_test_123',
+      id: '550e8400-e29b-41d4-a716-446655440002',
+      userId: '550e8400-e29b-41d4-a716-446655440001',
       fitnessGoals: 'Build strength',
       skillLevel: 'intermediate',
       exerciseFrequency: '4 days/week',
@@ -29,11 +28,12 @@ describe('Workout Instance Creation Integration Tests', () => {
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-01'),
     },
+    info: [],
   };
 
   const mockFitnessPlan: FitnessPlan = {
-    id: 'plan_test_123',
-    clientId: 'user_test_123',
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    clientId: '550e8400-e29b-41d4-a716-446655440001',
     programType: 'strength',
     goalStatement: 'Build strength and muscle',
     overview: 'Progressive strength program',
@@ -44,9 +44,9 @@ describe('Workout Instance Creation Integration Tests', () => {
   };
 
   const mockMesocycle: Mesocycle = {
-    id: 'meso_test_123',
-    fitnessPlanId: 'plan_test_123',
-    clientId: 'user_test_123',
+    id: '550e8400-e29b-41d4-a716-446655440004',
+    fitnessPlanId: '550e8400-e29b-41d4-a716-446655440003',
+    clientId: '550e8400-e29b-41d4-a716-446655440001',
     index: 0,
     phase: 'Strength',
     lengthWeeks: 4,
@@ -56,12 +56,12 @@ describe('Workout Instance Creation Integration Tests', () => {
   };
 
   const mockMicrocycle: Microcycle = {
-    id: 'micro_test_123',
-    mesocycleId: 'meso_test_123',
-    fitnessPlanId: 'plan_test_123',
-    clientId: 'user_test_123',
-    weekNumber: 1,
-    focus: 'Heavy',
+    id: '550e8400-e29b-41d4-a716-446655440005',
+    mesocycleId: '550e8400-e29b-41d4-a716-446655440004',
+    fitnessPlanId: '550e8400-e29b-41d4-a716-446655440003',
+    clientId: '550e8400-e29b-41d4-a716-446655440001',
+    index: 0,
+    targets: null,
     startDate: new Date('2024-01-01'),
     endDate: new Date('2024-01-07'),
     createdAt: new Date('2024-01-01'),
@@ -119,11 +119,10 @@ describe('Workout Instance Creation Integration Tests', () => {
           mesocycleId: mockMicrocycle.mesocycleId,
           fitnessPlanId: mockMicrocycle.fitnessPlanId,
           clientId: mockMicrocycle.clientId,
-          weekNumber: mockMicrocycle.weekNumber,
-          focus: mockMicrocycle.focus,
+          index: mockMicrocycle.index,
+          targets: mockMicrocycle.targets,
           startDate: mockMicrocycle.startDate,
           endDate: mockMicrocycle.endDate,
-          targets: null,
           createdAt: mockMicrocycle.createdAt,
           updatedAt: mockMicrocycle.updatedAt,
         }],
@@ -200,7 +199,7 @@ describe('Workout Instance Creation Integration Tests', () => {
         fitnessProfiles: [{ id: mockUser.profile.id, userId: mockUser.id, fitnessGoals: mockUser.profile.fitnessGoals, skillLevel: mockUser.profile.skillLevel, exerciseFrequency: mockUser.profile.exerciseFrequency, gender: mockUser.profile.gender, age: mockUser.profile.age, createdAt: mockUser.profile.createdAt, updatedAt: mockUser.profile.updatedAt }],
         fitnessPlans: [{ id: mockFitnessPlan.id!, clientId: mockFitnessPlan.clientId, programType: mockFitnessPlan.programType, goalStatement: mockFitnessPlan.goalStatement, overview: mockFitnessPlan.overview, macrocycles: JSON.stringify(mockFitnessPlan.macrocycles), startDate: mockFitnessPlan.startDate, createdAt: mockFitnessPlan.createdAt, updatedAt: mockFitnessPlan.updatedAt }],
         mesocycles: [{ id: mockMesocycle.id, fitnessPlanId: mockMesocycle.fitnessPlanId, clientId: mockMesocycle.clientId, index: mockMesocycle.index, phase: mockMesocycle.phase, lengthWeeks: mockMesocycle.lengthWeeks, startDate: mockMesocycle.startDate, createdAt: mockMesocycle.createdAt, updatedAt: mockMesocycle.updatedAt }],
-        microcycles: [{ id: mockMicrocycle.id, mesocycleId: mockMicrocycle.mesocycleId, fitnessPlanId: mockMicrocycle.fitnessPlanId, clientId: mockMicrocycle.clientId, weekNumber: mockMicrocycle.weekNumber, focus: mockMicrocycle.focus, startDate: mockMicrocycle.startDate, endDate: mockMicrocycle.endDate, targets: null, createdAt: mockMicrocycle.createdAt, updatedAt: mockMicrocycle.updatedAt }],
+        microcycles: [{ id: mockMicrocycle.id, mesocycleId: mockMicrocycle.mesocycleId, fitnessPlanId: mockMicrocycle.fitnessPlanId, clientId: mockMicrocycle.clientId, index: mockMicrocycle.index, targets: mockMicrocycle.targets, startDate: mockMicrocycle.startDate, endDate: mockMicrocycle.endDate, createdAt: mockMicrocycle.createdAt, updatedAt: mockMicrocycle.updatedAt }],
       });
 
       // Complex nested structure that could cause JSON serialization issues
@@ -253,7 +252,7 @@ describe('Workout Instance Creation Integration Tests', () => {
         fitnessProfiles: [{ id: mockUser.profile.id, userId: mockUser.id, fitnessGoals: mockUser.profile.fitnessGoals, skillLevel: mockUser.profile.skillLevel, exerciseFrequency: mockUser.profile.exerciseFrequency, gender: mockUser.profile.gender, age: mockUser.profile.age, createdAt: mockUser.profile.createdAt, updatedAt: mockUser.profile.updatedAt }],
         fitnessPlans: [{ id: mockFitnessPlan.id!, clientId: mockFitnessPlan.clientId, programType: mockFitnessPlan.programType, goalStatement: mockFitnessPlan.goalStatement, overview: mockFitnessPlan.overview, macrocycles: JSON.stringify(mockFitnessPlan.macrocycles), startDate: mockFitnessPlan.startDate, createdAt: mockFitnessPlan.createdAt, updatedAt: mockFitnessPlan.updatedAt }],
         mesocycles: [{ id: mockMesocycle.id, fitnessPlanId: mockMesocycle.fitnessPlanId, clientId: mockMesocycle.clientId, index: mockMesocycle.index, phase: mockMesocycle.phase, lengthWeeks: mockMesocycle.lengthWeeks, startDate: mockMesocycle.startDate, createdAt: mockMesocycle.createdAt, updatedAt: mockMesocycle.updatedAt }],
-        microcycles: [{ id: mockMicrocycle.id, mesocycleId: mockMicrocycle.mesocycleId, fitnessPlanId: mockMicrocycle.fitnessPlanId, clientId: mockMicrocycle.clientId, weekNumber: mockMicrocycle.weekNumber, focus: mockMicrocycle.focus, startDate: mockMicrocycle.startDate, endDate: mockMicrocycle.endDate, targets: null, createdAt: mockMicrocycle.createdAt, updatedAt: mockMicrocycle.updatedAt }],
+        microcycles: [{ id: mockMicrocycle.id, mesocycleId: mockMicrocycle.mesocycleId, fitnessPlanId: mockMicrocycle.fitnessPlanId, clientId: mockMicrocycle.clientId, index: mockMicrocycle.index, targets: mockMicrocycle.targets, startDate: mockMicrocycle.startDate, endDate: mockMicrocycle.endDate, createdAt: mockMicrocycle.createdAt, updatedAt: mockMicrocycle.updatedAt }],
       });
 
       const repo = new WorkoutInstanceRepository(db);

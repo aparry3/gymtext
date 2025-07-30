@@ -47,6 +47,15 @@ export class DatabaseMockHelper {
   mockInsertInto<T extends keyof DB>(table: T) {
     const queryBuilder = {
       values: vi.fn().mockReturnThis(),
+      onConflict: vi.fn().mockImplementation((callback) => {
+        const conflictBuilder = {
+          columns: vi.fn().mockReturnThis(),
+          doUpdateSet: vi.fn().mockReturnThis(),
+          doNothing: vi.fn().mockReturnThis(),
+        };
+        if (callback) callback(conflictBuilder);
+        return queryBuilder;
+      }),
       returning: vi.fn().mockReturnThis(),
       returningAll: vi.fn().mockReturnThis(),
       execute: vi.fn().mockResolvedValue([]),
@@ -136,14 +145,24 @@ export class DatabaseMockHelper {
   }
 
   private createDefaultInsertQueryBuilder() {
-    return {
+    const queryBuilder: any = {
       values: vi.fn().mockReturnThis(),
+      onConflict: vi.fn().mockImplementation((callback) => {
+        const conflictBuilder = {
+          columns: vi.fn().mockReturnThis(),
+          doUpdateSet: vi.fn().mockReturnThis(),
+          doNothing: vi.fn().mockReturnThis(),
+        };
+        if (callback) callback(conflictBuilder);
+        return queryBuilder;
+      }),
       returning: vi.fn().mockReturnThis(),
       returningAll: vi.fn().mockReturnThis(),
       execute: vi.fn().mockResolvedValue([]),
       executeTakeFirst: vi.fn().mockResolvedValue(undefined),
       executeTakeFirstOrThrow: vi.fn().mockRejectedValue(new Error('Insert failed')),
     };
+    return queryBuilder;
   }
 
   private createDefaultUpdateQueryBuilder() {

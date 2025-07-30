@@ -16,12 +16,20 @@ class TestDatabaseManager {
   private testDatabases: Map<string, TestDatabaseInstance> = new Map();
 
   constructor() {
-    // Use the main database URL but connect to postgres for admin operations
-    const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/gymtext';
-    const adminUrl = databaseUrl.replace(/\/[^/]*$/, '/postgres');
+    // Use the test database URL from environment
+    const databaseUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/gymtext_test';
     
+    // Parse the connection string to get components
+    const url = new URL(databaseUrl);
+    const [username, password] = url.username ? [url.username, url.password] : ['postgres', 'postgres'];
+    
+    // Connect to postgres database for admin operations
     this.adminPool = new Pool({
-      connectionString: adminUrl,
+      host: url.hostname,
+      port: parseInt(url.port || '5433'),
+      user: username,
+      password: password,
+      database: 'postgres',
       max: 5,
     });
   }
@@ -34,8 +42,10 @@ class TestDatabaseManager {
       await this.adminPool.query(`CREATE DATABASE "${dbName}"`);
       
       // Create a new connection pool for the test database
-      const testDatabaseUrl = process.env.DATABASE_URL?.replace(/\/[^/]*$/, `/${dbName}`) 
-        || `postgresql://postgres:postgres@localhost:5432/${dbName}`;
+      const baseUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/gymtext_test';
+      const url = new URL(baseUrl);
+      url.pathname = `/${dbName}`;
+      const testDatabaseUrl = url.toString();
       
       const testPool = new Pool({
         connectionString: testDatabaseUrl,
@@ -85,10 +95,14 @@ class TestDatabaseManager {
     }
 
     // Set up environment for migration script
+    const baseUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/gymtext_test';
+    const url = new URL(baseUrl);
+    url.pathname = `/${dbName}`;
+    const testDatabaseUrl = url.toString();
+    
     const env = {
       ...process.env,
-      DATABASE_URL: process.env.DATABASE_URL?.replace(/\/[^/]*$/, `/${dbName}`) 
-        || `postgresql://postgres:postgres@localhost:5432/${dbName}`,
+      DATABASE_URL: testDatabaseUrl,
     };
 
     // Run migrations using the project's migration script
@@ -201,6 +215,7 @@ export async function seedTestData(db: Kysely<DB>, data: {
   workoutInstances?: any[];
   conversations?: any[];
   messages?: any[];
+  subscriptions?: any[];
 }): Promise<void> {
   // Insert data in the correct order to respect foreign keys
   if (data.users) {
@@ -209,6 +224,10 @@ export async function seedTestData(db: Kysely<DB>, data: {
   
   if (data.fitnessProfiles) {
     await db.insertInto('fitnessProfiles').values(data.fitnessProfiles).execute();
+  }
+  
+  if (data.subscriptions) {
+    await db.insertInto('subscriptions').values(data.subscriptions).execute();
   }
   
   if (data.fitnessPlans) {

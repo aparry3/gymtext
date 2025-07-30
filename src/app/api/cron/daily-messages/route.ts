@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { DailyMessageService } from '@/server/services/dailyMessageService';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { MessageService } from '@/server/services/messageService';
 
 /**
  * Vercel Cron endpoint for sending daily workout messages
@@ -33,8 +36,15 @@ export async function GET(request: Request) {
     // Log the cron execution
     console.log(`[CRON] Daily messages cron triggered at ${new Date().toISOString()}`);
     
-    // Create service instance
-    const dailyMessageService = new DailyMessageService();
+    // Create service instance with dependencies
+    const userRepository = new UserRepository();
+    const workoutRepository = new WorkoutInstanceRepository();
+    const messageService = new MessageService();
+    const dailyMessageService = new DailyMessageService(
+      userRepository,
+      workoutRepository,
+      messageService
+    );
     
     // Process the hourly batch
     const result = await dailyMessageService.processHourlyBatch();

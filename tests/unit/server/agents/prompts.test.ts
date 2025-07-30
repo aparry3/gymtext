@@ -140,7 +140,10 @@ describe('Agent Prompts', () => {
     });
 
     it('should handle missing profile gracefully', () => {
-      const user = new UserBuilder().withName('Alex').build(); // No profile
+      const user = {
+        ...new UserBuilder().withName('Alex').build(),
+        profile: undefined
+      } as any; // Force profile to be undefined
       const message = 'How do I start working out?';
 
       const prompt = chatPrompt(user, message, [], undefined);

@@ -36,21 +36,22 @@ describe('Integration Test Infrastructure Example', () => {
       // Seed test data
       await seedTestData(db, {
         users: [{
-          id: 'user_123',
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          name: 'John Doe',
           phoneNumber: '+12125551234',
+          email: 'john@example.com',
           stripeCustomerId: 'cus_123',
-          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         }],
         fitnessProfiles: [{
-          id: 'profile_123',
-          userId: 'user_123',
-          name: 'John Doe',
+          id: '123e4567-e89b-12d3-a456-426614174001',
+          userId: '123e4567-e89b-12d3-a456-426614174000',
+          fitnessGoals: 'strength',
+          skillLevel: 'intermediate',
+          exerciseFrequency: '4 days/week',
+          gender: 'male',
           age: 30,
-          goals: ['strength', 'weight_loss'],
-          experienceLevel: 'intermediate',
-          preferredWorkoutDays: 4,
           createdAt: new Date(),
           updatedAt: new Date(),
         }],
@@ -59,7 +60,7 @@ describe('Integration Test Infrastructure Example', () => {
       // Query the database
       const user = await db
         .selectFrom('users')
-        .where('id', '=', 'user_123')
+        .where('id', '=', '123e4567-e89b-12d3-a456-426614174000')
         .selectAll()
         .executeTakeFirst();
 
@@ -175,10 +176,11 @@ describe('Integration Test Infrastructure Example', () => {
       const user = await db
         .insertInto('users')
         .values({
-          id: 'user_new',
+          id: '223e4567-e89b-12d3-a456-426614174000',
+          name: 'New User',
           phoneNumber: '+13105551234',
+          email: 'newuser@example.com',
           stripeCustomerId: stripeCustomer.id,
-          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -197,6 +199,8 @@ describe('Integration Test Infrastructure Example', () => {
       expect(welcomeMessage.status).toBe('sent');
 
       // 4. Generate fitness plan using LLM
+      // First call returns welcome message, second call returns fitness plan
+      const welcomeResponse = await mockLLM.getMock().invoke('Welcome message');
       const planResponse = await mockLLM.getMock().invoke('Generate fitness plan');
       expect(planResponse.content).toHaveProperty('programType');
 
@@ -218,7 +222,7 @@ describe('Integration Test Infrastructure Example', () => {
       // Verify complete setup
       const dbUser = await db
         .selectFrom('users')
-        .where('id', '=', 'user_new')
+        .where('id', '=', user!.id)
         .selectAll()
         .executeTakeFirst();
 
