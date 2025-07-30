@@ -105,6 +105,16 @@ export interface Microcycles {
   updatedAt: Generated<Timestamp>;
 }
 
+export interface NeonAuthUsersSync {
+  createdAt: Generated<Timestamp | null>;
+  deletedAt: Timestamp | null;
+  email: Generated<string | null>;
+  id: Generated<string>;
+  name: Generated<string | null>;
+  rawJson: Json;
+  updatedAt: Timestamp | null;
+}
+
 export interface Subscriptions {
   canceledAt: Timestamp | null;
   createdAt: Generated<Timestamp>;
@@ -153,6 +163,7 @@ export interface DB {
   mesocycles: Mesocycles;
   messages: Messages;
   microcycles: Microcycles;
+  "neonAuth.usersSync": NeonAuthUsersSync;
   subscriptions: Subscriptions;
   users: Users;
   workoutInstances: WorkoutInstances;
