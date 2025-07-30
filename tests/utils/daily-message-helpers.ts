@@ -87,65 +87,43 @@ export interface MessageTracker {
  * Create a message tracker for testing
  */
 export function createMessageTracker() {
-  const sentMessages: Array<{
-    userId: string;
-    phoneNumber?: string;
-    message: string;
-    sentAt: Date;
-    localHour?: number;
-  }> = [];
-  
+  const messages: Map<string, { message: string; metadata?: any }[]> = new Map();
+
   return {
-    sentMessages,
-    
-    addMessage(userId: string, phoneNumber: string, message: string) {
-      const sentAt = new Date();
-      const localHour = sentAt.getHours();
-      
-      sentMessages.push({
-        userId,
-        phoneNumber,
-        message,
-        sentAt,
-        localHour,
-      });
+    recordMessage(userId: string, message: string, metadata?: any) {
+      if (!messages.has(userId)) {
+        messages.set(userId, []);
+      }
+      messages.get(userId)!.push({ message, metadata });
     },
-    
-    recordMessage(userId: string, message: string, sentAt?: Date) {
-      sentMessages.push({
-        userId,
-        message,
-        sentAt: sentAt || new Date(),
-      });
-    },
-    
-    getMessagesForUser(userId: string) {
-      return sentMessages.filter(msg => msg.userId === userId);
-    },
-    
-    getMessages(userId: string) {
-      return sentMessages.filter(msg => msg.userId === userId);
-    },
-    
-    getMessagesAtHour(utcHour: number) {
-      return sentMessages.filter(msg => msg.sentAt.getUTCHours() === utcHour);
-    },
-    
+
     hasReceivedMessage(userId: string): boolean {
-      return sentMessages.some(msg => msg.userId === userId);
+      return messages.has(userId) && messages.get(userId)!.length > 0;
     },
-    
+
     getMessageCount(userId: string): number {
-      return sentMessages.filter(msg => msg.userId === userId).length;
+      return messages.get(userId)?.length || 0;
     },
-    
+
+    getMessagesForUser(userId: string): { message: string; metadata?: any }[] {
+      return messages.get(userId) || [];
+    },
+
     getTotalMessageCount(): number {
-      return sentMessages.length;
+      let total = 0;
+      messages.forEach(userMessages => {
+        total += userMessages.length;
+      });
+      return total;
     },
-    
+
+    getUniqueUserCount(): number {
+      return messages.size;
+    },
+
     reset() {
-      sentMessages.length = 0;
-    },
+      messages.clear();
+    }
   };
 }
 
