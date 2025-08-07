@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/server/models/userModel';
 import { fitnessCoachPrompt } from '@/server/prompts/templates';
-import { ConversationContextService } from '@/server/services/contextService';
 import { PromptBuilder } from '@/server/services/promptService';
+import { ConversationContextService } from '@/server/services/context/conversationContext';
 
 // Configuration from environment variables
 const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');
@@ -15,56 +15,70 @@ const llm = new ChatGoogleGenerativeAI({
 });
 
 // Initialize context services
-const contextService = new ConversationContextService();
+const conversationContextService = new ConversationContextService();
 const promptBuilder = new PromptBuilder();
 
-export async function generateChatResponse(
-  user: UserWithProfile,
-  message: string
-): Promise<string> {
-  try {
-    // Get conversation context
-    const context = await contextService.getContext(user.id, {
-      includeUserProfile: true,
-      includeWorkoutHistory: true,
-      messageLimit: 5
-    });
+export class ChatService {
 
-    // Create the fitness coach system prompt with user context
-    const systemPrompt = fitnessCoachPrompt(user);
-    
-    let response;
-    console.log('context', context);
-    if (context && context.recentMessages.length > 0) {
-      // Build messages with conversation history
-      const messages = promptBuilder.buildMessagesWithContext(
-        message,
-        context,
-        systemPrompt
-      );
+  constructor() {
+  }
+
+  async handleIncomingMessage(
+    user: UserWithProfile,
+    message: string
+  ): Promise<string> {
+    try {
+      // Get conversation context
+      const context = await conversationContextService.getContext(user.id, {
+        includeUserProfile: true,
+        includeWorkoutHistory: true,
+        messageLimit: 5
+      });
+
+      // Create the fitness coach system prompt with user context
+      const systemPrompt = fitnessCoachPrompt(user);
       
-      // Generate response with conversation context
-      response = await llm.invoke(messages);
-    } else {
-      // Fallback to simple prompt if no context available
-      const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response:`;
-      response = await llm.invoke(fullPrompt);
+      let response;
+      console.log('context', context);
+      if (context && context.recentMessages.length > 0) {
+        // Build messages with conversation history
+        const messages = promptBuilder.buildMessagesWithContext(
+          message,
+          context,
+          systemPrompt
+        );
+        
+
+        // TODO THIS IS GOING TO BE VERY IMPORTANT
+        // ALL AGENTIC FUNCTIONALITY WILL LIVE IN THIS LLM
+        // UPDATING WORKOUTS
+        // UPDATING PREFERENCES
+        // SAVING MEMORIES
+        // UPDATING PROGRESS
+        // NOTIFICATIONS
+
+        response = await llm.invoke(messages);
+      } else {
+        // Fallback to simple prompt if no context available
+        const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response:`;
+        response = await llm.invoke(fullPrompt);
+      }
+      
+      // Extract text content from response
+      const responseText = response.content.toString().trim();
+      
+      // Modern phones support concatenated SMS
+      // Twilio automatically handles message segmentation
+      if (responseText.length > SMS_MAX_LENGTH) {
+        // Only truncate very long responses
+        return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
+      }
+      
+      return responseText;
+    } catch (error) {
+      console.error('Error generating chat response:', error);
+      // Fallback response on error
+      return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
     }
-    
-    // Extract text content from response
-    const responseText = response.content.toString().trim();
-    
-    // Modern phones support concatenated SMS
-    // Twilio automatically handles message segmentation
-    if (responseText.length > SMS_MAX_LENGTH) {
-      // Only truncate very long responses
-      return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error('Error generating chat response:', error);
-    // Fallback response on error
-    return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
   }
 }

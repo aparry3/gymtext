@@ -35,7 +35,7 @@ export class ConversationService {
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
-      console.log('INBOUND CONVERSATION', conversation);
+
       // Store the message
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
@@ -53,11 +53,14 @@ export class ConversationService {
   }
 
   async storeOutboundMessage(userId: string, to: string, messageContent: string, from: string = process.env.TWILIO_NUMBER || '', twilioMessageSid?: string): Promise<Message | null> {
+    // TODO: Summarize and save conversation as memory - update previous conversation memory
     return await this.circuitBreaker.execute(async () => {
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
-      
+
+      const messages = await this.messageRepo.findByConversationId(conversation.id);
+
       // Store the message
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
@@ -70,8 +73,15 @@ export class ConversationService {
         metadata: {} as Json,
       });
 
+      const summary = await this.summarizeConversation(messages);
       return message;
     });
+  }
+
+  async summarizeConversation(messages: Message[]): Promise<string> {
+    // TODO: Summarize conversation
+    const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
+    return 'TODO: Summarize conversation';
   }
 
   async getOrCreateConversation(userId: string): Promise<Conversation> {
