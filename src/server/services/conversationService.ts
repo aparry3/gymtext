@@ -3,6 +3,9 @@ import { MessageRepository } from '@/server/repositories/messageRepository';
 import type { Conversation, Message } from '@/server/models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../models/_types';
+import { UserRepository } from '../repositories/userRepository';
+import { UserWithProfile } from '../models/userModel';
+import { summaryAgent } from '../agents/summary/chain';
 
 interface StoreInboundMessageParams {
   userId: string;
@@ -14,12 +17,14 @@ interface StoreInboundMessageParams {
 
 export class ConversationService {
   private conversationRepo: ConversationRepository;
+  private userRepo: UserRepository;
   private messageRepo: MessageRepository;
   private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
   constructor() {
     this.conversationRepo = new ConversationRepository();
+    this.userRepo = new UserRepository();
     this.messageRepo = new MessageRepository();
     this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
     this.circuitBreaker = new CircuitBreaker({
@@ -61,6 +66,11 @@ export class ConversationService {
 
       const messages = await this.messageRepo.findByConversationId(conversation.id);
 
+      const user = await this.userRepo.findWithProfile(userId);
+      if (!user) {
+        return null;
+      }
+
       // Store the message
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
@@ -73,15 +83,18 @@ export class ConversationService {
         metadata: {} as Json,
       });
 
-      const summary = await this.summarizeConversation(messages);
+      const summary = await this.summarizeConversation(user, messages);
+      await this.conversationRepo.update(conversation.id, { summary });
       return message;
     });
   }
 
-  async summarizeConversation(messages: Message[]): Promise<string> {
+  async summarizeConversation(user: UserWithProfile, messages: Message[]): Promise<string> {
     // TODO: Summarize conversation
     const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
-    return 'TODO: Summarize conversation';
+
+    const summary = await summaryAgent.invoke({ user, context: { messages: messagesText } });
+    return summary.value;
   }
 
   async getOrCreateConversation(userId: string): Promise<Conversation> {
