@@ -18,6 +18,14 @@ interface MessageResult {
   error?: string;
 }
 
+export interface ProcessOptions {
+  currentUtcHour?: number;
+  currentDate?: Date;
+  userFilter?: string[];
+  dryRun?: boolean;
+  testMode?: boolean;
+}
+
 export class DailyMessageService {
   private userRepository: UserRepository;
   private workoutRepository: WorkoutInstanceRepository;
@@ -40,22 +48,40 @@ export class DailyMessageService {
    * Main entry point for the hourly cron job
    * Processes all users whose local time matches their preferred send hour
    */
-  async processHourlyBatch(): Promise<BatchResult> {
+  async processHourlyBatch(options: ProcessOptions = {}): Promise<BatchResult> {
     const startTime = Date.now();
     const errors: Array<{ userId: string; error: string }> = [];
     let processed = 0;
     let failed = 0;
 
     try {
-      const currentUtcHour = new Date().getUTCHours();
-      console.log(`Starting daily message batch for UTC hour: ${currentUtcHour}`);
+      // Use provided hour or current UTC hour
+      const currentDate = options.currentDate || new Date();
+      const currentUtcHour = options.currentUtcHour !== undefined 
+        ? options.currentUtcHour 
+        : currentDate.getUTCHours();
+      
+      console.log(`Starting daily message batch`, {
+        utcHour: currentUtcHour,
+        date: currentDate.toISOString(),
+        testMode: options.testMode || false,
+        dryRun: options.dryRun || false,
+        userFilter: options.userFilter
+      });
 
       // Get all users who should receive messages this hour
-      const users = await this.getUsersForHour(currentUtcHour);
-      console.log(`Found ${users.length} users to process`);
+      let users = await this.getUsersForHour(currentUtcHour);
+      
+      // Apply user filter if provided
+      if (options.userFilter && options.userFilter.length > 0) {
+        users = users.filter(user => options.userFilter!.includes(user.id));
+        console.log(`Filtered to ${users.length} users based on userFilter`);
+      } else {
+        console.log(`Found ${users.length} users to process`);
+      }
 
       // Process users in batches
-      const results = await this.processBatch(users, this.batchSize);
+      const results = await this.processBatch(users, this.batchSize, options);
       
       // Tally results
       for (const result of results) {
@@ -94,13 +120,17 @@ export class DailyMessageService {
   /**
    * Processes users in batches to avoid overwhelming the system
    */
-  private async processBatch(users: UserWithProfile[], batchSize: number): Promise<MessageResult[]> {
+  private async processBatch(
+    users: UserWithProfile[], 
+    batchSize: number,
+    options: ProcessOptions = {}
+  ): Promise<MessageResult[]> {
     const results: MessageResult[] = [];
     
     // Process users in chunks
     for (let i = 0; i < users.length; i += batchSize) {
       const batch = users.slice(i, i + batchSize);
-      const batchPromises = batch.map(user => this.sendDailyMessage(user));
+      const batchPromises = batch.map(user => this.sendDailyMessage(user, options));
       
       // Use allSettled to ensure we process all users even if some fail
       const batchResults = await Promise.allSettled(batchPromises);
@@ -119,8 +149,8 @@ export class DailyMessageService {
         }
       });
       
-      // Small delay between batches to avoid rate limits
-      if (i + batchSize < users.length) {
+      // Small delay between batches to avoid rate limits (skip in test mode)
+      if (i + batchSize < users.length && !options.testMode) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -131,16 +161,35 @@ export class DailyMessageService {
   /**
    * Sends a daily message to a single user
    */
-  private async sendDailyMessage(user: UserWithProfile): Promise<MessageResult> {
+  private async sendDailyMessage(
+    user: UserWithProfile,
+    options: ProcessOptions = {}
+  ): Promise<MessageResult> {
     try {
-      console.log(`Processing daily message for user ${user.id}`);
+      console.log(`Processing daily message for user ${user.id}`, {
+        dryRun: options.dryRun || false,
+        testMode: options.testMode || false
+      });
 
-      // Get today's workout for the user
-      const today = DateTime.now().setZone(user.timezone).startOf('day').toJSDate();
-      const workout = await this.getTodaysWorkout(user.id, today);
+      // Get today's workout for the user (use test date if provided)
+      const baseDate = options.currentDate || new Date();
+      
+      // If we have a test date, treat it as a calendar date in the user's timezone
+      // Otherwise, use the current time in the user's timezone
+      let targetDate: DateTime;
+      if (options.currentDate) {
+        // For test dates, interpret the date as being in the user's timezone
+        const dateStr = baseDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
+        targetDate = DateTime.fromISO(dateStr, { zone: user.timezone }).startOf('day');
+      } else {
+        // For current date, convert current UTC time to user's timezone
+        targetDate = DateTime.fromJSDate(baseDate).setZone(user.timezone).startOf('day');
+      }
+      
+      const workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
 
       if (!workout) {
-        console.log(`No workout found for user ${user.id} on ${today.toISOString()}`);
+        console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}`);
         return {
           success: false,
           userId: user.id,
@@ -148,11 +197,20 @@ export class DailyMessageService {
         };
       }
 
-      // Build and send the message
+      // Build the message
       const message = await this.messageService.buildDailyMessage(user, workout);
-      await this.messageService.sendMessage(user, message);
+      
+      // Only send if not in dry-run mode
+      if (options.dryRun) {
+        console.log(`[DRY RUN] Would send message to user ${user.id}:`, {
+          phoneNumber: user.phoneNumber,
+          messagePreview: message.substring(0, 100) + '...'
+        });
+      } else {
+        await this.messageService.sendMessage(user, message);
+        console.log(`Successfully sent daily message to user ${user.id}`);
+      }
 
-      console.log(`Successfully sent daily message to user ${user.id}`);
       return {
         success: true,
         userId: user.id
@@ -171,34 +229,25 @@ export class DailyMessageService {
    * Gets today's workout for a user
    */
   private async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
-    // Get workouts for the specific date
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    // The date passed in is midnight in the user's timezone (as a JS Date in UTC)
+    // We need to create a date string for the actual calendar date
+    const dateOnly = date.toISOString().split('T')[0]; // Gets YYYY-MM-DD
+    const queryDate = new Date(dateOnly); // Creates date at midnight UTC
     
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // This assumes we have a method to find workouts by date range
-    // You may need to add this to WorkoutInstanceRepository
-    const workouts = await this.workoutRepository.findByClientIdAndDateRange(
-      userId,
-      startOfDay,
-      endOfDay
-    );
-
-    return workouts.length > 0 ? workouts[0] : null;
+    const workout = await this.workoutRepository.findByClientIdAndDate(userId, queryDate);
+    return workout || null;
   }
 
   /**
    * Manually trigger daily messages for testing
    * Only processes a single user
    */
-  async sendTestMessage(userId: string): Promise<MessageResult> {
+  async sendTestMessage(userId: string, options: ProcessOptions = {}): Promise<MessageResult> {
     const user = await this.userRepository.findWithProfile(userId);
     if (!user) {
       throw new Error(`User ${userId} not found`);
     }
 
-    return await this.sendDailyMessage(user);
+    return await this.sendDailyMessage(user, options);
   }
 }
