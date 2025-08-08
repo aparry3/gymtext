@@ -31,6 +31,7 @@ export interface Conversations {
   metadata: Generated<Json | null>;
   startedAt: Timestamp;
   status: Generated<string>;
+  summary: string | null;
   updatedAt: Generated<Timestamp>;
   userId: string;
 }

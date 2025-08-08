@@ -4,7 +4,7 @@ import { chatPrompt, contextPrompt } from '@/server/agents/chat/prompts';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
 import { MessageRepository } from '@/server/repositories/messageRepository';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { ConversationContextService } from '@/server/services/contextService';
+import { ConversationContextService } from '@/server/services/context/conversationContext';
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
 

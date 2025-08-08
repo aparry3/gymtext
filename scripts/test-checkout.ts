@@ -17,6 +17,8 @@ interface CheckoutData {
   exerciseFrequency: string;
   gender: string;
   age: string;
+  timezone: string;
+  preferredSendHour: number;
   paymentMethodId?: string;
 }
 
@@ -29,6 +31,8 @@ async function testCheckout(options: {
   exerciseFrequency?: string;
   gender?: string;
   age?: string;
+  timezone?: string;
+  preferredSendHour?: number;
   paymentMethod?: string;
   url?: string;
   verbose?: boolean;
@@ -48,6 +52,8 @@ async function testCheckout(options: {
     exerciseFrequency: options.exerciseFrequency || '3-4 times per week',
     gender: options.gender || 'male',
     age: options.age || '25',
+    timezone: options.timezone || 'America/New_York',
+    preferredSendHour: options.preferredSendHour ?? 8,
     ...(options.paymentMethod && { paymentMethodId: options.paymentMethod })
   };
 
@@ -55,6 +61,8 @@ async function testCheckout(options: {
   console.log(chalk.gray(`Name: ${checkoutData.name}`));
   console.log(chalk.gray(`Phone: ${checkoutData.phoneNumber}`));
   if (checkoutData.email) console.log(chalk.gray(`Email: ${checkoutData.email}`));
+  console.log(chalk.gray(`Timezone: ${checkoutData.timezone}`));
+  console.log(chalk.gray(`Preferred Send Hour: ${checkoutData.preferredSendHour}:00`));
   
   if (options.verbose) {
     console.log(chalk.gray('\nCheckout Data:'));
@@ -127,6 +135,8 @@ program
   .option('--exercise-frequency <frequency>', 'Exercise frequency')
   .option('--gender <gender>', 'Gender')
   .option('--age <age>', 'Age')
+  .option('--timezone <timezone>', 'Timezone (e.g., America/New_York)', 'America/New_York')
+  .option('--preferred-send-hour <hour>', 'Preferred hour to send messages (0-23)', (value) => parseInt(value, 10), 8)
   .option('--payment-method <id>', 'Payment method ID (for direct payment)')
   .option('-u, --url <url>', 'API endpoint URL', 'http://localhost:3000/api/checkout')
   .option('-v, --verbose', 'Show verbose output', false)
@@ -134,6 +144,12 @@ program
     // Validate phone number format (basic validation)
     if (!options.phone.match(/^\+?[\d\s\-()]+$/)) {
       console.log(chalk.red('Error: Invalid phone number format'));
+      process.exit(1);
+    }
+
+    // Validate preferred send hour
+    if (options.preferredSendHour < 0 || options.preferredSendHour > 23 || isNaN(options.preferredSendHour)) {
+      console.log(chalk.red('Error: Preferred send hour must be between 0 and 23'));
       process.exit(1);
     }
 
@@ -147,6 +163,7 @@ program.on('--help', () => {
   console.log('  $ pnpm checkout:test -n "John Doe" -p "+1234567890"');
   console.log('  $ pnpm checkout:test -n "Jane Smith" -p "+1234567890" -e "jane@example.com" --age 30 -v');
   console.log('  $ pnpm checkout:test -n "Bob Wilson" -p "+1234567890" --skill-level advanced --verbose');
+  console.log('  $ pnpm checkout:test -n "Alice Jones" -p "+1234567890" --timezone "America/Los_Angeles" --preferred-send-hour 9');
 });
 
 // Parse command line arguments
