@@ -31,16 +31,17 @@ This document outlines the refactoring of the fitness plan generation logic to s
 
 ```
 1. FitnessPlan Generation (fitnessPlanAgent)
-   └── Creates simplified plan with mesocycles only
+   └── Creates simplified plan with mesocycles array only
    
-2. Mesocycle Breakdown (mesocycleAgent)  
-   └── Creates microcycles with daily themes/patterns
-       └── NO workout generation (only structure)
+2. Progress Tracking (no separate tables)
+   └── Track current position in fitnessPlans or fitness_progress table
+       └── mesocycleIndex and microcycleWeek only
 
 3. Daily Message Flow (dailyMessageService)
-   └── Checks if workout exists for today
-       └── If not: Generate workout on-demand (dailyWorkoutAgent)
-           └── Save workout to database
+   └── Calculate current position from progress tracking
+       └── Generate microcycle patterns on-demand for current week
+           └── Generate workout on-demand (dailyWorkoutAgent)
+               └── Save workout to database
        └── Format workout into message (dailyMessageAgent)
 ```
 
@@ -48,8 +49,8 @@ This document outlines the refactoring of the fitness plan generation logic to s
 
 #### Database Tables
 - `fitnessPlans`: Stores macrocycles as JSON, includes overview and program type
-- `mesocycles`: Links to fitness plan, stores phase and length
-- `microcycles`: Links to mesocycle and fitness plan, stores targets
+- `mesocycles`: Links to fitness plan, stores phase and length (TO BE DROPPED)
+- `microcycles`: Links to mesocycle and fitness plan, stores targets (TO BE DROPPED)
 - `workoutInstances`: Links to all levels, stores workout details as JSON
 
 #### Current JSON Storage in FitnessPlan
@@ -86,9 +87,26 @@ This document outlines the refactoring of the fitness plan generation logic to s
 ```sql
 -- Current columns to modify:
 macrocycles JSON → mesocycles JSON  -- Rename and restructure
--- Add new column:
-macrocycle_weeks INTEGER  -- Total duration of the plan
+-- Add new columns:
+lengthWeeks INTEGER  -- Total duration of the plan
 notes TEXT  -- For travel, injuries, special considerations
+currentMesocycleIndex INTEGER DEFAULT 0  -- Current mesocycle position
+currentMicrocycleWeek INTEGER DEFAULT 1  -- Current week within mesocycle
+cycleStartDate TIMESTAMP  -- When current mesocycle started
+```
+
+#### Alternative: New fitness_progress Table
+```sql
+CREATE TABLE fitness_progress (
+  userId TEXT PRIMARY KEY,
+  fitnessPlanId TEXT NOT NULL,
+  mesocycleIndex INTEGER DEFAULT 0,
+  microcycleWeek INTEGER DEFAULT 1,
+  startedAt TIMESTAMP NOT NULL,
+  updatedAt TIMESTAMP NOT NULL,
+  FOREIGN KEY (userId) REFERENCES users(id),
+  FOREIGN KEY (fitnessPlanId) REFERENCES fitnessPlans(id)
+);
 ```
 
 #### Updated Type Definition
@@ -102,9 +120,22 @@ export interface FitnessPlans {
   mesocycles: Json;  // Changed from macrocycles
   lengthWeeks: number;  // New field
   notes: string | null;  // New field
+  currentMesocycleIndex: Generated<number>;  // New field (default 0)
+  currentMicrocycleWeek: Generated<number>;  // New field (default 1)
+  cycleStartDate: Timestamp | null;  // New field
   overview: string | null;
   programType: string;
   startDate: Timestamp;
+  updatedAt: Generated<Timestamp>;
+}
+
+// OR separate table:
+export interface FitnessProgress {
+  userId: string;  // Primary key
+  fitnessPlanId: string;
+  mesocycleIndex: number;
+  microcycleWeek: number;
+  startedAt: Timestamp;
   updatedAt: Generated<Timestamp>;
 }
 ```
@@ -153,40 +184,82 @@ export const _FitnessPlanSchema = z.object({
 });
 ```
 
-### 3. Mesocycle Model Changes
+### 3. Progress Tracking (No Mesocycle/Microcycle Tables)
 
-#### Updated Mesocycle to Include Microcycle Details
+#### Progress Tracking Logic
 ```typescript
-// src/server/models/mesocycle/index.ts
+// src/server/services/progressService.ts
 
-export interface MesocycleOverview {
-  index: number;
-  name: string;  // From fitness plan
-  phase: string;  // Detailed phase description
-  weeks: number;
-  focus: string[];
-  deload: boolean;
-  // Remove microcycleOverviews - will be generated during breakdown
+export class ProgressService {
+  async getCurrentProgress(userId: string): Promise<{
+    mesocycleIndex: number;
+    microcycleWeek: number;
+    mesocycle: MesocycleOverview;
+    dayOfWeek: number;
+  }> {
+    // Get from fitnessPlans columns OR fitness_progress table
+    const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+    
+    return {
+      mesocycleIndex: plan.currentMesocycleIndex,
+      microcycleWeek: plan.currentMicrocycleWeek,
+      mesocycle: plan.mesocycles[plan.currentMesocycleIndex],
+      dayOfWeek: this.calculateDayOfWeek(plan.cycleStartDate)
+    };
+  }
+  
+  async advanceWeek(userId: string): Promise<void> {
+    const progress = await this.getCurrentProgress(userId);
+    const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+    const currentMesocycle = plan.mesocycles[progress.mesocycleIndex];
+    
+    if (progress.microcycleWeek >= currentMesocycle.weeks) {
+      // Move to next mesocycle
+      await this.updateProgress(userId, {
+        mesocycleIndex: progress.mesocycleIndex + 1,
+        microcycleWeek: 1,
+        cycleStartDate: new Date()
+      });
+    } else {
+      // Just increment week
+      await this.updateProgress(userId, {
+        microcycleWeek: progress.microcycleWeek + 1
+      });
+    }
+  }
 }
 ```
 
-### 4. Microcycle Model Changes
+### 4. Microcycle Pattern Generation (On-Demand)
 
-#### Simplified Microcycle Structure
+#### Generated Microcycle Pattern (Not Stored)
 ```typescript
-// src/server/models/microcycle/schema.ts
+// src/server/agents/microcyclePattern/index.ts
 
-export const _MicrocycleSchema = z.object({
-  index: z.number(),
-  weekIndex: z.number(),  // Week within mesocycle
-  days: z.array(z.object({
-    day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
-    theme: z.string(),  // e.g., "Lower", "Upper Push"
-    load: z.enum(['light', 'moderate', 'heavy']).optional(),
-    notes: z.string().optional()
-  }))
-  // Remove workouts - will be generated individually day of
-});
+export interface MicrocyclePattern {
+  weekIndex: number;  // Week within mesocycle
+  days: Array<{
+    day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+    theme: string;  // e.g., "Lower", "Upper Push"
+    load?: 'light' | 'moderate' | 'heavy';
+    notes?: string;
+  }>;
+}
+
+// Generate pattern on-demand based on:
+// - Mesocycle focus areas
+// - Week number (for progressive overload)
+// - User's program type
+// - Any special notes
+export async function generateMicrocyclePattern(
+  mesocycle: MesocycleOverview,
+  weekNumber: number,
+  programType: string,
+  userNotes?: string
+): Promise<MicrocyclePattern> {
+  // Use AI agent to generate weekly pattern
+  // This is generated fresh each week, not stored
+}
 ```
 
 ### 5. Workout Model Changes
@@ -270,7 +343,7 @@ const updatedPrompt = `
 `;
 ```
 
-#### Mesocycle Breakdown Agent Updates
+#### Microcycle Pattern Agent (New - Replaces Mesocycle Breakdown)
 ```typescript
 // src/server/agents/mesocycleBreakdown/prompts.ts
 
@@ -280,28 +353,28 @@ const updatedPrompt = `
 // 2. Setting progressive overload targets within the mesocycle
 // 3. Defining daily themes and load patterns
 
-const updatedMesocyclePrompt = `
+const microcyclePatternPrompt = `
 ...
 <Goal>
-Generate ${mesocycle.weeks} microcycles with:
-- Weekly training patterns appropriate for ${mesocycle.focus.join(', ')}
-- Progressive overload targets across weeks
-- Deload in final week if ${mesocycle.deload}
+Generate ONE week's training pattern for:
+- Mesocycle: ${mesocycle.name} (${mesocycle.focus.join(', ')})
+- Week ${weekNumber} of ${mesocycle.weeks}
+- Progressive overload appropriate for week position
+- Deload pattern if final week and ${mesocycle.deload}
 - Daily themes and load patterns (NO workout details)
 </Goal>
 
-<Example Microcycle>
+<Example Pattern>
 {
-  "index": 0,
   "weekIndex": 1,
   "days": [
-    {"day": "Mon", "theme": "Lower Power", "load": "heavy", "notes": "Focus on explosive movements"},
-    {"day": "Tue", "theme": "Upper Push", "load": "moderate"},
-    {"day": "Wed", "theme": "Rest"},
-    {"day": "Thu", "theme": "Lower Volume", "load": "moderate"},
-    {"day": "Fri", "theme": "Upper Pull", "load": "moderate"},
-    {"day": "Sat", "theme": "Full Body", "load": "light"},
-    {"day": "Sun", "theme": "Rest"}
+    {"day": "MONDAY", "theme": "Lower Power", "load": "heavy", "notes": "Focus on explosive movements"},
+    {"day": "TUESDAY", "theme": "Upper Push", "load": "moderate"},
+    {"day": "WEDNESDAY", "theme": "Rest"},
+    {"day": "THURSDAY", "theme": "Lower Volume", "load": "moderate"},
+    {"day": "FRIDAY", "theme": "Upper Pull", "load": "moderate"},
+    {"day": "SATURDAY", "theme": "Full Body", "load": "light"},
+    {"day": "SUNDAY", "theme": "Rest"}
   ]
 }
 </Example>
@@ -442,39 +515,44 @@ public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
 }
 ```
 
-#### MesocycleService
+#### ProgressService (Replaces MesocycleService)
 ```typescript
-// src/server/services/mesocycleService.ts
+// src/server/services/progressService.ts
 
-public async getNextMesocycle(user: UserWithProfile, fitnessPlan: FitnessPlan): Promise<DetailedMesocycle> {
-  // Direct access to mesocycles, no macrocycle layer
-  const mesocycleOverview = fitnessPlan.mesocycles[nextMesocycleIndex];
+public async getCurrentMesocycleAndWeek(userId: string): Promise<{
+  mesocycle: MesocycleOverview;
+  weekNumber: number;
+  dayOfWeek: string;
+}> {
+  const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
   
-  // Generate microcycle patterns ONLY (no workouts)
-  const breakdown = await mesocycleAgent.invoke({ 
-    user, 
-    context: { 
-      mesocycleOverview,
-      fitnessPlan,
-      specialConsiderations: fitnessPlan.notes
-    }
+  // Get progress from fitnessPlans columns or fitness_progress table
+  const mesocycleIndex = plan.currentMesocycleIndex || 0;
+  const microcycleWeek = plan.currentMicrocycleWeek || 1;
+  
+  const mesocycle = plan.mesocycles[mesocycleIndex];
+  const dayOfWeek = this.getCurrentDayOfWeek();
+  
+  return {
+    mesocycle,
+    weekNumber: microcycleWeek,
+    dayOfWeek
+  };
+}
+
+public async generateCurrentWeekPattern(userId: string): Promise<MicrocyclePattern> {
+  const { mesocycle, weekNumber } = await this.getCurrentMesocycleAndWeek(userId);
+  const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+  
+  // Generate pattern on-demand for current week only
+  const pattern = await microcyclePatternAgent.invoke({
+    mesocycle,
+    weekNumber,
+    programType: plan.programType,
+    notes: plan.notes
   });
   
-  // Save microcycles with daily patterns but NO workouts
-  const microcycles = await Promise.all(
-    breakdown.value.map(async (microcycle) => {
-      return await this.microcycleRepo.create({
-        ...microcycle,
-        clientId: user.id,
-        fitnessPlanId: fitnessPlan.id,
-        mesocycleId: mesocycle.id,
-        // Store daily patterns in targets field
-        targets: { days: microcycle.days }
-      });
-    })
-  );
-  
-  return { ...mesocycle, microcycles };
+  return pattern;
 }
 ```
 
@@ -526,27 +604,20 @@ private async generateTodaysWorkout(
   targetDate: DateTime
 ): Promise<WorkoutInstance | null> {
   try {
-    // Get current fitness plan
+    // Get current fitness plan and progress
     const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
     if (!fitnessPlan) return null;
     
-    // Get current mesocycle
-    const mesocycle = await this.mesocycleRepo.getCurrentMesocycle(
-      fitnessPlan.id, 
-      targetDate.toJSDate()
-    );
-    if (!mesocycle) return null;
+    // Get current position from progress tracking
+    const progress = await this.progressService.getCurrentMesocycleAndWeek(user.id);
+    const { mesocycle, weekNumber } = progress;
     
-    // Get current microcycle
-    const microcycle = await this.microcycleRepo.getCurrentMicrocycle(
-      mesocycle.id,
-      targetDate.toJSDate()
-    );
-    if (!microcycle) return null;
+    // Generate this week's pattern on-demand (cached)
+    const weekPattern = await this.progressService.generateCurrentWeekPattern(user.id);
     
-    // Get the day's training plan from microcycle
-    const dayOfWeek = targetDate.toFormat('EEE'); // Mon, Tue, etc.
-    const dayPlan = microcycle.targets?.days?.find(
+    // Get the day's training plan from pattern
+    const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
+    const dayPlan = weekPattern.days.find(
       d => d.day === dayOfWeek
     );
     
@@ -564,7 +635,8 @@ private async generateTodaysWorkout(
       context: {
         date: targetDate.toJSDate(),
         dayPlan,
-        microcycle,
+        weekPattern,
+        weekNumber,
         mesocycle,
         fitnessPlan,
         recentWorkouts
@@ -617,11 +689,12 @@ async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
 6. Generate all future workouts on-demand with new format
 
 #### Data Migration Scope:
-1. **FitnessPlans**: Extract mesocycles from nested macrocycles structure (KEEP)
-2. **Mesocycles**: Delete all records (DROP)
-3. **Microcycles**: Delete all records (DROP)
-4. **WorkoutInstances**: Delete all records (DROP)
+1. **FitnessPlans**: Extract mesocycles from nested macrocycles structure, add progress tracking columns (KEEP)
+2. **Mesocycles TABLE**: Drop entire table (DROP TABLE)
+3. **Microcycles TABLE**: Drop entire table (DROP TABLE)  
+4. **WorkoutInstances**: Delete all records (TRUNCATE)
 5. **Users/Profiles**: Unchanged (KEEP)
+6. **NEW fitness_progress**: Create table if using separate progress tracking (CREATE)
 
 ### Step 1: Database Migration with Full Data Conversion
 
@@ -639,7 +712,21 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('mesocycles', 'json')
     .addColumn('lengthWeeks', 'integer')
     .addColumn('notes', 'text')
+    .addColumn('currentMesocycleIndex', 'integer', (col) => col.defaultTo(0))
+    .addColumn('currentMicrocycleWeek', 'integer', (col) => col.defaultTo(1))
+    .addColumn('cycleStartDate', 'timestamp')
     .execute();
+  
+  // Optional: Create progress tracking table instead
+  // await db.schema
+  //   .createTable('fitness_progress')
+  //   .addColumn('userId', 'text', (col) => col.primaryKey())
+  //   .addColumn('fitnessPlanId', 'text', (col) => col.notNull())
+  //   .addColumn('mesocycleIndex', 'integer', (col) => col.defaultTo(0))
+  //   .addColumn('microcycleWeek', 'integer', (col) => col.defaultTo(1))
+  //   .addColumn('startedAt', 'timestamp', (col) => col.notNull())
+  //   .addColumn('updatedAt', 'timestamp', (col) => col.notNull())
+  //   .execute();
 
   // Step 2: Convert existing fitness plans
   const existingPlans = await db
@@ -670,17 +757,17 @@ export async function up(db: Kysely<any>): Promise<void> {
       .execute();
   }
 
-  // Step 3: DROP all existing training data (clean slate)
+  // Step 3: DROP all existing training data and tables (clean slate)
   console.log('Dropping all workout instances...');
   await db.deleteFrom('workoutInstances').execute();
   
-  console.log('Dropping all microcycles...');
-  await db.deleteFrom('microcycles').execute();
+  console.log('Dropping microcycles table...');
+  await db.schema.dropTable('microcycles').execute();
   
-  console.log('Dropping all mesocycles...');
-  await db.deleteFrom('mesocycles').execute();
+  console.log('Dropping mesocycles table...');
+  await db.schema.dropTable('mesocycles').execute();
   
-  console.log('Clean slate migration complete - all training data removed');
+  console.log('Clean slate migration complete - training tables dropped');
 
   // Step 4: Drop old column
   await db.schema
@@ -706,29 +793,27 @@ export async function down(db: Kysely<any>): Promise<void> {
 }
 ```
 
-### Step 2: Post-Migration Regeneration
+### Step 2: Initialize Progress Tracking
 
-After the migration completes and all training data is dropped, we need to regenerate current training for active users:
+After the migration, initialize progress tracking for active users:
 
 ```typescript
-// scripts/regenerateActiveTraining.ts
+// scripts/initializeProgress.ts
 
 import { db } from '@/server/connections/database';
-import { MesocycleService } from '@/server/services/mesocycleService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { UserRepository } from '@/server/repositories/userRepository';
 
-export async function regenerateActiveUserTraining() {
+export async function initializeUserProgress() {
   const userRepo = new UserRepository(db);
   const fitnessPlanRepo = new FitnessPlanRepository(db);
-  const mesocycleService = new MesocycleService();
   
-  console.log('Starting regeneration of active user training...');
+  console.log('Initializing progress tracking for active users...');
   
   // Get all active users with fitness plans
   const activeUsers = await userRepo.getActiveUsersWithPlans();
   
-  console.log(`Found ${activeUsers.length} active users to regenerate`);
+  console.log(`Found ${activeUsers.length} active users`);
   
   for (const user of activeUsers) {
     try {
@@ -740,22 +825,22 @@ export async function regenerateActiveUserTraining() {
         continue;
       }
       
-      // Generate their current mesocycle with new format
-      console.log(`Regenerating training for user ${user.id}`);
-      await mesocycleService.generateCurrentMesocycle(user, plan);
-      
-      console.log(`✓ User ${user.id} training regenerated`);
+      // Initialize progress tracking (already set via defaults in migration)
+      // Just verify the progress fields are set
+      console.log(`✓ User ${user.id} progress initialized`);
+      console.log(`  - Mesocycle: ${plan.currentMesocycleIndex || 0}`);
+      console.log(`  - Week: ${plan.currentMicrocycleWeek || 1}`);
       
     } catch (error) {
-      console.error(`Failed to regenerate for user ${user.id}:`, error);
+      console.error(`Failed to initialize for user ${user.id}:`, error);
     }
   }
   
-  console.log('Regeneration complete!');
+  console.log('Progress initialization complete!');
 }
 
 // Run immediately after migration
-regenerateActiveUserTraining();
+initializeUserProgress();
 ```
 
 ### Step 3: User Communication
@@ -803,8 +888,9 @@ No action needed from you - just keep training! 💪
    - Create migration file: `pnpm migrate:create fitness-plan-clean-slate`
    - Test migration on staging
    - Run migration: `pnpm migrate:up`
-   - Verify all training data is dropped
-   - Verify fitness plans are converted
+   - Verify mesocycles and microcycles tables are dropped
+   - Verify workoutInstances table is empty
+   - Verify fitness plans are converted with progress fields
 
 3. **Code Updates**
    - Update database types: `pnpm db:codegen`
@@ -814,10 +900,10 @@ No action needed from you - just keep training! 💪
    - Update services
    - Update repositories
 
-4. **Data Regeneration**
-   - Run regeneration script for active users
-   - Generate current mesocycle for each user
-   - Verify users have active training
+4. **Progress Initialization**
+   - Run progress initialization script
+   - Verify all users have progress tracking set
+   - Test that workouts generate on-demand
 
 5. **Testing & Deployment**
    - Test with fresh data
@@ -904,28 +990,33 @@ No action needed from you - just keep training! 💪
 - [ ] Run `pnpm db:codegen` to update TypeScript types
 - [ ] Update FitnessPlan model and schema
 - [ ] Remove MacrocycleOverview interface
-- [ ] Update Mesocycle model
-- [ ] Update Microcycle schema (remove workout array)
+- [ ] Remove Mesocycle model entirely
+- [ ] Remove Microcycle model entirely
+- [ ] Create MicrocyclePattern interface (not stored)
 - [ ] Enhance Workout schema with new structure
+- [ ] Add progress tracking to FitnessPlan or new table
 
 ### Agent Layer
 - [ ] Create new dailyWorkout agent (chain & prompts)
 - [ ] Update fitnessPlanAgent prompt (simpler structure)
-- [ ] Update mesocycleBreakdownAgent (no workout generation)
+- [ ] Create microcyclePatternAgent (replaces mesocycle breakdown)
 - [ ] Keep existing dailyMessageAgent (formatting only)
 
 ### Service Layer
 - [ ] Update FitnessPlanService
-- [ ] Update MesocycleService (no workout creation)
+- [ ] Create ProgressService (replaces MesocycleService)
 - [ ] Update DailyMessageService with workout generation
 - [ ] Add generateTodaysWorkout method
-- [ ] Add workout caching logic
+- [ ] Add generateCurrentWeekPattern method
+- [ ] Add progress tracking methods
+- [ ] Add workout and pattern caching logic
 
 ### Repository Layer
 - [ ] Update FitnessPlanRepository
 - [ ] Add getCurrentPlan method to FitnessPlanRepository
-- [ ] Add getCurrentMesocycle method to MesocycleRepository
-- [ ] Add getCurrentMicrocycle method to MicrocycleRepository
+- [ ] Add updateProgress method to FitnessPlanRepository
+- [ ] Remove MesocycleRepository entirely
+- [ ] Remove MicrocycleRepository entirely
 - [ ] Add getRecentWorkouts method to WorkoutRepository
 
 ### Testing
