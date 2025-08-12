@@ -106,3 +106,4 @@ Required environment variables (see .env.example):
 
 ### Code Quality and Validation
 - Be sure that any implementations continue to pass pnpm build and pnpm lint
+- when making db schema changes, all migrations should utilize kysely, and exisitnig infrastrucutre (such as pnpm migrate commands and correct DB typing)
