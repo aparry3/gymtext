@@ -3,24 +3,83 @@
 ## Overview
 This checklist breaks down the fitness plan refactor into phased deliverables to enable incremental delivery, QA, and testing. Each phase builds upon the previous one and can be tested independently.
 
+## Phase 0: Clean Slate Migration Preparation [UPDATED]
+**Goal**: Prepare to drop all training data and keep only fitness plans  
+**Estimated Time**: 1 day  
+**Testing**: Backup verification, migration testing
+
+### 0.1 Backup and Analysis
+- [ ] Create CRITICAL database backup (all data will be deleted!)
+- [ ] Analyze existing data for documentation:
+  - [ ] Count total fitness plans to convert
+  - [ ] Count total mesocycles to be DELETED
+  - [ ] Count total microcycles to be DELETED
+  - [ ] Count total workout instances to be DELETED
+  - [ ] Document any edge cases in fitness plans
+- [ ] Document clean slate approach:
+  - [ ] FitnessPlan schema conversion (KEEP)
+  - [ ] All mesocycles (DELETE)
+  - [ ] All microcycles (DELETE)
+  - [ ] All workout instances (DELETE)
+
+### 0.2 Create Regeneration Scripts
+- [ ] Implement `regenerateActiveTraining.ts` script
+- [ ] Add methods:
+  - [ ] `getActiveUsersWithPlans()` - find users needing regeneration
+  - [ ] `generateCurrentMesocycle()` - create fresh mesocycle
+  - [ ] `notifyUsersOfReset()` - communication strategy
+- [ ] Add helper functions:
+  - [ ] `extractFocusAreas()` - for mesocycle conversion
+
+### 0.3 Migration Scripts
+- [ ] Write migration for:
+  - [ ] Fitness plan schema change
+  - [ ] DELETE all mesocycles
+  - [ ] DELETE all microcycles
+  - [ ] DELETE all workout instances
+- [ ] Test migration on staging database
+- [ ] Verify all training data is removed
+- [ ] Document that rollback = restore from backup
+
+### 0.4 User Communication Plan
+- [ ] Draft user notification message
+- [ ] Plan timing for migration (low-usage hours)
+- [ ] Prepare support team for questions
+- [ ] Create FAQ for common concerns
+
+### Phase 0 Deliverables & Testing
+- [ ] Backup verified and stored securely (CRITICAL)
+- [ ] Migration tested on staging (deletes all data)
+- [ ] Regeneration script ready
+- [ ] User communication plan approved
+- [ ] Team understands data will be deleted
+
+---
+
 ## Phase 1: Database Schema & Model Foundation
 **Goal**: Update database schema and core models to support the simplified structure  
 **Estimated Time**: 2-3 days  
 **Testing**: Unit tests for models, migration rollback verification
 
-### 1.1 Database Migration Preparation
-- [ ] Create backup of production database
-- [ ] Document current schema state for rollback reference
-- [ ] Create migration file: `pnpm migrate:create fitness-plan-refactor`
+### 1.1 Database Migration Implementation
+- [ ] VERIFY backup exists (CRITICAL - no going back!)
+- [ ] Create migration file: `pnpm migrate:create fitness-plan-clean-slate`
 - [ ] Implement migration with:
   - [ ] Add `mesocycles` JSON column to fitnessPlans
   - [ ] Add `lengthWeeks` INTEGER column to fitnessPlans  
   - [ ] Add `notes` TEXT column to fitnessPlans
-  - [ ] Data transformation logic from macrocycles → mesocycles
-  - [ ] Implement down() migration for rollback capability
-- [ ] Test migration on local database
-- [ ] Test rollback on local database
-- [ ] Run migration on staging: `pnpm migrate:up`
+  - [ ] Convert fitness plans:
+    - [ ] Extract mesocycles from macrocycles structure
+    - [ ] Calculate lengthWeeks from first macrocycle
+  - [ ] DELETE ALL mesocycles: `deleteFrom('mesocycles')`
+  - [ ] DELETE ALL microcycles: `deleteFrom('microcycles')`
+  - [ ] DELETE ALL workoutInstances: `deleteFrom('workoutInstances')`
+  - [ ] Drop macrocycles column
+  - [ ] One-way migration (no down() function)
+- [ ] Test migration on staging database
+- [ ] Verify ALL training data is deleted
+- [ ] Verify fitness plans converted correctly
+- [ ] Run migration: `pnpm migrate:up`
 
 ### 1.2 Update TypeScript Types
 - [ ] Run `pnpm db:codegen` to regenerate database types
@@ -45,12 +104,28 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 - [ ] Update existing repository tests
 - [ ] Add tests for new repository methods
 
+### 1.5 Regenerate Active User Training
+- [ ] Run regeneration script immediately after migration
+- [ ] For each active user:
+  - [ ] Get converted fitness plan
+  - [ ] Generate current mesocycle (new format)
+  - [ ] Generate current microcycle with patterns
+  - [ ] Log success/failure
+- [ ] Verify all active users have training
+- [ ] Handle any failed regenerations manually
+- [ ] Document users affected
+
 ### Phase 1 Deliverables & Testing
+- [ ] Fitness plans successfully converted to new schema
+- [ ] ALL old training data successfully DELETED
+- [ ] Active users have regenerated training
 - [ ] Run `pnpm build` - ensure no compilation errors
 - [ ] Run `pnpm lint` - ensure code quality
 - [ ] Run repository unit tests
-- [ ] Manual test: Create a fitness plan with old API (should fail gracefully)
-- [ ] Document breaking changes for team
+- [ ] Manual test: Users can generate new workouts
+- [ ] Manual test: Daily messages work with fresh data
+- [ ] Manual test: No references to old deleted data
+- [ ] Document data deletion for compliance/audit
 
 ---
 
@@ -168,10 +243,16 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
   - [ ] Update `create()` to handle new structure
 - [ ] Add comprehensive repository tests
 
-### 4.3 Migration for Existing Workouts
-- [ ] Create migration to transform existing workout data
-- [ ] Test migration with sample production data
-- [ ] Implement rollback for workout structure changes
+### 4.3 Fresh Workout Generation
+- [ ] All old workouts have been DELETED
+- [ ] New workout generation uses block structure only
+- [ ] No need for legacy format handling
+- [ ] Implement clean workout display logic:
+  - [ ] Assume all workouts have `blocks` property
+  - [ ] Display blocks in order (Warm-up, Main, etc.)
+  - [ ] Show modifications when applicable
+- [ ] Test workout generation thoroughly
+- [ ] Verify no references to old workout format
 
 ### Phase 4 Deliverables & Testing
 - [ ] Unit tests for new workout schemas
@@ -336,13 +417,28 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 
 ---
 
-## Rollout Strategy
+## Clean Slate Migration & Rollout Strategy
+
+### Pre-Deployment Preparation (Week 0)
+1. CREATE CRITICAL BACKUP (all data will be deleted!)
+2. Test migration on staging (verify deletion works)
+3. Test regeneration script on staging
+4. Prepare user communications
+5. Get approval from team and stakeholders
+6. Schedule migration for low-usage time
 
 ### Staging Deployment (Week 1-2)
-1. Deploy Phases 1-3 to staging
-2. Run integration tests
-3. Internal team testing
-4. Fix any issues found
+1. Run clean slate migration on staging:
+   - Convert fitness plans
+   - DELETE all training data
+2. Run regeneration script for active users
+3. Deploy Phases 1-3 to staging
+4. Test scenarios:
+   - Users get fresh workouts generated
+   - Daily messages work with new format
+   - No errors from missing old data
+5. Internal team testing with fresh data
+6. Verify no data integrity issues
 
 ### Beta Testing (Week 3-4)
 1. Deploy Phases 4-6 to staging
@@ -367,9 +463,29 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 
 ## Risk Mitigation Checklist
 
+### Migration Risks (Clean Slate)
+- [ ] Risk: Data loss from deletion
+  - [ ] Mitigation: CRITICAL backup before migration
+  - [ ] Mitigation: Test deletion on staging first
+  - [ ] Mitigation: Document all deleted data counts
+- [ ] Risk: Regeneration script fails for some users
+  - [ ] Mitigation: Log all failures for manual fixing
+  - [ ] Mitigation: Test regeneration thoroughly
+  - [ ] Mitigation: Have support team ready
+- [ ] Risk: Users upset about losing history
+  - [ ] Mitigation: Clear communication before migration
+  - [ ] Mitigation: Explain benefits of fresh start
+  - [ ] Mitigation: Consider exporting old data for records
+- [ ] Risk: Fitness plan conversion fails
+  - [ ] Mitigation: Simple extraction logic
+  - [ ] Mitigation: Test all edge cases
+  - [ ] Mitigation: Manual review of converted plans
+
 ### Pre-Deployment
-- [ ] Database backups verified
-- [ ] Rollback procedures tested
+- [ ] Database backups verified (with restoration tested)
+- [ ] Data conversion completed successfully
+- [ ] All existing user data verified working
+- [ ] Rollback procedures tested (restore from backup)
 - [ ] Feature flags configured
 - [ ] Monitoring dashboards ready
 - [ ] On-call schedule set
@@ -425,12 +541,32 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 
 ---
 
-## Notes
+## Critical Notes on Clean Slate Migration
 
-1. Each phase should be completed and tested before moving to the next
-2. Keep the old system running in parallel until fully confident
-3. Document all decisions and deviations from this plan
-4. Regular check-ins with stakeholders at phase boundaries
-5. Be prepared to pause or rollback if issues arise
+### Clean Slate Approach
+1. **COMPLETE DATA RESET**: All training data will be DELETED
+2. **Fresh Start**: Every user gets newly generated training
+3. **No Transition Period**: Old format completely removed
+4. **Higher Risk**: Requires careful backup and communication
+5. **Cleaner Codebase**: No legacy format handling needed
 
-This refactor is a significant architectural change that will improve system flexibility, reduce costs, and enable better user experiences. Take time to do it right!
+### Migration Checklist
+- [ ] ⚠️ CREATE BACKUP - THIS IS CRITICAL
+- [ ] Fitness plans: macrocycles → mesocycles structure (KEEP)
+- [ ] Mesocycles: ALL DELETED ❌
+- [ ] Microcycles: ALL DELETED ❌
+- [ ] Workout Instances: ALL DELETED ❌
+- [ ] Regenerate current training for active users ✅
+- [ ] User communication sent ✅
+- [ ] Support team prepared ✅
+
+### General Implementation Notes
+1. **NO GOING BACK** - This is a one-way migration
+2. **BACKUP IS CRITICAL** - Only way to recover if issues
+3. **User Communication Essential** - They will lose workout history
+4. **Regeneration Must Work** - Users need immediate training
+5. **Test Everything** - No old data to fall back on
+6. **Monitor Closely** - Watch for generation failures
+7. **Support Ready** - Users may have questions/concerns
+
+⚠️ **WARNING**: This approach DELETES all historical workout data. Ensure stakeholders understand and approve this decision before proceeding.

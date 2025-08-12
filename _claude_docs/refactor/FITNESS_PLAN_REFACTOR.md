@@ -180,7 +180,7 @@ export const _MicrocycleSchema = z.object({
   index: z.number(),
   weekIndex: z.number(),  // Week within mesocycle
   days: z.array(z.object({
-    day: z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']),
+    day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
     theme: z.string(),  // e.g., "Lower", "Upper Push"
     load: z.enum(['light', 'moderate', 'heavy']).optional(),
     notes: z.string().optional()
@@ -606,7 +606,24 @@ async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
 
 ## Migration Strategy
 
-### Step 1: Database Migration
+### Overview of Data Migration Strategy
+
+**CLEAN SLATE APPROACH**: We will perform a hard reset on training data:
+1. Convert fitness plan schema (macrocycles → mesocycles structure)
+2. **DROP** all existing mesocycles from the database
+3. **DROP** all existing microcycles from the database
+4. **DROP** all existing workout instances from the database
+5. After migration, regenerate current mesocycle/microcycle for active users
+6. Generate all future workouts on-demand with new format
+
+#### Data Migration Scope:
+1. **FitnessPlans**: Extract mesocycles from nested macrocycles structure (KEEP)
+2. **Mesocycles**: Delete all records (DROP)
+3. **Microcycles**: Delete all records (DROP)
+4. **WorkoutInstances**: Delete all records (DROP)
+5. **Users/Profiles**: Unchanged (KEEP)
+
+### Step 1: Database Migration with Full Data Conversion
 
 Using Kysely migration infrastructure:
 
@@ -616,7 +633,7 @@ Using Kysely migration infrastructure:
 import { Kysely, sql } from 'kysely';
 
 export async function up(db: Kysely<any>): Promise<void> {
-  // Add new columns
+  // Step 1: Add new columns to fitnessPlans
   await db.schema
     .alterTable('fitnessPlans')
     .addColumn('mesocycles', 'json')
@@ -624,65 +641,189 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('notes', 'text')
     .execute();
 
-  // Migrate data from macrocycles to mesocycles
-  await db
-    .updateTable('fitnessPlans')
-    .set({
-      mesocycles: sql`(
-        SELECT json_agg(mesocycle)
-        FROM json_array_elements(macrocycles->'[0]'->'mesocycles') AS mesocycle
-      )`,
-      lengthWeeks: sql`(macrocycles->'[0]'->>'durationWeeks')::INTEGER`
-    })
+  // Step 2: Convert existing fitness plans
+  const existingPlans = await db
+    .selectFrom('fitnessPlans')
+    .selectAll()
     .execute();
 
-  // Drop old column
+  for (const plan of existingPlans) {
+    const macrocycles = JSON.parse(plan.macrocycles);
+    const firstMacrocycle = macrocycles[0] || { mesocycles: [], durationWeeks: 12 };
+    
+    // Extract and simplify mesocycles
+    const simplifiedMesocycles = firstMacrocycle.mesocycles.map((meso: any) => ({
+      name: meso.phase || 'Training Phase',
+      weeks: meso.weeks || 4,
+      focus: extractFocusAreas(meso),
+      deload: meso.microcycleOverviews?.some((m: any) => m.deload) || false
+    }));
+
+    await db
+      .updateTable('fitnessPlans')
+      .set({
+        mesocycles: JSON.stringify(simplifiedMesocycles),
+        lengthWeeks: firstMacrocycle.durationWeeks,
+        notes: null // Will be populated if needed
+      })
+      .where('id', '=', plan.id)
+      .execute();
+  }
+
+  // Step 3: DROP all existing training data (clean slate)
+  console.log('Dropping all workout instances...');
+  await db.deleteFrom('workoutInstances').execute();
+  
+  console.log('Dropping all microcycles...');
+  await db.deleteFrom('microcycles').execute();
+  
+  console.log('Dropping all mesocycles...');
+  await db.deleteFrom('mesocycles').execute();
+  
+  console.log('Clean slate migration complete - all training data removed');
+
+  // Step 4: Drop old column
   await db.schema
     .alterTable('fitnessPlans')
     .dropColumn('macrocycles')
     .execute();
 }
 
+// Helper function for data conversion
+function extractFocusAreas(mesocycle: any): string[] {
+  const focus = [];
+  if (mesocycle.phase?.toLowerCase().includes('accumulation')) focus.push('volume', 'technique');
+  if (mesocycle.phase?.toLowerCase().includes('intensification')) focus.push('intensity');
+  if (mesocycle.phase?.toLowerCase().includes('peaking')) focus.push('performance');
+  if (focus.length === 0) focus.push('general');
+  return focus;
+}
+
 export async function down(db: Kysely<any>): Promise<void> {
-  // Reverse migration
-  await db.schema
-    .alterTable('fitnessPlans')
-    .addColumn('macrocycles', 'json')
-    .execute();
-    
-  // Restore data structure
-  await db
-    .updateTable('fitnessPlans')
-    .set({
-      macrocycles: sql`json_build_array(
-        json_build_object(
-          'name', 'Main Cycle',
-          'durationWeeks', length_weeks,
-          'mesocycles', mesocycles
-        )
-      )`
-    })
-    .execute();
-    
-  await db.schema
-    .alterTable('fitnessPlans')
-    .dropColumn('mesocycles')
-    .dropColumn('lengthWeeks')
-    .dropColumn('notes')
-    .execute();
+  // This is a one-way migration - no going back
+  // All training data has been deleted and cannot be restored
+  throw new Error('This migration cannot be reversed. Restore from backup if needed.');
 }
 ```
 
-### Step 2: Code Updates Order
-1. Create database migration using `pnpm migrate:create`
-2. Run migration with `pnpm migrate:up`
-3. Update database types with `pnpm db:codegen`
-4. Update model schemas and interfaces
-5. Create new dailyWorkout agent
-6. Update existing agent prompts
-7. Update services (FitnessPlan, Mesocycle, DailyMessage)
-8. Update repositories with new methods
-9. Test thoroughly
+### Step 2: Post-Migration Regeneration
+
+After the migration completes and all training data is dropped, we need to regenerate current training for active users:
+
+```typescript
+// scripts/regenerateActiveTraining.ts
+
+import { db } from '@/server/connections/database';
+import { MesocycleService } from '@/server/services/mesocycleService';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
+
+export async function regenerateActiveUserTraining() {
+  const userRepo = new UserRepository(db);
+  const fitnessPlanRepo = new FitnessPlanRepository(db);
+  const mesocycleService = new MesocycleService();
+  
+  console.log('Starting regeneration of active user training...');
+  
+  // Get all active users with fitness plans
+  const activeUsers = await userRepo.getActiveUsersWithPlans();
+  
+  console.log(`Found ${activeUsers.length} active users to regenerate`);
+  
+  for (const user of activeUsers) {
+    try {
+      // Get their converted fitness plan
+      const plan = await fitnessPlanRepo.getCurrentPlan(user.id);
+      
+      if (!plan || !plan.mesocycles) {
+        console.log(`Skipping user ${user.id} - no valid plan`);
+        continue;
+      }
+      
+      // Generate their current mesocycle with new format
+      console.log(`Regenerating training for user ${user.id}`);
+      await mesocycleService.generateCurrentMesocycle(user, plan);
+      
+      console.log(`✓ User ${user.id} training regenerated`);
+      
+    } catch (error) {
+      console.error(`Failed to regenerate for user ${user.id}:`, error);
+    }
+  }
+  
+  console.log('Regeneration complete!');
+}
+
+// Run immediately after migration
+regenerateActiveUserTraining();
+```
+
+### Step 3: User Communication
+
+Since we're deleting all historical workout data, we need to communicate this to users:
+
+```typescript
+// src/server/services/migrationCommunicationService.ts
+
+export class MigrationCommunicationService {
+  async notifyUsersOfReset(): Promise<void> {
+    const message = `
+🔄 System Update: Training Plan Reset
+
+We've upgraded our fitness plan system to provide better, more adaptive workouts!
+
+What's changed:
+• Your fitness plan has been updated to our new format
+• Historical workout data has been reset
+• Your current training week is being regenerated
+• Future workouts will be created fresh each day based on your progress
+
+What to expect:
+• You'll receive your next workout as scheduled
+• Workouts will be more personalized and adaptive
+• Better progressive overload tracking
+
+No action needed from you - just keep training! 💪
+    `;
+    
+    // Send to all active users
+    await this.sendToAllActiveUsers(message);
+  }
+}
+```
+
+### Step 3: Implementation Order
+
+1. **Pre-Migration**
+   - Create full database backup
+   - Notify users of upcoming reset (optional)
+   - Document current data state
+
+2. **Migration Execution**
+   - Create migration file: `pnpm migrate:create fitness-plan-clean-slate`
+   - Test migration on staging
+   - Run migration: `pnpm migrate:up`
+   - Verify all training data is dropped
+   - Verify fitness plans are converted
+
+3. **Code Updates**
+   - Update database types: `pnpm db:codegen`
+   - Update all models and schemas
+   - Create new dailyWorkout agent
+   - Update existing agents
+   - Update services
+   - Update repositories
+
+4. **Data Regeneration**
+   - Run regeneration script for active users
+   - Generate current mesocycle for each user
+   - Verify users have active training
+
+5. **Testing & Deployment**
+   - Test with fresh data
+   - Deploy to production
+   - Monitor workout generation
+   - Send user notifications
 
 ## Benefits of Refactor
 
