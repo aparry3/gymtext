@@ -149,53 +149,54 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 **Testing**: Database operations, pattern storage and retrieval
 
 ### 2.1 Create Microcycles Table Migration
-- [ ] Create migration for new microcycles table:
-  - [ ] `id` TEXT PRIMARY KEY
-  - [ ] `userId` TEXT NOT NULL (FK to users)
-  - [ ] `fitnessPlanId` TEXT NOT NULL (FK to fitnessPlans)
-  - [ ] `mesocycleIndex` INTEGER NOT NULL
-  - [ ] `weekNumber` INTEGER NOT NULL  
-  - [ ] `pattern` JSON NOT NULL (stores week's training pattern)
-  - [ ] `startDate` TIMESTAMP NOT NULL
-  - [ ] `endDate` TIMESTAMP NOT NULL
-  - [ ] `isActive` BOOLEAN DEFAULT true
-  - [ ] `createdAt` TIMESTAMP
-  - [ ] `updatedAt` TIMESTAMP
-- [ ] Add unique constraint on (userId, fitnessPlanId, mesocycleIndex, weekNumber)
-- [ ] Run migration and verify table created
+- [x] Create migration for new microcycles table:
+  - [x] `id` UUID PRIMARY KEY
+  - [x] `userId` UUID NOT NULL (FK to users)
+  - [x] `fitnessPlanId` UUID NOT NULL (FK to fitnessPlans)
+  - [x] `mesocycleIndex` INTEGER NOT NULL
+  - [x] `weekNumber` INTEGER NOT NULL  
+  - [x] `pattern` JSON NOT NULL (stores week's training pattern)
+  - [x] `startDate` TIMESTAMP NOT NULL
+  - [x] `endDate` TIMESTAMP NOT NULL
+  - [x] `isActive` BOOLEAN DEFAULT true
+  - [x] `createdAt` TIMESTAMP
+  - [x] `updatedAt` TIMESTAMP
+- [x] Add unique constraint on (userId, fitnessPlanId, mesocycleIndex, weekNumber)
+- [x] Run migration and verify table created
 
 ### 2.2 Update Microcycle Model
-- [ ] Create `src/server/models/microcycle/index.ts`:
-  - [ ] Define `Microcycle` interface with pattern storage
-  - [ ] Define `MicrocyclePattern` embedded structure
-  - [ ] Add helper methods for pattern access
-- [ ] Create `src/server/models/microcycle/schema.ts`:
-  - [ ] Create schema for microcycle with pattern validation
-  - [ ] Define pattern structure schema
+- [x] Create `src/server/models/microcycle/index.ts`:
+  - [x] Define `Microcycle` interface with pattern storage
+  - [x] Define `MicrocyclePattern` embedded structure
+  - [x] Add helper methods for pattern access
+- [x] Create `src/server/models/microcycle/schema.ts`:
+  - [x] Create schema for microcycle with pattern validation
+  - [x] Define pattern structure schema
 
 ### 2.3 Create Microcycle Repository
-- [ ] Create `MicrocycleRepository`:
-  - [ ] `createMicrocycle(microcycle)` - store new pattern
-  - [ ] `getCurrentMicrocycle(userId)` - get active microcycle
-  - [ ] `getMicrocycleByWeek(userId, mesocycleIndex, weekNumber)`
-  - [ ] `deactivatePreviousMicrocycles(userId)` - mark old as inactive
-  - [ ] `updateMicrocycle(id, updates)` - update existing
+- [x] Create `MicrocycleRepository`:
+  - [x] `createMicrocycle(microcycle)` - store new pattern
+  - [x] `getCurrentMicrocycle(userId)` - get active microcycle
+  - [x] `getMicrocycleByWeek(userId, mesocycleIndex, weekNumber)`
+  - [x] `deactivatePreviousMicrocycles(userId)` - mark old as inactive
+  - [x] `updateMicrocycle(id, updates)` - update existing
 
 ### 2.4 Update Progress Service Integration
-- [ ] Modify ProgressService to work with microcycles table:
-  - [ ] Check for existing microcycle before generating
-  - [ ] Store generated patterns in microcycles table
-  - [ ] Reference stored pattern for all workouts in week
-- [ ] Add microcycle lifecycle management:
-  - [ ] Auto-deactivate when week ends
-  - [ ] Create new microcycle on week transition
+- [x] Create ProgressService to work with microcycles table:
+  - [x] Check for existing microcycle before generating
+  - [x] Store generated patterns in microcycles table
+  - [x] Reference stored pattern for all workouts in week
+- [x] Add microcycle lifecycle management:
+  - [x] Auto-deactivate when week ends
+  - [x] Create new microcycle on week transition
 
 ### Phase 2 Deliverables & Testing
-- [ ] Microcycles table successfully created
-- [ ] Pattern storage and retrieval working
-- [ ] All workouts in a week reference same microcycle
-- [ ] Week transitions create new microcycles
-- [ ] Old microcycles properly deactivated
+- [x] Microcycles table successfully created
+- [x] Pattern storage and retrieval working
+- [x] All workouts in a week reference same microcycle
+- [x] Week transitions create new microcycles
+- [x] Old microcycles properly deactivated
+- [x] Build and lint pass successfully
 
 ---
 

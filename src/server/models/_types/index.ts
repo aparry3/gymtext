@@ -86,6 +86,20 @@ export interface Messages {
   userId: string;
 }
 
+export interface Microcycles {
+  createdAt: Generated<Timestamp>;
+  endDate: Timestamp;
+  fitnessPlanId: string;
+  id: Generated<string>;
+  isActive: Generated<boolean | null>;
+  mesocycleIndex: number;
+  pattern: Json;
+  startDate: Timestamp;
+  updatedAt: Generated<Timestamp>;
+  userId: string;
+  weekNumber: number;
+}
+
 export interface NeonAuthUsersSync {
   createdAt: Generated<Timestamp | null>;
   deletedAt: Timestamp | null;
@@ -142,6 +156,7 @@ export interface DB {
   fitnessPlans: FitnessPlans;
   fitnessProfiles: FitnessProfiles;
   messages: Messages;
+  microcycles: Microcycles;
   "neonAuth.usersSync": NeonAuthUsersSync;
   subscriptions: Subscriptions;
   users: Users;
