@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { dailyWorkoutAgent } from '@/server/agents/dailyWorkout/chain';
 
 interface BatchResult {
   processed: number;
@@ -34,6 +35,7 @@ export class DailyMessageService {
   private workoutRepository: WorkoutInstanceRepository;
   private messageService: MessageService;
   private progressService: ProgressService;
+  private fitnessPlanRepo: FitnessPlanRepository;
   private batchSize: number;
 
   constructor(
@@ -47,6 +49,7 @@ export class DailyMessageService {
     this.userRepository = userRepository;
     this.workoutRepository = workoutRepository;
     this.messageService = messageService;
+    this.fitnessPlanRepo = fitnessPlanRepository;
     this.progressService = new ProgressService(fitnessPlanRepository, microcycleRepository);
     this.batchSize = batchSize;
   }
@@ -253,7 +256,7 @@ export class DailyMessageService {
   }
 
   /**
-   * Generates today's workout on-demand
+   * Generates today's workout on-demand using AI
    */
   private async generateTodaysWorkout(
     user: UserWithProfile,
@@ -268,6 +271,19 @@ export class DailyMessageService {
         return null;
       }
 
+      // Get fitness plan and progress
+      const plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+      if (!plan) {
+        console.log(`No fitness plan found for user ${user.id}`);
+        return null;
+      }
+
+      const progress = await this.progressService.getCurrentProgress(user.id);
+      if (!progress) {
+        console.log(`No progress found for user ${user.id}`);
+        return null;
+      }
+
       // Get the day's pattern from the microcycle
       const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
       const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
@@ -277,8 +293,21 @@ export class DailyMessageService {
         return null;
       }
 
-      // For now, create a basic workout based on the pattern
-      // In Phase 5, this will be replaced with a proper workout generation agent
+      // Get recent workouts for context (last 7 days)
+      const recentWorkouts = await this.workoutRepository.getRecentWorkouts(user.id, 7);
+
+      // Use AI agent to generate sophisticated workout
+      const enhancedWorkout = await dailyWorkoutAgent.invoke({
+        user,
+        date: targetDate.toJSDate(),
+        dayPlan: dayPattern,
+        microcycle,
+        mesocycle: progress.mesocycle,
+        fitnessPlan: plan,
+        recentWorkouts
+      });
+
+      // Convert enhanced workout to database format
       const workout: WorkoutInstance = {
         id: `workout-${user.id}-${targetDate.toISODate()}`,
         clientId: user.id,
@@ -286,14 +315,9 @@ export class DailyMessageService {
         mesocycleId: `meso-${microcycle.mesocycleIndex}`,
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
-        sessionType: dayPattern.theme,
+        sessionType: this.mapThemeToSessionType(dayPattern.theme),
         goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
-        details: JSON.parse(JSON.stringify({
-          theme: dayPattern.theme,
-          load: dayPattern.load,
-          // Basic workout structure - will be enhanced in Phase 5
-          exercises: this.generateBasicExercises(dayPattern.theme, dayPattern.load || 'moderate')
-        })),
+        details: JSON.parse(JSON.stringify(enhancedWorkout)),
         completedAt: null,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -301,11 +325,71 @@ export class DailyMessageService {
 
       // Save the workout to the database
       const savedWorkout = await this.workoutRepository.create(workout);
-      console.log(`Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
+      console.log(`Generated and saved AI workout for user ${user.id} on ${targetDate.toISODate()}`);
       
       return savedWorkout;
     } catch (error) {
       console.error(`Error generating workout for user ${user.id}:`, error);
+      
+      // Fallback to basic generation if AI fails
+      return this.generateBasicWorkout(user, targetDate);
+    }
+  }
+
+  /**
+   * Maps theme to session type for database storage
+   */
+  private mapThemeToSessionType(theme: string): string {
+    const themeLower = theme.toLowerCase();
+    if (themeLower.includes('run') || themeLower.includes('cardio')) return 'run';
+    if (themeLower.includes('lift') || themeLower.includes('strength') || 
+        themeLower.includes('upper') || themeLower.includes('lower')) return 'lift';
+    if (themeLower.includes('hiit') || themeLower.includes('metcon')) return 'metcon';
+    if (themeLower.includes('mobility') || themeLower.includes('recovery')) return 'mobility';
+    if (themeLower.includes('rest')) return 'rest';
+    return 'other';
+  }
+
+  /**
+   * Fallback basic workout generation if AI fails
+   */
+  private async generateBasicWorkout(
+    user: UserWithProfile,
+    targetDate: DateTime
+  ): Promise<WorkoutInstance | null> {
+    try {
+      const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user);
+      if (!microcycle) return null;
+
+      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase();
+      const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+      if (!dayPattern) return null;
+
+      const workout: WorkoutInstance = {
+        id: `workout-${user.id}-${targetDate.toISODate()}`,
+        clientId: user.id,
+        fitnessPlanId: microcycle.fitnessPlanId,
+        mesocycleId: `meso-${microcycle.mesocycleIndex}`,
+        microcycleId: microcycle.id,
+        date: targetDate.toJSDate(),
+        sessionType: this.mapThemeToSessionType(dayPattern.theme),
+        goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
+        details: JSON.parse(JSON.stringify({
+          theme: dayPattern.theme,
+          load: dayPattern.load,
+          blocks: this.generateBasicExercises(dayPattern.theme, dayPattern.load || 'moderate').blocks
+        })),
+        completedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const savedWorkout = await this.workoutRepository.create(workout);
+      console.log(`Generated and saved basic workout for user ${user.id} on ${targetDate.toISODate()}`);
+      
+      return savedWorkout;
+    } catch (error) {
+      console.error(`Error generating basic workout for user ${user.id}:`, error);
       return null;
     }
   }

@@ -1,12 +1,7 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 import { 
-  LLMWorkoutInstance,
-  // These will be used in Phase 5 for enhanced workout generation
-  // WorkoutBlock,
-  // WorkoutBlockItem,
-  // WorkoutModification,
-  // EnhancedWorkoutInstance 
+  LLMWorkoutInstance
 } from './schema';
 
 
