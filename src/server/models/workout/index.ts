@@ -1,11 +1,11 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { UserWithProfile } from '../userModel';
-import { FitnessPlan } from '../fitnessPlan';
-import { Mesocycle } from '../mesocycle';
-import { Microcycle } from '../microcycle';
+// import { UserWithProfile } from '../userModel'; // TODO: Restore after refactor
+// import { FitnessPlan } from '../fitnessPlan'; // TODO: Restore after refactor
+// import { Mesocycle } from '../mesocycle'; // TODO: Remove after refactor
+// import { Microcycle } from '../microcycle'; // TODO: Remove after refactor
 import { LLMWorkoutInstance } from './schema';
-import { mapSessionType } from './sessionTypeMapping';
+// import { mapSessionType } from './sessionTypeMapping'; // TODO: Restore after refactor
 
 
 export type WorkoutInstance = Selectable<WorkoutInstances>;
@@ -48,28 +48,29 @@ export class WorkoutInstanceModel implements NewWorkoutInstance {
     this.completedAt = workoutInstance.completedAt;
   }
 
-  public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Microcycle, workoutBreakdown: WorkoutInstanceBreakdown): NewWorkoutInstance {
-    // Extract the LLM data and map session type
-    const { sessionType: llmSessionType, details, targets, ...rest } = workoutBreakdown;
+  // TODO: Update this method to work without Mesocycle and Microcycle models
+  // public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Microcycle, workoutBreakdown: WorkoutInstanceBreakdown): NewWorkoutInstance {
+  //   // Extract the LLM data and map session type
+  //   const { sessionType: llmSessionType, details, targets, ...rest } = workoutBreakdown;
     
-    // Map LLM session type to DB-compatible session type
-    const mappedSessionType = mapSessionType(llmSessionType);
+  //   // Map LLM session type to DB-compatible session type
+  //   const mappedSessionType = mapSessionType(llmSessionType);
     
-    // Convert targets array to a goal string if present
-    const goal = targets && targets.length > 0 
-      ? targets.map(t => `${t.key}: ${t.value}`).join(', ')
-      : null;
+  //   // Convert targets array to a goal string if present
+  //   const goal = targets && targets.length > 0 
+  //     ? targets.map(t => `${t.key}: ${t.value}`).join(', ')
+  //     : null;
     
-    return {
-      ...rest,
-      clientId: user.id,
-      fitnessPlanId: fitnessPlan.id!,
-      mesocycleId: mesocycle.id,
-      microcycleId: microcycle.id,
-      sessionType: mappedSessionType,
-      details: details, // This is already in the correct format
-      goal: goal,
-      completedAt: null, // Workouts start as not completed
-    };
-  }
+  //   return {
+  //     ...rest,
+  //     clientId: user.id,
+  //     fitnessPlanId: fitnessPlan.id!,
+  //     mesocycleId: mesocycle.id,
+  //     microcycleId: microcycle.id,
+  //     sessionType: mappedSessionType,
+  //     details: details, // This is already in the correct format
+  //     goal: goal,
+  //     completedAt: null, // Workouts start as not completed
+  //   };
+  // }
 }

@@ -47,9 +47,14 @@ export interface ConversationTopics {
 export interface FitnessPlans {
   clientId: string;
   createdAt: Generated<Timestamp>;
+  currentMesocycleIndex: Generated<number | null>;
+  currentMicrocycleWeek: Generated<number | null>;
+  cycleStartDate: Timestamp | null;
   goalStatement: string | null;
   id: Generated<string>;
-  macrocycles: Json;
+  lengthWeeks: number | null;
+  mesocycles: Json | null;
+  notes: string | null;
   overview: string | null;
   programType: string;
   startDate: Timestamp;
@@ -68,18 +73,6 @@ export interface FitnessProfiles {
   userId: string;
 }
 
-export interface Mesocycles {
-  clientId: string;
-  createdAt: Generated<Timestamp>;
-  fitnessPlanId: string;
-  id: Generated<string>;
-  index: number;
-  lengthWeeks: number;
-  phase: string;
-  startDate: Timestamp;
-  updatedAt: Generated<Timestamp>;
-}
-
 export interface Messages {
   content: string;
   conversationId: string;
@@ -91,19 +84,6 @@ export interface Messages {
   phoneTo: string;
   twilioMessageSid: string | null;
   userId: string;
-}
-
-export interface Microcycles {
-  clientId: string;
-  createdAt: Generated<Timestamp>;
-  endDate: Timestamp;
-  fitnessPlanId: string;
-  id: Generated<string>;
-  index: number;
-  mesocycleId: string;
-  startDate: Timestamp;
-  targets: Json | null;
-  updatedAt: Generated<Timestamp>;
 }
 
 export interface NeonAuthUsersSync {
@@ -161,9 +141,7 @@ export interface DB {
   conversationTopics: ConversationTopics;
   fitnessPlans: FitnessPlans;
   fitnessProfiles: FitnessProfiles;
-  mesocycles: Mesocycles;
   messages: Messages;
-  microcycles: Microcycles;
   "neonAuth.usersSync": NeonAuthUsersSync;
   subscriptions: Subscriptions;
   users: Users;

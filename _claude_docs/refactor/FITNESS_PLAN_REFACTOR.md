@@ -33,25 +33,30 @@ This document outlines the refactoring of the fitness plan generation logic to s
 1. FitnessPlan Generation (fitnessPlanAgent)
    └── Creates simplified plan with mesocycles array only
    
-2. Progress Tracking (no separate tables)
-   └── Track current position in fitnessPlans or fitness_progress table
-       └── mesocycleIndex and microcycleWeek only
+2. Progress Tracking (stored in fitnessPlans columns)
+   └── Track current position: mesocycleIndex and microcycleWeek
+       └── When week changes, generate new microcycle
 
-3. Daily Message Flow (dailyMessageService)
-   └── Calculate current position from progress tracking
-       └── Generate microcycle patterns on-demand for current week
-           └── Generate workout on-demand (dailyWorkoutAgent)
-               └── Save workout to database
+3. Microcycle Management (microcycles table)
+   └── Store current week's pattern in microcycles table
+       └── All workouts in the week reference this microcycle
+       └── Provides consistency across the week
+
+4. Daily Message Flow (dailyMessageService)
+   └── Get current progress from fitnessPlans
+       └── Get or create microcycle for current week
+           └── Generate workout on-demand using microcycle pattern
+               └── Save workout to database with microcycleId reference
        └── Format workout into message (dailyMessageAgent)
 ```
 
 ### Current Schema Structure
 
 #### Database Tables
-- `fitnessPlans`: Stores macrocycles as JSON, includes overview and program type
-- `mesocycles`: Links to fitness plan, stores phase and length (TO BE DROPPED)
-- `microcycles`: Links to mesocycle and fitness plan, stores targets (TO BE DROPPED)
-- `workoutInstances`: Links to all levels, stores workout details as JSON
+- `fitnessPlans`: Stores mesocycles as JSON, includes overview, program type, and progress tracking
+- `mesocycles`: (TO BE DROPPED - not needed with new architecture)
+- `microcycles`: NEW TABLE - Stores weekly training patterns, one per user per week
+- `workoutInstances`: Links to microcycle, stores workout details as JSON
 
 #### Current JSON Storage in FitnessPlan
 ```typescript
@@ -95,17 +100,23 @@ currentMicrocycleWeek INTEGER DEFAULT 1  -- Current week within mesocycle
 cycleStartDate TIMESTAMP  -- When current mesocycle started
 ```
 
-#### Alternative: New fitness_progress Table
+#### New Microcycles Table
 ```sql
-CREATE TABLE fitness_progress (
-  userId TEXT PRIMARY KEY,
+CREATE TABLE microcycles (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL,
   fitnessPlanId TEXT NOT NULL,
-  mesocycleIndex INTEGER DEFAULT 0,
-  microcycleWeek INTEGER DEFAULT 1,
-  startedAt TIMESTAMP NOT NULL,
-  updatedAt TIMESTAMP NOT NULL,
+  mesocycleIndex INTEGER NOT NULL,
+  weekNumber INTEGER NOT NULL,
+  pattern JSON NOT NULL,  -- Stores the week's training pattern
+  startDate TIMESTAMP NOT NULL,
+  endDate TIMESTAMP NOT NULL,
+  isActive BOOLEAN DEFAULT true,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES users(id),
-  FOREIGN KEY (fitnessPlanId) REFERENCES fitnessPlans(id)
+  FOREIGN KEY (fitnessPlanId) REFERENCES fitnessPlans(id),
+  UNIQUE(userId, fitnessPlanId, mesocycleIndex, weekNumber)
 );
 ```
 
@@ -129,13 +140,18 @@ export interface FitnessPlans {
   updatedAt: Generated<Timestamp>;
 }
 
-// OR separate table:
-export interface FitnessProgress {
-  userId: string;  // Primary key
+// New microcycles table:
+export interface Microcycles {
+  id: Generated<string>;
+  userId: string;
   fitnessPlanId: string;
   mesocycleIndex: number;
-  microcycleWeek: number;
-  startedAt: Timestamp;
+  weekNumber: number;
+  pattern: Json;  // Stores the week's training pattern
+  startDate: Timestamp;
+  endDate: Timestamp;
+  isActive: Generated<boolean>;
+  createdAt: Generated<Timestamp>;
   updatedAt: Generated<Timestamp>;
 }
 ```
@@ -230,11 +246,11 @@ export class ProgressService {
 }
 ```
 
-### 4. Microcycle Pattern Generation (On-Demand)
+### 4. Microcycle Pattern Generation & Storage
 
-#### Generated Microcycle Pattern (Not Stored)
+#### Microcycle Model with Pattern Storage
 ```typescript
-// src/server/agents/microcyclePattern/index.ts
+// src/server/models/microcycle/index.ts
 
 export interface MicrocyclePattern {
   weekIndex: number;  // Week within mesocycle
@@ -246,19 +262,61 @@ export interface MicrocyclePattern {
   }>;
 }
 
-// Generate pattern on-demand based on:
-// - Mesocycle focus areas
-// - Week number (for progressive overload)
-// - User's program type
-// - Any special notes
-export async function generateMicrocyclePattern(
+export interface Microcycle {
+  id: string;
+  userId: string;
+  fitnessPlanId: string;
+  mesocycleIndex: number;
+  weekNumber: number;
+  pattern: MicrocyclePattern;  // Stored in JSON column
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Generate pattern when week starts, then store in microcycles table
+// All workouts in the week reference the same microcycle
+export async function generateAndStoreMicrocycle(
+  user: UserWithProfile,
+  fitnessPlan: FitnessPlan,
   mesocycle: MesocycleOverview,
-  weekNumber: number,
-  programType: string,
-  userNotes?: string
-): Promise<MicrocyclePattern> {
-  // Use AI agent to generate weekly pattern
-  // This is generated fresh each week, not stored
+  weekNumber: number
+): Promise<Microcycle> {
+  // Check if microcycle already exists
+  const existing = await microcycleRepo.getMicrocycleByWeek(
+    user.id, 
+    mesocycle.index, 
+    weekNumber
+  );
+  
+  if (existing) return existing;
+  
+  // Generate new pattern using AI agent
+  const pattern = await microcyclePatternAgent.invoke({
+    mesocycle,
+    weekNumber,
+    programType: fitnessPlan.programType,
+    notes: fitnessPlan.notes
+  });
+  
+  // Store in database
+  const microcycle = await microcycleRepo.create({
+    userId: user.id,
+    fitnessPlanId: fitnessPlan.id,
+    mesocycleIndex: mesocycle.index,
+    weekNumber,
+    pattern,
+    startDate: calculateWeekStart(),
+    endDate: calculateWeekEnd(),
+    isActive: true
+  });
+  
+  // Deactivate previous weeks
+  await microcycleRepo.deactivatePreviousMicrocycles(user.id);
+  
+  return microcycle;
 }
 ```
 
@@ -540,19 +598,39 @@ public async getCurrentMesocycleAndWeek(userId: string): Promise<{
   };
 }
 
-public async generateCurrentWeekPattern(userId: string): Promise<MicrocyclePattern> {
+public async getCurrentOrCreateMicrocycle(userId: string): Promise<Microcycle> {
   const { mesocycle, weekNumber } = await this.getCurrentMesocycleAndWeek(userId);
   const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
   
-  // Generate pattern on-demand for current week only
-  const pattern = await microcyclePatternAgent.invoke({
-    mesocycle,
-    weekNumber,
-    programType: plan.programType,
-    notes: plan.notes
-  });
+  // Check if microcycle exists for current week
+  let microcycle = await this.microcycleRepo.getCurrentMicrocycle(userId);
   
-  return pattern;
+  if (!microcycle || microcycle.weekNumber !== weekNumber) {
+    // Generate new pattern for the week
+    const pattern = await microcyclePatternAgent.invoke({
+      mesocycle,
+      weekNumber,
+      programType: plan.programType,
+      notes: plan.notes
+    });
+    
+    // Store in database
+    microcycle = await this.microcycleRepo.create({
+      userId,
+      fitnessPlanId: plan.id,
+      mesocycleIndex: plan.currentMesocycleIndex,
+      weekNumber,
+      pattern,
+      startDate: calculateWeekStart(),
+      endDate: calculateWeekEnd(),
+      isActive: true
+    });
+    
+    // Deactivate previous microcycles
+    await this.microcycleRepo.deactivatePreviousMicrocycles(userId);
+  }
+  
+  return microcycle;
 }
 ```
 
@@ -612,12 +690,12 @@ private async generateTodaysWorkout(
     const progress = await this.progressService.getCurrentMesocycleAndWeek(user.id);
     const { mesocycle, weekNumber } = progress;
     
-    // Generate this week's pattern on-demand (cached)
-    const weekPattern = await this.progressService.generateCurrentWeekPattern(user.id);
+    // Get or create microcycle for current week (stored in DB)
+    const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user.id);
     
-    // Get the day's training plan from pattern
+    // Get the day's training plan from stored pattern
     const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-    const dayPlan = weekPattern.days.find(
+    const dayPlan = microcycle.pattern.days.find(
       d => d.day === dayOfWeek
     );
     
@@ -635,7 +713,7 @@ private async generateTodaysWorkout(
       context: {
         date: targetDate.toJSDate(),
         dayPlan,
-        weekPattern,
+        microcycle,
         weekNumber,
         mesocycle,
         fitnessPlan,
@@ -643,8 +721,11 @@ private async generateTodaysWorkout(
       }
     });
     
-    // Save the generated workout
-    const savedWorkout = await this.workoutRepo.create(workout);
+    // Save the generated workout with microcycle reference
+    const savedWorkout = await this.workoutRepo.create({
+      ...workout,
+      microcycleId: microcycle.id  // Reference the stored microcycle
+    });
     
     console.log(`Generated workout for user ${user.id} on ${targetDate.toISODate()}`);
     return savedWorkout;
@@ -690,11 +771,11 @@ async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
 
 #### Data Migration Scope:
 1. **FitnessPlans**: Extract mesocycles from nested macrocycles structure, add progress tracking columns (KEEP)
-2. **Mesocycles TABLE**: Drop entire table (DROP TABLE)
-3. **Microcycles TABLE**: Drop entire table (DROP TABLE)  
+2. **Mesocycles TABLE**: Drop entire table (DROP TABLE - not needed)
+3. **Microcycles TABLE**: Drop old table, create NEW microcycles table with different structure
 4. **WorkoutInstances**: Delete all records (TRUNCATE)
 5. **Users/Profiles**: Unchanged (KEEP)
-6. **NEW fitness_progress**: Create table if using separate progress tracking (CREATE)
+6. **Progress Tracking**: Use columns in fitnessPlans table
 
 ### Step 1: Database Migration with Full Data Conversion
 
@@ -717,16 +798,22 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('cycleStartDate', 'timestamp')
     .execute();
   
-  // Optional: Create progress tracking table instead
-  // await db.schema
-  //   .createTable('fitness_progress')
-  //   .addColumn('userId', 'text', (col) => col.primaryKey())
-  //   .addColumn('fitnessPlanId', 'text', (col) => col.notNull())
-  //   .addColumn('mesocycleIndex', 'integer', (col) => col.defaultTo(0))
-  //   .addColumn('microcycleWeek', 'integer', (col) => col.defaultTo(1))
-  //   .addColumn('startedAt', 'timestamp', (col) => col.notNull())
-  //   .addColumn('updatedAt', 'timestamp', (col) => col.notNull())
-  //   .execute();
+  // Create NEW microcycles table with different structure
+  await db.schema
+    .createTable('microcycles')
+    .addColumn('id', 'text', (col) => col.primaryKey())
+    .addColumn('userId', 'text', (col) => col.notNull())
+    .addColumn('fitnessPlanId', 'text', (col) => col.notNull())
+    .addColumn('mesocycleIndex', 'integer', (col) => col.notNull())
+    .addColumn('weekNumber', 'integer', (col) => col.notNull())
+    .addColumn('pattern', 'json', (col) => col.notNull())
+    .addColumn('startDate', 'timestamp', (col) => col.notNull())
+    .addColumn('endDate', 'timestamp', (col) => col.notNull())
+    .addColumn('isActive', 'boolean', (col) => col.defaultTo(true))
+    .addColumn('createdAt', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+    .addColumn('updatedAt', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+    .addUniqueConstraint('unique_user_week', ['userId', 'fitnessPlanId', 'mesocycleIndex', 'weekNumber'])
+    .execute();
 
   // Step 2: Convert existing fitness plans
   const existingPlans = await db
@@ -757,17 +844,17 @@ export async function up(db: Kysely<any>): Promise<void> {
       .execute();
   }
 
-  // Step 3: DROP all existing training data and tables (clean slate)
+  // Step 3: DROP all existing training data and old tables (clean slate)
   console.log('Dropping all workout instances...');
   await db.deleteFrom('workoutInstances').execute();
   
-  console.log('Dropping microcycles table...');
-  await db.schema.dropTable('microcycles').execute();
+  console.log('Dropping old microcycles table if exists...');
+  await db.schema.dropTable('microcycles').ifExists().execute();
   
   console.log('Dropping mesocycles table...');
   await db.schema.dropTable('mesocycles').execute();
   
-  console.log('Clean slate migration complete - training tables dropped');
+  console.log('Clean slate migration complete - old tables dropped, new microcycles table created');
 
   // Step 4: Drop old column
   await db.schema

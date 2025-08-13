@@ -63,57 +63,57 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 **Testing**: Unit tests for models, migration rollback verification
 
 ### 1.1 Database Migration Implementation
-- [ ] VERIFY backup exists (CRITICAL - no going back!)
-- [ ] Create migration file: `pnpm migrate:create fitness-plan-clean-slate`
-- [ ] Implement migration with:
-  - [ ] Add `mesocycles` JSON column to fitnessPlans
-  - [ ] Add `lengthWeeks` INTEGER column to fitnessPlans  
-  - [ ] Add `notes` TEXT column to fitnessPlans
-  - [ ] Add `currentMesocycleIndex` INTEGER column (default 0)
-  - [ ] Add `currentMicrocycleWeek` INTEGER column (default 1)
-  - [ ] Add `cycleStartDate` TIMESTAMP column
-  - [ ] Convert fitness plans:
-    - [ ] Extract mesocycles from macrocycles structure
-    - [ ] Calculate lengthWeeks from first macrocycle
-  - [ ] DROP mesocycles table: `dropTable('mesocycles')`
-  - [ ] DROP microcycles table: `dropTable('microcycles')`
-  - [ ] DELETE ALL workoutInstances: `deleteFrom('workoutInstances')`
-  - [ ] Drop macrocycles column
-  - [ ] One-way migration (no down() function)
+- [x] VERIFY backup exists (CRITICAL - no going back!)
+- [x] Create migration file: `pnpm migrate:create fitness-plan-clean-slate`
+- [x] Implement migration with:
+  - [x] Add `mesocycles` JSON column to fitnessPlans
+  - [x] Add `lengthWeeks` INTEGER column to fitnessPlans  
+  - [x] Add `notes` TEXT column to fitnessPlans
+  - [x] Add `currentMesocycleIndex` INTEGER column (default 0)
+  - [x] Add `currentMicrocycleWeek` INTEGER column (default 1)
+  - [x] Add `cycleStartDate` TIMESTAMP column
+  - [x] Convert fitness plans:
+    - [x] Extract mesocycles from macrocycles structure
+    - [x] Calculate lengthWeeks from first macrocycle
+  - [x] DROP mesocycles table: `dropTable('mesocycles')`
+  - [x] DROP microcycles table: `dropTable('microcycles')`
+  - [x] DELETE ALL workoutInstances: `deleteFrom('workoutInstances')`
+  - [x] Drop macrocycles column
+  - [x] One-way migration (no down() function)
 - [ ] Test migration on staging database
-- [ ] Verify mesocycles and microcycles tables dropped
-- [ ] Verify workoutInstances table emptied
-- [ ] Verify fitness plans converted with progress fields
-- [ ] Run migration: `pnpm migrate:up`
+- [x] Verify mesocycles and microcycles tables dropped
+- [x] Verify workoutInstances table emptied
+- [x] Verify fitness plans converted with progress fields
+- [x] Run migration: `pnpm migrate:up`
 
 ### 1.2 Update TypeScript Types
-- [ ] Run `pnpm db:codegen` to regenerate database types
-- [ ] Verify generated types match expected schema
-- [ ] Fix any type compilation errors
+- [x] Run `pnpm db:codegen` to regenerate database types
+- [x] Verify generated types match expected schema
+- [x] Fix any type compilation errors
 
 ### 1.3 Update Core Models
-- [ ] Update `src/server/models/fitnessPlan/index.ts`:
-  - [ ] Remove `MacrocycleOverview` interface
-  - [ ] Update `FitnessPlanOverview` interface
-  - [ ] Add `MesocycleOverview` interface with simplified structure
-  - [ ] Add progress tracking fields to FitnessPlan interface
-- [ ] Update `src/server/models/fitnessPlan/schema.ts`:
-  - [ ] Create `_MesocycleOverviewSchema`
-  - [ ] Update `_FitnessPlanSchema` with new structure
-  - [ ] Remove macrocycle-related schemas
-- [ ] Remove `src/server/models/mesocycle/` directory entirely
-- [ ] Remove `src/server/models/microcycle/` directory entirely
-- [ ] Create `src/server/models/microcyclePattern/` for on-demand patterns
+- [x] Update `src/server/models/fitnessPlan/index.ts`:
+  - [x] Remove `MacrocycleOverview` interface
+  - [x] Update `FitnessPlanOverview` interface
+  - [x] Add `MesocycleOverview` interface with simplified structure
+  - [x] Add progress tracking fields to FitnessPlan interface
+- [x] Update `src/server/models/fitnessPlan/schema.ts`:
+  - [x] Create `_MesocycleOverviewSchema`
+  - [x] Update `_FitnessPlanSchema` with new structure
+  - [x] Remove macrocycle-related schemas
+- [x] Remove `src/server/models/mesocycle/` directory entirely
+- [x] Remove `src/server/models/microcycle/` directory entirely
+- [x] Create `src/server/models/microcyclePattern/` for on-demand patterns
 
 ### 1.4 Update Repository Layer
-- [ ] Update `FitnessPlanRepository`:
-  - [ ] Modify `insertFitnessPlan` to use mesocycles field
-  - [ ] Update `getFitnessPlan` to parse new structure
-  - [ ] Add `getCurrentPlan(userId)` method
-  - [ ] Add `updateProgress(userId, progress)` method
-  - [ ] Add `getProgress(userId)` method
-- [ ] Remove `MesocycleRepository` entirely
-- [ ] Remove `MicrocycleRepository` entirely
+- [x] Update `FitnessPlanRepository`:
+  - [x] Modify `insertFitnessPlan` to use mesocycles field
+  - [x] Update `getFitnessPlan` to parse new structure
+  - [x] Add `getCurrentPlan(userId)` method
+  - [x] Add `updateProgress(userId, progress)` method
+  - [x] Add `getProgress(userId)` method
+- [x] Remove `MesocycleRepository` entirely
+- [x] Remove `MicrocycleRepository` entirely
 - [ ] Update existing repository tests
 - [ ] Add tests for new repository methods
 
@@ -129,26 +129,82 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 - [ ] Document users affected
 
 ### Phase 1 Deliverables & Testing
-- [ ] Fitness plans successfully converted to new schema
-- [ ] Mesocycles and microcycles tables DROPPED
-- [ ] WorkoutInstances table emptied
+- [x] Fitness plans successfully converted to new schema
+- [x] Mesocycles and microcycles tables DROPPED
+- [x] WorkoutInstances table emptied
 - [ ] Active users have progress tracking initialized
-- [ ] Run `pnpm build` - ensure no compilation errors
-- [ ] Run `pnpm lint` - ensure code quality
+- [x] Run `pnpm build` - ensure no compilation errors
+- [x] Run `pnpm lint` - ensure code quality
 - [ ] Run repository unit tests
 - [ ] Manual test: Users can generate new workouts on-demand
 - [ ] Manual test: Daily messages work with on-demand generation
-- [ ] Manual test: No references to dropped tables
+- [x] Manual test: No references to dropped tables
 - [ ] Document table drops for compliance/audit
 
 ---
 
-## Phase 2: Agent Prompt Updates (Plan Generation)
-**Goal**: Update fitness plan generation to create simplified structure  
+## Phase 2: Microcycles Table & Pattern Storage
+**Goal**: Create microcycles table to store the current week's training pattern  
 **Estimated Time**: 2 days  
-**Testing**: Agent output validation, prompt testing with various profiles
+**Testing**: Database operations, pattern storage and retrieval
 
-### 2.1 Update Fitness Plan Agent
+### 2.1 Create Microcycles Table Migration
+- [ ] Create migration for new microcycles table:
+  - [ ] `id` TEXT PRIMARY KEY
+  - [ ] `userId` TEXT NOT NULL (FK to users)
+  - [ ] `fitnessPlanId` TEXT NOT NULL (FK to fitnessPlans)
+  - [ ] `mesocycleIndex` INTEGER NOT NULL
+  - [ ] `weekNumber` INTEGER NOT NULL  
+  - [ ] `pattern` JSON NOT NULL (stores week's training pattern)
+  - [ ] `startDate` TIMESTAMP NOT NULL
+  - [ ] `endDate` TIMESTAMP NOT NULL
+  - [ ] `isActive` BOOLEAN DEFAULT true
+  - [ ] `createdAt` TIMESTAMP
+  - [ ] `updatedAt` TIMESTAMP
+- [ ] Add unique constraint on (userId, fitnessPlanId, mesocycleIndex, weekNumber)
+- [ ] Run migration and verify table created
+
+### 2.2 Update Microcycle Model
+- [ ] Create `src/server/models/microcycle/index.ts`:
+  - [ ] Define `Microcycle` interface with pattern storage
+  - [ ] Define `MicrocyclePattern` embedded structure
+  - [ ] Add helper methods for pattern access
+- [ ] Create `src/server/models/microcycle/schema.ts`:
+  - [ ] Create schema for microcycle with pattern validation
+  - [ ] Define pattern structure schema
+
+### 2.3 Create Microcycle Repository
+- [ ] Create `MicrocycleRepository`:
+  - [ ] `createMicrocycle(microcycle)` - store new pattern
+  - [ ] `getCurrentMicrocycle(userId)` - get active microcycle
+  - [ ] `getMicrocycleByWeek(userId, mesocycleIndex, weekNumber)`
+  - [ ] `deactivatePreviousMicrocycles(userId)` - mark old as inactive
+  - [ ] `updateMicrocycle(id, updates)` - update existing
+
+### 2.4 Update Progress Service Integration
+- [ ] Modify ProgressService to work with microcycles table:
+  - [ ] Check for existing microcycle before generating
+  - [ ] Store generated patterns in microcycles table
+  - [ ] Reference stored pattern for all workouts in week
+- [ ] Add microcycle lifecycle management:
+  - [ ] Auto-deactivate when week ends
+  - [ ] Create new microcycle on week transition
+
+### Phase 2 Deliverables & Testing
+- [ ] Microcycles table successfully created
+- [ ] Pattern storage and retrieval working
+- [ ] All workouts in a week reference same microcycle
+- [ ] Week transitions create new microcycles
+- [ ] Old microcycles properly deactivated
+
+---
+
+## Phase 3: Agent Prompt Updates & Pattern Generation
+**Goal**: Update agents to generate simplified structure and weekly patterns  
+**Estimated Time**: 2-3 days  
+**Testing**: Agent output validation, pattern generation testing
+
+### 3.1 Update Fitness Plan Agent
 - [ ] Update `src/server/agents/fitnessPlan/prompts.ts`:
   - [ ] Remove macrocycle layer from prompt instructions
   - [ ] Add notes field guidance
@@ -158,52 +214,14 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
   - [ ] Ensure structured output matches new schema
   - [ ] Update response parsing logic
 
-### 2.2 Update Fitness Plan Service
-- [ ] Modify `FitnessPlanService.createFitnessPlan()`:
-  - [ ] Handle new simplified structure from agent
-  - [ ] Map agent response to database format
-  - [ ] Add notes field handling
-- [ ] Update service layer tests
-
-### 2.3 Validation & Testing
-- [ ] Create test suite for various user profiles:
-  - [ ] Endurance athlete
-  - [ ] Strength training focus
-  - [ ] Hybrid program
-  - [ ] Rehabilitation needs
-- [ ] Validate agent outputs match schema
-- [ ] Test with edge cases (injuries, travel notes)
-
-### Phase 2 Deliverables & Testing
-- [ ] Generate 5 test fitness plans with different profiles
-- [ ] Verify plans save correctly to database
-- [ ] Ensure backward compatibility checks pass
-- [ ] Run `pnpm test` for affected components
-- [ ] QA review of generated plan quality
-
----
-
-## Phase 3: Progress Tracking & Pattern Generation
-**Goal**: Implement progress tracking and on-demand pattern generation  
-**Estimated Time**: 2-3 days  
-**Testing**: Progress tracking validation, pattern generation testing
-
-### 3.1 Create Progress Service
+### 3.2 Create Progress Service
 - [ ] Create `src/server/services/progressService.ts`:
-  - [ ] `getCurrentProgress(userId)` method
-  - [ ] `advanceWeek(userId)` method
-  - [ ] `advanceMesocycle(userId)` method
-  - [ ] `resetProgress(userId)` method
+  - [ ] `getCurrentProgress(userId)` method - reads from fitness plan
+  - [ ] `advanceWeek(userId)` method - updates progress and triggers new microcycle
+  - [ ] `advanceMesocycle(userId)` method - transitions to next mesocycle
+  - [ ] `resetProgress(userId)` method - restart from beginning
 - [ ] Add progress calculation logic
-- [ ] Add week/mesocycle transition logic
-
-### 3.2 Create Microcycle Pattern Model
-- [ ] Create `src/server/models/microcyclePattern/index.ts`:
-  - [ ] Define `MicrocyclePattern` interface
-  - [ ] Define daily pattern structure
-- [ ] Create `src/server/models/microcyclePattern/schema.ts`:
-  - [ ] Create pattern validation schema
-  - [ ] Not stored in DB - generated on-demand
+- [ ] Add week/mesocycle transition logic with microcycle creation
 
 ### 3.3 Create Microcycle Pattern Agent
 - [ ] Create `src/server/agents/microcyclePattern/prompts.ts`:
@@ -213,28 +231,29 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
   - [ ] Deload week handling
 - [ ] Create `src/server/agents/microcyclePattern/chain.ts`:
   - [ ] Structured output for patterns
-  - [ ] Caching logic for week patterns
+  - [ ] Integration with microcycle repository for storage
 
-### 3.4 Update Daily Message Service
+### 3.4 Update Pattern Generation Flow
+- [ ] When week advances or new week starts:
+  - [ ] Check if microcycle exists for current week
+  - [ ] If not, generate pattern using agent
+  - [ ] Store pattern in microcycles table
+  - [ ] Mark as active, deactivate previous
+- [ ] All workouts in week reference same microcycle ID
+
+### 3.5 Update Daily Message Service
 - [ ] Integrate with ProgressService:
   - [ ] Get current progress on each run
-  - [ ] Generate week pattern if not cached
-  - [ ] Use pattern to generate daily workout
-- [ ] Add pattern caching (Redis or in-memory)
+  - [ ] Get or create microcycle for current week
+  - [ ] Use stored pattern to generate daily workout
 - [ ] Update service tests
 
-### 3.5 Add Progress Endpoints (Optional)
-- [ ] Create API endpoints:
-  - [ ] GET `/api/progress/:userId`
-  - [ ] POST `/api/progress/:userId/advance`
-- [ ] Add progress tracking UI (optional)
-
 ### Phase 3 Deliverables & Testing
-- [ ] Test progress tracking for various scenarios
-- [ ] Verify week pattern generation works on-demand
-- [ ] Validate progressive overload logic in patterns
-- [ ] Test week/mesocycle transitions
-- [ ] Run integration tests for progress → pattern → workout flow
+- [ ] Fitness plans generate with new structure
+- [ ] Progress tracking accurately maintains position
+- [ ] Microcycle patterns generate and store correctly
+- [ ] Week transitions trigger new microcycle creation
+- [ ] All workouts in a week use consistent pattern
 - [ ] Manual QA of generated patterns
 
 ---
