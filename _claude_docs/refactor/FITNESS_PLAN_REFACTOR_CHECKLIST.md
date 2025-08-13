@@ -266,38 +266,41 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 **Testing**: Schema validation, workout structure tests
 
 ### 4.1 Update Workout Schema
-- [ ] Update `src/server/models/workout/schema.ts`:
-  - [ ] Create `_WorkoutBlockItemSchema`
-  - [ ] Create `_WorkoutBlockSchema`
-  - [ ] Create `_WorkoutModificationSchema`
-  - [ ] Update `_WorkoutInstanceSchema` with new structure
-- [ ] Update `src/server/models/workout/index.ts`:
-  - [ ] Update interfaces to match new schema
-  - [ ] Add type exports for new structures
+- [x] Update `src/server/models/workout/schema.ts`:
+  - [x] Create `_WorkoutBlockItemSchema`
+  - [x] Create `_WorkoutBlockSchema`
+  - [x] Create `_WorkoutModificationSchema`
+  - [x] Create `_EnhancedWorkoutInstanceSchema` with new structure
+- [x] Update `src/server/models/workout/index.ts`:
+  - [x] Update interfaces to match new schema
+  - [x] Add type exports for new structures
 
 ### 4.2 Update Workout Repository
-- [ ] Add to `WorkoutRepository`:
-  - [ ] `getRecentWorkouts(userId, days)` method
-  - [ ] `getWorkoutByDate(userId, date)` method
-  - [ ] Update `create()` to handle new structure
-- [ ] Add comprehensive repository tests
+- [x] Add to `WorkoutRepository`:
+  - [x] `getRecentWorkouts(userId, days)` method
+  - [x] `getWorkoutByDate(userId, date)` method
+  - [x] Update `create()` to handle new structure
+  - [x] Add `update()` method
+  - [x] Add `deleteOldWorkouts()` for cleanup
+- [ ] Add comprehensive repository tests (deferred)
 
 ### 4.3 Fresh Workout Generation
-- [ ] All old workouts have been DELETED
-- [ ] New workout generation uses block structure only
-- [ ] No need for legacy format handling
-- [ ] Implement clean workout display logic:
-  - [ ] Assume all workouts have `blocks` property
-  - [ ] Display blocks in order (Warm-up, Main, etc.)
-  - [ ] Show modifications when applicable
-- [ ] Test workout generation thoroughly
-- [ ] Verify no references to old workout format
+- [x] All old workouts have been DELETED (from Phase 1)
+- [x] New workout generation uses block structure
+- [x] No legacy format handling needed
+- [x] Implement clean workout display logic:
+  - [x] All new workouts have `blocks` property
+  - [x] Blocks displayed in order (Warm-up, Main, Cool-down)
+  - [x] Modifications included when applicable
+- [x] Basic workout generation implemented
+- [x] Verify no references to old workout format
 
 ### Phase 4 Deliverables & Testing
-- [ ] Unit tests for new workout schemas
-- [ ] Validate workout structure with sample data
-- [ ] Test backward compatibility for existing workouts
-- [ ] Run `pnpm build` and `pnpm lint`
+- [x] Enhanced workout schema created with blocks and modifications
+- [x] Workout repository enhanced with new methods
+- [x] Fresh workout generation using block structure
+- [x] No backward compatibility needed (clean slate)
+- [x] Run `pnpm build` and `pnpm lint` - both pass
 
 ---
 

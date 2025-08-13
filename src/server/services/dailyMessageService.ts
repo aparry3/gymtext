@@ -311,57 +311,187 @@ export class DailyMessageService {
   }
 
   /**
-   * Generates basic exercises based on theme (temporary until Phase 5)
+   * Generates basic exercises with enhanced block structure (temporary until Phase 5)
    */
   private generateBasicExercises(theme: string, load: string): Record<string, unknown> {
-    // This is a temporary implementation
-    // Will be replaced with proper workout generation in Phase 5
-    const exercises: Array<Record<string, unknown>> = [];
+    // This is a temporary implementation using the enhanced block structure
+    // Will be replaced with proper workout generation agent in Phase 5
     
     if (theme.toLowerCase().includes('rest')) {
-      return { rest: true, description: 'Rest day - focus on recovery' };
+      return { 
+        blocks: [{
+          name: 'Rest Day',
+          items: []
+        }],
+        rest: true, 
+        description: 'Rest day - focus on recovery' 
+      };
     }
 
-    // Basic workout structure
-    exercises.push({
+    const blocks: Array<Record<string, unknown>> = [];
+    
+    // Warm-up block
+    blocks.push({
       name: 'Warm-up',
-      description: '5-10 minutes of light cardio and dynamic stretching'
+      items: [
+        {
+          type: 'prep',
+          exercise: 'Dynamic Stretching',
+          durationMin: 5,
+          notes: 'Focus on movements related to today\'s training'
+        },
+        {
+          type: 'cardio',
+          exercise: 'Light Cardio',
+          durationMin: 5,
+          RPE: 3
+        }
+      ]
     });
 
-    // Add main exercises based on theme
+    // Main block based on theme
     if (theme.toLowerCase().includes('upper')) {
-      exercises.push(
-        { name: 'Push-ups', sets: 3, reps: '10-15', load },
-        { name: 'Rows', sets: 3, reps: '10-12', load },
-        { name: 'Shoulder Press', sets: 3, reps: '10-12', load }
-      );
+      blocks.push({
+        name: 'Main - Upper Body',
+        items: [
+          {
+            type: 'compound',
+            exercise: 'Push-ups',
+            sets: 3,
+            reps: '10-15',
+            rest: '60s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
+          },
+          {
+            type: 'compound',
+            exercise: 'Rows',
+            sets: 3,
+            reps: '10-12',
+            rest: '60s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
+          },
+          {
+            type: 'secondary',
+            exercise: 'Shoulder Press',
+            sets: 3,
+            reps: '10-12',
+            rest: '45s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
+          }
+        ]
+      });
     } else if (theme.toLowerCase().includes('lower')) {
-      exercises.push(
-        { name: 'Squats', sets: 3, reps: '10-12', load },
-        { name: 'Lunges', sets: 3, reps: '10 each leg', load },
-        { name: 'Deadlifts', sets: 3, reps: '8-10', load }
-      );
+      blocks.push({
+        name: 'Main - Lower Body',
+        items: [
+          {
+            type: 'compound',
+            exercise: 'Squats',
+            sets: 3,
+            reps: '10-12',
+            rest: '90s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
+          },
+          {
+            type: 'compound',
+            exercise: 'Lunges',
+            sets: 3,
+            reps: '10 each leg',
+            rest: '60s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
+          },
+          {
+            type: 'compound',
+            exercise: 'Romanian Deadlifts',
+            sets: 3,
+            reps: '8-10',
+            rest: '90s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
+          }
+        ]
+      });
     } else if (theme.toLowerCase().includes('cardio') || theme.toLowerCase().includes('run')) {
-      exercises.push({
-        name: theme,
-        duration: load === 'light' ? '20-30 minutes' : '30-45 minutes',
-        intensity: load
+      blocks.push({
+        name: 'Main - Cardio',
+        items: [
+          {
+            type: 'cardio',
+            exercise: theme,
+            durationMin: load === 'light' ? 20 : load === 'heavy' ? 45 : 30,
+            RPE: load === 'light' ? 4 : load === 'heavy' ? 7 : 6,
+            notes: `Maintain steady pace at ${load} intensity`
+          }
+        ]
       });
     } else {
-      // Generic workout
-      exercises.push(
-        { name: 'Exercise 1', sets: 3, reps: '10-12', load },
-        { name: 'Exercise 2', sets: 3, reps: '10-12', load },
-        { name: 'Exercise 3', sets: 3, reps: '10-12', load }
-      );
+      // Generic workout with blocks
+      blocks.push({
+        name: 'Main - Full Body',
+        items: [
+          {
+            type: 'compound',
+            exercise: 'Exercise 1',
+            sets: 3,
+            reps: '10-12',
+            rest: '60s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
+          },
+          {
+            type: 'secondary',
+            exercise: 'Exercise 2',
+            sets: 3,
+            reps: '10-12',
+            rest: '60s',
+            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
+          },
+          {
+            type: 'accessory',
+            exercise: 'Exercise 3',
+            sets: 3,
+            reps: '10-12',
+            rest: '45s',
+            RPE: load === 'light' ? 4 : load === 'heavy' ? 6 : 5
+          }
+        ]
+      });
     }
 
-    exercises.push({
+    // Cool-down block
+    blocks.push({
       name: 'Cool-down',
-      description: '5-10 minutes of stretching'
+      items: [
+        {
+          type: 'cooldown',
+          exercise: 'Static Stretching',
+          durationMin: 5,
+          notes: 'Hold each stretch for 30 seconds'
+        },
+        {
+          type: 'cooldown',
+          exercise: 'Foam Rolling',
+          durationMin: 5,
+          notes: 'Focus on tight areas'
+        }
+      ]
     });
 
-    return { exercises };
+    // Include modifications for common issues
+    const modifications = [];
+    if (theme.toLowerCase().includes('lower')) {
+      modifications.push({
+        condition: 'injury.knee.active',
+        replace: {
+          exercise: 'Lunges',
+          with: 'Step-ups'
+        },
+        note: 'Step-ups are easier on the knees than lunges'
+      });
+    }
+
+    return { 
+      blocks,
+      modifications: modifications.length > 0 ? modifications : undefined
+    };
   }
 
   /**

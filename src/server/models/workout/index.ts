@@ -1,11 +1,13 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-// import { UserWithProfile } from '../userModel'; // TODO: Restore after refactor
-// import { FitnessPlan } from '../fitnessPlan'; // TODO: Restore after refactor
-// import { Mesocycle } from '../mesocycle'; // TODO: Remove after refactor
-// import { Microcycle } from '../microcycle'; // TODO: Remove after refactor
-import { LLMWorkoutInstance } from './schema';
-// import { mapSessionType } from './sessionTypeMapping'; // TODO: Restore after refactor
+import { 
+  LLMWorkoutInstance,
+  // These will be used in Phase 5 for enhanced workout generation
+  // WorkoutBlock,
+  // WorkoutBlockItem,
+  // WorkoutModification,
+  // EnhancedWorkoutInstance 
+} from './schema';
 
 
 export type WorkoutInstance = Selectable<WorkoutInstances>;
@@ -19,6 +21,14 @@ export type { DBSessionType, LLMSessionType } from './sessionTypeMapping';
 export type WorkoutInstanceBreakdown = LLMWorkoutInstance & {
   date: Date;
 }
+
+// Export new enhanced types
+export type { 
+  WorkoutBlock, 
+  WorkoutBlockItem, 
+  WorkoutModification, 
+  EnhancedWorkoutInstance 
+} from './schema';
 
 export class WorkoutInstanceModel implements NewWorkoutInstance {
   clientId: string;
