@@ -4,6 +4,9 @@ import { MessageService } from './messageService';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
+import { ProgressService } from './progressService';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 
 interface BatchResult {
   processed: number;
@@ -30,17 +33,21 @@ export class DailyMessageService {
   private userRepository: UserRepository;
   private workoutRepository: WorkoutInstanceRepository;
   private messageService: MessageService;
+  private progressService: ProgressService;
   private batchSize: number;
 
   constructor(
     userRepository: UserRepository,
     workoutRepository: WorkoutInstanceRepository,
     messageService: MessageService,
+    fitnessPlanRepository: FitnessPlanRepository,
+    microcycleRepository: MicrocycleRepository,
     batchSize: number = 10
   ) {
     this.userRepository = userRepository;
     this.workoutRepository = workoutRepository;
     this.messageService = messageService;
+    this.progressService = new ProgressService(fitnessPlanRepository, microcycleRepository);
     this.batchSize = batchSize;
   }
 
@@ -186,15 +193,22 @@ export class DailyMessageService {
         targetDate = DateTime.fromJSDate(baseDate).setZone(user.timezone).startOf('day');
       }
       
-      const workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
+      // First try to get existing workout
+      let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
 
+      // If no workout exists, generate it on-demand
       if (!workout) {
-        console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}`);
-        return {
-          success: false,
-          userId: user.id,
-          error: 'No workout scheduled for today'
-        };
+        console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
+        workout = await this.generateTodaysWorkout(user, targetDate);
+        
+        if (!workout) {
+          console.log(`Failed to generate workout for user ${user.id} on ${targetDate.toISODate()}`);
+          return {
+            success: false,
+            userId: user.id,
+            error: 'Could not generate workout for today'
+          };
+        }
       }
 
       // Build the message
@@ -236,6 +250,118 @@ export class DailyMessageService {
     
     const workout = await this.workoutRepository.findByClientIdAndDate(userId, queryDate);
     return workout || null;
+  }
+
+  /**
+   * Generates today's workout on-demand
+   */
+  private async generateTodaysWorkout(
+    user: UserWithProfile,
+    targetDate: DateTime
+  ): Promise<WorkoutInstance | null> {
+    try {
+      // Get or create the current microcycle pattern
+      const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user);
+      
+      if (!microcycle) {
+        console.log(`Could not get/create microcycle for user ${user.id}`);
+        return null;
+      }
+
+      // Get the day's pattern from the microcycle
+      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
+      const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+      
+      if (!dayPattern) {
+        console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
+        return null;
+      }
+
+      // For now, create a basic workout based on the pattern
+      // In Phase 5, this will be replaced with a proper workout generation agent
+      const workout: WorkoutInstance = {
+        id: `workout-${user.id}-${targetDate.toISODate()}`,
+        clientId: user.id,
+        fitnessPlanId: microcycle.fitnessPlanId,
+        mesocycleId: `meso-${microcycle.mesocycleIndex}`,
+        microcycleId: microcycle.id,
+        date: targetDate.toJSDate(),
+        sessionType: dayPattern.theme,
+        goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
+        details: JSON.parse(JSON.stringify({
+          theme: dayPattern.theme,
+          load: dayPattern.load,
+          // Basic workout structure - will be enhanced in Phase 5
+          exercises: this.generateBasicExercises(dayPattern.theme, dayPattern.load || 'moderate')
+        })),
+        completedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Save the workout to the database
+      const savedWorkout = await this.workoutRepository.create(workout);
+      console.log(`Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
+      
+      return savedWorkout;
+    } catch (error) {
+      console.error(`Error generating workout for user ${user.id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Generates basic exercises based on theme (temporary until Phase 5)
+   */
+  private generateBasicExercises(theme: string, load: string): Record<string, unknown> {
+    // This is a temporary implementation
+    // Will be replaced with proper workout generation in Phase 5
+    const exercises: Array<Record<string, unknown>> = [];
+    
+    if (theme.toLowerCase().includes('rest')) {
+      return { rest: true, description: 'Rest day - focus on recovery' };
+    }
+
+    // Basic workout structure
+    exercises.push({
+      name: 'Warm-up',
+      description: '5-10 minutes of light cardio and dynamic stretching'
+    });
+
+    // Add main exercises based on theme
+    if (theme.toLowerCase().includes('upper')) {
+      exercises.push(
+        { name: 'Push-ups', sets: 3, reps: '10-15', load },
+        { name: 'Rows', sets: 3, reps: '10-12', load },
+        { name: 'Shoulder Press', sets: 3, reps: '10-12', load }
+      );
+    } else if (theme.toLowerCase().includes('lower')) {
+      exercises.push(
+        { name: 'Squats', sets: 3, reps: '10-12', load },
+        { name: 'Lunges', sets: 3, reps: '10 each leg', load },
+        { name: 'Deadlifts', sets: 3, reps: '8-10', load }
+      );
+    } else if (theme.toLowerCase().includes('cardio') || theme.toLowerCase().includes('run')) {
+      exercises.push({
+        name: theme,
+        duration: load === 'light' ? '20-30 minutes' : '30-45 minutes',
+        intensity: load
+      });
+    } else {
+      // Generic workout
+      exercises.push(
+        { name: 'Exercise 1', sets: 3, reps: '10-12', load },
+        { name: 'Exercise 2', sets: 3, reps: '10-12', load },
+        { name: 'Exercise 3', sets: 3, reps: '10-12', load }
+      );
+    }
+
+    exercises.push({
+      name: 'Cool-down',
+      description: '5-10 minutes of stretching'
+    });
+
+    return { exercises };
   }
 
   /**

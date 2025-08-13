@@ -3,6 +3,9 @@ import { DailyMessageService } from '@/server/services/dailyMessageService';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { MessageService } from '@/server/services/messageService';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 
 interface TestParams {
   testMode?: boolean;
@@ -104,10 +107,14 @@ export async function GET(request: Request) {
     const userRepository = new UserRepository();
     const workoutRepository = new WorkoutInstanceRepository();
     const messageService = new MessageService();
+    const fitnessPlanRepository = new FitnessPlanRepository();
+    const microcycleRepository = new MicrocycleRepository(postgresDb);
     const dailyMessageService = new DailyMessageService(
       userRepository,
       workoutRepository,
-      messageService
+      messageService,
+      fitnessPlanRepository,
+      microcycleRepository
     );
     
     // Process the hourly batch with test parameters

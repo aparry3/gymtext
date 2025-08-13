@@ -7,69 +7,57 @@ export const outlinePrompt = (
 You are an elite personal fitness coach and periodisation expert.
 
 <Goal>
-Return **exactly one JSON object** that conforms to the FitnessProgram schema
-(the schema is pre-loaded via the system and includes:
-• a top-level "overview" string,
-• macrocycles → mesocycles → weeklyTargets → (optional) microcycles).
+Return **exactly one JSON object** that conforms to the simplified FitnessProgram schema
+with a direct mesocycles array (no macrocycle wrapper).
 </Goal>
 
 <Schema highlights>
-• Each \`WeeklyTarget\` must now include **split** — a short text blueprint of
-  the weekly pattern (e.g. "Upper-Lower-HIIT-Rest").  
-• \`metrics\` and \`targets\` use arrays of { key, value } pairs (Gemini-safe).  
-• Objects are strict – no extra keys; no \`$ref\`; depth ≤ 5.  
+• Top-level fields: "programType", "lengthWeeks", "mesocycles", "overview", "notes"
+• Each mesocycle has: "name", "weeks", "focus" (array), "deload" (boolean)
+• No nested macrocycles - mesocycles are direct children
+• Keep it simple and focused on the training phases
 </Schema highlights>
 
 <Content guidelines>
 - Use ${user.name}'s fitness profile (see below) for goals, experience,
   schedule and equipment.
-- Build **one macrocycle** that spans the requested timeframe.
 - Program type should be based on the user's fitness profile, and should be one of the following: "endurance", "strength", "shred", "hybrid", "rehab", or "other".
-- Inside it, create **mesocycles** of 3-6 weeks.
-  • Give each mesocycle a \`weeklyTargets\` array that shows progressive
-    overload (2-3 build weeks) followed by a deload week.  
-  • Every element **must** contain \`split\`.
-- Leave \`microcycles\` as empty arrays – they will be generated later.
+- Create **mesocycles** of 3-6 weeks that span the requested timeframe.
+  • Each mesocycle should have a clear training focus (e.g., volume, intensity, peaking)
+  • Mark the last week as deload if appropriate (deload: true)
+- Add any special considerations to the "notes" field (injuries, travel, equipment limitations)
 - The \`overview\` (plain English) should be upbeat, ≤ 120 words.
+- Calculate total \`lengthWeeks\` from sum of all mesocycle weeks
 - Output **only** the JSON object wrapped in a single \`\`\`json … \`\`\` block.
 </Content guidelines>
 
 <Example output>
 \`\`\`json
 {
-  "overview": "Welcome, Alex! Over the next six weeks we'll alternate metabolic-strength sessions with HIIT to drop body-fat while maintaining muscle. Each week follows an Upper-Lower-HIIT-Rest rhythm, rising in intensity for two weeks, then deloading before the next push. Let’s crush Labor Day together!",
-  "programId": "shred-labor-day-alex-2025-07",
-  "programType": "shred",
-  "macrocycles": [
+  "programType": "hybrid",
+  "lengthWeeks": 12,
+  "mesocycles": [
     {
-      "id": "macro-1",
-      "lengthWeeks": 6,
-      "mesocycles": [
-        {
-          "id": "meso-A",
-          "phase": "Metabolic Strength",
-          "weeks": 3,
-          "weeklyTargets": [
-            { "weekOffset": 0, "split": "Upper-Lower-HIIT-Rest", "avgIntensityPct1RM": 65 },
-            { "weekOffset": 1, "split": "Upper-Lower-HIIT-Rest", "avgIntensityPct1RM": 70 },
-            { "weekOffset": 2, "split": "Upper-Lower-HIIT-Rest", "deload": true, "avgIntensityPct1RM": 60 }
-          ],
-          "microcycles": []
-        },
-        {
-          "id": "meso-B",
-          "phase": "HIIT Cut",
-          "weeks": 3,
-          "weeklyTargets": [
-            { "weekOffset": 0, "split": "HIIT-Upper-Lower-Rest", "avgIntensityPct1RM": 60 },
-            { "weekOffset": 1, "split": "HIIT-Upper-Lower-Rest", "avgIntensityPct1RM": 65 },
-            { "weekOffset": 2, "split": "HIIT-Upper-Lower-Rest", "deload": true, "avgIntensityPct1RM": 55 }
-          ],
-          "microcycles": []
-        }
-      ]
+      "name": "Base Building",
+      "weeks": 4,
+      "focus": ["volume", "technique", "aerobic base"],
+      "deload": false
+    },
+    {
+      "name": "Strength Development",
+      "weeks": 4,
+      "focus": ["intensity", "progressive overload"],
+      "deload": true
+    },
+    {
+      "name": "Power & Speed",
+      "weeks": 4,
+      "focus": ["explosive power", "speed work"],
+      "deload": false
     }
-  ]
+  ],
+  "overview": "Welcome, ${user.name}! Over the next 12 weeks, we'll build a solid foundation of strength and endurance. Starting with base building to establish movement patterns, then ramping up intensity for strength gains, and finishing with power work to maximize performance. Each phase builds on the last, creating a complete transformation!",
+  "notes": "Focus on lower back prehab throughout. Week 6 has reduced volume for travel."
 }
 \`\`\`
 </Example output>

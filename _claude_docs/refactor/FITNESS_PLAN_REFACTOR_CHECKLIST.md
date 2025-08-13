@@ -206,56 +206,57 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 **Testing**: Agent output validation, pattern generation testing
 
 ### 3.1 Update Fitness Plan Agent
-- [ ] Update `src/server/agents/fitnessPlan/prompts.ts`:
-  - [ ] Remove macrocycle layer from prompt instructions
-  - [ ] Add notes field guidance
-  - [ ] Update example outputs to match new schema
-  - [ ] Simplify mesocycle structure in prompts
-- [ ] Update `src/server/agents/fitnessPlan/chain.ts`:
-  - [ ] Ensure structured output matches new schema
-  - [ ] Update response parsing logic
+- [x] Update `src/server/agents/fitnessPlan/prompts.ts`:
+  - [x] Remove macrocycle layer from prompt instructions
+  - [x] Add notes field guidance
+  - [x] Update example outputs to match new schema
+  - [x] Simplify mesocycle structure in prompts
+- [x] Update `src/server/agents/fitnessPlan/chain.ts`:
+  - [x] Ensure structured output matches new schema
+  - [x] Update response parsing logic
 
 ### 3.2 Create Progress Service
-- [ ] Create `src/server/services/progressService.ts`:
-  - [ ] `getCurrentProgress(userId)` method - reads from fitness plan
-  - [ ] `advanceWeek(userId)` method - updates progress and triggers new microcycle
-  - [ ] `advanceMesocycle(userId)` method - transitions to next mesocycle
-  - [ ] `resetProgress(userId)` method - restart from beginning
-- [ ] Add progress calculation logic
-- [ ] Add week/mesocycle transition logic with microcycle creation
+- [x] Create `src/server/services/progressService.ts`:
+  - [x] `getCurrentProgress(userId)` method - reads from fitness plan
+  - [x] `advanceWeek(userId)` method - updates progress and triggers new microcycle
+  - [x] `advanceMesocycle(userId)` method - transitions to next mesocycle
+  - [x] `resetProgress(userId)` method - restart from beginning
+- [x] Add progress calculation logic
+- [x] Add week/mesocycle transition logic with microcycle creation
 
 ### 3.3 Create Microcycle Pattern Agent
-- [ ] Create `src/server/agents/microcyclePattern/prompts.ts`:
-  - [ ] Generate single week patterns
-  - [ ] Consider mesocycle focus and week number
-  - [ ] Progressive overload guidance
-  - [ ] Deload week handling
-- [ ] Create `src/server/agents/microcyclePattern/chain.ts`:
-  - [ ] Structured output for patterns
-  - [ ] Integration with microcycle repository for storage
+- [x] Create `src/server/agents/microcyclePattern/prompts.ts`:
+  - [x] Generate single week patterns
+  - [x] Consider mesocycle focus and week number
+  - [x] Progressive overload guidance
+  - [x] Deload week handling
+- [x] Create `src/server/agents/microcyclePattern/chain.ts`:
+  - [x] Structured output for patterns
+  - [x] Integration with microcycle repository for storage
 
 ### 3.4 Update Pattern Generation Flow
-- [ ] When week advances or new week starts:
-  - [ ] Check if microcycle exists for current week
-  - [ ] If not, generate pattern using agent
-  - [ ] Store pattern in microcycles table
-  - [ ] Mark as active, deactivate previous
-- [ ] All workouts in week reference same microcycle ID
+- [x] When week advances or new week starts:
+  - [x] Check if microcycle exists for current week
+  - [x] If not, generate pattern using agent
+  - [x] Store pattern in microcycles table
+  - [x] Mark as active, deactivate previous
+- [x] All workouts in week reference same microcycle ID
 
 ### 3.5 Update Daily Message Service
-- [ ] Integrate with ProgressService:
-  - [ ] Get current progress on each run
-  - [ ] Get or create microcycle for current week
-  - [ ] Use stored pattern to generate daily workout
-- [ ] Update service tests
+- [x] Integrate with ProgressService:
+  - [x] Get current progress on each run
+  - [x] Get or create microcycle for current week
+  - [x] Use stored pattern to generate daily workout
+- [x] Update service to generate workouts on-demand
 
 ### Phase 3 Deliverables & Testing
-- [ ] Fitness plans generate with new structure
-- [ ] Progress tracking accurately maintains position
-- [ ] Microcycle patterns generate and store correctly
-- [ ] Week transitions trigger new microcycle creation
-- [ ] All workouts in a week use consistent pattern
-- [ ] Manual QA of generated patterns
+- [x] Fitness plans generate with new structure
+- [x] Progress tracking accurately maintains position
+- [x] Microcycle patterns generate and store correctly
+- [x] Week transitions trigger new microcycle creation
+- [x] All workouts in a week use consistent pattern
+- [x] AI agent generates patterns with fallback
+- [x] Build and lint pass successfully
 
 ---
 

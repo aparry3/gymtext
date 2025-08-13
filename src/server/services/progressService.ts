@@ -4,6 +4,7 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { UserWithProfile } from '@/server/models/userModel';
+import { microcyclePatternAgent } from '@/server/agents/microcyclePattern/chain';
 
 export interface ProgressInfo {
   mesocycleIndex: number;
@@ -69,12 +70,12 @@ export class ProgressService {
     );
 
     if (!microcycle) {
-      // Generate new pattern for the week
-      // For now, we'll create a basic pattern - in Phase 3 we'll integrate with the AI agent
-      const pattern = await this.generateBasicPattern(
+      // Generate new pattern for the week using AI agent
+      const pattern = await this.generateMicrocyclePattern(
         progress.mesocycle,
         progress.microcycleWeek,
-        plan.programType
+        plan.programType,
+        plan.notes
       );
 
       // Calculate week start and end dates
@@ -216,70 +217,50 @@ export class ProgressService {
     };
   }
 
-  private async generateBasicPattern(
+  private async generateMicrocyclePattern(
     mesocycle: MesocycleOverview,
     weekNumber: number,
-    programType: string
+    programType: string,
+    notes?: string | null
   ): Promise<MicrocyclePattern> {
-    // This is a temporary basic pattern generator
-    // In Phase 3, this will be replaced with an AI agent
-    
-    const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
-    
-    // Basic patterns based on program type
-    const patterns: Record<string, MicrocyclePattern> = {
-      strength: {
-        weekIndex: weekNumber,
-        days: [
-          { day: 'MONDAY', theme: 'Lower Power', load: isDeloadWeek ? 'light' : 'heavy' },
-          { day: 'TUESDAY', theme: 'Upper Push', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'WEDNESDAY', theme: 'Rest' },
-          { day: 'THURSDAY', theme: 'Lower Volume', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'FRIDAY', theme: 'Upper Pull', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'SATURDAY', theme: 'Full Body', load: 'light' },
-          { day: 'SUNDAY', theme: 'Rest' },
-        ],
-      },
-      endurance: {
-        weekIndex: weekNumber,
-        days: [
-          { day: 'MONDAY', theme: 'Easy Run', load: 'light' },
-          { day: 'TUESDAY', theme: 'Interval Training', load: isDeloadWeek ? 'light' : 'heavy' },
-          { day: 'WEDNESDAY', theme: 'Recovery', load: 'light' },
-          { day: 'THURSDAY', theme: 'Tempo Run', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'FRIDAY', theme: 'Rest' },
-          { day: 'SATURDAY', theme: 'Long Run', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'SUNDAY', theme: 'Recovery or Rest' },
-        ],
-      },
-      hybrid: {
-        weekIndex: weekNumber,
-        days: [
-          { day: 'MONDAY', theme: 'Strength - Lower', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'TUESDAY', theme: 'Cardio - Intervals', load: isDeloadWeek ? 'light' : 'heavy' },
-          { day: 'WEDNESDAY', theme: 'Strength - Upper', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'THURSDAY', theme: 'Cardio - Steady State', load: 'light' },
-          { day: 'FRIDAY', theme: 'Rest' },
-          { day: 'SATURDAY', theme: 'Full Body Circuit', load: isDeloadWeek ? 'light' : 'moderate' },
-          { day: 'SUNDAY', theme: 'Active Recovery' },
-        ],
-      },
-    };
+    try {
+      // Use AI agent to generate pattern
+      const pattern = await microcyclePatternAgent.invoke({
+        mesocycle,
+        weekNumber,
+        programType,
+        notes
+      });
+      
+      console.log(`Generated AI pattern for week ${weekNumber} of ${mesocycle.name}`);
+      return pattern;
+    } catch (error) {
+      console.error('Failed to generate pattern with AI agent, using fallback:', error);
+      
+      // Fallback to basic pattern if AI fails
+      return this.generateFallbackPattern(mesocycle, weekNumber);
+    }
+  }
 
-    // Default pattern if program type not found
-    const defaultPattern: MicrocyclePattern = {
+  private generateFallbackPattern(
+    mesocycle: MesocycleOverview,
+    weekNumber: number
+  ): MicrocyclePattern {
+    const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
+    const load = isDeloadWeek ? 'light' : 'moderate';
+    
+    // Simple fallback pattern
+    return {
       weekIndex: weekNumber,
       days: [
-        { day: 'MONDAY', theme: 'Training Day 1', load: isDeloadWeek ? 'light' : 'moderate' },
-        { day: 'TUESDAY', theme: 'Training Day 2', load: isDeloadWeek ? 'light' : 'moderate' },
-        { day: 'WEDNESDAY', theme: 'Rest or Active Recovery' },
-        { day: 'THURSDAY', theme: 'Training Day 3', load: isDeloadWeek ? 'light' : 'moderate' },
-        { day: 'FRIDAY', theme: 'Training Day 4', load: isDeloadWeek ? 'light' : 'moderate' },
-        { day: 'SATURDAY', theme: 'Optional Training', load: 'light' },
+        { day: 'MONDAY', theme: 'Training Day 1', load },
+        { day: 'TUESDAY', theme: 'Training Day 2', load },
+        { day: 'WEDNESDAY', theme: 'Rest' },
+        { day: 'THURSDAY', theme: 'Training Day 3', load },
+        { day: 'FRIDAY', theme: 'Training Day 4', load },
+        { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
         { day: 'SUNDAY', theme: 'Rest' },
       ],
     };
-
-    return patterns[programType] || defaultPattern;
   }
 }

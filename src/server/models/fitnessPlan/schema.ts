@@ -19,7 +19,7 @@ export const _FitnessPlanSchema = z.object({
   programType: z.enum(['endurance', 'strength', 'shred', 'hybrid', 'rehab', 'other'], {
     description: "The type of fitness program, e.g., endurance, strength, shred, hybrid, rehab, or other."
   }),
-  macrocycleWeeks: z.number({
+  lengthWeeks: z.number({
     description: "The total duration of the fitness plan in weeks"
   }),
   mesocycles: z.array(_MesocycleOverviewSchema, {
