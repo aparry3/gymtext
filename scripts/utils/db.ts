@@ -8,11 +8,11 @@ import chalk from 'chalk';
  * Provides convenient methods for accessing database in tests
  */
 export class TestDatabase {
-  private db: Kysely<DB>;
+  private _db: Kysely<DB>;
   private static instance: TestDatabase;
 
   private constructor() {
-    this.db = postgresDb;
+    this._db = postgresDb;
   }
 
   /**
@@ -26,11 +26,18 @@ export class TestDatabase {
   }
 
   /**
+   * Get direct access to Kysely instance
+   */
+  get db(): Kysely<DB> {
+    return this._db;
+  }
+
+  /**
    * Get user by phone number
    */
   async getUserByPhone(phone: string) {
     try {
-      const user = await this.db
+      const user = await this._db
         .selectFrom('users')
         .selectAll()
         .where('phoneNumber', '=', phone)
@@ -48,7 +55,7 @@ export class TestDatabase {
    */
   async getUserById(id: string) {
     try {
-      const user = await this.db
+      const user = await this._db
         .selectFrom('users')
         .selectAll()
         .where('id', '=', id)
@@ -66,7 +73,7 @@ export class TestDatabase {
    */
   async getUserWithProfile(userId: string) {
     try {
-      const user = await this.db
+      const user = await this._db
         .selectFrom('users')
         .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
         .selectAll()
@@ -85,7 +92,7 @@ export class TestDatabase {
    */
   async getFitnessPlan(userId: string) {
     try {
-      const plan = await this.db
+      const plan = await this._db
         .selectFrom('fitnessPlans')
         .selectAll()
         .where('clientId', '=', userId)
@@ -124,7 +131,7 @@ export class TestDatabase {
    */
   async getMicrocycle(userId: string) {
     try {
-      const microcycle = await this.db
+      const microcycle = await this._db
         .selectFrom('microcycles')
         .selectAll()
         .where('userId', '=', userId)
@@ -147,7 +154,7 @@ export class TestDatabase {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      const workouts = await this.db
+      const workouts = await this._db
         .selectFrom('workoutInstances')
         .selectAll()
         .where('clientId', '=', userId)
@@ -173,7 +180,7 @@ export class TestDatabase {
       const endDate = new Date(targetDate);
       endDate.setDate(endDate.getDate() + 1);
 
-      const workout = await this.db
+      const workout = await this._db
         .selectFrom('workoutInstances')
         .selectAll()
         .where('clientId', '=', userId)
@@ -193,7 +200,7 @@ export class TestDatabase {
    */
   async getActiveUsers() {
     try {
-      const users = await this.db
+      const users = await this._db
         .selectFrom('users')
         .innerJoin('subscriptions', 'users.id', 'subscriptions.userId')
         .selectAll('users')
@@ -212,7 +219,7 @@ export class TestDatabase {
    */
   async getUsersForHour(hour: number) {
     try {
-      const users = await this.db
+      const users = await this._db
         .selectFrom('users')
         .innerJoin('subscriptions', 'users.id', 'subscriptions.userId')
         .selectAll('users')
@@ -233,14 +240,14 @@ export class TestDatabase {
   async deleteUser(userId: string) {
     try {
       // Delete in order of dependencies
-      await this.db.deleteFrom('workoutInstances').where('clientId', '=', userId).execute();
-      await this.db.deleteFrom('microcycles').where('userId', '=', userId).execute();
-      await this.db.deleteFrom('fitnessPlans').where('clientId', '=', userId).execute();
-      await this.db.deleteFrom('messages').where('userId', '=', userId).execute();
-      await this.db.deleteFrom('conversations').where('userId', '=', userId).execute();
-      await this.db.deleteFrom('subscriptions').where('userId', '=', userId).execute();
-      await this.db.deleteFrom('fitnessProfiles').where('userId', '=', userId).execute();
-      await this.db.deleteFrom('users').where('id', '=', userId).execute();
+      await this._db.deleteFrom('workoutInstances').where('clientId', '=', userId).execute();
+      await this._db.deleteFrom('microcycles').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('fitnessPlans').where('clientId', '=', userId).execute();
+      await this._db.deleteFrom('messages').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('conversations').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('subscriptions').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('fitnessProfiles').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('users').where('id', '=', userId).execute();
       
       return true;
     } catch (error) {
@@ -253,7 +260,7 @@ export class TestDatabase {
    * Close database connection
    */
   async close() {
-    await this.db.destroy();
+    await this._db.destroy();
   }
 }
 

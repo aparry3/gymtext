@@ -205,6 +205,10 @@ export class Timer {
     this.startTime = performance.now();
   }
 
+  start(): void {
+    this.startTime = performance.now();
+  }
+
   elapsed(): number {
     return performance.now() - this.startTime;
   }
@@ -216,4 +220,23 @@ export class Timer {
   reset(): void {
     this.startTime = performance.now();
   }
+}
+
+/**
+ * Display a formatted header
+ */
+export function displayHeader(title: string, icon?: string): void {
+  console.log(chalk.bold.blue(`\n${icon ? icon + ' ' : ''}${title}`));
+  separator('═');
+}
+
+/**
+ * Create a simple spinner helper
+ */
+export function spinner(message: string): { stop: () => void } {
+  const spin = new Spinner(message);
+  spin.start();
+  return {
+    stop: () => spin.stop()
+  };
 }

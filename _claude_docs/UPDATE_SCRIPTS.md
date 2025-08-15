@@ -271,21 +271,31 @@ pnpm test:messages:daily --phone "+1234567890" --force-generate
 - Integrated with new fitness plan architecture
 - Build and lint pass successfully
 
-### Phase 4: Message Testing Scripts (Day 4)
-- [ ] Update `test/messages/daily.ts`
-  - [ ] Support new on-demand generation
-  - [ ] Test progress tracking
-  - [ ] Handle microcycle transitions
-- [ ] Implement `test/messages/batch.ts`
-  - [ ] Test multiple users
-  - [ ] Performance metrics
-  - [ ] Error handling
-- [ ] Update `test/messages/sms.ts`
-  - [ ] Keep existing functionality
-  - [ ] Add conversation context
-- [ ] Implement `test/messages/schedule.ts`
-  - [ ] Test scheduling logic
-  - [ ] Timezone handling
+### Phase 4: Message Testing Scripts (Day 4) ✅ COMPLETE
+- [x] Update `test/messages/daily.ts`
+  - [x] Support new on-demand generation
+  - [x] Test progress tracking
+  - [x] Handle microcycle transitions
+- [x] Implement `test/messages/batch.ts`
+  - [x] Test multiple users
+  - [x] Performance metrics
+  - [x] Error handling
+- [x] Update `test/messages/sms.ts`
+  - [x] Keep existing functionality
+  - [x] Add conversation context
+- [x] Implement `test/messages/schedule.ts`
+  - [x] Test scheduling logic
+  - [x] Timezone handling
+
+**Completion Notes:**
+- Created comprehensive daily message script with on-demand workout generation support
+- Implemented batch testing with performance metrics and concurrency control
+- Enhanced SMS testing with conversation context and history tracking
+- Added schedule testing with timezone distribution analysis
+- Fixed all TypeScript issues with database field mappings (phoneNumber, userId, etc.)
+- Updated utility classes to use singleton pattern (TestDatabase, TestConfig)
+- All scripts support JSON output for automation
+- Build and lint pass successfully
 
 ### Phase 5: End-to-End Flows (Day 5)
 - [ ] Implement `test/flows/onboarding.ts`

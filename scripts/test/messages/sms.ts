@@ -2,11 +2,43 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { config } from 'dotenv';
-import { resolve } from 'path';
+import { table } from 'table';
+import { TestDatabase } from '../../utils/db';
+import { TestConfig } from '../../utils/config';
+import { Timer, formatDuration, success, error, warning, info, displayHeader } from '../../utils/common';
 
-// Load environment variables
-config({ path: resolve(process.cwd(), '.env.local') });
+interface SmsTestOptions {
+  phone: string;
+  message: string;
+  sid?: string;
+  url?: string;
+  context?: boolean;
+  conversationId?: string;
+  verbose?: boolean;
+  json?: boolean;
+}
+
+interface ConversationContext {
+  userId: string;
+  userName?: string;
+  conversationId?: string;
+  messageCount: number;
+  lastMessage?: {
+    content: string;
+    timestamp: Date;
+    isFromUser: boolean;
+  };
+  fitnessProfile?: {
+    goals: string[];
+    level: string;
+    frequency: string;
+  };
+  currentPlan?: {
+    id: string;
+    currentWeek: number;
+    currentMesocycle: number;
+  };
+}
 
 // Parse TwiML response to extract message content
 function parseTwiMLResponse(xml: string): string {
@@ -24,29 +56,164 @@ function generateMessageSid(): string {
   return `SM${timestamp}${random}`.toUpperCase();
 }
 
+class SmsConversationTester {
+  private db: TestDatabase;
+  private config: TestConfig;
+  private timer: Timer;
+
+  constructor() {
+    this.db = TestDatabase.getInstance();
+    this.config = TestConfig.getInstance();
+    this.timer = new Timer();
+  }
+
+  /**
+   * Get conversation context for a phone number
+   */
+  async getConversationContext(phone: string): Promise<ConversationContext | null> {
+    const user = await this.db.getUserByPhone(phone);
+    if (!user) {
+      return null;
+    }
+
+    const userWithProfile = await this.db.getUserWithProfile(user.id);
+    const fitnessPlan = await this.db.getFitnessPlan(user.id);
+    const progress = await this.db.getCurrentProgress(user.id);
+    
+    // Get conversation history
+    const conversations = await this.db.db
+      .selectFrom('conversations')
+      .where('userId', '=', user.id!)
+      .orderBy('createdAt', 'desc')
+      .limit(1)
+      .selectAll()
+      .execute();
+
+    const conversation = conversations[0];
+    let messageCount = 0;
+    let lastMessage: { content: string; timestamp: Date; isFromUser: boolean; } | undefined = undefined;
+
+    if (conversation) {
+      const messages = await this.db.db
+        .selectFrom('messages')
+        .where('conversationId', '=', conversation.id)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .selectAll()
+        .execute();
+
+      const messageCountResult = await this.db.db
+        .selectFrom('messages')
+        .where('conversationId', '=', conversation.id)
+        .select(({ fn }) => [fn.count<number>('id').as('count')])
+        .executeTakeFirst();
+
+      messageCount = messageCountResult?.count || 0;
+
+      if (messages[0]) {
+        lastMessage = {
+          content: messages[0].content,
+          timestamp: new Date(messages[0].createdAt),
+          isFromUser: messages[0].direction === 'inbound',
+        };
+      }
+    }
+
+    return {
+      userId: user.id,
+      userName: userWithProfile?.name || undefined,
+      conversationId: conversation?.id,
+      messageCount,
+      lastMessage,
+      fitnessProfile: userWithProfile?.fitnessGoals ? {
+        goals: [userWithProfile.fitnessGoals],
+        level: userWithProfile.skillLevel || 'beginner',
+        frequency: userWithProfile.exerciseFrequency || '3x/week',
+      } : undefined,
+      currentPlan: fitnessPlan && progress ? {
+        id: fitnessPlan.id,
+        currentWeek: progress.microcycleWeek,
+        currentMesocycle: progress.mesocycleIndex,
+      } : undefined,
+    };
+  }
+
+  /**
+   * Display conversation context
+   */
+  displayContext(context: ConversationContext): void {
+    displayHeader('Conversation Context');
+
+    const data = [
+      ['Field', 'Value'],
+      ['User', context.userName || context.userId],
+      ['Conversation ID', context.conversationId || 'None'],
+      ['Message Count', context.messageCount.toString()],
+    ];
+
+    if (context.lastMessage) {
+      data.push(['Last Message', context.lastMessage.isFromUser ? 'User' : 'System']);
+      data.push(['Last Message Time', context.lastMessage.timestamp.toLocaleString()]);
+      data.push(['Last Content', context.lastMessage.content.substring(0, 50) + '...']);
+    }
+
+    if (context.fitnessProfile) {
+      data.push(['─────────', '─────────']);
+      data.push(['Fitness Level', context.fitnessProfile.level]);
+      data.push(['Frequency', context.fitnessProfile.frequency]);
+      data.push(['Goals', context.fitnessProfile.goals.join(', ')]);
+    }
+
+    if (context.currentPlan) {
+      data.push(['─────────', '─────────']);
+      data.push(['Current Week', context.currentPlan.currentWeek.toString()]);
+      data.push(['Current Mesocycle', context.currentPlan.currentMesocycle.toString()]);
+    }
+
+    console.log(table(data));
+  }
+
+  async cleanup(): Promise<void> {
+    await this.db.close();
+  }
+}
+
 // Main function to send test SMS
-async function sendTestSMS(options: {
-  phone: string;
-  message: string;
-  sid?: string;
-  url?: string;
-  verbose?: boolean;
-}) {
-  const startTime = performance.now();
+async function sendTestSMS(options: SmsTestOptions) {
+  const timer = new Timer();
+  timer.start();
+  
+  const tester = new SmsConversationTester();
+  const config = TestConfig.getInstance();
   
   // Default values
   const messageId = options.sid || generateMessageSid();
-  const apiUrl = options.url || 'http://localhost:3000/api/sms';
+  const apiUrl = options.url || config.getApiUrl('/api/sms');
   const twilioNumber = process.env.TWILIO_NUMBER || '+15555555555';
 
-  console.log(chalk.blue('📱 Sending SMS to local endpoint...'));
-  console.log(chalk.gray(`From: ${options.phone}`));
-  console.log(chalk.gray(`Message: "${options.message}"`));
-  
-  if (options.verbose) {
-    console.log(chalk.gray(`\nMessage SID: ${messageId}`));
-    console.log(chalk.gray(`Endpoint: ${apiUrl}`));
-    console.log(chalk.gray(`To (Twilio Number): ${twilioNumber}`));
+  if (!options.json) {
+    displayHeader('SMS Conversation Test');
+    info(`From: ${options.phone}`);
+    info(`Message: "${options.message}"`);
+    
+    if (options.verbose) {
+      console.log(chalk.gray(`Message SID: ${messageId}`));
+      console.log(chalk.gray(`Endpoint: ${apiUrl}`));
+      console.log(chalk.gray(`To (Twilio Number): ${twilioNumber}`));
+    }
+    console.log();
+  }
+
+  // Show conversation context if requested
+  if (options.context && !options.json) {
+    const context = await tester.getConversationContext(options.phone);
+    if (context) {
+      tester.displayContext(context);
+      console.log();
+    } else {
+      warning('No conversation context found for this phone number');
+      console.log();
+    }
   }
 
   // Prepare form data to match Twilio webhook format
@@ -57,16 +224,23 @@ async function sendTestSMS(options: {
   formData.append('MessageSid', messageId);
   formData.append('AccountSid', 'ACtest123456789'); // Mock account SID
   formData.append('NumMedia', '0');
+  
+  if (options.conversationId) {
+    formData.append('ConversationId', options.conversationId);
+  }
 
   try {
+    if (!options.json) {
+      console.log(chalk.blue('📱 Sending message...'));
+    }
+
     // Send the request
     const response = await fetch(apiUrl, {
       method: 'POST',
       body: formData,
     });
 
-    const endTime = performance.now();
-    const duration = Math.round(endTime - startTime);
+    const duration = timer.elapsed();
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -74,27 +248,75 @@ async function sendTestSMS(options: {
 
     const responseText = await response.text();
     
-    if (options.verbose) {
-      console.log(chalk.gray('\nRaw TwiML Response:'));
-      console.log(chalk.gray(responseText));
-    }
-
-    // Parse and display the response
+    // Parse the response
     const messageContent = parseTwiMLResponse(responseText);
     
-    console.log(chalk.green(`\n✅ Response received (${duration}ms):`));
-    console.log(chalk.white(`"${messageContent}"`));
+    if (options.json) {
+      const result = {
+        success: true,
+        request: {
+          from: options.phone,
+          message: options.message,
+          messageId,
+          conversationId: options.conversationId,
+        },
+        response: {
+          message: messageContent,
+          duration,
+        },
+      };
+      
+      // Add context if requested
+      if (options.context) {
+        const context = await tester.getConversationContext(options.phone);
+        if (context) {
+          (result as any).context = context;
+        }
+      }
+      
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      if (options.verbose) {
+        console.log(chalk.gray('\nRaw TwiML Response:'));
+        console.log(chalk.gray(responseText));
+      }
+      
+      success(`Response received (${formatDuration(duration)}):`);
+      console.log(chalk.white(`\n"${messageContent}"\n`));
+      
+      // Show updated context if requested
+      if (options.context) {
+        console.log(chalk.cyan('Updated context:'));
+        const newContext = await tester.getConversationContext(options.phone);
+        if (newContext) {
+          const newCount = newContext.messageCount;
+          info(`Total messages in conversation: ${newCount}`);
+        }
+      }
+    }
 
-  } catch (error) {
-    console.log(chalk.red('\n❌ Error:'), (error as Error).message);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     
-    if ((error as Error).message.includes('ECONNREFUSED')) {
-      console.log(chalk.yellow('Is your local server running? Try: npm run dev'));
-    } else if ((error as Error).message.includes('fetch failed')) {
-      console.log(chalk.yellow('Network error. Check your connection and server status.'));
+    if (options.json) {
+      console.log(JSON.stringify({ 
+        success: false, 
+        error: errorMessage,
+        duration: timer.elapsed(),
+      }));
+    } else {
+      error(`Failed: ${errorMessage}`);
+      
+      if (errorMessage.includes('ECONNREFUSED')) {
+        console.log(chalk.yellow('Is your local server running? Try: pnpm dev'));
+      } else if (errorMessage.includes('fetch failed')) {
+        console.log(chalk.yellow('Network error. Check your connection and server status.'));
+      }
     }
     
     process.exit(1);
+  } finally {
+    await tester.cleanup();
   }
 }
 
@@ -102,29 +324,60 @@ async function sendTestSMS(options: {
 const program = new Command();
 
 program
-  .name('test-sms')
-  .description('Test the SMS chat endpoint locally')
+  .name('test-messages-sms')
+  .description('Test the SMS chat endpoint with conversation context')
   .version('1.0.0')
   .requiredOption('-p, --phone <phone>', 'Phone number to simulate')
   .requiredOption('-m, --message <message>', 'Message content to send')
   .option('-s, --sid <sid>', 'Message SID (auto-generated if not provided)')
-  .option('-u, --url <url>', 'API endpoint URL', 'http://localhost:3000/api/sms')
+  .option('-u, --url <url>', 'API endpoint URL')
+  .option('-c, --context', 'Show conversation context', false)
+  .option('--conversation-id <id>', 'Specify conversation ID')
   .option('-v, --verbose', 'Show verbose output', false)
-  .action(async (options) => {
+  .option('-j, --json', 'Output as JSON', false)
+  .action(async (options: SmsTestOptions) => {
     // Validate phone number format (basic validation)
     if (!options.phone.match(/^\+?[\d\s\-()]+$/)) {
-      console.log(chalk.red('Error: Invalid phone number format'));
+      if (options.json) {
+        console.log(JSON.stringify({ error: 'Invalid phone number format' }));
+      } else {
+        error('Invalid phone number format');
+      }
       process.exit(1);
     }
 
     // Ensure message is not empty
     if (!options.message.trim()) {
-      console.log(chalk.red('Error: Message cannot be empty'));
+      if (options.json) {
+        console.log(JSON.stringify({ error: 'Message cannot be empty' }));
+      } else {
+        error('Message cannot be empty');
+      }
       process.exit(1);
     }
 
     await sendTestSMS(options);
   });
+
+// Show help if no arguments
+if (process.argv.length === 2) {
+  program.outputHelp();
+  console.log(chalk.gray('\nExamples:'));
+  console.log(chalk.gray('  # Send a simple test message'));
+  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "What\'s my workout today?"');
+  console.log();
+  console.log(chalk.gray('  # Send with conversation context'));
+  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "I completed it!" --context');
+  console.log();
+  console.log(chalk.gray('  # Use specific conversation ID'));
+  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "Next exercise?" --conversation-id "conv_123"');
+  console.log();
+  console.log(chalk.gray('  # Verbose output with context'));
+  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "How many sets?" --context --verbose');
+  console.log();
+  console.log(chalk.gray('  # JSON output for automation'));
+  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "Help" --json --context');
+}
 
 // Parse command line arguments
 program.parse();
