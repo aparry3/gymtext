@@ -6,6 +6,34 @@ This document provides comprehensive documentation for all scripts available in 
 
 GymText includes several utility scripts for development, testing, and database management. All scripts are written in TypeScript and executed using `tsx`.
 
+## Script Organization
+
+Scripts are organized into the following directories:
+
+```
+scripts/
+├── migrations/         # Database migration scripts
+│   ├── create.ts      # Create new migrations
+│   └── run.ts         # Run migrations up/down
+├── test/              # Test scripts organized by feature
+│   ├── user/          # User management scripts
+│   │   ├── create.ts  # Create test users
+│   │   ├── get.ts     # Retrieve user information
+│   │   └── profile.ts # Update user profiles
+│   ├── fitness/       # Fitness plan scripts (Phase 3)
+│   ├── messages/      # Messaging test scripts
+│   │   └── sms.ts     # SMS webhook testing
+│   └── flows/         # End-to-end flow tests
+├── utils/             # Shared utilities
+│   ├── config.ts      # Environment configuration
+│   ├── db.ts          # Database utilities
+│   ├── users.ts       # User management helpers
+│   └── common.ts      # Common display and formatting utilities
+├── docker/            # Docker test scripts
+│   └── run-tests.sh   # Docker test runner
+└── archive/           # Deprecated scripts for reference
+```
+
 ## Available Scripts
 
 ### Database Management
@@ -26,6 +54,8 @@ Generates TypeScript types from the PostgreSQL database schema using Kysely Code
 #### `pnpm migrate:create [migration-name]`
 Creates a new database migration file with proper timestamp and boilerplate code.
 
+**Location:** `scripts/migrations/create.ts`
+
 **Example:**
 ```bash
 pnpm migrate:create add_user_preferences_table
@@ -37,6 +67,8 @@ pnpm migrate:create add_user_preferences_table
 
 #### `pnpm migrate:up`
 Applies all pending database migrations.
+
+**Location:** `scripts/migrations/run.ts`
 
 **Prerequisites:**
 - `DATABASE_URL` environment variable must be set
@@ -51,6 +83,8 @@ pnpm migrate:up
 
 #### `pnpm migrate:down`
 Rolls back the last applied database migration.
+
+**Location:** `scripts/migrations/run.ts`
 
 **Example:**
 ```bash
@@ -89,6 +123,134 @@ Starts the production server (requires `pnpm build` first).
 Runs ESLint with Next.js specific rules.
 
 ### Testing Scripts
+
+#### User Management Scripts
+
+##### `pnpm test:user:create`
+Creates a test user with comprehensive fitness profile setup.
+
+**Features:**
+- Interactive prompts for user data input
+- Command-line arguments for automation
+- Phone number validation and formatting
+- Stripe payment handling with skip option
+- Test data generation for quick testing
+
+**Usage:**
+```bash
+# Interactive mode (recommended)
+pnpm test:user:create
+
+# Quick creation with arguments
+pnpm test:user:create -n "John Doe" -p "+1234567890" --skip-payment
+
+# Generate test user automatically
+pnpm test:user:create --generate-test --skip-payment
+
+# Full specification
+pnpm test:user:create \
+  --name "Jane Smith" \
+  --phone "+1234567890" \
+  --email "jane@example.com" \
+  --goals "Build muscle" \
+  --level intermediate \
+  --frequency "4x/week" \
+  --skip-payment
+```
+
+**Options:**
+- `-n, --name <name>` - User name
+- `-p, --phone <phone>` - Phone number
+- `-e, --email <email>` - Email address
+- `--goals <goals>` - Fitness goals
+- `--level <level>` - Skill level (beginner/intermediate/advanced)
+- `--frequency <frequency>` - Exercise frequency
+- `--gender <gender>` - Gender
+- `--age <age>` - Age
+- `-t, --timezone <timezone>` - Timezone (e.g., America/New_York)
+- `-h, --hour <hour>` - Preferred send hour (0-23)
+- `--skip-payment` - Skip Stripe payment (test mode)
+- `--no-interactive` - Disable interactive prompts
+- `-g, --generate-test` - Generate test data automatically
+- `-v, --verbose` - Show detailed output
+
+---
+
+##### `pnpm test:user:get`
+Retrieves and displays user details including fitness profile, plan, and progress.
+
+**Usage:**
+```bash
+# Look up by phone
+pnpm test:user:get --phone "+1234567890"
+
+# Look up by user ID
+pnpm test:user:get --user-id "abc123"
+
+# List all active users
+pnpm test:user:get --active
+
+# Get detailed info with workouts
+pnpm test:user:get --phone "+1234567890" --workout --verbose
+
+# Export as JSON
+pnpm test:user:get --phone "+1234567890" --json > user.json
+```
+
+**Options:**
+- `-p, --phone <phone>` - Phone number to look up
+- `-u, --user-id <id>` - User ID to look up
+- `-a, --all` - List all users
+- `--active` - List only active users
+- `--no-profile` - Exclude fitness profile
+- `--no-plan` - Exclude fitness plan
+- `--no-progress` - Exclude progress info
+- `-w, --workout` - Include recent workouts
+- `-j, --json` - Output as JSON
+- `-v, --verbose` - Show detailed output
+
+---
+
+##### `pnpm test:user:profile`
+Updates user fitness profile including equipment, preferences, and injuries.
+
+**Usage:**
+```bash
+# Interactive update (recommended)
+pnpm test:user:profile --phone "+1234567890"
+
+# Update specific fields
+pnpm test:user:profile --user-id "abc123" \
+  --goals "Build muscle and lose fat" \
+  --level intermediate
+
+# Update equipment and preferences
+pnpm test:user:profile --phone "+1234567890" \
+  --equipment "Dumbbells,Barbell,Bench" \
+  --preferences "Strength Training,HIIT"
+
+# Add injury information
+pnpm test:user:profile --phone "+1234567890" \
+  --injuries "Lower back pain,Shoulder impingement"
+
+# Clear profile
+pnpm test:user:profile --phone "+1234567890" --clear
+```
+
+**Options:**
+- `-p, --phone <phone>` - Phone number
+- `-u, --user-id <id>` - User ID
+- `--goals <goals>` - Fitness goals
+- `--level <level>` - Skill level (beginner/intermediate/advanced)
+- `--frequency <frequency>` - Exercise frequency
+- `--equipment <equipment>` - Available equipment (comma-separated)
+- `--preferences <preferences>` - Workout preferences (comma-separated)
+- `--injuries <injuries>` - Current injuries (comma-separated)
+- `--no-interactive` - Disable interactive prompts
+- `--clear` - Clear the fitness profile
+- `-v, --verbose` - Show detailed output
+
+---
 
 #### `pnpm sms:test`
 Tests the SMS webhook endpoint by simulating incoming text messages.
@@ -252,10 +414,33 @@ PINECONE_INDEX_NAME=...
 ### Testing the Complete User Journey
 
 1. Start the dev server: `pnpm dev`
-2. Test user registration: `pnpm checkout:test -n "Test User" -p "+1234567890"`
-3. Note the user ID from the response
-4. Test program generation: `pnpm programs:test -i "user_id_here"`
-5. Test SMS interaction: `pnpm sms:test -p "+1234567890" -m "What's my workout?"`
+2. Create a test user interactively: `pnpm test:user:create`
+   - Or with arguments: `pnpm test:user:create -n "Test User" -p "+1234567890" --skip-payment`
+3. View user details: `pnpm test:user:get --phone "+1234567890"`
+4. Update fitness profile: `pnpm test:user:profile --phone "+1234567890"`
+5. Generate fitness plan: `pnpm test:fitness:plan --phone "+1234567890"` (coming in Phase 3)
+6. Test SMS interaction: `pnpm sms:test -p "+1234567890" -m "What's my workout?"`
+
+### Quick User Setup for Testing
+
+```bash
+# Create a test user with all details
+pnpm test:user:create \
+  --name "John Doe" \
+  --phone "+1234567890" \
+  --email "john@example.com" \
+  --goals "Build muscle" \
+  --level intermediate \
+  --skip-payment
+
+# Verify user was created
+pnpm test:user:get --phone "+1234567890" --verbose
+
+# Update profile with equipment
+pnpm test:user:profile --phone "+1234567890" \
+  --equipment "Dumbbells,Barbell,Bench" \
+  --preferences "Strength Training"
+```
 
 ### Adding a New Database Table
 
@@ -294,6 +479,17 @@ PINECONE_INDEX_NAME=...
 3. Verify environment variables are loaded correctly
 4. Test each component independently before running end-to-end tests
 
+## Deprecated Scripts
+
+The following scripts have been archived and replaced with new implementations:
+
+- `test-programs.ts` → Replaced by `test:fitness:plan` (coming in Phase 3)
+- `test-user-flow.ts` → Replaced by `test:flow:onboarding` (coming in Phase 5)
+- `test-cron-daily-messages.ts` → Replaced by `test:messages:daily` (coming in Phase 4)
+- `get-test-user.ts` → Replaced by `test:user:get`
+
+These scripts can be found in `scripts/archive/` for reference.
+
 ## Best Practices
 
 1. **Always run migrations before starting development**
@@ -306,16 +502,21 @@ PINECONE_INDEX_NAME=...
    - Test individual endpoints before running flow tests
    - Use verbose mode to debug issues
 
-3. **Keep test data realistic**
+3. **Use interactive mode for exploration**
+   - Most test scripts support interactive prompts
+   - Great for discovering features and testing edge cases
+
+4. **Keep test data realistic**
    - Use valid phone number formats
    - Provide realistic user profiles
    - Test edge cases
 
-4. **Clean up test data periodically**
+5. **Clean up test data periodically**
    - Test users can accumulate in the database
-   - Consider creating a cleanup script if needed
+   - Use `pnpm test:user:get --all` to list users
+   - Consider using the delete functionality in utils
 
-5. **Document new scripts**
+6. **Document new scripts**
    - Add clear descriptions in package.json
    - Update this documentation
    - Include example usage

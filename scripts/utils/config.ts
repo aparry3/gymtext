@@ -69,7 +69,7 @@ export class TestConfig {
    * Get current environment
    */
   getEnvironment(): 'development' | 'staging' | 'production' {
-    const env = process.env.NODE_ENV || 'development';
+    const env = (process.env.NODE_ENV || 'development') as string;
     if (env === 'production') return 'production';
     if (env === 'staging') return 'staging';
     return 'development';

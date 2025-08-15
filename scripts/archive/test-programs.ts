@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { postgresDb } from '../src/server/connections/postgres/postgres';
+import { postgresDb } from '../../src/server/connections/postgres/postgres';
 
 // Load environment variables
 config({ path: resolve(process.cwd(), '.env.local') });

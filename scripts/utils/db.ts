@@ -1,6 +1,6 @@
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import type { Kysely } from 'kysely';
-import type { Database } from '@/server/models/_types';
+import type { DB } from '@/server/models/_types';
 import chalk from 'chalk';
 
 /**
@@ -8,7 +8,7 @@ import chalk from 'chalk';
  * Provides convenient methods for accessing database in tests
  */
 export class TestDatabase {
-  private db: Kysely<Database>;
+  private db: Kysely<DB>;
   private static instance: TestDatabase;
 
   private constructor() {
@@ -69,15 +69,7 @@ export class TestDatabase {
       const user = await this.db
         .selectFrom('users')
         .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
-        .selectAll('users')
-        .select([
-          'fitnessProfiles.fitnessGoals',
-          'fitnessProfiles.skillLevel',
-          'fitnessProfiles.exerciseFrequency',
-          'fitnessProfiles.equipment',
-          'fitnessProfiles.workoutPreferences',
-          'fitnessProfiles.injuries',
-        ])
+        .selectAll()
         .where('users.id', '=', userId)
         .executeTakeFirst();
       
