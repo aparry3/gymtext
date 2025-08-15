@@ -11,7 +11,6 @@ export class FitnessPlanService {
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
     const agentResponse = await fitnessPlanAgent.invoke({ user });
 
-    // TODO: Save the fitness plan to the database
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse.program);
     console.log('fitnessPlan', JSON.stringify(fitnessPlan, null, 2));
     const savedFitnessPlan = await this.fitnessPlanRepo.insertFitnessPlan(fitnessPlan);

@@ -1,0 +1,408 @@
+# Test Scripts Update Plan
+
+## Executive Summary
+
+This document outlines the plan to reorganize and update the test scripts suite to align with the new fitness plan architecture after the refactor. The goal is to create a clean, consistent, and maintainable set of test scripts that support the new on-demand workout generation system.
+
+## Current State Analysis
+
+### Existing Scripts Assessment
+
+| Script | Purpose | Status | Action |
+|--------|---------|--------|--------|
+| `create-migration.ts` | Create DB migrations | ✅ Keep | Essential for DB management |
+| `migrate.ts` | Run migrations | ✅ Keep | Essential for DB management |
+| `run-tests.sh` | Docker test runner | ✅ Keep | Essential for testing |
+| `test-sms.ts` | Test SMS endpoint | ✅ Keep/Update | Minor updates needed |
+| `test-checkout.ts` | Test user creation | ✅ Keep/Update | Add subscription handling |
+| `test-user-flow.ts` | End-to-end user flow | ⚠️ Update | Needs refactor for new architecture |
+| `test-programs.ts` | Test program creation | ⚠️ Update | Align with new fitness plan structure |
+| `test-cron-daily-messages.ts` | Test daily message cron | ⚠️ Update | Update for on-demand generation |
+| `get-test-user.ts` | Get user by phone | ❌ Remove | Replace with better utility |
+
+### Issues with Current Scripts
+
+1. **Inconsistent naming**: Mix of `test-*.ts` and `*:test` in package.json
+2. **Outdated architecture**: Scripts reference old mesocycle/microcycle structure
+3. **Missing functionality**: No script to test new on-demand workout generation
+4. **Poor organization**: No clear separation between utilities and test scripts
+5. **Hardcoded values**: Phone numbers and test data hardcoded in scripts
+
+## Proposed Structure
+
+### Directory Organization
+
+```
+scripts/
+├── migrations/              # Migration-related scripts
+│   ├── create.ts           # Create new migration
+│   └── run.ts              # Run migrations
+│
+├── test/                   # Test scripts
+│   ├── user/               # User-related tests
+│   │   ├── create.ts       # Create user
+│   │   ├── profile.ts      # Update profile
+│   │   └── get.ts          # Get user info
+│   │
+│   ├── fitness/            # Fitness plan tests
+│   │   ├── create-plan.ts  # Create fitness plan
+│   │   ├── progress.ts     # Test progress tracking
+│   │   └── workout.ts      # Generate workout
+│   │
+│   ├── messages/           # Messaging tests
+│   │   ├── daily.ts        # Send daily message
+│   │   ├── batch.ts        # Batch daily messages
+│   │   ├── sms.ts          # Test SMS webhook
+│   │   └── schedule.ts     # Test scheduling
+│   │
+│   └── flows/              # End-to-end flows
+│       ├── onboarding.ts   # Complete onboarding
+│       ├── daily-cycle.ts  # Daily workout cycle
+│       └── week-cycle.ts   # Weekly progression
+│
+├── utils/                  # Utility scripts
+│   ├── db.ts               # Database utilities
+│   ├── users.ts            # User management utilities
+│   └── config.ts           # Configuration helpers
+│
+└── docker/                 # Docker test scripts
+    └── run-tests.sh        # Docker test runner
+```
+
+### Package.json Scripts Organization
+
+```json
+{
+  "scripts": {
+    // Database Management
+    "db:migrate": "tsx scripts/migrations/run.ts up",
+    "db:migrate:down": "tsx scripts/migrations/run.ts down",
+    "db:migrate:create": "tsx scripts/migrations/create.ts",
+    "db:codegen": "kysely-codegen ...",
+    
+    // User Management
+    "test:user:create": "tsx scripts/test/user/create.ts",
+    "test:user:profile": "tsx scripts/test/user/profile.ts",
+    "test:user:get": "tsx scripts/test/user/get.ts",
+    
+    // Fitness Plan Testing
+    "test:fitness:plan": "tsx scripts/test/fitness/create-plan.ts",
+    "test:fitness:progress": "tsx scripts/test/fitness/progress.ts",
+    "test:fitness:workout": "tsx scripts/test/fitness/workout.ts",
+    
+    // Message Testing
+    "test:messages:daily": "tsx scripts/test/messages/daily.ts",
+    "test:messages:batch": "tsx scripts/test/messages/batch.ts",
+    "test:messages:sms": "tsx scripts/test/messages/sms.ts",
+    "test:messages:schedule": "tsx scripts/test/messages/schedule.ts",
+    
+    // End-to-End Flows
+    "test:flow:onboarding": "tsx scripts/test/flows/onboarding.ts",
+    "test:flow:daily": "tsx scripts/test/flows/daily-cycle.ts",
+    "test:flow:week": "tsx scripts/test/flows/week-cycle.ts",
+    
+    // Convenience Commands
+    "test:quick": "pnpm test:user:create && pnpm test:fitness:plan && pnpm test:messages:daily",
+    "test:full": "pnpm test:flow:onboarding",
+    
+    // Docker Testing
+    "test:docker": "./scripts/docker/run-tests.sh"
+  }
+}
+```
+
+## Core Test Scripts Implementation
+
+### 1. Create User Script (`test:user:create`)
+
+**Purpose**: Create a new user with fitness profile
+
+**Features**:
+- Interactive prompts for user data
+- Support for command-line arguments
+- Validation of phone numbers
+- Option to skip Stripe payment
+- Return user ID for chaining
+
+**Usage**:
+```bash
+# Interactive mode
+pnpm test:user:create
+
+# With arguments
+pnpm test:user:create --name "John Doe" --phone "+1234567890" --email "john@example.com"
+
+# Skip payment (dev mode)
+pnpm test:user:create --name "Test User" --phone "+1234567890" --skip-payment
+
+# With fitness preferences
+pnpm test:user:create --name "Jane Smith" --phone "+1234567890" \
+  --goals "Build muscle" --level "intermediate" --frequency "4x/week"
+```
+
+### 2. Create Fitness Plan Script (`test:fitness:plan`)
+
+**Purpose**: Generate a fitness plan for an existing user
+
+**Features**:
+- Accept user ID or phone number
+- Show plan overview
+- Display mesocycle breakdown
+- Track progress initialization
+- Support for different program types
+
+**Usage**:
+```bash
+# By user ID
+pnpm test:fitness:plan --user-id "abc123"
+
+# By phone number
+pnpm test:fitness:plan --phone "+1234567890"
+
+# With specific program type
+pnpm test:fitness:plan --phone "+1234567890" --type "strength"
+
+# Show detailed output
+pnpm test:fitness:plan --phone "+1234567890" --verbose
+```
+
+### 3. Send Daily Messages Script (`test:messages:daily`)
+
+**Purpose**: Trigger daily workout message generation
+
+**Features**:
+- Send for specific user or all users
+- Set custom date/time for testing
+- Dry run mode
+- Progress tracking updates
+- On-demand workout generation testing
+
+**Usage**:
+```bash
+# Send to specific user (current time)
+pnpm test:messages:daily --phone "+1234567890"
+
+# Send to all users scheduled for current hour
+pnpm test:messages:daily --all
+
+# Test specific date/time
+pnpm test:messages:daily --phone "+1234567890" --date "2024-01-15" --hour 8
+
+# Dry run (no actual sending)
+pnpm test:messages:daily --phone "+1234567890" --dry-run
+
+# Batch test for multiple hours
+pnpm test:messages:daily --batch --hours "6,7,8,18,19,20"
+
+# Force regenerate workout (bypass cache)
+pnpm test:messages:daily --phone "+1234567890" --force-generate
+```
+
+## Implementation Phases
+
+### Phase 1: Cleanup & Reorganization (Day 1)
+- [ ] Create new directory structure
+- [ ] Move migration scripts to `migrations/`
+- [ ] Move docker scripts to `docker/`
+- [ ] Archive old scripts that will be replaced
+- [ ] Create base utility modules
+
+### Phase 2: User Management Scripts (Day 2)
+- [ ] Implement `test/user/create.ts`
+  - [ ] Interactive prompts with `inquirer`
+  - [ ] Command-line argument parsing
+  - [ ] Stripe payment handling
+  - [ ] User creation validation
+- [ ] Implement `test/user/get.ts`
+  - [ ] Lookup by ID or phone
+  - [ ] Display user and fitness profile
+  - [ ] Show current progress
+- [ ] Implement `test/user/profile.ts`
+  - [ ] Update fitness profile
+  - [ ] Update preferences
+
+### Phase 3: Fitness Plan Scripts (Day 3)
+- [ ] Implement `test/fitness/create-plan.ts`
+  - [ ] Generate fitness plan using new agent
+  - [ ] Display mesocycle structure
+  - [ ] Initialize progress tracking
+- [ ] Implement `test/fitness/progress.ts`
+  - [ ] View current progress
+  - [ ] Advance week/mesocycle
+  - [ ] Reset progress
+- [ ] Implement `test/fitness/workout.ts`
+  - [ ] Generate on-demand workout
+  - [ ] Test microcycle pattern generation
+  - [ ] Display workout blocks
+
+### Phase 4: Message Testing Scripts (Day 4)
+- [ ] Update `test/messages/daily.ts`
+  - [ ] Support new on-demand generation
+  - [ ] Test progress tracking
+  - [ ] Handle microcycle transitions
+- [ ] Implement `test/messages/batch.ts`
+  - [ ] Test multiple users
+  - [ ] Performance metrics
+  - [ ] Error handling
+- [ ] Update `test/messages/sms.ts`
+  - [ ] Keep existing functionality
+  - [ ] Add conversation context
+- [ ] Implement `test/messages/schedule.ts`
+  - [ ] Test scheduling logic
+  - [ ] Timezone handling
+
+### Phase 5: End-to-End Flows (Day 5)
+- [ ] Implement `test/flows/onboarding.ts`
+  - [ ] Complete user creation
+  - [ ] Generate fitness plan
+  - [ ] Send welcome messages
+  - [ ] Generate first workout
+- [ ] Implement `test/flows/daily-cycle.ts`
+  - [ ] Simulate daily message flow
+  - [ ] Test workout generation
+  - [ ] Verify progress tracking
+- [ ] Implement `test/flows/week-cycle.ts`
+  - [ ] Test weekly progression
+  - [ ] Microcycle transitions
+  - [ ] Pattern generation
+
+### Phase 6: Package.json Updates (Day 6)
+- [ ] Remove old script entries
+- [ ] Add new organized scripts
+- [ ] Add convenience commands
+- [ ] Update documentation
+- [ ] Test all new scripts
+
+## Shared Utilities
+
+### Database Utility (`utils/db.ts`)
+```typescript
+export class TestDatabase {
+  async getUserByPhone(phone: string): Promise<User | null>
+  async getUserById(id: string): Promise<User | null>
+  async getFitnessPlan(userId: string): Promise<FitnessPlan | null>
+  async getCurrentProgress(userId: string): Promise<Progress | null>
+  async getMicrocycle(userId: string): Promise<Microcycle | null>
+  async getRecentWorkouts(userId: string, days: number): Promise<Workout[]>
+}
+```
+
+### Configuration Utility (`utils/config.ts`)
+```typescript
+export class TestConfig {
+  getApiUrl(endpoint: string): string
+  getTestUser(): { phone: string; name: string }
+  getEnvironment(): 'development' | 'staging' | 'production'
+  loadEnv(): void
+}
+```
+
+### User Management Utility (`utils/users.ts`)
+```typescript
+export class TestUsers {
+  async createUser(data: UserData): Promise<User>
+  async updateProfile(userId: string, profile: FitnessProfile): Promise<void>
+  async deleteUser(userId: string): Promise<void>
+  async listActiveUsers(): Promise<User[]>
+}
+```
+
+## Common Features Across Scripts
+
+### 1. Consistent CLI Interface
+- Use `commander` for all scripts
+- Standard options: `--verbose`, `--dry-run`, `--help`
+- Environment detection and validation
+- Colored output with `chalk`
+
+### 2. Error Handling
+- Graceful error messages
+- Helpful suggestions for common issues
+- Exit codes for CI/CD integration
+- Detailed error logging in verbose mode
+
+### 3. Progress Indicators
+- Show operation progress
+- Display timing information
+- Success/failure summaries
+- Table output for structured data
+
+### 4. Environment Awareness
+- Auto-detect environment (dev/staging/prod)
+- Load appropriate `.env` files
+- Validate required environment variables
+- Support for environment overrides
+
+## Migration Strategy
+
+### Week 1: Preparation
+1. Document current script usage
+2. Identify dependencies and users
+3. Create backup of existing scripts
+4. Set up new directory structure
+
+### Week 2: Implementation
+1. Implement core utilities
+2. Create user management scripts
+3. Create fitness plan scripts
+4. Update message testing scripts
+
+### Week 3: Testing & Migration
+1. Test all new scripts thoroughly
+2. Update CI/CD pipelines
+3. Update documentation
+4. Deprecate old scripts with warnings
+
+### Week 4: Cleanup
+1. Remove deprecated scripts
+2. Update all references
+3. Final testing
+4. Team training on new scripts
+
+## Success Metrics
+
+1. **Consistency**: All scripts follow same patterns and conventions
+2. **Reliability**: Scripts work correctly with new architecture
+3. **Usability**: Clear documentation and helpful error messages
+4. **Performance**: Scripts execute efficiently
+5. **Maintainability**: Clean code structure and organization
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] Test utility functions
+- [ ] Test argument parsing
+- [ ] Test error handling
+
+### Integration Tests
+- [ ] Test database operations
+- [ ] Test API calls
+- [ ] Test end-to-end flows
+
+### Manual Testing
+- [ ] Test each script individually
+- [ ] Test script combinations
+- [ ] Test error scenarios
+- [ ] Test with different environments
+
+## Documentation Updates
+
+1. Update main README with new script commands
+2. Create script-specific documentation
+3. Add examples for common workflows
+4. Document environment setup
+5. Create troubleshooting guide
+
+## Risk Mitigation
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Breaking existing workflows | High | Keep old scripts during transition |
+| Missing functionality | Medium | Thorough testing before deprecation |
+| User confusion | Medium | Clear documentation and training |
+| CI/CD failures | High | Update pipelines incrementally |
+| Data corruption | High | Always use transactions and dry-run |
+
+## Conclusion
+
+This reorganization will create a maintainable, consistent, and user-friendly test script suite that aligns with the new fitness plan architecture. The phased approach ensures minimal disruption while providing improved functionality for development and testing workflows.
