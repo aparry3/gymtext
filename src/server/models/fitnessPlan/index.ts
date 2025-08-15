@@ -14,7 +14,7 @@ export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
 
 export interface FitnessPlanOverview {
   programType: string;
-  macrocycleWeeks: number; // Total weeks
+  lengthWeeks: number; // Total weeks
   mesocycles: MesocycleOverview[];
   overview: string;
   notes?: string; // Travel, injuries, etc.
@@ -89,7 +89,7 @@ export class FitnessPlanModel implements FitnessPlan {
     return {
       programType: fitnessPlanOverview.programType,
       mesocycles: fitnessPlanOverview.mesocycles,
-      lengthWeeks: fitnessPlanOverview.macrocycleWeeks,
+      lengthWeeks: fitnessPlanOverview.lengthWeeks,
       notes: fitnessPlanOverview.notes || null,
       currentMesocycleIndex: 0,
       currentMicrocycleWeek: 1,

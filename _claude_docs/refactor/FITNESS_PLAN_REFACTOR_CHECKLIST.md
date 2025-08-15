@@ -434,28 +434,28 @@ This checklist breaks down the fitness plan refactor into phased deliverables to
 **Testing**: Regression testing, performance benchmarks
 
 ### 8.1 Code Cleanup
-- [ ] Remove deprecated macrocycle code
-- [ ] Remove all mesocycle table references
-- [ ] Remove all microcycle table references
-- [ ] Clean up unused workout pre-generation logic
-- [ ] Update all import statements
-- [ ] Remove obsolete tests
-- [ ] Remove unused repository files
+- [x] Remove deprecated macrocycle code
+- [x] Remove all mesocycle table references
+- [x] Remove all microcycle table references
+- [x] Clean up unused workout pre-generation logic
+- [x] Update all import statements
+- [x] Remove obsolete tests
+- [x] Remove unused repository files
 
 ### 8.2 Performance Optimization
-- [ ] Profile and optimize hot paths
-- [ ] Implement connection pooling improvements
-- [ ] Optimize agent prompts for token usage
-- [ ] Add database indexes where needed
+- [x] Profile and optimize hot paths
+- [x] Implement connection pooling improvements
+- [x] Optimize agent prompts for token usage
+- [x] Add database indexes where needed
 
 ### 8.3 Documentation Updates
-- [ ] Update API documentation
-- [ ] Update architecture diagrams
-- [ ] Create migration guide for API consumers
-- [ ] Update CLAUDE.md with new patterns
+- [x] Update API documentation
+- [x] Update architecture diagrams
+- [x] Create migration guide for API consumers
+- [x] Update CLAUDE.md with new patterns
 
 ### 8.4 Final Testing
-- [ ] Full regression test suite
+- [ ] Full regression test suite (needs test fixtures updated to new schema)
 - [ ] Performance benchmarks vs. old system
 - [ ] Security audit of new code paths
 - [ ] Accessibility testing

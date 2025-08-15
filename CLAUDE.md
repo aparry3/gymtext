@@ -63,16 +63,19 @@ Core tables include:
 - `users` - User accounts and authentication
 - `fitness_profiles` - User fitness data and preferences  
 - `conversations` & `messages` - SMS conversation history
-- `fitness_plans` → `mesocycles` → `microcycles` → `workouts` - Hierarchical fitness plan structure
+- `fitness_plans` - Simplified fitness plans with mesocycles array and progress tracking
+- `microcycles` - Weekly training patterns (generated on-demand)
+- `workout_instances` - Individual workouts with enhanced block structure
 - `subscriptions` - Stripe subscription tracking
 
 ### AI Agent System
 Specialized agents in `src/server/agents/`:
 - `chatAgent` - General conversation responses
-- `generateFitnessPlanAgent` - Creates complete fitness plans
+- `generateFitnessPlanAgent` - Creates fitness plans with simplified mesocycle structure
+- `dailyWorkout` - Generates on-demand workouts with block structure using Gemini 2.0 Flash
+- `microcyclePattern` - Creates weekly training patterns with progressive overload
 - `dailyMessageAgent` - Generates daily workout messages
 - `welcomeMessageAgent` - Onboarding messages
-- `mesocycleBreakdownAgent` - Breaks mesocycles into microcycles
 
 ### Environment Variables
 Required environment variables (see .env.example):
