@@ -1,5 +1,13 @@
 # Test Scripts Update Plan
 
+## Progress Overview
+- ✅ **Phase 1**: Cleanup & Reorganization - **COMPLETE**
+- ⏳ **Phase 2**: User Management Scripts - Pending
+- ⏳ **Phase 3**: Fitness Plan Scripts - Pending
+- ⏳ **Phase 4**: Message Testing Scripts - Pending
+- ⏳ **Phase 5**: End-to-End Flows - Pending
+- ⏳ **Phase 6**: Package.json Updates - Pending
+
 ## Executive Summary
 
 This document outlines the plan to reorganize and update the test scripts suite to align with the new fitness plan architecture after the refactor. The goal is to create a clean, consistent, and maintainable set of test scripts that support the new on-demand workout generation system.
@@ -200,12 +208,22 @@ pnpm test:messages:daily --phone "+1234567890" --force-generate
 
 ## Implementation Phases
 
-### Phase 1: Cleanup & Reorganization (Day 1)
-- [ ] Create new directory structure
-- [ ] Move migration scripts to `migrations/`
-- [ ] Move docker scripts to `docker/`
-- [ ] Archive old scripts that will be replaced
-- [ ] Create base utility modules
+### Phase 1: Cleanup & Reorganization (Day 1) ✅ COMPLETE
+- [x] Create new directory structure
+- [x] Move migration scripts to `migrations/`
+- [x] Move docker scripts to `docker/`
+- [x] Archive old scripts that will be replaced
+- [x] Create base utility modules
+- [x] Update package.json with new script paths
+
+**Completion Notes:**
+- All directories created successfully
+- Migration scripts: `create-migration.ts` → `migrations/create.ts`, `migrate.ts` → `migrations/run.ts`
+- Docker script: `run-tests.sh` → `docker/run-tests.sh`
+- Archived scripts moved to `archive/` folder for later replacement
+- Created comprehensive utility modules: `config.ts`, `db.ts`, `users.ts`, `common.ts`
+- Package.json updated with all new paths
+- Created README.md for scripts directory documentation
 
 ### Phase 2: User Management Scripts (Day 2)
 - [ ] Implement `test/user/create.ts`
@@ -273,39 +291,59 @@ pnpm test:messages:daily --phone "+1234567890" --force-generate
 - [ ] Update documentation
 - [ ] Test all new scripts
 
-## Shared Utilities
+## Shared Utilities ✅ COMPLETE
 
-### Database Utility (`utils/db.ts`)
+### Database Utility (`utils/db.ts`) ✅
 ```typescript
 export class TestDatabase {
   async getUserByPhone(phone: string): Promise<User | null>
   async getUserById(id: string): Promise<User | null>
+  async getUserWithProfile(userId: string): Promise<UserWithProfile | null>
   async getFitnessPlan(userId: string): Promise<FitnessPlan | null>
   async getCurrentProgress(userId: string): Promise<Progress | null>
   async getMicrocycle(userId: string): Promise<Microcycle | null>
   async getRecentWorkouts(userId: string, days: number): Promise<Workout[]>
+  async getTodaysWorkout(userId: string, date?: Date): Promise<Workout | null>
+  async getActiveUsers(): Promise<User[]>
+  async getUsersForHour(hour: number): Promise<User[]>
+  async deleteUser(userId: string): Promise<boolean>
+  async close(): Promise<void>
 }
 ```
 
-### Configuration Utility (`utils/config.ts`)
+### Configuration Utility (`utils/config.ts`) ✅
 ```typescript
 export class TestConfig {
   getApiUrl(endpoint: string): string
-  getTestUser(): { phone: string; name: string }
+  getTestUser(): { phone: string; name: string; email?: string }
   getEnvironment(): 'development' | 'staging' | 'production'
+  isDryRunDefault(): boolean
+  getDatabaseUrl(): string
+  getSummary(): void
   loadEnv(): void
 }
 ```
 
-### User Management Utility (`utils/users.ts`)
+### User Management Utility (`utils/users.ts`) ✅
 ```typescript
 export class TestUsers {
-  async createUser(data: UserData): Promise<User>
-  async updateProfile(userId: string, profile: FitnessProfile): Promise<void>
-  async deleteUser(userId: string): Promise<void>
+  async createUser(data: UserData, skipPayment?: boolean): Promise<Result>
+  async updateProfile(userId: string, profile: FitnessProfile): Promise<boolean>
+  async deleteUser(userId: string): Promise<boolean>
   async listActiveUsers(): Promise<User[]>
+  async getUserDetails(phoneOrId: string): Promise<UserDetails>
+  displayUserSummary(details: UserDetails): void
 }
 ```
+
+### Common Utilities (`utils/common.ts`) ✅
+Additional utility module created with:
+- Display utilities (tables, headers, separators)
+- Timing utilities (Timer class, formatDuration)
+- Phone number parsing and generation
+- Test data generators
+- Spinner class for progress indication
+- Success/error/warning/info message helpers
 
 ## Common Features Across Scripts
 
