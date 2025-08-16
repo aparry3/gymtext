@@ -52,6 +52,39 @@ src/
 └── shared/              # Shared utilities and configs
 ```
 
+### Architecture Layer Overview
+
+The application follows a clean architecture pattern with clear separation of concerns:
+
+1. **Routes Layer** (`src/app/api/`)
+   - Handles HTTP routing and request/response processing
+   - Validates incoming requests
+   - Delegates business logic to services
+   - Returns formatted responses
+
+2. **Services Layer** (`src/server/services/`)
+   - Contains all business logic
+   - Orchestrates operations between agents and repositories
+   - Handles complex workflows and state management
+   - Never directly instantiates LLMs - delegates to agents
+
+3. **Agents Layer** (`src/server/agents/`)
+   - Manages all LLM interactions and AI chains
+   - Each agent has a specific purpose with tailored prompts
+   - Uses LangChain for chain composition
+   - Abstracts AI complexity from business logic
+
+4. **Repositories Layer** (`src/server/repositories/`)
+   - Handles all database operations
+   - Provides clean data access interface
+   - Uses Kysely ORM for type-safe queries
+   - Isolates database logic from business logic
+
+5. **Supporting Layers**:
+   - **Models** (`src/server/models/`) - TypeScript type definitions and database schema
+   - **Connections** (`src/server/connections/`) - External service clients (DB, Twilio, Stripe, etc.)
+   - **Utils** (`src/server/utils/`) - Shared utilities and helper functions
+
 ### Key Architectural Patterns
 - **Repository Pattern**: All database operations go through repositories
 - **Service Layer**: Business logic is isolated in services, delegates LLM work to agents
