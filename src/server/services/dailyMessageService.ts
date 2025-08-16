@@ -246,12 +246,9 @@ export class DailyMessageService {
    * Gets today's workout for a user
    */
   private async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
-    // The date passed in is midnight in the user's timezone (as a JS Date in UTC)
-    // We need to create a date string for the actual calendar date
-    const dateOnly = date.toISOString().split('T')[0]; // Gets YYYY-MM-DD
-    const queryDate = new Date(dateOnly); // Creates date at midnight UTC
-    
-    const workout = await this.workoutRepository.findByClientIdAndDate(userId, queryDate);
+    // The date passed in is already the correct date at midnight in the user's timezone
+    // We can use it directly for the query
+    const workout = await this.workoutRepository.findByClientIdAndDate(userId, date);
     return workout || null;
   }
 
