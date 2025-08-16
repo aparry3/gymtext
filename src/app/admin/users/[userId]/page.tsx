@@ -32,6 +32,16 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <div>Timezone: {user.timezone}</div>
             <div>Preferred Hour: {user.preferredSendHour}:00</div>
             <div>Created: {new Date(user.createdAt).toLocaleString()}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={async () => {
+                await fetch(`/api/admin/users/${user.id}/plans`, { method: 'POST' });
+                alert('Plan generation requested');
+              }} style={{ padding: 8, borderRadius: 6 }}>Generate Plan</button>
+              <button onClick={async () => {
+                await fetch(`/api/admin/users/${user.id}/send-daily-message`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dryRun: true }) });
+                alert('Daily message (dry run) requested');
+              }} style={{ padding: 8, borderRadius: 6 }}>Send Daily (Dry Run)</button>
+            </div>
           </div>
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Profile</h2>
@@ -44,7 +54,18 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <div>Age: {user.profile.age}</div>
               </div>
             ) : (
-              <div>No profile.</div>
+              <div>
+                <div>No profile.</div>
+                <button onClick={async () => {
+                  const res = await fetch(`/api/admin/users/${user.id}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skillLevel: 'beginner', fitnessGoals: 'General fitness', exerciseFrequency: '3-4 times per week', gender: 'other', age: '30' }) });
+                  if (res.ok) {
+                    alert('Profile created');
+                    location.reload();
+                  } else {
+                    alert('Failed to create profile');
+                  }
+                }} style={{ marginTop: 8, padding: 8, borderRadius: 6 }}>Quick Create Profile</button>
+              </div>
             )}
           </div>
         </div>
