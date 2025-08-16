@@ -1,22 +1,8 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/server/models/userModel';
-import { fitnessCoachPrompt } from '@/server/prompts/templates';
-import { PromptBuilder } from '@/server/services/promptService';
-import { ConversationContextService } from '@/server/services/context/conversationContext';
+import { contextualChatChain } from '@/server/agents/chat/chain';
 
 // Configuration from environment variables
-const MAX_OUTPUT_TOKENS = parseInt(process.env.LLM_MAX_OUTPUT_TOKENS || '1000');
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
-
-const llm = new ChatGoogleGenerativeAI({ 
-  temperature: 0.7, 
-  model: 'gemini-2.0-flash',
-  maxOutputTokens: MAX_OUTPUT_TOKENS
-});
-
-// Initialize context services
-const conversationContextService = new ConversationContextService();
-const promptBuilder = new PromptBuilder();
 
 export class ChatService {
 
@@ -28,44 +14,22 @@ export class ChatService {
     message: string
   ): Promise<string> {
     try {
-      // Get conversation context
-      const context = await conversationContextService.getContext(user.id, {
-        includeUserProfile: true,
-        includeWorkoutHistory: true,
-        messageLimit: 5
+      // TODO THIS IS GOING TO BE VERY IMPORTANT
+      // ALL AGENTIC FUNCTIONALITY WILL LIVE IN THE AGENT
+      // UPDATING WORKOUTS
+      // UPDATING PREFERENCES
+      // SAVING MEMORIES
+      // UPDATING PROGRESS
+      // NOTIFICATIONS
+
+      // Use the contextualChatChain agent to generate response
+      const result = await contextualChatChain.invoke({
+        userId: user.id,
+        message: message
       });
-
-      // Create the fitness coach system prompt with user context
-      const systemPrompt = fitnessCoachPrompt(user);
       
-      let response;
-      console.log('context', context);
-      if (context && context.recentMessages.length > 0) {
-        // Build messages with conversation history
-        const messages = promptBuilder.buildMessagesWithContext(
-          message,
-          context,
-          systemPrompt
-        );
-        
-
-        // TODO THIS IS GOING TO BE VERY IMPORTANT
-        // ALL AGENTIC FUNCTIONALITY WILL LIVE IN THIS LLM
-        // UPDATING WORKOUTS
-        // UPDATING PREFERENCES
-        // SAVING MEMORIES
-        // UPDATING PROGRESS
-        // NOTIFICATIONS
-
-        response = await llm.invoke(messages);
-      } else {
-        // Fallback to simple prompt if no context available
-        const fullPrompt = `${systemPrompt}\n\nUser message: ${message}\n\nYour response:`;
-        response = await llm.invoke(fullPrompt);
-      }
-      
-      // Extract text content from response
-      const responseText = response.content.toString().trim();
+      // Extract the response text from the agent result
+      const responseText = result.response.trim();
       
       // Modern phones support concatenated SMS
       // Twilio automatically handles message segmentation
