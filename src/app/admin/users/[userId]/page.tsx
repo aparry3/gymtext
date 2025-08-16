@@ -12,6 +12,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const { userId } = await params;
   const data = await getUser(userId);
   const user = data?.user;
+  const activityRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/users/${userId}/activity`, { cache: 'no-store' });
+  const activity = activityRes.ok ? await activityRes.json() : { logs: [] };
 
   return (
     <div style={{ padding: 24 }}>
@@ -86,6 +88,29 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <button type="submit" style={{ padding: 8, borderRadius: 6 }}>Send</button>
               </div>
             </form>
+          </div>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Activity</h2>
+            <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid #eee', borderRadius: 6 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Time</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Action</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activity.logs?.map((log: { id: string; createdAt: string; action: string; result: string }) => (
+                    <tr key={log.id}>
+                      <td style={{ padding: 8 }}>{new Date(log.createdAt).toLocaleString()}</td>
+                      <td style={{ padding: 8 }}>{log.action}</td>
+                      <td style={{ padding: 8 }}>{log.result}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

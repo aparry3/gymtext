@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Users</h1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           placeholder="Search name/email/phone"
           value={q}
@@ -54,6 +54,10 @@ export default function AdminUsersPage() {
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/admin/users/new" style={{ marginLeft: 'auto', padding: 8, borderRadius: 6, background: '#0a7', color: 'white', textDecoration: 'none' }}>
           New User
+        </a>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/admin/users/simulate" style={{ padding: 8, borderRadius: 6, border: '1px solid #0a7', color: '#0a7', textDecoration: 'none' }}>
+          Inbound Simulation
         </a>
       </div>
       <div style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>Total: {total}</div>

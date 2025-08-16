@@ -23,4 +23,20 @@ export class AdminActivityLogRepository extends BaseRepository {
       })
       .execute();
   }
+
+  async listForUser(targetUserId: string, options: { page?: number; pageSize?: number } = {}) {
+    const page = options.page ?? 1;
+    const pageSize = options.pageSize ?? 20;
+
+    const rows = await this.db
+      .selectFrom('adminActivityLogs')
+      .selectAll()
+      .where('targetUserId', '=', targetUserId)
+      .orderBy('createdAt', 'desc')
+      .offset((page - 1) * pageSize)
+      .limit(pageSize)
+      .execute();
+
+    return rows;
+  }
 }
