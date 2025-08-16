@@ -27,8 +27,8 @@ export type {
 
 export class WorkoutInstanceModel implements NewWorkoutInstance {
   clientId: string;
-  microcycleId: string;
-  mesocycleId: string;
+  microcycleId: string | null | undefined;
+  mesocycleId: string | null | undefined;
   sessionType: string;
   createdAt: Date | string | undefined;
   date: Date | string;
