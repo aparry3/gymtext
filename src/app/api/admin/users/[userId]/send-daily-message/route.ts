@@ -6,6 +6,7 @@ import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanReposito
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { DailyMessageService } from '@/server/services/dailyMessageService';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
   try {
@@ -24,9 +25,14 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       dryRun: !!dryRun,
       testMode: true,
     });
+    await new AdminActivityLogRepository().log({ targetUserId: userId, action: 'admin.send_daily_message', payload: { dryRun: !!dryRun, date: date ?? null }, result: result.success ? 'success' : 'failure', errorMessage: result.success ? null : result.error });
     return NextResponse.json(result);
   } catch (err) {
     console.error('[admin users send-daily-message] POST failed', err);
+    try {
+      const { userId } = await context.params;
+      await new AdminActivityLogRepository().log({ targetUserId: userId, action: 'admin.send_daily_message', result: 'failure', errorMessage: err instanceof Error ? err.message : 'unknown' });
+    } catch {}
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

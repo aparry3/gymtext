@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { UserModel, type CreateUserData, type CreateFitnessProfileData } from '@/server/models/userModel';
+import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
     } as CreateUserData;
 
     const userModel = new UserModel();
+    const activity = new AdminActivityLogRepository();
     const user = await userModel.createUser(userInput);
 
     // Optionally create a fitness profile when fields are provided
@@ -67,10 +69,14 @@ export async function POST(request: Request) {
         console.warn('Profile creation failed for new user', e);
       }
     }
-
+    await activity.log({ targetUserId: user.id, action: 'admin.create_user', payload: { name, phoneNumber, email }, result: 'success' });
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {
     console.error('[admin users] POST failed', err);
+    try {
+      const activity = new AdminActivityLogRepository();
+      await activity.log({ targetUserId: 'unknown', action: 'admin.create_user', result: 'failure', errorMessage: err instanceof Error ? err.message : 'unknown' });
+    } catch {}
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
