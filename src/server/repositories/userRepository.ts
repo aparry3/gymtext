@@ -56,33 +56,32 @@ export class UserRepository extends BaseRepository {
     }
 
     if (createdFrom) {
-      query = query.where('users.createdAt', '>=', createdFrom);
+      query = query.where('users.createdAt', '>=', new Date(createdFrom));
     }
     if (createdTo) {
-      query = query.where('users.createdAt', '<=', createdTo);
+      query = query.where('users.createdAt', '<=', new Date(createdTo));
     }
 
     // Note: hasProfile/hasPlan filters can be added when plan joins are available
 
-    const countQuery = this.db
+    let countBuilder = this.db
       .selectFrom('users')
-      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
-      .select((eb) => eb.fn.countAll<number>().as('count'));
+      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId');
 
-    // apply same filters to count
     if (q) {
       const like = `%${q}%`;
-      // @ts-expect-error Kysely typing for or conditions
-      countQuery.where((eb) => eb.or([
+      countBuilder = countBuilder.where((eb) => eb.or([
         eb('users.name', 'ilike', like),
         eb('users.email', 'ilike', like),
         eb('users.phoneNumber', 'ilike', like),
       ]));
     }
-    if (createdFrom) countQuery.where('users.createdAt', '>=', createdFrom);
-    if (createdTo) countQuery.where('users.createdAt', '<=', createdTo);
+    if (createdFrom) countBuilder = countBuilder.where('users.createdAt', '>=', new Date(createdFrom));
+    if (createdTo) countBuilder = countBuilder.where('users.createdAt', '<=', new Date(createdTo));
 
-    const totalResult = await countQuery.executeTakeFirst();
+    const totalResult = await countBuilder
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .executeTakeFirst();
     const total = Number(totalResult?.count || 0);
 
     const usersRows = await query

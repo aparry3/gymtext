@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { UserModel } from '@/server/models/userModel';
 
-export async function GET(_request: Request, { params }: { params: { userId: string } }) {
+export async function GET(_request: Request, context: { params: Promise<{ userId: string }> }) {
   try {
+    const { userId } = await context.params;
     const userModel = new UserModel();
-    const user = await userModel.getUserWithProfile(params.userId);
+    const user = await userModel.getUserWithProfile(userId);
     if (!user) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }

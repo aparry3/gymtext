@@ -8,8 +8,9 @@ async function getUser(userId: string) {
   return res.json();
 }
 
-export default async function AdminUserDetailPage({ params }: { params: { userId: string } }) {
-  const data = await getUser(params.userId);
+export default async function AdminUserDetailPage({ params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
+  const data = await getUser(userId);
   const user = data?.user;
 
   return (
