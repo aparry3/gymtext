@@ -17,7 +17,7 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 ---
 
 ## 1) Database & Types
-- [x] Migration: create `admin_activity_logs`
+- [x] Migration: create `admin_activity_logs` (created via `pnpm migrate:create`)
   - [ ] Columns: `id`, `actor_user_id` (nullable), `target_user_id`, `action` (enum), `payload` (jsonb), `result` (enum: success|failure), `error_message` (nullable), `created_at`
   - [ ] Indexes: `idx_admin_activity_logs_target`, `idx_admin_activity_logs_created_at`
 - [ ] Indexes (if missing):

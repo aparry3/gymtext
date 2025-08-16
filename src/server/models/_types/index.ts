@@ -23,6 +23,17 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AdminActivityLogs {
+  action: string;
+  actorUserId: string | null;
+  createdAt: Generated<Timestamp>;
+  errorMessage: string | null;
+  id: Generated<string>;
+  payload: Generated<Json>;
+  result: string;
+  targetUserId: string;
+}
+
 export interface Conversations {
   createdAt: Generated<Timestamp>;
   id: Generated<string>;
@@ -151,6 +162,7 @@ export interface WorkoutInstances {
 }
 
 export interface DB {
+  adminActivityLogs: AdminActivityLogs;
   conversations: Conversations;
   conversationTopics: ConversationTopics;
   fitnessPlans: FitnessPlans;
