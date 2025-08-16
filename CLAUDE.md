@@ -54,9 +54,10 @@ src/
 
 ### Key Architectural Patterns
 - **Repository Pattern**: All database operations go through repositories
-- **Service Layer**: Business logic is isolated in services
-- **Agent Pattern**: Each AI task has a dedicated agent with specific prompts
+- **Service Layer**: Business logic is isolated in services, delegates LLM work to agents
+- **Agent Pattern**: Each AI task has a dedicated agent with specific prompts - services should NOT instantiate LLMs directly
 - **Type Safety**: Full TypeScript with Kysely codegen for database types
+- **Clean Architecture**: Services use agents for all LLM interactions (see _claude_docs/AGENT_ARCHITECTURE.md)
 
 ### Database Schema
 Core tables include:
@@ -70,12 +71,14 @@ Core tables include:
 
 ### AI Agent System
 Specialized agents in `src/server/agents/`:
-- `chatAgent` - General conversation responses
+- `contextualChatChain` (`chat/chain.ts`) - Contextual conversation responses with history
 - `generateFitnessPlanAgent` - Creates fitness plans with simplified mesocycle structure
 - `dailyWorkout` - Generates on-demand workouts with block structure using Gemini 2.0 Flash
 - `microcyclePattern` - Creates weekly training patterns with progressive overload
 - `dailyMessageAgent` - Generates daily workout messages
 - `welcomeMessageAgent` - Onboarding messages
+
+**Important**: Services should use these agents, not instantiate their own LLMs
 
 ### Environment Variables
 Required environment variables (see .env.example):
@@ -93,10 +96,11 @@ Required environment variables (see .env.example):
 - Migrations are in the `migrations/` directory
 
 ### Adding New Features
-- Follow the existing service/repository pattern
+- Follow the existing service/repository/agent pattern
 - Place business logic in services, not in API routes
-- Use the appropriate AI agent for LLM tasks
+- Use the appropriate AI agent for LLM tasks - never instantiate LLMs directly in services
 - Add proper TypeScript types for all new code
+- See `_claude_docs/AGENT_ARCHITECTURE.md` for agent pattern details
 
 ### Testing Considerations
 - The project uses Vitest for testing
