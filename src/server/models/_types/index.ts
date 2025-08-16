@@ -144,8 +144,8 @@ export interface WorkoutInstances {
   fitnessPlanId: string;
   goal: string | null;
   id: Generated<string>;
-  mesocycleId: string;
-  microcycleId: string;
+  mesocycleId: string | null;
+  microcycleId: string | null;
   sessionType: string;
   updatedAt: Generated<Timestamp>;
 }

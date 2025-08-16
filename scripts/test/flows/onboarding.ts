@@ -189,7 +189,7 @@ class OnboardingFlow {
       }
 
       // Create user via API
-      const apiUrl = this.config.getApiUrl('/api/checkout');
+      const apiUrl = this.config.getApiUrl('/checkout');
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -331,7 +331,7 @@ class OnboardingFlow {
       }
 
       // Call fitness plan generation API
-      const apiUrl = this.config.getApiUrl('/api/fitness-plans/generate');
+      const apiUrl = this.config.getApiUrl('/fitness-plans/generate');
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -376,7 +376,7 @@ class OnboardingFlow {
       }
 
       // Send welcome SMS sequence
-      const apiUrl = this.config.getApiUrl('/api/messages/welcome');
+      const apiUrl = this.config.getApiUrl('/messages/welcome');
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -426,7 +426,7 @@ class OnboardingFlow {
       }
 
       // Generate first workout
-      const apiUrl = this.config.getApiUrl('/api/workouts/generate');
+      const apiUrl = this.config.getApiUrl('/workouts/generate');
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

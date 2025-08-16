@@ -2,7 +2,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { MessageService } from './messageService';
 import { UserWithProfile } from '@/server/models/userModel';
-import { WorkoutInstance } from '@/server/models/workout';
+import { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
@@ -308,11 +308,11 @@ export class DailyMessageService {
       });
 
       // Convert enhanced workout to database format
-      const workout: WorkoutInstance = {
-        id: `workout-${user.id}-${targetDate.toISODate()}`,
+      const workout: NewWorkoutInstance = {
+        // Let database generate UUID automatically
         clientId: user.id,
         fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleId: `meso-${microcycle.mesocycleIndex}`,
+        mesocycleId: null, // No longer using mesocycles table
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
         sessionType: this.mapThemeToSessionType(dayPattern.theme),
@@ -341,13 +341,20 @@ export class DailyMessageService {
    */
   private mapThemeToSessionType(theme: string): string {
     const themeLower = theme.toLowerCase();
-    if (themeLower.includes('run') || themeLower.includes('cardio')) return 'run';
+    // Valid types: strength, cardio, mobility, recovery, assessment, deload
+    if (themeLower.includes('run') || themeLower.includes('cardio') || 
+        themeLower.includes('hiit') || themeLower.includes('metcon') ||
+        themeLower.includes('conditioning')) return 'cardio';
     if (themeLower.includes('lift') || themeLower.includes('strength') || 
-        themeLower.includes('upper') || themeLower.includes('lower')) return 'lift';
-    if (themeLower.includes('hiit') || themeLower.includes('metcon')) return 'metcon';
-    if (themeLower.includes('mobility') || themeLower.includes('recovery')) return 'mobility';
-    if (themeLower.includes('rest')) return 'rest';
-    return 'other';
+        themeLower.includes('upper') || themeLower.includes('lower') ||
+        themeLower.includes('push') || themeLower.includes('pull')) return 'strength';
+    if (themeLower.includes('mobility') || themeLower.includes('flexibility') ||
+        themeLower.includes('stretch')) return 'mobility';
+    if (themeLower.includes('rest') || themeLower.includes('recovery')) return 'recovery';
+    if (themeLower.includes('assessment') || themeLower.includes('test')) return 'assessment';
+    if (themeLower.includes('deload')) return 'deload';
+    // Default to strength for hybrid/unknown workouts
+    return 'strength';
   }
 
   /**
@@ -365,11 +372,11 @@ export class DailyMessageService {
       const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
       if (!dayPattern) return null;
 
-      const workout: WorkoutInstance = {
-        id: `workout-${user.id}-${targetDate.toISODate()}`,
+      const workout: NewWorkoutInstance = {
+        // Let database generate UUID automatically
         clientId: user.id,
         fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleId: `meso-${microcycle.mesocycleIndex}`,
+        mesocycleId: null, // No longer using mesocycles table
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
         sessionType: this.mapThemeToSessionType(dayPattern.theme),

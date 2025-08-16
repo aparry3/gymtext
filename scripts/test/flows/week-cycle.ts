@@ -143,7 +143,7 @@ class WeekCycleFlow {
    */
   private async generateMicrocyclePattern(userId: string, week: number): Promise<any> {
     try {
-      const apiUrl = this.config.getApiUrl('/api/microcycle/generate');
+      const apiUrl = this.config.getApiUrl('/microcycle/generate');
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -222,7 +222,7 @@ class WeekCycleFlow {
           }
 
           try {
-            const apiUrl = this.config.getApiUrl('/api/workouts/generate');
+            const apiUrl = this.config.getApiUrl('/workouts/generate');
             const response = await fetch(apiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ class WeekCycleFlow {
       if (!this.options.skipProgress) {
         try {
           // Simulate weekly progress update
-          const apiUrl = this.config.getApiUrl('/api/progress/weekly');
+          const apiUrl = this.config.getApiUrl('/progress/weekly');
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

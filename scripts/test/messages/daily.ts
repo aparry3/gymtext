@@ -91,7 +91,7 @@ class DailyMessageTester {
       }
 
       // Prepare API request
-      const apiUrl = this.config.getApiUrl('/api/cron/daily-messages');
+      const apiUrl = this.config.getApiUrl('/cron/daily-messages');
       const params = new URLSearchParams({
         testMode: 'true',
         testUserIds: userId,
@@ -449,7 +449,7 @@ program
   .option('-a, --all', 'Send to all users scheduled for current/specified hour')
   .option('-H, --hour <hour>', 'Test specific UTC hour (0-23)', parseInt)
   .option('-d, --date <date>', 'Test specific date (ISO format)')
-  .option('--dry-run', 'Run without sending actual messages', true)
+  .option('--dry-run', 'Run without sending actual messages', false)
   .option('--no-dry-run', 'Send actual messages (use with caution!)')
   .option('-f, --force-generate', 'Force regenerate workout (bypass cache)')
   .option('-b, --batch', 'Test multiple hours')

@@ -97,7 +97,7 @@ class BatchMessageTester {
       }
 
       // Call the API
-      const apiUrl = this.config.getApiUrl('/api/cron/daily-messages');
+      const apiUrl = this.config.getApiUrl('/cron/daily-messages');
       const params = new URLSearchParams({
         testMode: 'true',
         testUserIds: userId,

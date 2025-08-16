@@ -188,7 +188,7 @@ async function sendTestSMS(options: SmsTestOptions) {
   
   // Default values
   const messageId = options.sid || generateMessageSid();
-  const apiUrl = options.url || config.getApiUrl('/api/sms');
+  const apiUrl = options.url || config.getApiUrl('/sms');
   const twilioNumber = process.env.TWILIO_NUMBER || '+15555555555';
 
   if (!options.json) {

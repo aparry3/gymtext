@@ -6,7 +6,7 @@ export const _WorkoutBlockItemSchema = z.object({
     .describe("Type of exercise in the workout"),
   exercise: z.string().describe("Name of the exercise"),
   sets: z.number().optional().describe("Number of sets"),
-  reps: z.union([z.number(), z.string()]).optional().describe("Number of reps (can be range like '6-8')"),
+  reps: z.string().optional().describe("Number of reps (can be range like '6-8' or number like '10')"),
   durationSec: z.number().optional().describe("Duration in seconds"),
   durationMin: z.number().optional().describe("Duration in minutes"),
   RPE: z.number().min(1).max(10).optional().describe("Rate of Perceived Exertion (1-10)"),

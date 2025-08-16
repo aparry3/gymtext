@@ -143,7 +143,7 @@ class DailyCycleFlow {
       // Step 1: Generate workout for the day
       if (!this.options.skipWorkouts) {
         try {
-          const apiUrl = this.config.getApiUrl('/api/workouts/generate');
+          const apiUrl = this.config.getApiUrl('/workouts/generate');
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -173,7 +173,7 @@ class DailyCycleFlow {
       // Step 2: Send daily messages
       if (!this.options.skipMessages) {
         try {
-          const apiUrl = this.config.getApiUrl('/api/cron/daily-messages');
+          const apiUrl = this.config.getApiUrl('/cron/daily-messages');
           const params = new URLSearchParams({
             testMode: 'true',
             testUserIds: userId,
@@ -202,7 +202,7 @@ class DailyCycleFlow {
       if (!this.options.skipProgress) {
         try {
           // Simulate workout completion
-          const apiUrl = this.config.getApiUrl('/api/progress/update');
+          const apiUrl = this.config.getApiUrl('/progress/update');
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
