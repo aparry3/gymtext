@@ -6,9 +6,6 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
 
 export class ChatService {
 
-  constructor() {
-  }
-
   async handleIncomingMessage(
     user: UserWithProfile,
     message: string
