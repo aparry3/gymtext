@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ToastProvider } from '../../_components/ToastProvider';
 
 async function getUser(userId: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/users/${userId}`, {
@@ -8,7 +9,7 @@ async function getUser(userId: string) {
   return res.json();
 }
 
-export default async function AdminUserDetailPage({ params }: { params: Promise<{ userId: string }> }) {
+async function Inner({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
   const data = await getUser(userId);
   const user = data?.user;
@@ -35,14 +36,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <div>Preferred Hour: {user.preferredSendHour}:00</div>
             <div>Created: {new Date(user.createdAt).toLocaleString()}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={async () => {
-                await fetch(`/api/admin/users/${user.id}/plans`, { method: 'POST' });
-                alert('Plan generation requested');
-              }} style={{ padding: 8, borderRadius: 6 }}>Generate Plan</button>
-              <button onClick={async () => {
-                await fetch(`/api/admin/users/${user.id}/send-daily-message`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dryRun: true }) });
-                alert('Daily message (dry run) requested');
-              }} style={{ padding: 8, borderRadius: 6 }}>Send Daily (Dry Run)</button>
+              <form action={`/api/admin/users/${user.id}/plans`} method="post">
+                <button type="submit" style={{ padding: 8, borderRadius: 6 }}>Generate Plan</button>
+              </form>
+              <form action={`/api/admin/users/${user.id}/send-daily-message`} method="post">
+                <input type="hidden" name="dryRun" value="true" />
+                <button type="submit" style={{ padding: 8, borderRadius: 6 }}>Send Daily (Dry Run)</button>
+              </form>
             </div>
           </div>
           <div>
@@ -61,10 +61,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <button onClick={async () => {
                   const res = await fetch(`/api/admin/users/${user.id}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skillLevel: 'beginner', fitnessGoals: 'General fitness', exerciseFrequency: '3-4 times per week', gender: 'other', age: '30' }) });
                   if (res.ok) {
-                    alert('Profile created');
                     location.reload();
-                  } else {
-                    alert('Failed to create profile');
                   }
                 }} style={{ marginTop: 8, padding: 8, borderRadius: 6 }}>Quick Create Profile</button>
               </div>
@@ -115,5 +112,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminUserDetailPage(props: { params: Promise<{ userId: string }> }) {
+  return (
+    <ToastProvider>
+      <Inner {...props} />
+    </ToastProvider>
   );
 }

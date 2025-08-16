@@ -11,8 +11,18 @@ import { AdminActivityLogRepository } from '@/server/repositories/adminActivityL
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
   try {
     const { userId } = await context.params;
-    const body = await request.json().catch(() => ({}));
-    const { date, dryRun } = body || {};
+    let date: string | undefined;
+    let dryRun = false;
+    const contentType = request.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const body: { date?: string; dryRun?: boolean } = await request.json().catch(() => ({}));
+      date = body?.date;
+      dryRun = Boolean(body?.dryRun);
+    } else if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+      const form = await request.formData();
+      date = (form.get('date') as string) || undefined;
+      dryRun = (form.get('dryRun') as string) === 'true';
+    }
     const dailyMessageService = new DailyMessageService(
       new UserRepository(),
       new WorkoutInstanceRepository(),

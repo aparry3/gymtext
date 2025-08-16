@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { ToastProvider, useToast } from '../_components/ToastProvider';
 
 interface UserRow {
   id: string;
@@ -12,7 +13,7 @@ interface UserRow {
   profile?: unknown | null;
 }
 
-export default function AdminUsersPage() {
+function UsersInner() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -30,6 +31,8 @@ export default function AdminUsersPage() {
     // We intentionally run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const { showToast } = useToast();
 
   async function fetchUsers() {
     setLoading(true);
@@ -55,11 +58,11 @@ export default function AdminUsersPage() {
       const res = await fetch(`/api/cron/daily-messages?${params.toString()}`, { method: 'GET' });
       if (!res.ok) {
         const text = await res.text();
-        alert(`Batch failed: ${text}`);
+        showToast(`Batch failed: ${text}`, 'error');
         return;
       }
       const data = await res.json();
-      alert(`Batch complete. processed=${data.processed} failed=${data.failed}`);
+      showToast(`Batch complete. processed=${data.processed} failed=${data.failed}`, 'success');
     } finally {
       setBatchSubmitting(false);
     }
@@ -133,5 +136,13 @@ export default function AdminUsersPage() {
         </tbody>
       </table>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <ToastProvider>
+      <UsersInner />
+    </ToastProvider>
   );
 }
