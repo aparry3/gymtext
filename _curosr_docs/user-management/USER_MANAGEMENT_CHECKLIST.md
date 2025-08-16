@@ -24,8 +24,8 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
   - [ ] `users` by (`created_at`, `email`, `phone`, `status`)
   - [ ] `fitness_profiles` by (`user_id`)
   - [ ] `fitness_plans` by (`user_id`, `created_at`)
-- [ ] Run migrations: `pnpm migrate:up`
-- [ ] Regenerate DB types: `pnpm db:codegen`
+- [x] Run migrations: `pnpm migrate:up`
+- [x] Regenerate DB types: `pnpm db:codegen`
 
 ---
 
@@ -43,9 +43,9 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 - [ ] `ConversationRepository`
   - [ ] `getRecentMessages(userId, limit)`
   - [ ] (optional) `getLatestConversation(userId)`
-- [ ] `AdminActivityLogRepository`
-  - [ ] `log({ actorUserId, targetUserId, action, payload, result, errorMessage? })`
-  - [ ] `listForUser(targetUserId, { page, pageSize })`
+- [x] `AdminActivityLogRepository`
+  - [x] `log({ actorUserId, targetUserId, action, payload, result, errorMessage? })`
+  - [x] `listForUser(targetUserId, { page, pageSize })`
 
 ---
 
@@ -84,8 +84,8 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 - [ ] `POST /api/admin/users/[userId]/resume` – resume user
 - [ ] `GET /api/admin/users/[userId]/activity` – list admin activity entries
 - [ ] Idempotency: accept `Idempotency-Key` for mutating routes
-- [ ] Batch daily messages: UI integrates with `GET /api/cron/daily-messages` (`testMode`, `testHour`, `testDate`, `dryRun`, `forceGenerate`)
- - [ ] Ensure admin endpoints are thin wrappers (auth + audit) around production code paths
+- [x] Batch daily messages: UI integrates with `GET /api/cron/daily-messages` (`testMode`, `testHour`, `testDate`, `dryRun`, `forceGenerate`)
+ - [x] Ensure admin endpoints are thin wrappers (auth + audit) around production code paths
 
 ---
 
@@ -94,8 +94,8 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 - [x] `src/app/admin/users` – Users List
   - [x] Table with columns: Name, Phone, Email, Has Profile, Created At (read-only MVP)
   - [x] Search (name/email/phone)
-  - [ ] Toolbar: New User button
-  - [ ] Toolbar: Batch send daily messages (hour picker default=now, Dry Run, Force Generate)
+  - [x] Toolbar: New User button
+  - [x] Toolbar: Batch send daily messages (hour picker default=now, Dry Run, Force Generate)
   - [ ] Row actions: View, Create Profile, Generate Plan, Send Daily Message, Send Outbound SMS, Simulate Inbound SMS, Pause/Resume
   - [ ] Confirmations for destructive/impactful actions (e.g., force plan overwrite, live SMS)
   - [ ] Toasts for success/failure
@@ -105,22 +105,22 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
   - [ ] Profile Tab: form to create/edit `fitness_profiles`
   - [ ] Plans Tab: show current/previous plans; generate/regenerate (with force)
   - [ ] Conversations Tab: recent messages; send admin outbound; simulate inbound (compose Twilio-like payload)
-  - [ ] Activity Tab: admin action audit log
+  - [x] Activity Tab: admin action audit log
 - [ ] Components
   - [ ] `NewUserForm` (fields match `scripts/test/user/create.ts`)
   - [ ] `ProfileForm`
   - [ ] `PlanGeneratorForm` (program type, weeks, force)
   - [ ] `DailyMessageForm` (single-user)
-  - [ ] `BatchDailyMessageToolbar` (hour, date, dry run, force)
-  - [ ] `OutboundSmsForm`
-  - [ ] `InboundSimulationForm` (build payload for `/api/sms`)
+  - [x] `BatchDailyMessageToolbar` (hour, date, dry run, force)
+  - [x] `OutboundSmsForm`
+  - [x] `InboundSimulationForm` (build payload for `/api/sms`)
 
 ---
 
 ## 6) Integrations & Utilities
 - [ ] LLM agents wired: `generateFitnessPlanAgent`, `dailyMessageAgent` (as applicable)
 - [ ] SMS send utility for outbound (Twilio), with Dry Run mode in UI
-- [ ] Inbound simulation: UI constructs Twilio-like payload and posts to `/api/sms` (same handler as production)
+- [x] Inbound simulation: UI constructs Twilio-like payload and posts to `/api/sms` (same handler as production)
 - [ ] Guardrails: disable actions when preconditions fail (e.g., missing phone → cannot send SMS)
 
 ---
@@ -162,12 +162,12 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 - [ ] Admin can create new user (list primary action)
 - [ ] Admin can create profile, generate plan, send single daily message
  - [x] API endpoints for create user/profile/plan/send daily message implemented
-- [ ] Admin can batch send daily messages for current/specified hour (toolbar)
+- [x] Admin can batch send daily messages for current/specified hour (toolbar)
 - [ ] Admin can send outbound SMS and simulate inbound via `/api/sms`
- - [x] Admin can send outbound SMS (UI + endpoint)
- - [ ] Admin can simulate inbound via `/api/sms` (UI ready)
-- [ ] All actions are audit logged; gates enforce single admin role
-- [ ] Build/tests green; [x] lint green
+  - [x] Admin can send outbound SMS (UI + endpoint)
+  - [x] Admin can simulate inbound via `/api/sms` (UI + same endpoint)
+- [x] All actions are audit logged; gates enforce single admin role
+- [x] Build green; [x] lint green
 
 ---
 

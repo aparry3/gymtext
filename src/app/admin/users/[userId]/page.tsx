@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ToastProvider } from '../../_components/ToastProvider';
+import { MessagingForm, QuickCreateProfileButton } from '../../_components/ClientActions';
 
 async function getUser(userId: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/users/${userId}`, {
@@ -58,33 +59,13 @@ async function Inner({ params }: { params: Promise<{ userId: string }> }) {
             ) : (
               <div>
                 <div>No profile.</div>
-                <button onClick={async () => {
-                  const res = await fetch(`/api/admin/users/${user.id}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ skillLevel: 'beginner', fitnessGoals: 'General fitness', exerciseFrequency: '3-4 times per week', gender: 'other', age: '30' }) });
-                  if (res.ok) {
-                    location.reload();
-                  }
-                }} style={{ marginTop: 8, padding: 8, borderRadius: 6 }}>Quick Create Profile</button>
+                <QuickCreateProfileButton userId={user.id} />
               </div>
             )}
           </div>
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Messaging</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = e.target as HTMLFormElement;
-              const message = (form.elements.namedItem('message') as HTMLInputElement).value;
-              const dryRun = (form.elements.namedItem('dryRun') as HTMLInputElement).checked;
-              const res = await fetch(`/api/admin/users/${user.id}/messages/outbound`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, dryRun }) });
-              alert(res.ok ? (dryRun ? 'Dry run success' : 'Message sent') : 'Failed to send');
-            }}>
-              <textarea name="message" placeholder="Type a message..." style={{ width: '100%', minHeight: 80, padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <input type="checkbox" name="dryRun" /> Dry run
-                </label>
-                <button type="submit" style={{ padding: 8, borderRadius: 6 }}>Send</button>
-              </div>
-            </form>
+            <MessagingForm userId={user.id} />
           </div>
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Activity</h2>
