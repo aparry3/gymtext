@@ -1,71 +1,61 @@
-import type { JsonValue, Microcycles } from '../_types';
-import { Insertable, Selectable, Updateable } from 'kysely';
-import { _MicrocycleOverviewSchema, _MicrocycleSchema, LLMMicrocycle } from "./schema";
-import { UserWithProfile } from '../userModel';
-import { FitnessPlan } from '../fitnessPlan';
-import { Mesocycle } from '../mesocycle';
-import { WorkoutInstance, WorkoutInstanceBreakdown } from '../workout';
+import { Microcycles } from '@/server/models/_types';
 
+export interface MicrocyclePattern {
+  weekIndex: number;  // Week within mesocycle
+  days: Array<{
+    day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+    theme: string;  // e.g., "Lower", "Upper Push"
+    load?: 'light' | 'moderate' | 'heavy';
+    notes?: string;
+  }>;
+}
 
-export type Microcycle = Selectable<Microcycles>;
-export type NewMicrocycle = Insertable<Microcycles>;
-export type MicrocycleUpdate = Updateable<Microcycles>;
-
-
-export type MicrocycleBreakdown = LLMMicrocycle & {
+export interface Microcycle {
+  id: string;
+  userId: string;
+  fitnessPlanId: string;
+  mesocycleIndex: number;
+  weekNumber: number;
+  pattern: MicrocyclePattern;
   startDate: Date;
   endDate: Date;
-  workouts: WorkoutInstanceBreakdown[];
-}
-export interface MicrocycleOverview {
-  index: number;
-  split?: string;
-  totalMileage?: number;
-  longRunMileage?: number;
-  avgIntensityPct1RM?: number;
-  totalSetsMainLifts?: number;
-  deload?: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface DetailedMicrocycle extends Microcycle {
-  workouts: WorkoutInstance[];
-}
-
-export class MicrocycleModel implements NewMicrocycle {
-  clientId: string;
-  createdAt: Date | string | undefined;
-  endDate: Date | string;
-  fitnessPlanId: string;
-  id: string | undefined;
-  index: number;
-  mesocycleId: string;
-  startDate: Date | string;
-  updatedAt: Date | string | undefined;
-  targets: JsonValue | undefined;
-
-  constructor(microcycle: NewMicrocycle) {
-    this.clientId = microcycle.clientId;
-    this.createdAt = microcycle.createdAt;
-    this.endDate = microcycle.endDate;
-    this.fitnessPlanId = microcycle.fitnessPlanId;
-    this.id = microcycle.id;
-    this.index = microcycle.index;
-    this.mesocycleId = microcycle.mesocycleId;
-    this.startDate = microcycle.startDate;
-    this.updatedAt = microcycle.updatedAt;
-    this.targets = microcycle.targets;
-  }
-
-  public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Omit<MicrocycleBreakdown, 'workouts'>): NewMicrocycle {
+export class MicrocycleModel {
+  static fromDB(row: Microcycles): Microcycle {
     return {
-      ...microcycle,
-      clientId: user.id,
-      fitnessPlanId: fitnessPlan.id!,
-      mesocycleId: mesocycle.id,
+      id: row.id as unknown as string,
+      userId: row.userId as unknown as string,
+      fitnessPlanId: row.fitnessPlanId as unknown as string,
+      mesocycleIndex: row.mesocycleIndex,
+      weekNumber: row.weekNumber,
+      pattern: typeof row.pattern === 'string' 
+        ? JSON.parse(row.pattern) 
+        : row.pattern as unknown as MicrocyclePattern,
+      startDate: new Date(row.startDate as unknown as string | number | Date),
+      endDate: new Date(row.endDate as unknown as string | number | Date),
+      isActive: (row.isActive as unknown as boolean) ?? true,
+      createdAt: new Date(row.createdAt as unknown as string | number | Date),
+      updatedAt: new Date(row.updatedAt as unknown as string | number | Date),
     };
   }
 
-  public static overviewSchema = _MicrocycleOverviewSchema;
-
-  public static schema = _MicrocycleSchema;
+  static toDB(microcycle: Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>): Omit<Microcycles, 'id' | 'createdAt' | 'updatedAt'> {
+    return {
+      userId: microcycle.userId,
+      fitnessPlanId: microcycle.fitnessPlanId,
+      mesocycleIndex: microcycle.mesocycleIndex,
+      weekNumber: microcycle.weekNumber,
+      pattern: JSON.stringify(microcycle.pattern),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      startDate: microcycle.startDate as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      endDate: microcycle.endDate as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      isActive: microcycle.isActive as any,
+    };
+  }
 }

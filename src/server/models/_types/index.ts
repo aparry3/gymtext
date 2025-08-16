@@ -23,6 +23,17 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AdminActivityLogs {
+  action: string;
+  actorUserId: string | null;
+  createdAt: Generated<Timestamp>;
+  errorMessage: string | null;
+  id: Generated<string>;
+  payload: Generated<Json>;
+  result: string;
+  targetUserId: string;
+}
+
 export interface Conversations {
   createdAt: Generated<Timestamp>;
   id: Generated<string>;
@@ -31,6 +42,7 @@ export interface Conversations {
   metadata: Generated<Json | null>;
   startedAt: Timestamp;
   status: Generated<string>;
+  summary: string | null;
   updatedAt: Generated<Timestamp>;
   userId: string;
 }
@@ -46,9 +58,14 @@ export interface ConversationTopics {
 export interface FitnessPlans {
   clientId: string;
   createdAt: Generated<Timestamp>;
+  currentMesocycleIndex: Generated<number | null>;
+  currentMicrocycleWeek: Generated<number | null>;
+  cycleStartDate: Timestamp | null;
   goalStatement: string | null;
   id: Generated<string>;
-  macrocycles: Json;
+  lengthWeeks: number | null;
+  mesocycles: Json | null;
+  notes: string | null;
   overview: string | null;
   programType: string;
   startDate: Timestamp;
@@ -67,18 +84,6 @@ export interface FitnessProfiles {
   userId: string;
 }
 
-export interface Mesocycles {
-  clientId: string;
-  createdAt: Generated<Timestamp>;
-  fitnessPlanId: string;
-  id: Generated<string>;
-  index: number;
-  lengthWeeks: number;
-  phase: string;
-  startDate: Timestamp;
-  updatedAt: Generated<Timestamp>;
-}
-
 export interface Messages {
   content: string;
   conversationId: string;
@@ -93,16 +98,27 @@ export interface Messages {
 }
 
 export interface Microcycles {
-  clientId: string;
   createdAt: Generated<Timestamp>;
   endDate: Timestamp;
   fitnessPlanId: string;
   id: Generated<string>;
-  index: number;
-  mesocycleId: string;
+  isActive: Generated<boolean | null>;
+  mesocycleIndex: number;
+  pattern: Json;
   startDate: Timestamp;
-  targets: Json | null;
   updatedAt: Generated<Timestamp>;
+  userId: string;
+  weekNumber: number;
+}
+
+export interface NeonAuthUsersSync {
+  createdAt: Generated<Timestamp | null>;
+  deletedAt: Timestamp | null;
+  email: Generated<string | null>;
+  id: Generated<string>;
+  name: Generated<string | null>;
+  rawJson: Json;
+  updatedAt: Timestamp | null;
 }
 
 export interface Subscriptions {
@@ -139,20 +155,21 @@ export interface WorkoutInstances {
   fitnessPlanId: string;
   goal: string | null;
   id: Generated<string>;
-  mesocycleId: string;
-  microcycleId: string;
+  mesocycleId: string | null;
+  microcycleId: string | null;
   sessionType: string;
   updatedAt: Generated<Timestamp>;
 }
 
 export interface DB {
+  adminActivityLogs: AdminActivityLogs;
   conversations: Conversations;
   conversationTopics: ConversationTopics;
   fitnessPlans: FitnessPlans;
   fitnessProfiles: FitnessProfiles;
-  mesocycles: Mesocycles;
   messages: Messages;
   microcycles: Microcycles;
+  "neonAuth.usersSync": NeonAuthUsersSync;
   subscriptions: Subscriptions;
   users: Users;
   workoutInstances: WorkoutInstances;

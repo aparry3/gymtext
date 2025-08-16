@@ -1,321 +1,604 @@
-# GymText Scripts Documentation
+# Test Scripts Documentation
 
-This document provides comprehensive documentation for all scripts available in the GymText project.
+This document provides comprehensive documentation for all test scripts in the GymText project. These scripts are designed to facilitate development, testing, and debugging of the fitness coaching application.
 
-## Overview
+## Quick Start
 
-GymText includes several utility scripts for development, testing, and database management. All scripts are written in TypeScript and executed using `tsx`.
-
-## Available Scripts
-
-### Database Management
-
-#### `pnpm db:codegen`
-Generates TypeScript types from the PostgreSQL database schema using Kysely Codegen.
-
-**When to use:** After any database schema changes or before running the application.
-
-**Details:**
-- Automatically runs before `dev` and `build` commands
-- Outputs types to `./src/server/models/_types/index.ts`
-- Excludes internal Kysely tables
-- Uses camel-case naming convention
-
----
-
-#### `pnpm migrate:create [migration-name]`
-Creates a new database migration file with proper timestamp and boilerplate code.
-
-**Example:**
 ```bash
-pnpm migrate:create add_user_preferences_table
+# Most common operations
+pnpm test:user:create          # Create a new test user
+pnpm test:fitness:plan          # Generate a fitness plan
+pnpm test:messages:daily        # Send daily workout message
+pnpm test:flow:onboarding       # Complete onboarding flow
 ```
 
-**Output:** Creates `migrations/20240124120000_add_user_preferences_table.ts`
+## Directory Structure
 
----
-
-#### `pnpm migrate:up`
-Applies all pending database migrations.
-
-**Prerequisites:**
-- `DATABASE_URL` environment variable must be set
-- Migration files must exist in the `migrations/` directory
-
-**Example:**
-```bash
-pnpm migrate:up
+```
+scripts/
+├── migrations/              # Database migration scripts
+├── test/                   # Test scripts organized by category
+│   ├── user/              # User management
+│   ├── fitness/           # Fitness plan operations
+│   ├── messages/          # Messaging tests
+│   └── flows/             # End-to-end workflows
+├── utils/                 # Shared utilities
+└── docker/                # Docker test runner
 ```
 
----
+## User Management Scripts
 
-#### `pnpm migrate:down`
-Rolls back the last applied database migration.
+### Create User (`test:user:create`)
 
-**Example:**
+Creates a new user with fitness profile.
+
 ```bash
-pnpm migrate:down
-```
+# Interactive mode (prompts for all information)
+pnpm test:user:create
 
-### Development
+# With command-line arguments
+pnpm test:user:create --name "John Doe" --phone "+1234567890" --email "john@example.com"
 
-#### `pnpm dev`
-Starts the Next.js development server with Turbopack.
+# Skip payment for development testing
+pnpm test:user:create --name "Test User" --phone "+1234567890" --skip-payment
 
-**Features:**
-- Runs on `http://localhost:3000`
-- Hot module replacement
-- Automatic TypeScript type generation (via predev hook)
-- Fast refresh for React components
+# Include fitness preferences
+pnpm test:user:create --name "Jane Smith" --phone "+1234567890" \
+  --goals "Build muscle" --level "intermediate" --frequency "4x/week"
 
----
-
-#### `pnpm build`
-Creates a production build of the application.
-
-**Features:**
-- Optimized for production
-- Automatic TypeScript type generation (via prebuild hook)
-- Static optimization where possible
-
----
-
-#### `pnpm start`
-Starts the production server (requires `pnpm build` first).
-
----
-
-#### `pnpm lint`
-Runs ESLint with Next.js specific rules.
-
-### Testing Scripts
-
-#### `pnpm sms:test`
-Tests the SMS webhook endpoint by simulating incoming text messages.
-
-**Usage:**
-```bash
-pnpm sms:test -p "+1234567890" -m "What's my workout today?"
+# JSON output for automation
+pnpm test:user:create --name "Bot User" --phone "+1234567890" --json
 ```
 
 **Options:**
-- `-p, --phone <phone>` (required) - Phone number to simulate
-- `-m, --message <message>` (required) - Message content
-- `-s, --sid <sid>` - Message SID (auto-generated if not provided)
-- `-u, --url <url>` - API endpoint URL (default: http://localhost:3000/api/sms)
-- `-v, --verbose` - Show detailed output
+- `--name <name>`: User's full name
+- `--phone <phone>`: Phone number (E.164 format)
+- `--email <email>`: Email address
+- `--skip-payment`: Skip Stripe payment (dev only)
+- `--goals <goals>`: Fitness goals
+- `--level <level>`: Experience level (beginner/intermediate/advanced)
+- `--frequency <frequency>`: Preferred workout frequency
+- `--json`: Output result as JSON
+- `--verbose`: Show detailed output
 
-**Example Scenarios:**
+### Get User (`test:user:get`)
+
+Retrieves and displays user information.
+
 ```bash
-# Ask about today's workout
-pnpm sms:test -p "+1234567890" -m "What's my workout today?"
+# By phone number
+pnpm test:user:get --phone "+1234567890"
 
-# Mark workout as complete
-pnpm sms:test -p "+1234567890" -m "Done with my workout!"
+# By user ID
+pnpm test:user:get --user-id "abc123"
 
-# Ask a general fitness question
-pnpm sms:test -p "+1234567890" -m "How many rest days should I take?"
-```
+# Show detailed information
+pnpm test:user:get --phone "+1234567890" --verbose
 
----
-
-#### `pnpm checkout:test`
-Tests the checkout/registration API endpoint.
-
-**Usage:**
-```bash
-pnpm checkout:test -n "John Doe" -p "+1234567890" -e "john@example.com"
+# JSON output
+pnpm test:user:get --phone "+1234567890" --json
 ```
 
 **Options:**
-- `-n, --name <name>` (required) - User's name
-- `-p, --phone <phone>` (required) - Phone number
-- `-e, --email <email>` - Email address
-- `--fitness-goals <goals>` - Fitness goals description
-- `--skill-level <level>` - Skill level (beginner/intermediate/advanced)
-- `--exercise-frequency <frequency>` - How often they exercise
-- `--gender <gender>` - User's gender
-- `--age <age>` - User's age
-- `--payment-method <id>` - Payment method ID for direct payment
-- `-u, --url <url>` - API endpoint URL
-- `-v, --verbose` - Show detailed output
+- `--phone <phone>`: Phone number to lookup
+- `--user-id <id>`: User ID to lookup
+- `--json`: Output as JSON
+- `--verbose`: Show detailed information
 
-**Example Scenarios:**
+### Update Profile (`test:user:profile`)
+
+Updates user's fitness profile.
+
 ```bash
-# Basic registration
-pnpm checkout:test -n "John Doe" -p "+1234567890"
+# Interactive mode
+pnpm test:user:profile --phone "+1234567890"
 
-# Full profile registration
-pnpm checkout:test -n "Jane Smith" -p "+1234567890" -e "jane@example.com" \
-  --age 30 --skill-level intermediate --fitness-goals "Build muscle"
+# Update specific fields
+pnpm test:user:profile --phone "+1234567890" \
+  --goals "Lose weight" \
+  --level "advanced" \
+  --frequency "5x/week"
 
-# Test with payment method
-pnpm checkout:test -n "Test User" -p "+1234567890" \
-  --payment-method "pm_card_visa"
-```
+# Update equipment availability
+pnpm test:user:profile --phone "+1234567890" \
+  --equipment "dumbbells,barbell,pull-up bar"
 
----
-
-#### `pnpm programs:test`
-Tests fitness program generation for an existing user.
-
-**Usage:**
-```bash
-pnpm programs:test -i "user_id_here"
+# Add injury information
+pnpm test:user:profile --phone "+1234567890" \
+  --injuries "lower back pain"
 ```
 
 **Options:**
-- `-i, --user-id <id>` (required) - User ID from the database
-- `-u, --url <url>` - API endpoint URL
-- `-v, --verbose` - Show detailed output
+- `--phone <phone>` or `--user-id <id>`: User identifier
+- `--goals <goals>`: Updated fitness goals
+- `--level <level>`: New experience level
+- `--frequency <frequency>`: Updated workout frequency
+- `--equipment <list>`: Available equipment (comma-separated)
+- `--injuries <list>`: Current injuries or limitations
 
-**Note:** You need a valid user ID from a previously created user. Create a user first using `checkout:test`.
+## Fitness Plan Scripts
 
----
+### Create Fitness Plan (`test:fitness:plan`)
 
-#### `pnpm flow:test`
-Tests the complete user registration and onboarding flow end-to-end.
+Generates a new fitness plan for a user.
 
-**Usage:**
 ```bash
-pnpm flow:test -n "John Doe" -p "+1234567890"
+# Generate plan for user
+pnpm test:fitness:plan --phone "+1234567890"
+
+# Specify program type
+pnpm test:fitness:plan --phone "+1234567890" --type "strength"
+
+# Verbose output showing mesocycles
+pnpm test:fitness:plan --phone "+1234567890" --verbose
+
+# JSON output for automation
+pnpm test:fitness:plan --user-id "abc123" --json
 ```
 
 **Options:**
-- `-n, --name <name>` (required) - User's name
-- `-p, --phone <phone>` (required) - Phone number
-- `-e, --email <email>` - Email address
-- `--fitness-goals <goals>` - Fitness goals
-- `--skill-level <level>` - Skill level
-- `--exercise-frequency <frequency>` - Exercise frequency
-- `--gender <gender>` - Gender
-- `--age <age>` - Age
-- `-b, --base-url <url>` - Base API URL (default: http://localhost:3000)
-- `-d, --delay <ms>` - Delay between steps (default: 2000)
-- `--skip-payment` - Skip payment step for testing
-- `-v, --verbose` - Show detailed output
+- `--phone <phone>` or `--user-id <id>`: User identifier
+- `--type <type>`: Program type (strength/hypertrophy/endurance)
+- `--verbose`: Show detailed plan structure
+- `--json`: Output as JSON
 
-**Example Scenarios:**
+### View/Update Progress (`test:fitness:progress`)
+
+Manages user's workout progress.
+
 ```bash
-# Basic flow
-pnpm flow:test -n "John Doe" -p "+1234567890"
+# View current progress
+pnpm test:fitness:progress --phone "+1234567890"
 
-# Full profile with custom delay
-pnpm flow:test -n "Jane Smith" -p "+1234567890" -e "jane@example.com" \
-  --age 30 --delay 5000
+# Advance to next week
+pnpm test:fitness:progress --phone "+1234567890" --advance-week
 
-# Test without payment
-pnpm flow:test -n "Test User" -p "+1234567890" --skip-payment
+# Advance to next mesocycle
+pnpm test:fitness:progress --phone "+1234567890" --advance-mesocycle
+
+# Reset progress (start over)
+pnpm test:fitness:progress --phone "+1234567890" --reset
+
+# Show detailed progress visualization
+pnpm test:fitness:progress --phone "+1234567890" --verbose
 ```
 
-## Environment Setup
+**Options:**
+- `--phone <phone>` or `--user-id <id>`: User identifier
+- `--advance-week`: Move to next week
+- `--advance-mesocycle`: Move to next mesocycle
+- `--reset`: Reset all progress
+- `--verbose`: Show detailed visualization
 
-### Required Environment Variables
+### Generate Workout (`test:fitness:workout`)
 
-Create a `.env.local` file with the following variables:
+Generates or retrieves today's workout.
 
-```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/gymtext
+```bash
+# Get today's workout
+pnpm test:fitness:workout --phone "+1234567890"
 
-# Twilio (for SMS)
-TWILIO_ACCOUNT_SID=your_account_sid
-TWILIO_AUTH_TOKEN=your_auth_token
-TWILIO_NUMBER=+1234567890
+# Force regenerate (bypass cache)
+pnpm test:fitness:workout --phone "+1234567890" --force
 
-# Stripe (for payments)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_ID=price_...
+# Get workout for specific date
+pnpm test:fitness:workout --phone "+1234567890" --date "2024-01-15"
 
-# AI/LLM
-OPENAI_API_KEY=sk_...
-GOOGLE_API_KEY=...
+# Show microcycle pattern
+pnpm test:fitness:workout --phone "+1234567890" --show-pattern
 
-# Pinecone (vector database)
-PINECONE_API_KEY=...
-PINECONE_ENVIRONMENT=...
-PINECONE_INDEX_NAME=...
+# JSON output
+pnpm test:fitness:workout --phone "+1234567890" --json
 ```
 
-## Common Workflows
+**Options:**
+- `--phone <phone>` or `--user-id <id>`: User identifier
+- `--force`: Force regeneration
+- `--date <date>`: Specific date (YYYY-MM-DD)
+- `--show-pattern`: Display weekly pattern
+- `--json`: Output as JSON
 
-### Setting Up a New Development Environment
+## Message Testing Scripts
 
-1. Clone the repository
-2. Install dependencies: `pnpm install`
-3. Set up environment variables in `.env.local`
-4. Create the database
-5. Run migrations: `pnpm migrate:up`
-6. Start development server: `pnpm dev`
+### Daily Messages (`test:messages:daily`)
 
-### Testing the Complete User Journey
+Tests daily workout message generation and sending.
 
-1. Start the dev server: `pnpm dev`
-2. Test user registration: `pnpm checkout:test -n "Test User" -p "+1234567890"`
-3. Note the user ID from the response
-4. Test program generation: `pnpm programs:test -i "user_id_here"`
-5. Test SMS interaction: `pnpm sms:test -p "+1234567890" -m "What's my workout?"`
+```bash
+# Send to specific user
+pnpm test:messages:daily --phone "+1234567890"
 
-### Adding a New Database Table
+# Send to all scheduled users (current hour)
+pnpm test:messages:daily --all
 
-1. Create a migration: `pnpm migrate:create add_new_table`
-2. Edit the migration file in `migrations/`
-3. Apply the migration: `pnpm migrate:up`
-4. Generate TypeScript types: `pnpm db:codegen`
-5. Use the new types in your code
+# Test specific date/time
+pnpm test:messages:daily --phone "+1234567890" --date "2024-01-15" --hour 8
+
+# Dry run (no actual sending)
+pnpm test:messages:daily --phone "+1234567890" --dry-run
+
+# Force workout regeneration
+pnpm test:messages:daily --phone "+1234567890" --force-generate
+```
+
+**Options:**
+- `--phone <phone>`: Target user's phone
+- `--all`: Send to all scheduled users
+- `--date <date>`: Specific date (YYYY-MM-DD)
+- `--hour <hour>`: Specific hour (0-23)
+- `--dry-run`: Preview without sending
+- `--force-generate`: Force new workout generation
+
+### Batch Messages (`test:messages:batch`)
+
+Tests sending messages to multiple users.
+
+```bash
+# Send to all active users
+pnpm test:messages:batch
+
+# Limit number of users
+pnpm test:messages:batch --limit 10
+
+# Dry run with performance metrics
+pnpm test:messages:batch --dry-run --verbose
+
+# Control concurrency
+pnpm test:messages:batch --concurrency 5
+
+# Filter by schedule hour
+pnpm test:messages:batch --hour 8
+```
+
+**Options:**
+- `--limit <n>`: Maximum users to process
+- `--concurrency <n>`: Parallel processing limit
+- `--hour <hour>`: Filter by schedule hour
+- `--dry-run`: Preview without sending
+- `--verbose`: Show performance metrics
+
+### SMS Testing (`test:messages:sms`)
+
+Tests SMS webhook and conversation handling.
+
+```bash
+# Send test SMS
+pnpm test:messages:sms --phone "+1234567890" --message "What's my workout today?"
+
+# Test with conversation history
+pnpm test:messages:sms --phone "+1234567890" --message "Show me alternatives" --with-history
+
+# Custom webhook URL
+pnpm test:messages:sms --phone "+1234567890" --message "Help" --webhook-url "http://localhost:3000/api/webhooks/sms"
+
+# Show conversation context
+pnpm test:messages:sms --phone "+1234567890" --message "Next exercise" --verbose
+```
+
+**Options:**
+- `--phone <phone>`: Sender's phone number
+- `--message <text>`: SMS message content
+- `--with-history`: Include conversation history
+- `--webhook-url <url>`: Custom webhook endpoint
+- `--verbose`: Show conversation context
+
+### Schedule Testing (`test:messages:schedule`)
+
+Tests message scheduling logic.
+
+```bash
+# Show all scheduled users
+pnpm test:messages:schedule
+
+# Show users for specific hour
+pnpm test:messages:schedule --hour 8
+
+# Show timezone distribution
+pnpm test:messages:schedule --show-timezones
+
+# Test scheduling for specific user
+pnpm test:messages:schedule --phone "+1234567890"
+
+# Show next 24 hours schedule
+pnpm test:messages:schedule --next-24
+```
+
+**Options:**
+- `--hour <hour>`: Filter by hour
+- `--phone <phone>`: Check specific user
+- `--show-timezones`: Display timezone analysis
+- `--next-24`: Show next 24 hours
+
+## End-to-End Flow Scripts
+
+### Onboarding Flow (`test:flow:onboarding`)
+
+Simulates complete user onboarding.
+
+```bash
+# Run full onboarding
+pnpm test:flow:onboarding
+
+# With custom user data
+pnpm test:flow:onboarding --name "New User" --phone "+1234567890"
+
+# Skip payment step
+pnpm test:flow:onboarding --skip-payment
+
+# Fast mode (skip delays)
+pnpm test:flow:onboarding --fast
+
+# Verbose mode with step details
+pnpm test:flow:onboarding --verbose
+```
+
+**Flow includes:**
+1. User creation
+2. Fitness profile setup
+3. Payment processing (optional)
+4. Fitness plan generation
+5. Welcome message sending
+6. First workout generation
+
+### Daily Cycle (`test:flow:daily-cycle`)
+
+Simulates a day's worth of workouts and messages.
+
+```bash
+# Run for specific user
+pnpm test:flow:daily-cycle --phone "+1234567890"
+
+# Simulate multiple days
+pnpm test:flow:daily-cycle --phone "+1234567890" --days 3
+
+# Include rest days
+pnpm test:flow:daily-cycle --phone "+1234567890" --include-rest
+
+# Fast mode
+pnpm test:flow:daily-cycle --phone "+1234567890" --fast
+```
+
+**Options:**
+- `--phone <phone>`: Target user
+- `--days <n>`: Number of days to simulate
+- `--include-rest`: Include rest days
+- `--fast`: Skip delays
+
+### Weekly Cycle (`test:flow:week-cycle`)
+
+Tests weekly progression and microcycle transitions.
+
+```bash
+# Run weekly progression
+pnpm test:flow:week-cycle --phone "+1234567890"
+
+# Simulate multiple weeks
+pnpm test:flow:week-cycle --phone "+1234567890" --weeks 4
+
+# Test mesocycle transition
+pnpm test:flow:week-cycle --phone "+1234567890" --test-transition
+
+# Show progression details
+pnpm test:flow:week-cycle --phone "+1234567890" --verbose
+```
+
+**Options:**
+- `--phone <phone>`: Target user
+- `--weeks <n>`: Number of weeks
+- `--test-transition`: Test mesocycle transition
+- `--verbose`: Show progression details
+
+## Database Migration Scripts
+
+### Create Migration (`db:migrate:create`)
+
+Creates a new database migration file.
+
+```bash
+# Interactive mode
+pnpm db:migrate:create
+
+# With migration name
+pnpm db:migrate:create --name "add_user_preferences"
+```
+
+### Run Migrations (`db:migrate`)
+
+Applies pending database migrations.
+
+```bash
+# Apply all pending migrations
+pnpm db:migrate
+
+# Rollback last migration
+pnpm db:migrate:down
+
+# Show migration status
+pnpm db:migrate --status
+```
+
+## Convenience Commands
+
+### Quick Test (`test:quick`)
+
+Runs essential tests quickly.
+
+```bash
+pnpm test:quick
+```
+
+Executes:
+1. Create user
+2. Generate fitness plan
+3. Send daily message
+
+### Full Test (`test:full`)
+
+Runs complete onboarding flow.
+
+```bash
+pnpm test:full
+```
+
+Equivalent to `pnpm test:flow:onboarding`
+
+## Environment Configuration
+
+Scripts automatically detect and use the appropriate environment:
+
+```bash
+# Development (default)
+NODE_ENV=development pnpm test:user:create
+
+# Staging
+NODE_ENV=staging pnpm test:user:create
+
+# Production (use with caution!)
+NODE_ENV=production pnpm test:user:create
+```
+
+## Common Options
+
+Most scripts support these standard options:
+
+- `--verbose`: Show detailed output and debug information
+- `--dry-run`: Preview actions without making changes
+- `--json`: Output results as JSON for automation
+- `--help`: Show command help and usage
+
+## Error Handling
+
+Scripts provide helpful error messages and suggestions:
+
+```bash
+# Example: Missing required parameter
+$ pnpm test:user:get
+Error: Please provide either --phone or --user-id
+
+# Example: User not found
+$ pnpm test:user:get --phone "+1234567890"
+Error: User not found with phone +1234567890
+Suggestion: Check the phone number or try with --user-id
+
+# Example: Network error
+$ pnpm test:fitness:plan --phone "+1234567890"
+Error: Failed to connect to API
+Suggestion: Check your network connection and API_URL configuration
+```
+
+## Tips and Best Practices
+
+1. **Development Testing**: Always use `--skip-payment` in development to avoid Stripe charges
+2. **Batch Operations**: Use `--dry-run` first when testing batch operations
+3. **JSON Output**: Use `--json` for automation and CI/CD integration
+4. **Verbose Mode**: Enable `--verbose` when debugging issues
+5. **Phone Numbers**: Always use E.164 format (+1234567890)
+6. **Cleanup**: Remember to clean up test users after testing
 
 ## Troubleshooting
 
 ### Common Issues
 
-**"Connection refused" errors**
-- Ensure the development server is running: `pnpm dev`
-- Check that you're using the correct port (default: 3000)
+**Database Connection Failed**
+```bash
+# Check database URL
+echo $DATABASE_URL
 
-**Database migration failures**
-- Verify `DATABASE_URL` is set correctly
-- Ensure PostgreSQL is running
-- Check migration file syntax
+# Test connection
+pnpm db:migrate --status
+```
 
-**SMS test not working**
-- Verify `TWILIO_NUMBER` is set in `.env.local`
-- Ensure the phone number format includes country code
+**SMS Not Sending**
+```bash
+# Check Twilio configuration
+pnpm test:messages:sms --phone "+1234567890" --message "test" --dry-run --verbose
 
-**Type generation issues**
-- Run `pnpm db:codegen` manually
-- Check database connection
-- Ensure all migrations are applied
+# Verify webhook URL
+curl -X POST $API_URL/api/webhooks/sms
+```
 
-### Debugging Tips
+**User Creation Fails**
+```bash
+# Check for existing user
+pnpm test:user:get --phone "+1234567890"
 
-1. Use the `-v, --verbose` flag on test scripts for detailed output
-2. Check server logs when running `pnpm dev`
-3. Verify environment variables are loaded correctly
-4. Test each component independently before running end-to-end tests
+# Try with different phone number
+pnpm test:user:create --phone "+1987654321"
+```
 
-## Best Practices
+## Docker Testing
 
-1. **Always run migrations before starting development**
-   ```bash
-   pnpm migrate:up
-   pnpm dev
-   ```
+Run tests in Docker container:
 
-2. **Test changes incrementally**
-   - Test individual endpoints before running flow tests
-   - Use verbose mode to debug issues
+```bash
+# Run all tests
+pnpm test:docker
 
-3. **Keep test data realistic**
-   - Use valid phone number formats
-   - Provide realistic user profiles
-   - Test edge cases
+# Run specific test
+./scripts/docker/run-tests.sh test:user:create
+```
 
-4. **Clean up test data periodically**
-   - Test users can accumulate in the database
-   - Consider creating a cleanup script if needed
+## Contributing
 
-5. **Document new scripts**
-   - Add clear descriptions in package.json
-   - Update this documentation
-   - Include example usage
+When adding new scripts:
+
+1. Follow the existing directory structure
+2. Use the utility classes in `scripts/utils/`
+3. Support standard options (--verbose, --dry-run, --json)
+4. Add appropriate error handling
+5. Update this documentation
+6. Add to package.json scripts section
+
+## Script Development
+
+Example of creating a new script:
+
+```typescript
+// scripts/test/example/new-feature.ts
+import { Command } from 'commander';
+import { TestDatabase, TestConfig, TestUsers } from '../../utils';
+import { displayHeader, displaySuccess, displayError } from '../../utils/common';
+
+const program = new Command()
+  .name('test:example:new-feature')
+  .description('Test new feature')
+  .option('--phone <phone>', 'User phone number')
+  .option('--verbose', 'Show detailed output')
+  .option('--dry-run', 'Preview without making changes')
+  .option('--json', 'Output as JSON')
+  .parse();
+
+async function main() {
+  const options = program.opts();
+  const config = TestConfig.getInstance();
+  
+  if (!options.json) {
+    displayHeader('New Feature Test');
+  }
+  
+  try {
+    // Your test logic here
+    
+    if (options.json) {
+      console.log(JSON.stringify(result));
+    } else {
+      displaySuccess('Test completed successfully');
+    }
+  } catch (error) {
+    if (options.json) {
+      console.log(JSON.stringify({ error: error.message }));
+    } else {
+      displayError('Test failed', error);
+    }
+    process.exit(1);
+  }
+}
+
+main();
+```
+
+## Additional Resources
+
+- [Testing Guide](./TESTING.md) - General testing documentation
+- [Cron Testing](./CRON_TEST_SCRIPT.md) - Cron job testing
+- [Vercel Deployment](./VERCEL_CRON_DEPLOYMENT.md) - Deployment guide

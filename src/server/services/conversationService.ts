@@ -3,6 +3,9 @@ import { MessageRepository } from '@/server/repositories/messageRepository';
 import type { Conversation, Message } from '@/server/models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../models/_types';
+import { UserRepository } from '../repositories/userRepository';
+import { UserWithProfile } from '../models/userModel';
+import { summaryAgent } from '../agents/summary/chain';
 
 interface StoreInboundMessageParams {
   userId: string;
@@ -14,12 +17,14 @@ interface StoreInboundMessageParams {
 
 export class ConversationService {
   private conversationRepo: ConversationRepository;
+  private userRepo: UserRepository;
   private messageRepo: MessageRepository;
   private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
   constructor() {
     this.conversationRepo = new ConversationRepository();
+    this.userRepo = new UserRepository();
     this.messageRepo = new MessageRepository();
     this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
     this.circuitBreaker = new CircuitBreaker({
@@ -35,7 +40,7 @@ export class ConversationService {
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
-      console.log('INBOUND CONVERSATION', conversation);
+
       // Store the message
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
@@ -53,11 +58,19 @@ export class ConversationService {
   }
 
   async storeOutboundMessage(userId: string, to: string, messageContent: string, from: string = process.env.TWILIO_NUMBER || '', twilioMessageSid?: string): Promise<Message | null> {
+    // TODO: Summarize and save conversation as memory - update previous conversation memory
     return await this.circuitBreaker.execute(async () => {
       
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
-      
+
+      const messages = await this.messageRepo.findByConversationId(conversation.id);
+
+      const user = await this.userRepo.findWithProfile(userId);
+      if (!user) {
+        return null;
+      }
+
       // Store the message
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
@@ -70,8 +83,18 @@ export class ConversationService {
         metadata: {} as Json,
       });
 
+      const summary = await this.summarizeConversation(user, messages);
+      await this.conversationRepo.update(conversation.id, { summary });
       return message;
     });
+  }
+
+  async summarizeConversation(user: UserWithProfile, messages: Message[]): Promise<string> {
+    // TODO: Summarize conversation
+    const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
+
+    const summary = await summaryAgent.invoke({ user, context: { messages: messagesText } });
+    return summary.value;
   }
 
   async getOrCreateConversation(userId: string): Promise<Conversation> {

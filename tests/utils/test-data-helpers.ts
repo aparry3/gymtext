@@ -38,42 +38,43 @@ export async function createCompleteWorkoutSetup(db: Kysely<DB>, userId: string,
   const microcycleId = generateUuid();
   const workoutId = generateUuid();
   
-  // Create fitness plan
+  // Create fitness plan with new schema
   await db.insertInto('fitnessPlans').values({
     id: fitnessPlanId,
     clientId: userId,
     programType: 'strength',
     goalStatement: 'Build strength',
     overview: 'Strength program',
-    macrocycles: JSON.stringify([]),
-    startDate: new Date('2024-01-01'),
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-  }).execute();
-  
-  // Create mesocycle
-  await db.insertInto('mesocycles').values({
-    id: mesocycleId,
-    fitnessPlanId: fitnessPlanId,
-    clientId: userId,
-    index: 0,
-    phase: 'Strength',
+    mesocycles: JSON.stringify([
+      { name: 'Accumulation', weeks: 4, focus: ['volume'], deload: false }
+    ]),
     lengthWeeks: 4,
+    currentMesocycleIndex: 0,
+    currentMicrocycleWeek: 1,
     startDate: new Date('2024-01-01'),
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   }).execute();
   
-  // Create microcycle
+  // Create microcycle with new schema (pattern storage)
   await db.insertInto('microcycles').values({
     id: microcycleId,
-    mesocycleId: mesocycleId,
+    userId: userId,
     fitnessPlanId: fitnessPlanId,
-    clientId: userId,
-    index: 0,
-    targets: null,
+    mesocycleIndex: 0,
+    weekNumber: 1,
+    pattern: JSON.stringify({
+      Monday: 'Strength',
+      Tuesday: 'Cardio',
+      Wednesday: 'Recovery',
+      Thursday: 'Strength',
+      Friday: 'Cardio',
+      Saturday: 'Active Recovery',
+      Sunday: 'Rest'
+    }),
     startDate: date,
     endDate: new Date(date.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days later
+    isActive: true,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   }).execute();

@@ -9,6 +9,123 @@ import type {
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
 
 export class UserRepository extends BaseRepository {
+  async list(params: {
+    q?: string;
+    status?: string;
+    hasProfile?: boolean;
+    hasPlan?: boolean;
+    createdFrom?: string;
+    createdTo?: string;
+    page?: number;
+    pageSize?: number;
+    sort?: string;
+  }): Promise<{ users: UserWithProfile[]; total: number; }> {
+    const {
+      q,
+      createdFrom,
+      createdTo,
+      page = 1,
+      pageSize = 20,
+      sort = 'createdAt:desc',
+    } = params;
+
+    const [sortField, sortDir] = sort.split(':');
+
+    let query = this.db
+      .selectFrom('users')
+      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
+      .selectAll('users')
+      .select((eb) => [
+        eb.ref('fitnessProfiles.id').as('profileId'),
+        eb.ref('fitnessProfiles.fitnessGoals').as('fitnessGoals'),
+        eb.ref('fitnessProfiles.skillLevel').as('skillLevel'),
+        eb.ref('fitnessProfiles.exerciseFrequency').as('exerciseFrequency'),
+        eb.ref('fitnessProfiles.gender').as('gender'),
+        eb.ref('fitnessProfiles.age').as('age'),
+        eb.ref('fitnessProfiles.createdAt').as('profileCreatedAt'),
+        eb.ref('fitnessProfiles.updatedAt').as('profileUpdatedAt'),
+      ]);
+
+    if (q) {
+      const like = `%${q}%`;
+      query = query.where((eb) => eb.or([
+        eb('users.name', 'ilike', like),
+        eb('users.email', 'ilike', like),
+        eb('users.phoneNumber', 'ilike', like),
+      ]));
+    }
+
+    if (createdFrom) {
+      query = query.where('users.createdAt', '>=', new Date(createdFrom));
+    }
+    if (createdTo) {
+      query = query.where('users.createdAt', '<=', new Date(createdTo));
+    }
+
+    // Note: hasProfile/hasPlan filters can be added when plan joins are available
+
+    let countBuilder = this.db
+      .selectFrom('users')
+      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId');
+
+    if (q) {
+      const like = `%${q}%`;
+      countBuilder = countBuilder.where((eb) => eb.or([
+        eb('users.name', 'ilike', like),
+        eb('users.email', 'ilike', like),
+        eb('users.phoneNumber', 'ilike', like),
+      ]));
+    }
+    if (createdFrom) countBuilder = countBuilder.where('users.createdAt', '>=', new Date(createdFrom));
+    if (createdTo) countBuilder = countBuilder.where('users.createdAt', '<=', new Date(createdTo));
+
+    const totalResult = await countBuilder
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .executeTakeFirst();
+    const total = Number(totalResult?.count || 0);
+
+    const usersRows = await query
+      // @ts-expect-error dynamic orderBy
+      .orderBy(`users.${sortField}`, sortDir === 'asc' ? 'asc' : 'desc')
+      .offset((page - 1) * pageSize)
+      .limit(pageSize)
+      .execute();
+
+    const users: UserWithProfile[] = usersRows.map((u) => ({
+      id: u.id,
+      name: u.name,
+      phoneNumber: u.phoneNumber,
+      email: u.email,
+      stripeCustomerId: u.stripeCustomerId,
+      preferredSendHour: u.preferredSendHour,
+      timezone: u.timezone,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      profile: (u as any).profileId ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        id: (u as any).profileId,
+        userId: u.id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fitnessGoals: (u as any).fitnessGoals,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        skillLevel: (u as any).skillLevel,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        exerciseFrequency: (u as any).exerciseFrequency,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gender: (u as any).gender,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        age: (u as any).age,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        createdAt: (u as any).profileCreatedAt,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updatedAt: (u as any).profileUpdatedAt,
+      } : null,
+      info: [],
+    }));
+
+    return { users, total };
+  }
   async create(userData: CreateUserData): Promise<User> {
     return await this.db
       .insertInto('users')

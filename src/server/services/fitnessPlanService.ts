@@ -11,11 +11,10 @@ export class FitnessPlanService {
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
     const agentResponse = await fitnessPlanAgent.invoke({ user });
 
-    // TODO: Save the fitness plan to the database
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse.program);
     console.log('fitnessPlan', JSON.stringify(fitnessPlan, null, 2));
     const savedFitnessPlan = await this.fitnessPlanRepo.insertFitnessPlan(fitnessPlan);
-    if (!fitnessPlan.macrocycles.length || !fitnessPlan.macrocycles[0].mesocycles.length) {
+    if (!fitnessPlan.mesocycles || fitnessPlan.mesocycles.length === 0) {
       throw new Error('Fitness plan does not have any mesocycles');
     }
 

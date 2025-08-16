@@ -69,4 +69,87 @@ export class WorkoutInstanceRepository extends BaseRepository {
     
     return result;
   }
+
+  /**
+   * Get recent workouts for a user
+   * @param userId The user's ID
+   * @param days Number of days to look back
+   */
+  async getRecentWorkouts(
+    userId: string,
+    days: number = 7
+  ): Promise<WorkoutInstance[]> {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
+      .orderBy('date', 'desc')
+      .selectAll()
+      .execute();
+    
+    return results;
+  }
+
+  /**
+   * Get workout by specific date
+   * @param userId The user's ID
+   * @param date The specific date
+   */
+  async getWorkoutByDate(
+    userId: string,
+    date: Date
+  ): Promise<WorkoutInstance | undefined> {
+    return this.findByClientIdAndDate(userId, date);
+  }
+
+  /**
+   * Update workout instance
+   * @param id The workout ID
+   * @param data The update data
+   */
+  async update(
+    id: string,
+    data: Partial<NewWorkoutInstance>
+  ): Promise<WorkoutInstance | undefined> {
+    const updateData = {
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    if (data.details) {
+      updateData.details = typeof data.details === 'string' 
+        ? data.details 
+        : JSON.stringify(data.details);
+    }
+    
+    const result = await this.db
+      .updateTable('workoutInstances')
+      .set(updateData)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+    
+    return result;
+  }
+
+  /**
+   * Delete old workout instances (cleanup)
+   * @param daysToKeep Number of days to keep
+   */
+  async deleteOldWorkouts(daysToKeep: number = 90): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+    
+    const result = await this.db
+      .deleteFrom('workoutInstances')
+      .where('date', '<', cutoffDate)
+      .executeTakeFirst();
+    
+    return Number(result.numDeletedRows);
+  }
 }

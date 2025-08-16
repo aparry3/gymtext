@@ -1,29 +1,31 @@
-/**
- * This schema file defines the structured output expected from an LLM (Large Language Model)
- * for microcycle planning in fitness periodization. It provides Zod schemas for validating
- * microcycle overviews and detailed microcycle objects, ensuring that generated outputs
- * conform to the required structure for downstream processing and storage.
- */
+import { z } from 'zod';
 
-import { z } from "zod";
-import { _WorkoutInstanceSchema } from "../workout/schema";
+export const _DayPatternSchema = z.object({
+  day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
+  theme: z.string().describe('Training theme for the day (e.g., "Lower", "Upper Push", "Rest")'),
+  load: z.enum(['light', 'moderate', 'heavy']).optional(),
+  notes: z.string().optional(),
+});
 
-export const _MicrocycleOverviewSchema = z.object({
-    weekNumber: z.number().describe("Index of the microcycle in the mesocycle"),
-    split: z.string().optional().describe("Split day pattern of the microcycle. ex.Upper-Lower-Rest-HIIT-Upper-Lower-Rest"),
-    totalMileage: z.number().optional().describe("Total mileage of the microcycle"),
-    longRunMileage: z.number().optional().describe("Long run mileage of the microcycle"),
-    avgIntensityPct1RM: z.number().optional().describe("Average intensity percentage of the microcycle"),
-    totalSetsMainLifts: z.number().optional().describe("Total sets of main lifts of the microcycle"),
-    deload: z.boolean().optional().describe("Is this microcycle a deload week?")
+export const _MicrocyclePatternSchema = z.object({
+  weekIndex: z.number().describe('Week number within the mesocycle'),
+  days: z.array(_DayPatternSchema).length(7).describe('Training pattern for each day of the week'),
 });
 
 export const _MicrocycleSchema = z.object({
-    index: z.number().int().describe("index of the microcycle in the mesocycle"),
-    workouts: z.array(
-        _WorkoutInstanceSchema
-    ).min(1).describe("Workouts scheduled for this week")
-  }).strict();
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  fitnessPlanId: z.string().uuid(),
+  mesocycleIndex: z.number().int().nonnegative(),
+  weekNumber: z.number().int().positive(),
+  pattern: _MicrocyclePatternSchema,
+  startDate: z.date(),
+  endDate: z.date(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
 
-
-  export type LLMMicrocycle = z.infer<typeof _MicrocycleSchema>;
+export type DayPattern = z.infer<typeof _DayPatternSchema>;
+export type MicrocyclePattern = z.infer<typeof _MicrocyclePatternSchema>;
+export type MicrocycleSchema = z.infer<typeof _MicrocycleSchema>;

@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { generateChatResponse } from '@/server/services/chatService';
+import { ChatService } from '@/server/services/chatService';
 import { ConversationService } from '@/server/services/conversationService';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
@@ -68,7 +68,8 @@ export async function POST(req: NextRequest) {
     }
     
     // Generate chat response using LLM
-    const chatResponse = await generateChatResponse(userWithProfile, incomingMessage);
+    const chatService = new ChatService();
+    const chatResponse = await chatService.handleIncomingMessage(userWithProfile, incomingMessage);
     
     // Store the outbound message (non-blocking)
     try {

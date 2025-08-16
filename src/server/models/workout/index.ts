@@ -1,11 +1,8 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { UserWithProfile } from '../userModel';
-import { FitnessPlan } from '../fitnessPlan';
-import { Mesocycle } from '../mesocycle';
-import { Microcycle } from '../microcycle';
-import { LLMWorkoutInstance } from './schema';
-import { mapSessionType } from './sessionTypeMapping';
+import { 
+  LLMWorkoutInstance
+} from './schema';
 
 
 export type WorkoutInstance = Selectable<WorkoutInstances>;
@@ -20,10 +17,18 @@ export type WorkoutInstanceBreakdown = LLMWorkoutInstance & {
   date: Date;
 }
 
+// Export new enhanced types
+export type { 
+  WorkoutBlock, 
+  WorkoutBlockItem, 
+  WorkoutModification, 
+  EnhancedWorkoutInstance 
+} from './schema';
+
 export class WorkoutInstanceModel implements NewWorkoutInstance {
   clientId: string;
-  microcycleId: string;
-  mesocycleId: string;
+  microcycleId: string | null | undefined;
+  mesocycleId: string | null | undefined;
   sessionType: string;
   createdAt: Date | string | undefined;
   date: Date | string;
@@ -46,30 +51,5 @@ export class WorkoutInstanceModel implements NewWorkoutInstance {
     this.details = workoutInstance.details!; // Details is required in DB
     this.goal = workoutInstance.goal;
     this.completedAt = workoutInstance.completedAt;
-  }
-
-  public static fromLLM(user: UserWithProfile, fitnessPlan: FitnessPlan, mesocycle: Mesocycle, microcycle: Microcycle, workoutBreakdown: WorkoutInstanceBreakdown): NewWorkoutInstance {
-    // Extract the LLM data and map session type
-    const { sessionType: llmSessionType, details, targets, ...rest } = workoutBreakdown;
-    
-    // Map LLM session type to DB-compatible session type
-    const mappedSessionType = mapSessionType(llmSessionType);
-    
-    // Convert targets array to a goal string if present
-    const goal = targets && targets.length > 0 
-      ? targets.map(t => `${t.key}: ${t.value}`).join(', ')
-      : null;
-    
-    return {
-      ...rest,
-      clientId: user.id,
-      fitnessPlanId: fitnessPlan.id!,
-      mesocycleId: mesocycle.id,
-      microcycleId: microcycle.id,
-      sessionType: mappedSessionType,
-      details: details, // This is already in the correct format
-      goal: goal,
-      completedAt: null, // Workouts start as not completed
-    };
   }
 }
