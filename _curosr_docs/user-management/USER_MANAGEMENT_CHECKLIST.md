@@ -78,6 +78,7 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 - [ ] `POST /api/admin/users/[userId]/send-daily-message` – single-user daily message; calls the same function used by `/api/cron/daily-messages`
  - [x] `POST /api/admin/users/[userId]/send-daily-message` – single-user daily message; calls same function used by cron
 - [ ] `POST /api/admin/users/[userId]/messages/outbound` – send admin → user SMS
+ - [x] `POST /api/admin/users/[userId]/messages/outbound` – send admin → user SMS
 - [ ] (No separate simulation route) Use `POST /api/sms` for inbound simulation from the UI
 - [ ] `POST /api/admin/users/[userId]/pause` – pause user
 - [ ] `POST /api/admin/users/[userId]/resume` – resume user
@@ -127,6 +128,7 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
 ## 7) Analytics & Insights (Lightweight)
 - [ ] Users List: counters for Active users, Users with profile, Users with plan, Messages sent last 24h
 - [ ] User Detail: 14-day messages sparkline (if feasible), plan adherence indicator (if available)
+ - [ ] Inbound Simulation UI (admin-only) posts to `/api/sms`
 
 ---
 
@@ -162,6 +164,8 @@ Key principle: Admin must reuse the same production services/endpoints. Admin ro
  - [x] API endpoints for create user/profile/plan/send daily message implemented
 - [ ] Admin can batch send daily messages for current/specified hour (toolbar)
 - [ ] Admin can send outbound SMS and simulate inbound via `/api/sms`
+ - [x] Admin can send outbound SMS (UI + endpoint)
+ - [ ] Admin can simulate inbound via `/api/sms` (UI ready)
 - [ ] All actions are audit logged; gates enforce single admin role
 - [ ] Build/tests green; [x] lint green
 
