@@ -2,7 +2,7 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/server/models/userModel';
 import { conversationSummaryPrompt } from './prompts';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.5-flash" });
 
 export const summaryAgent = {
   invoke: async ({ user, context }: { user: UserWithProfile, context: { messages: string } }): Promise<{ user: UserWithProfile, context: { messages: string }, value: string }> => {

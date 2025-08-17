@@ -4,7 +4,7 @@ import { WorkoutInstance } from '@/server/models/workout';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { dailyMessagePrompt } from './prompts';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.5-flash" });
 
 export const dailyMessageAgent = {
   invoke: async ({ user, context }: { user: UserWithProfile, context: { workout: WorkoutInstance } }): Promise<{ user: UserWithProfile, context: { workout: WorkoutInstance }, value: string }> => {

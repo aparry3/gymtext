@@ -6,7 +6,7 @@ import { MessageRepository } from '@/server/repositories/messageRepository';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { ConversationContextService } from '@/server/services/context/conversationContext';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.5-flash" });
 
 export const chatChain = RunnableSequence.from([
   async ({ 

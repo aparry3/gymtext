@@ -4,7 +4,7 @@ import { FitnessPlanModel, FitnessPlanOverview } from '@/server/models/fitnessPl
 import { outlinePrompt } from '@/server/agents/fitnessPlan/prompts';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.5-flash" });
 
 export const fitnessPlanAgent = {
   invoke: async ({ user, context }: { user: UserWithProfile, context?: object }): Promise<{ user: UserWithProfile, context?: object, program: FitnessPlanOverview }> => {

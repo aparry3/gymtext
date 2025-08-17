@@ -451,7 +451,7 @@ import { WorkoutInstance } from '@/server/models/workout';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { dailyWorkoutPrompt } from './prompts';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.5-flash" });
 
 export const dailyWorkoutAgent = {
   invoke: async ({ 

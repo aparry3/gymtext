@@ -9,7 +9,7 @@ import { dailyWorkoutPrompt } from './prompts';
 
 const llm = new ChatGoogleGenerativeAI({ 
   temperature: 0.3, 
-  model: "gemini-2.0-flash" 
+  model: "gemini-2.5-flash" 
 });
 
 export interface DailyWorkoutContext {

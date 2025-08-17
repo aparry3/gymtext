@@ -3,7 +3,7 @@ import { welcomePrompt } from '@/server/agents/welcomeMessage/prompts';
 import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
+const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.5-flash" });
 
 export const welcomeMessageAgent = {
   invoke: async ({ user, context }: { user: UserWithProfile, context: { fitnessPlan: FitnessPlan } }): Promise<{ user: UserWithProfile, context: { fitnessPlan: FitnessPlan }, value: string }> => {
