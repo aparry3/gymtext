@@ -73,8 +73,15 @@ export default function ChatInterface() {
         
         for (const line of lines) {
           if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6)
+            
+            // Skip the [DONE] signal
+            if (dataStr === '[DONE]') {
+              continue
+            }
+            
             try {
-              const data = JSON.parse(line.slice(6))
+              const data = JSON.parse(dataStr)
               if (data.content) {
                 accumulatedContent += data.content
                 setStreamingContent(accumulatedContent)
