@@ -187,15 +187,31 @@
   - [x] Test context endpoint
   - [x] Test ops endpoint with patches and operations
   - [x] Test history endpoint with pagination
-- [ ] Test onboarding flow with profile extraction
-- [ ] Test SMS handler with profile updates
-- [ ] Test agent collaboration scenarios
+- [x] Test onboarding flow with profile extraction
+  - [x] Created tests/integration/agents/onboardingFlow.test.ts
+  - [x] Test extraction from conversations
+  - [x] Test constraint detection
+  - [x] Test multi-turn conversations
+- [x] Test SMS handler with profile updates
+  - [x] Created tests/integration/agents/smsProfileUpdates.test.ts
+  - [x] Test weight and metric updates
+  - [x] Test injury detection
+  - [x] Test goal changes
+- [x] Test agent collaboration scenarios
+  - [x] Created tests/integration/agents/agentCollaboration.test.ts
+  - [x] Test onboarding to fitness plan flow
+  - [x] Test profile update triggers
+  - [x] Test context consistency
 
 ### 6.3 Migration Tests
 - [ ] Test data migration script on sample data
 - [ ] Test rollback procedures
-- [ ] Test backward compatibility
-- [ ] Performance test with large profiles
+- [x] Test backward compatibility (via FitnessProfileRepository tests)
+- [x] Performance test with large profiles
+  - [x] Created tests/integration/performance/profilePerformance.test.ts
+  - [x] Test large constraint handling
+  - [x] Test complex profile updates
+  - [x] Test context generation performance
 
 ---
 
