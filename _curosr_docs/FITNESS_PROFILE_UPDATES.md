@@ -1,5 +1,7 @@
 # AIContext & Profile Updates — Source of Truth
 
+*Path: `docs/ai-context-and-profile-updates.md`*
+
 **Purpose.** Define the canonical approach for:
 
 * Constructing deterministic AIContext from the JSON profile.
@@ -61,46 +63,134 @@
 > This is the canonical schema used by the platform. Fields marked optional may be omitted; unknown fields are allowed for forward compatibility. Keep this file as the single source of truth.
 
 ```ts
-// Schema versioning
-export type ISODate = string; // YYYY-MM-DD
+export type ISODate = string;
 export type UnitWeight = 'lbs' | 'kg';
-export type ExperienceLevel = 'beginner' | 'novice' | 'intermediate' | 'advanced';
-export type PrimaryGoal = 'fat_loss' | 'muscle_gain' | 'recomp' | 'endurance' | 'strength' | 'mobility' | 'general_fitness';
+export type PrimaryGoal = string | 'fat_loss' | 'muscle_gain' | 'recomp' | 'endurance' | 'strength' | 'mobility' | 'general_fitness';
 
 export interface FitnessProfile {
-  // ---- Identity / meta ----
-  version?: number;              // schema/versioning (default 1)
-  userId?: string;               // FK to users
-  createdAt?: string;            // ISO timestamp
-  updatedAt?: string;            // ISO timestamp
+  // Identity / meta
+  version?: number;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 
-  // ---- Goals ----
-  primaryGoal?: PrimaryGoal;     // e.g., 'recomp'
-  specificObjective?: string;    // free text: "get shredded by Labor Day"
-  eventDate?: ISODate;           // target event date, optional
-  timelineWeeks?: number;        // derived or user-stated timeline
-  experienceLevel?: ExperienceLevel; // self-reported training age
+  // Goals
+  primaryGoal?: PrimaryGoal;
+  specificObjective?: string;
+  eventDate?: ISODate;
+  timelineWeeks?: number;
+  experienceLevel?: string;
 
-  // ---- Training status ----
-  currentActivity?: string;      // short summary: "runs 10 mi/wk; lifts 3–4x"
+  // Training status
+  currentActivity?: string;
   currentTraining?: {
     programName?: string;
     weeksCompleted?: number;
-    focus?: string;              // e.g., "upper/lower split", "5x5"
+    focus?: string;
     notes?: string;
   };
 
-  // ---- Availability & access ----
+  // Availability & access
   availability?: {
-    daysPerWeek?: number;        // 0–7
-    minutesPerSession?: number;  // 10–180
-    preferredTimes?: Array<'morning' | 'midday' | 'evening' | 'varies'>
+    daysPerWeek?: number;
+    minutesPerSession?: number;
+    preferredTimes?: string;
+    travelPattern?: atring;
+    notes?: string;
+  };
+
+  equipment?: {
+    access?: string;
+    location?: string;
+    items?: string[];
+    constraints?: string[];
+  };
+
+  // Preferences
+  preferences?: {
+    workoutStyle?: string;
+    enjoyedExercises?: string[];
+    dislikedExercises?: string[];
+    coachingTone?: 'friendly' | 'tough-love' | 'clinical' | 'cheerleader';
+    musicOrVibe?: string;
+  };
+
+  // Metrics (latest snapshot)
+  metrics?: {
+    heightCm?: number;
+    bodyweight?: { value: number; unit: UnitWeight };
+    bodyFatPercent?: number;
+    bmi?: number;
+    prLifts?: { [liftName: string]: { weight: number; unit: UnitWeight; reps?: number; date?: ISODate } };
+    vo2max?: number;
+    restingHr?: number;
+    tape?: { [site: string]: number };
+  };
+
+  // Constraints (active snapshot)
+  constraints?: Constraint[];
+
+  // Nutrition & recovery
+  nutrition?: {
+    caloriesTarget?: number;
+    proteinTargetG?: number;
+    dietType?: string;
+    intolerances?: string[];
+    notes?: string;
+  };
+
+  recovery?: {
+    sleepHours?: number;
+    sleepQuality?: string;
+    stressLevel?: string;
+    stepsPerDay?: number;
+    notes?: string;
+  };
+
+  // Coaching / context / history
+  coaching?: {
+    notes?: string;
+    lastCoach?: string;
+  };
+
+  additionalContext?: {
+    whyStarted?: string;
+    motivators?: string[];
+    environment?: string;
+  };
+
+  history?: {
+    previousPlans?: Array<{ name?: string; startDate?: ISODate; endDate?: ISODate; outcome?: string }>;
+    injuries?: Array<{ name: string; date?: ISODate; notes?: string }>;
+  };
+
+  // Legacy top-level convenience fields (optional; read-only in new writes)
+  heightCm?: number;
+}
+
+export interface Constraint {
+  id: string;
+  type: 'injury' | 'equipment' | 'schedule' | 'mobility' | 'preference' | 'other';
+  label: string;
+  severity?: 'mild' | 'moderate' | 'severe';
+  affectedAreas?: string[];
+  modifications?: string;
+  startDate?: ISODate;
+  endDate?: ISODate;
+  status: 'active' | 'resolved';
+}
+```
+
+---
+
+## 2) Deterministic AIContext Constructor
 
 **Principle.** Deterministic → reproducible → cheap. Always pair prose with a compact `facts` object used for logic/tools. The planner receives `{ facts, prose }` and treats `facts` as ground truth.
 
 **Format.** **5–8 labeled bullets** in fixed order. Each bullet: `LABEL: fact; fact; fact.` Short, unambiguous, numbers/units preserved.
 
 **Order.**
+
 1. GOAL
 2. TRAINING STATUS
 3. AVAILABILITY & ACCESS
@@ -110,26 +200,26 @@ export interface FitnessProfile {
 7. CONTEXT (optional)
 
 **Style rules.**
-- Use semicolons between facts; end each bullet with a period.
-- Preserve dates & units verbatim (e.g., `210 lb`, `183 cm`, ISO dates `YYYY‑MM‑DD`).
-- Omit empty sections (or emit `not specified` only in diagnostics).
+
+* Use semicolons between facts; end each bullet with a period.
+* Preserve dates & units verbatim (e.g., `210 lb`, `183 cm`, ISO dates `YYYY‑MM‑DD`).
+* Omit empty sections (or emit `not specified` only in diagnostics).
 
 ### Example output (deterministic draft)
+
+```
+USER PROFILE (as of 2025-08-18)
+- GOAL: get shredded by Labor Day; recomposition (muscle gain + fat loss); target date 2025-09-01.
+- TRAINING STATUS: runs 10 mi/week; lifts 3–4x/week; alternating heavy and light weeks.
+- AVAILABILITY & ACCESS: 5d/week; 45–60 min/session; gym: Planet Fitness near office.
+- CONSTRAINTS (ACTIVE): Tweaked shoulder doing overhead press (start 2025-08-10); No overhead work for 2 weeks, light bench only.
+- PREFERENCES: heavy with good rest; dislikes: burpees.
+- METRICS: 183 cm; 210 lb; 95.3 kg.
+- CONTEXT: wants visible abs by Labor Day; travels 1x/month.
 ```
 
-USER PROFILE (as of 2025-08-18)
-
-* GOAL: get shredded by Labor Day; recomposition (muscle gain + fat loss); target date 2025-09-01.
-* TRAINING STATUS: runs 10 mi/week; lifts 3–4x/week; alternating heavy and light weeks.
-* AVAILABILITY & ACCESS: 5d/week; 45–60 min/session; gym: Planet Fitness near office.
-* CONSTRAINTS (ACTIVE): Tweaked shoulder doing overhead press (start 2025-08-10); No overhead work for 2 weeks, light bench only.
-* PREFERENCES: heavy with good rest; dislikes: burpees.
-* METRICS: 183 cm; 210 lb; 95.3 kg.
-* CONTEXT: wants visible abs by Labor Day; travels 1x/month.
-
-````
-
 ### Reference TypeScript (constructor)
+
 ```ts
 export type BuildOpts = { asOf?: string };
 
@@ -259,7 +349,7 @@ export function buildAIContext(profile: any, opts: BuildOpts = {}) {
   const prose = [header, ...bullets.map(b => `- ${b}`)].join('\n');
   return { facts, prose };
 }
-````
+```
 
 ---
 
