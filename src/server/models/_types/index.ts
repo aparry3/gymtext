@@ -76,9 +76,12 @@ export interface FitnessProfiles {
   age: number;
   createdAt: Generated<Timestamp>;
   exerciseFrequency: string;
+  experienceLevel: Generated<string | null>;
   fitnessGoals: string;
   gender: string;
   id: Generated<string>;
+  primaryGoal: Generated<string | null>;
+  profile: Generated<Json | null>;
   skillLevel: string;
   updatedAt: Generated<Timestamp>;
   userId: string;
@@ -119,6 +122,16 @@ export interface NeonAuthUsersSync {
   name: Generated<string | null>;
   rawJson: Json;
   updatedAt: Timestamp | null;
+}
+
+export interface ProfileUpdates {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  patch: Json;
+  path: string | null;
+  reason: string | null;
+  source: string;
+  userId: string;
 }
 
 export interface Subscriptions {
@@ -170,6 +183,7 @@ export interface DB {
   messages: Messages;
   microcycles: Microcycles;
   "neonAuth.usersSync": NeonAuthUsersSync;
+  profileUpdates: ProfileUpdates;
   subscriptions: Subscriptions;
   users: Users;
   workoutInstances: WorkoutInstances;
