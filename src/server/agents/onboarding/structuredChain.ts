@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { FitnessProfile } from '../../models/fitnessProfile';
 
 // Define the structured output schema for profile extraction
 export const ProfileExtractionSchema = z.object({

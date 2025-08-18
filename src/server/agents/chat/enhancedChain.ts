@@ -25,7 +25,12 @@ export interface EnhancedChatResponse {
   response: string;
   conversationId: string;
   profileUpdated: boolean;
-  detectedUpdates?: any[];
+  detectedUpdates?: Array<{
+    type: string;
+    data?: unknown;
+    confidence: number;
+    description: string;
+  }>;
   requiresConfirmation?: boolean;
 }
 
@@ -93,8 +98,7 @@ export class EnhancedChatAgent {
     
     // Get recent conversation history
     const recentMessages = await messageRepo.findByConversationId(
-      conversation.id,
-      { limit: 10 }
+      conversation.id
     );
     const conversationHistory = recentMessages
       .map(m => `${m.direction === 'inbound' ? 'User' : 'Coach'}: ${m.content}`)
@@ -102,7 +106,12 @@ export class EnhancedChatAgent {
     
     let response: string;
     let profileUpdated = false;
-    let detectedUpdates: any[] = [];
+    let detectedUpdates: Array<{
+      type: string;
+      data?: unknown;
+      confidence: number;
+      description: string;
+    }> = [];
     let requiresConfirmation = false;
     
     if (input.detectProfileUpdates) {
@@ -168,7 +177,8 @@ export class EnhancedChatAgent {
     });
     
     // Update conversation
-    await conversationRepo.updateLastMessage(conversation.id);
+    // TODO: Add updateLastMessage method to ConversationRepository
+    // await conversationRepo.updateLastMessage(conversation.id);
     
     return {
       response,

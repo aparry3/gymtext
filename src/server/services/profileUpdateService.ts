@@ -103,7 +103,7 @@ export class ProfileUpdateService {
       }
       
       default:
-        throw new Error(`Unknown operation kind: ${(op as any).kind}`);
+        throw new Error(`Unknown operation kind: ${(op as Record<string, unknown>).kind}`);
     }
     
     return this.applyPatch(userId, patch, source, reason);
@@ -112,20 +112,28 @@ export class ProfileUpdateService {
   /**
    * Deep merge two objects
    */
-  private deepMerge(target: any, source: any): any {
-    const result = { ...target };
+  private deepMerge(target: unknown, source: unknown): unknown {
+    if (typeof target !== 'object' || target === null) {
+      return source;
+    }
+    if (typeof source !== 'object' || source === null) {
+      return target;
+    }
     
-    for (const key in source) {
-      if (source[key] === null || source[key] === undefined) {
+    const result = { ...(target as Record<string, unknown>) };
+    
+    const sourceObj = source as Record<string, unknown>;
+    for (const key in sourceObj) {
+      if (sourceObj[key] === null || sourceObj[key] === undefined) {
         continue;
       }
       
-      if (typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (typeof sourceObj[key] === 'object' && !Array.isArray(sourceObj[key])) {
         // Nested object - recurse
-        result[key] = this.deepMerge(result[key] || {}, source[key]);
+        result[key] = this.deepMerge(result[key] || {}, sourceObj[key]);
       } else {
         // Primitive or array - replace
-        result[key] = source[key];
+        result[key] = sourceObj[key];
       }
     }
     
@@ -135,7 +143,7 @@ export class ProfileUpdateService {
   /**
    * Set a value by JSON pointer path
    */
-  private setByJsonPointer(obj: any, path: string, value: any): any {
+  private setByJsonPointer(obj: unknown, path: string, value: unknown): unknown {
     // Convert JSON pointer to object path
     // e.g., "/metrics/bodyweight/value" -> ["metrics", "bodyweight", "value"]
     const parts = path.split('/').filter(p => p !== '');
@@ -145,7 +153,7 @@ export class ProfileUpdateService {
     }
     
     // Build patch object
-    const patch: any = {};
+    const patch: Record<string, unknown> = {};
     let current = patch;
     
     for (let i = 0; i < parts.length - 1; i++) {
@@ -163,7 +171,7 @@ export class ProfileUpdateService {
    */
   private async recordUpdate(
     userId: string,
-    patch: any,
+    patch: unknown,
     path: string | null,
     source: string,
     reason?: string
@@ -215,7 +223,7 @@ export class ProfileUpdateService {
    */
   async getProfileWithContext(userId: string): Promise<{
     profile: FitnessProfile;
-    context: { facts: any; prose: string };
+    context: { facts: unknown; prose: string };
   }> {
     const { AIContextService } = await import('./aiContextService');
     const contextService = new AIContextService();

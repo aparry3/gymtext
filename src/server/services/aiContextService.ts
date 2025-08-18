@@ -1,4 +1,4 @@
-import { FitnessProfile, Constraint } from '../models/fitnessProfile';
+import { FitnessProfile } from '../models/fitnessProfile';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
 export interface ProfileFacts {
@@ -391,7 +391,7 @@ Create a polished version that maintains all factual accuracy:`;
     // Extract key values from original (numbers, dates, etc.)
     const numberPattern = /\d+/g;
     const originalNumbers = original.match(numberPattern) || [];
-    const polishedNumbers = polished.match(numberPattern) || [];
+    // polishedNumbers not used in validation - we check numbers are included in polished directly
 
     // Check that most numbers are preserved
     const preserved = originalNumbers.filter(n => polished.includes(n));

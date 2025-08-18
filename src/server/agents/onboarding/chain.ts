@@ -4,7 +4,7 @@ import { EnhancedOnboardingAgent } from './structuredChain'
 import { ProfileUpdateService } from '../../services/profileUpdateService'
 import { Kysely } from 'kysely'
 import { DB } from '../../models/_types'
-import { FitnessProfile } from '../../models/fitnessProfile'
+import { FitnessProfile, ProfileUpdateOp } from '../../models/fitnessProfile'
 
 const llm = new ChatGoogleGenerativeAI({ 
   temperature: 0.7, 
@@ -103,7 +103,7 @@ export const onboardingAgent = {
       try {
         if (result.profileUpdate.type === 'mergePatch' && result.profileUpdate.patch) {
           // Convert patch to FitnessProfile type (constraints need special handling)
-          const patch: Partial<FitnessProfile> = { ...result.profileUpdate.patch } as any
+          const patch = { ...result.profileUpdate.patch } as Partial<FitnessProfile>
           
           await updateService.applyPatch(
             input.userId,
@@ -114,7 +114,7 @@ export const onboardingAgent = {
         } else if (result.profileUpdate.type === 'op' && result.profileUpdate.op) {
           await updateService.applyOp(
             input.userId,
-            result.profileUpdate.op as any,
+            result.profileUpdate.op as ProfileUpdateOp,
             'onboarding_agent',
             `Extracted from message: "${input.message.slice(0, 50)}..."`
           )

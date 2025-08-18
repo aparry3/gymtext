@@ -1,17 +1,17 @@
 import { Kysely } from 'kysely';
-import { DB, FitnessProfiles } from '../models/_types';
+import { DB } from '../models/_types';
 import { BaseRepository } from './baseRepository';
 import { FitnessProfile } from '../models/fitnessProfile';
 
 export class FitnessProfileRepository extends BaseRepository {
   constructor(db: Kysely<DB>) {
-    super(db, 'FitnessProfileRepository');
+    super(db);
   }
 
   /**
    * Get profile by user ID
    */
-  async getByUserId(userId: string): Promise<FitnessProfiles | undefined> {
+  async getByUserId(userId: string) {
     return await this.db
       .selectFrom('fitnessProfiles')
       .selectAll()
@@ -77,7 +77,7 @@ export class FitnessProfileRepository extends BaseRepository {
       await this.recordUpdate(userId, patch, null, meta.source || 'api', meta.reason);
     }
     
-    return merged;
+    return merged as FitnessProfile;
   }
 
   /**
@@ -129,7 +129,7 @@ export class FitnessProfileRepository extends BaseRepository {
    */
   private async recordUpdate(
     userId: string,
-    patch: any,
+    patch: unknown,
     path: string | null,
     source: string,
     reason?: string
@@ -150,7 +150,7 @@ export class FitnessProfileRepository extends BaseRepository {
   /**
    * Get profile update history
    */
-  async getUpdateHistory(userId: string, limit = 50): Promise<any[]> {
+  async getUpdateHistory(userId: string, limit = 50): Promise<unknown[]> {
     const updates = await this.db
       .selectFrom('profileUpdates')
       .selectAll()
@@ -168,20 +168,28 @@ export class FitnessProfileRepository extends BaseRepository {
   /**
    * Deep merge helper
    */
-  private deepMerge(target: any, source: any): any {
-    const result = { ...target };
+  private deepMerge(target: unknown, source: unknown): unknown {
+    if (typeof target !== 'object' || target === null) {
+      return source;
+    }
+    if (typeof source !== 'object' || source === null) {
+      return target;
+    }
     
-    for (const key in source) {
-      if (source[key] === null || source[key] === undefined) {
+    const result = { ...(target as Record<string, unknown>) };
+    
+    const sourceObj = source as Record<string, unknown>;
+    for (const key in sourceObj) {
+      if (sourceObj[key] === null || sourceObj[key] === undefined) {
         continue;
       }
       
-      if (typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (typeof sourceObj[key] === 'object' && !Array.isArray(sourceObj[key])) {
         // Nested object - recurse
-        result[key] = this.deepMerge(result[key] || {}, source[key]);
+        result[key] = this.deepMerge(result[key] || {}, sourceObj[key]);
       } else {
         // Primitive or array - replace
-        result[key] = source[key];
+        result[key] = sourceObj[key];
       }
     }
     
