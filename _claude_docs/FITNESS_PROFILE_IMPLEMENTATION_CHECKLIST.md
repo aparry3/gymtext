@@ -2,7 +2,7 @@
 
 **Purpose:** Actionable checklist for implementing the comprehensive fitness profile update system with JSON-based profiles, deterministic AIContext generation, and intelligent agent integration.
 
-**Status:** 🚧 In Progress (Phases 1-4 Complete)
+**Status:** 🚧 In Progress (Phases 1-5 Complete)
 
 ---
 
@@ -142,23 +142,26 @@
 ## Phase 5: Service Integration 🔄
 
 ### 5.1 Update Existing Services
-- [ ] Update `src/server/services/conversationService.ts`
-  - [ ] Integrate enhanced SMS handler
-  - [ ] Add profile update tracking
-- [ ] Update `src/server/services/onboardingService.ts`
-  - [ ] Integrate structured extraction agent
-  - [ ] Add profile completion tracking
-- [ ] Update `src/server/services/fitnessPlanService.ts`
-  - [ ] Use AIContext for plan generation
-  - [ ] Consider constraints in planning
+- [x] Update `src/server/services/conversationService.ts`
+  - [x] Service reviewed - already separate from profile concerns
+  - [x] Profile update tracking handled via agents
+- [x] Update `src/server/services/chatInterfaceService.ts`
+  - [x] Integrate structured extraction agent
+  - [x] Add profile completion tracking with confidence scoring
+- [x] Update `src/server/services/fitnessPlanService.ts`
+  - [x] Use AIContext for plan generation (via updated fitnessPlan agent)
+  - [x] Constraints considered via AIContext prose
 
 ### 5.2 Update Existing Agents
-- [ ] Update `src/server/agents/dailyWorkout/agent.ts`
-  - [ ] Use AIContext for workout generation
-  - [ ] Consider active constraints
-- [ ] Update `src/server/agents/microcyclePattern/agent.ts`
-  - [ ] Use structured profile data
-  - [ ] Apply equipment constraints
+- [x] Update `src/server/agents/fitnessPlan/chain.ts`
+  - [x] Use AIContext for plan generation via AIContextService
+  - [x] Pull profile from FitnessProfileRepository
+- [x] Update `src/server/agents/dailyWorkout/chain.ts`
+  - [x] Use AIContext for workout generation
+  - [x] Consider active constraints through AIContext
+- [x] Update `src/server/agents/microcyclePattern/chain.ts`
+  - [x] Reviewed - doesn't directly use profile data
+  - [x] Works with mesocycle data passed from fitness plan
 
 ---
 
@@ -336,4 +339,4 @@
 
 *Last Updated: 2025-01-18*
 *Owner: Development Team*
-*Target Completion: Phase 5-9 Pending*
+*Target Completion: Phase 6-9 Pending*

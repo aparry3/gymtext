@@ -4,7 +4,9 @@ import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '@/server/models/workout';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
+import { AIContextService } from '@/server/services/aiContextService';
+import { FitnessProfileRepository } from '@/server/repositories/fitnessProfileRepository';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 import { dailyWorkoutPrompt } from './prompts';
 
 const llm = new ChatGoogleGenerativeAI({ 
@@ -39,14 +41,16 @@ export const dailyWorkoutAgent = {
       recentWorkouts 
     } = context;
 
-    // Get fitness profile context
-    const fitnessProfileContext = new FitnessProfileContext(user);
-    const fitnessProfile = await fitnessProfileContext.getContext();
+    // Get fitness profile context using new AIContextService
+    const profileRepo = new FitnessProfileRepository(postgresDb);
+    const profile = await profileRepo.getProfile(user.id);
+    const aiContextService = new AIContextService();
+    const aiContext = aiContextService.buildAIContext(profile);
 
     // Generate prompt
     const prompt = dailyWorkoutPrompt(
       user,
-      fitnessProfile,
+      aiContext.prose,
       dayPlan,
       microcycle.pattern,
       mesocycle,
