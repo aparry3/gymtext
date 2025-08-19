@@ -13,11 +13,12 @@ describe('Agent Prompts', () => {
     it('should generate proper daily message prompt with workout details', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('John').build(),
-        profile: new FitnessProfileBuilder()
+        parsedProfile: new FitnessProfileBuilder()
           .withSkillLevel('intermediate')
           .withFitnessGoals('Build muscle, Increase strength')
           .build(),
-      };
+        info: [],
+      } as any;
 
       const workout = new WorkoutInstanceBuilder()
         .withSessionType('strength')
@@ -57,8 +58,9 @@ describe('Agent Prompts', () => {
     it('should handle recovery day workouts', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Sarah').build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const workout = new WorkoutInstanceBuilder()
         .withSessionType('recovery')
@@ -87,12 +89,13 @@ describe('Agent Prompts', () => {
     it('should generate proper chat prompt with conversation history', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Mike').build(),
-        profile: new FitnessProfileBuilder()
+        parsedProfile: new FitnessProfileBuilder()
           .withSkillLevel('intermediate')
           .withFitnessGoals('Build muscle')
           .withExerciseFrequency('3-4 times per week')
           .build(),
-      };
+        info: [],
+      } as any;
 
       const message = 'What should I eat before my workout?';
       const conversationHistory = [
@@ -142,8 +145,9 @@ describe('Agent Prompts', () => {
     it('should handle missing profile gracefully', () => {
       const user = {
         ...new UserBuilder().withName('Alex').build(),
-        profile: undefined
-      } as any; // Force profile to be undefined
+        parsedProfile: undefined,
+        info: [],
+      } as any; // Force parsedProfile to be undefined
       const message = 'How do I start working out?';
 
       const prompt = chatPrompt(user, message, [], undefined);
@@ -156,8 +160,9 @@ describe('Agent Prompts', () => {
     it('should generate contextual prompt with rich context', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Emma').build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const message = 'Show me my progress';
       const context = {
@@ -191,11 +196,12 @@ describe('Agent Prompts', () => {
     it('should generate motivational message with achievement', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('David').build(),
-        profile: new FitnessProfileBuilder()
+        parsedProfile: new FitnessProfileBuilder()
           .withFitnessGoals('Lose weight, Build endurance')
           .withSkillLevel('beginner')
           .build(),
-      };
+        info: [],
+      } as any;
 
       const achievement = 'Completed 5 workouts this week';
       const currentStreak = 7;
@@ -214,8 +220,9 @@ describe('Agent Prompts', () => {
     it('should handle missing achievement and streak', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Lisa').build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const prompt = motivationalPrompt(user);
 
@@ -229,8 +236,9 @@ describe('Agent Prompts', () => {
     it('should generate reminder with workout details', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Chris').build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const upcomingWorkout = {
         name: 'Upper Body Strength',
@@ -253,8 +261,9 @@ describe('Agent Prompts', () => {
     it('should handle no scheduled workout', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Pat').build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const prompt = workoutReminderPrompt(user);
 
@@ -268,8 +277,9 @@ describe('Agent Prompts', () => {
     it('should handle very long conversation history', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const longHistory = Array.from({ length: 20 }, (_, i) => ({
         id: `msg-${i}`,
@@ -297,8 +307,9 @@ describe('Agent Prompts', () => {
     it('should handle complex workout details in daily message', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().build(),
-        profile: new FitnessProfileBuilder().build(),
-      };
+        parsedProfile: new FitnessProfileBuilder().build(),
+        info: [],
+      } as any;
 
       const complexWorkout = new WorkoutInstanceBuilder()
         .withDetails({
@@ -349,10 +360,11 @@ describe('Agent Prompts', () => {
     it('should escape special characters in user input', () => {
       const user: UserWithProfile = {
         ...new UserBuilder().withName('Test"User').build(),
-        profile: new FitnessProfileBuilder()
+        parsedProfile: new FitnessProfileBuilder()
           .withFitnessGoals('Build muscle & "get strong"')
           .build(),
-      };
+        info: [],
+      } as any;
 
       const message = 'What about "special" characters & symbols?';
       
