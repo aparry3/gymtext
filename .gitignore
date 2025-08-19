@@ -16,8 +16,6 @@
 # next.js
 /.next/
 /out/
-/migrations_backup
-
 
 # production
 /build
@@ -41,3 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/migrations_backup
+
