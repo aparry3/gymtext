@@ -1,4 +1,5 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
+import { sql } from 'kysely';
 import type { 
   User, 
   FitnessProfile, 
@@ -280,6 +281,31 @@ export class UserRepository extends BaseRepository {
       .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();
+  }
+
+  /**
+   * Patch the user's profile with a partial update using JSONB merge
+   * This performs a deep merge of the provided patch with the existing profile
+   */
+  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile> {
+    // Use PostgreSQL's JSONB merge operator to deep merge the patch
+    // The || operator merges two JSONB values, with the right-hand value overwriting keys
+    const result = await this.db
+      .updateTable('users')
+      .set({
+        // Use raw SQL for JSONB merge operation
+        profile: sql`profile || ${JSON.stringify(patch)}::jsonb`,
+        updatedAt: new Date(),
+      })
+      .where('id', '=', userId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return {
+      ...result,
+      parsedProfile: this.parseProfile(result.profile),
+      info: []
+    };
   }
 
   private parseProfile(profile: unknown): FitnessProfile | null {
