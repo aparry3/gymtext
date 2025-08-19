@@ -1,10 +1,7 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { 
-  buildChatSystemPrompt, 
-  buildContextualChatPrompt 
-} from '@/server/agents/chat/prompts';
+import { buildChatSystemPrompt } from '@/server/agents/chat/prompts';
 import type { FitnessProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 
@@ -141,113 +138,4 @@ Respond to the user's message.`;
   }
 };
 
-/**
- * Contextual chat variant that includes additional context
- * Used when specific context data needs to be incorporated
- */
-export const contextualChatAgent = async ({
-  userName,
-  message,
-  profile,
-  wasProfileUpdated = false,
-  context,
-  config = {},
-}: {
-  userName: string;
-  message: string;
-  profile: FitnessProfile | null;
-  wasProfileUpdated?: boolean;
-  context: Record<string, unknown>;
-  config?: ChatAgentConfig;
-}): Promise<ChatAgentResult> => {
-  try {
-    const { verbose = false } = config;
-    
-    // Initialize the model
-    const model = initializeModel(config);
-    
-    // Build the contextual prompt
-    const prompt = buildContextualChatPrompt(
-      userName,
-      message,
-      profile,
-      context,
-      wasProfileUpdated
-    );
-    
-    if (verbose) {
-      console.log('ContextualChatAgent generating response with context:', {
-        userName,
-        wasProfileUpdated,
-        hasProfile: !!profile,
-        contextKeys: Object.keys(context)
-      });
-    }
-    
-    // Generate the response
-    const response = await model.invoke(prompt);
-    
-    // Extract the response content
-    const responseText = typeof response.content === 'string' 
-      ? response.content 
-      : JSON.stringify(response.content);
-    
-    return {
-      response: responseText
-    };
-    
-  } catch (error) {
-    console.error('ContextualChatAgent error:', error);
-    
-    return {
-      response: "I apologize, but I'm having trouble processing your message right now. Please try again in a moment."
-    };
-  }
-};
-
-/**
- * Legacy chain exports for backward compatibility
- * These will be removed once ChatService is updated
- * Wrapping to maintain the .invoke() interface
- */
-export const chatChain = {
-  invoke: async (input: { userId: string; message: string; conversationId?: string }) => {
-    // For backward compatibility, fetch the user to get the profile
-    const { UserRepository } = await import('@/server/repositories/userRepository');
-    const userRepo = new UserRepository();
-    const user = await userRepo.findWithProfile(input.userId);
-    
-    return chatAgent({
-      userName: user?.name || 'User',
-      message: input.message,
-      profile: user?.parsedProfile || null,
-      conversationHistory: [],
-      context: {}
-    });
-  }
-};
-
-export const contextualChatChain = {
-  invoke: async (input: { userId: string; message: string }) => {
-    // For backward compatibility, fetch the user to get the profile
-    const { UserRepository } = await import('@/server/repositories/userRepository');
-    const { ConversationContextService } = await import('@/server/services/context/conversationContext');
-    
-    const userRepo = new UserRepository();
-    const user = await userRepo.findWithProfile(input.userId);
-    
-    const contextService = new ConversationContextService();
-    const context = await contextService.getContext(input.userId, {
-      includeUserProfile: true,
-      includeWorkoutHistory: true,
-      messageLimit: 5
-    });
-    
-    return contextualChatAgent({
-      userName: user?.name || 'User',
-      message: input.message,
-      profile: user?.parsedProfile || null,
-      context: context ? (context as unknown as Record<string, unknown>) : {}
-    });
-  }
-};
+// No legacy code - only the new two-agent architecture exports

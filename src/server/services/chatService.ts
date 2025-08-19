@@ -1,6 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { userProfileAgent } from '@/server/agents/profile/chain';
-import { chatAgent, contextualChatAgent } from '@/server/agents/chat/chain';
+import { chatAgent } from '@/server/agents/chat/chain';
 import { ConversationContextService } from '@/server/services/context/conversationContext';
 import { MessageRepository } from '@/server/repositories/messageRepository';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
@@ -216,46 +216,4 @@ export class ChatService {
     }
   }
 
-  /**
-   * Processes a message with full context but without profile updates.
-   * Useful when profile updates should be disabled temporarily.
-   */
-  async handleMessageWithoutProfileUpdate(
-    user: UserWithProfile,
-    message: string
-  ): Promise<string> {
-    try {
-      // Get context
-      // Note: context.recentMessages will include the current message since it was already stored
-      // This is okay since we're using conversationHistory for the actual chat history
-      // The context is mainly for workout history and user profile data
-      const context = await this.contextService.getContext(user.id, {
-        includeUserProfile: true,
-        includeWorkoutHistory: true,
-        messageLimit: 0  // Don't include messages in context since we handle them separately
-      });
-      
-      // Use contextual chat agent directly
-      const result = await contextualChatAgent({
-        userName: user.name,
-        message,
-        profile: user.parsedProfile,
-        wasProfileUpdated: false,
-        context: context ? (context as unknown as Record<string, unknown>) : {},
-        config: { temperature: 0.7 }
-      });
-      
-      // Enforce SMS length
-      const responseText = result.response.trim();
-      if (responseText.length > SMS_MAX_LENGTH) {
-        return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
-      }
-      
-      return responseText;
-      
-    } catch (error) {
-      console.error('[ChatService] Error without profile update:', error);
-      return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
-    }
-  }
 }
