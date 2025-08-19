@@ -66,28 +66,12 @@ export class ChatService {
     conversationId?: string
   ): Promise<string> {
     try {
-      // Step 1: Get or create conversation
-      let conversation = conversationId 
+      // Step 1: Get conversation if provided
+      // Note: Conversation and message storage is handled by the API route,
+      // not here in the service layer
+      const conversation = conversationId 
         ? await this.conversationRepo.findById(conversationId)
         : null;
-      
-      if (!conversation) {
-        conversation = await this.conversationRepo.create({
-          userId: user.id,
-          lastMessageAt: new Date(),
-          startedAt: new Date()
-        });
-      }
-
-      // Store the incoming message
-      await this.messageRepo.create({
-        conversationId: conversation.id,
-        userId: user.id,
-        direction: 'inbound',
-        content: message,
-        phoneFrom: user.phoneNumber || 'user_phone',
-        phoneTo: process.env.TWILIO_NUMBER || 'system_phone'
-      });
 
       // Step 2: Run UserProfileAgent to extract and update profile
       let currentProfile = user.parsedProfile;
@@ -121,8 +105,11 @@ export class ChatService {
       }
 
       // Step 3: Get conversation context and history
-      const allMessages = await this.messageRepo.findByConversationId(conversation.id);
-      const conversationHistory = allMessages.slice(-10); // Get last 10 messages
+      // Only get previous messages if we have a conversation
+      const conversationHistory = conversation 
+        ? await this.messageRepo.findByConversationId(conversation.id)
+            .then(msgs => msgs.slice(-10)) // Get last 10 messages
+        : [];
       
       const context = await this.contextService.getContext(user.id, {
         includeUserProfile: true,
@@ -147,23 +134,8 @@ export class ChatService {
         }
       });
       
-      // Step 5: Store the assistant's response
-      await this.messageRepo.create({
-        conversationId: conversation.id,
-        userId: user.id,
-        direction: 'outbound',
-        content: chatResult.response,
-        phoneFrom: process.env.TWILIO_NUMBER || 'system_phone',
-        phoneTo: user.phoneNumber || 'user_phone'
-      });
-
-      // Update conversation metadata
-      await this.conversationRepo.update(conversation.id, {
-        lastMessageAt: new Date(),
-        messageCount: (conversation.messageCount || 0) + 2 // User message + assistant response
-      });
-      
-      // Step 6: Enforce SMS length constraints
+      // Step 5: Enforce SMS length constraints
+      // Note: Message storage is handled by the API route
       const responseText = chatResult.response.trim();
       
       if (responseText.length > SMS_MAX_LENGTH) {
