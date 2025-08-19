@@ -88,11 +88,11 @@ import {
   
         if (options.includeUserProfile !== false) {
           const userWithProfile = await this.userRepo.findWithProfile(userId);
-          if (userWithProfile?.profile) {
+          if (userWithProfile?.parsedProfile) {
             userProfile = {
               ...userProfile,
-              fitnessGoals: userWithProfile.profile.fitnessGoals,
-              skillLevel: userWithProfile.profile.skillLevel,
+              fitnessGoals: userWithProfile.parsedProfile.fitnessGoals,
+              skillLevel: userWithProfile.parsedProfile.skillLevel,
               // TODO: Add currentProgram and other fields as needed
             };
           }

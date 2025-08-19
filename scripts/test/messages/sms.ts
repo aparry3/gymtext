@@ -125,10 +125,16 @@ class SmsConversationTester {
       conversationId: conversation?.id,
       messageCount,
       lastMessage,
-      fitnessProfile: userWithProfile?.fitnessGoals ? {
-        goals: [userWithProfile.fitnessGoals],
-        level: userWithProfile.skillLevel || 'beginner',
-        frequency: userWithProfile.exerciseFrequency || '3x/week',
+      fitnessProfile: userWithProfile?.profile ? {
+        goals: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'fitnessGoals' in userWithProfile.profile 
+          ? [userWithProfile.profile.fitnessGoals as string] 
+          : [],
+        level: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'skillLevel' in userWithProfile.profile 
+          ? (userWithProfile.profile.skillLevel as string) 
+          : 'beginner',
+        frequency: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'exerciseFrequency' in userWithProfile.profile 
+          ? (userWithProfile.profile.exerciseFrequency as string) 
+          : '3x/week',
       } : undefined,
       currentPlan: fitnessPlan && progress ? {
         id: fitnessPlan.id,

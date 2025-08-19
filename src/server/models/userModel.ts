@@ -1,27 +1,88 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import type { Users, FitnessProfiles } from './_types';
+import type { Users } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
 export type User = Selectable<Users>;
 export type NewUser = Insertable<Users>;
 export type UserUpdate = Updateable<Users>;
 
-export type FitnessProfile = Selectable<FitnessProfiles>;
-export type NewFitnessProfile = Insertable<FitnessProfiles>;
-export type FitnessProfileUpdate = Updateable<FitnessProfiles>;
+// FitnessProfile is now stored as JSONB in the users table
+export interface FitnessProfile {
+  version?: number;
+  userId?: string;
+  
+  // Legacy fields for backward compatibility
+  fitnessGoals?: string;
+  skillLevel?: string;
+  exerciseFrequency?: string;
+  gender?: string;
+  age?: number;
+  
+  // New comprehensive profile fields
+  primaryGoal?: string;
+  specificObjective?: string;
+  eventDate?: string;
+  timelineWeeks?: number;
+  experienceLevel?: string;
+  
+  currentActivity?: string;
+  currentTraining?: {
+    programName?: string;
+    weeksCompleted?: number;
+    focus?: string;
+    notes?: string;
+  };
+  
+  availability?: {
+    daysPerWeek?: number;
+    minutesPerSession?: number;
+    preferredTimes?: string;
+    travelPattern?: string;
+    notes?: string;
+  };
+  
+  equipment?: {
+    access?: string;
+    location?: string;
+    items?: string[];
+    constraints?: string[];
+  };
+  
+  preferences?: {
+    workoutStyle?: string;
+    enjoyedExercises?: string[];
+    dislikedExercises?: string[];
+    coachingTone?: 'friendly' | 'tough-love' | 'clinical' | 'cheerleader';
+    musicOrVibe?: string;
+  };
+  
+  metrics?: {
+    heightCm?: number;
+    bodyweight?: { value: number; unit: 'lbs' | 'kg' };
+    bodyFatPercent?: number;
+    prLifts?: Record<string, { weight: number; unit: 'lbs' | 'kg'; reps?: number; date?: string }>;
+  };
+  
+  constraints?: Array<{
+    id: string;
+    type: 'injury' | 'equipment' | 'schedule' | 'mobility' | 'preference' | 'other';
+    label: string;
+    severity?: 'mild' | 'moderate' | 'severe';
+    affectedAreas?: string[];
+    modifications?: string;
+    startDate?: string;
+    endDate?: string;
+    status: 'active' | 'resolved';
+  }>;
+}
 
 export interface UserWithProfile extends User {
-  profile: FitnessProfile | null;
+  parsedProfile: FitnessProfile | null;
   info: string[];
 }
+
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
-export type CreateFitnessProfileData = Omit<NewFitnessProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
-
-
-export interface UserWithProfile extends User {
-  profile: FitnessProfile | null;
-  info: string[];
-}
+export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
 export class UserModel {
   private userRepository: UserRepository;
@@ -49,10 +110,10 @@ export class UserModel {
     return result ?? undefined;
   }
 
-  async createFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
-    // Business logic for fitness profile creation
+  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
+    // Business logic for fitness profile creation/update
     this.validateFitnessProfile(profileData);
-    return await this.userRepository.createFitnessProfile(userId, profileData);
+    return await this.userRepository.createOrUpdateFitnessProfile(userId, profileData);
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
@@ -75,12 +136,15 @@ export class UserModel {
   }
 
   private validateFitnessProfile(profileData: CreateFitnessProfileData): void {
-    if (!profileData.skillLevel || !['beginner', 'intermediate', 'advanced'].includes(profileData.skillLevel)) {
-      throw new Error('Valid skill level is required');
+    // With the new flexible profile structure, validation is more lenient
+    // We can add specific validations as needed
+    if (profileData.age !== undefined && (profileData.age < 1 || profileData.age > 120)) {
+      throw new Error('Age must be between 1 and 120');
     }
     
-    if (!profileData.fitnessGoals || profileData.fitnessGoals.length === 0) {
-      throw new Error('At least one fitness goal is required');
+    if (profileData.skillLevel && !['beginner', 'intermediate', 'advanced'].includes(profileData.skillLevel)) {
+      // Allow any skill level for flexibility
+      console.warn(`Non-standard skill level: ${profileData.skillLevel}`);
     }
   }
 

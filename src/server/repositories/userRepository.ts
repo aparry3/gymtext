@@ -33,18 +33,7 @@ export class UserRepository extends BaseRepository {
 
     let query = this.db
       .selectFrom('users')
-      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
-      .selectAll('users')
-      .select((eb) => [
-        eb.ref('fitnessProfiles.id').as('profileId'),
-        eb.ref('fitnessProfiles.fitnessGoals').as('fitnessGoals'),
-        eb.ref('fitnessProfiles.skillLevel').as('skillLevel'),
-        eb.ref('fitnessProfiles.exerciseFrequency').as('exerciseFrequency'),
-        eb.ref('fitnessProfiles.gender').as('gender'),
-        eb.ref('fitnessProfiles.age').as('age'),
-        eb.ref('fitnessProfiles.createdAt').as('profileCreatedAt'),
-        eb.ref('fitnessProfiles.updatedAt').as('profileUpdatedAt'),
-      ]);
+      .selectAll('users');
 
     if (q) {
       const like = `%${q}%`;
@@ -62,11 +51,19 @@ export class UserRepository extends BaseRepository {
       query = query.where('users.createdAt', '<=', new Date(createdTo));
     }
 
-    // Note: hasProfile/hasPlan filters can be added when plan joins are available
+    // Note: hasProfile filter can check if profile is not empty JSON
+    if (params.hasProfile === true) {
+      query = query.where('users.profile', 'is not', null)
+        .where('users.profile', '!=', '{}');
+    } else if (params.hasProfile === false) {
+      query = query.where((eb) => eb.or([
+        eb('users.profile', 'is', null),
+        eb('users.profile', '=', '{}')
+      ]));
+    }
 
     let countBuilder = this.db
-      .selectFrom('users')
-      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId');
+      .selectFrom('users');
 
     if (q) {
       const like = `%${q}%`;
@@ -78,6 +75,16 @@ export class UserRepository extends BaseRepository {
     }
     if (createdFrom) countBuilder = countBuilder.where('users.createdAt', '>=', new Date(createdFrom));
     if (createdTo) countBuilder = countBuilder.where('users.createdAt', '<=', new Date(createdTo));
+    
+    if (params.hasProfile === true) {
+      countBuilder = countBuilder.where('users.profile', 'is not', null)
+        .where('users.profile', '!=', '{}');
+    } else if (params.hasProfile === false) {
+      countBuilder = countBuilder.where((eb) => eb.or([
+        eb('users.profile', 'is', null),
+        eb('users.profile', '=', '{}')
+      ]));
+    }
 
     const totalResult = await countBuilder
       .select((eb) => eb.fn.countAll<number>().as('count'))
@@ -92,40 +99,14 @@ export class UserRepository extends BaseRepository {
       .execute();
 
     const users: UserWithProfile[] = usersRows.map((u) => ({
-      id: u.id,
-      name: u.name,
-      phoneNumber: u.phoneNumber,
-      email: u.email,
-      stripeCustomerId: u.stripeCustomerId,
-      preferredSendHour: u.preferredSendHour,
-      timezone: u.timezone,
-      createdAt: u.createdAt,
-      updatedAt: u.updatedAt,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      profile: (u as any).profileId ? {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        id: (u as any).profileId,
-        userId: u.id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fitnessGoals: (u as any).fitnessGoals,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        skillLevel: (u as any).skillLevel,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        exerciseFrequency: (u as any).exerciseFrequency,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        gender: (u as any).gender,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        age: (u as any).age,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        createdAt: (u as any).profileCreatedAt,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        updatedAt: (u as any).profileUpdatedAt,
-      } : null,
-      info: [],
+      ...u,
+      parsedProfile: this.parseProfile(u.profile),
+      info: []
     }));
 
     return { users, total };
   }
+
   async create(userData: CreateUserData): Promise<User> {
     return await this.db
       .insertInto('users')
@@ -136,8 +117,9 @@ export class UserRepository extends BaseRepository {
         stripeCustomerId: userData.stripeCustomerId || null,
         timezone: userData.timezone,
         preferredSendHour: userData.preferredSendHour,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        profile: userData.profile || {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -179,21 +161,45 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirstOrThrow();
   }
 
-  async createFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
-    return await this.db
-      .insertInto('fitnessProfiles')
-      .values({
-        userId: userId,
-        fitnessGoals: profileData.fitnessGoals,
-        skillLevel: profileData.skillLevel,
-        exerciseFrequency: profileData.exerciseFrequency,
-        gender: profileData.gender,
-        age: profileData.age,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
+    // Get the current user
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Merge the new profile data with existing profile
+    const existingProfile = this.parseProfile(user.profile) || {};
+    const updatedProfile: FitnessProfile = {
+      ...existingProfile,
+      ...profileData,
+      userId,
+      version: (existingProfile.version || 0) + 1
+    };
+
+    // Update the user's profile field
+    await this.db
+      .updateTable('users')
+      .set({
+        profile: JSON.parse(JSON.stringify(updatedProfile)), // Ensure it's a plain object
+        updatedAt: new Date(),
       })
-      .returningAll()
-      .executeTakeFirstOrThrow() as FitnessProfile;
+      .where('id', '=', userId)
+      .execute();
+
+    // Also log the update in profile_updates table
+    await this.db
+      .insertInto('profileUpdates')
+      .values({
+        userId,
+        patch: JSON.parse(JSON.stringify(profileData)),
+        source: 'api',
+        reason: 'Profile update',
+        createdAt: new Date()
+      })
+      .execute();
+
+    return updatedProfile;
   }
 
   async findWithProfile(userId: string): Promise<UserWithProfile | null> {
@@ -203,25 +209,20 @@ export class UserRepository extends BaseRepository {
       return null;
     }
 
-    const profile = await this.db
-      .selectFrom('fitnessProfiles')
-      .where('userId', '=', userId)
-      .selectAll()
-      .executeTakeFirst();
-
     return {
       ...user,
-      profile: profile || null,
+      parsedProfile: this.parseProfile(user.profile),
       info: []
     };
   }
 
   async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {
-    return await this.db
-      .selectFrom('fitnessProfiles')
-      .where('userId', '=', userId)
-      .selectAll()
-      .executeTakeFirst();
+    const user = await this.findById(userId);
+    if (!user) {
+      return undefined;
+    }
+    
+    return this.parseProfile(user.profile) || undefined;
   }
 
   async updatePreferences(userId: string, preferences: { 
@@ -241,23 +242,11 @@ export class UserRepository extends BaseRepository {
 
   async findUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
     // This query finds all users whose local preferred hour matches the current UTC hour
-    // We'll need to calculate this for each timezone
     const users = await this.db
       .selectFrom('users')
-      .leftJoin('fitnessProfiles', 'users.id', 'fitnessProfiles.userId')
       // .leftJoin('subscriptions', 'users.id', 'subscriptions.userId')
       // .where('subscriptions.status', '=', 'active')
       .selectAll('users')
-      .select([
-        'fitnessProfiles.id as profileId',
-        'fitnessProfiles.fitnessGoals',
-        'fitnessProfiles.skillLevel',
-        'fitnessProfiles.exerciseFrequency',
-        'fitnessProfiles.gender',
-        'fitnessProfiles.age',
-        'fitnessProfiles.createdAt as profileCreatedAt',
-        'fitnessProfiles.updatedAt as profileUpdatedAt'
-      ])
       .execute();
 
     // Filter users whose local hour matches their preference
@@ -269,29 +258,9 @@ export class UserRepository extends BaseRepository {
       try {
         const localHour = getLocalHourForTimezone(currentUtcDate, user.timezone);
         if (localHour === user.preferredSendHour) {
-          const profile: FitnessProfile | null = user.profileId ? {
-            id: user.profileId,
-            userId: user.id,
-            fitnessGoals: user.fitnessGoals!,
-            skillLevel: user.skillLevel!,
-            exerciseFrequency: user.exerciseFrequency!,
-            gender: user.gender!,
-            age: user.age!,
-            createdAt: user.profileCreatedAt!,
-            updatedAt: user.profileUpdatedAt!
-          } : null;
-
           matchingUsers.push({
-            id: user.id,
-            name: user.name,
-            phoneNumber: user.phoneNumber,
-            email: user.email,
-            stripeCustomerId: user.stripeCustomerId,
-            preferredSendHour: user.preferredSendHour,
-            timezone: user.timezone,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-            profile,
+            ...user,
+            parsedProfile: this.parseProfile(user.profile),
             info: []
           });
         }
@@ -311,5 +280,23 @@ export class UserRepository extends BaseRepository {
       .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();
+  }
+
+  private parseProfile(profile: unknown): FitnessProfile | null {
+    if (!profile || (typeof profile === 'object' && Object.keys(profile).length === 0)) {
+      return null;
+    }
+    
+    // If it's a string, parse it
+    if (typeof profile === 'string') {
+      try {
+        return JSON.parse(profile) as FitnessProfile;
+      } catch {
+        return null;
+      }
+    }
+    
+    // If it's already an object, return it
+    return profile as FitnessProfile;
   }
 }

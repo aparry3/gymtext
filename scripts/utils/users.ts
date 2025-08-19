@@ -206,12 +206,13 @@ export class TestUsers {
     console.log(chalk.white('Timezone:'), user.timezone);
     console.log(chalk.white('Send Time:'), `${user.preferredSendHour}:00`);
 
-    if (profile) {
+    if (profile && profile.profile) {
       console.log(chalk.bold('\n💪 Fitness Profile'));
       console.log(chalk.gray('─'.repeat(50)));
-      console.log(chalk.white('Goals:'), profile.fitnessGoals || 'N/A');
-      console.log(chalk.white('Skill Level:'), profile.skillLevel || 'N/A');
-      console.log(chalk.white('Frequency:'), profile.exerciseFrequency || 'N/A');
+      const profileData = typeof profile.profile === 'object' && profile.profile ? profile.profile : {};
+      console.log(chalk.white('Goals:'), (profileData as any).fitnessGoals || 'N/A');
+      console.log(chalk.white('Skill Level:'), (profileData as any).skillLevel || 'N/A');
+      console.log(chalk.white('Frequency:'), (profileData as any).exerciseFrequency || 'N/A');
     }
 
     if (plan) {

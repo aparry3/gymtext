@@ -241,13 +241,14 @@ class OnboardingFlow {
         return;
       }
 
-      // Update profile via database
+      // Update profile via database (now stored in users table)
       await this.db.db
-        .insertInto('fitnessProfiles')
-        .values({
-          userId,
-          ...profileData,
+        .updateTable('users')
+        .set({
+          profile: profileData,
+          updatedAt: new Date(),
         })
+        .where('id', '=', userId)
         .execute();
 
       this.updateStep('Create Fitness Profile', 'completed', undefined, profileData);

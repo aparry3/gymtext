@@ -259,7 +259,7 @@ async function displayUser(options: GetUserOptions): Promise<void> {
       console.log('');
       separator();
       
-      const hasProfile = !!profile?.fitnessGoals;
+      const hasProfile = profile?.profile && typeof profile.profile === 'object' && Object.keys(profile.profile).length > 0;
       const hasPlan = !!plan;
       const hasProgress = !!progress;
       

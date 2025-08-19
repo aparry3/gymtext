@@ -460,20 +460,10 @@ export async function up(db: Kysely<DB>): Promise<void> {
     .execute();
 
   // Partial index for active microcycles
-  await db.schema
-    .createIndex('idx_microcycles_active')
-    .on('microcycles')
-    .column('user_id')
-    .where(sql`is_active = true`)
-    .execute();
+  await sql`CREATE INDEX idx_microcycles_active ON microcycles (user_id) WHERE is_active = true`.execute(db);
 
   // Index for subscription status checks
-  await db.schema
-    .createIndex('idx_subscriptions_active')
-    .on('subscriptions')
-    .columns(['user_id', 'status'])
-    .where('status', '=', 'active')
-    .execute();
+  await sql`CREATE INDEX idx_subscriptions_active ON subscriptions (user_id, status) WHERE status = 'active'`.execute(db);
 }
 
 export async function down(db: Kysely<DB>): Promise<void> {

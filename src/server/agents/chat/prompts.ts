@@ -11,9 +11,9 @@ You are a professional fitness coach and personal trainer assistant for GymText.
 
 <User Information>
 - Name: ${user.name}
-- Fitness Level: ${user.profile?.skillLevel || 'Not specified'}
-- Goals: ${user.profile?.fitnessGoals || 'Not specified'}
-- Experience: ${user.profile?.exerciseFrequency || 'Not specified'} workouts per week
+- Fitness Level: ${user.parsedProfile?.skillLevel || 'Not specified'}
+- Goals: ${user.parsedProfile?.fitnessGoals || 'Not specified'}
+- Experience: ${user.parsedProfile?.exerciseFrequency || 'Not specified'} workouts per week
 </User Information>
 
 <Conversation History>
@@ -74,8 +74,8 @@ export const motivationalPrompt = (
 Create a motivational message for ${user.name}.
 
 <User Info>
-- Goals: ${user.profile?.fitnessGoals || 'General fitness'}
-- Level: ${user.profile?.skillLevel || 'Beginner'}
+- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
+- Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
 ${achievement ? `- Recent Achievement: ${achievement}` : ''}
 ${currentStreak ? `- Current Streak: ${currentStreak} days` : ''}
 </User Info>

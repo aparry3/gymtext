@@ -60,7 +60,7 @@ export async function POST(request: Request) {
           age: parseInt(formData.age, 10),
         };
 
-        await userRepository.createFitnessProfile(user.id, fitnessProfileData);
+        await userRepository.createOrUpdateFitnessProfile(user.id, fitnessProfileData);
       } else {
         // Update existing user with new Stripe customer ID and time preferences
         user = await userRepository.update(user.id, { 

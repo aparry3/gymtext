@@ -16,7 +16,6 @@ export class AdminActivityLogRepository extends BaseRepository {
         targetUserId: params.targetUserId,
         action: params.action,
         // JSON stringify/parse to ensure it's JSON-serializable for jsonb
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         payload: JSON.parse(JSON.stringify(params.payload ?? {})),
         result: params.result,
         errorMessage: params.errorMessage ?? null,
