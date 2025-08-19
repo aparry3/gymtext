@@ -28,14 +28,19 @@ describe('UserRepository', () => {
       const result = await userRepository.create(userData);
 
       expect(mockDb.insertInto).toHaveBeenCalledWith('users');
-      expect(insertBuilder.values).toHaveBeenCalledWith({
-        name: userData.name,
-        phoneNumber: userData.phoneNumber,
-        email: userData.email,
-        stripeCustomerId: userData.stripeCustomerId,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
-      });
+      expect(insertBuilder.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: userData.name,
+          phoneNumber: userData.phoneNumber,
+          email: userData.email,
+          stripeCustomerId: userData.stripeCustomerId,
+          timezone: userData.timezone,
+          preferredSendHour: userData.preferredSendHour,
+          profile: expect.any(Object),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        })
+      );
       expect(insertBuilder.returningAll).toHaveBeenCalled();
       expect(result).toEqual(expectedUser);
     });
@@ -52,14 +57,19 @@ describe('UserRepository', () => {
 
       const result = await userRepository.create(userData);
 
-      expect(insertBuilder.values).toHaveBeenCalledWith({
-        name: userData.name,
-        phoneNumber: userData.phoneNumber,
-        email: null,
-        stripeCustomerId: null,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
-      });
+      expect(insertBuilder.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: userData.name,
+          phoneNumber: userData.phoneNumber,
+          email: null,
+          stripeCustomerId: null,
+          timezone: userData.timezone,
+          preferredSendHour: userData.preferredSendHour,
+          profile: expect.any(Object),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        })
+      );
       expect(result.email).toBeNull();
       expect(result.stripeCustomerId).toBeNull();
     });
@@ -198,120 +208,35 @@ describe('UserRepository', () => {
     });
   });
 
-  describe('createFitnessProfile', () => {
-    it('should create fitness profile successfully', async () => {
-      const userId = 'user-1';
-      const profileData = new FitnessProfileBuilder().asNewFitnessProfile();
-      const expectedProfile = new FitnessProfileBuilder({ ...profileData, userId }).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('fitnessProfiles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedProfile);
-
-      const result = await userRepository.createFitnessProfile(userId, profileData);
-
-      expect(mockDb.insertInto).toHaveBeenCalledWith('fitnessProfiles');
-      expect(insertBuilder.values).toHaveBeenCalledWith({
-        userId,
-        fitnessGoals: profileData.fitnessGoals,
-        skillLevel: profileData.skillLevel,
-        exerciseFrequency: profileData.exerciseFrequency,
-        gender: profileData.gender,
-        age: profileData.age,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
-      });
-      expect(insertBuilder.returningAll).toHaveBeenCalled();
-      expect(result).toEqual(expectedProfile);
-    });
-
-    it('should create fitness profile with different skill levels', async () => {
-      const skillLevels = ['beginner', 'intermediate', 'advanced'] as const;
-      
-      for (const skillLevel of skillLevels) {
-        const profileData = new FitnessProfileBuilder()
-          .withSkillLevel(skillLevel)
-          .asNewFitnessProfile();
-        const expectedProfile = new FitnessProfileBuilder({ ...profileData }).build();
-        
-        const insertBuilder = dbHelper.mockInsertInto('fitnessProfiles');
-        insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedProfile);
-
-        const result = await userRepository.createFitnessProfile('user-1', profileData);
-
-        expect(result.skillLevel).toBe(skillLevel);
-      }
-    });
-
-    it('should throw error when profile creation fails', async () => {
-      const insertBuilder = dbHelper.mockInsertInto('fitnessProfiles');
-      insertBuilder.executeTakeFirstOrThrow.mockRejectedValue(new Error('Insert failed'));
-
-      await expect(
-        userRepository.createFitnessProfile('user-1', new FitnessProfileBuilder().asNewFitnessProfile())
-      ).rejects.toThrow('Insert failed');
-    });
-  });
+  // Removed createFitnessProfile tests: profiles are embedded JSON on users now
 
   describe('findWithProfile', () => {
-    it('should find user with profile', async () => {
+    it('should find user with parsed profile', async () => {
       const user = mockUsers.john();
-      const profile = mockProfiles.intermediate();
-      
-      let callCount = 0;
-      mockDb.selectFrom = vi.fn().mockImplementation((table) => {
-        const queryBuilder = {
-          where: vi.fn().mockReturnThis(),
-          selectAll: vi.fn().mockReturnThis(),
-          executeTakeFirst: vi.fn(),
-        };
-        
-        if (table === 'users' && callCount === 0) {
-          queryBuilder.executeTakeFirst.mockResolvedValue(user);
-          callCount++;
-        } else if (table === 'fitnessProfiles') {
-          queryBuilder.executeTakeFirst.mockResolvedValue(profile);
-        }
-        
-        return queryBuilder;
+      const selectBuilder = dbHelper.mockSelectFrom('users');
+      selectBuilder.executeTakeFirst.mockResolvedValue({
+        ...user,
+        profile: user.profile,
       });
 
       const result = await userRepository.findWithProfile(user.id);
 
-      expect(result).toEqual({
-        ...user,
-        profile,
-        info: [],
-      });
+      expect(result?.parsedProfile).toBeTruthy();
+      expect(result?.info).toEqual([]);
     });
 
-    it('should return user with null profile when profile not found', async () => {
+    it('should return user with null parsedProfile when profile empty', async () => {
       const user = mockUsers.noEmail();
-      
-      let callCount = 0;
-      mockDb.selectFrom = vi.fn().mockImplementation((table) => {
-        const queryBuilder = {
-          where: vi.fn().mockReturnThis(),
-          selectAll: vi.fn().mockReturnThis(),
-          executeTakeFirst: vi.fn(),
-        };
-        
-        if (table === 'users' && callCount === 0) {
-          queryBuilder.executeTakeFirst.mockResolvedValue(user);
-          callCount++;
-        } else if (table === 'fitnessProfiles') {
-          queryBuilder.executeTakeFirst.mockResolvedValue(undefined);
-        }
-        
-        return queryBuilder;
+      const selectBuilder = dbHelper.mockSelectFrom('users');
+      selectBuilder.executeTakeFirst.mockResolvedValue({
+        ...user,
+        profile: {},
       });
 
       const result = await userRepository.findWithProfile(user.id);
 
-      expect(result).toEqual({
-        ...user,
-        profile: null,
-        info: [],
-      });
+      expect(result?.parsedProfile).toBeNull();
+      expect(result?.info).toEqual([]);
     });
 
     it('should return null when user not found', async () => {
@@ -329,17 +254,17 @@ describe('UserRepository', () => {
   });
 
   describe('findFitnessProfileByUserId', () => {
-    it('should find fitness profile by user id', async () => {
-      const profile = mockProfiles.advanced();
-      const selectBuilder = dbHelper.mockSelectFrom('fitnessProfiles');
-      selectBuilder.executeTakeFirst.mockResolvedValue(profile);
+    it('should find fitness profile by user id from embedded profile', async () => {
+      const user = mockUsers.john();
+      const selectBuilder = dbHelper.mockSelectFrom('users');
+      selectBuilder.executeTakeFirst.mockResolvedValue(user);
 
-      const result = await userRepository.findFitnessProfileByUserId(profile.userId);
+      const result = await userRepository.findFitnessProfileByUserId(user.id);
 
-      expect(mockDb.selectFrom).toHaveBeenCalledWith('fitnessProfiles');
-      expect(selectBuilder.where).toHaveBeenCalledWith('userId', '=', profile.userId);
+      expect(mockDb.selectFrom).toHaveBeenCalledWith('users');
+      expect(selectBuilder.where).toHaveBeenCalledWith('id', '=', user.id);
       expect(selectBuilder.selectAll).toHaveBeenCalled();
-      expect(result).toEqual(profile);
+      expect(result).toEqual(user.profile);
     });
 
     it('should return undefined when profile not found', async () => {
@@ -361,29 +286,7 @@ describe('UserRepository', () => {
       await expect(userRepository.findById('user-1')).rejects.toThrow('Database connection failed');
     });
 
-    it('should handle transaction errors in complex operations', async () => {
-      const user = mockUsers.john();
-      
-      let callCount = 0;
-      mockDb.selectFrom = vi.fn().mockImplementation((table) => {
-        const queryBuilder = {
-          where: vi.fn().mockReturnThis(),
-          selectAll: vi.fn().mockReturnThis(),
-          executeTakeFirst: vi.fn(),
-        };
-        
-        if (table === 'users' && callCount === 0) {
-          queryBuilder.executeTakeFirst.mockResolvedValue(user);
-          callCount++;
-        } else if (table === 'fitnessProfiles') {
-          queryBuilder.executeTakeFirst.mockRejectedValue(new Error('Query failed'));
-        }
-        
-        return queryBuilder;
-      });
-
-      await expect(userRepository.findWithProfile(user.id)).rejects.toThrow('Query failed');
-    });
+    // Removed transaction error test that depended on separate fitnessProfiles table
   });
 
   describe('updatePreferences', () => {
@@ -476,40 +379,16 @@ describe('UserRepository', () => {
     it('should return users matching the current UTC hour', async () => {
       // Mock users in different timezones
       const nyUser = mockUsers.newYork(); // UTC-5, prefers 8 AM, so UTC 13
-      const laUser = mockUsers.losAngeles(); // UTC-8, prefers 8 AM, so UTC 16
-      const profile = mockProfiles.intermediate();
-      
-      const mockResults = [
-        {
-          ...nyUser,
-          profileId: profile.id,
-          fitnessGoals: profile.fitnessGoals,
-          skillLevel: profile.skillLevel,
-          exerciseFrequency: profile.exerciseFrequency,
-          gender: profile.gender,
-          age: profile.age,
-          profileCreatedAt: profile.createdAt,
-          profileUpdatedAt: profile.updatedAt,
-        },
-      ];
-
-      const selectBuilder = {
-        leftJoin: vi.fn().mockReturnThis(),
-        selectAll: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        execute: vi.fn().mockResolvedValue(mockResults),
-      };
-
-      mockDb.selectFrom = vi.fn().mockReturnValue(selectBuilder);
+      const selectBuilder = dbHelper.mockSelectFrom('users');
+      selectBuilder.execute.mockResolvedValue([nyUser]);
 
       // Test for UTC hour 13 (8 AM EST)
       const result = await userRepository.findUsersForHour(13);
 
       expect(mockDb.selectFrom).toHaveBeenCalledWith('users');
-      expect(selectBuilder.leftJoin).toHaveBeenCalledWith('fitnessProfiles', 'users.id', 'fitnessProfiles.userId');
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(nyUser.id);
-      expect(result[0].profile).toBeTruthy();
+      expect(result[0].parsedProfile).toBeTruthy();
     });
 
     it('should filter out users with different preferred hours', async () => {

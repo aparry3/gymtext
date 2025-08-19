@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { DatabaseMockHelper } from '../../../mocks/database-helpers';
-import { MicrocycleBuilder, mockMicrocycles, createMicrocycleSequence } from '../../../fixtures/microcycles';
 import type { Kysely } from 'kysely';
 import type { DB } from '@/server/models/_types';
 
@@ -16,233 +15,181 @@ describe('MicrocycleRepository', () => {
     microcycleRepository = new MicrocycleRepository(mockDb);
   });
 
-  describe('create', () => {
-    it('should create a new microcycle successfully', async () => {
-      const microcycleData = new MicrocycleBuilder().asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
+  describe('createMicrocycle', () => {
+    it('creates a new microcycle with JSON pattern', async () => {
+      const newMicrocycle = {
+        userId: 'user-1',
+        fitnessPlanId: 'plan-1',
+        mesocycleIndex: 0,
+        weekNumber: 1,
+        pattern: {
+          weekIndex: 1,
+          days: [{ day: 'MONDAY' as const, theme: 'Upper' }],
+        },
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-07'),
+        isActive: true,
+      };
 
-      const result = await microcycleRepository.create(microcycleData);
+      const dbRow = {
+        id: 'micro-1',
+        userId: newMicrocycle.userId,
+        fitnessPlanId: newMicrocycle.fitnessPlanId,
+        mesocycleIndex: newMicrocycle.mesocycleIndex,
+        weekNumber: newMicrocycle.weekNumber,
+        pattern: JSON.stringify(newMicrocycle.pattern),
+        startDate: newMicrocycle.startDate,
+        endDate: newMicrocycle.endDate,
+        isActive: newMicrocycle.isActive,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+      } as any;
+
+      const insertBuilder = dbHelper.mockInsertInto('microcycles');
+      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(dbRow);
+
+      const result = await microcycleRepository.createMicrocycle(newMicrocycle);
 
       expect(mockDb.insertInto).toHaveBeenCalledWith('microcycles');
-      expect(insertBuilder.values).toHaveBeenCalledWith(microcycleData);
-      expect(insertBuilder.returningAll).toHaveBeenCalled();
-      expect(result).toEqual(expectedMicrocycle);
+      expect(insertBuilder.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-1',
+          fitnessPlanId: 'plan-1',
+          mesocycleIndex: 0,
+          weekNumber: 1,
+          pattern: JSON.stringify(newMicrocycle.pattern),
+        })
+      );
+      expect(result.id).toBe('micro-1');
+      expect(result.pattern).toEqual(newMicrocycle.pattern);
+      expect(result.isActive).toBe(true);
     });
 
-    it('should create microcycle with targets', async () => {
-      const targets = {
-        avgIntensityPct1RM: 80,
-        totalSetsMainLifts: 16,
-        split: 'Upper-Lower-Rest-Upper-Lower-Rest-Rest',
-      };
-      
-      const microcycleData = new MicrocycleBuilder()
-        .withTargets(targets)
-        .asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
-
-      const result = await microcycleRepository.create(microcycleData);
-
-      expect(result.targets).toEqual(targets);
-    });
-
-    it('should create deload week', async () => {
-      const deloadTargets = { deload: true, volumeReduction: 0.5 };
-      const microcycleData = new MicrocycleBuilder()
-        .withTargets(deloadTargets)
-        .asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
-
-      const result = await microcycleRepository.create(microcycleData);
-
-      expect(result.targets).toHaveProperty('deload', true);
-      expect(result.targets).toHaveProperty('volumeReduction', 0.5);
-    });
-
-    it('should create microcycle with proper date range', async () => {
-      const startDate = new Date('2024-01-01');
-      const endDate = new Date('2024-01-07');
-      
-      const microcycleData = new MicrocycleBuilder()
-        .withDates(startDate, endDate)
-        .asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
-
-      const result = await microcycleRepository.create(microcycleData);
-
-      expect(result.startDate).toEqual(startDate);
-      expect(result.endDate).toEqual(endDate);
-      
-      const duration = endDate.getTime() - startDate.getTime();
-      const days = duration / (1000 * 60 * 60 * 24);
-      expect(days).toBe(6); // 7-day week
-    });
-
-    it('should throw error when insert fails', async () => {
-      const microcycleData = new MicrocycleBuilder().asNewMicrocycle();
+    it('throws when insert fails', async () => {
       const insertBuilder = dbHelper.mockInsertInto('microcycles');
       insertBuilder.executeTakeFirstOrThrow.mockRejectedValue(new Error('Insert failed'));
 
-      await expect(microcycleRepository.create(microcycleData)).rejects.toThrow('Insert failed');
+      await expect(
+        microcycleRepository.createMicrocycle({
+          userId: 'user-1',
+          fitnessPlanId: 'plan-1',
+          mesocycleIndex: 0,
+          weekNumber: 1,
+          pattern: { weekIndex: 1, days: [] },
+          startDate: new Date('2024-01-01'),
+          endDate: new Date('2024-01-07'),
+          isActive: true,
+        })
+      ).rejects.toThrow('Insert failed');
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle microcycles with null targets', async () => {
-      const microcycleData = new MicrocycleBuilder()
-        .withTargets(null)
-        .asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
+  describe('getters', () => {
+    it('returns current active microcycle', async () => {
+      const selectBuilder = dbHelper.mockSelectFrom('microcycles');
+      selectBuilder.executeTakeFirst.mockResolvedValue({
+        id: 'micro-1',
+        userId: 'user-1',
+        fitnessPlanId: 'plan-1',
+        mesocycleIndex: 0,
+        weekNumber: 1,
+        pattern: { weekIndex: 1, days: [] },
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-07'),
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
 
-      const result = await microcycleRepository.create(microcycleData);
+      const result = await microcycleRepository.getCurrentMicrocycle('user-1');
 
-      expect(result.targets).toBeNull();
+      expect(mockDb.selectFrom).toHaveBeenCalledWith('microcycles');
+      expect(selectBuilder.where).toHaveBeenCalledWith('userId', '=', 'user-1');
+      expect(selectBuilder.where).toHaveBeenCalledWith('isActive', '=', true);
+      expect(selectBuilder.orderBy).toHaveBeenCalledWith('createdAt', 'desc');
+      expect(result?.id).toBe('micro-1');
     });
 
-    it('should handle complex target structures', async () => {
-      const complexTargets = {
-        strength: {
-          avgIntensityPct1RM: 85,
-          totalSetsMainLifts: 15,
-          mainLifts: ['squat', 'bench', 'deadlift'],
-        },
-        endurance: {
-          totalMileage: 30,
-          longRunMileage: 12,
-          paceTargets: {
-            easy: '8:30',
-            tempo: '7:00',
-            interval: '6:00',
-          },
-        },
-        split: 'Custom-Program',
-        notes: 'Focus on compound movements',
-      };
-      
-      const microcycleData = new MicrocycleBuilder()
-        .withTargets(complexTargets)
-        .asNewMicrocycle();
-      const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
+    it('finds microcycle by week tuple', async () => {
+      const selectBuilder = dbHelper.mockSelectFrom('microcycles');
+      selectBuilder.executeTakeFirst.mockResolvedValue({ id: 'micro-2' } as any);
 
-      const result = await microcycleRepository.create(microcycleData);
+      const result = await microcycleRepository.getMicrocycleByWeek('user-1', 'plan-1', 2, 3);
 
-      expect(result.targets).toEqual(complexTargets);
+      expect(selectBuilder.where).toHaveBeenCalledWith('userId', '=', 'user-1');
+      expect(selectBuilder.where).toHaveBeenCalledWith('fitnessPlanId', '=', 'plan-1');
+      expect(selectBuilder.where).toHaveBeenCalledWith('mesocycleIndex', '=', 2);
+      expect(selectBuilder.where).toHaveBeenCalledWith('weekNumber', '=', 3);
+      expect(result?.id).toBe('micro-2');
     });
 
-    it('should handle microcycles with same index in different mesocycles', async () => {
-      const microcycle1Data = new MicrocycleBuilder()
-        .withMesocycleId('meso-1')
-        .withIndex(0)
-        .asNewMicrocycle();
-      const microcycle2Data = new MicrocycleBuilder()
-        .withMesocycleId('meso-2')
-        .withIndex(0)
-        .asNewMicrocycle();
-      
-      const expectedMicrocycle1 = new MicrocycleBuilder(microcycle1Data).build();
-      const expectedMicrocycle2 = new MicrocycleBuilder(microcycle2Data).build();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow
-        .mockResolvedValueOnce(expectedMicrocycle1)
-        .mockResolvedValueOnce(expectedMicrocycle2);
+    it('gets microcycle by id', async () => {
+      const selectBuilder = dbHelper.mockSelectFrom('microcycles');
+      selectBuilder.executeTakeFirst.mockResolvedValue({ id: 'micro-1' } as any);
 
-      const result1 = await microcycleRepository.create(microcycle1Data);
-      const result2 = await microcycleRepository.create(microcycle2Data);
-
-      expect(result1.index).toBe(0);
-      expect(result2.index).toBe(0);
-      expect(result1.mesocycleId).not.toBe(result2.mesocycleId);
+      const result = await microcycleRepository.getMicrocycleById('micro-1');
+      expect(selectBuilder.where).toHaveBeenCalledWith('id', '=', 'micro-1');
+      expect(result?.id).toBe('micro-1');
     });
 
-    it('should handle microcycles spanning different durations', async () => {
-      const durations = [
-        { start: new Date('2024-01-01'), end: new Date('2024-01-07'), days: 6 },  // Standard week
-        { start: new Date('2024-01-01'), end: new Date('2024-01-10'), days: 9 },  // 10-day cycle
-        { start: new Date('2024-01-01'), end: new Date('2024-01-14'), days: 13 }, // 2-week cycle
-      ];
+    it('lists recent microcycles', async () => {
+      const selectBuilder = dbHelper.mockSelectFrom('microcycles');
+      selectBuilder.execute.mockResolvedValue([{ id: 'a' }, { id: 'b' }] as any);
 
-      for (const { start, end, days } of durations) {
-        const microcycleData = new MicrocycleBuilder()
-          .withDates(start, end)
-          .asNewMicrocycle();
-        const expectedMicrocycle = new MicrocycleBuilder(microcycleData).build();
-        
-        const insertBuilder = dbHelper.mockInsertInto('microcycles');
-        insertBuilder.executeTakeFirstOrThrow.mockResolvedValue(expectedMicrocycle);
-
-        const result = await microcycleRepository.create(microcycleData);
-
-        const actualDays = (result.endDate.getTime() - result.startDate.getTime()) / (1000 * 60 * 60 * 24);
-        expect(actualDays).toBe(days);
-      }
+      const result = await microcycleRepository.getRecentMicrocycles('user-1', 2);
+      expect(selectBuilder.where).toHaveBeenCalledWith('userId', '=', 'user-1');
+      expect(selectBuilder.orderBy).toHaveBeenCalledWith('createdAt', 'desc');
+      expect(result.map(r => r.id)).toEqual(['a', 'b']);
     });
   });
 
-  describe('error handling', () => {
-    it('should handle database connection errors', async () => {
-      mockDb.insertInto = vi.fn().mockImplementation(() => {
-        throw new Error('Database connection failed');
+  describe('updates and deletes', () => {
+    it('deactivates previous microcycles for a user', async () => {
+      const updateBuilder = dbHelper.mockUpdateTable('microcycles');
+      await microcycleRepository.deactivatePreviousMicrocycles('user-1');
+      expect(mockDb.updateTable).toHaveBeenCalledWith('microcycles');
+      expect(updateBuilder.set).toHaveBeenCalledWith({ isActive: false });
+      expect(updateBuilder.where).toHaveBeenCalledWith('userId', '=', 'user-1');
+      expect(updateBuilder.where).toHaveBeenCalledWith('isActive', '=', true);
+    });
+
+    it('updates allowed fields and returns updated microcycle', async () => {
+      const updateBuilder = dbHelper.mockUpdateTable('microcycles');
+      updateBuilder.executeTakeFirst.mockResolvedValue({
+        id: 'micro-1',
+        pattern: JSON.stringify({ weekIndex: 2, days: [] }),
+        startDate: new Date('2024-01-08'),
+        endDate: new Date('2024-01-14'),
+        isActive: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+
+      const result = await microcycleRepository.updateMicrocycle('micro-1', {
+        pattern: { weekIndex: 2, days: [] },
+        startDate: new Date('2024-01-08'),
+        endDate: new Date('2024-01-14'),
+        isActive: false,
       });
 
-      const microcycleData = new MicrocycleBuilder().asNewMicrocycle();
-
-      await expect(microcycleRepository.create(microcycleData)).rejects.toThrow('Database connection failed');
+      expect(mockDb.updateTable).toHaveBeenCalledWith('microcycles');
+      expect(updateBuilder.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pattern: JSON.stringify({ weekIndex: 2, days: [] }),
+          updatedAt: expect.any(Date),
+        })
+      );
+      expect(updateBuilder.where).toHaveBeenCalledWith('id', '=', 'micro-1');
+      expect(result?.isActive).toBe(false);
     });
 
-    it('should handle foreign key violations', async () => {
-      const microcycleData = new MicrocycleBuilder()
-        .withMesocycleId('non-existent-mesocycle')
-        .asNewMicrocycle();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockRejectedValue(
-        new Error('Foreign key violation: mesocycle_id references non-existent mesocycle')
-      );
+    it('deletes microcycle by id', async () => {
+      const deleteBuilder = dbHelper.mockDeleteFrom('microcycles');
+      deleteBuilder.executeTakeFirst.mockResolvedValue({ numDeletedRows: 1 } as any);
 
-      await expect(microcycleRepository.create(microcycleData)).rejects.toThrow('Foreign key violation');
-    });
-
-    it('should handle unique constraint violations', async () => {
-      const microcycleData = new MicrocycleBuilder().asNewMicrocycle();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockRejectedValue(
-        new Error('Unique constraint violation: (client_id, fitness_plan_id, mesocycle_id, index)')
-      );
-
-      await expect(microcycleRepository.create(microcycleData)).rejects.toThrow('Unique constraint violation');
-    });
-
-    it('should handle invalid date ranges', async () => {
-      const microcycleData = new MicrocycleBuilder()
-        .withDates(new Date('2024-01-08'), new Date('2024-01-01')) // End before start
-        .asNewMicrocycle();
-      
-      const insertBuilder = dbHelper.mockInsertInto('microcycles');
-      insertBuilder.executeTakeFirstOrThrow.mockRejectedValue(
-        new Error('Check constraint violation: end_date must be after start_date')
-      );
-
-      await expect(microcycleRepository.create(microcycleData)).rejects.toThrow('Check constraint violation');
+      const result = await microcycleRepository.deleteMicrocycle('micro-1');
+      expect(mockDb.deleteFrom).toHaveBeenCalledWith('microcycles');
+      expect(result).toBe(true);
     });
   });
 });
