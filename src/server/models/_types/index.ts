@@ -72,18 +72,6 @@ export interface FitnessPlans {
   updatedAt: Generated<Timestamp>;
 }
 
-export interface FitnessProfiles {
-  age: number;
-  createdAt: Generated<Timestamp>;
-  exerciseFrequency: string;
-  fitnessGoals: string;
-  gender: string;
-  id: Generated<string>;
-  skillLevel: string;
-  updatedAt: Generated<Timestamp>;
-  userId: string;
-}
-
 export interface Messages {
   content: string;
   conversationId: string;
@@ -121,6 +109,16 @@ export interface NeonAuthUsersSync {
   updatedAt: Timestamp | null;
 }
 
+export interface ProfileUpdates {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  patch: Json;
+  path: string | null;
+  reason: string | null;
+  source: string;
+  userId: string;
+}
+
 export interface Subscriptions {
   canceledAt: Timestamp | null;
   createdAt: Generated<Timestamp>;
@@ -141,6 +139,7 @@ export interface Users {
   name: string;
   phoneNumber: string;
   preferredSendHour: Generated<number>;
+  profile: Generated<Json | null>;
   stripeCustomerId: string | null;
   timezone: Generated<string>;
   updatedAt: Generated<Timestamp>;
@@ -166,10 +165,10 @@ export interface DB {
   conversations: Conversations;
   conversationTopics: ConversationTopics;
   fitnessPlans: FitnessPlans;
-  fitnessProfiles: FitnessProfiles;
   messages: Messages;
   microcycles: Microcycles;
   "neonAuth.usersSync": NeonAuthUsersSync;
+  profileUpdates: ProfileUpdates;
   subscriptions: Subscriptions;
   users: Users;
   workoutInstances: WorkoutInstances;
