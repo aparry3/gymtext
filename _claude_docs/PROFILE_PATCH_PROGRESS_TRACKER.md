@@ -77,24 +77,24 @@ Implementation of a two-agent system for automatic profile updates from chat con
 
 ---
 
-## Phase 4: ChatAgent Updates ⏳
+## Phase 4: ChatAgent Updates ✅
 *Target: Refactor existing chat agent*
 
 ### Prompts
-- [ ] Update `src/server/agents/chat/prompts.ts`
-  - [ ] Export `buildChatSystemPrompt()` function
-  - [ ] Accept profile parameter
-  - [ ] Accept wasProfileUpdated flag
-  - [ ] Add update acknowledgment context
+- [x] Update `src/server/agents/chat/prompts.ts`
+  - [x] Export `buildChatSystemPrompt()` function
+  - [x] Accept profile parameter
+  - [x] Accept wasProfileUpdated flag
+  - [x] Add update acknowledgment context
 
 ### Chain
-- [ ] Refactor `src/server/agents/chat/chain.ts`
-  - [ ] Rename to `chatAgent` export
-  - [ ] Import prompts from prompts.ts
-  - [ ] Accept profile as parameter
-  - [ ] Remove profile fetching logic
-  - [ ] Accept wasProfileUpdated flag
-  - [ ] Focus on response generation
+- [x] Refactor `src/server/agents/chat/chain.ts`
+  - [x] Rename to `chatAgent` export
+  - [x] Import prompts from prompts.ts
+  - [x] Accept profile as parameter
+  - [x] Remove profile fetching logic
+  - [x] Accept wasProfileUpdated flag
+  - [x] Focus on response generation
   - [ ] Write integration tests
 
 ---
@@ -238,11 +238,11 @@ Implementation of a two-agent system for automatic profile updates from chat con
 - ✅ Phase 1: Foundation Layer (repositories and services)
 - ✅ Phase 2: Tool Layer (profile patch tool)
 - ✅ Phase 3: UserProfileAgent (extraction agent)
-- 🟡 Starting Phase 4: ChatAgent Updates...
+- ✅ Phase 4: ChatAgent Updates (refactored for two-agent architecture)
 
 ### Next Steps
-1. Phase 4: Update existing ChatAgent
-2. Phase 5: Update ChatService orchestration
+1. ~~Phase 4: Update existing ChatAgent~~ ✅
+2. Phase 5: Update ChatService orchestration  
 3. Phase 6: Create comprehensive test suite
 
 ---
@@ -253,11 +253,11 @@ Implementation of a two-agent system for automatic profile updates from chat con
 Phase 1: Foundation Layer    [✅✅✅✅✅] 100%
 Phase 2: Tool Layer          [✅✅✅✅✅] 100%
 Phase 3: UserProfileAgent    [✅✅✅✅✅] 100%
-Phase 4: ChatAgent Updates   [⬜⬜⬜⬜⬜] 0%
+Phase 4: ChatAgent Updates   [✅✅✅✅✅] 100%
 Phase 5: Service Orchestra   [⬜⬜⬜⬜⬜] 0%
 Phase 6: Testing Suite       [⬜⬜⬜⬜⬜] 0%
 Phase 7: Documentation       [⬜⬜⬜⬜⬜] 0%
 Phase 8: Monitoring & Roll   [⬜⬜⬜⬜⬜] 0%
 
-Overall Progress:            [✅✅⬛⬜⬜] 37.5%
+Overall Progress:            [✅✅✅⬜⬜] 50%
 ```
