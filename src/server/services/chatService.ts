@@ -105,16 +105,23 @@ export class ChatService {
       }
 
       // Step 3: Get conversation context and history
-      // Only get previous messages if we have a conversation
+      // Exclude the current message that was just stored by the API route
       const conversationHistory = conversation 
         ? await this.messageRepo.findByConversationId(conversation.id)
-            .then(msgs => msgs.slice(-10)) // Get last 10 messages
+            .then(msgs => {
+              // Remove the last message (current one) and get previous 10
+              const previousMessages = msgs.slice(0, -1);
+              return previousMessages.slice(-10);
+            })
         : [];
       
+      // Note: context.recentMessages will include the current message since it was already stored
+      // This is okay since we're using conversationHistory for the actual chat history
+      // The context is mainly for workout history and user profile data
       const context = await this.contextService.getContext(user.id, {
         includeUserProfile: true,
         includeWorkoutHistory: true,
-        messageLimit: 5
+        messageLimit: 0  // Don't include messages in context since we handle them separately
       });
 
       // Step 4: Run ChatAgent with the current profile and update status
@@ -219,10 +226,13 @@ export class ChatService {
   ): Promise<string> {
     try {
       // Get context
+      // Note: context.recentMessages will include the current message since it was already stored
+      // This is okay since we're using conversationHistory for the actual chat history
+      // The context is mainly for workout history and user profile data
       const context = await this.contextService.getContext(user.id, {
         includeUserProfile: true,
         includeWorkoutHistory: true,
-        messageLimit: 5
+        messageLimit: 0  // Don't include messages in context since we handle them separately
       });
       
       // Use contextual chat agent directly
