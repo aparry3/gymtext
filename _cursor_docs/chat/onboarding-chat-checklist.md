@@ -52,13 +52,14 @@ This checklist tracks delivery of the hero-to-fullscreen onboarding chat at `/ch
 
 ### Phase 6 – Frontend (Hero → Fullscreen Chat)
 - [ ] Page: `src/app/chat/page.tsx` with hero input (placeholder: "What are your fitness goals?")
-- [ ] Expand-to-fullscreen on type/submit, maintain scrollable landing content below
-- [ ] Client components in `src/components/pages/chat/`
+  - [ ] Expand-to-fullscreen on type/submit, maintain scrollable landing content below
+  - [ ] Client components in `src/components/pages/chat/`
   - [ ] `ChatContainer`: SSE connection, message state, pending patches, profile projection
   - [ ] `MessageList`: streaming tokens, timestamps, typing indicator
   - [ ] `Composer`: input, send, disabled state
   - [ ] `ProfileSummaryPanel`: live `projectedProfile`, completeness
   - [ ] `SignupCTA`: visible on essentials complete; prefill handoff
+  - [ ] Minimal placeholder to land the route (pending)
 
 ### Phase 7 – Signup Handoff & Merge-on-Signup
 - [ ] Prefill essentials to signup via server session or secure query
