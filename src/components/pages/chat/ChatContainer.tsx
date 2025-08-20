@@ -16,7 +16,7 @@ export default function ChatContainer() {
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
   const [essentialsComplete, setEssentialsComplete] = useState(false);
-  const [updatedFields, setUpdatedFields] = useState<string[]>([]);
+  // const [updatedFields, setUpdatedFields] = useState<string[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
@@ -90,8 +90,8 @@ export default function ChatContainer() {
               return next;
             });
           } else if (event === 'profile_patch') {
-            const fields = (data?.updates as string[] | undefined) ?? [];
-            if (fields.length > 0) setUpdatedFields((prev) => Array.from(new Set([...prev, ...fields])));
+            // const fields = (data?.updates as string[] | undefined) ?? [];
+            // if (fields.length > 0) setUpdatedFields((prev) => Array.from(new Set([...prev, ...fields])));
           } else if (event === 'milestone') {
             if (data === 'essentials_complete') setEssentialsComplete(true);
           }
@@ -122,7 +122,7 @@ export default function ChatContainer() {
                 Start your fitness journey
               </h1>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Tell us about your goals, and we'll create a personalized training plan in minutes
+                Tell us about your goals, and we&apos;ll create a personalized training plan in minutes
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export default function ChatContainer() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700 mb-3">"Finally found a program that adapts to my busy schedule. The SMS reminders keep me accountable."</p>
+                <p className="text-gray-700 mb-3">&ldquo;Finally found a program that adapts to my busy schedule. The SMS reminders keep me accountable.&rdquo;</p>
                 <p className="text-sm text-gray-500">Sarah M. • Marketing Manager</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -216,7 +216,7 @@ export default function ChatContainer() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700 mb-3">"Lost 15 pounds in 2 months. The personalized workouts actually work with my home gym setup."</p>
+                <p className="text-gray-700 mb-3">&ldquo;Lost 15 pounds in 2 months. The personalized workouts actually work with my home gym setup.&rdquo;</p>
                 <p className="text-sm text-gray-500">Mike R. • Software Engineer</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -227,7 +227,7 @@ export default function ChatContainer() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700 mb-3">"The AI coach understands my climbing goals and built a perfect strength program."</p>
+                <p className="text-gray-700 mb-3">&ldquo;The AI coach understands my climbing goals and built a perfect strength program.&rdquo;</p>
                 <p className="text-sm text-gray-500">Alex T. • Rock Climber</p>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function ChatContainer() {
                   </div>
                   <div className="bg-emerald-50 rounded-lg p-4 shadow-sm">
                     <p className="text-sm text-emerald-600 mb-1">GymText Coach</p>
-                    <p className="text-gray-900">Perfect! I'll create a time-efficient program focused on compound movements. What equipment do you have access to?</p>
+                    <p className="text-gray-900">Perfect! I&apos;ll create a time-efficient program focused on compound movements. What equipment do you have access to?</p>
                   </div>
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default function ChatContainer() {
                 Welcome to GymText Onboarding
               </h1>
               <p className="text-gray-600">
-                Tell us about your fitness goals, and we'll create a personalized plan for you.
+                Tell us about your fitness goals, and we&apos;ll create a personalized plan for you.
               </p>
             </div>
           ) : (
