@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "source .env.local && next dev --turbopack",
     "build": "next build",
+    "build:local": "source .env.local && next build",
     "start": "next start",
     "lint": "next lint",
     "predev": "source .env.local && pnpm db:codegen",

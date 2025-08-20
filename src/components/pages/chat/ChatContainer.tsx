@@ -1,15 +1,23 @@
 "use client";
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 
 type EventType = 'token' | 'profile_patch' | 'milestone' | 'error';
+
+// type PendingRequired = Array<'name' | 'email' | 'phone' | 'primaryGoal'>;
 
 export default function ChatContainer() {
   const [messages, setMessages] = useState<string[]>([]);
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
+  const [essentialsComplete, setEssentialsComplete] = useState(false);
+  const [updatedFields, setUpdatedFields] = useState<string[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const send = useCallback(async () => {
     if (!input.trim()) return;
+    // Expand to fullscreen when sending the first message
+    if (!isExpanded) setIsExpanded(true);
     const response = await fetch('/api/chat/onboarding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,6 +52,11 @@ export default function ChatContainer() {
           const data = dataStr ? JSON.parse(dataStr) : '';
           if (event === 'token') {
             setMessages((m) => [...m, String(data)]);
+          } else if (event === 'profile_patch') {
+            const fields = (data?.updates as string[] | undefined) ?? [];
+            if (fields.length > 0) setUpdatedFields((prev) => Array.from(new Set([...prev, ...fields])));
+          } else if (event === 'milestone') {
+            if (data === 'essentials_complete') setEssentialsComplete(true);
           }
         } catch {
           // ignore json errors
@@ -51,28 +64,62 @@ export default function ChatContainer() {
       }
     }
     setConnected(false);
-  }, [input]);
+  }, [input, isExpanded]);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded border p-3 h-64 overflow-auto bg-white">
-        {messages.map((m, i) => (
-          <div key={i} className="text-sm text-gray-800">
-            {m}
+    <div className={isExpanded ? 'w-full h-[90vh] bg-white p-4 md:p-6 rounded-lg shadow' : 'space-y-4 md:grid md:grid-cols-3 md:gap-4'}>
+      <div className={isExpanded ? 'max-w-5xl mx-auto grid md:grid-cols-3 md:gap-4' : 'md:col-span-2 space-y-3'}>
+        {!isExpanded && (
+          <div className="md:col-span-2 space-y-3">
+            <div className="text-sm text-gray-600">Start typing to expand the chat.</div>
           </div>
-        ))}
-        {connected && <div className="text-xs text-gray-500">Assistant is typing…</div>}
-      </div>
-      <div className="flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="What are your fitness goals?"
-          className="flex-1 rounded border px-3 py-2"
-        />
-        <button onClick={send} className="rounded bg-black px-3 py-2 text-white" disabled={!input.trim()}>
-          Send
-        </button>
+        )}
+        {isExpanded && (
+          <div className="md:col-span-3 flex items-center justify-between mb-3">
+            <div className="text-sm font-medium">Onboarding Chat</div>
+            <button
+              type="button"
+              className="text-sm text-gray-600 hover:text-gray-900"
+              onClick={() => setIsExpanded(false)}
+            >
+              Minimize
+            </button>
+          </div>
+        )}
+        <div className={isExpanded ? 'md:col-span-2 space-y-3' : 'md:col-span-2 space-y-3'}>
+          <div className="rounded border p-3 h-64 overflow-auto bg-white">
+          {messages.map((m, i) => (
+            <div key={i} className="text-sm text-gray-800">
+              {m}
+            </div>
+          ))}
+          {connected && <div className="text-xs text-gray-500">Assistant is typing…</div>}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onFocus={() => setIsExpanded(true)}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="What are your fitness goals?"
+              className="flex-1 rounded border px-3 py-2"
+            />
+            <button onClick={send} className="rounded bg-black px-3 py-2 text-white" disabled={!input.trim()}>
+              Send
+            </button>
+          </div>
+        </div>
+        <div className={isExpanded ? 'md:col-span-1 space-y-3 mt-4 md:mt-0' : 'md:col-span-1 space-y-3'}>
+          <div className="rounded border p-3 bg-white">
+            <div className="text-sm font-medium mb-2">Profile Summary (live)</div>
+            <div className="text-xs text-gray-600 mb-2">Recently updated: {updatedFields.length > 0 ? updatedFields.join(', ') : '—'}</div>
+            <div className="text-xs">Essentials status: {essentialsComplete ? 'Complete' : 'Collecting'}</div>
+          </div>
+          {essentialsComplete && (
+            <Link href="/" className="block text-center rounded bg-emerald-600 px-3 py-2 text-white text-sm">
+              Continue signup
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );
