@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { OnboardingChatService } from '@/server/services/onboardingChatService';
 
 // Phase 1: Minimal SSE streaming endpoint scaffold
 // - Accepts { message, conversationId?, tempSessionId? }
@@ -38,16 +39,21 @@ export async function POST(req: NextRequest) {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    // Write initial headers/event
+    // Phase 2: stream real events from service
+    const service = new OnboardingChatService();
     queueMicrotask(async () => {
       try {
-        // Phase 1: placeholder events to verify client pipeline
         await writer.write(`retry: 1500\n\n`);
-        await writer.write(`event: token\n` + `data: ${JSON.stringify('Hi! I\'m your GymText onboarding coach. What are your fitness goals?')}\n\n`);
-        await writer.write(`event: profile_patch\n` + `data: ${JSON.stringify({ applied: false, updates: {}, confidence: 0, reason: 'Phase 1 placeholder' })}\n\n`);
-        await writer.write(`event: milestone\n` + `data: ${JSON.stringify('ask_next')}\n\n`);
+        for await (const evt of service.streamMessage({
+          message,
+          tempSessionId: sessionId,
+        })) {
+          await writer.write(`event: ${evt.type}\n` + `data: ${JSON.stringify(evt.data)}\n\n`);
+        }
       } catch {
-        // swallow for Phase 1
+        try {
+          await writer.write(`event: error\n` + `data: ${JSON.stringify('stream_error')}\n\n`);
+        } catch {}
       } finally {
         try { await writer.close(); } catch {}
       }

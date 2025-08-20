@@ -22,12 +22,12 @@ This checklist tracks delivery of the hero-to-fullscreen onboarding chat at `/ch
   - [x] Stream events: `token`, `profile_patch`, `milestone`, `error`
 
 ### Phase 2 – Service Orchestration
-- [ ] Create `src/server/services/onboardingChatService.ts`
-  - [ ] Orchestrate: run profile extraction first, then chat reply
-  - [ ] Essentials milestone detection (name, email, phone, primaryGoal/fitnessGoal)
-  - [ ] Build context: `{ tempSessionId | userId, currentProfile, recentMessages, pendingRequiredFields }`
-  - [ ] Emit structured events for streaming
-  - [ ] Share helpers with existing `ChatService` where possible (avoid duplication)
+- [x] Create `src/server/services/onboardingChatService.ts`
+  - [x] Orchestrate: run profile extraction first (authed only in Phase 2), then chat reply
+  - [x] Essentials milestone detection (name, email, phone, primaryGoal/fitnessGoal)
+  - [x] Build context: `{ tempSessionId | userId, currentProfile, pendingRequiredFields }`
+  - [x] Emit structured events for streaming
+  - [x] Share helpers when possible; full interception lands in Phase 4
 
 ### Phase 3 – Agent Prompting
 - [ ] Add onboarding system prompt builder (minimal new code)
