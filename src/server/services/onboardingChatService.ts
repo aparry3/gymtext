@@ -2,6 +2,8 @@ import type { FitnessProfile, UserWithProfile } from '@/server/models/userModel'
 import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
+import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts';
+import { projectProfile, addPendingPatch } from '@/server/utils/session/onboardingSession';
 
 export type OnboardingEvent =
   | { type: 'token'; data: string }
@@ -34,7 +36,7 @@ export class OnboardingChatService {
   }
 
   async *streamMessage(input: OnboardingMessageInput): AsyncGenerator<OnboardingEvent> {
-    const { message, userId } = input;
+    const { message, userId, tempSessionId } = input;
 
     let user: UserWithProfile | null = null;
     let currentProfile: FitnessProfile | null = null;
@@ -55,7 +57,7 @@ export class OnboardingChatService {
           userId,
           message,
           currentProfile,
-          config: { temperature: 0.2, verbose: process.env.NODE_ENV === 'development' },
+          config: { temperature: 0.2, verbose: process.env.NODE_ENV === 'development', mode: 'apply' },
         });
 
         if (profileResult.wasUpdated) {
@@ -74,11 +76,48 @@ export class OnboardingChatService {
       } catch {
         yield { type: 'error', data: 'Profile extraction failed' };
       }
+    } else {
+      // Interception mode for unauth sessions (Phase 4)
+      const projected = tempSessionId ? projectProfile(currentProfile, tempSessionId) : currentProfile;
+      if (tempSessionId) {
+        try {
+          const profileResult = await this.userProfileAgent({
+            userId: 'unauth-session',
+            message,
+            currentProfile: projected,
+            config: { temperature: 0.2, verbose: false, mode: 'intercept' },
+          });
+
+          if (profileResult.updateSummary) {
+            // We only have fields list in intercept mode; store a minimal placeholder patch
+            addPendingPatch(tempSessionId, {
+              updates: {},
+              reason: profileResult.updateSummary.reason,
+              confidence: profileResult.updateSummary.confidence,
+              timestamp: Date.now(),
+            });
+            // Surface a non-applied profile_patch event
+            yield {
+              type: 'profile_patch',
+              data: {
+                applied: false,
+                updates: profileResult.updateSummary.fieldsUpdated,
+                confidence: profileResult.updateSummary.confidence,
+                reason: profileResult.updateSummary.reason,
+              },
+            };
+          }
+          currentProfile = projected;
+        } catch {
+          // swallow interception errors
+        }
+      }
     }
 
     const pendingRequired = this.computePendingRequiredFields(currentProfile, user);
 
     try {
+      const systemPrompt = buildOnboardingChatSystemPrompt(currentProfile, pendingRequired);
       const chatResult = await this.chatAgent({
         userName: user?.name ?? 'there',
         message,
@@ -86,6 +125,7 @@ export class OnboardingChatService {
         wasProfileUpdated: false,
         conversationHistory: [],
         context: { onboarding: true, pendingRequiredFields: pendingRequired },
+        systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
 

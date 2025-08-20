@@ -25,6 +25,7 @@ export interface ProfileAgentConfig {
   model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro';
   temperature?: number;
   verbose?: boolean;
+  mode?: 'apply' | 'intercept';
 }
 
 /**
@@ -75,7 +76,7 @@ export const userProfileAgent = async ({
   config?: ProfileAgentConfig;
 }): Promise<ProfileAgentResult> => {
   try {
-    const { verbose = false } = config;
+    const { verbose = false, mode = 'apply' } = config;
     
     // Initialize the model with tools
     const model = initializeModel(config);
@@ -111,27 +112,39 @@ export const userProfileAgent = async ({
             console.log('Profile update tool called with:', toolCall.args);
           }
           
-          // Execute the tool - args are already properly typed by LangChain
-          const result = await profilePatchTool.invoke(
-            toolCall.args as Parameters<typeof profilePatchTool.invoke>[0],
-            { configurable: { userId } }
-          );
-          
-          // Check if the update was applied
-          if (result.applied) {
-            wasUpdated = true;
-            updatedProfile = result.updatedProfile as FitnessProfile;
+          if (mode === 'intercept' || !userId) {
+            // Interception mode: do not apply, just return intent
+            wasUpdated = false;
+            const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
             updateSummary = {
-              fieldsUpdated: result.fieldsUpdated || [],
-              reason: toolCall.args.reason,
-              confidence: toolCall.args.confidence
+              fieldsUpdated: Object.keys(args?.updates || {}),
+              reason: args?.reason || '',
+              confidence: args?.confidence ?? 0,
             };
+          } else {
+            // Execute the tool - args are already properly typed by LangChain
+            const result = await profilePatchTool.invoke(
+              toolCall.args as Parameters<typeof profilePatchTool.invoke>[0],
+              { configurable: { userId } }
+            );
             
-            if (verbose) {
-              console.log('Profile updated successfully:', updateSummary);
+            // Check if the update was applied
+            if (result.applied) {
+              wasUpdated = true;
+              updatedProfile = result.updatedProfile as FitnessProfile;
+              const args = toolCall.args as { reason?: string; confidence?: number };
+              updateSummary = {
+                fieldsUpdated: result.fieldsUpdated || [],
+                reason: args?.reason || '',
+                confidence: args?.confidence ?? 0,
+              };
+              
+              if (verbose) {
+                console.log('Profile updated successfully:', updateSummary);
+              }
+            } else if (verbose) {
+              console.log('Profile update not applied:', result.reason);
             }
-          } else if (verbose) {
-            console.log('Profile update not applied:', result.reason);
           }
         }
       }

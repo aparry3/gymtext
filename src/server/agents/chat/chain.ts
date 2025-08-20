@@ -61,6 +61,7 @@ export const chatAgent = async ({
   conversationHistory = [],
   context = {},
   config = {},
+  systemPromptOverride,
 }: {
   userName: string;
   message: string;
@@ -69,6 +70,7 @@ export const chatAgent = async ({
   conversationHistory?: Message[];
   context?: Record<string, unknown>;
   config?: ChatAgentConfig;
+  systemPromptOverride?: string;
 }): Promise<ChatAgentResult> => {
   try {
     const { verbose = false } = config;
@@ -77,7 +79,7 @@ export const chatAgent = async ({
     const model = initializeModel(config);
     
     // Build the system prompt with profile and update status
-    const systemPrompt = buildChatSystemPrompt(profile, wasProfileUpdated);
+    const systemPrompt = systemPromptOverride ?? buildChatSystemPrompt(profile, wasProfileUpdated);
     
     // Build conversation history string
     const historyString = conversationHistory.length > 0

@@ -30,19 +30,19 @@ This checklist tracks delivery of the hero-to-fullscreen onboarding chat at `/ch
   - [x] Share helpers when possible; full interception lands in Phase 4
 
 ### Phase 3 – Agent Prompting
-- [ ] Add onboarding system prompt builder (minimal new code)
-  - [ ] `src/server/agents/onboardingChat/prompts.ts` or extend `chat/prompts.ts`
-  - [ ] Emphasize one-question-at-a-time onboarding and essentials-first
-  - [ ] Nudge confirmations for name/phone/email and summaries
+- [x] Add onboarding system prompt builder (minimal new code)
+  - [x] `src/server/agents/onboardingChat/prompts.ts`
+  - [x] Emphasize one-question-at-a-time onboarding and essentials-first
+  - [x] Nudge confirmations for name/phone/email and summaries
 
 ### Phase 4 – Interception Mode (Unauth Draft Profile)
-- [ ] Update `userProfileAgent` to accept `mode?: 'apply' | 'intercept'` (default `apply`)
-  - [ ] When `mode === 'intercept'` or `!userId`, return tool-call intents `{ updates, reason, confidence }` without invoking `profilePatchTool`
-  - [ ] Preserve current SMS behavior (apply mode)
-- [ ] Add session projection utilities: `src/server/utils/session/onboardingSession.ts`
-  - [ ] Store `pendingPatches[]` per `tempSessionId`
-  - [ ] Compute `projectedProfile` = reduce(pendingPatches) over base
-  - [ ] Merge and clear on signup
+- [x] Update `userProfileAgent` to accept `mode?: 'apply' | 'intercept'` (default `apply`)
+  - [x] When `mode === 'intercept'` or `!userId`, return tool-call intents (no DB writes)
+  - [x] Preserve current SMS behavior (apply mode)
+- [x] Add session projection utilities: `src/server/utils/session/onboardingSession.ts`
+  - [x] Store `pendingPatches[]` per `tempSessionId`
+  - [x] Compute `projectedProfile` = reduce(pendingPatches) over base
+  - [ ] Merge and clear on signup (Phase 7)
 
 ### Phase 5 – Validation & Dedupe (Server-side)
 - [ ] Email validation (RFC-compliant)
