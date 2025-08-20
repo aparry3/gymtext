@@ -3,18 +3,23 @@
 This checklist tracks delivery of the hero-to-fullscreen onboarding chat at `/chat`, reusing `userProfileAgent`, `chatAgent`, and `profilePatchTool`, with a draft profile session and merge-on-signup.
 
 ### Phase 0 – Planning & Reuse Confirmation
-- [ ] Confirm reuse of `userProfileAgent` (`src/server/agents/profile/chain.ts`) and `profilePatchTool` (`src/server/agents/tools/profilePatchTool.ts`) for patching
-- [ ] Confirm reuse of `chatAgent` (`src/server/agents/chat/chain.ts`) for responses
-- [ ] Decide streaming transport for web (`SSE` vs `WebSocket`) → target: SSE
-- [ ] Decide draft profile storage (Redis, DB table, or encrypted cookie) and retention policy
+- [x] Confirm reuse of `userProfileAgent` (`src/server/agents/profile/chain.ts`) and `profilePatchTool` (`src/server/agents/tools/profilePatchTool.ts`) for patching
+  - Decision: Reuse as-is; no new patch logic. `ProfilePatchService` remains the single writer.
+- [x] Confirm reuse of `chatAgent` (`src/server/agents/chat/chain.ts`) for responses
+  - Decision: Reuse with an onboarding-specific system prompt added in a later phase.
+- [x] Decide streaming transport for web (`SSE` vs `WebSocket`) → target: SSE
+  - Decision: Use Server-Sent Events (SSE) for simplicity and broad support.
+- [x] Decide draft profile storage (Redis, DB table, or encrypted cookie) and retention policy
+  - Decision: Start with a temporary signed cookie `gt_temp_session` storing a UUID, with server-side session data to come in Phase 4. Retention: 7 days. No Redis required initially.
 
 ### Phase 1 – API Route (Streaming)
-- [ ] Create `src/app/api/chat/onboarding/route.ts` (POST)
-  - [ ] Accept `{ message, conversationId?, tempSessionId? }`
-  - [ ] Establish SSE stream (or fetch streaming) response
-  - [ ] Resolve auth (`userId`) or ensure `tempSessionId` cookie exists
-  - [ ] Load base profile (user or session-projected)
-  - [ ] Stream events: `token`, `profile_patch`, `milestone`, `error`
+- [x] Create `src/app/api/chat/onboarding/route.ts` (POST)
+  - [x] Accept `{ message, conversationId?, tempSessionId? }`
+  - [x] Establish SSE stream (or fetch streaming) response
+  - [x] Resolve auth (`userId`) or ensure `tempSessionId` cookie exists
+  - [x] Load base profile (user or session-projected)
+    - Note: Phase 1 returns a placeholder projected profile (null). Real projection added in Phase 2/4.
+  - [x] Stream events: `token`, `profile_patch`, `milestone`, `error`
 
 ### Phase 2 – Service Orchestration
 - [ ] Create `src/server/services/onboardingChatService.ts`
