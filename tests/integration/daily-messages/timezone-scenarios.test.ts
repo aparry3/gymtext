@@ -3,6 +3,8 @@ import { withTestDatabase, seedTestData } from '../../utils/db';
 import { DailyMessageService } from '@/server/services/dailyMessageService';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { MessageService } from '@/server/services/messageService';
 import { UserBuilder } from '../../fixtures/users';
 import { createMessageTracker } from '../../utils/daily-message-helpers';
@@ -80,33 +82,24 @@ describe('Daily Message Timezone Scenarios Integration Tests', () => {
         programType: 'strength',
         goalStatement: 'Build strength',
         overview: 'Strength program',
-        macrocycles: JSON.stringify([]),
+        mesocycles: JSON.stringify([ { name: 'Phase', weeks: 4, focus: ['volume'], deload: false } ]),
         startDate: new Date('2024-01-01'),
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
       }).execute();
       
-      await db.insertInto('mesocycles').values({
-        id: mesocycleId,
-        fitnessPlanId: fitnessPlanId,
-        clientId: user.id,
-        index: 0,
-        phase: 'Strength',
-        lengthWeeks: 4,
-        startDate: new Date('2024-01-01'),
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      }).execute();
+      // no mesocycles table in new schema
       
       await db.insertInto('microcycles').values({
         id: microcycleId,
-        mesocycleId: mesocycleId,
+        userId: user.id,
         fitnessPlanId: fitnessPlanId,
-        clientId: user.id,
-        index: 0,
-        targets: null,
+        mesocycleIndex: 0,
+        weekNumber: 1,
+        pattern: JSON.stringify({ weekIndex: 1, days: [] }),
         startDate: new Date('2024-03-15'),
         endDate: new Date('2024-03-22'),
+        isActive: true,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
       }).execute();
@@ -130,10 +123,14 @@ describe('Daily Message Timezone Scenarios Integration Tests', () => {
       // Create services
       const userRepository = new UserRepository(db);
       const workoutRepository = new WorkoutInstanceRepository(db);
+      const fitnessPlanRepo = new FitnessPlanRepository(db);
+      const microcycleRepo = new MicrocycleRepository(db);
       const dailyMessageService = new DailyMessageService(
         userRepository,
         workoutRepository,
         mockMessageService,
+        fitnessPlanRepo,
+        microcycleRepo,
         10
       );
 
