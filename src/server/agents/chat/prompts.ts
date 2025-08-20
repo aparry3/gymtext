@@ -1,5 +1,43 @@
-import { UserWithProfile } from "@/server/models/userModel";
+import { UserWithProfile, FitnessProfile } from "@/server/models/userModel";
 import { Message } from "@/server/models/messageModel";
+
+/**
+ * Build the chat system prompt with profile and update status
+ */
+export const buildChatSystemPrompt = (
+  profile: FitnessProfile | null,
+  wasProfileUpdated: boolean = false
+): string => {
+  const profileSummary = profile ? `
+- Fitness Level: ${profile.skillLevel || profile.experienceLevel || 'Not specified'}
+- Primary Goal: ${profile.primaryGoal || profile.fitnessGoals || 'Not specified'}
+- Training Days: ${profile.availability?.daysPerWeek || profile.exerciseFrequency || 'Not specified'} days per week
+- Equipment: ${profile.equipment?.access || 'Not specified'}
+- Current Training: ${profile.currentTraining?.programName || 'Not specified'}` : 'No profile available';
+
+  const updateAcknowledgment = wasProfileUpdated ? `
+
+IMPORTANT: The user's profile was just updated based on information they provided. Acknowledge this subtly in your response (e.g., "Got it, I've noted that..." or "Thanks for letting me know about...").` : '';
+
+  return `You are a professional fitness coach and personal trainer assistant for GymText.
+You provide personalized fitness guidance via SMS.
+
+<User Profile>
+${profileSummary}
+</User Profile>${updateAcknowledgment}
+
+<Instructions>
+1. Respond as a knowledgeable, supportive fitness coach
+2. Keep responses conversational and encouraging
+3. Provide actionable fitness advice when asked
+4. Reference the user's goals and current program when relevant
+5. Keep responses under 300 words for SMS compatibility
+6. Use emojis sparingly but appropriately (💪, 🎯, 🔥)
+7. Be specific to their equipment access and training availability
+8. If profile was updated, subtly acknowledge the new information
+
+Respond in a helpful, professional, and encouraging tone.`;
+};
 
 export const chatPrompt = (
   user: UserWithProfile,
@@ -11,9 +49,9 @@ You are a professional fitness coach and personal trainer assistant for GymText.
 
 <User Information>
 - Name: ${user.name}
-- Fitness Level: ${user.profile?.skillLevel || 'Not specified'}
-- Goals: ${user.profile?.fitnessGoals || 'Not specified'}
-- Experience: ${user.profile?.exerciseFrequency || 'Not specified'} workouts per week
+- Fitness Level: ${user.parsedProfile?.skillLevel || 'Not specified'}
+- Goals: ${user.parsedProfile?.fitnessGoals || 'Not specified'}
+- Experience: ${user.parsedProfile?.exerciseFrequency || 'Not specified'} workouts per week
 </User Information>
 
 <Conversation History>
@@ -40,6 +78,35 @@ User: ${message}
 
 Respond to the user's message in a helpful, professional, and encouraging tone.
 `;
+
+/**
+ * Build contextual chat prompt with profile
+ */
+export const buildContextualChatPrompt = (
+  userName: string,
+  message: string,
+  profile: FitnessProfile | null,
+  context: Record<string, unknown>,
+  wasProfileUpdated: boolean = false
+): string => {
+  const systemPrompt = buildChatSystemPrompt(profile, wasProfileUpdated);
+  
+  return `${systemPrompt}
+
+<User Name>
+${userName}
+</User Name>
+
+<Context Data>
+${JSON.stringify(context, null, 2)}
+</Context Data>
+
+<User Message>
+${message}
+</User Message>
+
+Provide a helpful, personalized response based on the user's profile and context.`;
+};
 
 export const contextPrompt = (
   user: UserWithProfile,
@@ -74,8 +141,8 @@ export const motivationalPrompt = (
 Create a motivational message for ${user.name}.
 
 <User Info>
-- Goals: ${user.profile?.fitnessGoals || 'General fitness'}
-- Level: ${user.profile?.skillLevel || 'Beginner'}
+- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
+- Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
 ${achievement ? `- Recent Achievement: ${achievement}` : ''}
 ${currentStreak ? `- Current Streak: ${currentStreak} days` : ''}
 </User Info>

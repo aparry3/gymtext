@@ -182,11 +182,9 @@ export async function truncateAllTables(db: Kysely<DB>): Promise<void> {
   const tables = [
     'workout_instances',
     'microcycles',
-    'mesocycles',
     'fitness_plans',
     'messages',
     'conversations',
-    'fitness_profiles',
     'subscriptions',
     'users',
   ];
@@ -223,7 +221,14 @@ export async function seedTestData(db: Kysely<DB>, data: {
   }
   
   if (data.fitnessProfiles) {
-    await db.insertInto('fitnessProfiles').values(data.fitnessProfiles).execute();
+    // New schema embeds profile JSON on users table
+    for (const profile of data.fitnessProfiles) {
+      await db
+        .updateTable('users')
+        .set({ profile: sql`${JSON.stringify(profile)}::jsonb` })
+        .where('id', '=', profile.userId)
+        .execute();
+    }
   }
   
   if (data.subscriptions) {
@@ -234,9 +239,7 @@ export async function seedTestData(db: Kysely<DB>, data: {
     await db.insertInto('fitnessPlans').values(data.fitnessPlans).execute();
   }
   
-  if (data.mesocycles) {
-    await db.insertInto('mesocycles').values(data.mesocycles).execute();
-  }
+  // mesocycles table was removed; mesocycle overviews now stored in fitnessPlans.mesocycles
   
   if (data.microcycles) {
     await db.insertInto('microcycles').values(data.microcycles).execute();

@@ -50,16 +50,19 @@ export async function POST(req: NextRequest) {
     // Initialize conversation storage service
     const conversationStorage = new ConversationService();
     
-    // Store the inbound message (non-blocking)
+    // Store the inbound message and get conversation ID
+    let conversationId: string | undefined;
     try {
-      const stored = await conversationStorage.storeInboundMessage({
+      const storedMessage = await conversationStorage.storeInboundMessage({
         userId: user.id,
         from,
         to,
         content: incomingMessage,
         twilioData: body
       });
-      if (!stored) {
+      if (storedMessage) {
+        conversationId = storedMessage.conversationId;
+      } else {
         console.warn('Circuit breaker prevented storing inbound message');
       }
     } catch (error) {
@@ -69,7 +72,11 @@ export async function POST(req: NextRequest) {
     
     // Generate chat response using LLM
     const chatService = new ChatService();
-    const chatResponse = await chatService.handleIncomingMessage(userWithProfile, incomingMessage);
+    const chatResponse = await chatService.handleIncomingMessage(
+      userWithProfile, 
+      incomingMessage,
+      conversationId
+    );
     
     // Store the outbound message (non-blocking)
     try {

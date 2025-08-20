@@ -108,33 +108,24 @@ describe('24-Hour Daily Message Simulation', () => {
           programType: 'strength',
           goalStatement: 'Build strength',
           overview: 'Strength program',
-          macrocycles: JSON.stringify([]),
+          mesocycles: JSON.stringify([ { name: 'Phase', weeks: 4, focus: ['volume'], deload: false } ]),
           startDate: new Date('2024-01-01'),
           createdAt: new Date('2024-01-01'),
           updatedAt: new Date('2024-01-01'),
         }).execute();
         
-        await db.insertInto('mesocycles').values({
-          id: mesocycleId,
-          fitnessPlanId: fitnessPlanId,
-          clientId: user.id,
-          index: 0,
-          phase: 'Strength',
-          lengthWeeks: 4,
-          startDate: new Date('2024-01-01'),
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-01'),
-        }).execute();
+        // no mesocycles table in new schema
         
         await db.insertInto('microcycles').values({
           id: microcycleId,
-          mesocycleId: mesocycleId,
+          userId: user.id,
           fitnessPlanId: fitnessPlanId,
-          clientId: user.id,
-          index: 0,
-          targets: null,
+          mesocycleIndex: 0,
+          weekNumber: 1,
+          pattern: JSON.stringify({ weekIndex: 1, days: [] }),
           startDate: new Date('2024-03-10'),
           endDate: new Date('2024-03-17'),
+          isActive: true,
           createdAt: new Date('2024-01-01'),
           updatedAt: new Date('2024-01-01'),
         }).execute();

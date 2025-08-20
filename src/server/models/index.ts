@@ -8,7 +8,7 @@ export { WorkoutInstanceModel } from './workout';
 // Type exports from models
 export type { 
   User, NewUser, UserUpdate, 
-  FitnessProfile, NewFitnessProfile, FitnessProfileUpdate,
+  FitnessProfile,
   UserWithProfile, CreateUserData, CreateFitnessProfileData 
 } from './userModel';
 

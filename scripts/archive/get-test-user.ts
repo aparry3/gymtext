@@ -21,15 +21,9 @@ async function getTestUser() {
       console.log('User ID:', user.id);
       console.log('User:', JSON.stringify(user, null, 2));
       
-      // Also get fitness profile
-      const profile = await db
-        .selectFrom('fitnessProfiles')
-        .selectAll()
-        .where('userId', '=', user.id)
-        .executeTakeFirst();
-        
-      if (profile) {
-        console.log('\nFitness Profile:', JSON.stringify(profile, null, 2));
+      // Profile is now stored in the users table
+      if (user.profile) {
+        console.log('\nFitness Profile:', JSON.stringify(user.profile, null, 2));
       }
     } else {
       console.log('User not found');

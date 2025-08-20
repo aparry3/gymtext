@@ -1,131 +1,141 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { RunnableSequence } from '@langchain/core/runnables';
-import { chatPrompt, contextPrompt } from '@/server/agents/chat/prompts';
-import { ConversationRepository } from '@/server/repositories/conversationRepository';
-import { MessageRepository } from '@/server/repositories/messageRepository';
-import { UserRepository } from '@/server/repositories/userRepository';
-import { ConversationContextService } from '@/server/services/context/conversationContext';
+import { ChatOpenAI } from '@langchain/openai';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { buildChatSystemPrompt } from '@/server/agents/chat/prompts';
+import type { FitnessProfile } from '@/server/models/userModel';
+import type { Message } from '@/server/models/messageModel';
 
-const llm = new ChatGoogleGenerativeAI({ temperature: 0.7, model: "gemini-2.0-flash" });
+/**
+ * Configuration for the ChatAgent
+ */
+export interface ChatAgentConfig {
+  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro' | 'gemini-2.0-flash';
+  temperature?: number;
+  verbose?: boolean;
+}
 
-export const chatChain = RunnableSequence.from([
-  async ({ 
-    userId, 
-    message, 
-    conversationId 
-  }: { 
-    userId: string;
-    message: string;
-    conversationId?: string;
-  }) => {
-    // Get or create conversation
-    const conversationRepo = new ConversationRepository();
-    const messageRepo = new MessageRepository();
+/**
+ * Result type returned by the ChatAgent
+ */
+export interface ChatAgentResult {
+  response: string;
+  conversationId?: string;
+}
+
+/**
+ * Initialize the chat model
+ * Using higher temperature for more conversational responses
+ */
+const initializeModel = (config: ChatAgentConfig = {}) => {
+  const { 
+    model = 'gemini-2.0-flash', 
+    temperature = 0.7  // Higher temperature for conversational responses
+  } = config;
+
+  if (model.startsWith('gemini')) {
+    return new ChatGoogleGenerativeAI({
+      model: model,
+      temperature,
+      maxOutputTokens: 500, // Keep responses concise for SMS
+    });
+  }
+
+  return new ChatOpenAI({
+    model: model,
+    temperature,
+    maxTokens: 500,
+  });
+};
+
+/**
+ * ChatAgent - Generates conversational responses based on user profile
+ * 
+ * This agent is responsible for generating the actual chat response
+ * It receives the profile from UserProfileAgent and doesn't fetch it
+ */
+export const chatAgent = async ({
+  userName,
+  message,
+  profile,
+  wasProfileUpdated = false,
+  conversationHistory = [],
+  context = {},
+  config = {},
+}: {
+  userName: string;
+  message: string;
+  profile: FitnessProfile | null;
+  wasProfileUpdated?: boolean;
+  conversationHistory?: Message[];
+  context?: Record<string, unknown>;
+  config?: ChatAgentConfig;
+}): Promise<ChatAgentResult> => {
+  try {
+    const { verbose = false } = config;
     
-    let conversation;
-    if (conversationId) {
-      conversation = await conversationRepo.findById(conversationId);
-    }
+    // Initialize the model
+    const model = initializeModel(config);
     
-    if (!conversation) {
-      conversation = await conversationRepo.create({
-        userId,
-        lastMessageAt: new Date(),
-        startedAt: new Date()
+    // Build the system prompt with profile and update status
+    const systemPrompt = buildChatSystemPrompt(profile, wasProfileUpdated);
+    
+    // Build conversation history string
+    const historyString = conversationHistory.length > 0
+      ? conversationHistory
+          .slice(-5) // Keep last 5 messages for context
+          .map(msg => `${msg.direction === 'inbound' ? 'User' : 'Assistant'}: ${msg.content}`)
+          .join('\n')
+      : '';
+    
+    // Build the full prompt
+    const userPrompt = `
+${historyString ? `<Conversation History>\n${historyString}\n</Conversation History>\n` : ''}
+${context && Object.keys(context).length > 0 ? `<Additional Context>\n${JSON.stringify(context, null, 2)}\n</Additional Context>\n` : ''}
+<Current Message>
+User (${userName}): ${message}
+</Current Message>
+
+Respond to the user's message.`;
+    
+    // Create the message array
+    const messages = [
+      new SystemMessage(systemPrompt),
+      new HumanMessage(userPrompt)
+    ];
+    
+    if (verbose) {
+      console.log('ChatAgent generating response:', {
+        userName,
+        wasProfileUpdated,
+        hasProfile: !!profile,
+        historyLength: conversationHistory.length
       });
     }
     
-    // Store user message
-    await messageRepo.create({
-      conversationId: conversation.id,
-      userId,
-      direction: 'inbound',
-      content: message,
-      phoneFrom: 'user_phone', // TODO: Get from user
-      phoneTo: 'system_phone' // TODO: Get from config
-    });
+    // Generate the response
+    const response = await model.invoke(messages);
     
-    // Get conversation history
-    const messages = await messageRepo.findByConversationId(conversation.id);
+    // Extract the response content
+    const responseText = typeof response.content === 'string' 
+      ? response.content 
+      : JSON.stringify(response.content);
     
-    return { 
-      userId, 
-      message, 
-      conversation, 
-      messages: messages.slice(-10) // Keep last 10 messages for context
-    };
-  },
-  
-  async ({ userId, message, conversation, messages }) => {
-    // Get user context
-    const userRepo = new UserRepository();
-    const user = await userRepo.findWithProfile(userId);
-    
-    // Get conversation context
-    const contextService = new ConversationContextService();
-    const context = await contextService.getContext(userId, {
-      includeUserProfile: true,
-      includeWorkoutHistory: true,
-      messageLimit: 5
-    });
-    
-    return { user, message, conversation, messages, context };
-  },
-  
-  async ({ user, message, conversation, messages, context }) => {
-    // Generate response using chat prompt
-    const prompt = chatPrompt(user, message, messages, context);
-    const response = await llm.invoke(prompt);
-    
-    // Store assistant message
-    const messageRepo = new MessageRepository();
-    await messageRepo.create({
-      conversationId: conversation.id,
-      userId: user.id,
-      direction: 'outbound',
-      content: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
-      phoneFrom: 'system_phone', // TODO: Get from config
-      phoneTo: 'user_phone' // TODO: Get from user
-    });
+    if (verbose) {
+      console.log('ChatAgent response generated:', responseText.substring(0, 100) + '...');
+    }
     
     return {
-      conversationId: conversation.id,
-      response: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
-      context
+      response: responseText
+    };
+    
+  } catch (error) {
+    console.error('ChatAgent error:', error);
+    
+    // Return a fallback response
+    return {
+      response: "I apologize, but I'm having trouble processing your message right now. Please try again in a moment."
     };
   }
-]);
+};
 
-export const contextualChatChain = RunnableSequence.from([
-  async ({ 
-    userId, 
-    message
-  }: { 
-    userId: string;
-    message: string;
-  }) => {
-    // Get user info
-    const userRepo = new UserRepository();
-    const user = await userRepo.findWithProfile(userId);
-    
-    // Get conversation context
-    const contextService = new ConversationContextService();
-    const context = await contextService.getContext(userId, {
-      includeUserProfile: true,
-      includeWorkoutHistory: true,
-      messageLimit: 5
-    });
-    
-    return { user, message, context };
-  },
-  
-  async ({ user, message, context }) => {
-    const prompt = contextPrompt(user, message, context);
-    const response = await llm.invoke(prompt);
-    
-    return {
-      response: typeof response.content === 'string' ? response.content : JSON.stringify(response.content),
-      context
-    };
-  }
-]);
+// No legacy code - only the new two-agent architecture exports

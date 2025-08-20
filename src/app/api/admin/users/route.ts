@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         age: age ?? '30',
       } as CreateFitnessProfileData;
       try {
-        await userModel.createFitnessProfile(user.id, profileInput);
+        await userModel.createOrUpdateFitnessProfile(user.id, profileInput);
       } catch (e) {
         // Ignore profile errors to not block user creation
         console.warn('Profile creation failed for new user', e);

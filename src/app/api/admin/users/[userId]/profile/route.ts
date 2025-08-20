@@ -14,7 +14,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     } as CreateFitnessProfileData;
 
     const userModel = new UserModel();
-    const profile = await userModel.createFitnessProfile(userId, input);
+    const profile = await userModel.createOrUpdateFitnessProfile(userId, input);
     return NextResponse.json({ profile }, { status: 201 });
   } catch (err) {
     console.error('[admin users profile] POST failed', err);
