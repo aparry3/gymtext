@@ -1,0 +1,103 @@
+## Onboarding Chat – Implementation Plan & Checklist
+
+This checklist tracks delivery of the hero-to-fullscreen onboarding chat at `/chat`, reusing `userProfileAgent`, `chatAgent`, and `profilePatchTool`, with a draft profile session and merge-on-signup.
+
+### Phase 0 – Planning & Reuse Confirmation
+- [ ] Confirm reuse of `userProfileAgent` (`src/server/agents/profile/chain.ts`) and `profilePatchTool` (`src/server/agents/tools/profilePatchTool.ts`) for patching
+- [ ] Confirm reuse of `chatAgent` (`src/server/agents/chat/chain.ts`) for responses
+- [ ] Decide streaming transport for web (`SSE` vs `WebSocket`) → target: SSE
+- [ ] Decide draft profile storage (Redis, DB table, or encrypted cookie) and retention policy
+
+### Phase 1 – API Route (Streaming)
+- [ ] Create `src/app/api/chat/onboarding/route.ts` (POST)
+  - [ ] Accept `{ message, conversationId?, tempSessionId? }`
+  - [ ] Establish SSE stream (or fetch streaming) response
+  - [ ] Resolve auth (`userId`) or ensure `tempSessionId` cookie exists
+  - [ ] Load base profile (user or session-projected)
+  - [ ] Stream events: `token`, `profile_patch`, `milestone`, `error`
+
+### Phase 2 – Service Orchestration
+- [ ] Create `src/server/services/onboardingChatService.ts`
+  - [ ] Orchestrate: run profile extraction first, then chat reply
+  - [ ] Essentials milestone detection (name, email, phone, primaryGoal/fitnessGoal)
+  - [ ] Build context: `{ tempSessionId | userId, currentProfile, recentMessages, pendingRequiredFields }`
+  - [ ] Emit structured events for streaming
+  - [ ] Share helpers with existing `ChatService` where possible (avoid duplication)
+
+### Phase 3 – Agent Prompting
+- [ ] Add onboarding system prompt builder (minimal new code)
+  - [ ] `src/server/agents/onboardingChat/prompts.ts` or extend `chat/prompts.ts`
+  - [ ] Emphasize one-question-at-a-time onboarding and essentials-first
+  - [ ] Nudge confirmations for name/phone/email and summaries
+
+### Phase 4 – Interception Mode (Unauth Draft Profile)
+- [ ] Update `userProfileAgent` to accept `mode?: 'apply' | 'intercept'` (default `apply`)
+  - [ ] When `mode === 'intercept'` or `!userId`, return tool-call intents `{ updates, reason, confidence }` without invoking `profilePatchTool`
+  - [ ] Preserve current SMS behavior (apply mode)
+- [ ] Add session projection utilities: `src/server/utils/session/onboardingSession.ts`
+  - [ ] Store `pendingPatches[]` per `tempSessionId`
+  - [ ] Compute `projectedProfile` = reduce(pendingPatches) over base
+  - [ ] Merge and clear on signup
+
+### Phase 5 – Validation & Dedupe (Server-side)
+- [ ] Email validation (RFC-compliant)
+- [ ] Phone normalization (E.164) and verification step (optional)
+- [ ] Dedupe checks via `UserRepository` for email/phone
+- [ ] Surface validation outcomes as `profile_patch` events with `applied: false` when invalid
+
+### Phase 6 – Frontend (Hero → Fullscreen Chat)
+- [ ] Page: `src/app/chat/page.tsx` with hero input (placeholder: "What are your fitness goals?")
+- [ ] Expand-to-fullscreen on type/submit, maintain scrollable landing content below
+- [ ] Client components in `src/components/pages/chat/`
+  - [ ] `ChatContainer`: SSE connection, message state, pending patches, profile projection
+  - [ ] `MessageList`: streaming tokens, timestamps, typing indicator
+  - [ ] `Composer`: input, send, disabled state
+  - [ ] `ProfileSummaryPanel`: live `projectedProfile`, completeness
+  - [ ] `SignupCTA`: visible on essentials complete; prefill handoff
+
+### Phase 7 – Signup Handoff & Merge-on-Signup
+- [ ] Prefill essentials to signup via server session or secure query
+- [ ] On signup completion, merge all pending patches via `ProfilePatchService.patchProfile` (source: `onboarding-web`)
+- [ ] Set `name`/`email`/`phoneNumber` on user; clear session patches
+- [ ] Rehydrate chat with real `userId`
+
+### Phase 8 – Telemetry & Analytics
+- [ ] Instrument funnel: `chat_opened`, `message_sent`, `patch_detected`, `essentials_complete`, `cta_clicked`, `signup_started`, `signup_completed`
+- [ ] Log `fieldsUpdated` summary (no raw PII)
+- [ ] Dashboards/alerts for error rates and drop-offs
+
+### Phase 9 – Testing (Vitest)
+- [ ] Unit tests
+  - [ ] `OnboardingChatService` orchestration and milestones
+  - [ ] Interception mode in `userProfileAgent`
+  - [ ] Session projection & merge utilities
+  - [ ] Validation helpers (email/phone)
+- [ ] Integration tests
+  - [ ] Streaming API emits `token`, `profile_patch`, and `milestone`
+  - [ ] Session patches → signup → merged patch applied
+  - [ ] Authenticated flow applies immediately via `profilePatchTool`
+- [ ] UI tests
+  - [ ] Hero→fullscreen, streaming render, CTA visibility, error states
+
+### Phase 10 – Rollout
+- [ ] Feature flag gating for `/chat` onboarding
+- [ ] Internal testing (dogfooding) with staff accounts
+- [ ] Gradual ramp-up; monitor metrics
+- [ ] Remove flag once stable
+
+### Non-Goals / Defer
+- [ ] Voice input and attachments
+- [ ] WebSocket transport (unless SSE is insufficient)
+- [ ] Advanced goal inference tools beyond current agent
+
+### Risk & Mitigations
+- **Session growth**: cap patches and compress/merge periodically; prefer server store over cookies if size grows
+- **Validation UX**: keep assistant guidance friendly; inline corrections
+- **Duplication**: reuse existing agents/tools/services; avoid new patch logic
+
+### Acceptance Criteria (cross-check)
+- [ ] Hero at `/chat` with minimal textbox and fullscreen expansion
+- [ ] Streaming chat with live profile summary and `profilePatchTool` reuse
+- [ ] Essentials captured unlocks CTA; signup prefilled
+- [ ] Draft profile maintained for unauth; merged on signup; authed applies immediately
+- [ ] Tests pass; build/lint clean; analytics in place
