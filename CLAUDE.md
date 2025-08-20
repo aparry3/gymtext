@@ -104,12 +104,30 @@ Core tables include:
 
 ### AI Agent System
 Specialized agents in `src/server/agents/`:
-- `contextualChatChain` (`chat/chain.ts`) - Contextual conversation responses with history
+
+#### Chat & Profile Management
+- `chatAgent` (`chat/chain.ts`) - Generates contextual conversation responses
+  - Uses conversation history and user profile for personalized coaching
+  - Supports multiple models (GPT-4, Gemini 2.0 Flash)
+  - Keeps responses concise for SMS format
+- `userProfileAgent` (`profile/chain.ts`) - Extracts and updates user profiles from conversations
+  - Analyzes messages for fitness information with confidence scoring
+  - Uses `profilePatchTool` for automatic profile updates
+  - Supports batch message processing for conversation history
+  - Only updates with high confidence (>0.5 threshold)
+
+#### Fitness Planning
 - `generateFitnessPlanAgent` - Creates fitness plans with simplified mesocycle structure
 - `dailyWorkout` - Generates on-demand workouts with block structure using Gemini 2.0 Flash
 - `microcyclePattern` - Creates weekly training patterns with progressive overload
 - `dailyMessageAgent` - Generates daily workout messages
 - `welcomeMessageAgent` - Onboarding messages
+
+#### Agent Tools
+- `profilePatchTool` (`tools/profilePatchTool.ts`) - LangChain tool for profile updates
+  - Validates confidence scores before applying updates
+  - Tracks which fields were updated and why
+  - Integrates with ProfilePatchService for database persistence
 
 **Important**: Services should use these agents, not instantiate their own LLMs
 
@@ -120,6 +138,30 @@ Required environment variables (see .env.example):
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
 - AI: `OPENAI_API_KEY`, `GOOGLE_API_KEY`
 - Pinecone: `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME`
+
+### Chat Architecture
+
+The chat system uses a two-agent architecture for processing messages:
+
+1. **Profile Extraction Phase** - UserProfileAgent analyzes incoming messages
+   - Extracts fitness-related information with confidence scoring
+   - Updates user profile automatically via profilePatchTool
+   - Only updates when confidence exceeds 0.5 threshold
+   - Returns profile state and update summary
+
+2. **Response Generation Phase** - ChatAgent generates the response
+   - Receives updated profile from UserProfileAgent
+   - Uses conversation history for context
+   - Generates personalized coaching responses
+   - Acknowledges profile updates when they occur
+
+This separation ensures:
+- Profile building happens automatically and consistently
+- Chat responses remain conversational and engaging
+- Services don't need to manage LLM instantiation
+- Clean separation of concerns between data extraction and conversation
+
+**Onboarding Chat**: A specialized flow for new users that focuses on profile building through conversation to prepare for SMS-based coaching (see `_claude_docs/chat/CHAT_FEATURE_PRD.md`)
 
 ## Development Guidelines
 

@@ -10,6 +10,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup/test-environment.ts'],
+    include: ['tests/unit/**/*.test.ts'],
+    exclude: ['tests/integration/**', 'node_modules/**'],
   },
   resolve: {
     alias: {
