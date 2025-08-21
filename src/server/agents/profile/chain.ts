@@ -101,10 +101,12 @@ export const userProfileAgent = async ({
       configurable: { userId, mode: config.mode }
     });
     
-    // Initialize result
+    // Initialize result accumulators
     let wasUpdated = false;
     let updatedProfile = currentProfile;
-    let updateSummary: ProfileAgentResult['updateSummary'] = undefined;
+    const combinedFieldsUpdated: string[] = [];
+    const reasons: string[] = [];
+    let maxConfidence = 0;
     
     // Check if the model called the tool
     if (response.tool_calls && response.tool_calls.length > 0) {
@@ -116,13 +118,10 @@ export const userProfileAgent = async ({
           
           if (mode === 'intercept' || !userId) {
             // Interception mode: do not apply, just return intent
-            wasUpdated = false;
             const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
-            updateSummary = {
-              fieldsUpdated: Object.keys(args?.updates || {}),
-              reason: args?.reason || '',
-              confidence: args?.confidence ?? 0,
-            };
+            combinedFieldsUpdated.push(...Object.keys(args?.updates || {}));
+            if (args?.reason) reasons.push(args.reason);
+            if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
           } else {
             // Execute the tool - args are already properly typed by LangChain
             const result = await profilePatchTool.invoke(
@@ -135,14 +134,16 @@ export const userProfileAgent = async ({
               wasUpdated = true;
               updatedProfile = result.updatedProfile as FitnessProfile;
               const args = toolCall.args as { reason?: string; confidence?: number };
-              updateSummary = {
-                fieldsUpdated: result.fieldsUpdated || [],
-                reason: args?.reason || '',
-                confidence: args?.confidence ?? 0,
-              };
+              combinedFieldsUpdated.push(...(result.fieldsUpdated || []));
+              if (args?.reason) reasons.push(args.reason);
+              if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
               
               if (verbose) {
-                console.log('Profile updated successfully:', updateSummary);
+                console.log('Profile updated successfully:', {
+                  fieldsUpdated: result.fieldsUpdated || [],
+                  reason: args?.reason || '',
+                  confidence: args?.confidence ?? 0,
+                });
               }
             } else if (verbose) {
               console.log('Profile update not applied:', result.reason);
@@ -161,11 +162,9 @@ export const userProfileAgent = async ({
             );
             // Do not flip wasUpdated; just summarize intent
             const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
-            updateSummary = {
-              fieldsUpdated: Object.keys(args?.updates || {}),
-              reason: args?.reason || '',
-              confidence: args?.confidence ?? 0,
-            };
+            combinedFieldsUpdated.push(...Object.keys(args?.updates || {}));
+            if (args?.reason) reasons.push(args.reason);
+            if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
           } else {
             // Apply directly to DB
             const userInfoResult = await userInfoPatchTool.invoke(
@@ -174,11 +173,9 @@ export const userProfileAgent = async ({
             );
             // Do not alter profile; user info is separate. Provide summary only.
             const args = toolCall.args as { reason?: string; confidence?: number };
-            updateSummary = {
-              fieldsUpdated: (userInfoResult as unknown as { fieldsUpdated?: string[] }).fieldsUpdated || [],
-              reason: args?.reason || '',
-              confidence: args?.confidence ?? 0,
-            };
+            combinedFieldsUpdated.push(...((userInfoResult as unknown as { fieldsUpdated?: string[] }).fieldsUpdated || []));
+            if (args?.reason) reasons.push(args.reason);
+            if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
           }
         }
       }
@@ -186,10 +183,18 @@ export const userProfileAgent = async ({
       console.log('No profile updates detected in message');
     }
     
+    const updateSummary = combinedFieldsUpdated.length > 0
+      ? {
+          fieldsUpdated: Array.from(new Set(combinedFieldsUpdated)),
+          reason: reasons.filter(Boolean).join('; '),
+          confidence: maxConfidence,
+        }
+      : undefined;
+
     return {
       profile: updatedProfile,
       wasUpdated,
-      updateSummary
+      updateSummary,
     };
     
   } catch (error) {

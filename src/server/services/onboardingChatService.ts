@@ -3,7 +3,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
 import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts';
-import { projectProfile, addPendingPatch } from '@/server/utils/session/onboardingSession';
+import { projectProfile, addPendingPatch, appendMessage, getRecentMessages, projectUser } from '@/server/utils/session/onboardingSession';
 
 export type OnboardingEvent =
   | { type: 'token'; data: string }
@@ -53,7 +53,7 @@ export class OnboardingChatService {
     // Phase 2: apply updates only for authenticated users
     if (userId && currentProfile) {
       try {
-        const profileResult = await this.userProfileAgent({
+          const profileResult = await this.userProfileAgent({
           userId,
           message,
           currentProfile,
@@ -85,7 +85,7 @@ export class OnboardingChatService {
             userId: 'unauth-session',
             message,
             currentProfile: projected,
-            config: { temperature: 0.2, verbose: false, mode: 'intercept' },
+            config: { temperature: 0.2, verbose: false, mode: 'intercept', tempSessionId },
           });
 
           if (profileResult.updateSummary) {
@@ -114,22 +114,33 @@ export class OnboardingChatService {
       }
     }
 
-    const pendingRequired = this.computePendingRequiredFields(currentProfile, user);
+    // Compute essentials against DB (auth) or projected session (unauth)
+    const projectedUser = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
+    const pendingRequired = this.computePendingRequiredFields(currentProfile, projectedUser);
 
     try {
+      // Rolling history (short)
+      const history = tempSessionId
+        ? getRecentMessages(tempSessionId, 5).map(m => ({ direction: m.role === 'user' ? 'inbound' as const : 'outbound' as const, content: m.content }))
+        : [] as Array<{ direction: 'inbound' | 'outbound'; content: string }>;
       const systemPrompt = buildOnboardingChatSystemPrompt(currentProfile, pendingRequired);
       const chatResult = await this.chatAgent({
         userName: user?.name ?? 'there',
         message,
         profile: currentProfile,
         wasProfileUpdated: false,
-        conversationHistory: [],
+        conversationHistory: history as unknown as import('@/server/models/messageModel').Message[],
         context: { onboarding: true, pendingRequiredFields: pendingRequired },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
 
       const text = chatResult.response ?? '';
+      // Append to session history for unauth
+      if (tempSessionId) {
+        appendMessage(tempSessionId, 'user', message);
+        appendMessage(tempSessionId, 'assistant', text);
+      }
       const chunkSize = 64;
       for (let i = 0; i < text.length; i += chunkSize) {
         yield { type: 'token', data: text.slice(i, i + chunkSize) };

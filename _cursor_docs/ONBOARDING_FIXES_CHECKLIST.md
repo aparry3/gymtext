@@ -30,16 +30,16 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Bind both `profilePatchTool` and `userInfoPatchTool`
 - [x] Support `mode: 'apply' | 'intercept'` for both tools
 - [x] In intercept mode, return field lists for both user and profile updates
-- [ ] Update result typing or surface a combined update summary
+- [x] Update result typing or surface a combined update summary
 - [ ] Unit tests for multi-intent extraction (user + profile in one message)
 
 ### 5) Orchestration updates (`src/server/services/onboardingChatService.ts`)
-- [ ] Load session via `gt_temp_session` for unauth flows
-- [ ] Authed: run profile+user extraction in `apply` mode; update `currentProfile` and (optionally) reload user
-- [ ] Unauth: run in `intercept` mode; write to `pendingPatches` (profile) and `draft.user`
-- [ ] Compute pending essentials from projected (unauth) or DB (auth): `name`, `email`, `phoneNumber`, `primaryGoal`
-- [ ] Use rewritten onboarding system prompt; pass pending essentials + brief profile summary
-- [ ] Maintain short rolling `conversationHistory` from session `messages`
+- [x] Load session via `gt_temp_session` for unauth flows
+- [x] Authed: run profile+user extraction in `apply` mode; update `currentProfile` and (optionally) reload user
+- [x] Unauth: run in `intercept` mode; write to `pendingPatches` (profile) and `draft.user`
+- [x] Compute pending essentials from projected (unauth) or DB (auth): `name`, `email`, `phoneNumber`, `primaryGoal`
+- [x] Use rewritten onboarding system prompt; pass pending essentials + brief profile summary
+- [x] Maintain short rolling `conversationHistory` from session `messages`
 - [ ] Emit `milestone: 'essentials_complete'` when first satisfied
 - [ ] Trigger a single-summary response once essentials complete; emit `milestone: 'summary'`
 - [ ] Stream tokens as before
