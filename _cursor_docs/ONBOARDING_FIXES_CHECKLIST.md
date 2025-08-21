@@ -10,13 +10,13 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Add tests asserting: no "confirm your …" language; summary guidance present
 
 ### 2) Session state expansion (`src/server/utils/session/onboardingSession.ts`)
-- [ ] Add `draft: { user: Partial<{ name; email; phoneNumber }>, profile: Partial<FitnessProfile> }`
-- [ ] Add `messages: Array<{ role: 'user'|'assistant'; content: string; ts: number }>`
-- [ ] Keep rolling history (e.g., last 5–10 messages) helper: `appendMessage`
-- [ ] Extend `projectProfile` to merge `draft.profile` + `pendingPatches`
-- [ ] Add `projectUser(baseUser, sessionId)` for unauth projections
-- [ ] Helpers: `getOrInitSession`, `applyInterceptedUserDraft`, `clearPendingPatches`
-- [ ] Unit tests for projection, rolling buffer, and merge precedence
+- [x] Add `draft: { user: Partial<{ name; email; phoneNumber }>, profile: Partial<FitnessProfile> }`
+- [x] Add `messages: Array<{ role: 'user'|'assistant'; content: string; ts: number }>`
+- [x] Keep rolling history (e.g., last 5–10 messages) helper: `appendMessage`
+- [x] Extend `projectProfile` to merge `draft.profile` + `pendingPatches`
+- [x] Add `projectUser(baseUser, sessionId)` for unauth projections
+- [x] Helpers: `getOrInitSession`, `applyInterceptedUserDraft`, `clearPendingPatches`
+- [x] Unit tests for projection, rolling buffer, and merge precedence
 
 ### 3) User info patch tool (`src/server/agents/tools/userInfoPatchTool.ts`)
 - [ ] Zod schema `{ updates: { name?, email?, phoneNumber? }, reason, confidence }`
@@ -64,7 +64,7 @@ Reference: `ONBOARDING_FIXES.md`
 
 ### 9) Tests
 - [ ] Unit: onboarding prompt builder expectations
-- [ ] Unit: session utils (projection, buffering, merging)
+- [x] Unit: session utils (projection, buffering, merging)
 - [ ] Unit: `userInfoPatchTool` (apply/intercept, gating)
 - [ ] Unit: essentials validation and normalization (email/phoneNumber)
 - [ ] Integration (unauth): multi-field answer captured, no DB writes, `summary` milestone emitted
