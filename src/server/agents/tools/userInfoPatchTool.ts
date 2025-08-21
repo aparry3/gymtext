@@ -97,8 +97,31 @@ export const userInfoPatchTool = tool(
       } as const;
     }
 
-    // Auth path: update DB via repository
+    // Auth path: validate and update DB via repository
     const repo = new UserRepository();
+    // Dedupe checks
+    if (userUpdate.email) {
+      const existing = await repo.findByEmail(userUpdate.email);
+      if (existing && existing.id !== userId) {
+        return {
+          applied: false,
+          reason: 'Email already in use',
+          conflict: 'email',
+          confidence,
+        } as const;
+      }
+    }
+    if (userUpdate.phoneNumber) {
+      const existing = await repo.findByPhoneNumber(userUpdate.phoneNumber);
+      if (existing && existing.id !== userId) {
+        return {
+          applied: false,
+          reason: 'Phone number already in use',
+          conflict: 'phoneNumber',
+          confidence,
+        } as const;
+      }
+    }
     await repo.update(userId, userUpdate);
 
     return {

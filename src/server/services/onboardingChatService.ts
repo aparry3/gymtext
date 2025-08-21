@@ -51,6 +51,10 @@ export class OnboardingChatService {
     }
 
     // Phase 2: apply updates only for authenticated users
+    // Snapshot pending essentials before any updates this turn
+    const projectedUserBefore = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
+    const pendingBefore = this.computePendingRequiredFields(currentProfile, projectedUserBefore);
+
     if (userId && currentProfile) {
       try {
           const profileResult = await this.userProfileAgent({
@@ -146,7 +150,11 @@ export class OnboardingChatService {
         yield { type: 'token', data: text.slice(i, i + chunkSize) };
       }
 
-      if (pendingRequired.length === 0) {
+      // Determine milestone based on transition from before→after
+      const becameComplete = pendingBefore.length > 0 && pendingRequired.length === 0;
+      if (becameComplete) {
+        yield { type: 'milestone', data: 'summary' };
+      } else if (pendingRequired.length === 0) {
         yield { type: 'milestone', data: 'essentials_complete' };
       } else {
         yield { type: 'milestone', data: 'ask_next' };

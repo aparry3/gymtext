@@ -12,6 +12,8 @@ describe('userInfoPatchTool', () => {
     vi.clearAllMocks();
     (UserRepository as unknown as vi.Mock).mockImplementation(() => ({
       update: mockUpdate,
+      findByEmail: vi.fn().mockResolvedValue(undefined),
+      findByPhoneNumber: vi.fn().mockResolvedValue(undefined),
     }));
   });
 

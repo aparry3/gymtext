@@ -40,8 +40,8 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Compute pending essentials from projected (unauth) or DB (auth): `name`, `email`, `phoneNumber`, `primaryGoal`
 - [x] Use rewritten onboarding system prompt; pass pending essentials + brief profile summary
 - [x] Maintain short rolling `conversationHistory` from session `messages`
-- [ ] Emit `milestone: 'essentials_complete'` when first satisfied
-- [ ] Trigger a single-summary response once essentials complete; emit `milestone: 'summary'`
+- [x] Emit `milestone: 'essentials_complete'` when first satisfied
+- [x] Trigger a single-summary response once essentials complete; emit `milestone: 'summary'`
 - [ ] Stream tokens as before
 - [ ] Unit tests for essentials computation (auth/unauth), milestone transitions
 
@@ -65,8 +65,8 @@ Reference: `ONBOARDING_FIXES.md`
 ### 9) Tests
 - [ ] Unit: onboarding prompt builder expectations
 - [x] Unit: session utils (projection, buffering, merging)
-- [ ] Unit: `userInfoPatchTool` (apply/intercept, gating)
-- [ ] Unit: essentials validation and normalization (email/phoneNumber)
+- [x] Unit: `userInfoPatchTool` (apply/intercept, gating)
+- [x] Unit: essentials validation and normalization (email/phoneNumber)
 - [ ] Integration (unauth): multi-field answer captured, no DB writes, `summary` milestone emitted
 - [ ] Integration (auth): user+profile updates applied; essentials complete; summary emitted once
 - [ ] Integration: low-confidence inputs do not update; invalid email/phone → polite re-ask in next turn
