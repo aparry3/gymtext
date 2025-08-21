@@ -52,9 +52,9 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Migration not required if DB already uses `phoneNumber` (verify)
 
 ### 7) Client integration (`src/components/pages/chat/ChatContainer.tsx`)
-- [ ] Handle SSE `milestone: 'summary'` to style/anchor the final essentials summary
-- [ ] Persist a lightweight copy of session draft to `localStorage` for resume (optional; server remains canonical)
-- [ ] Ensure `gt_temp_session` cookie is preserved across requests
+- [x] Handle SSE `milestone: 'summary'` to style/anchor the final essentials summary
+- [x] Persist a lightweight copy of session draft to `localStorage` for resume (optional; server remains canonical)
+- [x] Ensure `gt_temp_session` cookie is preserved across requests
 - [ ] Manual test: batched essentials, summary appears once
 
 ### 8) Telemetry and tagging

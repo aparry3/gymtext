@@ -9,6 +9,7 @@ interface ChatMessage {
   id: string;
   role: Role;
   content: string;
+  summary?: boolean;
 }
 
 export default function ChatContainer() {
@@ -21,12 +22,51 @@ export default function ChatContainer() {
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const currentAssistantIdRef = useRef<string | null>(null);
+  const [summaryAnchorId, setSummaryAnchorId] = useState<string | null>(null);
 
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isStreaming]);
+
+  // Restore lightweight session from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('gt_onboarding_session');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { messages?: ChatMessage[]; essentialsComplete?: boolean };
+        if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+          setMessages(parsed.messages);
+          setIsExpanded(true);
+        }
+        if (typeof parsed.essentialsComplete === 'boolean') {
+          setEssentialsComplete(parsed.essentialsComplete);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Persist lightweight session to localStorage
+  useEffect(() => {
+    try {
+      const payload = { messages, essentialsComplete };
+      localStorage.setItem('gt_onboarding_session', JSON.stringify(payload));
+    } catch {
+      // ignore quota/storage errors
+    }
+  }, [messages, essentialsComplete]);
+
+  // Scroll to summary anchor when set
+  useEffect(() => {
+    if (summaryAnchorId) {
+      const el = document.getElementById(`msg-${summaryAnchorId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [summaryAnchorId]);
 
   const placeholderSuggestions = useMemo(
     () => [
@@ -47,11 +87,13 @@ export default function ChatContainer() {
     const userMsg: ChatMessage = { id: uuidv4(), role: 'user', content: trimmed };
     const assistantMsg: ChatMessage = { id: uuidv4(), role: 'assistant', content: '' };
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    currentAssistantIdRef.current = assistantMsg.id;
     setInput('');
 
     const response = await fetch('/api/chat/onboarding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // ensure gt_temp_session cookie is sent/preserved
       body: JSON.stringify({ message: trimmed }),
     });
     if (!response.ok || !response.body) return;
@@ -93,7 +135,16 @@ export default function ChatContainer() {
             // const fields = (data?.updates as string[] | undefined) ?? [];
             // if (fields.length > 0) setUpdatedFields((prev) => Array.from(new Set([...prev, ...fields])));
           } else if (event === 'milestone') {
-            if (data === 'essentials_complete') setEssentialsComplete(true);
+            if (data === 'essentials_complete') {
+              setEssentialsComplete(true);
+            } else if (data === 'summary') {
+              setEssentialsComplete(true);
+              const anchorId = currentAssistantIdRef.current;
+              if (anchorId) {
+                setSummaryAnchorId(anchorId);
+                setMessages((prev) => prev.map(m => m.id === anchorId ? { ...m, summary: true } : m));
+              }
+            }
           }
         } catch {
           // ignore parse errors
@@ -397,10 +448,16 @@ export default function ChatContainer() {
                     className={
                       m.role === 'user'
                         ? 'max-w-[70%] rounded-2xl bg-gray-100 px-4 py-2 text-gray-900'
-                        : 'max-w-[70%] text-gray-900'
+                        : `max-w-[70%] ${m.summary ? 'rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3' : ''} text-gray-900`
                     }
+                    id={`msg-${m.id}`}
                   >
-                    {m.content}
+                    {m.summary && (
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                        Essentials Summary
+                      </div>
+                    )}
+                    <div>{m.content}</div>
                   </div>
                 </div>
               ))}
