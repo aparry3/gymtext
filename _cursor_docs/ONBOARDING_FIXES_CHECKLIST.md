@@ -19,17 +19,17 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Unit tests for projection, rolling buffer, and merge precedence
 
 ### 3) User info patch tool (`src/server/agents/tools/userInfoPatchTool.ts`)
-- [ ] Zod schema `{ updates: { name?, email?, phoneNumber? }, reason, confidence }`
-- [ ] Confidence threshold = 0.5 (align with profile tool)
-- [ ] Authed: `UserRepository.update(userId, { name, email, phoneNumber })`
-- [ ] Unauth: write to session `draft.user`; do not hit DB
-- [ ] Return shape consistent with `profilePatchTool` (applied, fieldsUpdated, reason, confidence)
-- [ ] Unit tests for apply vs intercept; validation (email/phoneNumber)
+- [x] Zod schema `{ updates: { name?, email?, phoneNumber? }, reason, confidence }`
+- [x] Confidence threshold = 0.5 (align with profile tool)
+- [x] Authed: `UserRepository.update(userId, { name, email, phoneNumber })`
+- [x] Unauth: write to session `draft.user`; do not hit DB
+- [x] Return shape similar to `profilePatchTool` (applied, fieldsUpdated, reason, confidence)
+- [x] Unit tests for apply vs intercept; validation (email/phoneNumber)
 
 ### 4) Bind tools in `userProfileAgent`
-- [ ] Bind both `profilePatchTool` and `userInfoPatchTool`
-- [ ] Support `mode: 'apply' | 'intercept'` for both tools
-- [ ] In intercept mode, return field lists for both user and profile updates
+- [x] Bind both `profilePatchTool` and `userInfoPatchTool`
+- [x] Support `mode: 'apply' | 'intercept'` for both tools
+- [x] In intercept mode, return field lists for both user and profile updates
 - [ ] Update result typing or surface a combined update summary
 - [ ] Unit tests for multi-intent extraction (user + profile in one message)
 

@@ -2,6 +2,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { profilePatchTool } from '@/server/agents/tools/profilePatchTool';
+import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
 import { buildUserProfileSystemPrompt } from './prompts';
 import type { FitnessProfile } from '@/server/models/userModel';
 
@@ -26,6 +27,7 @@ export interface ProfileAgentConfig {
   temperature?: number;
   verbose?: boolean;
   mode?: 'apply' | 'intercept';
+  tempSessionId?: string;
 }
 
 /**
@@ -46,7 +48,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
       temperature,
       maxOutputTokens: 1000,
     });
-    return geminiModel.bindTools([profilePatchTool]);
+    return geminiModel.bindTools([profilePatchTool, userInfoPatchTool]);
   }
 
   const openaiModel = new ChatOpenAI({
@@ -55,7 +57,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
     maxTokens: 1000,
   });
   
-  return openaiModel.bindTools([profilePatchTool]);
+  return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);
 };
 
 /**
@@ -96,7 +98,7 @@ export const userProfileAgent = async ({
     
     // Invoke the model with the tool
     const response = await model.invoke(messages, {
-      configurable: { userId }
+      configurable: { userId, mode: config.mode }
     });
     
     // Initialize result
@@ -145,6 +147,38 @@ export const userProfileAgent = async ({
             } else if (verbose) {
               console.log('Profile update not applied:', result.reason);
             }
+          }
+        } else if (toolCall.name === 'update_user_info') {
+          if (verbose) {
+            console.log('User info update tool called with:', toolCall.args);
+          }
+
+          if (mode === 'intercept' || !userId) {
+            // Intercept: write to session via tool by passing tempSessionId
+            await userInfoPatchTool.invoke(
+              toolCall.args as Parameters<typeof userInfoPatchTool.invoke>[0],
+              { configurable: { mode: 'intercept', tempSessionId: config.tempSessionId } }
+            );
+            // Do not flip wasUpdated; just summarize intent
+            const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
+            updateSummary = {
+              fieldsUpdated: Object.keys(args?.updates || {}),
+              reason: args?.reason || '',
+              confidence: args?.confidence ?? 0,
+            };
+          } else {
+            // Apply directly to DB
+            const userInfoResult = await userInfoPatchTool.invoke(
+              toolCall.args as Parameters<typeof userInfoPatchTool.invoke>[0],
+              { configurable: { userId, mode: 'apply' } }
+            );
+            // Do not alter profile; user info is separate. Provide summary only.
+            const args = toolCall.args as { reason?: string; confidence?: number };
+            updateSummary = {
+              fieldsUpdated: (userInfoResult as unknown as { fieldsUpdated?: string[] }).fieldsUpdated || [],
+              reason: args?.reason || '',
+              confidence: args?.confidence ?? 0,
+            };
           }
         }
       }
