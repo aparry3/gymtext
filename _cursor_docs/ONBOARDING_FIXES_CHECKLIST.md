@@ -2,12 +2,12 @@
 
 Reference: `ONBOARDING_FIXES.md`
 
-### 1) Prompt rewrite (onboarding)
-- [ ] Replace per-field confirmations with final single summary
-- [ ] Allow batching 2–3 essentials when natural (name, email, phone)
-- [ ] Keep tone human and concise (< ~120 words)
-- [ ] Include pending essentials + concise profile summary in system prompt
-- [ ] Add tests asserting: no “confirm your …” language; summary guidance present
+### 1) Prompt rewrite (onboarding) ✅
+- [x] Replace per-field confirmations with final single summary
+- [x] Allow batching 2–3 essentials when natural (name, email, phone)
+- [x] Keep tone human and concise (< ~120 words)
+- [x] Include pending essentials + concise profile summary in system prompt
+- [x] Add tests asserting: no "confirm your …" language; summary guidance present
 
 ### 2) Session state expansion (`src/server/utils/session/onboardingSession.ts`)
 - [ ] Add `draft: { user: Partial<{ name; email; phoneNumber }>, profile: Partial<FitnessProfile> }`
