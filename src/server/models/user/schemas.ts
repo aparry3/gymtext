@@ -5,7 +5,9 @@ export const UserSchema = z.object({
   id: z.string().uuid(),
   name: z.string().nullable(),
   email: z.string().email().nullable(),
-  phone: z.string().nullable(),
+  // Prefer phoneNumber; keep phone as backward-compatible alias
+  phoneNumber: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
   profile: z.unknown().nullable(),
   isActive: z.boolean(),
   lastActivity: z.date().nullable(),
@@ -137,6 +139,8 @@ export const UserWithProfileSchema = UserSchema.extend({
 export const CreateUserSchema = z.object({
   name: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),
+  // Accept either; normalize to phoneNumber in repositories/services
+  phoneNumber: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   profile: z.unknown().nullable().optional(),
   isActive: z.boolean().optional().default(true),

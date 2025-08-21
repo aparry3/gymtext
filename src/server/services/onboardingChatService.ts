@@ -3,7 +3,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
 import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts';
-import { projectProfile, addPendingPatch } from '@/server/utils/session/onboardingSession';
+import { projectProfile, addPendingPatch, appendMessage, getRecentMessages, projectUser } from '@/server/utils/session/onboardingSession';
 
 export type OnboardingEvent =
   | { type: 'token'; data: string }
@@ -51,9 +51,13 @@ export class OnboardingChatService {
     }
 
     // Phase 2: apply updates only for authenticated users
+    // Snapshot pending essentials before any updates this turn
+    const projectedUserBefore = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
+    const pendingBefore = this.computePendingRequiredFields(currentProfile, projectedUserBefore);
+
     if (userId && currentProfile) {
       try {
-        const profileResult = await this.userProfileAgent({
+          const profileResult = await this.userProfileAgent({
           userId,
           message,
           currentProfile,
@@ -85,7 +89,7 @@ export class OnboardingChatService {
             userId: 'unauth-session',
             message,
             currentProfile: projected,
-            config: { temperature: 0.2, verbose: false, mode: 'intercept' },
+            config: { temperature: 0.2, verbose: false, mode: 'intercept', tempSessionId },
           });
 
           if (profileResult.updateSummary) {
@@ -114,28 +118,43 @@ export class OnboardingChatService {
       }
     }
 
-    const pendingRequired = this.computePendingRequiredFields(currentProfile, user);
+    // Compute essentials against DB (auth) or projected session (unauth)
+    const projectedUser = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
+    const pendingRequired = this.computePendingRequiredFields(currentProfile, projectedUser);
 
     try {
+      // Rolling history (short)
+      const history = tempSessionId
+        ? getRecentMessages(tempSessionId, 5).map(m => ({ direction: m.role === 'user' ? 'inbound' as const : 'outbound' as const, content: m.content }))
+        : [] as Array<{ direction: 'inbound' | 'outbound'; content: string }>;
       const systemPrompt = buildOnboardingChatSystemPrompt(currentProfile, pendingRequired);
       const chatResult = await this.chatAgent({
         userName: user?.name ?? 'there',
         message,
         profile: currentProfile,
         wasProfileUpdated: false,
-        conversationHistory: [],
+        conversationHistory: history as unknown as import('@/server/models/messageModel').Message[],
         context: { onboarding: true, pendingRequiredFields: pendingRequired },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
 
       const text = chatResult.response ?? '';
+      // Append to session history for unauth
+      if (tempSessionId) {
+        appendMessage(tempSessionId, 'user', message);
+        appendMessage(tempSessionId, 'assistant', text);
+      }
       const chunkSize = 64;
       for (let i = 0; i < text.length; i += chunkSize) {
         yield { type: 'token', data: text.slice(i, i + chunkSize) };
       }
 
-      if (pendingRequired.length === 0) {
+      // Determine milestone based on transition from before→after
+      const becameComplete = pendingBefore.length > 0 && pendingRequired.length === 0;
+      if (becameComplete) {
+        yield { type: 'milestone', data: 'summary' };
+      } else if (pendingRequired.length === 0) {
         yield { type: 'milestone', data: 'essentials_complete' };
       } else {
         yield { type: 'milestone', data: 'ask_next' };
@@ -151,17 +170,15 @@ export class OnboardingChatService {
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
     const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];
     const name: string | null | undefined = user?.name as unknown as string | null | undefined;
-    // Our DB user type uses 'email' and 'phoneNumber'; adapt safely
     const email: string | null | undefined = user ? (user as unknown as { email?: string | null })?.email : null;
-    const phone: string | null | undefined = user
-      ? ((user as unknown as { phoneNumber?: string | null; phone?: string | null })?.phoneNumber
-        ?? (user as unknown as { phone?: string | null })?.phone)
+    const phoneNumber: string | null | undefined = user
+      ? (user as unknown as { phoneNumber?: string | null })?.phoneNumber
       : null;
     const hasGoal = Boolean(profile?.primaryGoal || profile?.fitnessGoals);
 
     if (!name) missing.push('name');
     if (!email) missing.push('email');
-    if (!phone) missing.push('phone');
+    if (!phoneNumber) missing.push('phone');
     if (!hasGoal) missing.push('primaryGoal');
 
     return missing;

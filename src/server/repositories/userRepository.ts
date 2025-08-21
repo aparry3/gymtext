@@ -142,6 +142,14 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirst();
   }
 
+  async findByEmail(email: string): Promise<User | undefined> {
+    return await this.db
+      .selectFrom('users')
+      .where('email', '=', email)
+      .selectAll()
+      .executeTakeFirst();
+  }
+
   async findByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
     return await this.db
       .selectFrom('users')
