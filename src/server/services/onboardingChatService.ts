@@ -170,17 +170,15 @@ export class OnboardingChatService {
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
     const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];
     const name: string | null | undefined = user?.name as unknown as string | null | undefined;
-    // Our DB user type uses 'email' and 'phoneNumber'; adapt safely
     const email: string | null | undefined = user ? (user as unknown as { email?: string | null })?.email : null;
-    const phone: string | null | undefined = user
-      ? ((user as unknown as { phoneNumber?: string | null; phone?: string | null })?.phoneNumber
-        ?? (user as unknown as { phone?: string | null })?.phone)
+    const phoneNumber: string | null | undefined = user
+      ? (user as unknown as { phoneNumber?: string | null })?.phoneNumber
       : null;
     const hasGoal = Boolean(profile?.primaryGoal || profile?.fitnessGoals);
 
     if (!name) missing.push('name');
     if (!email) missing.push('email');
-    if (!phone) missing.push('phone');
+    if (!phoneNumber) missing.push('phone');
     if (!hasGoal) missing.push('primaryGoal');
 
     return missing;

@@ -42,14 +42,14 @@ Reference: `ONBOARDING_FIXES.md`
 - [x] Maintain short rolling `conversationHistory` from session `messages`
 - [x] Emit `milestone: 'essentials_complete'` when first satisfied
 - [x] Trigger a single-summary response once essentials complete; emit `milestone: 'summary'`
-- [ ] Stream tokens as before
+- [x] Stream tokens as before
 - [ ] Unit tests for essentials computation (auth/unauth), milestone transitions
 
 ### 6) Schema and naming alignment
-- [ ] Standardize on `phoneNumber` in user schemas/types; keep `phone` as optional alias only where necessary
-- [ ] Update `src/server/models/user/schemas.ts` to include `phoneNumber` (and/or adapter)
-- [ ] Remove ad-hoc `phone` vs `phoneNumber` checks from service in favor of normalization helper
-- [ ] Migration not required if DB already uses `phoneNumber` (verify)
+- [x] Standardize on `phoneNumber` in user schemas/types; keep `phone` as optional alias only where necessary
+- [x] Update `src/server/models/user/schemas.ts` to include `phoneNumber` (and/or adapter)
+- [x] Remove ad-hoc `phone` vs `phoneNumber` checks from service in favor of normalization helper
+- [x] Migration not required if DB already uses `phoneNumber` (verify)
 
 ### 7) Client integration (`src/components/pages/chat/ChatContainer.tsx`)
 - [ ] Handle SSE `milestone: 'summary'` to style/anchor the final essentials summary
