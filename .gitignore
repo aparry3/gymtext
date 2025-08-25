@@ -42,4 +42,4 @@ next-env.d.ts
 /migrations_backup
 
 # generated types
-/src/server/models/_types/*
+/src/server/models/_types/
