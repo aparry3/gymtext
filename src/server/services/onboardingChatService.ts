@@ -54,7 +54,7 @@ export class OnboardingChatService {
     // Snapshot pending essentials before any updates this turn
     const projectedUserBefore = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
     const pendingBefore = this.computePendingRequiredFields(currentProfile, projectedUserBefore);
-
+    console.log('pendingBefore', pendingBefore)
     if (userId && currentProfile) {
       try {
           const profileResult = await this.userProfileAgent({
@@ -83,6 +83,7 @@ export class OnboardingChatService {
     } else {
       // Interception mode for unauth sessions (Phase 4)
       const projected = tempSessionId ? projectProfile(currentProfile, tempSessionId) : currentProfile;
+      console.log('projected', projected)
       if (tempSessionId) {
         try {
           const profileResult = await this.userProfileAgent({
@@ -92,6 +93,7 @@ export class OnboardingChatService {
             config: { temperature: 0.2, verbose: false, mode: 'intercept', tempSessionId },
           });
 
+          console.log("profileResult", profileResult)
           if (profileResult.updateSummary) {
             // We only have fields list in intercept mode; store a minimal placeholder patch
             addPendingPatch(tempSessionId, {

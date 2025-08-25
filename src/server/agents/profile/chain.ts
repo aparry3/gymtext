@@ -110,6 +110,7 @@ export const userProfileAgent = async ({
     
     // Check if the model called the tool
     if (response.tool_calls && response.tool_calls.length > 0) {
+      console.log("response.tool_calls", response.tool_calls)
       for (const toolCall of response.tool_calls) {
         if (toolCall.name === 'update_user_profile') {
           if (verbose) {

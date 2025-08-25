@@ -10,14 +10,7 @@ export type UserUpdate = Updateable<Users>;
 export interface FitnessProfile {
   version?: number;
   userId?: string;
-  
-  // Legacy fields for backward compatibility
-  fitnessGoals?: string;
-  skillLevel?: string;
-  exerciseFrequency?: string;
-  gender?: string;
-  age?: number;
-  
+    
   // New comprehensive profile fields
   primaryGoal?: string;
   specificObjective?: string;

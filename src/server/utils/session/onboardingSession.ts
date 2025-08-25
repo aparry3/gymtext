@@ -39,6 +39,7 @@ const MAX_MESSAGE_HISTORY = 10; // Keep last 10 messages
  */
 export function getOrInitSession(tempSessionId: string): OnboardingSessionState {
   let state = sessionStore.get(tempSessionId);
+  console.log('state', state)
   if (!state) {
     state = {
       draft: {
