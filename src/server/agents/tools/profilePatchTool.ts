@@ -1,18 +1,19 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { ProfilePatchService } from '@/server/services/profilePatchService';
 import { FitnessProfileSchema } from '@/server/models/user/schemas';
 import type { FitnessProfile } from '@/server/models/userModel';
 
 /**
  * Tool for updating user fitness profiles based on conversation context
  * This tool is used by the UserProfileAgent to patch profiles when new information is provided
+ * 
+ * Simplified version that works with partial objects - no database operations
  */
 export const profilePatchTool = tool(
-  async ({ updates, reason, confidence }, config) => {
+  async ({ currentProfile, updates, reason, confidence }) => {
     try {
-      // Check confidence threshold (default 0.5)
-      const CONFIDENCE_THRESHOLD = 0.5;
+      // Check confidence threshold (raised to 0.75)
+      const CONFIDENCE_THRESHOLD = 0.75;
       
       if (confidence < CONFIDENCE_THRESHOLD) {
         console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
@@ -20,51 +21,31 @@ export const profilePatchTool = tool(
           applied: false,
           reason: 'Low confidence',
           confidence,
-          threshold: CONFIDENCE_THRESHOLD
+          threshold: CONFIDENCE_THRESHOLD,
+          updatedProfile: currentProfile
         };
       }
 
-      // Get userId from config
-      const userId = config?.configurable?.userId;
-      
-      if (!userId) {
-        console.error('Profile patch tool called without userId in config');
-        return {
-          applied: false,
-          reason: 'Missing userId',
-          error: 'userId not provided in config'
-        };
-      }
+      // Merge updates into current profile
+      const updatedProfile: Partial<FitnessProfile> = {
+        ...currentProfile,
+        ...updates
+      };
 
-      // Initialize the patch service
-      const patchService = new ProfilePatchService();
-      
-      // Log the update attempt
-      console.log(`Attempting profile update for user ${userId}:`, {
-        confidence,
-        reason,
-        fieldsUpdated: Object.keys(updates)
-      });
-
-      // Apply the profile patch
-      const updatedUser = await patchService.patchProfile(
-        userId,
-        updates,
-        {
-          source: 'chat',
-          reason,
-          path: 'profilePatchTool'
-        }
+      // Get list of fields that were updated
+      const fieldsUpdated = Object.keys(updates).filter(key => 
+        updates[key as keyof FitnessProfile] !== undefined
       );
 
-      // Get summary of updated fields
-      const fieldsUpdated = patchService.getUpdateSummary(updates);
-
-      console.log(`Profile successfully updated for user ${userId}:`, fieldsUpdated);
+      console.log(`Profile update applied:`, {
+        confidence,
+        reason,
+        fieldsUpdated
+      });
 
       return {
         applied: true,
-        updatedProfile: updatedUser.parsedProfile,
+        updatedProfile,
         fieldsUpdated,
         confidence,
         reason
@@ -76,7 +57,8 @@ export const profilePatchTool = tool(
       return {
         applied: false,
         reason: 'Update failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        updatedProfile: currentProfile
       };
     }
   },
@@ -91,9 +73,12 @@ export const profilePatchTool = tool(
       - Preferences for workout style (powerlifting, bodybuilding, crossfit, etc.)
       - Experience level (beginner, intermediate, advanced)
       
-      Only use this tool when the user explicitly provides new information with high confidence (>0.5).
+      Only use this tool when the user explicitly provides new information with high confidence (≥0.75).
       Do not use for questions, hypotheticals, or uncertain statements.`,
     schema: z.object({
+      currentProfile: FitnessProfileSchema.partial().describe(
+        'The current user fitness profile state'
+      ),
       updates: FitnessProfileSchema.partial().describe(
         'The specific profile fields to update based on user information'
       ),
@@ -101,7 +86,7 @@ export const profilePatchTool = tool(
         'Brief explanation of why these updates are being made (e.g., "User stated they now train 5 days a week")'
       ),
       confidence: z.number().min(0).max(1).describe(
-        'Confidence score from 0-1. Use 0.9-1.0 for direct statements, 0.7-0.89 for clear implications, 0.5-0.69 for moderate confidence. Below 0.5 will not update.'
+        'Confidence score from 0-1. Use 0.9-1.0 for direct statements, 0.7-0.89 for clear implications, 0.75+ required for updates.'
       )
     })
   }

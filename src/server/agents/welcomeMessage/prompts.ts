@@ -35,10 +35,9 @@ Create an onboarding guidance message for ${user.name}.
 
 <User Profile>
 - Name: ${user.name}
-- Fitness Level: ${user.parsedProfile?.skillLevel || 'Not specified'}
-- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
-- Workout Frequency: ${user.parsedProfile?.exerciseFrequency || 'Not specified'} per week
-- Age: ${user.parsedProfile?.age || 'Not specified'}
+- Fitness Level: ${user.parsedProfile?.experienceLevel || 'Not specified'}
+- Goals: ${user.parsedProfile?.primaryGoal || 'General fitness'}
+- Training Days: ${user.parsedProfile?.availability?.daysPerWeek || 'Not specified'} per week
 </User Profile>
 
 <Instructions>
