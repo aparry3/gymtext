@@ -29,8 +29,8 @@ export interface RecentMessage {
 
 export interface UserContextProfile {
   userId: string;
-  fitnessGoals?: string;
-  skillLevel?: string;
+  primaryGoal?: string;
+  experienceLevel?: string;
   currentProgram?: string;
   recentTopics?: string[];
   preferences?: Record<string, unknown>;

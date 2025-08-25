@@ -176,7 +176,7 @@ export class OnboardingChatService {
     const phoneNumber: string | null | undefined = user
       ? (user as unknown as { phoneNumber?: string | null })?.phoneNumber
       : null;
-    const hasGoal = Boolean(profile?.primaryGoal || profile?.fitnessGoals);
+    const hasGoal = Boolean(profile?.primaryGoal);
 
     if (!name) missing.push('name');
     if (!email) missing.push('email');

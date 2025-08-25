@@ -78,8 +78,8 @@ import {
         // Get user profile information
         let userProfile: UserContextProfile = {
           userId,
-          fitnessGoals: undefined,
-          skillLevel: undefined,
+          primaryGoal: undefined,
+          experienceLevel: undefined,
           currentProgram: undefined,
           recentTopics: [],
           preferences: {},
@@ -91,8 +91,8 @@ import {
           if (userWithProfile?.parsedProfile) {
             userProfile = {
               ...userProfile,
-              fitnessGoals: userWithProfile.parsedProfile.fitnessGoals,
-              skillLevel: userWithProfile.parsedProfile.skillLevel,
+              primaryGoal: userWithProfile.parsedProfile.primaryGoal,
+              experienceLevel: userWithProfile.parsedProfile.experienceLevel,
               // TODO: Add currentProgram and other fields as needed
             };
           }

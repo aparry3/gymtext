@@ -58,8 +58,8 @@ Create a message announcing that ${user.name}'s fitness program is ready.
 
 <User Info>
 - Name: ${user.name}
-- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
-- Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
+- Goals: ${user.parsedProfile?.primaryGoal || 'General fitness'}
+- Level: ${user.parsedProfile?.experienceLevel || 'Beginner'}
 </User Info>
 
 <Program Overview>
@@ -83,7 +83,7 @@ Create a message for ${user.name}'s first workout.
 
 <User Info>
 - Name: ${user.name}
-- Fitness Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
+- Fitness Level: ${user.parsedProfile?.experienceLevel || 'Beginner'}
 </User Info>
 
 <First Workout>
