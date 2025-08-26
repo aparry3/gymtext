@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
 import { OnboardingChatService } from '@/server/services/onboardingChatService';
+import type { User, FitnessProfile } from '@/server/models/userModel';
 
-// Phase 1: Minimal SSE streaming endpoint scaffold
-// - Accepts { message, conversationId?, tempSessionId? }
-// - Ensures a temp session cookie exists for unauth flows
-// - Streams placeholder events (token, profile_patch, milestone)
-// - Phase 2 will delegate to OnboardingChatService for real orchestration
+// Simplified onboarding chat endpoint
+// - Accepts { message, currentUser?, currentProfile?, saveWhenReady? }
+// - Uses pass-through approach with partial objects
+// - Streams events (token, user_update, profile_update, ready_to_save, milestone)
+// - No temp sessions, frontend manages state
 
 export const dynamic = 'force-dynamic';
 
-// (reserved) helper for Phase 2 orchestration
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, tempSessionId } = await req.json().catch(() => ({ })) as Partial<{
+    const { message, currentUser, currentProfile, saveWhenReady } = await req.json().catch(() => ({})) as Partial<{
       message: string;
-      tempSessionId: string;
+      currentUser: Partial<User>;
+      currentProfile: Partial<FitnessProfile>;
+      saveWhenReady: boolean;
     }>;
 
     if (!message || typeof message !== 'string') {
@@ -24,15 +25,6 @@ export async function POST(req: NextRequest) {
         status: 400,
         headers: { 'content-type': 'application/json' },
       });
-    }
-
-    // Resolve auth (Phase 1: unauth only; Phase 2+: attach real user if present)
-    // Ensure temp session cookie exists
-    const cookieName = 'gt_temp_session';
-    let sessionId = tempSessionId || req.cookies.get(cookieName)?.value;
-    if (!sessionId) {
-      sessionId = randomUUID();
-      // Will set cookie on the response below (7-day temp cookie)
     }
 
     // Create a TransformStream for SSE
@@ -46,7 +38,9 @@ export async function POST(req: NextRequest) {
         await writer.write(`retry: 1500\n\n`);
         for await (const evt of service.streamMessage({
           message,
-          tempSessionId: sessionId,
+          currentUser: currentUser || {},
+          currentProfile: currentProfile || {},
+          saveWhenReady: saveWhenReady || false,
         })) {
           await writer.write(`event: ${evt.type}\n` + `data: ${JSON.stringify(evt.data)}\n\n`);
         }
@@ -68,18 +62,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // If we created a new sessionId, set it as cookie
-    if (sessionId && !req.cookies.get(cookieName)?.value) {
-      response.cookies.set({
-        name: cookieName,
-        value: sessionId,
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-    }
+    // No more session cookies needed with pass-through approach
 
     return response;
   } catch (error) {

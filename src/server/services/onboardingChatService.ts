@@ -1,21 +1,22 @@
-import type { FitnessProfile, UserWithProfile } from '@/server/models/userModel';
+import type { FitnessProfile, User } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
 import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts';
-import { projectProfile, addPendingPatch, appendMessage, getRecentMessages, projectUser } from '@/server/utils/session/onboardingSession';
 
 export type OnboardingEvent =
   | { type: 'token'; data: string }
-  | { type: 'profile_patch'; data: { applied: boolean; updates?: string[]; confidence?: number; reason?: string } }
+  | { type: 'user_update'; data: Partial<User> }
+  | { type: 'profile_update'; data: Partial<FitnessProfile> }
+  | { type: 'ready_to_save'; data: { canSave: boolean; missing: string[] } }
   | { type: 'milestone'; data: 'essentials_complete' | 'ask_next' | 'summary' }
   | { type: 'error'; data: string };
 
 export interface OnboardingMessageInput {
   message: string;
-  userId?: string; // authenticated users
-  tempSessionId?: string; // unauth draft sessions
-  conversationId?: string;
+  currentUser?: Partial<User>;
+  currentProfile?: Partial<FitnessProfile>;
+  saveWhenReady?: boolean; // Trigger DB save when requirements met
 }
 
 export interface OnboardingChatServiceDeps {
@@ -36,152 +37,112 @@ export class OnboardingChatService {
   }
 
   async *streamMessage(input: OnboardingMessageInput): AsyncGenerator<OnboardingEvent> {
-    const { message, userId, tempSessionId } = input;
+    const { message, currentUser = {}, currentProfile = {}, saveWhenReady = false } = input;
 
-    let user: UserWithProfile | null = null;
-    let currentProfile: FitnessProfile | null = null;
+    // Track the state for this conversation turn
+    const updatedUser = { ...currentUser };
+    let updatedProfile = { ...currentProfile };
+    const userWasUpdated = false;
+    let profileWasUpdated = false;
 
-    if (userId) {
-      try {
-        user = await this.userRepo.findWithProfile(userId);
-        currentProfile = user?.parsedProfile ?? null;
-      } catch {
-        yield { type: 'error', data: 'Failed to load user profile' };
+    // Extract profile updates from message
+    try {
+      const profileResult = await this.userProfileAgent({
+        userId: 'session-user',
+        message,
+        currentProfile: updatedProfile,
+        config: { 
+          temperature: 0.2, 
+          verbose: process.env.NODE_ENV === 'development'
+        },
+      });
+
+      if (profileResult.wasUpdated && profileResult.profile) {
+        updatedProfile = { ...updatedProfile, ...profileResult.profile };
+        profileWasUpdated = true;
+        yield { type: 'profile_update', data: updatedProfile };
       }
+    } catch (error) {
+      console.error('Profile extraction failed:', error);
     }
 
-    // Phase 2: apply updates only for authenticated users
-    // Snapshot pending essentials before any updates this turn
-    const projectedUserBefore = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
-    const pendingBefore = this.computePendingRequiredFields(currentProfile, projectedUserBefore);
-    console.log('pendingBefore', pendingBefore)
-    if (userId && currentProfile) {
+    // For now, user info extraction (name, email, phone) will be handled by the frontend
+    // In a future iteration, we could add a separate user info extraction agent/tool call here
+
+    // Check if we have enough data to save to DB
+    const pendingRequired = this.computePendingRequiredFields(updatedProfile, updatedUser);
+    const canSave = pendingRequired.length === 0;
+    
+    yield { 
+      type: 'ready_to_save', 
+      data: { canSave, missing: pendingRequired } 
+    };
+
+    // If save is requested and we have required fields, create user in DB
+    if (saveWhenReady && canSave) {
       try {
-          const profileResult = await this.userProfileAgent({
-          userId,
-          message,
-          currentProfile,
-          config: { temperature: 0.2, verbose: process.env.NODE_ENV === 'development', mode: 'apply' },
+        const newUser = await this.userRepo.create({
+          name: updatedUser.name!,
+          phoneNumber: updatedUser.phoneNumber!,
+          email: updatedUser.email!,
+          timezone: updatedUser.timezone || 'America/New_York',
+          preferredSendHour: updatedUser.preferredSendHour || 9,
         });
 
-        if (profileResult.wasUpdated) {
-          currentProfile = profileResult.profile;
-          const summary = profileResult.updateSummary;
-          yield {
-            type: 'profile_patch',
-            data: {
-              applied: true,
-              updates: summary?.fieldsUpdated,
-              confidence: summary?.confidence,
-              reason: summary?.reason,
-            },
-          };
+        if (Object.keys(updatedProfile).length > 0) {
+          await this.userRepo.createOrUpdateFitnessProfile(newUser.id, updatedProfile);
         }
-      } catch {
-        yield { type: 'error', data: 'Profile extraction failed' };
-      }
-    } else {
-      // Interception mode for unauth sessions (Phase 4)
-      const projected = tempSessionId ? projectProfile(currentProfile, tempSessionId) : currentProfile;
-      console.log('projected', projected)
-      if (tempSessionId) {
-        try {
-          const profileResult = await this.userProfileAgent({
-            userId: 'unauth-session',
-            message,
-            currentProfile: projected,
-            config: { temperature: 0.2, verbose: false, mode: 'intercept', tempSessionId },
-          });
 
-          console.log("profileResult", profileResult)
-          if (profileResult.updateSummary) {
-            // We only have fields list in intercept mode; store a minimal placeholder patch
-            addPendingPatch(tempSessionId, {
-              updates: {},
-              reason: profileResult.updateSummary.reason,
-              confidence: profileResult.updateSummary.confidence,
-              timestamp: Date.now(),
-            });
-            // Surface a non-applied profile_patch event
-            yield {
-              type: 'profile_patch',
-              data: {
-                applied: false,
-                updates: profileResult.updateSummary.fieldsUpdated,
-                confidence: profileResult.updateSummary.confidence,
-                reason: profileResult.updateSummary.reason,
-              },
-            };
-          }
-          currentProfile = projected;
-        } catch {
-          // swallow interception errors
-        }
+        yield { type: 'milestone', data: 'essentials_complete' };
+        return;
+      } catch {
+        yield { type: 'error', data: 'Failed to save user data' };
+        return;
       }
     }
 
-    // Compute essentials against DB (auth) or projected session (unauth)
-    const projectedUser = user ?? (tempSessionId ? (projectUser(null, tempSessionId) as unknown as UserWithProfile) : null);
-    const pendingRequired = this.computePendingRequiredFields(currentProfile, projectedUser);
-
+    // Generate chat response
     try {
-      // Rolling history (short)
-      const history = tempSessionId
-        ? getRecentMessages(tempSessionId, 5).map(m => ({ direction: m.role === 'user' ? 'inbound' as const : 'outbound' as const, content: m.content }))
-        : [] as Array<{ direction: 'inbound' | 'outbound'; content: string }>;
-      const systemPrompt = buildOnboardingChatSystemPrompt(currentProfile, pendingRequired);
+      const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired);
       const chatResult = await this.chatAgent({
-        userName: user?.name ?? 'there',
+        userName: updatedUser.name || 'there',
         message,
-        profile: currentProfile,
-        wasProfileUpdated: false,
-        conversationHistory: history as unknown as import('@/server/models/messageModel').Message[],
+        profile: updatedProfile,
+        wasProfileUpdated: userWasUpdated || profileWasUpdated,
+        conversationHistory: [], // No history for now - could be passed from frontend
         context: { onboarding: true, pendingRequiredFields: pendingRequired },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
 
       const text = chatResult.response ?? '';
-      // Append to session history for unauth
-      if (tempSessionId) {
-        appendMessage(tempSessionId, 'user', message);
-        appendMessage(tempSessionId, 'assistant', text);
-      }
       const chunkSize = 64;
       for (let i = 0; i < text.length; i += chunkSize) {
         yield { type: 'token', data: text.slice(i, i + chunkSize) };
       }
 
-      // Determine milestone based on transition from before→after
-      const becameComplete = pendingBefore.length > 0 && pendingRequired.length === 0;
-      if (becameComplete) {
+      // Determine milestone
+      if (canSave) {
         yield { type: 'milestone', data: 'summary' };
-      } else if (pendingRequired.length === 0) {
-        yield { type: 'milestone', data: 'essentials_complete' };
       } else {
         yield { type: 'milestone', data: 'ask_next' };
       }
-    } catch {
+    } catch (error) {
+      console.error('Chat generation failed:', error);
       yield { type: 'error', data: 'Chat generation failed' };
     }
   }
 
   private computePendingRequiredFields(
-    profile: FitnessProfile | null,
-    user?: UserWithProfile | null
+    profile: Partial<FitnessProfile>,
+    user: Partial<User>
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
     const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];
-    const name: string | null | undefined = user?.name as unknown as string | null | undefined;
-    const email: string | null | undefined = user ? (user as unknown as { email?: string | null })?.email : null;
-    const phoneNumber: string | null | undefined = user
-      ? (user as unknown as { phoneNumber?: string | null })?.phoneNumber
-      : null;
-    const hasGoal = Boolean(profile?.primaryGoal);
-
-    if (!name) missing.push('name');
-    if (!email) missing.push('email');
-    if (!phoneNumber) missing.push('phone');
-    if (!hasGoal) missing.push('primaryGoal');
+    
+    if (!user.name) missing.push('name');
+    if (!user.email) missing.push('email');
+    if (!user.phoneNumber) missing.push('phone');
+    if (!profile.primaryGoal) missing.push('primaryGoal');
 
     return missing;
   }
