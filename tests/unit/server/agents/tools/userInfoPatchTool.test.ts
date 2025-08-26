@@ -1,73 +1,118 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
-import * as session from '@/server/utils/session/onboardingSession';
-import { UserRepository } from '@/server/repositories/userRepository';
+import type { User } from '@/server/models/userModel';
 
-vi.mock('@/server/repositories/userRepository');
-
-describe('userInfoPatchTool', () => {
-  const mockUpdate = vi.fn();
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (UserRepository as unknown as vi.Mock).mockImplementation(() => ({
-      update: mockUpdate,
-      findByEmail: vi.fn().mockResolvedValue(undefined),
-      findByPhoneNumber: vi.fn().mockResolvedValue(undefined),
-    }));
-  });
-
+describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
   it('rejects low confidence updates', async () => {
-    const res = await userInfoPatchTool.invoke(
-      { updates: { name: 'Alice' }, reason: 'user stated name', confidence: 0.4 },
-      { configurable: { userId: 'u1' } as any }
-    );
+    const currentUser: Partial<User> = { name: 'Bob' };
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { name: 'Alice' },
+      reason: 'user stated name',
+      confidence: 0.4
+    });
+
     expect(res.applied).toBe(false);
-    expect((res as any).reason).toMatch(/Low confidence/);
+    expect(res.reason).toMatch(/Low confidence/);
+    expect(res.confidence).toBe(0.4);
+    expect(res.threshold).toBe(0.75);
+    expect(res.updatedUser).toEqual(currentUser); // unchanged
   });
 
-  it('applies to DB when authed (apply mode)', async () => {
-    const res = await userInfoPatchTool.invoke(
-      { updates: { name: 'Alice', email: 'a@example.com', phoneNumber: '+15551234567' }, reason: 'from chat', confidence: 0.9 },
-      { configurable: { userId: 'u1', mode: 'apply' } as any }
-    );
-
-    expect(res.applied).toBe(true);
-    expect((res as any).target).toBe('db');
-    expect((res as any).fieldsUpdated).toEqual(expect.arrayContaining(['name', 'email', 'phoneNumber']));
-    expect(mockUpdate).toHaveBeenCalledWith('u1', {
+  it('applies valid updates with high confidence', async () => {
+    const currentUser: Partial<User> = { name: 'Bob' };
+    const updates = { 
       name: 'Alice',
-      email: 'a@example.com',
-      phoneNumber: '+15551234567',
+      email: 'alice@example.com',
+      phoneNumber: '+15551234567'
+    };
+
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates,
+      reason: 'user provided complete info',
+      confidence: 0.9
     });
-  });
-
-  it('writes to session draft when unauth/intercept', async () => {
-    const applyDraftSpy = vi.spyOn(session, 'applyInterceptedUserDraft');
-
-    const res = await userInfoPatchTool.invoke(
-      { updates: { name: 'Bob', phone: '(555) 123-4567' }, reason: 'from chat', confidence: 0.8 },
-      { configurable: { mode: 'intercept', tempSessionId: 'temp-123' } as any }
-    );
 
     expect(res.applied).toBe(true);
-    expect((res as any).target).toBe('session');
-    expect((res as any).fieldsUpdated).toEqual(expect.arrayContaining(['name', 'phoneNumber']));
-    expect(applyDraftSpy).toHaveBeenCalledWith('temp-123', {
-      name: 'Bob',
-      phoneNumber: '+5551234567',
+    expect(res.updatedUser).toEqual({
+      name: 'Alice',
+      email: 'alice@example.com', 
+      phoneNumber: '+15551234567'
     });
+    expect(res.fieldsUpdated).toEqual(['name', 'email', 'phoneNumber']);
+    expect(res.confidence).toBe(0.9);
   });
 
-  it('ignores invalid email and phone', async () => {
-    const res = await userInfoPatchTool.invoke(
-      { updates: { email: 'not-an-email', phoneNumber: 'abc' }, reason: 'from chat', confidence: 0.9 },
-      { configurable: { userId: 'u1', mode: 'apply' } as any }
-    );
+  it('normalizes phone number format', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { phone: '(555) 123-4567' },
+      reason: 'user provided phone',
+      confidence: 0.8
+    });
 
-    // No valid fields -> not applied
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.phoneNumber).toBe('+5551234567');
+    expect(res.fieldsUpdated).toEqual(['phoneNumber']);
+  });
+
+  it('validates and filters invalid email and phone', async () => {
+    const currentUser: Partial<User> = { name: 'Bob' };
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { 
+        name: 'Alice',
+        email: 'not-an-email',
+        phoneNumber: 'abc123'
+      },
+      reason: 'mixed valid/invalid data',
+      confidence: 0.9
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser).toEqual({
+      name: 'Alice' // only valid field applied
+    });
+    expect(res.fieldsUpdated).toEqual(['name']);
+  });
+
+  it('handles empty updates gracefully', async () => {
+    const currentUser: Partial<User> = { name: 'Bob' };
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: {},
+      reason: 'no updates',
+      confidence: 0.8
+    });
+
     expect(res.applied).toBe(false);
-    expect((res as any).reason).toMatch(/No valid fields/);
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(res.reason).toMatch(/No valid fields/);
+    expect(res.updatedUser).toEqual(currentUser);
+    expect(res.fieldsUpdated).toEqual([]);
+  });
+
+  it('merges updates with existing user data', async () => {
+    const currentUser: Partial<User> = { 
+      name: 'Bob',
+      email: 'bob@example.com',
+      timezone: 'America/New_York'
+    };
+    
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { name: 'Robert' }, // only update name
+      reason: 'user corrected name',
+      confidence: 0.95
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser).toEqual({
+      name: 'Robert', // updated
+      email: 'bob@example.com', // preserved
+      timezone: 'America/New_York' // preserved
+    });
+    expect(res.fieldsUpdated).toEqual(['name']);
   });
 });

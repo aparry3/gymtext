@@ -5,8 +5,10 @@ import type { FitnessProfile } from '@/server/models/userModel';
  * This agent specializes in extracting fitness-related information from user messages
  * and determining when to update the user's profile
  */
-export const buildUserProfileSystemPrompt = (currentProfile: FitnessProfile | null): string => {
-  const profileJson = currentProfile ? JSON.stringify(currentProfile, null, 2) : 'No profile yet';
+export const buildUserProfileSystemPrompt = (currentProfile: Partial<FitnessProfile> | null): string => {
+  const profileJson = currentProfile && Object.keys(currentProfile).length > 0 
+    ? JSON.stringify(currentProfile, null, 2) 
+    : 'No profile yet';
   
   return `You are a profile extraction specialist for GymText, a fitness coaching app.
 Your ONLY job is to identify and extract fitness-related information from user messages that should be saved to their profile.

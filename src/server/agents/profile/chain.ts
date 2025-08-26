@@ -26,8 +26,6 @@ export interface ProfileAgentConfig {
   model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro';
   temperature?: number;
   verbose?: boolean;
-  mode?: 'apply' | 'intercept';
-  tempSessionId?: string;
 }
 
 /**
@@ -61,24 +59,27 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
 };
 
 /**
- * UserProfileAgent - Extracts and updates user profile information
+ * UserProfileAgent - Extracts and updates user profile information (Phase 4 - Pass-through)
  * 
  * This agent analyzes user messages for fitness-related information
- * and updates the profile when appropriate with high confidence
+ * and returns updated partial profile objects using pure functions
  */
 export const userProfileAgent = async ({
-  userId,
+  userId, // Kept for backward compatibility but not used in pass-through mode
   message,
   currentProfile,
   config = {},
 }: {
   userId: string;
   message: string;
-  currentProfile: FitnessProfile | null;
+  currentProfile: Partial<FitnessProfile>;
   config?: ProfileAgentConfig;
 }): Promise<ProfileAgentResult> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _userId = userId; // Suppress unused variable warning
+  
   try {
-    const { verbose = false, mode = 'apply' } = config;
+    const { verbose = false } = config;
     
     // Initialize the model with tools
     const model = initializeModel(config);
@@ -96,10 +97,8 @@ export const userProfileAgent = async ({
       console.log('UserProfileAgent analyzing message:', message);
     }
     
-    // Invoke the model with the tool
-    const response = await model.invoke(messages, {
-      configurable: { userId, mode: config.mode }
-    });
+    // Invoke the model with the tool - no config needed for pass-through
+    const response = await model.invoke(messages);
     
     // Initialize result accumulators
     let wasUpdated = false;
@@ -110,75 +109,44 @@ export const userProfileAgent = async ({
     
     // Check if the model called the tool
     if (response.tool_calls && response.tool_calls.length > 0) {
-      console.log("response.tool_calls", response.tool_calls)
+      if (verbose) {
+        console.log("response.tool_calls", response.tool_calls);
+      }
+      
       for (const toolCall of response.tool_calls) {
         if (toolCall.name === 'update_user_profile') {
           if (verbose) {
             console.log('Profile update tool called with:', toolCall.args);
           }
           
-          if (mode === 'intercept' || !userId) {
-            // Interception mode: do not apply, just return intent
-            const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
-            combinedFieldsUpdated.push(...Object.keys(args?.updates || {}));
-            if (args?.reason) reasons.push(args.reason);
-            if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
-          } else {
-            // Execute the tool - args are already properly typed by LangChain
-            const result = await profilePatchTool.invoke(
-              toolCall.args as Parameters<typeof profilePatchTool.invoke>[0],
-              { configurable: { userId } }
-            );
+          // Use the new pass-through approach
+          const result = await profilePatchTool.invoke({
+            ...toolCall.args,
+            currentProfile: updatedProfile
+          } as Parameters<typeof profilePatchTool.invoke>[0]);
+          
+          // Check if the update was applied
+          if (result.applied) {
+            wasUpdated = true;
+            updatedProfile = result.updatedProfile as FitnessProfile;
+            combinedFieldsUpdated.push(...(result.fieldsUpdated || []));
             
-            // Check if the update was applied
-            if (result.applied) {
-              wasUpdated = true;
-              updatedProfile = result.updatedProfile as FitnessProfile;
-              const args = toolCall.args as { reason?: string; confidence?: number };
-              combinedFieldsUpdated.push(...(result.fieldsUpdated || []));
-              if (args?.reason) reasons.push(args.reason);
-              if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
-              
-              if (verbose) {
-                console.log('Profile updated successfully:', {
-                  fieldsUpdated: result.fieldsUpdated || [],
-                  reason: args?.reason || '',
-                  confidence: args?.confidence ?? 0,
-                });
-              }
-            } else if (verbose) {
-              console.log('Profile update not applied:', result.reason);
-            }
-          }
-        } else if (toolCall.name === 'update_user_info') {
-          if (verbose) {
-            console.log('User info update tool called with:', toolCall.args);
-          }
-
-          if (mode === 'intercept' || !userId) {
-            // Intercept: write to session via tool by passing tempSessionId
-            await userInfoPatchTool.invoke(
-              toolCall.args as Parameters<typeof userInfoPatchTool.invoke>[0],
-              { configurable: { mode: 'intercept', tempSessionId: config.tempSessionId } }
-            );
-            // Do not flip wasUpdated; just summarize intent
-            const args = toolCall.args as { updates?: Record<string, unknown>; reason?: string; confidence?: number };
-            combinedFieldsUpdated.push(...Object.keys(args?.updates || {}));
-            if (args?.reason) reasons.push(args.reason);
-            if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
-          } else {
-            // Apply directly to DB
-            const userInfoResult = await userInfoPatchTool.invoke(
-              toolCall.args as Parameters<typeof userInfoPatchTool.invoke>[0],
-              { configurable: { userId, mode: 'apply' } }
-            );
-            // Do not alter profile; user info is separate. Provide summary only.
             const args = toolCall.args as { reason?: string; confidence?: number };
-            combinedFieldsUpdated.push(...((userInfoResult as unknown as { fieldsUpdated?: string[] }).fieldsUpdated || []));
             if (args?.reason) reasons.push(args.reason);
             if ((args?.confidence ?? 0) > maxConfidence) maxConfidence = args?.confidence ?? 0;
+            
+            if (verbose) {
+              console.log('Profile updated successfully:', {
+                fieldsUpdated: result.fieldsUpdated || [],
+                reason: args?.reason || '',
+                confidence: args?.confidence ?? 0,
+              });
+            }
+          } else if (verbose) {
+            console.log('Profile update not applied:', result.reason);
           }
         }
+        // Note: User info updates are handled separately in onboarding service
       }
     } else if (verbose) {
       console.log('No profile updates detected in message');
@@ -193,7 +161,7 @@ export const userProfileAgent = async ({
       : undefined;
 
     return {
-      profile: updatedProfile,
+      profile: updatedProfile as FitnessProfile,
       wasUpdated,
       updateSummary,
     };
@@ -203,7 +171,7 @@ export const userProfileAgent = async ({
     
     // Return the original profile on error
     return {
-      profile: currentProfile,
+      profile: currentProfile as FitnessProfile,
       wasUpdated: false
     };
   }
@@ -221,7 +189,7 @@ export const batchProfileExtraction = async ({
 }: {
   userId: string;
   messages: string[];
-  currentProfile: FitnessProfile | null;
+  currentProfile: Partial<FitnessProfile>;
   config?: ProfileAgentConfig;
 }): Promise<ProfileAgentResult> => {
   let profile = currentProfile;
@@ -236,8 +204,8 @@ export const batchProfileExtraction = async ({
       config
     });
     
-    if (result.wasUpdated) {
-      profile = result.profile;
+    if (result.wasUpdated && result.profile) {
+      profile = result.profile as Partial<FitnessProfile>;
       totalUpdates++;
       
       if (result.updateSummary) {
@@ -247,7 +215,7 @@ export const batchProfileExtraction = async ({
   }
   
   return {
-    profile,
+    profile: profile as FitnessProfile,
     wasUpdated: totalUpdates > 0,
     updateSummary: totalUpdates > 0 ? {
       fieldsUpdated: [...new Set(allFieldsUpdated)], // Remove duplicates
@@ -262,7 +230,7 @@ export const batchProfileExtraction = async ({
  */
 export const testProfileExtraction = async (
   message: string,
-  currentProfile: FitnessProfile | null = null
+  currentProfile: Partial<FitnessProfile> = {}
 ): Promise<ProfileAgentResult> => {
   console.log('Testing profile extraction with message:', message);
   
