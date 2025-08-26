@@ -260,6 +260,7 @@ Transform the complex temp session-based onboarding flow into a simple pass-thro
   - `user_update` - Updated partial user object
   - `profile_update` - Updated partial profile object  
   - `ready_to_save` - Indicates if user can be saved to DB with missing field list
+  - `user_created` - Returns the created user with ID when successfully saved to DB
 - Service is now stateless and works purely with passed objects
 - API route updated to accept new interface and removed cookie logic
 

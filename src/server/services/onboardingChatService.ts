@@ -9,6 +9,7 @@ export type OnboardingEvent =
   | { type: 'user_update'; data: Partial<User> }
   | { type: 'profile_update'; data: Partial<FitnessProfile> }
   | { type: 'ready_to_save'; data: { canSave: boolean; missing: string[] } }
+  | { type: 'user_created'; data: { user: User; success: true } }
   | { type: 'milestone'; data: 'essentials_complete' | 'ask_next' | 'summary' }
   | { type: 'error'; data: string };
 
@@ -93,6 +94,11 @@ export class OnboardingChatService {
           await this.userRepo.createOrUpdateFitnessProfile(newUser.id, updatedProfile);
         }
 
+        // Return the created user so frontend has the ID
+        yield { 
+          type: 'user_created', 
+          data: { user: newUser, success: true } 
+        };
         yield { type: 'milestone', data: 'essentials_complete' };
         return;
       } catch {
