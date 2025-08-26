@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import type { User, FitnessProfile } from '@/server/models/userModel';
 
-type EventType = 'token' | 'profile_patch' | 'milestone' | 'error';
+type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
 type Role = 'user' | 'assistant';
 
 interface ChatMessage {
@@ -17,13 +18,20 @@ export default function ChatContainer() {
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
   const [essentialsComplete, setEssentialsComplete] = useState(false);
-  // const [updatedFields, setUpdatedFields] = useState<string[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentAssistantIdRef = useRef<string | null>(null);
   const [summaryAnchorId, setSummaryAnchorId] = useState<string | null>(null);
+  
+  // New state management for partial objects (Phase 4)
+  const [currentUser, setCurrentUser] = useState<Partial<User>>({});
+  const [currentProfile, setCurrentProfile] = useState<Partial<FitnessProfile>>({});
+  const [canSave, setCanSave] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [createdUser, setCreatedUser] = useState<User | null>(null);
+  const [showProfileReview, setShowProfileReview] = useState(false);
 
   const hasMessages = messages.length > 0;
 
@@ -31,12 +39,19 @@ export default function ChatContainer() {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isStreaming]);
 
-  // Restore lightweight session from localStorage on mount
+  // Restore session from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem('gt_onboarding_session');
       if (raw) {
-        const parsed = JSON.parse(raw) as { messages?: ChatMessage[]; essentialsComplete?: boolean };
+        const parsed = JSON.parse(raw) as { 
+          messages?: ChatMessage[]; 
+          essentialsComplete?: boolean;
+          currentUser?: Partial<User>;
+          currentProfile?: Partial<FitnessProfile>;
+          canSave?: boolean;
+          missingFields?: string[];
+        };
         if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
           setMessages(parsed.messages);
           setIsExpanded(true);
@@ -44,21 +59,40 @@ export default function ChatContainer() {
         if (typeof parsed.essentialsComplete === 'boolean') {
           setEssentialsComplete(parsed.essentialsComplete);
         }
+        if (parsed.currentUser) {
+          setCurrentUser(parsed.currentUser);
+        }
+        if (parsed.currentProfile) {
+          setCurrentProfile(parsed.currentProfile);
+        }
+        if (typeof parsed.canSave === 'boolean') {
+          setCanSave(parsed.canSave);
+        }
+        if (parsed.missingFields) {
+          setMissingFields(parsed.missingFields);
+        }
       }
     } catch {
       // ignore
     }
   }, []);
 
-  // Persist lightweight session to localStorage
+  // Persist session to localStorage
   useEffect(() => {
     try {
-      const payload = { messages, essentialsComplete };
+      const payload = { 
+        messages, 
+        essentialsComplete, 
+        currentUser, 
+        currentProfile,
+        canSave,
+        missingFields
+      };
       localStorage.setItem('gt_onboarding_session', JSON.stringify(payload));
     } catch {
       // ignore quota/storage errors
     }
-  }, [messages, essentialsComplete]);
+  }, [messages, essentialsComplete, currentUser, currentProfile, canSave, missingFields]);
 
   // Scroll to summary anchor when set
   useEffect(() => {
@@ -93,8 +127,12 @@ export default function ChatContainer() {
     const response = await fetch('/api/chat/onboarding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // ensure gt_temp_session cookie is sent/preserved
-      body: JSON.stringify({ message: trimmed }),
+      body: JSON.stringify({ 
+        message: trimmed,
+        currentUser,
+        currentProfile,
+        saveWhenReady: false // Only true when user explicitly confirms
+      }),
     });
     if (!response.ok || !response.body) return;
 
@@ -131,9 +169,25 @@ export default function ChatContainer() {
               }
               return next;
             });
-          } else if (event === 'profile_patch') {
-            // const fields = (data?.updates as string[] | undefined) ?? [];
-            // if (fields.length > 0) setUpdatedFields((prev) => Array.from(new Set([...prev, ...fields])));
+          } else if (event === 'user_update') {
+            setCurrentUser(data as Partial<User>);
+          } else if (event === 'profile_update') {
+            setCurrentProfile(data as Partial<FitnessProfile>);
+          } else if (event === 'ready_to_save') {
+            const saveData = data as { canSave: boolean; missing: string[] };
+            setCanSave(saveData.canSave);
+            setMissingFields(saveData.missing);
+            if (saveData.canSave) {
+              setShowProfileReview(true);
+            }
+          } else if (event === 'user_created') {
+            const userData = data as { user: User; success: true };
+            setCreatedUser(userData.user);
+            setEssentialsComplete(true);
+            // Redirect to success page or next step
+            setTimeout(() => {
+              window.location.href = '/success';
+            }, 2000);
           } else if (event === 'milestone') {
             if (data === 'essentials_complete') {
               setEssentialsComplete(true);
@@ -145,6 +199,9 @@ export default function ChatContainer() {
                 setMessages((prev) => prev.map(m => m.id === anchorId ? { ...m, summary: true } : m));
               }
             }
+          } else if (event === 'error') {
+            console.error('Onboarding error:', data);
+            // Could show error message to user
           }
         } catch {
           // ignore parse errors
@@ -153,7 +210,74 @@ export default function ChatContainer() {
     }
     setConnected(false);
     setIsStreaming(false);
-  }, [input, isExpanded]);
+  }, [input, isExpanded, currentUser, currentProfile]);
+
+  // Handle final save when user confirms profile
+  const handleSaveProfile = useCallback(async () => {
+    if (!canSave) return;
+    
+    setIsStreaming(true);
+    
+    const response = await fetch('/api/chat/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        message: 'Please save my profile and create my account.',
+        currentUser,
+        currentProfile,
+        saveWhenReady: true
+      }),
+    });
+    
+    if (!response.ok || !response.body) {
+      setIsStreaming(false);
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    setConnected(true);
+
+    let buffer = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let idx: number;
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const raw = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const lines = raw.split('\n');
+        let event: EventType = 'token';
+        let dataStr = '';
+        for (const line of lines) {
+          if (line.startsWith('event:')) event = line.slice(6).trim() as EventType;
+          if (line.startsWith('data:')) dataStr += (dataStr ? '\n' : '') + line.slice(5).trim();
+        }
+        try {
+          const data = dataStr ? JSON.parse(dataStr) : '';
+          if (event === 'user_created') {
+            const userData = data as { user: User; success: true };
+            setCreatedUser(userData.user);
+            setEssentialsComplete(true);
+            setShowProfileReview(false);
+            // Redirect to success page
+            setTimeout(() => {
+              window.location.href = '/success';
+            }, 2000);
+          } else if (event === 'error') {
+            console.error('Save error:', data);
+            // Could show error message to user
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+    setConnected(false);
+    setIsStreaming(false);
+  }, [canSave, currentUser, currentProfile]);
 
   // Hero state
   if (!isExpanded && !hasMessages) {
@@ -406,9 +530,19 @@ export default function ChatContainer() {
         <div className="mx-auto max-w-3xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-lg font-medium text-gray-900">GymText Onboarding</div>
+            {canSave && !essentialsComplete && (
+              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                Ready to Save
+              </span>
+            )}
             {essentialsComplete && (
               <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
-                Profile Complete
+                Account Created
+              </span>
+            )}
+            {createdUser && (
+              <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                Welcome, {createdUser.name}!
               </span>
             )}
           </div>
@@ -475,6 +609,117 @@ export default function ChatContainer() {
           )}
         </div>
       </div>
+
+      {/* Profile Review Interface */}
+      {showProfileReview && (
+        <div className="border-t border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50 px-4 py-6">
+          <div className="mx-auto max-w-3xl">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Review Your Profile</h3>
+                <div className="flex items-center text-sm text-emerald-600">
+                  <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Ready to save
+                </div>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* User Info */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
+                  <div className="space-y-2 text-sm">
+                    {currentUser.name && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Name:</span>
+                        <span className="font-medium">{currentUser.name}</span>
+                      </div>
+                    )}
+                    {currentUser.email && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <span className="font-medium">{currentUser.email}</span>
+                      </div>
+                    )}
+                    {currentUser.phoneNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Phone:</span>
+                        <span className="font-medium">{currentUser.phoneNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fitness Profile */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Fitness Profile</h4>
+                  <div className="space-y-2 text-sm">
+                    {currentProfile.primaryGoal && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Goal:</span>
+                        <span className="font-medium">{currentProfile.primaryGoal}</span>
+                      </div>
+                    )}
+                    {currentProfile.experienceLevel && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Experience:</span>
+                        <span className="font-medium capitalize">{currentProfile.experienceLevel}</span>
+                      </div>
+                    )}
+                    {currentProfile.availability?.daysPerWeek && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Days/Week:</span>
+                        <span className="font-medium">{currentProfile.availability.daysPerWeek}</span>
+                      </div>
+                    )}
+                    {currentProfile.availability?.minutesPerSession && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Session Time:</span>
+                        <span className="font-medium">{currentProfile.availability.minutesPerSession} min</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Missing fields */}
+              {missingFields.length > 0 && (
+                <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    <strong>Still need:</strong> {missingFields.map(field => {
+                      const fieldNames: Record<string, string> = {
+                        'name': 'your name',
+                        'email': 'email address',
+                        'phone': 'phone number',
+                        'primaryGoal': 'fitness goal'
+                      };
+                      return fieldNames[field] || field;
+                    }).join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={!canSave || isStreaming}
+                  className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isStreaming ? 'Creating Account...' : 'Continue to SMS Coaching'}
+                </button>
+                <button
+                  onClick={() => setShowProfileReview(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Keep Chatting
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input area */}
       <div className="border-t border-gray-200 px-4 py-4">
