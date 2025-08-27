@@ -68,7 +68,8 @@ export const userInfoPatchTool = tool(
         applied: false,
         reason: 'No valid fields to update',
         confidence,
-        updatedUser: currentUser
+        updatedUser: currentUser,
+        fieldsUpdated: []
       } as const;
     }
 
@@ -96,6 +97,7 @@ export const userInfoPatchTool = tool(
           email: z.string().optional(),
           phoneNumber: z.string().optional(),
         })
+        .passthrough()
         .describe('Current user information state'),
       updates: z
         .object({

@@ -41,9 +41,9 @@ export class OnboardingChatService {
     const { message, currentUser = {}, currentProfile = {}, saveWhenReady = false } = input;
 
     // Track the state for this conversation turn
-    const updatedUser = { ...currentUser };
+    let updatedUser = { ...currentUser };
     let updatedProfile = { ...currentProfile };
-    const userWasUpdated = false;
+    let userWasUpdated = false;
     let profileWasUpdated = false;
 
     // Extract profile updates from message
@@ -52,16 +52,25 @@ export class OnboardingChatService {
         userId: 'session-user',
         message,
         currentProfile: updatedProfile,
+        currentUser: updatedUser,
         config: { 
           temperature: 0.2, 
           verbose: process.env.NODE_ENV === 'development'
         },
       });
 
-      if (profileResult.wasUpdated && profileResult.profile) {
-        updatedProfile = { ...updatedProfile, ...profileResult.profile };
-        profileWasUpdated = true;
-        yield { type: 'profile_update', data: updatedProfile };
+      if (profileResult.wasUpdated) {
+        if (profileResult.profile) {
+          updatedProfile = { ...updatedProfile, ...profileResult.profile };
+          profileWasUpdated = true;
+          yield { type: 'profile_update', data: updatedProfile };
+        }
+        
+        if (profileResult.user) {
+          updatedUser = { ...updatedUser, ...profileResult.user };
+          userWasUpdated = true;
+          yield { type: 'user_update', data: updatedUser };
+        }
       }
     } catch (error) {
       console.error('Profile extraction failed:', error);

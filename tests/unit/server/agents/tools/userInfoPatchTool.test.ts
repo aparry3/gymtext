@@ -82,8 +82,8 @@ describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
     const currentUser: Partial<User> = { name: 'Bob' };
     const res = await userInfoPatchTool.invoke({
       currentUser,
-      updates: {},
-      reason: 'no updates',
+      updates: { email: 'invalid-email' }, // Invalid email should be filtered out
+      reason: 'no valid updates',
       confidence: 0.8
     });
 
