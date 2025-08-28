@@ -88,7 +88,7 @@ export const userProfileAgent = async ({
     const model = initializeModel(config);
     
     // Build the system prompt
-    const systemPrompt = buildUserProfileSystemPrompt(currentProfile);
+    const systemPrompt = buildUserProfileSystemPrompt(currentProfile, currentUser);
     
     // Create the message array
     const messages = [
