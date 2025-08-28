@@ -88,7 +88,7 @@ export const userProfileAgent = async ({
     const model = initializeModel(config);
     
     // Build the system prompt
-    const systemPrompt = buildUserProfileSystemPrompt(currentProfile);
+    const systemPrompt = buildUserProfileSystemPrompt(currentProfile, currentUser);
     
     // Create the message array
     const messages = [
@@ -158,7 +158,8 @@ export const userProfileAgent = async ({
     // Generic tool handler function
     const handleToolCall = async (toolCall: { name: string; args: ToolCallArgs }, state: ToolState): Promise<ToolState> => {
       const handler = toolHandlers[toolCall.name as keyof typeof toolHandlers];
-      
+      console.log("name", toolCall.name)
+      console.log("args", toolCall.args)
       if (!handler) {
         if (verbose) {
           console.log(`Unknown tool called: ${toolCall.name}`);
