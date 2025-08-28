@@ -153,6 +153,11 @@ export default function ChatContainer() {
     }
     setConnected(false);
     setIsStreaming(false);
+    
+    // Refocus input after response is complete
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   }, [input, isExpanded, currentUser, currentProfile]);
 
   // Handle final save when user confirms profile
@@ -219,7 +224,14 @@ export default function ChatContainer() {
     }
     setConnected(false);
     setIsStreaming(false);
-  }, [canSave, currentUser, currentProfile]);
+    
+    // Refocus input after save is complete (if not redirecting)
+    if (!createdUser) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  }, [canSave, currentUser, currentProfile, createdUser]);
 
   // Hero state
   if (!isExpanded && !hasMessages) {
@@ -464,7 +476,7 @@ export default function ChatContainer() {
     );
   }
 
-  // Chat state (expanded)
+  // Chat state (expanded)  
   return (
     <div className="h-screen flex flex-col lg:flex-row bg-white">
       {/* Mobile Header - only visible on smaller screens */}
@@ -472,6 +484,25 @@ export default function ChatContainer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-lg font-medium text-gray-900">GymText Onboarding</div>
+            {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
+              <button
+                onClick={() => setIsProfileCollapsed(!isProfileCollapsed)}
+                className="flex items-center gap-1 text-sm px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors"
+              >
+                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                Profile
+                <svg 
+                  className={`h-3 w-3 transition-transform ${isProfileCollapsed ? '' : 'rotate-180'}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
             {canSave && !essentialsComplete && (
               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
                 Ready to Save
@@ -501,8 +532,113 @@ export default function ChatContainer() {
         </div>
       </header>
 
+      {/* Mobile Profile Section - only visible on smaller screens and when expanded */}
+      {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && !isProfileCollapsed && (
+        <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
+          <div className="max-h-80 overflow-y-auto">
+            <div className="p-6">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="space-y-6">
+                  {/* User Info */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
+                    <div className="space-y-2 text-sm">
+                      {currentUser.name && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Name:</span>
+                          <span className="font-medium">{currentUser.name}</span>
+                        </div>
+                      )}
+                      {currentUser.email && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Email:</span>
+                          <span className="font-medium">{currentUser.email}</span>
+                        </div>
+                      )}
+                      {currentUser.phoneNumber && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Phone:</span>
+                          <span className="font-medium">{currentUser.phoneNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fitness Profile */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Fitness Profile</h4>
+                    <div className="space-y-2 text-sm">
+                      {currentProfile.primaryGoal && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Goal:</span>
+                          <span className="font-medium">{currentProfile.primaryGoal}</span>
+                        </div>
+                      )}
+                      {currentProfile.experienceLevel && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Experience:</span>
+                          <span className="font-medium capitalize">{currentProfile.experienceLevel}</span>
+                        </div>
+                      )}
+                      {currentProfile.availability?.daysPerWeek && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Days/Week:</span>
+                          <span className="font-medium">{currentProfile.availability.daysPerWeek}</span>
+                        </div>
+                      )}
+                      {currentProfile.availability?.minutesPerSession && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Session Time:</span>
+                          <span className="font-medium">{currentProfile.availability.minutesPerSession} min</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Missing fields */}
+                {missingFields.length > 0 && (
+                  <div className="mt-6 p-3 bg-amber-50 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      <strong>Still need:</strong> {missingFields.map(field => {
+                        const fieldNames: Record<string, string> = {
+                          'name': 'your name',
+                          'email': 'email address',
+                          'phone': 'phone number',
+                          'primaryGoal': 'fitness goal'
+                        };
+                        return fieldNames[field] || field;
+                      }).join(', ')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                {canSave && (
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={!canSave || isStreaming}
+                      className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isStreaming ? 'Creating Account...' : 'Continue to SMS Coaching'}
+                    </button>
+                    <button
+                      onClick={() => setIsProfileCollapsed(true)}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Keep Chatting
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Chat Area - Left side on desktop (60%), full width on mobile */}
-      <div className="flex-1 lg:w-3/5 flex flex-col">
+      <div className="flex-1 lg:w-3/5 flex flex-col min-h-0">
         {/* Desktop Header - only visible on larger screens */}
         <header className="hidden lg:block border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -537,138 +673,9 @@ export default function ChatContainer() {
           </div>
         </header>
 
-        {/* Mobile Profile Section - only visible on smaller screens */}
-        {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
-          <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50 px-4 py-4">
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <button
-                onClick={() => setIsProfileCollapsed(!isProfileCollapsed)}
-                className="w-full flex items-center justify-between text-left p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
-                  {canSave && (
-                    <div className="flex items-center text-sm text-emerald-600">
-                      <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Ready to save
-                    </div>
-                  )}
-                </div>
-                <svg 
-                  className={`h-5 w-5 text-gray-400 transition-transform ${isProfileCollapsed ? '' : 'rotate-180'}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              <div className={`transition-all duration-300 ease-in-out ${isProfileCollapsed ? 'max-h-0' : 'max-h-[1000px]'} overflow-hidden`}>
-                <div className="border-t border-gray-200 p-6">
-                  <div className="grid gap-6">
-                    {/* User Info */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
-                      <div className="space-y-2 text-sm">
-                        {currentUser.name && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Name:</span>
-                            <span className="font-medium">{currentUser.name}</span>
-                          </div>
-                        )}
-                        {currentUser.email && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Email:</span>
-                            <span className="font-medium">{currentUser.email}</span>
-                          </div>
-                        )}
-                        {currentUser.phoneNumber && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Phone:</span>
-                            <span className="font-medium">{currentUser.phoneNumber}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Fitness Profile */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Fitness Profile</h4>
-                      <div className="space-y-2 text-sm">
-                        {currentProfile.primaryGoal && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Goal:</span>
-                            <span className="font-medium">{currentProfile.primaryGoal}</span>
-                          </div>
-                        )}
-                        {currentProfile.experienceLevel && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Experience:</span>
-                            <span className="font-medium capitalize">{currentProfile.experienceLevel}</span>
-                          </div>
-                        )}
-                        {currentProfile.availability?.daysPerWeek && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Days/Week:</span>
-                            <span className="font-medium">{currentProfile.availability.daysPerWeek}</span>
-                          </div>
-                        )}
-                        {currentProfile.availability?.minutesPerSession && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Session Time:</span>
-                            <span className="font-medium">{currentProfile.availability.minutesPerSession} min</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Missing fields */}
-                  {missingFields.length > 0 && (
-                    <div className="mt-4 p-3 bg-amber-50 rounded-lg">
-                      <p className="text-sm text-amber-800">
-                        <strong>Still need:</strong> {missingFields.map(field => {
-                          const fieldNames: Record<string, string> = {
-                            'name': 'your name',
-                            'email': 'email address',
-                            'phone': 'phone number',
-                            'primaryGoal': 'fitness goal'
-                          };
-                          return fieldNames[field] || field;
-                        }).join(', ')}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Action buttons */}
-                  {canSave && (
-                    <div className="flex gap-3 mt-6">
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={!canSave || isStreaming}
-                        className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isStreaming ? 'Creating Account...' : 'Continue to SMS Coaching'}
-                      </button>
-                      <button
-                        onClick={() => setIsProfileCollapsed(true)}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                      >
-                        Keep Chatting
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <div className="px-4 lg:px-6 py-8 max-w-4xl lg:max-w-none">
             {messages.length === 0 ? (
               <div className="text-center py-20">
@@ -758,7 +765,7 @@ export default function ChatContainer() {
 
       {/* Desktop Profile Section - Right side (40%), only visible on larger screens */}
       <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden">
-          <div className="h-full flex flex-col">
+          <div className="h-full flex flex-col min-h-0">
             <div className="px-6 py-4 border-b border-gray-200 bg-white/80 backdrop-blur">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
@@ -781,7 +788,7 @@ export default function ChatContainer() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               <div className="p-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="space-y-6">
