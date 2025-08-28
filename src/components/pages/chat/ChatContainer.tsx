@@ -31,7 +31,6 @@ export default function ChatContainer() {
   const [canSave, setCanSave] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [createdUser, setCreatedUser] = useState<User | null>(null);
-  const [showProfileReview, setShowProfileReview] = useState(false);
   const [isProfileCollapsed, setIsProfileCollapsed] = useState(true);
 
   const hasMessages = messages.length > 0;
@@ -124,9 +123,6 @@ export default function ChatContainer() {
             const saveData = data as { canSave: boolean; missing: string[] };
             setCanSave(saveData.canSave);
             setMissingFields(saveData.missing);
-            if (saveData.canSave) {
-              setShowProfileReview(true);
-            }
           } else if (event === 'user_created') {
             const userData = data as { user: User; success: true };
             setCreatedUser(userData.user);
@@ -208,7 +204,6 @@ export default function ChatContainer() {
             const userData = data as { user: User; success: true };
             setCreatedUser(userData.user);
             setEssentialsComplete(true);
-            setShowProfileReview(false);
             // Redirect to success page
             setTimeout(() => {
               window.location.href = '/success';
