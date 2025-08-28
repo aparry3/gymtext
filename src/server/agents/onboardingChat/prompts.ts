@@ -16,9 +16,9 @@ export function buildOnboardingChatSystemPrompt(
     : 'Essentials complete.';
 
   const profileSummary = profile ? `
-- Primary Goal: ${profile.primaryGoal || profile.fitnessGoals || 'Not specified'}
-- Experience: ${profile.experienceLevel || profile.skillLevel || 'Not specified'}
-- Availability: ${profile.availability?.daysPerWeek ?? profile.exerciseFrequency ?? 'Not specified'}
+- Primary Goal: ${profile.primaryGoal || 'Not specified'}
+- Experience: ${profile.experienceLevel || 'Not specified'}
+- Availability: ${profile.availability?.daysPerWeek ?? 'Not specified'} days per week
 - Equipment: ${profile.equipment?.access || 'Not specified'}` : 'No profile yet.';
 
   return `You are GymText's onboarding coach. Be warm, clear, and efficient.

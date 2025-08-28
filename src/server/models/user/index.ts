@@ -10,14 +10,7 @@ export type UserUpdate = Updateable<Users>;
 export interface FitnessProfile {
   version?: number;
   userId?: string;
-  
-  // Legacy fields for backward compatibility
-  fitnessGoals?: string;
-  skillLevel?: string;
-  exerciseFrequency?: string;
-  gender?: string;
-  age?: number;
-  
+    
   // New comprehensive profile fields
   primaryGoal?: string;
   specificObjective?: string;
@@ -138,13 +131,9 @@ export class UserModel {
   private validateFitnessProfile(profileData: CreateFitnessProfileData): void {
     // With the new flexible profile structure, validation is more lenient
     // We can add specific validations as needed
-    if (profileData.age !== undefined && (profileData.age < 1 || profileData.age > 120)) {
-      throw new Error('Age must be between 1 and 120');
-    }
-    
-    if (profileData.skillLevel && !['beginner', 'intermediate', 'advanced'].includes(profileData.skillLevel)) {
-      // Allow any skill level for flexibility
-      console.warn(`Non-standard skill level: ${profileData.skillLevel}`);
+    if (profileData.experienceLevel && !['beginner', 'intermediate', 'advanced'].includes(profileData.experienceLevel)) {
+      // Allow any experience level for flexibility
+      console.warn(`Non-standard experience level: ${profileData.experienceLevel}`);
     }
   }
 

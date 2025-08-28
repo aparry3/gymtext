@@ -94,12 +94,12 @@ ${contextInfo}`;
   private formatUserProfile(profile: UserContextProfile): string {
     const lines: string[] = ['User Profile:'];
 
-    if (profile.fitnessGoals) {
-      lines.push(`- Fitness Goals: ${profile.fitnessGoals}`);
+    if (profile.primaryGoal) {
+      lines.push(`- Primary Goal: ${profile.primaryGoal}`);
     }
 
-    if (profile.skillLevel) {
-      lines.push(`- Skill Level: ${profile.skillLevel}`);
+    if (profile.experienceLevel) {
+      lines.push(`- Experience Level: ${profile.experienceLevel}`);
     }
 
     if (profile.currentProgram) {

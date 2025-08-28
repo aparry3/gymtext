@@ -83,7 +83,7 @@ export class ChatService {
         const profileResult = await userProfileAgent({
           userId: user.id,
           message,
-          currentProfile,
+          currentProfile: currentProfile || {},
           config: {
             model: 'gpt-4-turbo',
             temperature: 0.2,
@@ -185,7 +185,7 @@ export class ChatService {
         const profileResult = await userProfileAgent({
           userId: user.id,
           message,
-          currentProfile,
+          currentProfile: currentProfile || {},
           config: { verbose: false }
         });
         

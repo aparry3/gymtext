@@ -35,10 +35,9 @@ Create an onboarding guidance message for ${user.name}.
 
 <User Profile>
 - Name: ${user.name}
-- Fitness Level: ${user.parsedProfile?.skillLevel || 'Not specified'}
-- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
-- Workout Frequency: ${user.parsedProfile?.exerciseFrequency || 'Not specified'} per week
-- Age: ${user.parsedProfile?.age || 'Not specified'}
+- Fitness Level: ${user.parsedProfile?.experienceLevel || 'Not specified'}
+- Goals: ${user.parsedProfile?.primaryGoal || 'General fitness'}
+- Training Days: ${user.parsedProfile?.availability?.daysPerWeek || 'Not specified'} per week
 </User Profile>
 
 <Instructions>
@@ -59,8 +58,8 @@ Create a message announcing that ${user.name}'s fitness program is ready.
 
 <User Info>
 - Name: ${user.name}
-- Goals: ${user.parsedProfile?.fitnessGoals || 'General fitness'}
-- Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
+- Goals: ${user.parsedProfile?.primaryGoal || 'General fitness'}
+- Level: ${user.parsedProfile?.experienceLevel || 'Beginner'}
 </User Info>
 
 <Program Overview>
@@ -84,7 +83,7 @@ Create a message for ${user.name}'s first workout.
 
 <User Info>
 - Name: ${user.name}
-- Fitness Level: ${user.parsedProfile?.skillLevel || 'Beginner'}
+- Fitness Level: ${user.parsedProfile?.experienceLevel || 'Beginner'}
 </User Info>
 
 <First Workout>

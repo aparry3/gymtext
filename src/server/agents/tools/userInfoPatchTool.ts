@@ -1,7 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { UserRepository } from '@/server/repositories/userRepository';
-import { applyInterceptedUserDraft } from '@/server/utils/session/onboardingSession';
+import type { User } from '@/server/models/userModel';
 
 const E164ish = /^\+?[1-9]\d{7,14}$/;
 
@@ -15,8 +14,8 @@ function normalizePhoneNumber(input: string | undefined | null): string | undefi
 }
 
 export const userInfoPatchTool = tool(
-  async ({ updates, reason, confidence }, config) => {
-    const CONFIDENCE_THRESHOLD = 0.5;
+  async ({ currentUser, updates, reason, confidence }) => {
+    const CONFIDENCE_THRESHOLD = 0.75;
 
     if (confidence < CONFIDENCE_THRESHOLD) {
       return {
@@ -24,6 +23,7 @@ export const userInfoPatchTool = tool(
         reason: 'Low confidence',
         confidence,
         threshold: CONFIDENCE_THRESHOLD,
+        updatedUser: currentUser
       } as const;
     }
 
@@ -36,7 +36,7 @@ export const userInfoPatchTool = tool(
     const normalizedPhone = normalizePhoneNumber(phoneNumber ?? phone ?? undefined);
 
     const fieldsUpdated: string[] = [];
-    const userUpdate: { name?: string; email?: string; phoneNumber?: string } = {};
+    const userUpdate: Partial<User> = { ...currentUser };
 
     if (typeof name === 'string') {
       name = name.trim();
@@ -68,65 +68,20 @@ export const userInfoPatchTool = tool(
         applied: false,
         reason: 'No valid fields to update',
         confidence,
+        updatedUser: currentUser,
+        fieldsUpdated: []
       } as const;
     }
 
-    const userId = config?.configurable?.userId as string | undefined;
-    type Configurable = { mode?: 'apply' | 'intercept'; tempSessionId?: string } | undefined;
-    const configurable = config?.configurable as Configurable;
-    const mode = configurable?.mode;
-    const tempSessionId = configurable?.tempSessionId;
-
-    // Interception or unauth path: write to session draft only
-    if (!userId || mode === 'intercept') {
-      if (!tempSessionId) {
-        return {
-          applied: false,
-          reason: 'Missing tempSessionId for intercept mode',
-          error: 'tempSessionId not provided in config',
-        } as const;
-      }
-
-      applyInterceptedUserDraft(tempSessionId, userUpdate);
-      return {
-        applied: true,
-        target: 'session',
-        fieldsUpdated,
-        confidence,
-        reason,
-      } as const;
-    }
-
-    // Auth path: validate and update DB via repository
-    const repo = new UserRepository();
-    // Dedupe checks
-    if (userUpdate.email) {
-      const existing = await repo.findByEmail(userUpdate.email);
-      if (existing && existing.id !== userId) {
-        return {
-          applied: false,
-          reason: 'Email already in use',
-          conflict: 'email',
-          confidence,
-        } as const;
-      }
-    }
-    if (userUpdate.phoneNumber) {
-      const existing = await repo.findByPhoneNumber(userUpdate.phoneNumber);
-      if (existing && existing.id !== userId) {
-        return {
-          applied: false,
-          reason: 'Phone number already in use',
-          conflict: 'phoneNumber',
-          confidence,
-        } as const;
-      }
-    }
-    await repo.update(userId, userUpdate);
+    console.log(`User info update applied:`, {
+      confidence,
+      reason,
+      fieldsUpdated
+    });
 
     return {
       applied: true,
-      target: 'db',
+      updatedUser: userUpdate,
       fieldsUpdated,
       confidence,
       reason,
@@ -134,8 +89,16 @@ export const userInfoPatchTool = tool(
   },
   {
     name: 'update_user_info',
-    description: 'Update user contact info (name, email, phoneNumber). Applies to DB when authed; updates session draft in intercept/unauth.',
+    description: 'Update user contact info (name, email, phoneNumber) based on conversation. Works with partial user objects.',
     schema: z.object({
+      currentUser: z
+        .object({
+          name: z.string().optional(),
+          email: z.string().optional(),
+          phoneNumber: z.string().optional(),
+        })
+        .passthrough()
+        .describe('Current user information state'),
       updates: z
         .object({
           name: z.string().min(1).optional(),
@@ -154,7 +117,7 @@ export const userInfoPatchTool = tool(
         .number()
         .min(0)
         .max(1)
-        .describe('0-1 confidence score; <0.5 will not apply.'),
+        .describe('0-1 confidence score; ≥0.75 required for updates.'),
     }),
   }
 );

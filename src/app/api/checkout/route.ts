@@ -34,9 +34,9 @@ export async function POST(request: Request) {
         phone: formData.phoneNumber,
         ...(formData.email && { email: formData.email }),
         metadata: {
-          fitnessGoals: formData.fitnessGoals,
-          skillLevel: formData.skillLevel,
-          exerciseFrequency: formData.exerciseFrequency,
+          primaryGoal: formData.fitnessGoals,
+          experienceLevel: formData.skillLevel,
+          daysPerWeek: formData.exerciseFrequency,
           gender: formData.gender,
           age: formData.age,
           timezone: formData.timezone,
@@ -53,11 +53,11 @@ export async function POST(request: Request) {
 
         // Create fitness profile for new user
         const fitnessProfileData: CreateFitnessProfileData = {
-          fitnessGoals: formData.fitnessGoals,
-          skillLevel: formData.skillLevel,
-          exerciseFrequency: formData.exerciseFrequency,
-          gender: formData.gender,
-          age: parseInt(formData.age, 10),
+          primaryGoal: formData.fitnessGoals,
+          experienceLevel: formData.skillLevel,
+          availability: {
+            daysPerWeek: parseInt(formData.exerciseFrequency, 10)
+          }
         };
 
         await userRepository.createOrUpdateFitnessProfile(user.id, fitnessProfileData);
