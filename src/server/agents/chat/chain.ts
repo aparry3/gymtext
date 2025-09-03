@@ -9,7 +9,7 @@ import type { Message } from '@/server/models/messageModel';
  * Configuration for the ChatAgent
  */
 export interface ChatAgentConfig {
-  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro' | 'gemini-2.0-flash';
+  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro' | 'gemini-2.0-flash' | 'gemini-2.5-flash';
   temperature?: number;
   verbose?: boolean;
 }
@@ -28,7 +28,7 @@ export interface ChatAgentResult {
  */
 const initializeModel = (config: ChatAgentConfig = {}) => {
   const { 
-    model = 'gemini-2.0-flash', 
+    model = 'gemini-2.5-flash', 
     temperature = 0.7  // Higher temperature for conversational responses
   } = config;
 

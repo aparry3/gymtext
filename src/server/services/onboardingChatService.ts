@@ -172,13 +172,16 @@ export class OnboardingChatService {
     profile: Partial<FitnessProfile>,
     user: Partial<User>
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
-    const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];
-    
+    console.log("profile", profile)
+    console.log("user", user)
+    const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];    
     if (!user.name) missing.push('name');
     if (!user.email) missing.push('email');
     if (!user.phoneNumber) missing.push('phone');
     if (!profile.primaryGoal) missing.push('primaryGoal');
 
+
+    console.log("missing", missing)
     return missing;
   }
 }
