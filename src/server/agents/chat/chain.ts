@@ -36,14 +36,14 @@ const initializeModel = (config: ChatAgentConfig = {}) => {
     return new ChatGoogleGenerativeAI({
       model: model,
       temperature,
-      maxOutputTokens: 500, // Keep responses concise for SMS
+      maxOutputTokens: 5000, // Keep responses concise for SMS
     });
   }
 
   return new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 500,
+    maxTokens: 5000,
   });
 };
 
@@ -89,38 +89,69 @@ export const chatAgent = async ({
           .join('\n')
       : '';
     
-    // Build the full prompt
+    // Build the full prompt with safe context handling
+    let contextString = '';
+    if (context && typeof context === 'object' && Object.keys(context).length > 0) {
+      try {
+        contextString = `<Additional Context>\n${JSON.stringify(context, null, 2)}\n</Additional Context>\n`;
+      } catch (error) {
+        console.error('Error stringifying context:', error);
+        contextString = `<Additional Context>\nContext processing error\n</Additional Context>\n`;
+      }
+    }
+
     const userPrompt = `
 ${historyString ? `<Conversation History>\n${historyString}\n</Conversation History>\n` : ''}
-${context && Object.keys(context).length > 0 ? `<Additional Context>\n${JSON.stringify(context, null, 2)}\n</Additional Context>\n` : ''}
+${contextString}
 <Current Message>
 User (${userName}): ${message}
 </Current Message>
 
 Respond to the user's message.`;
     
+    // Validate prompts before creating messages
+    if (!systemPrompt || typeof systemPrompt !== 'string') {
+      console.error('Invalid systemPrompt:', typeof systemPrompt, systemPrompt);
+      throw new Error('System prompt is invalid');
+    }
+    
+    if (!userPrompt || typeof userPrompt !== 'string') {
+      console.error('Invalid userPrompt:', typeof userPrompt, userPrompt);
+      throw new Error('User prompt is invalid');
+    }
+
     // Create the message array
     const messages = [
       new SystemMessage(systemPrompt),
       new HumanMessage(userPrompt)
     ];
-    console.log("=========messages=======")
-    console.log("SYSTEM PROMPT", systemPrompt)
-    console.log("USER PROMPT", userPrompt)
-    console.log("=========end messages=======")
 
     if (verbose) {
       console.log('ChatAgent generating response:', {
         userName,
         wasProfileUpdated,
         hasProfile: !!profile,
-        historyLength: conversationHistory.length
+        historyLength: conversationHistory?.length || 0
       });
     }
     
     let response;
     // Generate the response
     try {
+      console.log('About to invoke model with messages:', messages ? `Array of ${messages.length} items` : 'undefined');
+      console.log('Message types:', messages?.map(m => m.constructor.name));
+      console.log('SystemMessage content length:', messages?.[0]?.content?.length || 'undefined');
+      console.log('HumanMessage content length:', messages?.[1]?.content?.length || 'undefined');
+      
+      if (!messages || !Array.isArray(messages)) {
+        throw new Error('Messages array is undefined or not an array');
+      }
+      
+      // Check if messages have valid content
+      if (!messages[0]?.content || !messages[1]?.content) {
+        throw new Error('Messages missing content');
+      }
+      
       response = await model.invoke(messages);
     } catch (error) {
       console.error('ChatAgent error:', error);
