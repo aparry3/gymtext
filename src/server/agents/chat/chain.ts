@@ -104,7 +104,11 @@ Respond to the user's message.`;
       new SystemMessage(systemPrompt),
       new HumanMessage(userPrompt)
     ];
-    
+    console.log("=========messages=======")
+    console.log("SYSTEM PROMPT", systemPrompt)
+    console.log("USER PROMPT", userPrompt)
+    console.log("=========end messages=======")
+
     if (verbose) {
       console.log('ChatAgent generating response:', {
         userName,
@@ -114,8 +118,16 @@ Respond to the user's message.`;
       });
     }
     
+    let response;
     // Generate the response
-    const response = await model.invoke(messages);
+    try {
+      response = await model.invoke(messages);
+    } catch (error) {
+      console.error('ChatAgent error:', error);
+      return {
+        response: "I apologize, but I'm having trouble processing your message right now. Please try again in a moment."
+      }
+    }
     
     // Extract the response content
     const responseText = typeof response.content === 'string' 
