@@ -141,12 +141,20 @@ export function buildOnboardingChatSystemPrompt(
   const contextualGuidelines = pendingRequiredFields.length === 0 ? `
 
 CONTEXT AWARENESS FOR PROFILE BUILDING:
-- Acknowledge specific objectives when mentioned (e.g., "Great! For ski season prep, I need to know...")
+- Acknowledge specific objectives when mentioned (e.g., "Great! For your Grand Canyon rim-to-rim hike...")
 - Reference captured equipment/constraints context when determining what else to ask
 - Build on stated preferences to ask relevant profile completion questions
 - Use current training context to inform what information gaps remain
 - Focus ONLY on gathering complete profile information - DO NOT make training recommendations
-- Ask contextual follow-up questions that efficiently complete the profile` : '';
+
+ACTIVITY-SPECIFIC QUESTIONING STRATEGY:
+- Ask questions relevant to their specific activity/goal instead of generic fitness questions
+- For HIKING goals (hike, trail, canyon, mountain): Ask about hiking experience, longest hikes, backpacking experience, elevation comfort
+- For RUNNING goals (marathon, 5k, run): Ask about running experience, longest distances, race history, current weekly mileage  
+- For STRENGTH goals (powerlifting, deadlift, squat): Ask about lifting experience, current lifts, gym familiarity
+- For SPORTS goals (ski, surf, climb, bike): Ask about experience with that specific sport
+- Use activity experience to INFER general fitness level (e.g., "completed a marathon" suggests intermediate+ fitness)
+- Frame follow-up questions in the context of their goal (e.g., "For hiking prep..." rather than "For fitness...")` : '';
 
   return `You are GymText's onboarding coach. Be warm, clear, and efficient.
 
@@ -184,6 +192,48 @@ Behavior:
 export function computeContextualGaps(profile: FitnessProfile): string[] {
   const gaps: string[] = [];
   
+  // Activity-specific experience gaps - detect specific activities and ask relevant experience questions
+  if (profile.specificObjective) {
+    const objective = profile.specificObjective.toLowerCase();
+    
+    // Hiking/backpacking activities
+    if (objective.includes('hike') || objective.includes('hiking') || objective.includes('backpack') || 
+        objective.includes('trail') || objective.includes('canyon') || objective.includes('mountain')) {
+      if (!profile.experienceLevel) {
+        gaps.push('hiking-experience');
+      }
+    }
+    
+    // Running/endurance activities  
+    else if (objective.includes('marathon') || objective.includes('run') || objective.includes('5k') || 
+             objective.includes('10k') || objective.includes('half marathon') || objective.includes('triathlon')) {
+      if (!profile.experienceLevel) {
+        gaps.push('running-experience');
+      }
+    }
+    
+    // Strength/lifting activities
+    else if (objective.includes('powerlifting') || objective.includes('strength') || objective.includes('lifting') ||
+             objective.includes('deadlift') || objective.includes('squat') || objective.includes('bench')) {
+      if (!profile.experienceLevel) {
+        gaps.push('strength-experience');
+      }
+    }
+    
+    // Sports-specific activities
+    else if (objective.includes('ski') || objective.includes('surf') || objective.includes('climb') || 
+             objective.includes('bike') || objective.includes('cycling') || objective.includes('swim')) {
+      if (!profile.experienceLevel) {
+        gaps.push('sport-experience');
+      }
+    }
+    
+    // If no specific activity detected but we still need general experience
+    else if (!profile.experienceLevel) {
+      gaps.push('general-experience');
+    }
+  }
+  
   // Timeline gaps - if they have a goal but no timeline context
   if (profile.primaryGoal && !profile.timelineWeeks && !profile.eventDate) {
     gaps.push('timeline');
@@ -191,7 +241,7 @@ export function computeContextualGaps(profile: FitnessProfile): string[] {
   
   // Event preparation gaps - if they mention specific objective but no timeline
   if (profile.specificObjective && !profile.eventDate && !profile.timelineWeeks) {
-    const eventKeywords = ['wedding', 'season', 'competition', 'vacation', 'beach', 'marathon', 'race'];
+    const eventKeywords = ['wedding', 'season', 'competition', 'vacation', 'beach', 'marathon', 'race', 'hike', 'trip'];
     const hasEventKeyword = eventKeywords.some(keyword => 
       profile.specificObjective?.toLowerCase().includes(keyword)
     );
