@@ -131,6 +131,12 @@ export function buildOnboardingChatSystemPrompt(
   // Use comprehensive profile context instead of limited 4-field summary
   const profileSummary = buildRichProfileSummary(profile);
 
+  // Identify contextual gaps to help guide next questions
+  const contextualGaps = profile ? computeContextualGaps(profile) : [];
+  const gapsContext = contextualGaps.length > 0 
+    ? `\nProfile Gaps to Address: ${contextualGaps.join(', ')}`
+    : '';
+
   // Add contextual guidelines when essentials are complete
   const contextualGuidelines = pendingRequiredFields.length === 0 ? `
 
@@ -155,7 +161,7 @@ Goals:
 Context:
 ${essentials}
 Current Profile:
-${profileSummary}${contextualGuidelines}
+${profileSummary}${gapsContext}${contextualGuidelines}
 
 Style:
 - Conversational and human. Avoid robotic phrasing and redundant confirmations.
@@ -169,4 +175,69 @@ Behavior:
 - If essentials are complete, provide a concise summary and ask contextual next questions.
 - Focus on profile building, not workout recommendations or exercise suggestions.
 `;
+}
+
+/**
+ * Detect contextual gaps in the profile that need to be filled
+ * This helps identify what follow-up questions would be most valuable
+ */
+export function computeContextualGaps(profile: FitnessProfile): string[] {
+  const gaps: string[] = [];
+  
+  // Timeline gaps - if they have a goal but no timeline context
+  if (profile.primaryGoal && !profile.timelineWeeks && !profile.eventDate) {
+    gaps.push('timeline');
+  }
+  
+  // Event preparation gaps - if they mention specific objective but no timeline
+  if (profile.specificObjective && !profile.eventDate && !profile.timelineWeeks) {
+    const eventKeywords = ['wedding', 'season', 'competition', 'vacation', 'beach', 'marathon', 'race'];
+    const hasEventKeyword = eventKeywords.some(keyword => 
+      profile.specificObjective?.toLowerCase().includes(keyword)
+    );
+    if (hasEventKeyword) {
+      gaps.push('event-timeline');
+    }
+  }
+  
+  // Equipment detail gaps - if they have equipment access but no specifics
+  if (profile.equipment?.access === 'home-gym' && (!profile.equipment?.items || profile.equipment.items.length === 0)) {
+    gaps.push('equipment-details');
+  }
+  
+  // Schedule preference gaps - if they have availability but no timing preferences
+  if (profile.availability?.daysPerWeek && !profile.availability?.preferredTimes) {
+    gaps.push('schedule-preferences');
+  }
+  
+  // Constraint modification gaps - if they have moderate/severe constraints but no modifications noted
+  if (profile.constraints && profile.constraints.length > 0) {
+    const severeConstraints = profile.constraints.filter(c => 
+      c.status === 'active' && (c.severity === 'moderate' || c.severity === 'severe')
+    );
+    const hasModifications = profile.constraints.some(c => c.modifications);
+    
+    if (severeConstraints.length > 0 && !hasModifications) {
+      gaps.push('constraint-modifications');
+    }
+  }
+  
+  // Experience context gaps - if they have a goal but no experience level
+  if (profile.primaryGoal && !profile.experienceLevel) {
+    gaps.push('experience-level');
+  }
+  
+  // Physical baseline gaps - if they have fitness goals but no current metrics
+  if ((profile.primaryGoal === 'fat-loss' || profile.primaryGoal === 'muscle-gain') && 
+      !profile.metrics?.bodyweight) {
+    gaps.push('physical-baseline');
+  }
+  
+  // Current activity gaps - if they have goals/schedule but no current training context
+  if (profile.primaryGoal && profile.availability?.daysPerWeek && 
+      !profile.currentActivity && !profile.currentTraining?.programName) {
+    gaps.push('current-training');
+  }
+  
+  return gaps;
 }

@@ -47,25 +47,26 @@ export class OnboardingChatService {
     let userWasUpdated = false;
     let profileWasUpdated = false;
 
-    // Extract profile updates from message
-    try {
-      // Prepare recent conversation context for better profile extraction
-      // Take the last few messages (alternating user/assistant) for context
-      const recentMessages: string[] = [];
-      const maxContextMessages = 6; // Last 3 exchanges (user + assistant pairs)
+    // Prepare recent conversation context for both profile extraction and chat generation
+    // Take the last few messages (alternating user/assistant) for context
+    const recentMessages: string[] = [];
+    const maxContextMessages = 6; // Last 3 exchanges (user + assistant pairs)
+    
+    if (conversationHistory.length > 0) {
+      // Take the most recent messages, focusing on the assistant's last response and user's current message
+      const contextHistory = conversationHistory.slice(-maxContextMessages);
       
-      if (conversationHistory.length > 0) {
-        // Take the most recent messages, focusing on the assistant's last response and user's current message
-        const contextHistory = conversationHistory.slice(-maxContextMessages);
-        
-        for (const msg of contextHistory) {
-          if (msg.role === 'assistant' && msg.content.trim()) {
-            recentMessages.push(`Assistant: ${msg.content.trim()}`);
-          } else if (msg.role === 'user' && msg.content.trim()) {
-            recentMessages.push(`User: ${msg.content.trim()}`);
-          }
+      for (const msg of contextHistory) {
+        if (msg.role === 'assistant' && msg.content.trim()) {
+          recentMessages.push(`Assistant: ${msg.content.trim()}`);
+        } else if (msg.role === 'user' && msg.content.trim()) {
+          recentMessages.push(`User: ${msg.content.trim()}`);
         }
       }
+    }
+
+    // Extract profile updates from message
+    try {
 
       const profileResult = await this.userProfileAgent({
         userId: 'session-user',
@@ -144,8 +145,12 @@ export class OnboardingChatService {
         message,
         profile: updatedProfile,
         wasProfileUpdated: userWasUpdated || profileWasUpdated,
-        conversationHistory: [], // No history for now - could be passed from frontend
-        context: { onboarding: true, pendingRequiredFields: pendingRequired },
+        conversationHistory: [], // Use empty array since we'll pass recentMessages via context
+        context: { 
+          onboarding: true, 
+          pendingRequiredFields: pendingRequired,
+          recentMessages: recentMessages.join('\n') // Pass recent conversation context
+        },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
@@ -172,16 +177,15 @@ export class OnboardingChatService {
     profile: Partial<FitnessProfile>,
     user: Partial<User>
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
-    console.log("profile", profile)
-    console.log("user", user)
+    // Focus on essentials needed to create user account and start profile building
+    // Additional contextual completeness is handled by computeContextualGaps() in the prompts
     const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];    
+    
     if (!user.name) missing.push('name');
     if (!user.email) missing.push('email');
     if (!user.phoneNumber) missing.push('phone');
     if (!profile.primaryGoal) missing.push('primaryGoal');
 
-
-    console.log("missing", missing)
     return missing;
   }
 }

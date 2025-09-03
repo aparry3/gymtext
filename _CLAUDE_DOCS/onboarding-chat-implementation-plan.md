@@ -12,10 +12,20 @@ Transform the onboarding chat from asking redundant questions to providing intel
   - Created `buildRichProfileSummary()` function with comprehensive profile context (15+ fields vs. previous 4)
   - Updated system prompt with context-awareness guidelines
   - Added explicit profile building focus (no recommendations)
+  - Fixed critical bug: profile agent enum values for primaryGoal
+  - All builds and lints passing
+
+### ✅ Phase 2 (COMPLETED): Enhanced Intelligence
+- **Status**: Complete ✅
+- **Time Taken**: ~1 hour
+- **Key Changes**:
+  - Created `computeContextualGaps()` function with 8 gap detection strategies
+  - Integrated contextual gaps into system prompt to guide better questions
+  - Cleaned up console.log statements from service layer
+  - Reviewed and optimized conversation context handling
   - All builds and lints passing
 
 ### 🔄 Next Steps
-- **Phase 2**: Enhanced Intelligence (contextual gap detection)
 - **Phase 3**: Testing & Validation (critical for success validation)
 - **Phase 4**: Edge Cases & Polish
 
@@ -53,31 +63,31 @@ Transform the onboarding chat from asking redundant questions to providing intel
 - [x] Include constraint formatting
 - [x] Add metrics display logic
 
-## Phase 2: Enhanced Intelligence (Medium Priority - 1-2 hours)
+## Phase 2: Enhanced Intelligence ✅ COMPLETED (Medium Priority - 1-2 hours)
 
-### 2.1 Contextual Gap Detection
+### 2.1 Contextual Gap Detection ✅ COMPLETED
 **File**: `src/server/agents/onboardingChat/prompts.ts`
 
-- [ ] Create `computeContextualGaps()` function
-- [ ] Detect timeline gaps (goal without eventDate/timelineWeeks)
-- [ ] Identify equipment detail gaps (home-gym without items)
-- [ ] Find constraint modification gaps (severe constraints without modifications)
-- [ ] Detect schedule preference gaps (availability without preferredTimes)
+- [x] Create `computeContextualGaps()` function
+- [x] Detect timeline gaps (goal without eventDate/timelineWeeks)
+- [x] Identify equipment detail gaps (home-gym without items)
+- [x] Find constraint modification gaps (severe constraints without modifications)
+- [x] Detect schedule preference gaps (availability without preferredTimes)
 
-### 2.2 Smarter Required Fields Logic
+### 2.2 Smarter Required Fields Logic ✅ COMPLETED
 **File**: `src/server/services/onboardingChatService.ts`
 
-- [ ] Review `computePendingRequiredFields()` function
-- [ ] Consider expanding beyond 4 essential fields
-- [ ] Add contextual completeness checks
-- [ ] Ensure profile readiness for program creation phase
+- [x] Review `computePendingRequiredFields()` function
+- [x] Consider expanding beyond 4 essential fields (decided to keep focused on essentials)
+- [x] Add contextual completeness checks (via computeContextualGaps)
+- [x] Ensure profile readiness for program creation phase
 
-### 2.3 Enhanced Conversation Context
+### 2.3 Enhanced Conversation Context ✅ COMPLETED
 **File**: `src/server/services/onboardingChatService.ts`
 
-- [ ] Review conversation history usage (currently maxContextMessages = 6)
-- [ ] Consider increasing context window for profile extraction
-- [ ] Ensure context is properly passed to chat generation
+- [x] Review conversation history usage (currently maxContextMessages = 6)
+- [x] Consider increasing context window for profile extraction (6 messages is appropriate)
+- [x] Ensure context is properly passed to chat generation (via rich profile summary)
 
 ## Phase 3: Testing & Validation (Critical - 2-3 hours)
 
