@@ -146,12 +146,12 @@
 - [x] **12 tests pass** with comprehensive coverage of merging logic
 - [x] **ESLint and TypeScript compilation pass** ✅
 
-## Phase 3: Agent Prompt Updates
+## Phase 3: Agent Prompt Updates ✅
 
-### 3.1 Update Activity Data Instructions
-- [ ] **File**: `src/server/agents/profile/prompts.ts`
-- [ ] **Lines 102-119**: Update activityData section
-- [ ] **Replace** single object example with array-focused instructions:
+### 3.1 Update Activity Data Instructions ✅
+- [x] **File**: `src/server/agents/profile/prompts.ts`
+- [x] **Lines 102-126**: Update activityData section to array format
+- [x] **Replace** single object example with array-focused instructions:
   ```typescript
   🎯 ACTIVITY-SPECIFIC DATA EXTRACTION (CRITICAL PRIORITY):
   - When users mention ANY specific activities, you MUST populate/append to the activityData ARRAY
@@ -185,28 +185,33 @@
   ]
   ```
 
-### 3.2 Add Multi-Activity Examples
-- [ ] **File**: `src/server/agents/profile/prompts.ts`
-- [ ] **Lines 64-73**: Add multi-activity examples:
+### 3.2 Add Multi-Activity Examples ✅
+- [x] **File**: `src/server/agents/profile/prompts.ts`
+- [x] **Lines 64-74**: Add multi-activity examples:
   ```typescript
   MULTI-ACTIVITY DETECTION EXAMPLES (BOTH ACTIVITIES REQUIRED):
   - "I run and also do strength training" → MUST extract BOTH:
-    * activityData: [{type: 'running', goals: ['cardio fitness']}, {type: 'strength', goals: ['build muscle']}]
+    * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['cardio fitness']}, {type: 'strength', goals: ['cross-training']}]
   - "Training for a marathon but also hitting the gym" → MUST extract BOTH:
-    * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['marathon']}, {type: 'strength', goals: ['cross-training']}]  
+    * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['marathon training']}, {type: 'strength', goals: ['support training']}]  
   - "I ski in winter and hike in summer" → MUST extract BOTH:
-    * activityData: [{type: 'skiing', goals: ['seasonal fitness']}, {type: 'hiking', goals: ['seasonal fitness']}]
+    * primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['winter fitness']}, {type: 'hiking', goals: ['summer fitness']}]
+  - "I'm a runner but I also lift weights twice a week" → MUST extract BOTH:
+    * primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced'}, {type: 'strength', keyMetrics: {trainingDays: 2}}]
+  - "CrossFit and cycling are my main activities" → MUST extract BOTH:
+    * primaryGoal: "athletic-performance" + activityData: [{type: 'other', activityName: 'CrossFit'}, {type: 'cycling'}]
   ```
 
-### 3.3 Update Single Activity Examples
-- [ ] **File**: `src/server/agents/profile/prompts.ts`  
-- [ ] **Lines 64-73**: Ensure all examples show array format:
+### 3.3 Update Single Activity Examples ✅
+- [x] **File**: `src/server/agents/profile/prompts.ts`  
+- [x] **Lines 76-90**: Updated all examples to array format:
   ```typescript
-  - "help me get in shape for ski season" → 
-    primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['ski season preparation']}]
-  - "getting back into lifting weights" →
-    primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}]
+  - "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['ski season preparation']}]
+  - "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}]
+  - "I run marathons" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
+  - Plus 5 more examples all updated to array format
   ```
+- [x] **Added Critical Reminders**: Array format requirements and merge tool behavior explanation
 
 ## Phase 4: Testing & Validation
 
