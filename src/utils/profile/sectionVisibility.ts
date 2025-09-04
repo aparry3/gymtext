@@ -262,10 +262,33 @@ function countConstraintsFields(profileData: ProcessedProfileData): number {
 }
 
 function hasActivityData(profileData: ProcessedProfileData): boolean {
-  return !!(profileData.activityData && Object.keys(profileData.activityData).length > 0);
+  return !!(profileData.activityData && Array.isArray(profileData.activityData) && profileData.activityData.length > 0);
 }
 
 function countActivityDataFields(profileData: ProcessedProfileData): number {
-  if (!profileData.activityData || typeof profileData.activityData !== 'object') return 0;
-  return Object.keys(profileData.activityData).length;
+  if (!profileData.activityData || !Array.isArray(profileData.activityData)) return 0;
+  // Count total meaningful fields across all activities
+  return profileData.activityData.reduce((total: number, activity: unknown) => {
+    if (typeof activity === 'object' && activity !== null && !Array.isArray(activity)) {
+      const activityObj = activity as Record<string, unknown>;
+      let count = 0;
+      
+      // Count core activity fields
+      if (activityObj.type) count++;
+      if (activityObj.experienceLevel) count++;
+      if (activityObj.activityName) count++;
+      
+      // Count key metrics
+      if (activityObj.keyMetrics && typeof activityObj.keyMetrics === 'object') {
+        count += Object.keys(activityObj.keyMetrics).length;
+      }
+      
+      // Count arrays like goals and equipment
+      if (Array.isArray(activityObj.goals) && activityObj.goals.length > 0) count++;
+      if (Array.isArray(activityObj.equipment) && activityObj.equipment.length > 0) count++;
+      
+      return total + count;
+    }
+    return total;
+  }, 0);
 }

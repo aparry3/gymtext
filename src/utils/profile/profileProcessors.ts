@@ -82,8 +82,8 @@ export interface ProcessedProfileData {
     status: string;
   }> | null;
   
-  // Activity Data
-  activityData: Record<string, unknown> | null;
+  // Activity Data (now an array)
+  activityData: unknown[] | null;
 }
 
 export function processUserData(user: Partial<User> | null | undefined): ProcessedUserData {
@@ -158,8 +158,8 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
     // Arrays with validation
     constraints: isValidArray(profile.constraints) ? profile.constraints as ProcessedProfileData['constraints'] : null,
     
-    // Activity data with validation
-    activityData: isValidObject(profile.activityData) ? profile.activityData as Record<string, unknown> : null,
+    // Activity data with validation (now handles array)
+    activityData: isValidArray(profile.activityData) ? profile.activityData : null,
   };
 }
 

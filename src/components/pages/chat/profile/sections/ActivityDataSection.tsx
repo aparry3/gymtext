@@ -336,9 +336,12 @@ export default function ActivityDataSection({
   onToggle,
   dataCount,
 }: ActivityDataSectionProps) {
-  const hasData = !!(profileData.activityData && 
-    typeof profileData.activityData === 'object' && 
-    Object.keys(profileData.activityData).length > 0);
+  // Handle array structure - activityData is now an array of activity objects
+  const activityDataArray = Array.isArray(profileData.activityData) 
+    ? profileData.activityData 
+    : [];
+  
+  const hasData = activityDataArray.length > 0;
 
   if (!hasData) {
     return (
@@ -358,10 +361,7 @@ export default function ActivityDataSection({
     );
   }
 
-  const activityData = profileData.activityData as Record<string, string | number | string[] | Record<string, string | number>>;
-  const activityType = (typeof activityData.type === 'string' ? activityData.type : 'other');
-
-  const renderActivitySpecificData = () => {
+  const renderActivitySpecificData = (activityData: Record<string, unknown>, activityType: string): React.ReactNode => {
     switch (activityType) {
       case 'running':
         return <RunningData data={activityData} />;
@@ -378,7 +378,7 @@ export default function ActivityDataSection({
     }
   };
 
-  const getActivityTitle = () => {
+  const getActivityTitle = (activityType: string, activityData: Record<string, unknown>) => {
     switch (activityType) {
       case 'running':
         return 'Running Data';
@@ -396,52 +396,93 @@ export default function ActivityDataSection({
     }
   };
 
+  // Type guard to ensure activity is a proper object
+  const isActivityObject = (activity: unknown): activity is Record<string, unknown> => {
+    return typeof activity === 'object' && activity !== null && !Array.isArray(activity);
+  };
+
+  // Filter and cast activities to proper type
+  const validActivities = activityDataArray.filter(isActivityObject);
+
+  // If we have multiple activities, show them as separate sections
+  // If we have only one, show it as the main activity data section
+  const firstActivity = validActivities[0];
+  const firstActivityType = typeof firstActivity?.type === 'string' ? firstActivity.type : 'other';
+  
+  const title = validActivities.length === 1 
+    ? getActivityTitle(firstActivityType, firstActivity)
+    : 'Activity-Specific Data';
+    
+  const mainIcon = validActivities.length === 1 
+    ? getActivityIcon(firstActivityType)
+    : <ActivityDataIcon />;
+
   return (
     <CollapsibleSection
       id="activity-data"
-      title={getActivityTitle()}
-      icon={getActivityIcon(activityType)}
+      title={title}
+      icon={mainIcon}
       isExpanded={isExpanded}
       onToggle={onToggle}
       dataCount={dataCount}
     >
-      <div className="space-y-4">
-        {activityData.experienceLevel && typeof activityData.experienceLevel === 'string' && (
-          <DataField
-            label="Experience Level"
-            value={activityData.experienceLevel}
-            formatter={(value) => {
-              if (typeof value !== 'string') return String(value);
-              return value.charAt(0).toUpperCase() + value.slice(1);
-            }}
-          />
-        )}
-        
-        {renderActivitySpecificData()}
+      <div className="space-y-6">
+        {validActivities.map((activity: Record<string, unknown>, index: number) => {
+          const activityType = typeof activity.type === 'string' ? activity.type : 'other';
+          const activityTitle = validActivities.length > 1 ? getActivityTitle(activityType, activity) : null;
+          
+          return (
+            <div key={index} className={validActivities.length > 1 ? "border-l-4 border-blue-200 pl-4" : ""}>
+              {activityTitle && (
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-5 w-5 text-blue-600">
+                    {getActivityIcon(activityType)}
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-800">{activityTitle}</h4>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                {(typeof activity.experienceLevel === 'string' && activity.experienceLevel) && (
+                  <DataField
+                    label="Experience Level"
+                    value={activity.experienceLevel}
+                    formatter={(value) => {
+                      if (typeof value !== 'string') return String(value);
+                      return value.charAt(0).toUpperCase() + value.slice(1);
+                    }}
+                  />
+                )}
+                
+                {renderActivitySpecificData(activity, activityType)}
 
-        {Array.isArray(activityData.goals) && activityData.goals.length > 0 && (
-          <div>
-            <h5 className="text-sm font-medium text-gray-700 mb-2">Goals</h5>
-            <div className="flex flex-wrap gap-1">
-              {activityData.goals.map((goal, index: number) => (
-                <span
-                  key={index}
-                  className="inline-flex px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                >
-                  {String(goal)}
-                </span>
-              ))}
+                {Array.isArray(activity.goals) && activity.goals.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">Goals</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {activity.goals.map((goal: unknown, goalIndex: number) => (
+                        <span
+                          key={goalIndex}
+                          className="inline-flex px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        >
+                          {String(goal) as React.ReactNode}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Array.isArray(activity.equipment) && activity.equipment.length > 0 && (
+                  <DataField
+                    label="Equipment"
+                    value={activity.equipment}
+                    type="list"
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        {Array.isArray(activityData.equipment) && activityData.equipment.length > 0 && (
-          <DataField
-            label="Equipment"
-            value={activityData.equipment}
-            type="list"
-          />
-        )}
+          );
+        })}
       </div>
     </CollapsibleSection>
   );
