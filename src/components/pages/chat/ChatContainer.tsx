@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { User, FitnessProfile } from '@/server/models/userModel';
+import ProfileView from './profile/ProfileView';
 
 type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
 type Role = 'user' | 'assistant';
@@ -538,103 +539,26 @@ export default function ChatContainer() {
       {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && !isProfileCollapsed && (
         <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
           <div className="max-h-80 overflow-y-auto">
-            <div className="p-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="space-y-6">
-                  {/* User Info */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
-                    <div className="space-y-2 text-sm">
-                      {currentUser.name && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Name:</span>
-                          <span className="font-medium">{currentUser.name}</span>
-                        </div>
-                      )}
-                      {currentUser.email && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Email:</span>
-                          <span className="font-medium">{currentUser.email}</span>
-                        </div>
-                      )}
-                      {currentUser.phoneNumber && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Phone:</span>
-                          <span className="font-medium">{currentUser.phoneNumber}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Fitness Profile */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Fitness Profile</h4>
-                    <div className="space-y-2 text-sm">
-                      {currentProfile.primaryGoal && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Goal:</span>
-                          <span className="font-medium">{currentProfile.primaryGoal}</span>
-                        </div>
-                      )}
-                      {currentProfile.experienceLevel && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Experience:</span>
-                          <span className="font-medium capitalize">{currentProfile.experienceLevel}</span>
-                        </div>
-                      )}
-                      {currentProfile.availability?.daysPerWeek && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Days/Week:</span>
-                          <span className="font-medium">{currentProfile.availability.daysPerWeek}</span>
-                        </div>
-                      )}
-                      {currentProfile.availability?.minutesPerSession && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Session Time:</span>
-                          <span className="font-medium">{currentProfile.availability.minutesPerSession} min</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Missing fields */}
-                {missingFields.length > 0 && (
-                  <div className="mt-6 p-3 bg-amber-50 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>Still need:</strong> {missingFields.map(field => {
-                        const fieldNames: Record<string, string> = {
-                          'name': 'your name',
-                          'email': 'email address',
-                          'phone': 'phone number',
-                          'primaryGoal': 'fitness goal'
-                        };
-                        return fieldNames[field] || field;
-                      }).join(', ')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                {canSave && (
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={!canSave || isStreaming}
-                      className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isStreaming ? 'Creating Account...' : 'Continue to SMS Coaching'}
-                    </button>
-                    <button
-                      onClick={() => setIsProfileCollapsed(true)}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                    >
-                      Keep Chatting
-                    </button>
-                  </div>
-                )}
+            <ProfileView
+              currentUser={currentUser}
+              currentProfile={currentProfile}
+              canSave={canSave}
+              missingFields={missingFields}
+              onSaveProfile={handleSaveProfile}
+              isStreaming={isStreaming}
+              className="h-auto"
+            />
+            {/* Keep Chatting button for mobile */}
+            {canSave && (
+              <div className="px-6 pb-4">
+                <button
+                  onClick={() => setIsProfileCollapsed(true)}
+                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Keep Chatting
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -767,124 +691,15 @@ export default function ChatContainer() {
 
       {/* Desktop Profile Section - Right side (40%), only visible on larger screens */}
       <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden">
-          <div className="h-full flex flex-col min-h-0">
-            <div className="px-6 py-4 border-b border-gray-200 bg-white/80 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
-                {canSave && (
-                  <div className="flex items-center text-sm text-emerald-600">
-                    <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Ready to save
-                  </div>
-                )}
-                {!canSave && Object.keys(currentUser).length === 0 && Object.keys(currentProfile).length === 0 && (
-                  <div className="flex items-center text-sm text-gray-500">
-                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Being built from conversation
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="p-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="space-y-6">
-                    {/* User Info */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Name:</span>
-                          <span className="font-medium text-right">
-                            {currentUser.name || <span className="text-gray-400 italic">your name, email address, phone number</span>}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Email:</span>
-                          <span className="font-medium text-right break-all">
-                            {currentUser.email || <span className="text-gray-400 italic">Not provided yet</span>}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Phone:</span>
-                          <span className="font-medium text-right">
-                            {currentUser.phoneNumber || <span className="text-gray-400 italic">Not provided yet</span>}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Fitness Profile */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Fitness Profile</h4>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Goal:</span>
-                          <span className="font-medium text-right">
-                            {currentProfile.primaryGoal || <span className="text-gray-400 italic">fat-loss</span>}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Experience:</span>
-                          <span className="font-medium capitalize text-right">
-                            {currentProfile.experienceLevel || <span className="text-gray-400 italic">Not provided yet</span>}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Days/Week:</span>
-                          <span className="font-medium text-right">
-                            {currentProfile.availability?.daysPerWeek || <span className="text-gray-400 italic">Not provided yet</span>}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-gray-600">Session Time:</span>
-                          <span className="font-medium text-right">
-                            {currentProfile.availability?.minutesPerSession ? `${currentProfile.availability.minutesPerSession} min` : <span className="text-gray-400 italic">Not provided yet</span>}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Missing fields */}
-                  {missingFields.length > 0 && (
-                    <div className="mt-6 p-3 bg-amber-50 rounded-lg">
-                      <p className="text-sm text-amber-800">
-                        <strong>Still need:</strong> {missingFields.map(field => {
-                          const fieldNames: Record<string, string> = {
-                            'name': 'your name',
-                            'email': 'email address',
-                            'phone': 'phone number',
-                            'primaryGoal': 'fitness goal'
-                          };
-                          return fieldNames[field] || field;
-                        }).join(', ')}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Action buttons */}
-                  {canSave && (
-                    <div className="space-y-3 mt-6">
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={!canSave || isStreaming}
-                        className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isStreaming ? 'Creating Account...' : 'Continue to SMS Coaching'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProfileView
+          currentUser={currentUser}
+          currentProfile={currentProfile}
+          canSave={canSave}
+          missingFields={missingFields}
+          onSaveProfile={handleSaveProfile}
+          isStreaming={isStreaming}
+        />
+      </div>
     </div>
   );
 }
