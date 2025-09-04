@@ -116,82 +116,85 @@
 ## Phase 3: Advanced Features 📊
 
 ### Metrics & Constraints
-- [ ] Create `MetricsSection.tsx`
-  - [ ] Body composition display
-  - [ ] Height and weight with units
-  - [ ] Body fat percentage
-  - [ ] Performance records (PRs)
-  - [ ] Lift tracking display
+- [x] Create `MetricsSection.tsx`
+  - [x] Body composition display (height, weight, body fat)
+  - [x] Height and weight with units (converted to inches/feet)
+  - [x] Body fat percentage with color coding
+  - [x] Performance records (PRs) with organized display
+  - [x] Lift tracking with MetricDisplay cards
 
-- [ ] Create `ConstraintsSection.tsx`
-  - [ ] Active constraints list
-  - [ ] Severity indicators
-  - [ ] Affected body areas
-  - [ ] Modification requirements
-  - [ ] Constraint timeline
+- [x] Create `ConstraintsSection.tsx`
+  - [x] Active constraints list with status indicators
+  - [x] Severity indicators (mild/moderate/severe with colors)
+  - [x] Affected body areas with tags
+  - [x] Modification requirements displayed
+  - [x] Type-specific icons (injury, equipment, schedule, mobility)
 
 ### Activity Intelligence
-- [ ] Create `ActivityDataSection.tsx`
-  - [ ] Activity type detection
-  - [ ] Running data display
-    - [ ] Weekly mileage
-    - [ ] Average pace
-    - [ ] Race history
-  - [ ] Strength data display
-    - [ ] Training frequency
-    - [ ] Current lifts
-    - [ ] Progress tracking
-  - [ ] Hiking data display
-    - [ ] Experience level
-    - [ ] Pack weight comfort
-    - [ ] Elevation preferences
-  - [ ] Cycling data display
-    - [ ] Weekly hours
-    - [ ] Terrain preferences
-    - [ ] Equipment type
-  - [ ] Skiing data display
-    - [ ] Days per season
-    - [ ] Terrain comfort
-    - [ ] Experience level
-  - [ ] Generic activity support
+- [x] Create `ActivityDataSection.tsx`
+  - [x] Activity type detection with dynamic titles
+  - [x] Running data display
+    - [x] Weekly mileage with MetricDisplay
+    - [x] Average pace formatting
+    - [x] Race completion tracking
+  - [x] Strength data display
+    - [x] Training frequency display
+    - [x] Current lifts (bench, squat, deadlift, overhead)
+    - [x] Progress tracking with colored metrics
+  - [x] Hiking data display
+    - [x] Experience level with smart formatting
+    - [x] Pack weight comfort indicators
+    - [x] Elevation preferences
+  - [x] Cycling data display
+    - [x] Weekly hours with time formatting
+    - [x] Terrain preferences with lists
+    - [x] Equipment type handling
+  - [x] Skiing data display
+    - [x] Days per season metrics
+    - [x] Terrain comfort arrays
+    - [x] Experience level display
+  - [x] Generic activity support with flexible schema
 
 ### Enhanced Data Processing
-- [ ] Create `src/utils/profile/dataFormatters.ts`
-  - [ ] `formatWeight()` function
-  - [ ] `formatTime()` function
-  - [ ] `formatDate()` function
-  - [ ] `formatPercentage()` function
-  - [ ] `formatList()` function
+- [x] Create `src/utils/profile/dataFormatters.ts`
+  - [x] `formatWeight()` function with unit conversion
+  - [x] `formatTime()` function with hours/minutes
+  - [x] `formatDate()` function with locale support
+  - [x] `formatPercentage()` function with decimals
+  - [x] `formatList()` function with max items
+  - [x] Additional specialized formatters (height, pace, distance, etc.)
 
-- [ ] Create `MetricDisplay.tsx` component
-  - [ ] Unit conversion support
-  - [ ] Progress visualization
-  - [ ] Comparison displays
-  - [ ] Trend indicators
+- [x] Create `MetricDisplay.tsx` component
+  - [x] Unit conversion support (lbs/kg, etc.)
+  - [x] Progress visualization with color themes
+  - [x] Comparison displays with previous values
+  - [x] Trend indicators (up/down/stable arrows)
+  - [x] Multiple size options (sm/md/lg)
+  - [x] Full accessibility support
 
 ### Visual Polish
-- [ ] Add section icons
-  - [ ] Personal info icon
-  - [ ] Goals icon
-  - [ ] Training status icon
-  - [ ] Availability icon
-  - [ ] Equipment icon
-  - [ ] Preferences icon
-  - [ ] Metrics icon
-  - [ ] Constraints icon
-  - [ ] Activity data icon
+- [x] Add section icons
+  - [x] Personal info icon (user profile)
+  - [x] Goals icon (checkmark circle)
+  - [x] Training status icon (lightning bolt)
+  - [x] Availability icon (clock)
+  - [x] Equipment icon (dumbbell)
+  - [x] Preferences icon (heart)
+  - [x] Metrics icon (bar chart)
+  - [x] Constraints icon (warning triangle)
+  - [x] Activity-specific icons (running, cycling, hiking, etc.)
 
-- [ ] Implement color coding
-  - [ ] Section header colors
-  - [ ] Status indicators
-  - [ ] Progress colors
-  - [ ] Priority highlighting
+- [x] Implement color coding
+  - [x] Section header colors with contextual themes
+  - [x] Status indicators (active/resolved constraints)
+  - [x] Progress colors (emerald, blue, amber, red themes)
+  - [x] Exercise preference tags (green for enjoyed, red for disliked)
 
-- [ ] Add animations
-  - [ ] Section expand/collapse
-  - [ ] Data loading states
-  - [ ] Progress animations
-  - [ ] Hover effects
+- [x] Add animations
+  - [x] Section expand/collapse with smooth transitions
+  - [x] MetricDisplay cards with hover effects
+  - [x] Progress animations with duration controls
+  - [x] Smooth loading states throughout
 
 ## Phase 4: Polish & QA ✨
 

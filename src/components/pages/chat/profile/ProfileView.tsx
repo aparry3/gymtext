@@ -16,6 +16,9 @@ import TrainingStatusSection from './sections/TrainingStatusSection';
 import AvailabilitySection from './sections/AvailabilitySection';
 import EquipmentSection from './sections/EquipmentSection';
 import PreferencesSection from './sections/PreferencesSection';
+import MetricsSection from './sections/MetricsSection';
+import ConstraintsSection from './sections/ConstraintsSection';
+import ActivityDataSection from './sections/ActivityDataSection';
 import ProgressBar from './components/ProgressBar';
 
 interface ProfileViewProps {
@@ -158,6 +161,30 @@ export default function ProfileView({
                   case 'preferences':
                     return (
                       <PreferencesSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'metrics':
+                    return (
+                      <MetricsSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'constraints':
+                    return (
+                      <ConstraintsSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'activityData':
+                    return (
+                      <ActivityDataSection
                         key={section.id}
                         profileData={processedProfileData}
                         dataCount={section.dataCount}
