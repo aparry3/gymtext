@@ -12,6 +12,11 @@ import {
 } from '@/utils/profile/sectionVisibility';
 import PersonalInfoSection from './sections/PersonalInfoSection';
 import GoalsSection from './sections/GoalsSection';
+import TrainingStatusSection from './sections/TrainingStatusSection';
+import AvailabilitySection from './sections/AvailabilitySection';
+import EquipmentSection from './sections/EquipmentSection';
+import PreferencesSection from './sections/PreferencesSection';
+import ProgressBar from './components/ProgressBar';
 
 interface ProfileViewProps {
   currentUser: Partial<User>;
@@ -56,13 +61,13 @@ export default function ProfileView({
             <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
             {completeness > 0 && (
               <div className="flex items-center gap-2">
-                <div className="w-16 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${completeness}%` }}
-                  />
-                </div>
-                <span className="text-sm text-gray-600">{completeness}%</span>
+                <ProgressBar
+                  value={completeness}
+                  size="sm"
+                  color="emerald"
+                  showLabel={true}
+                  className="w-16"
+                />
               </div>
             )}
           </div>
@@ -121,6 +126,38 @@ export default function ProfileView({
                   case 'goals':
                     return (
                       <GoalsSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'trainingStatus':
+                    return (
+                      <TrainingStatusSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'availability':
+                    return (
+                      <AvailabilitySection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'equipment':
+                    return (
+                      <EquipmentSection
+                        key={section.id}
+                        profileData={processedProfileData}
+                        dataCount={section.dataCount}
+                      />
+                    );
+                  case 'preferences':
+                    return (
+                      <PreferencesSection
                         key={section.id}
                         profileData={processedProfileData}
                         dataCount={section.dataCount}
