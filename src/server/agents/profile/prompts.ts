@@ -44,6 +44,16 @@ YOUR RESPONSIBILITIES:
 - You may infer light structure from the phrasing of goals/objectives (e.g. "summer wedding" → eventDate in the future, "better cardio" → endurance goal).
 - Goals should be updated more aggressively than other fields.
 
+🎯 CRITICAL: PRIMARY GOAL INFERENCE FROM ACTIVITIES
+- ALWAYS infer primaryGoal from mentioned activities using this mapping:
+  • Hiking, running, cycling, skiing, endurance sports → primaryGoal: "endurance"  
+  • Weightlifting, strength training, powerlifting, bodybuilding → primaryGoal: "strength"
+  • "Get in shape", "lose weight", "burn fat" → primaryGoal: "fat-loss"
+  • "Build muscle", "bulk up", "gain mass" → primaryGoal: "muscle-gain"
+  • Competition prep, sport-specific training → primaryGoal: "athletic-performance"
+  • Injury recovery, physical therapy → primaryGoal: "rehabilitation"
+- Extract primaryGoal even when users don't explicitly state it - infer from their activity context
+
 🎯 ACTIVITY-SPECIFIC DATA EXTRACTION (CRITICAL PRIORITY):
 - When users mention ANY specific activities or sports, you MUST populate the activityData field with structured information
 - Activity detection is MANDATORY for messages mentioning: hiking, running, lifting, strength training, cycling, skiing, swimming, climbing, etc.
@@ -52,14 +62,14 @@ YOUR RESPONSIBILITIES:
 - This is the HIGHEST PRIORITY extraction after goals - never skip activity data when mentioned
 
 MANDATORY ACTIVITY DETECTION EXAMPLES (UPDATE REQUIRED):
-- "help me get in shape for ski season" → MUST extract activityData: {type: 'skiing', goals: ['ski season preparation']}
-- "training for Grand Canyon hike" → MUST extract activityData: {type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}
-- "want to run my first marathon" → MUST extract activityData: {type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}
-- "getting back into lifting weights" → MUST extract activityData: {type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}
-- "I run marathons" → MUST extract activityData: {type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}
-- "started lifting at the gym" → MUST extract activityData: {type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}
-- "cycling 50 miles a week" → MUST extract activityData: {type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}
-- "rock climbing indoors" → MUST extract activityData: {type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}
+- "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activityData: {type: 'skiing', goals: ['ski season preparation']}
+- "training for Grand Canyon hike" → MUST extract primaryGoal: "endurance" + activityData: {type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}
+- "want to run my first marathon" → MUST extract primaryGoal: "endurance" + activityData: {type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}
+- "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activityData: {type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}
+- "I run marathons" → MUST extract primaryGoal: "endurance" + activityData: {type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}
+- "started lifting at the gym" → MUST extract primaryGoal: "strength" + activityData: {type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}
+- "cycling 50 miles a week" → MUST extract primaryGoal: "endurance" + activityData: {type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}
+- "rock climbing indoors" → MUST extract primaryGoal: "athletic-performance" + activityData: {type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}
 
 ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - Hiking: hike, hiking, trail, mountain, backpacking, trekking
