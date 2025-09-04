@@ -77,7 +77,6 @@ export default function ProfileView({
     const isExpanded = isSectionExpanded(section.id as 'personalInfo' | 'goals' | 'trainingStatus' | 'availability' | 'equipment' | 'preferences' | 'metrics' | 'constraints' | 'activityData');
     const onToggle = () => toggleSection(section.id as 'personalInfo' | 'goals' | 'trainingStatus' | 'availability' | 'equipment' | 'preferences' | 'metrics' | 'constraints' | 'activityData');
     const commonProps = {
-      key: section.id,
       isExpanded,
       onToggle,
       dataCount: section.dataCount
@@ -86,23 +85,23 @@ export default function ProfileView({
     const sectionComponent = (() => {
       switch (section.id) {
         case 'personalInfo':
-          return <PersonalInfoSection userData={processedUserData} {...commonProps} />;
+          return <PersonalInfoSection key={section.id} userData={processedUserData} {...commonProps} />;
         case 'goals':
-          return <GoalsSection profileData={processedProfileData} {...commonProps} />;
+          return <GoalsSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'trainingStatus':
-          return <TrainingStatusSection profileData={processedProfileData} {...commonProps} />;
+          return <TrainingStatusSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'availability':
-          return <AvailabilitySection profileData={processedProfileData} {...commonProps} />;
+          return <AvailabilitySection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'equipment':
-          return <EquipmentSection profileData={processedProfileData} {...commonProps} />;
+          return <EquipmentSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'preferences':
-          return <PreferencesSection profileData={processedProfileData} {...commonProps} />;
+          return <PreferencesSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'metrics':
-          return <MetricsSection profileData={processedProfileData} {...commonProps} />;
+          return <MetricsSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'constraints':
-          return <ConstraintsSection profileData={processedProfileData} {...commonProps} />;
+          return <ConstraintsSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'activityData':
-          return <ActivityDataSection profileData={processedProfileData} {...commonProps} />;
+          return <ActivityDataSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         default:
           return null;
       }
