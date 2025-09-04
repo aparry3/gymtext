@@ -51,7 +51,7 @@ export function createMockLLM() {
     batch: mockBatch,
     stream: mockStream,
     temperature: 0.7,
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     // Add other properties that might be accessed
     _llmType: () => 'google-genai',
     _modelType: () => 'gemini-2.0-flash',

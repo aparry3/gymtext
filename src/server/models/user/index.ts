@@ -1,81 +1,17 @@
+// Re-export all types and schemas from schemas.ts
+export * from './schemas';
+
+// Import what we need for the UserModel class
 import { UserRepository } from '@/server/repositories/userRepository';
-import type { Users } from '../_types';
-import { Insertable, Selectable, Updateable } from 'kysely';
+import type { User, NewUser, FitnessProfile } from './schemas';
 
-export type User = Selectable<Users>;
-export type NewUser = Insertable<Users>;
-export type UserUpdate = Updateable<Users>;
-
-// FitnessProfile is now stored as JSONB in the users table
-export interface FitnessProfile {
-  version?: number;
-  userId?: string;
-    
-  // New comprehensive profile fields
-  primaryGoal?: string;
-  specificObjective?: string;
-  eventDate?: string;
-  timelineWeeks?: number;
-  experienceLevel?: string;
-  
-  currentActivity?: string;
-  currentTraining?: {
-    programName?: string;
-    weeksCompleted?: number;
-    focus?: string;
-    notes?: string;
-  };
-  
-  availability?: {
-    daysPerWeek?: number;
-    minutesPerSession?: number;
-    preferredTimes?: string;
-    travelPattern?: string;
-    notes?: string;
-  };
-  
-  equipment?: {
-    access?: string;
-    location?: string;
-    items?: string[];
-    constraints?: string[];
-  };
-  
-  preferences?: {
-    workoutStyle?: string;
-    enjoyedExercises?: string[];
-    dislikedExercises?: string[];
-    coachingTone?: 'friendly' | 'tough-love' | 'clinical' | 'cheerleader';
-    musicOrVibe?: string;
-  };
-  
-  metrics?: {
-    heightCm?: number;
-    bodyweight?: { value: number; unit: 'lbs' | 'kg' };
-    bodyFatPercent?: number;
-    prLifts?: Record<string, { weight: number; unit: 'lbs' | 'kg'; reps?: number; date?: string }>;
-  };
-  
-  constraints?: Array<{
-    id: string;
-    type: 'injury' | 'equipment' | 'schedule' | 'mobility' | 'preference' | 'other';
-    label: string;
-    severity?: 'mild' | 'moderate' | 'severe';
-    affectedAreas?: string[];
-    modifications?: string;
-    startDate?: string;
-    endDate?: string;
-    status: 'active' | 'resolved';
-  }>;
-}
+export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
 export interface UserWithProfile extends User {
   parsedProfile: FitnessProfile | null;
   info: string[];
 }
-
-export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
-export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
 export class UserModel {
   private userRepository: UserRepository;

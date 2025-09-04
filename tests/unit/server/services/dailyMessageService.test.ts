@@ -32,7 +32,7 @@ vi.mock('@langchain/google-genai', () => ({
   ChatGoogleGenerativeAI: vi.fn().mockImplementation(() => ({
     invoke: vi.fn(),
     temperature: 0.3,
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
   })),
 }));
 

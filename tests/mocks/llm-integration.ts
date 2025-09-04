@@ -77,7 +77,7 @@ export class PredictableLLM {
       batch: this.mockBatch,
       stream: this.mockStream,
       temperature: 0.7,
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       _llmType: () => 'google-genai',
       _modelType: () => 'gemini-2.0-flash',
     };

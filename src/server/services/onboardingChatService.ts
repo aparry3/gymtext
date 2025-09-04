@@ -1,4 +1,5 @@
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import type { FitnessProfile } from '@/server/models/user/schemas';
+import type { User } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
@@ -18,6 +19,7 @@ export interface OnboardingMessageInput {
   currentUser?: Partial<User>;
   currentProfile?: Partial<FitnessProfile>;
   saveWhenReady?: boolean; // Trigger DB save when requirements met
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>; // Recent conversation context
 }
 
 export interface OnboardingChatServiceDeps {
@@ -38,7 +40,7 @@ export class OnboardingChatService {
   }
 
   async *streamMessage(input: OnboardingMessageInput): AsyncGenerator<OnboardingEvent> {
-    const { message, currentUser = {}, currentProfile = {}, saveWhenReady = false } = input;
+    const { message, currentUser = {}, currentProfile = {}, saveWhenReady = false, conversationHistory = [] } = input;
 
     // Track the state for this conversation turn
     let updatedUser = { ...currentUser };
@@ -46,13 +48,33 @@ export class OnboardingChatService {
     let userWasUpdated = false;
     let profileWasUpdated = false;
 
+    // Prepare recent conversation context for both profile extraction and chat generation
+    // Take the last few messages (alternating user/assistant) for context
+    const recentMessages: string[] = [];
+    const maxContextMessages = 6; // Last 3 exchanges (user + assistant pairs)
+    
+    if (conversationHistory.length > 0) {
+      // Take the most recent messages, focusing on the assistant's last response and user's current message
+      const contextHistory = conversationHistory.slice(-maxContextMessages);
+      
+      for (const msg of contextHistory) {
+        if (msg.role === 'assistant' && msg.content.trim()) {
+          recentMessages.push(`Assistant: ${msg.content.trim()}`);
+        } else if (msg.role === 'user' && msg.content.trim()) {
+          recentMessages.push(`User: ${msg.content.trim()}`);
+        }
+      }
+    }
+
     // Extract profile updates from message
     try {
+
       const profileResult = await this.userProfileAgent({
         userId: 'session-user',
         message,
         currentProfile: updatedProfile,
         currentUser: updatedUser,
+        recentMessages,
         config: { 
           temperature: 0.2, 
           verbose: process.env.NODE_ENV === 'development'
@@ -124,8 +146,12 @@ export class OnboardingChatService {
         message,
         profile: updatedProfile,
         wasProfileUpdated: userWasUpdated || profileWasUpdated,
-        conversationHistory: [], // No history for now - could be passed from frontend
-        context: { onboarding: true, pendingRequiredFields: pendingRequired },
+        conversationHistory: [], // Use empty array since we'll pass recentMessages via context
+        context: { 
+          onboarding: true, 
+          pendingRequiredFields: pendingRequired,
+          recentMessages: recentMessages.join('\n') // Pass recent conversation context
+        },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
       });
@@ -152,7 +178,9 @@ export class OnboardingChatService {
     profile: Partial<FitnessProfile>,
     user: Partial<User>
   ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
-    const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];
+    // Focus on essentials needed to create user account and start profile building
+    // Additional contextual completeness is handled by computeContextualGaps() in the prompts
+    const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];    
     
     if (!user.name) missing.push('name');
     if (!user.email) missing.push('email');

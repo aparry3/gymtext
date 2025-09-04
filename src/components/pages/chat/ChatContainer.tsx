@@ -77,7 +77,8 @@ export default function ChatContainer() {
         message: trimmed,
         currentUser,
         currentProfile,
-        saveWhenReady: false // Only true when user explicitly confirms
+        saveWhenReady: false, // Only true when user explicitly confirms
+        conversationHistory: messages // Send the recent conversation history for better context
       }),
     });
     if (!response.ok || !response.body) return;
@@ -158,7 +159,7 @@ export default function ChatContainer() {
     setTimeout(() => {
       inputRef.current?.focus();
     }, 0);
-  }, [input, isExpanded, currentUser, currentProfile]);
+  }, [input, isExpanded, currentUser, currentProfile, messages]);
 
   // Handle final save when user confirms profile
   const handleSaveProfile = useCallback(async () => {
@@ -173,7 +174,8 @@ export default function ChatContainer() {
         message: 'Please save my profile and create my account.',
         currentUser,
         currentProfile,
-        saveWhenReady: true
+        saveWhenReady: true,
+        conversationHistory: messages
       }),
     });
     
@@ -231,7 +233,7 @@ export default function ChatContainer() {
         inputRef.current?.focus();
       }, 0);
     }
-  }, [canSave, currentUser, currentProfile, createdUser]);
+  }, [canSave, currentUser, currentProfile, createdUser, messages]);
 
   // Hero state
   if (!isExpanded && !hasMessages) {

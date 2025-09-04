@@ -135,7 +135,7 @@ export class ChatService {
         conversationHistory,
         context: context ? (context as unknown as Record<string, unknown>) : {},
         config: {
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash',
           temperature: 0.7,
           verbose: process.env.NODE_ENV === 'development'
         }

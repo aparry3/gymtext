@@ -1,4 +1,4 @@
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import type { FitnessProfile, User } from '@/server/models/user/schemas';
 
 /**
  * Build the system prompt for the UserProfileAgent
@@ -38,11 +38,25 @@ YOUR RESPONSIBILITIES:
 3. Assess your confidence level in the information provided
 4. Call the appropriate tool ONLY when appropriate
 
-⚡️ PRIORITY: GOALS
+⚡️ PRIORITY: GOALS & ACTIVITY-SPECIFIC DATA
 - The most important updates are the user's fitness goals and objectives.
-- Always extract goals when they are stated, even if phrased indirectly (e.g. "help me get in shape for ski season" → primaryGoal: "endurance/conditioning", specificObjective: "ski season cardio and leg strength").
+- Always extract goals when they are stated, even if phrased indirectly (e.g. "help me get in shape for ski season" → primaryGoal: "endurance", specificObjective: "ski season preparation").
 - You may infer light structure from the phrasing of goals/objectives (e.g. "summer wedding" → eventDate in the future, "better cardio" → endurance goal).
 - Goals should be updated more aggressively than other fields.
+
+🎯 ACTIVITY-SPECIFIC DATA EXTRACTION:
+- When users mention specific activities, ALWAYS populate the activityData field with structured information
+- Detect activity type from context: hiking, running, strength, cycling, skiing, or "other"
+- Extract activity-specific experience, metrics, equipment, and goals
+- This is critical for providing relevant, activity-specific conversations and training programs
+
+ACTIVITY DETECTION EXAMPLES:
+- "help me get in shape for ski season" → activityData: {type: 'skiing', goals: ['ski season preparation']}
+- "training for Grand Canyon hike" → activityData: {type: 'hiking', goals: ['Grand Canyon rim-to-rim'], experience: 'training for challenging hike'}
+- "I run marathons" → activityData: {type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}
+- "started lifting at the gym" → activityData: {type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}
+- "cycling 50 miles a week" → activityData: {type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}
+- "rock climbing indoors" → activityData: {type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}
 
 CONFIDENCE SCORING GUIDELINES:
 - 0.9–1.0: Direct, explicit statements about current situation.
@@ -58,11 +72,30 @@ CONFIDENCE SCORING GUIDELINES:
 
 INFORMATION TO EXTRACT (fitness > contact):
 
-1. Goals & Objectives (highest priority):
-   - primaryGoal (strength, fat loss, muscle gain, endurance, general health, etc.)
-   - specificObjective (e.g. "get in shape for ski season", "improve cardio and leg strength")
+1. Goals & Objectives + Activity Data (highest priority):
+   - primaryGoal (strength, fat-loss, muscle-gain, endurance, athletic-performance, general-fitness, rehabilitation, competition-prep)
+   - specificObjective (e.g. "ski season preparation", "Grand Canyon rim-to-rim hike")
    - eventDate or timeline
    - notes (if relevant)
+   
+   - activityData: When users mention specific activities, structure as:
+     {
+       type: 'hiking' | 'running' | 'strength' | 'cycling' | 'skiing' | 'other',
+       experienceLevel: string (activity-specific experience),
+       keyMetrics: { 
+         // Activity-specific metrics based on type:
+         // hiking: longestHike, elevationComfort, packWeight, weeklyHikes
+         // running: weeklyMileage, longestRun, averagePace, racesCompleted  
+         // strength: benchPress, squat, deadlift, trainingDays
+         // cycling: weeklyHours, longestRide, avgSpeed, terrainTypes
+         // skiing: daysPerSeason, terrainComfort, verticalPerDay
+         // other: flexible Record<string, string | number>
+       },
+       equipment: string[],
+       goals: string[], 
+       experience: string,
+       lastUpdated: Date
+     }
 
 2. Training Schedule
    - Days per week

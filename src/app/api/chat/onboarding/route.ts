@@ -13,11 +13,12 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, currentUser, currentProfile, saveWhenReady } = await req.json().catch(() => ({})) as Partial<{
+    const { message, currentUser, currentProfile, saveWhenReady, conversationHistory } = await req.json().catch(() => ({})) as Partial<{
       message: string;
       currentUser: Partial<User>;
       currentProfile: Partial<FitnessProfile>;
       saveWhenReady: boolean;
+      conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
     }>;
 
     if (!message || typeof message !== 'string') {
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
           currentUser: currentUser || {},
           currentProfile: currentProfile || {},
           saveWhenReady: saveWhenReady || false,
+          conversationHistory: conversationHistory || [],
         })) {
           await writer.write(`event: ${evt.type}\n` + `data: ${JSON.stringify(evt.data)}\n\n`);
         }

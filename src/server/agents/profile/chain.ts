@@ -3,8 +3,8 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { profilePatchTool } from '@/server/agents/tools/profilePatchTool';
 import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
-import { buildUserProfileSystemPrompt } from './prompts';
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
+import type { FitnessProfile, User } from '@/server/models/user/schemas';
 
 /**
  * Result type returned by the UserProfileAgent
@@ -71,12 +71,14 @@ export const userProfileAgent = async ({
   currentProfile,
   currentUser = {},
   config = {},
+  recentMessages = [],
 }: {
   userId: string;
   message: string;
   currentProfile: Partial<FitnessProfile>;
   currentUser?: Partial<User>;
   config?: ProfileAgentConfig;
+  recentMessages?: string[];
 }): Promise<ProfileAgentResult> => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _userId = userId; // Suppress unused variable warning
@@ -87,8 +89,10 @@ export const userProfileAgent = async ({
     // Initialize the model with tools
     const model = initializeModel(config);
     
-    // Build the system prompt
-    const systemPrompt = buildUserProfileSystemPrompt(currentProfile, currentUser);
+    // Build the system prompt with conversation context if available
+    const systemPrompt = recentMessages.length > 0 
+      ? buildContextualProfilePrompt(currentProfile as FitnessProfile, recentMessages, currentUser)
+      : buildUserProfileSystemPrompt(currentProfile, currentUser);
     
     // Create the message array
     const messages = [
@@ -263,12 +267,14 @@ export const batchProfileExtraction = async ({
   currentProfile,
   currentUser = {},
   config = {},
+  recentMessages = [],
 }: {
   userId: string;
   messages: string[];
   currentProfile: Partial<FitnessProfile>;
   currentUser?: Partial<User>;
   config?: ProfileAgentConfig;
+  recentMessages?: string[];
 }): Promise<ProfileAgentResult> => {
   let profile = currentProfile;
   let user = currentUser;
@@ -281,7 +287,8 @@ export const batchProfileExtraction = async ({
       message,
       currentProfile: profile,
       currentUser: user,
-      config
+      config,
+      recentMessages
     });
     
     if (result.wasUpdated) {
