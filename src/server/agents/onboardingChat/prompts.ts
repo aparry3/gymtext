@@ -24,6 +24,34 @@ function buildRichProfileSummary(profile: FitnessProfile | null): string {
     sections.push(goalSection);
   }
   
+  // Activity-Specific Context (NEW - high priority)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activityData = (profile as any).activityData;
+  if (activityData && activityData.type) {
+    let activitySection = `Activity Focus: ${activityData.type.charAt(0).toUpperCase() + activityData.type.slice(1)}`;
+    
+    if (activityData.experienceLevel) {
+      activitySection += ` (${activityData.experienceLevel} level)`;
+    }
+    
+    if (activityData.goals && activityData.goals.length > 0) {
+      activitySection += ` - Goals: ${activityData.goals.join(', ')}`;
+    }
+    
+    if (activityData.keyMetrics && Object.keys(activityData.keyMetrics).length > 0) {
+      const metrics = Object.entries(activityData.keyMetrics).map(([key, value]) => 
+        `${key}: ${value}`
+      ).join(', ');
+      activitySection += ` - Metrics: ${metrics}`;
+    }
+    
+    if (activityData.equipment && activityData.equipment.length > 0) {
+      activitySection += ` - Equipment: ${activityData.equipment.join(', ')}`;
+    }
+    
+    sections.push(activitySection);
+  }
+  
   // Current Training Context
   if (profile.currentActivity || profile.currentTraining?.programName) {
     let trainingSection = 'Current Training: ';
