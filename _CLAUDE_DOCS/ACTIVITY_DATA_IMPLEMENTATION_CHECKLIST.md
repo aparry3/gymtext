@@ -40,11 +40,11 @@
 - [x] Test invalid activity structure (should fail) ✅
 - [x] **All 9 tests pass** including mixed activities, optional fields, and validation
 
-## Phase 2: Profile Patch Tool Enhancement
+## Phase 2: Profile Patch Tool Enhancement ✅
 
-### 2.1 Add Activity Data Merge Helper
-- [ ] **File**: `src/server/agents/tools/profilePatchTool.ts`
-- [ ] **Add** before the main tool function:
+### 2.1 Add Activity Data Merge Helper ✅
+- [x] **File**: `src/server/agents/tools/profilePatchTool.ts`
+- [x] **Add** before the main tool function:
   ```typescript
   import type { ActivityData } from '@/server/models/user/schemas';
 
@@ -83,10 +83,10 @@
   }
   ```
 
-### 2.2 Update Profile Patch Logic
-- [ ] **File**: `src/server/agents/tools/profilePatchTool.ts`
-- [ ] **Location**: Inside the tool function, before line 30
-- [ ] **Add** special handling for activityData:
+### 2.2 Update Profile Patch Logic ✅
+- [x] **File**: `src/server/agents/tools/profilePatchTool.ts`
+- [x] **Location**: Inside the tool function, around line 80-90
+- [x] **Add** special handling for activityData:
   ```typescript
   // Handle activityData array merging specially
   if (updates.activityData && !Array.isArray(updates.activityData)) {
@@ -117,10 +117,10 @@
   };
   ```
 
-### 2.3 Update Field Change Tracking
-- [ ] **File**: `src/server/agents/tools/profilePatchTool.ts`
-- [ ] **Location**: Around line 36-38
-- [ ] **Update** to handle activityData array changes:
+### 2.3 Update Field Change Tracking ✅
+- [x] **File**: `src/server/agents/tools/profilePatchTool.ts`
+- [x] **Location**: Around line 113-116  
+- [x] **Update** to handle activityData array changes:
   ```typescript
   // Get list of fields that were updated
   const fieldsUpdated = Object.keys(updates).filter(key => 
@@ -133,13 +133,18 @@
   }
   ```
 
-### 2.4 Test Profile Patch Tool
-- [ ] Create unit tests for `mergeActivityData` function
-- [ ] Test: Empty current + new activity → [new activity]
-- [ ] Test: Existing activity + same type → merged activity
-- [ ] Test: Existing activity + different type → [existing, new]
-- [ ] Test: Multiple existing + multiple new → properly merged
-- [ ] Test: Backwards compatibility with single activity object
+### 2.4 Test Profile Patch Tool ✅
+- [x] Create comprehensive unit tests: `tests/unit/agents/tools/profilePatchTool.test.ts`
+- [x] Test: Empty profile + new activity → [new activity] ✅
+- [x] Test: Existing activity + same type → merged activity with preserved data ✅
+- [x] Test: Existing activity + different type → [existing, new] ✅
+- [x] Test: Multiple activities in single update → properly merged ✅
+- [x] Test: Duplicate goals/equipment removal ✅
+- [x] Test: Confidence threshold validation ✅
+- [x] Test: Field change tracking ✅
+- [x] Test: Error handling and edge cases ✅
+- [x] **12 tests pass** with comprehensive coverage of merging logic
+- [x] **ESLint and TypeScript compilation pass** ✅
 
 ## Phase 3: Agent Prompt Updates
 

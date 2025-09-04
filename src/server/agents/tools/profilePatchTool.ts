@@ -1,7 +1,72 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { FitnessProfileSchema } from '@/server/models/user/schemas';
-import type { FitnessProfile } from '@/server/models/user/schemas';
+import type { FitnessProfile, ActivityData } from '@/server/models/user/schemas';
+
+// Use a more flexible type for activity merging to avoid strict union type issues
+type AnyActivity = {
+  type: string;
+  experienceLevel?: string;
+  keyMetrics?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+  [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any -- Allow other activity-specific fields
+};
+
+/**
+ * Merge activity data arrays, preserving existing activities and updating/adding new ones
+ */
+function mergeActivityData(
+  current: ActivityData = [], 
+  newActivity: AnyActivity
+): ActivityData {
+  // Use any typing to avoid strict union type conflicts
+  let currentArray: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+  
+  if (!Array.isArray(current)) {
+    // Handle backwards compatibility - convert single activity to array
+    currentArray = current ? [current] : [];
+  } else {
+    currentArray = current as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  }
+
+  // Find existing activity of same type
+  const existingIndex = currentArray.findIndex(
+    (activity: any) => activity.type === newActivity.type // eslint-disable-line @typescript-eslint/no-explicit-any
+  );
+  
+  if (existingIndex >= 0) {
+    // Update existing activity (merge metrics, goals, etc.)
+    const existing = currentArray[existingIndex];
+    const updated = {
+      ...existing,
+      ...newActivity,
+      // Merge arrays instead of overwriting
+      equipment: [
+        ...(existing.equipment || []), 
+        ...(newActivity.equipment || [])
+      ].filter((item: string, index: number, arr: string[]) => arr.indexOf(item) === index), // Remove duplicates
+      goals: [
+        ...(existing.goals || []), 
+        ...(newActivity.goals || [])
+      ].filter((item: string, index: number, arr: string[]) => arr.indexOf(item) === index), // Remove duplicates
+      keyMetrics: { 
+        ...(existing.keyMetrics || {}), 
+        ...(newActivity.keyMetrics || {}) 
+      },
+      lastUpdated: new Date()
+    };
+    
+    const result = [...currentArray];
+    result[existingIndex] = updated;
+    return result as ActivityData;
+  } else {
+    // Add new activity type
+    return [...currentArray, { ...newActivity, lastUpdated: new Date() }] as ActivityData;
+  }
+}
 
 /**
  * Tool for updating user fitness profiles based on conversation context
@@ -26,16 +91,43 @@ export const profilePatchTool = tool(
         };
       }
 
+      // Handle activityData array merging specially
+      let mergedActivityData = currentProfile.activityData;
+      if (updates.activityData) {
+        if (!Array.isArray(updates.activityData)) {
+          // Convert single activity to array format for consistency
+          updates.activityData = [updates.activityData] as ActivityData;
+        }
+
+        const currentActivities = currentProfile.activityData || [];
+        
+        // Merge each new activity
+        mergedActivityData = (updates.activityData || []).reduce(
+          (acc: ActivityData, newActivity: any) => mergeActivityData(acc, newActivity as AnyActivity), // eslint-disable-line @typescript-eslint/no-explicit-any
+          currentActivities
+        );
+        
+        // Remove from updates to prevent simple overwrite
+        delete updates.activityData;
+      }
+
       // Merge updates into current profile
       const updatedProfile: Partial<FitnessProfile> = {
         ...currentProfile,
-        ...updates
+        ...updates,
+        // Apply merged activity data
+        ...(mergedActivityData && { activityData: mergedActivityData })
       };
 
       // Get list of fields that were updated
       const fieldsUpdated = Object.keys(updates).filter(key => 
         updates[key as keyof FitnessProfile] !== undefined
       );
+      
+      // Add activityData to fieldsUpdated if it was merged
+      if (mergedActivityData !== currentProfile.activityData) {
+        fieldsUpdated.push('activityData');
+      }
 
       console.log(`Profile update applied:`, {
         confidence,
