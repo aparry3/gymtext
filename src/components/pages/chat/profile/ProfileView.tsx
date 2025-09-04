@@ -1,25 +1,36 @@
 "use client";
-import { useMemo } from 'react';
+import { lazy, Suspense } from 'react';
 import type { User, FitnessProfile } from '@/server/models/user';
-import { 
-  processUserData, 
-  processProfileData, 
-  calculateProfileCompleteness 
-} from '@/utils/profile/profileProcessors';
-import { 
-  determineSectionOrder, 
-  shouldShowSection 
-} from '@/utils/profile/sectionVisibility';
+import { useProfileData } from './hooks/useProfileData';
+import { useProfileSections } from './hooks/useProfileSections';
 import PersonalInfoSection from './sections/PersonalInfoSection';
 import GoalsSection from './sections/GoalsSection';
-import TrainingStatusSection from './sections/TrainingStatusSection';
-import AvailabilitySection from './sections/AvailabilitySection';
-import EquipmentSection from './sections/EquipmentSection';
-import PreferencesSection from './sections/PreferencesSection';
-import MetricsSection from './sections/MetricsSection';
-import ConstraintsSection from './sections/ConstraintsSection';
-import ActivityDataSection from './sections/ActivityDataSection';
 import ProgressBar from './components/ProgressBar';
+
+// Lazy load less critical sections for better performance
+const TrainingStatusSection = lazy(() => import('./sections/TrainingStatusSection'));
+const AvailabilitySection = lazy(() => import('./sections/AvailabilitySection'));
+const EquipmentSection = lazy(() => import('./sections/EquipmentSection'));
+const PreferencesSection = lazy(() => import('./sections/PreferencesSection'));
+const MetricsSection = lazy(() => import('./sections/MetricsSection'));
+const ConstraintsSection = lazy(() => import('./sections/ConstraintsSection'));
+const ActivityDataSection = lazy(() => import('./sections/ActivityDataSection'));
+
+// Loading component for lazy sections
+const SectionSkeleton = () => (
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
+    <div className="p-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-5 w-5 bg-gray-300 rounded"></div>
+        <div className="h-4 w-24 bg-gray-300 rounded"></div>
+      </div>
+      <div className="space-y-2">
+        <div className="h-3 w-3/4 bg-gray-300 rounded"></div>
+        <div className="h-3 w-1/2 bg-gray-300 rounded"></div>
+      </div>
+    </div>
+  </div>
+);
 
 interface ProfileViewProps {
   currentUser: Partial<User>;
@@ -40,20 +51,74 @@ export default function ProfileView({
   isStreaming = false,
   className = '',
 }: ProfileViewProps) {
-  const processedUserData = useMemo(() => processUserData(currentUser), [currentUser]);
-  const processedProfileData = useMemo(() => processProfileData(currentProfile), [currentProfile]);
-  
-  const completeness = useMemo(() => 
-    calculateProfileCompleteness(processedUserData, processedProfileData),
-    [processedUserData, processedProfileData]
-  );
-  
-  const sectionOrder = useMemo(() => 
-    determineSectionOrder(processedUserData, processedProfileData),
-    [processedUserData, processedProfileData]
-  );
+  // Use custom hooks for better performance and state management
+  const {
+    processedUserData,
+    processedProfileData,
+    completeness,
+    hasAnyData,
+    isEmpty,
+    isLoading
+  } = useProfileData({ currentUser, currentProfile });
 
-  const hasAnyData = sectionOrder.some(section => section.hasData);
+  const {
+    visibleSections,
+    isSectionExpanded,
+    toggleSection,
+    sectionsWithData
+  } = useProfileSections({ 
+    processedUserData, 
+    processedProfileData,
+    defaultExpandedSections: ['personalInfo', 'goals']
+  });
+
+  // Render section with proper lazy loading and error boundaries
+  const renderSection = (section: { id: string; dataCount: number }) => {
+    const isExpanded = isSectionExpanded(section.id as 'personalInfo' | 'goals' | 'trainingStatus' | 'availability' | 'equipment' | 'preferences' | 'metrics' | 'constraints' | 'activityData');
+    const onToggle = () => toggleSection(section.id as 'personalInfo' | 'goals' | 'trainingStatus' | 'availability' | 'equipment' | 'preferences' | 'metrics' | 'constraints' | 'activityData');
+    const commonProps = {
+      key: section.id,
+      isExpanded,
+      onToggle,
+      dataCount: section.dataCount
+    };
+
+    const sectionComponent = (() => {
+      switch (section.id) {
+        case 'personalInfo':
+          return <PersonalInfoSection userData={processedUserData} {...commonProps} />;
+        case 'goals':
+          return <GoalsSection profileData={processedProfileData} {...commonProps} />;
+        case 'trainingStatus':
+          return <TrainingStatusSection profileData={processedProfileData} {...commonProps} />;
+        case 'availability':
+          return <AvailabilitySection profileData={processedProfileData} {...commonProps} />;
+        case 'equipment':
+          return <EquipmentSection profileData={processedProfileData} {...commonProps} />;
+        case 'preferences':
+          return <PreferencesSection profileData={processedProfileData} {...commonProps} />;
+        case 'metrics':
+          return <MetricsSection profileData={processedProfileData} {...commonProps} />;
+        case 'constraints':
+          return <ConstraintsSection profileData={processedProfileData} {...commonProps} />;
+        case 'activityData':
+          return <ActivityDataSection profileData={processedProfileData} {...commonProps} />;
+        default:
+          return null;
+      }
+    })();
+
+    // Wrap lazy components in Suspense
+    if (['trainingStatus', 'availability', 'equipment', 'preferences', 'metrics', 'constraints', 'activityData'].includes(section.id)) {
+      return (
+        <Suspense key={section.id} fallback={<SectionSkeleton />}>
+          {sectionComponent}
+        </Suspense>
+      );
+    }
+
+    return sectionComponent;
+  };
 
   return (
     <div className={`h-full flex flex-col min-h-0 ${className}`}>
@@ -96,7 +161,16 @@ export default function ProfileView({
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-6">
-          {!hasAnyData ? (
+          {isLoading && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center gap-3">
+                <div className="animate-spin h-5 w-5 border-2 border-emerald-600 border-t-transparent rounded-full"></div>
+                <span className="text-sm text-gray-600">Building your profile...</span>
+              </div>
+            </div>
+          )}
+          
+          {isEmpty && !isLoading ? (
             <div className="text-center py-12">
               <div className="h-12 w-12 mx-auto mb-4 text-gray-300">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,92 +184,25 @@ export default function ProfileView({
                 Share your fitness goals and preferences in the chat, and we&apos;ll build your personalized profile automatically.
               </p>
             </div>
-          ) : (
+          ) : hasAnyData && !isLoading ? (
             <div className="space-y-4">
-              {sectionOrder.map((section) => {
-                if (!shouldShowSection(section.id, processedUserData, processedProfileData)) {
-                  return null;
-                }
-
-                switch (section.id) {
-                  case 'personalInfo':
-                    return (
-                      <PersonalInfoSection
-                        key={section.id}
-                        userData={processedUserData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'goals':
-                    return (
-                      <GoalsSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'trainingStatus':
-                    return (
-                      <TrainingStatusSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'availability':
-                    return (
-                      <AvailabilitySection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'equipment':
-                    return (
-                      <EquipmentSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'preferences':
-                    return (
-                      <PreferencesSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'metrics':
-                    return (
-                      <MetricsSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'constraints':
-                    return (
-                      <ConstraintsSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  case 'activityData':
-                    return (
-                      <ActivityDataSection
-                        key={section.id}
-                        profileData={processedProfileData}
-                        dataCount={section.dataCount}
-                      />
-                    );
-                  default:
-                    return null;
-                }
-              })}
+              {visibleSections.map(renderSection)}
+              
+              {/* Show data quality summary if we have some sections */}
+              {sectionsWithData.length > 0 && (
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">
+                      Profile sections: {sectionsWithData.length} of {visibleSections.length} with data
+                    </span>
+                    <span className="text-emerald-600 font-medium">
+                      {completeness}% complete
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          ) : null}
 
           {/* Missing fields alert */}
           {missingFields.length > 0 && (

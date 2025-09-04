@@ -86,50 +86,80 @@ export interface ProcessedProfileData {
   activityData: Record<string, unknown> | null;
 }
 
-export function processUserData(user: Partial<User>): ProcessedUserData {
+export function processUserData(user: Partial<User> | null | undefined): ProcessedUserData {
+  if (!user || typeof user !== 'object') {
+    return {
+      name: null,
+      email: null,
+      phoneNumber: null,
+      timezone: null,
+      preferredSendHour: null,
+      createdAt: null,
+      stripeCustomerId: null,
+    };
+  }
+
   return {
-    name: user.name || null,
-    email: user.email || null,
-    phoneNumber: user.phoneNumber || null,
-    timezone: user.timezone || null,
-    preferredSendHour: user.preferredSendHour || null,
-    createdAt: user.createdAt || null,
-    stripeCustomerId: user.stripeCustomerId || null,
+    name: typeof user.name === 'string' && user.name.trim() ? user.name.trim() : null,
+    email: typeof user.email === 'string' && user.email.trim() ? user.email.trim() : null,
+    phoneNumber: typeof user.phoneNumber === 'string' && user.phoneNumber.trim() ? user.phoneNumber.trim() : null,
+    timezone: typeof user.timezone === 'string' && user.timezone.trim() ? user.timezone.trim() : null,
+    preferredSendHour: typeof user.preferredSendHour === 'number' && user.preferredSendHour >= 0 && user.preferredSendHour <= 23 ? user.preferredSendHour : null,
+    createdAt: user.createdAt instanceof Date ? user.createdAt : null,
+    stripeCustomerId: typeof user.stripeCustomerId === 'string' && user.stripeCustomerId.trim() ? user.stripeCustomerId.trim() : null,
   };
 }
 
-export function processProfileData(profile: Partial<FitnessProfile>): ProcessedProfileData {
+export function processProfileData(profile: Partial<FitnessProfile> | null | undefined): ProcessedProfileData {
+  if (!profile || typeof profile !== 'object') {
+    return {
+      primaryGoal: null,
+      specificObjective: null,
+      eventDate: null,
+      timelineWeeks: null,
+      experienceLevel: null,
+      currentActivity: null,
+      currentTraining: null,
+      availability: null,
+      equipment: null,
+      preferences: null,
+      metrics: null,
+      constraints: null,
+      activityData: null,
+    };
+  }
+
+  // Safe object validation helper
+  const isValidObject = (obj: unknown): obj is Record<string, unknown> => 
+    obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+
+  // Safe array validation helper  
+  const isValidArray = (arr: unknown): arr is unknown[] =>
+    Array.isArray(arr) && arr.length > 0;
+
   return {
-    // Goals
-    primaryGoal: profile.primaryGoal || null,
-    specificObjective: profile.specificObjective || null,
-    eventDate: profile.eventDate || null,
-    timelineWeeks: profile.timelineWeeks || null,
+    // Goals with validation
+    primaryGoal: typeof profile.primaryGoal === 'string' && profile.primaryGoal.trim() ? profile.primaryGoal.trim() : null,
+    specificObjective: typeof profile.specificObjective === 'string' && profile.specificObjective.trim() ? profile.specificObjective.trim() : null,
+    eventDate: typeof profile.eventDate === 'string' && profile.eventDate.trim() ? profile.eventDate.trim() : null,
+    timelineWeeks: typeof profile.timelineWeeks === 'number' && profile.timelineWeeks > 0 ? profile.timelineWeeks : null,
     
-    // Experience
-    experienceLevel: profile.experienceLevel || null,
-    currentActivity: profile.currentActivity || null,
+    // Experience with validation
+    experienceLevel: typeof profile.experienceLevel === 'string' && profile.experienceLevel.trim() ? profile.experienceLevel.trim() : null,
+    currentActivity: typeof profile.currentActivity === 'string' && profile.currentActivity.trim() ? profile.currentActivity.trim() : null,
     
-    // Current Training
-    currentTraining: profile.currentTraining || null,
+    // Nested objects with validation
+    currentTraining: isValidObject(profile.currentTraining) ? profile.currentTraining as ProcessedProfileData['currentTraining'] : null,
+    availability: isValidObject(profile.availability) ? profile.availability as ProcessedProfileData['availability'] : null,
+    equipment: isValidObject(profile.equipment) ? profile.equipment as ProcessedProfileData['equipment'] : null,
+    preferences: isValidObject(profile.preferences) ? profile.preferences as ProcessedProfileData['preferences'] : null,
+    metrics: isValidObject(profile.metrics) ? profile.metrics as ProcessedProfileData['metrics'] : null,
     
-    // Availability
-    availability: profile.availability || null,
+    // Arrays with validation
+    constraints: isValidArray(profile.constraints) ? profile.constraints as ProcessedProfileData['constraints'] : null,
     
-    // Equipment
-    equipment: profile.equipment || null,
-    
-    // Preferences
-    preferences: profile.preferences || null,
-    
-    // Metrics
-    metrics: profile.metrics || null,
-    
-    // Constraints
-    constraints: profile.constraints || null,
-    
-    // Activity Data
-    activityData: profile.activityData || null,
+    // Activity data with validation
+    activityData: isValidObject(profile.activityData) ? profile.activityData as Record<string, unknown> : null,
   };
 }
 
