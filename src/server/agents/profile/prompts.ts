@@ -61,15 +61,33 @@ YOUR RESPONSIBILITIES:
 - Extract activity-specific experience, metrics, equipment, and goals
 - This is the HIGHEST PRIORITY extraction after goals - never skip activity data when mentioned
 
-MANDATORY ACTIVITY DETECTION EXAMPLES (UPDATE REQUIRED):
-- "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activityData: {type: 'skiing', goals: ['ski season preparation']}
-- "training for Grand Canyon hike" → MUST extract primaryGoal: "endurance" + activityData: {type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}
-- "want to run my first marathon" → MUST extract primaryGoal: "endurance" + activityData: {type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}
-- "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activityData: {type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}
-- "I run marathons" → MUST extract primaryGoal: "endurance" + activityData: {type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}
-- "started lifting at the gym" → MUST extract primaryGoal: "strength" + activityData: {type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}
-- "cycling 50 miles a week" → MUST extract primaryGoal: "endurance" + activityData: {type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}
-- "rock climbing indoors" → MUST extract primaryGoal: "athletic-performance" + activityData: {type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}
+MULTI-ACTIVITY DETECTION EXAMPLES (BOTH ACTIVITIES REQUIRED):
+- "I run and also do strength training" → MUST extract BOTH:
+  * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['cardio fitness']}, {type: 'strength', goals: ['cross-training']}]
+- "Training for a marathon but also hitting the gym" → MUST extract BOTH:
+  * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['marathon training']}, {type: 'strength', goals: ['support training']}]  
+- "I ski in winter and hike in summer" → MUST extract BOTH:
+  * primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['winter fitness']}, {type: 'hiking', goals: ['summer fitness']}]
+- "I'm a runner but I also lift weights twice a week" → MUST extract BOTH:
+  * primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced'}, {type: 'strength', keyMetrics: {trainingDays: 2}}]
+- "CrossFit and cycling are my main activities" → MUST extract BOTH:
+  * primaryGoal: "athletic-performance" + activityData: [{type: 'other', activityName: 'CrossFit'}, {type: 'cycling'}]
+
+MANDATORY SINGLE ACTIVITY DETECTION EXAMPLES (ARRAY FORMAT REQUIRED):
+- "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['ski season preparation']}]
+- "training for Grand Canyon hike" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}]
+- "want to run my first marathon" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}]
+- "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}]
+- "I run marathons" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
+- "started lifting at the gym" → MUST extract primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}]
+- "cycling 50 miles a week" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}]
+- "rock climbing indoors" → MUST extract primaryGoal: "athletic-performance" + activityData: [{type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}]
+
+CRITICAL ARRAY FORMAT REMINDERS:
+- ALWAYS use array format for activityData, even for single activities
+- When user mentions new activities, provide ONLY the new activity data 
+- The profile patch tool will intelligently merge with existing activities
+- Never try to preserve or reference existing activities in your response - focus only on extracting NEW information
 
 ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - Hiking: hike, hiking, trail, mountain, backpacking, trekking
@@ -99,24 +117,31 @@ INFORMATION TO EXTRACT (fitness > contact):
    - eventDate or timeline
    - notes (if relevant)
    
-   - activityData: When users mention specific activities, structure as:
-     {
-       type: 'hiking' | 'running' | 'strength' | 'cycling' | 'skiing' | 'other',
-       experienceLevel: string (activity-specific experience),
-       keyMetrics: { 
-         // Activity-specific metrics based on type:
-         // hiking: longestHike, elevationComfort, packWeight, weeklyHikes
-         // running: weeklyMileage, longestRun, averagePace, racesCompleted  
-         // strength: benchPress, squat, deadlift, trainingDays
-         // cycling: weeklyHours, longestRide, avgSpeed, terrainTypes
-         // skiing: daysPerSeason, terrainComfort, verticalPerDay
-         // other: flexible Record<string, string | number>
+   - activityData: When users mention specific activities, ALWAYS provide as ARRAY format:
+     [
+       {
+         type: 'running',
+         experienceLevel: 'intermediate',
+         keyMetrics: { weeklyMileage: 25, longestRun: 13.1 },
+         equipment: ['running shoes', 'GPS watch'],
+         goals: ['first marathon', 'sub-4:00 time'],
+         experience: 'running for 2 years',
+         lastUpdated: Date
        },
-       equipment: string[],
-       goals: string[], 
-       experience: string,
-       lastUpdated: Date
-     }
+       {
+         type: 'strength',
+         experienceLevel: 'beginner', 
+         keyMetrics: { trainingDays: 3, benchPress: 135 },
+         equipment: ['home gym', 'dumbbells'],
+         goals: ['build muscle', 'bench bodyweight'],
+         experience: 'just started lifting',
+         lastUpdated: Date
+       }
+       // Support for multiple simultaneous activities - NEVER overwrite existing activities
+     ]
+     
+     CRITICAL: Even if user mentions only ONE activity, provide as single-item array: [{...}]
+     CRITICAL: When updating existing activities, provide ONLY the new activity data - the merge tool will handle preservation
 
 2. Training Schedule
    - Days per week

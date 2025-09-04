@@ -175,8 +175,15 @@ export const GeneralActivityDataSchema = z.object({
   lastUpdated: z.date().optional(),
 });
 
-// Activity data schema - using flexible validation to allow for evolving structure
-export const ActivityDataSchema = z.any().optional();
+// Activity data schema - array of typed activity objects
+export const ActivityDataSchema = z.union([
+  HikingDataSchema,
+  RunningDataSchema, 
+  StrengthDataSchema,
+  CyclingDataSchema,
+  SkiingDataSchema,
+  GeneralActivityDataSchema
+]).array().optional();
 
 // Complete fitness profile schema
 export const FitnessProfileSchema = z.object({
@@ -311,6 +318,7 @@ export type GoalAnalysis = z.infer<typeof GoalAnalysisSchema>;
 
 // Activity-specific data types
 export type ActivityData = z.infer<typeof ActivityDataSchema>;
+export type ActivityDataArray = ActivityData; // Explicit array type alias
 export type HikingData = z.infer<typeof HikingDataSchema>;
 export type RunningData = z.infer<typeof RunningDataSchema>;
 export type StrengthData = z.infer<typeof StrengthDataSchema>;

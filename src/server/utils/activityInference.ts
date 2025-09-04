@@ -14,7 +14,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 
-import type { ActivityData } from '../models/user/schemas';
+import type { ActivityData, HikingData, RunningData, StrengthData, CyclingData, SkiingData, GeneralActivityData } from '../models/user/schemas';
+
+// Individual activity data types
+export type SingleActivityData = HikingData | RunningData | StrengthData | CyclingData | SkiingData | GeneralActivityData;
 
 export interface FitnessInference {
   generalFitnessLevel: 'beginner' | 'novice' | 'intermediate' | 'advanced' | 'elite';
@@ -27,9 +30,33 @@ export interface FitnessInference {
 }
 
 /**
- * Infer general fitness capabilities from activity-specific data
+ * Infer general fitness capabilities from activity data array
  */
 export function inferFitnessFromActivity(activityData: ActivityData): FitnessInference {
+  
+  if (!activityData || !Array.isArray(activityData) || activityData.length === 0) {
+    return {
+      generalFitnessLevel: 'beginner',
+      enduranceLevel: 'low',
+      strengthLevel: 'low',
+      cardioLevel: 'low',
+      athleticPerformance: 'recreational',
+      confidence: 0.1,
+      reasoning: ['No activity data available']
+    };
+  }
+
+  // Aggregate inferences from all activities
+  const inferences = activityData.map(activity => inferFromSingleActivity(activity));
+  
+  // Combine inferences - take the highest levels across all activities
+  return combineActivityInferences(inferences);
+}
+
+/**
+ * Infer general fitness capabilities from a single activity data object
+ */
+export function inferFromSingleActivity(activityData: SingleActivityData): FitnessInference {
   
   if (!activityData || !activityData.type) {
     return {
