@@ -86,6 +86,104 @@ export const ConstraintSchema = z.object({
   status: z.enum(['active', 'resolved']),
 });
 
+// Activity-specific data schemas
+export const HikingDataSchema = z.object({
+  type: z.literal('hiking'),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.object({
+    longestHike: z.number().positive().optional(),
+    elevationComfort: z.enum(['flat', 'moderate', 'high-altitude']).optional(),
+    packWeight: z.number().positive().optional(),
+    weeklyHikes: z.number().int().positive().optional(),
+  }).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+export const RunningDataSchema = z.object({
+  type: z.literal('running'),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.object({
+    weeklyMileage: z.number().positive().optional(),
+    longestRun: z.number().positive().optional(),
+    averagePace: z.string().optional(),
+    racesCompleted: z.number().int().nonnegative().optional(),
+  }).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+export const StrengthDataSchema = z.object({
+  type: z.literal('strength'),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.object({
+    trainingDays: z.number().int().min(1).max(7).optional(),
+    benchPress: z.number().positive().optional(),
+    squat: z.number().positive().optional(),
+    deadlift: z.number().positive().optional(),
+    overhead: z.number().positive().optional(),
+  }).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+export const CyclingDataSchema = z.object({
+  type: z.literal('cycling'),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.object({
+    weeklyHours: z.number().positive().optional(),
+    longestRide: z.number().positive().optional(),
+    averageSpeed: z.number().positive().optional(),
+    terrainTypes: z.array(z.string()).optional(),
+  }).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+export const SkiingDataSchema = z.object({
+  type: z.literal('skiing'),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.object({
+    daysPerSeason: z.number().int().positive().optional(),
+    terrainComfort: z.array(z.string()).optional(),
+    yearsSkiing: z.number().int().positive().optional(),
+    mountainTypes: z.array(z.string()).optional(),
+  }).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+export const GeneralActivityDataSchema = z.object({
+  type: z.literal('other'),
+  activityName: z.string().optional(),
+  experienceLevel: z.string().optional(),
+  keyMetrics: z.record(z.string(), z.union([z.number(), z.string()])).optional(),
+  equipment: z.array(z.string()).optional(),
+  goals: z.array(z.string()).optional(),
+  experience: z.string().optional(),
+  lastUpdated: z.date().optional(),
+});
+
+// Discriminated union for all activity data types
+export const ActivityDataSchema = z.discriminatedUnion('type', [
+  HikingDataSchema,
+  RunningDataSchema,
+  StrengthDataSchema,
+  CyclingDataSchema,
+  SkiingDataSchema,
+  GeneralActivityDataSchema,
+]).optional();
+
 // Complete fitness profile schema
 export const FitnessProfileSchema = z.object({
   version: z.number().optional(),
@@ -127,6 +225,9 @@ export const FitnessProfileSchema = z.object({
   preferences: PreferencesSchema.optional(),
   metrics: MetricsSchema.optional(),
   constraints: z.array(ConstraintSchema).optional(),
+  
+  // Activity-specific data for enhanced intelligence  
+  activityData: ActivityDataSchema,
 });
 
 // User with profile schema
@@ -223,3 +324,12 @@ export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
 export type ExtractedProfileInfo = z.infer<typeof ExtractedProfileInfoSchema>;
 export type WorkoutPreferencesExtraction = z.infer<typeof WorkoutPreferencesExtractionSchema>;
 export type GoalAnalysis = z.infer<typeof GoalAnalysisSchema>;
+
+// Activity-specific data types
+export type ActivityData = z.infer<typeof ActivityDataSchema>;
+export type HikingData = z.infer<typeof HikingDataSchema>;
+export type RunningData = z.infer<typeof RunningDataSchema>;
+export type StrengthData = z.infer<typeof StrengthDataSchema>;
+export type CyclingData = z.infer<typeof CyclingDataSchema>;
+export type SkiingData = z.infer<typeof SkiingDataSchema>;
+export type GeneralActivityData = z.infer<typeof GeneralActivityDataSchema>;

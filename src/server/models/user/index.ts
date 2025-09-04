@@ -2,6 +2,102 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import type { Users } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
+// Activity-specific data types for enhanced profile intelligence
+export type ActivityData = 
+  | HikingData 
+  | RunningData 
+  | StrengthData 
+  | CyclingData
+  | SkiingData
+  | GeneralActivityData;
+
+export interface HikingData {
+  type: 'hiking';
+  experienceLevel?: string;
+  keyMetrics?: {
+    longestHike?: number;       // miles
+    elevationComfort?: string;  // 'flat' | 'moderate' | 'high-altitude'
+    packWeight?: number;        // lbs
+    weeklyHikes?: number;
+  };
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
+export interface RunningData {
+  type: 'running';
+  experienceLevel?: string;
+  keyMetrics?: {
+    weeklyMileage?: number;     // miles per week
+    longestRun?: number;        // miles
+    averagePace?: string;       // 'MM:SS per mile' format
+    racesCompleted?: number;
+  };
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
+export interface StrengthData {
+  type: 'strength';
+  experienceLevel?: string;
+  keyMetrics?: {
+    trainingDays?: number;      // days per week
+    benchPress?: number;        // lbs or kg
+    squat?: number;             // lbs or kg
+    deadlift?: number;          // lbs or kg
+    overhead?: number;          // lbs or kg
+  };
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
+export interface CyclingData {
+  type: 'cycling';
+  experienceLevel?: string;
+  keyMetrics?: {
+    weeklyHours?: number;       // hours per week
+    longestRide?: number;       // miles
+    averageSpeed?: number;      // mph
+    terrainTypes?: string[];    // 'road', 'mountain', 'gravel', etc.
+  };
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
+export interface SkiingData {
+  type: 'skiing';
+  experienceLevel?: string;
+  keyMetrics?: {
+    daysPerSeason?: number;     // ski days per season
+    terrainComfort?: string[];  // 'green', 'blue', 'black', 'double-black'
+    yearsSkiing?: number;
+    mountainTypes?: string[];   // 'alpine', 'backcountry', 'nordic'
+  };
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
+export interface GeneralActivityData {
+  type: 'other';
+  activityName?: string;        // Custom activity name
+  experienceLevel?: string;
+  keyMetrics?: Record<string, number | string>;  // Flexible metrics
+  equipment?: string[];
+  goals?: string[];
+  experience?: string;
+  lastUpdated?: Date;
+}
+
 export type User = Selectable<Users>;
 export type NewUser = Insertable<Users>;
 export type UserUpdate = Updateable<Users>;
@@ -67,6 +163,9 @@ export interface FitnessProfile {
     endDate?: string;
     status: 'active' | 'resolved';
   }>;
+  
+  // Activity-specific data for enhanced intelligence
+  activityData?: ActivityData;
 }
 
 export interface UserWithProfile extends User {
