@@ -148,13 +148,16 @@ CONTEXT AWARENESS FOR PROFILE BUILDING:
 - Focus ONLY on gathering complete profile information - DO NOT make training recommendations
 
 ACTIVITY-SPECIFIC QUESTIONING STRATEGY:
-- Ask questions relevant to their specific activity/goal instead of generic fitness questions
-- For HIKING goals (hike, trail, canyon, mountain): Ask about hiking experience, longest hikes, backpacking experience, elevation comfort
-- For RUNNING goals (marathon, 5k, run): Ask about running experience, longest distances, race history, current weekly mileage  
-- For STRENGTH goals (powerlifting, deadlift, squat): Ask about lifting experience, current lifts, gym familiarity
-- For SPORTS goals (ski, surf, climb, bike): Ask about experience with that specific sport
-- Use activity experience to INFER general fitness level (e.g., "completed a marathon" suggests intermediate+ fitness)
-- Frame follow-up questions in the context of their goal (e.g., "For hiking prep..." rather than "For fitness...")` : '';
+- When activityData exists, ask questions based on missing fields in that specific activity profile
+- For HIKING activity: Ask about longest hikes, elevation comfort, backpacking experience, pack weight comfort
+- For RUNNING activity: Ask about weekly mileage, longest runs, race experience, current pace
+- For STRENGTH activity: Ask about current lifts, training frequency, gym experience, form confidence
+- For CYCLING activity: Ask about training volume, longest rides, terrain comfort, bike type
+- For SKIING activity: Ask about days per season, terrain comfort, equipment ownership
+- For OTHER activities: Ask about experience level, activity-specific metrics, equipment needs
+- Use activity-specific experience to INFER general fitness level and frame questions in activity context
+- Frame follow-up questions in the context of their specific activity (e.g., "For your Grand Canyon hike prep..." rather than "For fitness...")
+- If no activityData exists, use specificObjective to determine relevant activity-specific questions` : '';
 
   return `You are GymText's onboarding coach. Be warm, clear, and efficient.
 
@@ -187,107 +190,10 @@ Behavior:
 
 /**
  * Detect contextual gaps in the profile that need to be filled
- * This helps identify what follow-up questions would be most valuable
+ * Uses activityData field when available for accurate gap detection
+ * Falls back to specificObjective analysis only when activityData is not present
  */
 export function computeContextualGaps(profile: FitnessProfile): string[] {
   const gaps: string[] = [];
-  
-  // Activity-specific experience gaps - detect specific activities and ask relevant experience questions
-  if (profile.specificObjective) {
-    const objective = profile.specificObjective.toLowerCase();
-    
-    // Hiking/backpacking activities
-    if (objective.includes('hike') || objective.includes('hiking') || objective.includes('backpack') || 
-        objective.includes('trail') || objective.includes('canyon') || objective.includes('mountain')) {
-      if (!profile.experienceLevel) {
-        gaps.push('hiking-experience');
-      }
-    }
-    
-    // Running/endurance activities  
-    else if (objective.includes('marathon') || objective.includes('run') || objective.includes('5k') || 
-             objective.includes('10k') || objective.includes('half marathon') || objective.includes('triathlon')) {
-      if (!profile.experienceLevel) {
-        gaps.push('running-experience');
-      }
-    }
-    
-    // Strength/lifting activities
-    else if (objective.includes('powerlifting') || objective.includes('strength') || objective.includes('lifting') ||
-             objective.includes('deadlift') || objective.includes('squat') || objective.includes('bench')) {
-      if (!profile.experienceLevel) {
-        gaps.push('strength-experience');
-      }
-    }
-    
-    // Sports-specific activities
-    else if (objective.includes('ski') || objective.includes('surf') || objective.includes('climb') || 
-             objective.includes('bike') || objective.includes('cycling') || objective.includes('swim')) {
-      if (!profile.experienceLevel) {
-        gaps.push('sport-experience');
-      }
-    }
-    
-    // If no specific activity detected but we still need general experience
-    else if (!profile.experienceLevel) {
-      gaps.push('general-experience');
-    }
-  }
-  
-  // Timeline gaps - if they have a goal but no timeline context
-  if (profile.primaryGoal && !profile.timelineWeeks && !profile.eventDate) {
-    gaps.push('timeline');
-  }
-  
-  // Event preparation gaps - if they mention specific objective but no timeline
-  if (profile.specificObjective && !profile.eventDate && !profile.timelineWeeks) {
-    const eventKeywords = ['wedding', 'season', 'competition', 'vacation', 'beach', 'marathon', 'race', 'hike', 'trip'];
-    const hasEventKeyword = eventKeywords.some(keyword => 
-      profile.specificObjective?.toLowerCase().includes(keyword)
-    );
-    if (hasEventKeyword) {
-      gaps.push('event-timeline');
-    }
-  }
-  
-  // Equipment detail gaps - if they have equipment access but no specifics
-  if (profile.equipment?.access === 'home-gym' && (!profile.equipment?.items || profile.equipment.items.length === 0)) {
-    gaps.push('equipment-details');
-  }
-  
-  // Schedule preference gaps - if they have availability but no timing preferences
-  if (profile.availability?.daysPerWeek && !profile.availability?.preferredTimes) {
-    gaps.push('schedule-preferences');
-  }
-  
-  // Constraint modification gaps - if they have moderate/severe constraints but no modifications noted
-  if (profile.constraints && profile.constraints.length > 0) {
-    const severeConstraints = profile.constraints.filter(c => 
-      c.status === 'active' && (c.severity === 'moderate' || c.severity === 'severe')
-    );
-    const hasModifications = profile.constraints.some(c => c.modifications);
-    
-    if (severeConstraints.length > 0 && !hasModifications) {
-      gaps.push('constraint-modifications');
-    }
-  }
-  
-  // Experience context gaps - if they have a goal but no experience level
-  if (profile.primaryGoal && !profile.experienceLevel) {
-    gaps.push('experience-level');
-  }
-  
-  // Physical baseline gaps - if they have fitness goals but no current metrics
-  if ((profile.primaryGoal === 'fat-loss' || profile.primaryGoal === 'muscle-gain') && 
-      !profile.metrics?.bodyweight) {
-    gaps.push('physical-baseline');
-  }
-  
-  // Current activity gaps - if they have goals/schedule but no current training context
-  if (profile.primaryGoal && profile.availability?.daysPerWeek && 
-      !profile.currentActivity && !profile.currentTraining?.programName) {
-    gaps.push('current-training');
-  }
-  
-  return gaps;
+  return gaps
 }
