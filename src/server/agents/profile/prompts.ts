@@ -1,4 +1,4 @@
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import type { FitnessProfile, User } from '@/server/models/user/schemas';
 
 /**
  * Build the system prompt for the UserProfileAgent

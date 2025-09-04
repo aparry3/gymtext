@@ -1,5 +1,4 @@
-import type { FitnessProfile } from '@/server/models/userModel';
-import type { ActivityData } from '@/server/models/user/index';
+import type { FitnessProfile } from '@/server/models/user/schemas';
 
 /**
  * Build a comprehensive profile summary using all available context
@@ -198,7 +197,8 @@ export function computeContextualGaps(profile: FitnessProfile): string[] {
   const gaps: string[] = [];
   
   // First, check if we have activity-specific data (when available)
-  const activityData = (profile as FitnessProfile & { activityData?: ActivityData }).activityData;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activityData = (profile as any).activityData;
   
   if (activityData && activityData.type) {
     // Activity-specific gap detection
@@ -207,7 +207,8 @@ export function computeContextualGaps(profile: FitnessProfile): string[] {
         if (!activityData.experienceLevel) gaps.push('hiking-experience-level');
         if (!activityData.keyMetrics?.longestHike) gaps.push('hiking-distance-experience');
         if (!activityData.keyMetrics?.elevationComfort) gaps.push('hiking-elevation-comfort');
-        if (!activityData.keyMetrics?.packWeight && activityData.goals?.some(g => g.includes('backpack'))) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (!activityData.keyMetrics?.packWeight && activityData.goals?.some((g: any) => g.includes('backpack'))) {
           gaps.push('hiking-pack-experience');
         }
         if (!activityData.equipment?.length) gaps.push('hiking-equipment');
@@ -218,7 +219,8 @@ export function computeContextualGaps(profile: FitnessProfile): string[] {
         if (!activityData.keyMetrics?.weeklyMileage) gaps.push('running-weekly-volume');
         if (!activityData.keyMetrics?.longestRun) gaps.push('running-distance-experience');
         if (!activityData.keyMetrics?.averagePace) gaps.push('running-pace-baseline');
-        if (activityData.goals?.some(g => g.includes('marathon') || g.includes('race')) && !activityData.keyMetrics?.racesCompleted) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (activityData.goals?.some((g: any) => g.includes('marathon') || g.includes('race')) && !activityData.keyMetrics?.racesCompleted) {
           gaps.push('running-race-experience');
         }
         break;

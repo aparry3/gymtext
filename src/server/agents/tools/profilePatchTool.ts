@@ -1,7 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { FitnessProfileSchema } from '@/server/models/user/schemas';
-import type { FitnessProfile } from '@/server/models/userModel';
+import type { FitnessProfile } from '@/server/models/user/schemas';
 
 /**
  * Tool for updating user fitness profiles based on conversation context

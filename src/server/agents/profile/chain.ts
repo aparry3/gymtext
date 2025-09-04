@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { profilePatchTool } from '@/server/agents/tools/profilePatchTool';
 import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
 import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import type { FitnessProfile, User } from '@/server/models/user/schemas';
 
 /**
  * Result type returned by the UserProfileAgent

@@ -1,18 +1,19 @@
 import { z } from 'zod';
+import type { Users } from '../_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
 
 // Base user schema
 export const UserSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().nullable(),
+  name: z.string(),
   email: z.string().email().nullable(),
   // Prefer phoneNumber; keep phone as backward-compatible alias
-  phoneNumber: z.string().nullable().optional(),
+  phoneNumber: z.string(),
   phone: z.string().nullable().optional(),
   profile: z.unknown().nullable(),
-  isActive: z.boolean(),
-  lastActivity: z.date().nullable(),
   stripeCustomerId: z.string().nullable(),
-  isAdmin: z.boolean(),
+  preferredSendHour: z.number().int().min(0).max(23),
+  timezone: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -36,7 +37,7 @@ export const AvailabilitySchema = z.object({
 
 // Equipment sub-schema
 export const EquipmentSchema = z.object({
-  access: z.enum(['full-gym', 'home-gym', 'minimal', 'none']).optional(),
+  access: z.string().optional(),
   location: z.string().optional(),
   items: z.array(z.string()).optional(),
   constraints: z.array(z.string()).optional(),
@@ -92,7 +93,7 @@ export const HikingDataSchema = z.object({
   experienceLevel: z.string().optional(),
   keyMetrics: z.object({
     longestHike: z.number().positive().optional(),
-    elevationComfort: z.enum(['flat', 'moderate', 'high-altitude']).optional(),
+    elevationComfort: z.string().optional(),
     packWeight: z.number().positive().optional(),
     weeklyHikes: z.number().int().positive().optional(),
   }).optional(),
@@ -174,15 +175,8 @@ export const GeneralActivityDataSchema = z.object({
   lastUpdated: z.date().optional(),
 });
 
-// Discriminated union for all activity data types
-export const ActivityDataSchema = z.discriminatedUnion('type', [
-  HikingDataSchema,
-  RunningDataSchema,
-  StrengthDataSchema,
-  CyclingDataSchema,
-  SkiingDataSchema,
-  GeneralActivityDataSchema,
-]).optional();
+// Activity data schema - using flexible validation to allow for evolving structure
+export const ActivityDataSchema = z.any().optional();
 
 // Complete fitness profile schema
 export const FitnessProfileSchema = z.object({
@@ -197,26 +191,11 @@ export const FitnessProfileSchema = z.object({
   age: z.number().int().min(13).max(120).optional(),
   
   // New comprehensive profile fields
-  primaryGoal: z.enum([
-    'strength',
-    'muscle-gain',
-    'fat-loss',
-    'endurance',
-    'athletic-performance',
-    'general-fitness',
-    'rehabilitation',
-    'competition-prep'
-  ]).optional(),
+  primaryGoal: z.string().optional(),
   specificObjective: z.string().optional(),
   eventDate: z.string().optional(),
   timelineWeeks: z.number().int().min(1).max(52).optional(),
-  experienceLevel: z.enum([
-    'beginner',
-    'novice',
-    'intermediate',
-    'advanced',
-    'elite'
-  ]).optional(),
+  experienceLevel: z.string().optional(),
   
   currentActivity: z.string().optional(),
   currentTraining: CurrentTrainingSchema.optional(),
@@ -238,7 +217,7 @@ export const UserWithProfileSchema = UserSchema.extend({
 
 // Schema for creating a new user
 export const CreateUserSchema = z.object({
-  name: z.string().nullable().optional(),
+  name: z.string().optional(),
   email: z.string().email().nullable().optional(),
   // Accept either; normalize to phoneNumber in repositories/services
   phoneNumber: z.string().nullable().optional(),
@@ -313,8 +292,13 @@ export const GoalAnalysisSchema = z.object({
   potentialChallenges: z.array(z.string()),
 });
 
-// Export types
-export type User = z.infer<typeof UserSchema>;
+// Kysely-based types (using database schema)
+export type User = Selectable<Users>;
+export type NewUser = Insertable<Users>;
+export type UserUpdate = Updateable<Users>;
+
+// Zod-inferred types (for validation)
+export type UserValidation = z.infer<typeof UserSchema>;
 export type FitnessProfile = z.infer<typeof FitnessProfileSchema>;
 export type UserWithProfile = z.infer<typeof UserWithProfileSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;

@@ -1,4 +1,5 @@
-import type { FitnessProfile, User } from '@/server/models/userModel';
+import type { FitnessProfile } from '@/server/models/user/schemas';
+import type { User } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
