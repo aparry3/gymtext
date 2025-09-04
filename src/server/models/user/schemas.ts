@@ -100,7 +100,7 @@ export const HikingDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 export const RunningDataSchema = z.object({
@@ -115,7 +115,7 @@ export const RunningDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 export const StrengthDataSchema = z.object({
@@ -131,7 +131,7 @@ export const StrengthDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 export const CyclingDataSchema = z.object({
@@ -146,7 +146,7 @@ export const CyclingDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 export const SkiingDataSchema = z.object({
@@ -161,7 +161,7 @@ export const SkiingDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 export const GeneralActivityDataSchema = z.object({
@@ -172,7 +172,7 @@ export const GeneralActivityDataSchema = z.object({
   equipment: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
   experience: z.string().optional(),
-  lastUpdated: z.date().optional(),
+  lastUpdated: z.coerce.date().optional(),
 });
 
 // Activity data schema - array of typed activity objects
