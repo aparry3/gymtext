@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { User, FitnessProfile } from '@/server/models/userModel';
 import ProfileView from './profile/ProfileView';
+import { initializeViewportHeight } from '@/shared/utils/viewport';
 
 type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
 type Role = 'user' | 'assistant';
@@ -39,6 +40,12 @@ export default function ChatContainer() {
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isStreaming]);
+
+  // Initialize viewport height handling
+  useEffect(() => {
+    const cleanup = initializeViewportHeight();
+    return cleanup;
+  }, []);
 
 
   // Scroll to summary anchor when set
@@ -481,7 +488,7 @@ export default function ChatContainer() {
 
   // Chat state (expanded)  
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-white">
+    <div className="h-screen-safe flex flex-col lg:flex-row bg-white relative">
       {/* Mobile Header - only visible on smaller screens */}
       <header className="lg:hidden border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
@@ -564,7 +571,7 @@ export default function ChatContainer() {
       )}
 
       {/* Chat Area - Left side on desktop (60%), full width on mobile */}
-      <div className="flex-1 lg:w-3/5 flex flex-col min-h-0">
+      <div className="flex-1 lg:w-3/5 flex flex-col min-h-0 relative">
         {/* Desktop Header - only visible on larger screens */}
         <header className="hidden lg:block border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -601,7 +608,7 @@ export default function ChatContainer() {
 
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 lg:pb-0">
           <div className="px-4 lg:px-6 py-8 max-w-4xl lg:max-w-none">
             {messages.length === 0 ? (
               <div className="text-center py-20">
@@ -652,8 +659,8 @@ export default function ChatContainer() {
         </div>
 
         {/* Input area */}
-        <div className="border-t border-gray-200 px-4 lg:px-6 py-4">
-          <div className="max-w-4xl lg:max-w-none">
+        <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto border-t border-gray-200 px-4 lg:px-6 py-4 bg-white pb-safe z-50 lg:z-auto lg:w-full">
+          <div className="max-w-4xl lg:max-w-none w-full">
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <input
@@ -690,7 +697,7 @@ export default function ChatContainer() {
       </div>
 
       {/* Desktop Profile Section - Right side (40%), only visible on larger screens */}
-      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden">
+      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden h-full">
         <ProfileView
           currentUser={currentUser}
           currentProfile={currentProfile}

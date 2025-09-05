@@ -25,6 +25,37 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Mobile viewport height utilities */
+:root {
+  --viewport-height: 100vh;
+  --vh: 1vh;
+}
+
+/* Use dynamic viewport height when supported */
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+  }
+}
+
+/* Mobile-safe viewport classes */
+.h-screen-safe {
+  height: var(--viewport-height);
+}
+
+.min-h-screen-safe {
+  min-height: var(--viewport-height);
+}
+
+/* Safe area insets for mobile */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
 /* Word Carousel Animation */
 .carousel-word {
   opacity: 0;
