@@ -150,7 +150,7 @@ function buildRichProfileSummary(profile: FitnessProfile | null): string {
  */
 export function buildOnboardingChatSystemPrompt(
   profile: FitnessProfile | null,
-  pendingRequiredFields: Array<'name' | 'email' | 'phone' | 'primaryGoal'>
+  pendingRequiredFields: Array<'name' | 'phone' | 'primaryGoal'>
 ): string {
   const essentials = pendingRequiredFields.length > 0
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
