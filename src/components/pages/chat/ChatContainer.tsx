@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { User, FitnessProfile } from '@/server/models/userModel';
 import ProfileView from './profile/ProfileView';
+import ProfileDrawer from './ProfileDrawer';
+import { initializeViewportHeight } from '@/shared/utils/viewport';
 
 type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
 type Role = 'user' | 'assistant';
@@ -32,13 +34,19 @@ export default function ChatContainer() {
   const [canSave, setCanSave] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [createdUser, setCreatedUser] = useState<User | null>(null);
-  const [isProfileCollapsed, setIsProfileCollapsed] = useState(true);
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
 
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isStreaming]);
+
+  // Initialize viewport height handling
+  useEffect(() => {
+    const cleanup = initializeViewportHeight();
+    return cleanup;
+  }, []);
 
 
   // Scroll to summary anchor when set
@@ -481,31 +489,12 @@ export default function ChatContainer() {
 
   // Chat state (expanded)  
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-white">
+    <div className="h-screen-safe flex flex-col lg:flex-row bg-white relative">
       {/* Mobile Header - only visible on smaller screens */}
       <header className="lg:hidden border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-lg font-medium text-gray-900">GymText Onboarding</div>
-            {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
-              <button
-                onClick={() => setIsProfileCollapsed(!isProfileCollapsed)}
-                className="flex items-center gap-1 text-sm px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors"
-              >
-                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-                Profile
-                <svg 
-                  className={`h-3 w-3 transition-transform ${isProfileCollapsed ? '' : 'rotate-180'}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            )}
             {canSave && !essentialsComplete && (
               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
                 Ready to Save
@@ -522,49 +511,23 @@ export default function ChatContainer() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(false)}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Minimize"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
+            <button
+              onClick={() => setIsProfileDrawerOpen(true)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Open profile drawer"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Mobile Profile Section - only visible on smaller screens and when expanded */}
-      {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && !isProfileCollapsed && (
-        <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
-          <div className="max-h-80 overflow-y-auto">
-            <ProfileView
-              currentUser={currentUser}
-              currentProfile={currentProfile}
-              canSave={canSave}
-              missingFields={missingFields}
-              onSaveProfile={handleSaveProfile}
-              isStreaming={isStreaming}
-              className="h-auto"
-            />
-            {/* Keep Chatting button for mobile */}
-            {canSave && (
-              <div className="px-6 pb-4">
-                <button
-                  onClick={() => setIsProfileCollapsed(true)}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Keep Chatting
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Chat Area - Left side on desktop (60%), full width on mobile */}
-      <div className="flex-1 lg:w-3/5 flex flex-col min-h-0">
+      <div className="flex-1 lg:w-3/5 flex flex-col min-h-0 relative">
         {/* Desktop Header - only visible on larger screens */}
         <header className="hidden lg:block border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -601,7 +564,7 @@ export default function ChatContainer() {
 
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-20 lg:pb-0">
           <div className="px-4 lg:px-6 py-8 max-w-4xl lg:max-w-none">
             {messages.length === 0 ? (
               <div className="text-center py-20">
@@ -652,8 +615,8 @@ export default function ChatContainer() {
         </div>
 
         {/* Input area */}
-        <div className="border-t border-gray-200 px-4 lg:px-6 py-4">
-          <div className="max-w-4xl lg:max-w-none">
+        <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto lg:left-auto lg:right-auto border-t border-gray-200 px-4 lg:px-6 py-4 bg-white pb-safe z-50 lg:z-auto lg:w-full">
+          <div className="max-w-4xl lg:max-w-none w-full">
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <input
@@ -690,7 +653,7 @@ export default function ChatContainer() {
       </div>
 
       {/* Desktop Profile Section - Right side (40%), only visible on larger screens */}
-      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden">
+      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden h-full">
         <ProfileView
           currentUser={currentUser}
           currentProfile={currentProfile}
@@ -700,6 +663,18 @@ export default function ChatContainer() {
           isStreaming={isStreaming}
         />
       </div>
+
+      {/* Mobile Profile Drawer */}
+      <ProfileDrawer
+        isOpen={isProfileDrawerOpen}
+        onClose={() => setIsProfileDrawerOpen(false)}
+        currentUser={currentUser}
+        currentProfile={currentProfile}
+        canSave={canSave}
+        missingFields={missingFields}
+        onSaveProfile={handleSaveProfile}
+        isStreaming={isStreaming}
+      />
     </div>
   );
 }
