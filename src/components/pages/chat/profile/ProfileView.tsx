@@ -40,6 +40,7 @@ interface ProfileViewProps {
   onSaveProfile?: () => void;
   isStreaming?: boolean;
   className?: string;
+  hideHeader?: boolean;
 }
 
 export default function ProfileView({
@@ -50,6 +51,7 @@ export default function ProfileView({
   onSaveProfile,
   isStreaming = false,
   className = '',
+  hideHeader = false,
 }: ProfileViewProps) {
   // Use custom hooks for better performance and state management
   const {
@@ -122,40 +124,42 @@ export default function ProfileView({
   return (
     <div className={`h-full flex flex-col min-h-0 ${className}`}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-white/80 backdrop-blur">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
-            {completeness > 0 && (
-              <div className="flex items-center gap-2">
-                <ProgressBar
-                  value={completeness}
-                  size="sm"
-                  color="emerald"
-                  showLabel={true}
-                  className="w-16"
-                />
+      {!hideHeader && (
+        <div className="px-6 py-4 border-b border-gray-200 bg-white/80 backdrop-blur">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-gray-900">Your Profile</h3>
+              {completeness > 0 && (
+                <div className="flex items-center gap-2">
+                  <ProgressBar
+                    value={completeness}
+                    size="sm"
+                    color="emerald"
+                    showLabel={true}
+                    className="w-16"
+                  />
+                </div>
+              )}
+            </div>
+            {canSave && (
+              <div className="flex items-center text-sm text-emerald-600">
+                <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Ready to save
+              </div>
+            )}
+            {!canSave && !hasAnyData && (
+              <div className="flex items-center text-sm text-gray-500">
+                <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Being built from conversation
               </div>
             )}
           </div>
-          {canSave && (
-            <div className="flex items-center text-sm text-emerald-600">
-              <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Ready to save
-            </div>
-          )}
-          {!canSave && !hasAnyData && (
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Being built from conversation
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">

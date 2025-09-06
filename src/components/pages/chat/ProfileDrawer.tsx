@@ -109,14 +109,14 @@ export default function ProfileDrawer({
         aria-labelledby="drawer-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 pt-safe bg-white">
-          <h2 id="drawer-title" className="text-lg font-medium text-gray-900">
-            Your Profile
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white" style={{ paddingTop: `max(1rem, env(safe-area-inset-top))` }}>
+          <h2 id="drawer-title" className="text-xl font-semibold text-gray-900">
+            Profile
           </h2>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
             aria-label="Close profile"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,6 +136,7 @@ export default function ProfileDrawer({
               onSaveProfile={onSaveProfile}
               isStreaming={isStreaming}
               className="h-auto"
+              hideHeader={true}
             />
           </div>
         </div>
