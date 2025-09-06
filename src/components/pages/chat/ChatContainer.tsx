@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { User, FitnessProfile } from '@/server/models/userModel';
 import ProfileView from './profile/ProfileView';
+import ProfileDrawer from './ProfileDrawer';
 import { initializeViewportHeight } from '@/shared/utils/viewport';
 
 type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
@@ -33,7 +34,7 @@ export default function ChatContainer() {
   const [canSave, setCanSave] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [createdUser, setCreatedUser] = useState<User | null>(null);
-  const [isProfileCollapsed, setIsProfileCollapsed] = useState(true);
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
 
   const hasMessages = messages.length > 0;
 
@@ -496,20 +497,21 @@ export default function ChatContainer() {
             <div className="text-lg font-medium text-gray-900">GymText Onboarding</div>
             {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
               <button
-                onClick={() => setIsProfileCollapsed(!isProfileCollapsed)}
+                onClick={() => setIsProfileDrawerOpen(true)}
                 className="flex items-center gap-1 text-sm px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors"
+                aria-label="Open profile drawer"
               >
                 <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
                 Profile
                 <svg 
-                  className={`h-3 w-3 transition-transform ${isProfileCollapsed ? '' : 'rotate-180'}`} 
+                  className="h-3 w-3" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             )}
@@ -542,33 +544,6 @@ export default function ChatContainer() {
         </div>
       </header>
 
-      {/* Mobile Profile Section - only visible on smaller screens and when expanded */}
-      {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && !isProfileCollapsed && (
-        <div className="lg:hidden border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
-          <div className="max-h-80 overflow-y-auto">
-            <ProfileView
-              currentUser={currentUser}
-              currentProfile={currentProfile}
-              canSave={canSave}
-              missingFields={missingFields}
-              onSaveProfile={handleSaveProfile}
-              isStreaming={isStreaming}
-              className="h-auto"
-            />
-            {/* Keep Chatting button for mobile */}
-            {canSave && (
-              <div className="px-6 pb-4">
-                <button
-                  onClick={() => setIsProfileCollapsed(true)}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Keep Chatting
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Chat Area - Left side on desktop (60%), full width on mobile */}
       <div className="flex-1 lg:w-3/5 flex flex-col min-h-0 relative">
@@ -707,6 +682,18 @@ export default function ChatContainer() {
           isStreaming={isStreaming}
         />
       </div>
+
+      {/* Mobile Profile Drawer */}
+      <ProfileDrawer
+        isOpen={isProfileDrawerOpen}
+        onClose={() => setIsProfileDrawerOpen(false)}
+        currentUser={currentUser}
+        currentProfile={currentProfile}
+        canSave={canSave}
+        missingFields={missingFields}
+        onSaveProfile={handleSaveProfile}
+        isStreaming={isStreaming}
+      />
     </div>
   );
 }

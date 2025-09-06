@@ -56,6 +56,47 @@ body {
   margin-bottom: env(safe-area-inset-bottom);
 }
 
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Drawer animation utilities */
+.drawer-backdrop-enter {
+  opacity: 0;
+}
+
+.drawer-backdrop-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-out;
+}
+
+.drawer-backdrop-exit {
+  opacity: 1;
+}
+
+.drawer-backdrop-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+
+.drawer-panel-enter {
+  transform: translateX(100%);
+}
+
+.drawer-panel-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-out;
+}
+
+.drawer-panel-exit {
+  transform: translateX(0);
+}
+
+.drawer-panel-exit-active {
+  transform: translateX(100%);
+  transition: transform 300ms ease-out;
+}
+
 /* Word Carousel Animation */
 .carousel-word {
   opacity: 0;
