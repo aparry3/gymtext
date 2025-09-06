@@ -495,26 +495,6 @@ export default function ChatContainer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-lg font-medium text-gray-900">GymText Onboarding</div>
-            {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
-              <button
-                onClick={() => setIsProfileDrawerOpen(true)}
-                className="flex items-center gap-1 text-sm px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors"
-                aria-label="Open profile drawer"
-              >
-                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-                Profile
-                <svg 
-                  className="h-3 w-3" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
             {canSave && !essentialsComplete && (
               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
                 Ready to Save
@@ -531,16 +511,17 @@ export default function ChatContainer() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsExpanded(false)}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Minimize"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {(Object.keys(currentUser).length > 0 || Object.keys(currentProfile).length > 0) && (
+            <button
+              onClick={() => setIsProfileDrawerOpen(true)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Open profile drawer"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
