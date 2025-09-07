@@ -23,21 +23,19 @@ describe('buildOnboardingChatSystemPrompt', () => {
     expect(prompt.toLowerCase()).not.toContain('when a user provides an essential');
     
     // Should contain guidance to NOT confirm
-    expect(prompt).toContain('Do not confirm each item');
     expect(prompt).toContain('accept them and continue without confirmation');
   });
 
   it('includes summary guidance for when essentials are complete', () => {
     const prompt = buildOnboardingChatSystemPrompt(null, []);
     
-    // Should include summary guidance
-    expect(prompt).toContain('Once essentials are complete, send ONE friendly summary');
-    expect(prompt).toContain('Fantastic! I\'ve got what I need');
-    expect(prompt).toContain('Let me know if I missed anything');
+    // Should include behavior guidance about summaries
+    expect(prompt).toContain('ONLY provide a comprehensive summary when essentials are complete AND you\'re ready to move to the next phase');
+    expect(prompt).toContain('Do NOT summarize all captured information after every user response');
   });
 
   it('encourages batching of questions', () => {
-    const prompt = buildOnboardingChatSystemPrompt(null, ['name', 'email', 'phone']);
+    const prompt = buildOnboardingChatSystemPrompt(null, ['name', 'phone', 'timezone']);
     
     // Should encourage batching
     expect(prompt).toContain('Ask for 2–3 missing essentials together when natural');
@@ -59,10 +57,11 @@ describe('buildOnboardingChatSystemPrompt', () => {
     
     const prompt = buildOnboardingChatSystemPrompt(mockProfile as FitnessProfile, []);
     
-    expect(prompt).toContain('Primary Goal: Build muscle');
-    expect(prompt).toContain('Experience: Intermediate');
-    expect(prompt).toContain('Availability: 4');
-    expect(prompt).toContain('Equipment: Full gym');
+    // Should include profile information in the rich summary format
+    expect(prompt).toContain('Build muscle'); 
+    expect(prompt).toContain('Intermediate');
+    expect(prompt).toContain('4 days/week');
+    expect(prompt).toContain('Full gym');
   });
 
   it('shows "No profile yet" when profile is null', () => {
@@ -84,16 +83,28 @@ describe('buildOnboardingChatSystemPrompt', () => {
   });
 
   it('handles all pending required fields', () => {
-    const allPending: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = 
-      ['name', 'email', 'phone', 'primaryGoal'];
+    const allPending: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'> = 
+      ['name', 'phone', 'timezone', 'preferredSendHour', 'primaryGoal'];
     const prompt = buildOnboardingChatSystemPrompt(null, allPending);
     
-    expect(prompt).toContain('Essentials missing: name, email, phone, primaryGoal');
+    expect(prompt).toContain('Essentials missing: name, phone, timezone, preferredSendHour, primaryGoal');
   });
 
   it('provides clear behavior instructions for multiple details', () => {
-    const prompt = buildOnboardingChatSystemPrompt(null, ['name', 'email']);
+    const prompt = buildOnboardingChatSystemPrompt(null, ['name', 'timezone']);
     
     expect(prompt).toContain('If the user provides multiple details, accept them and continue without confirmation');
+  });
+
+  it('includes scheduling information collection guidance', () => {
+    const prompt = buildOnboardingChatSystemPrompt(null, ['timezone', 'preferredSendHour']);
+    
+    // Should include scheduling guidance
+    expect(prompt).toContain('SCHEDULING INFORMATION COLLECTION:');
+    expect(prompt).toContain('Ask about timezone when collecting contact info');
+    expect(prompt).toContain('What timezone are you in?');
+    expect(prompt).toContain('What time of day works best for you to receive your workout?');
+    expect(prompt).toContain('Most people prefer morning workouts around 8 AM');
+    expect(prompt).toContain('This helps us send your workout at the perfect time in your local timezone');
   });
 });
