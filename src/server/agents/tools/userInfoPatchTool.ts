@@ -1,17 +1,9 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import type { User } from '@/server/models/userModel';
-
-const E164ish = /^\+?[1-9]\d{7,14}$/;
-
-function normalizePhoneNumber(input: string | undefined | null): string | undefined {
-  if (!input) return undefined;
-  const digits = input.replace(/\D/g, '');
-  if (!digits) return undefined;
-  const withPlus = digits.startsWith('0') ? digits.replace(/^0+/, '') : digits;
-  const e164 = `+${withPlus}`;
-  return e164;
-}
+import { normalizeUSPhoneNumber, validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
+import { parseTimeExpression, isValidHour } from '@/shared/utils/timeUtils';
+import { parseLocationToTimezone, isValidTimezone } from '@/shared/utils/timezone';
 
 export const userInfoPatchTool = tool(
   async ({ currentUser, updates, reason, confidence }) => {
@@ -29,11 +21,38 @@ export const userInfoPatchTool = tool(
 
     // Normalize inputs
     let { name, email } = updates;
-    const phoneNumber = updates.phoneNumber;
-    const phone = updates.phone;
+    const { phoneNumber, timezone, preferredSendHour } = updates;
 
-    // Prefer explicit phoneNumber, fallback to phone
-    const normalizedPhone = normalizePhoneNumber(phoneNumber ?? phone ?? undefined);
+    // Normalize phone number using centralized utility
+    const normalizedPhone = normalizeUSPhoneNumber(phoneNumber);
+    
+    // Parse and normalize timezone
+    let normalizedTimezone: string | undefined;
+    if (timezone) {
+      // First try direct validation
+      if (isValidTimezone(timezone)) {
+        normalizedTimezone = timezone;
+      } else {
+        // Try parsing as location
+        const parsedTimezone = parseLocationToTimezone(timezone);
+        if (parsedTimezone) {
+          normalizedTimezone = parsedTimezone;
+        }
+      }
+    }
+    
+    // Parse and normalize preferred send hour
+    let normalizedPreferredSendHour: number | undefined;
+    if (typeof preferredSendHour === 'number') {
+      if (isValidHour(preferredSendHour)) {
+        normalizedPreferredSendHour = preferredSendHour;
+      }
+    } else if (typeof preferredSendHour === 'string') {
+      const parsedHour = parseTimeExpression(preferredSendHour);
+      if (parsedHour !== null && isValidHour(parsedHour)) {
+        normalizedPreferredSendHour = parsedHour;
+      }
+    }
 
     const fieldsUpdated: string[] = [];
     const userUpdate: Partial<User> = { ...currentUser };
@@ -54,12 +73,20 @@ export const userInfoPatchTool = tool(
         fieldsUpdated.push('email');
       }
     }
-    if (typeof (phoneNumber ?? phone) === 'string' && normalizedPhone) {
-      // Basic E.164-ish validation
-      if (E164ish.test(normalizedPhone)) {
+    if (typeof phoneNumber === 'string' && normalizedPhone) {
+      // Validate using centralized US phone validation
+      if (validateUSPhoneNumber(normalizedPhone)) {
         userUpdate.phoneNumber = normalizedPhone;
         fieldsUpdated.push('phoneNumber');
       }
+    }
+    if (normalizedTimezone) {
+      userUpdate.timezone = normalizedTimezone;
+      fieldsUpdated.push('timezone');
+    }
+    if (normalizedPreferredSendHour !== undefined) {
+      userUpdate.preferredSendHour = normalizedPreferredSendHour;
+      fieldsUpdated.push('preferredSendHour');
     }
 
     // Nothing valid to update
@@ -89,13 +116,15 @@ export const userInfoPatchTool = tool(
   },
   {
     name: 'update_user_info',
-    description: 'Update user contact info (name, email, phoneNumber) based on conversation. Works with partial user objects.',
+    description: 'Update user contact and scheduling info (name, email, phoneNumber, timezone, preferredSendHour) based on conversation. Works with partial user objects.',
     schema: z.object({
       currentUser: z
         .object({
           name: z.string().optional(),
           email: z.string().optional(),
           phoneNumber: z.string().optional(),
+          timezone: z.string().optional(),
+          preferredSendHour: z.number().optional(),
         })
         .passthrough()
         .describe('Current user information state'),
@@ -104,7 +133,8 @@ export const userInfoPatchTool = tool(
           name: z.string().min(1).optional(),
           email: z.string().optional(),
           phoneNumber: z.string().optional(),
-          phone: z.string().optional(),
+          timezone: z.string().optional(),
+          preferredSendHour: z.union([z.number().min(0).max(23), z.string()]).optional(),
         })
         .refine((obj) => Object.keys(obj).length > 0, {
           message: 'At least one field must be provided in updates',

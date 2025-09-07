@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       // Create or update customer in Stripe
       const customer = await stripe.customers.create({
         name: formData.name,
-        phone: formData.phoneNumber,
+        phone: formData.phoneNumber, // Stripe expects 'phone' field name
         ...(formData.email && { email: formData.email }),
         metadata: {
           primaryGoal: formData.fitnessGoals,

@@ -116,9 +116,9 @@ export class OnboardingChatService {
         const newUser = await this.userRepo.create({
           name: updatedUser.name!,
           phoneNumber: updatedUser.phoneNumber!,
-          email: updatedUser.email!,
-          timezone: updatedUser.timezone || 'America/New_York',
-          preferredSendHour: updatedUser.preferredSendHour || 9,
+          email: updatedUser.email || null, // Email is now optional
+          timezone: updatedUser.timezone!, // Required timezone
+          preferredSendHour: updatedUser.preferredSendHour!, // Required preferred send hour
         });
 
         if (Object.keys(updatedProfile).length > 0) {
@@ -177,14 +177,16 @@ export class OnboardingChatService {
   private computePendingRequiredFields(
     profile: Partial<FitnessProfile>,
     user: Partial<User>
-  ): Array<'name' | 'email' | 'phone' | 'primaryGoal'> {
+  ): Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'> {
     // Focus on essentials needed to create user account and start profile building
+    // Email is now optional - only collect name, phone, timezone, preferred send hour, and primary goal
     // Additional contextual completeness is handled by computeContextualGaps() in the prompts
-    const missing: Array<'name' | 'email' | 'phone' | 'primaryGoal'> = [];    
+    const missing: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'> = [];    
     
     if (!user.name) missing.push('name');
-    if (!user.email) missing.push('email');
     if (!user.phoneNumber) missing.push('phone');
+    if (!user.timezone) missing.push('timezone');
+    if (user.preferredSendHour === undefined || user.preferredSendHour === null) missing.push('preferredSendHour');
     if (!profile.primaryGoal) missing.push('primaryGoal');
 
     return missing;

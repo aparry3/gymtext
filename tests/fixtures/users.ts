@@ -163,7 +163,7 @@ export const mockUsers = {
   london: () => new UserBuilder()
     .withId('user-lon')
     .withName('London User')
-    .withPhoneNumber('+442071234567')
+    .withPhoneNumber('+17185551234') // US number for consistency
     .withEmail('london@example.com')
     .withTimezone('Europe/London')
     .withPreferredSendHour(8)
@@ -172,7 +172,7 @@ export const mockUsers = {
   tokyo: () => new UserBuilder()
     .withId('user-tokyo')
     .withName('Tokyo User')
-    .withPhoneNumber('+81312345678')
+    .withPhoneNumber('+14155551234') // US number for consistency
     .withEmail('tokyo@example.com')
     .withTimezone('Asia/Tokyo')
     .withPreferredSendHour(8)
@@ -181,7 +181,7 @@ export const mockUsers = {
   sydney: () => new UserBuilder()
     .withId('user-sydney')
     .withName('Sydney User')
-    .withPhoneNumber('+61212345678')
+    .withPhoneNumber('+16195551234') // US number for consistency
     .withEmail('sydney@example.com')
     .withTimezone('Australia/Sydney')
     .withPreferredSendHour(8)
@@ -190,7 +190,7 @@ export const mockUsers = {
   mumbai: () => new UserBuilder()
     .withId('user-mumbai')
     .withName('Mumbai User')
-    .withPhoneNumber('+912212345678')
+    .withPhoneNumber('+17735551234') // US number for consistency
     .withEmail('mumbai@example.com')
     .withTimezone('Asia/Kolkata')
     .withPreferredSendHour(8)
@@ -200,7 +200,7 @@ export const mockUsers = {
   kiribati: () => new UserBuilder()
     .withId('user-kiribati')
     .withName('Kiribati User')
-    .withPhoneNumber('+68612345')
+    .withPhoneNumber('+19075551234') // US number for consistency
     .withEmail('kiribati@example.com')
     .withTimezone('Pacific/Kiritimati') // UTC+14
     .withPreferredSendHour(8)

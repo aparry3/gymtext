@@ -29,7 +29,21 @@ export default function ChatContainer() {
   const [summaryAnchorId, setSummaryAnchorId] = useState<string | null>(null);
   
   // New state management for partial objects (Phase 4)
-  const [currentUser, setCurrentUser] = useState<Partial<User>>({});
+  const [currentUser, setCurrentUser] = useState<Partial<User>>(() => {
+    // Auto-detect timezone and set default preferred send hour on initialization
+    try {
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return {
+        timezone: detectedTimezone,
+        preferredSendHour: 8, // Default to 8 AM
+      };
+    } catch {
+      return {
+        timezone: 'America/New_York', // Fallback
+        preferredSendHour: 8,
+      };
+    }
+  });
   const [currentProfile, setCurrentProfile] = useState<Partial<FitnessProfile>>({});
   const [canSave, setCanSave] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
