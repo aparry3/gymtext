@@ -115,4 +115,117 @@ describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
     });
     expect(res.fieldsUpdated).toEqual(['name']);
   });
+
+  it('extracts and validates timezone from location string', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { timezone: 'California' },
+      reason: 'user mentioned location',
+      confidence: 0.8
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.timezone).toBe('America/Los_Angeles');
+    expect(res.fieldsUpdated).toEqual(['timezone']);
+  });
+
+  it('extracts and validates timezone from direct IANA string', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { timezone: 'America/Chicago' },
+      reason: 'user provided timezone',
+      confidence: 0.9
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.timezone).toBe('America/Chicago');
+    expect(res.fieldsUpdated).toEqual(['timezone']);
+  });
+
+  it('parses natural language time expressions', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { preferredSendHour: '8am' },
+      reason: 'user mentioned preferred time',
+      confidence: 0.85
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.preferredSendHour).toBe(8);
+    expect(res.fieldsUpdated).toEqual(['preferredSendHour']);
+  });
+
+  it('parses general time periods', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { preferredSendHour: 'evening' },
+      reason: 'user prefers evening workouts',
+      confidence: 0.8
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.preferredSendHour).toBe(18);
+    expect(res.fieldsUpdated).toEqual(['preferredSendHour']);
+  });
+
+  it('handles numeric preferred send hour directly', async () => {
+    const currentUser: Partial<User> = {};
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: { preferredSendHour: 7 },
+      reason: 'user specified exact hour',
+      confidence: 0.9
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser.preferredSendHour).toBe(7);
+    expect(res.fieldsUpdated).toEqual(['preferredSendHour']);
+  });
+
+  it('updates multiple scheduling fields together', async () => {
+    const currentUser: Partial<User> = { name: 'Alice' };
+    const updates = {
+      timezone: 'New York',
+      preferredSendHour: '6:00 AM'
+    };
+
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates,
+      reason: 'user provided scheduling preferences',
+      confidence: 0.9
+    });
+
+    expect(res.applied).toBe(true);
+    expect(res.updatedUser).toEqual({
+      name: 'Alice',
+      timezone: 'America/New_York',
+      preferredSendHour: 6
+    });
+    expect(res.fieldsUpdated).toEqual(['timezone', 'preferredSendHour']);
+  });
+
+  it('filters invalid timezone and time inputs', async () => {
+    const currentUser: Partial<User> = { name: 'Bob' };
+    const res = await userInfoPatchTool.invoke({
+      currentUser,
+      updates: {
+        timezone: 'InvalidTimezone',
+        preferredSendHour: 'not a time'
+      },
+      reason: 'invalid scheduling data',
+      confidence: 0.9
+    });
+
+    expect(res.applied).toBe(false); // Should be false when no valid updates
+    expect(res.reason).toMatch(/No valid fields/);
+    expect(res.updatedUser).toEqual({
+      name: 'Bob' // preserved existing data
+    });
+    expect(res.fieldsUpdated).toEqual([]); // no valid updates applied
+  });
 });

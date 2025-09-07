@@ -338,7 +338,70 @@ Bot: "Most people prefer morning workouts around 8 AM to start their day strong 
 - ✅ `src/server/services/onboardingChatService.ts` - Core onboarding logic updates
 - ✅ `src/server/agents/onboardingChat/prompts.ts` - Prompt system and guidance updates
 
-**Next**: Phase 2 - Enhanced Collection Tools
+**Next**: Phase 3 - Testing & Validation
+
+### Phase 2: Enhanced Collection Tools ✅ COMPLETED
+**Status**: COMPLETED on 2025-09-06
+
+✅ **Created Natural Language Time Parsing** - Comprehensive time expression parser
+- **File**: `src/shared/utils/timeUtils.ts` (new)
+- **Features**: 
+  - Parses expressions like "8am", "6:00 PM", "morning", "evening"
+  - Handles general periods ("morning" → 8, "evening" → 18)
+  - Validates 24-hour format (0-23)
+  - Provides time suggestions and display formatting
+  - Supports both string and numeric inputs
+
+✅ **Enhanced Timezone Validation** - Location-aware timezone parsing
+- **File**: `src/shared/utils/timezone.ts` (enhanced)
+- **Features**:
+  - Validates IANA timezone identifiers using `Intl.DateTimeFormat`
+  - Maps natural language locations to timezones ("California" → "America/Los_Angeles")
+  - Supports US states, cities, regions, and colloquial timezone names
+  - International location mapping for common locations
+  - Timezone suggestions based on partial input
+
+✅ **Enhanced UserInfoPatchTool** - Complete timezone and time preference extraction
+- **File**: `src/server/agents/tools/userInfoPatchTool.ts`
+- **Features**:
+  - Added timezone and preferredSendHour fields to schema
+  - Integrated natural language parsing for both fields
+  - Validates and normalizes timezone strings (direct IANA or location-based)
+  - Parses time expressions from conversation ("8am", "evening", etc.)
+  - Maintains backward compatibility with existing phone/email extraction
+  - Enhanced confidence scoring for scheduling information
+
+✅ **Comprehensive Test Coverage** - Full test suite for new functionality
+- **File**: `tests/unit/server/agents/tools/userInfoPatchTool.test.ts`
+- **Coverage**:
+  - Timezone extraction from location strings ("California" → "America/Los_Angeles")
+  - Direct IANA timezone validation ("America/Chicago")
+  - Natural language time parsing ("8am" → 8, "evening" → 18)
+  - Numeric time handling (direct hour values)
+  - Multiple field updates (timezone + time together)
+  - Invalid input filtering and validation
+  - All 13 tests passing ✅
+
+**Quality Checks**:
+- ✅ **ESLint**: Passed with no warnings or errors
+- ✅ **Build**: Successful compilation with TypeScript
+- ✅ **Unit Tests**: All UserInfoPatchTool tests passing (13/13)
+- ✅ **Integration**: Time parsing and timezone validation working correctly
+
+**Files Created/Modified**:
+- ✅ `src/shared/utils/timeUtils.ts` (new) - Natural language time parsing
+- ✅ `src/shared/utils/timezone.ts` (enhanced) - Location-to-timezone mapping
+- ✅ `src/server/agents/tools/userInfoPatchTool.ts` - Enhanced with scheduling fields
+- ✅ `tests/unit/server/agents/tools/userInfoPatchTool.test.ts` - Comprehensive test coverage
+
+**Key Capabilities Added**:
+- **Smart Timezone Detection**: "I'm in California" → `timezone: "America/Los_Angeles"`
+- **Natural Time Parsing**: "I prefer evening workouts" → `preferredSendHour: 18`
+- **Flexible Input Handling**: Supports both technical (IANA) and conversational formats
+- **Robust Validation**: Invalid inputs are filtered out, valid ones normalized
+- **Confidence Scoring**: Maintains existing confidence threshold system
+
+**Next**: Phase 3 - Testing & Validation (Update unit tests, add integration tests)
 
 ### Priority 1: Core Onboarding Logic
 1. ✅ **Update computePendingRequiredFields()** - Remove email, add timezone/preferredSendHour (COMPLETED)
@@ -346,8 +409,8 @@ Bot: "Most people prefer morning workouts around 8 AM to start their day strong 
 3. ✅ **Update onboarding prompts** - Remove email from essentials, add scheduling guidance (COMPLETED)
 
 ### Priority 2: Enhanced Collection Tools
-4. ✅ **Enhance UserInfoPatchTool** - Add timezone and time preference extraction
-5. ✅ **Add natural language time parsing** - Handle "morning", "8am", "evening" etc.
+4. ✅ **Enhance UserInfoPatchTool** - Add timezone and time preference extraction (COMPLETED)
+5. ✅ **Add natural language time parsing** - Handle "morning", "8am", "evening" etc. (COMPLETED)
 6. ✅ **Add timezone validation** - Validate against IANA timezone list
 
 ### Priority 3: Testing & Validation
