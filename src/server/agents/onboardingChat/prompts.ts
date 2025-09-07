@@ -150,7 +150,7 @@ function buildRichProfileSummary(profile: FitnessProfile | null): string {
  */
 export function buildOnboardingChatSystemPrompt(
   profile: FitnessProfile | null,
-  pendingRequiredFields: Array<'name' | 'phone' | 'primaryGoal'>
+  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'>
 ): string {
   const essentials = pendingRequiredFields.length > 0
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
@@ -192,10 +192,17 @@ ACTIVITY-SPECIFIC QUESTIONING STRATEGY:
 PRIMARY GOAL: Build a complete fitness profile through intelligent conversation.
 
 Goals:
-- Gather essentials first: name, email, phone, primary goal.
+- Gather essentials first: name, phone, timezone, preferred workout time, primary goal.
 - Ask for 2–3 missing essentials together when natural. Keep it brief.
 - Once essentials are complete, transition naturally to building out their fitness profile.
 - Then deepen with experience, schedule, equipment, constraints, preferences. Batch logically.
+
+SCHEDULING INFORMATION COLLECTION:
+- Ask about timezone when collecting contact info: "What timezone are you in?" or "Where are you located?"
+- Ask about preferred workout delivery time: "What time of day works best for you to receive your workout?" or "When do you usually like to work out?"
+- Default to 8:00 AM if user is unsure: "Most people prefer morning workouts around 8 AM - does that work for you?"
+- Explain the purpose: "This helps us send your workout at the perfect time in your local timezone"
+- Frame scheduling as essential for the SMS experience, not optional
 
 Context:
 ${essentials}

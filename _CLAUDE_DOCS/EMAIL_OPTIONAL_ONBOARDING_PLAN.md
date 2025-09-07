@@ -307,10 +307,43 @@ Bot: "Most people prefer morning workouts around 8 AM to start their day strong 
 
 ## Implementation Order
 
+### Phase 1: Core Onboarding Logic ✅ COMPLETED
+**Status**: COMPLETED on 2025-09-06
+
+✅ **Updated computePendingRequiredFields()** - Removed email requirement and added timezone/preferredSendHour
+- **File**: `src/server/services/onboardingChatService.ts`
+- **Change**: Modified function signature from `Array<'name' | 'email' | 'phone' | 'primaryGoal'>` to `Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'>`
+- **Logic**: Removed email check, added timezone and preferredSendHour validation
+- **Comments**: Updated to reflect that email is now optional
+
+✅ **Updated user creation logic** - Made email optional, required timezone/preferredSendHour
+- **File**: `src/server/services/onboardingChatService.ts`
+- **Change**: Modified user creation to use `email: updatedUser.email || null` (optional)
+- **Change**: Modified to use `timezone: updatedUser.timezone!` (required)
+- **Change**: Modified to use `preferredSendHour: updatedUser.preferredSendHour!` (required)
+- **Comments**: Added clarifying comments for required vs optional fields
+
+✅ **Updated onboarding prompts** - Removed email from essentials, added scheduling guidance
+- **File**: `src/server/agents/onboardingChat/prompts.ts`
+- **Change**: Updated function signature to accept new required fields array
+- **Change**: Updated prompt text from "name, email, phone, primary goal" to "name, phone, timezone, preferred workout time, primary goal"
+- **Added**: Comprehensive scheduling information collection guidance with example questions and approaches
+
+**Quality Checks**:
+- ✅ **ESLint**: Passed with no warnings or errors
+- ✅ **Build**: Successful compilation and type checking
+- ✅ **Database Codegen**: Successfully updated type definitions
+
+**Files Modified**:
+- ✅ `src/server/services/onboardingChatService.ts` - Core onboarding logic updates
+- ✅ `src/server/agents/onboardingChat/prompts.ts` - Prompt system and guidance updates
+
+**Next**: Phase 2 - Enhanced Collection Tools
+
 ### Priority 1: Core Onboarding Logic
-1. ✅ **Update computePendingRequiredFields()** - Remove email, add timezone/preferredSendHour
-2. ✅ **Update user creation logic** - Make email optional, require timezone/preferredSendHour  
-3. ✅ **Update onboarding prompts** - Remove email from essentials, add scheduling guidance
+1. ✅ **Update computePendingRequiredFields()** - Remove email, add timezone/preferredSendHour (COMPLETED)
+2. ✅ **Update user creation logic** - Make email optional, require timezone/preferredSendHour (COMPLETED)
+3. ✅ **Update onboarding prompts** - Remove email from essentials, add scheduling guidance (COMPLETED)
 
 ### Priority 2: Enhanced Collection Tools
 4. ✅ **Enhance UserInfoPatchTool** - Add timezone and time preference extraction
