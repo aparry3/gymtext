@@ -1,15 +1,16 @@
 import { z } from 'zod';
 import type { Users } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
+import { normalizeUSPhoneNumber, validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 // Base user schema
 export const UserSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   email: z.string().email().nullable(),
-  // Prefer phoneNumber; keep phone as backward-compatible alias
-  phoneNumber: z.string(),
-  phone: z.string().nullable().optional(),
+  phoneNumber: z.string()
+    .transform(normalizeUSPhoneNumber)
+    .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
   profile: z.unknown().nullable(),
   stripeCustomerId: z.string().nullable(),
   preferredSendHour: z.number().int().min(0).max(23),
@@ -226,9 +227,9 @@ export const UserWithProfileSchema = UserSchema.extend({
 export const CreateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().nullable().optional(),
-  // Accept either; normalize to phoneNumber in repositories/services
-  phoneNumber: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
+  phoneNumber: z.string()
+    .transform(normalizeUSPhoneNumber)
+    .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
   profile: z.unknown().nullable().optional(),
   isActive: z.boolean().optional().default(true),
   isAdmin: z.boolean().optional().default(false),

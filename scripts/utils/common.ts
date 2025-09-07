@@ -123,9 +123,10 @@ export async function confirm(message: string): Promise<boolean> {
 
 /**
  * Parse phone number to ensure consistent format
+ * @deprecated Use normalizeUSPhoneNumber from @/shared/utils/phoneUtils instead
  */
 export function parsePhoneNumber(phone: string): string {
-  // Remove all non-numeric characters
+  // Legacy function - use phoneUtils.normalizeUSPhoneNumber() for new code
   let cleaned = phone.replace(/\D/g, '');
   
   // Add country code if missing

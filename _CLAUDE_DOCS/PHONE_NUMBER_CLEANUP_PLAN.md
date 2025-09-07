@@ -228,18 +228,81 @@ Ensure the generated types reflect `phoneNumber` field only (should already be c
 **Files Created:**
 - ✅ `src/shared/utils/phoneUtils.ts`
 
-**Next**: Phase 2 - Update Schema and Types
+**Next**: Phase 3 - Update Tools and Agents
+
+### Phase 2: Update Schema and Types ✅ COMPLETED
+**Status**: COMPLETED on 2025-09-06
+
+✅ **Updated User Schemas** - Removed duplicate `phone` field and integrated phoneUtils
+- **UserSchema**: Removed `phone` field, updated `phoneNumber` to use `normalizeUSPhoneNumber` transform and `validateUSPhoneNumber` validation
+- **CreateUserSchema**: Removed `phone` field, only accepts `phoneNumber` with validation
+- Both schemas now provide automatic normalization and validation of US phone numbers
+- Added proper error messages for invalid phone numbers
+
+✅ **Updated User Model** - Replaced custom validation with phoneUtils
+- Replaced `isValidPhoneNumber()` method with `validateUSPhoneNumber` import
+- Updated error message to be more specific ("Valid US phone number is required")
+- Removed redundant phone validation logic
+
+**Files Modified:**
+- ✅ `src/server/models/user/schemas.ts` - Schema integration with phoneUtils
+- ✅ `src/server/models/user/index.ts` - Model validation updates
+
+**Quality Checks:**
+- ✅ **ESLint**: Passed with no warnings or errors
+- ✅ **Syntax**: TypeScript code is syntactically correct
+- ✅ **Import Resolution**: Works correctly within Next.js build system
+
+**Next**: Phase 5 - Frontend Components
+
+### Phase 3 & 4: Update Tools, Agents, and References ✅ COMPLETED  
+**Status**: COMPLETED on 2025-09-06
+
+✅ **Updated UserInfoPatchTool** - Integrated phoneUtils and removed phone field support
+- Replaced custom `normalizePhoneNumber()` with `normalizeUSPhoneNumber` import
+- Replaced regex validation with `validateUSPhoneNumber`
+- Removed `phone` field support from schema - only accepts `phoneNumber`
+- Updated tests to use valid US phone numbers with proper area codes
+- All tests passing (6/6) ✅
+
+✅ **Updated API Routes** - Use phoneNumber consistently
+- `src/app/api/checkout/route.ts`: Added clarifying comment that Stripe expects 'phone' field name
+- Internal application consistently uses `phoneNumber`, only Stripe integration uses `phone` for API compatibility
+
+✅ **Updated Test Files** - Removed phone field references and ensured US phone compliance
+- Fixed test fixtures to use valid US phone numbers for international timezone users
+- Updated `userInfoPatchTool.test.ts` to use valid US phone numbers (area codes 2-9)
+- Deprecated `parsePhoneNumber()` in `scripts/utils/common.ts` with migration notice
+
+✅ **Updated Script Files** - Marked legacy functions for migration
+- Added deprecation notice to `parsePhoneNumber()` in scripts/utils/common.ts
+- Function still works for backward compatibility but points to new phoneUtils
+
+**Files Modified:**
+- ✅ `src/server/agents/tools/userInfoPatchTool.ts` - Complete phoneUtils integration  
+- ✅ `src/app/api/checkout/route.ts` - Added clarifying comment
+- ✅ `tests/unit/server/agents/tools/userInfoPatchTool.test.ts` - Fixed test cases with valid US numbers
+- ✅ `tests/fixtures/users.ts` - Updated international fixtures to use US phone numbers  
+- ✅ `scripts/utils/common.ts` - Added deprecation notice
+
+**Quality Checks:**
+- ✅ **ESLint**: Passed with no warnings or errors
+- ✅ **Unit Tests**: All UserInfoPatchTool tests passing (6/6)
+- ✅ **Integration**: Phone normalization and validation working correctly
+- ✅ **Consistency**: All code now uses `phoneNumber` field consistently
+
+**Next**: Phase 5 - Frontend Components (SignUp, Profile components)
 
 ## Implementation Order
 
 ### Priority 1: Core Infrastructure  
 1. ✅ **Create `phoneUtils.ts`** - Centralized utilities (COMPLETED)
-2. 🚧 **Update User Schema** - Remove duplicate fields  
-3. 🚧 **Update User Model** - Use new validation
+2. ✅ **Update User Schema** - Remove duplicate fields (COMPLETED)  
+3. ✅ **Update User Model** - Use new validation (COMPLETED)
 
 ### Priority 2: Tools and Agents  
-4. ✅ **Update UserInfoPatchTool** - Remove phone support
-5. ✅ **Update API Routes** - Use phoneNumber consistently
+4. ✅ **Update UserInfoPatchTool** - Remove phone support (COMPLETED)
+5. ✅ **Update API Routes** - Use phoneNumber consistently (COMPLETED)
 
 ### Priority 3: Frontend
 6. ✅ **Update SignUp Component** - Use centralized utils

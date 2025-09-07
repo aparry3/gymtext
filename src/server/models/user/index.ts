@@ -4,6 +4,7 @@ export * from './schemas';
 // Import what we need for the UserModel class
 import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, NewUser, FitnessProfile } from './schemas';
+import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Partial<FitnessProfile>;
@@ -55,8 +56,8 @@ export class UserModel {
       throw new Error('User name must be at least 2 characters long');
     }
     
-    if (!userData.phoneNumber || !this.isValidPhoneNumber(userData.phoneNumber)) {
-      throw new Error('Valid phone number is required');
+    if (!userData.phoneNumber || !validateUSPhoneNumber(userData.phoneNumber)) {
+      throw new Error('Valid US phone number is required');
     }
     
     if (userData.email && !this.isValidEmail(userData.email)) {
@@ -73,11 +74,7 @@ export class UserModel {
     }
   }
 
-  private isValidPhoneNumber(phone: string): boolean {
-    // Basic phone number validation - can be enhanced
-    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
-  }
+  // Phone validation is now handled by phoneUtils.validateUSPhoneNumber
 
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

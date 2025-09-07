@@ -24,7 +24,7 @@ describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
     const updates = { 
       name: 'Alice',
       email: 'alice@example.com',
-      phoneNumber: '+15551234567'
+      phoneNumber: '+13392223571'
     };
 
     const res = await userInfoPatchTool.invoke({
@@ -38,7 +38,7 @@ describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
     expect(res.updatedUser).toEqual({
       name: 'Alice',
       email: 'alice@example.com', 
-      phoneNumber: '+15551234567'
+      phoneNumber: '+13392223571'
     });
     expect(res.fieldsUpdated).toEqual(['name', 'email', 'phoneNumber']);
     expect(res.confidence).toBe(0.9);
@@ -48,13 +48,13 @@ describe('userInfoPatchTool (Phase 4 - Pure Function)', () => {
     const currentUser: Partial<User> = {};
     const res = await userInfoPatchTool.invoke({
       currentUser,
-      updates: { phone: '(555) 123-4567' },
+      updates: { phoneNumber: '3392223571' },
       reason: 'user provided phone',
       confidence: 0.8
     });
 
     expect(res.applied).toBe(true);
-    expect(res.updatedUser.phoneNumber).toBe('+5551234567');
+    expect(res.updatedUser.phoneNumber).toBe('+13392223571');
     expect(res.fieldsUpdated).toEqual(['phoneNumber']);
   });
 

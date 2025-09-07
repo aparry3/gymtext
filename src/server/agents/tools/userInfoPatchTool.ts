@@ -1,17 +1,7 @@
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import type { User } from '@/server/models/userModel';
-
-const E164ish = /^\+?[1-9]\d{7,14}$/;
-
-function normalizePhoneNumber(input: string | undefined | null): string | undefined {
-  if (!input) return undefined;
-  const digits = input.replace(/\D/g, '');
-  if (!digits) return undefined;
-  const withPlus = digits.startsWith('0') ? digits.replace(/^0+/, '') : digits;
-  const e164 = `+${withPlus}`;
-  return e164;
-}
+import { normalizeUSPhoneNumber, validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 export const userInfoPatchTool = tool(
   async ({ currentUser, updates, reason, confidence }) => {
@@ -29,11 +19,10 @@ export const userInfoPatchTool = tool(
 
     // Normalize inputs
     let { name, email } = updates;
-    const phoneNumber = updates.phoneNumber;
-    const phone = updates.phone;
+    const { phoneNumber } = updates;
 
-    // Prefer explicit phoneNumber, fallback to phone
-    const normalizedPhone = normalizePhoneNumber(phoneNumber ?? phone ?? undefined);
+    // Normalize phone number using centralized utility
+    const normalizedPhone = normalizeUSPhoneNumber(phoneNumber);
 
     const fieldsUpdated: string[] = [];
     const userUpdate: Partial<User> = { ...currentUser };
@@ -54,9 +43,9 @@ export const userInfoPatchTool = tool(
         fieldsUpdated.push('email');
       }
     }
-    if (typeof (phoneNumber ?? phone) === 'string' && normalizedPhone) {
-      // Basic E.164-ish validation
-      if (E164ish.test(normalizedPhone)) {
+    if (typeof phoneNumber === 'string' && normalizedPhone) {
+      // Validate using centralized US phone validation
+      if (validateUSPhoneNumber(normalizedPhone)) {
         userUpdate.phoneNumber = normalizedPhone;
         fieldsUpdated.push('phoneNumber');
       }
@@ -104,7 +93,6 @@ export const userInfoPatchTool = tool(
           name: z.string().min(1).optional(),
           email: z.string().optional(),
           phoneNumber: z.string().optional(),
-          phone: z.string().optional(),
         })
         .refine((obj) => Object.keys(obj).length > 0, {
           message: 'At least one field must be provided in updates',
