@@ -1,146 +1,47 @@
 import type { FitnessProfile } from '@/server/models/user/schemas';
 
 /**
- * Build a comprehensive profile summary using all available context
- * This replaces the limited 4-field summary with rich contextual information
+ * Build a simplified profile summary focused on key facts for next questions
+ * Replaces the complex buildRichProfileSummary with essential context only
  */
-function buildRichProfileSummary(profile: FitnessProfile | null): string {
-  if (!profile) return 'No profile yet.';
+function buildSimplifiedProfileSummary(profile: FitnessProfile | null): string {
+  if (!profile) return 'No profile information yet.';
   
-  const sections = [];
+  const keyFacts = [];
   
-  // Goals & Objectives (highest priority)
-  if (profile.primaryGoal || profile.specificObjective) {
-    let goalSection = `Goals: ${profile.primaryGoal || 'Not specified'}`;
+  // Primary goal and objective (highest priority)
+  if (profile.primaryGoal) {
+    let goalText = `Goal: ${profile.primaryGoal}`;
     if (profile.specificObjective) {
-      goalSection += ` (${profile.specificObjective})`;
+      goalText += ` (${profile.specificObjective})`;
     }
     if (profile.eventDate) {
-      goalSection += ` by ${profile.eventDate}`;
+      goalText += ` by ${profile.eventDate}`;
     }
-    if (profile.timelineWeeks) {
-      goalSection += ` (${profile.timelineWeeks} week timeline)`;
-    }
-    sections.push(goalSection);
+    keyFacts.push(goalText);
   }
   
-  // Activity-Specific Context (NEW - high priority)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const activityData = (profile as any).activityData;
-  if (activityData && activityData.type) {
-    let activitySection = `Activity Focus: ${activityData.type.charAt(0).toUpperCase() + activityData.type.slice(1)}`;
-    
-    if (activityData.experienceLevel) {
-      activitySection += ` (${activityData.experienceLevel} level)`;
-    }
-    
-    if (activityData.goals && activityData.goals.length > 0) {
-      activitySection += ` - Goals: ${activityData.goals.join(', ')}`;
-    }
-    
-    if (activityData.keyMetrics && Object.keys(activityData.keyMetrics).length > 0) {
-      const metrics = Object.entries(activityData.keyMetrics).map(([key, value]) => 
-        `${key}: ${value}`
-      ).join(', ');
-      activitySection += ` - Metrics: ${metrics}`;
-    }
-    
-    if (activityData.equipment && activityData.equipment.length > 0) {
-      activitySection += ` - Equipment: ${activityData.equipment.join(', ')}`;
-    }
-    
-    sections.push(activitySection);
+  // Current activity level
+  if (profile.currentActivity) {
+    keyFacts.push(`Current activity: ${profile.currentActivity}`);
   }
   
-  // Current Training Context
-  if (profile.currentActivity || profile.currentTraining?.programName) {
-    let trainingSection = 'Current Training: ';
-    if (profile.currentActivity) {
-      trainingSection += profile.currentActivity;
-    } else if (profile.currentTraining?.programName) {
-      trainingSection += profile.currentTraining.programName;
-    }
-    if (profile.currentTraining?.focus) {
-      trainingSection += ` (focus: ${profile.currentTraining.focus})`;
-    }
-    sections.push(trainingSection);
-  }
-  
-  // Detailed Availability
-  if (profile.availability) {
-    const avail = profile.availability;
-    let scheduleSection = 'Schedule: ';
-    const scheduleParts = [];
-    
-    if (avail.daysPerWeek) scheduleParts.push(`${avail.daysPerWeek} days/week`);
-    if (avail.minutesPerSession) scheduleParts.push(`${avail.minutesPerSession} min/session`);
-    if (avail.preferredTimes) scheduleParts.push(`prefers ${avail.preferredTimes}`);
-    
-    scheduleSection += scheduleParts.length > 0 ? scheduleParts.join(', ') : 'Not specified';
-    sections.push(scheduleSection);
-  }
-  
-  // Equipment & Location
-  if (profile.equipment) {
-    const eq = profile.equipment;
-    let equipmentSection = `Equipment: ${eq.access || 'Not specified'}`;
-    
-    if (eq.location) {
-      equipmentSection += ` at ${eq.location}`;
-    }
-    if (eq.items && eq.items.length > 0) {
-      equipmentSection += ` (has: ${eq.items.join(', ')})`;
-    }
-    if (eq.constraints && eq.constraints.length > 0) {
-      equipmentSection += ` [constraints: ${eq.constraints.join(', ')}]`;
-    }
-    
-    sections.push(equipmentSection);
-  }
-  
-  // Experience & Preferences
-  if (profile.experienceLevel || profile.preferences?.workoutStyle) {
-    let experienceSection = `Experience: ${profile.experienceLevel || 'Not specified'}`;
-    
-    if (profile.preferences?.workoutStyle) {
-      experienceSection += `, prefers ${profile.preferences.workoutStyle}`;
-    }
-    if (profile.preferences?.enjoyedExercises && profile.preferences.enjoyedExercises.length > 0) {
-      experienceSection += ` (likes: ${profile.preferences.enjoyedExercises.slice(0, 3).join(', ')})`;
-    }
-    
-    sections.push(experienceSection);
-  }
-  
-  // Active Constraints
+  // Key constraints or limitations
   if (profile.constraints && profile.constraints.length > 0) {
     const activeConstraints = profile.constraints.filter(c => c.status === 'active');
     if (activeConstraints.length > 0) {
-      const constraintLabels = activeConstraints.map(c => {
-        let label = c.label;
-        if (c.severity) label += ` (${c.severity})`;
-        return label;
-      });
-      sections.push(`Constraints: ${constraintLabels.join(', ')}`);
+      keyFacts.push(`Constraints: ${activeConstraints.map(c => c.label).join(', ')}`);
     }
   }
   
-  // Physical Metrics
-  if (profile.metrics?.bodyweight || profile.metrics?.heightCm) {
-    const metricsParts = [];
-    
-    if (profile.metrics.bodyweight) {
-      metricsParts.push(`${profile.metrics.bodyweight.value}${profile.metrics.bodyweight.unit}`);
-    }
-    if (profile.metrics.heightCm) {
-      metricsParts.push(`${profile.metrics.heightCm}cm`);
-    }
-    
-    sections.push(`Physical: ${metricsParts.join(', ')}`);
+  // Equipment access
+  if (profile.equipment?.access) {
+    keyFacts.push(`Equipment: ${profile.equipment.access}`);
   }
   
-  return sections.length > 0 ? sections.join('\n- ') : 'No profile information yet.';
+  return keyFacts.length > 0 ? keyFacts.join(' | ') : 'No profile information yet.';
 }
+
 
 /**
  * Build onboarding-focused system prompt with comprehensive context awareness.
@@ -156,72 +57,55 @@ export function buildOnboardingChatSystemPrompt(
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
     : 'Essentials complete.';
 
-  // Use comprehensive profile context instead of limited 4-field summary
-  const profileSummary = buildRichProfileSummary(profile);
+  // Simplified profile context - focus on key facts for next questions
+  const profileSummary = buildSimplifiedProfileSummary(profile);
 
-  // Identify contextual gaps to help guide next questions
-  const contextualGaps = profile ? computeContextualGaps(profile) : [];
-  const gapsContext = contextualGaps.length > 0 
-    ? `\nProfile Gaps to Address: ${contextualGaps.join(', ')}`
-    : '';
+  // Essential batching rules when missing multiple essentials
+  const batchingGuidelines = pendingRequiredFields.length > 1 ? `
 
-  // Add contextual guidelines when essentials are complete
-  const contextualGuidelines = pendingRequiredFields.length === 0 ? `
+ESSENTIAL BATCHING RULES:
+- When missing name, phone, timezone, or preferred time: ask for ALL remaining essentials in ONE message
+- Use natural language: "What's your name? Also, for reaching you with workouts, what phone number should I use, and should I send those at 8:00am EST or would you prefer a different time/timezone?"
+- Don't ask essentials one at a time - batch them together for efficiency` : '';
 
-CONTEXT AWARENESS FOR PROFILE BUILDING:
-- Acknowledge specific objectives when mentioned (e.g., "Great! For your Grand Canyon rim-to-rim hike...")
-- Reference captured equipment/constraints context when determining what else to ask
-- Build on stated preferences to ask relevant profile completion questions
-- Use current training context to inform what information gaps remain
-- Focus ONLY on gathering complete profile information - DO NOT make training recommendations
+  // Simplified activity-specific guidelines only when essentials complete
+  const activityGuidelines = pendingRequiredFields.length === 0 ? `
 
-ACTIVITY-SPECIFIC QUESTIONING STRATEGY:
-- When activityData exists, ask questions based on missing fields in that specific activity profile
-- For HIKING activity: Ask about longest hikes, elevation comfort, backpacking experience, pack weight comfort
-- For RUNNING activity: Ask about weekly mileage, longest runs, race experience, current pace
-- For STRENGTH activity: Ask about current lifts, training frequency, gym experience, form confidence
-- For CYCLING activity: Ask about training volume, longest rides, terrain comfort, bike type
-- For SKIING activity: Ask about days per season, terrain comfort, equipment ownership
-- For OTHER activities: Ask about experience level, activity-specific metrics, equipment needs
-- Use activity-specific experience to INFER general fitness level and frame questions in activity context
-- Frame follow-up questions in the context of their specific activity (e.g., "For your Grand Canyon hike prep..." rather than "For fitness...")
-- If no activityData exists, use specificObjective to determine relevant activity-specific questions` : '';
+ACTIVITY-FOCUSED QUESTIONING:
+- For running goals: Ask about weekly mileage + longest run + current pace together
+- For strength goals: Ask about experience + current lifts + gym access together  
+- For general fitness: Ask about current activity + experience + schedule together
+- Reference their specific goal (e.g., "For your Army Ten Miler prep...")
+- Batch related questions to reduce back-and-forth` : '';
 
-  return `You are GymText's onboarding coach. Be warm, clear, and efficient.
+  return `You are GymText's onboarding coach. Be professional, warm, and efficient.
 
-PRIMARY GOAL: Build a complete fitness profile through intelligent conversation.
+PRIMARY GOAL: Build a complete fitness profile through smart conversation batching.
 
-Goals:
-- Gather essentials first: name, phone, timezone, preferred workout time, primary goal.
-- Ask for 2–3 missing essentials together when natural. Keep it brief.
-- Once essentials are complete, transition naturally to building out their fitness profile.
-- Then deepen with experience, schedule, equipment, constraints, preferences. Batch logically.
-
-SCHEDULING INFORMATION COLLECTION:
-- Ask about timezone when collecting contact info: "What timezone are you in?" or "Where are you located?"
-- Ask about preferred workout delivery time: "What time of day works best for you to receive your workout?" or "When do you usually like to work out?"
-- Default to 8:00 AM if user is unsure: "Most people prefer morning workouts around 8 AM - does that work for you?"
-- Explain the purpose: "This helps us send your workout at the perfect time in your local timezone"
-- Frame scheduling as essential for the SMS experience, not optional
+Approach:
+- Batch essential questions together for efficiency
+- Group related activity questions in single messages
+- Acknowledge information naturally without excessive enthusiasm
+- Focus on profile building, not workout recommendations
 
 Context:
 ${essentials}
-Current Profile:
-${profileSummary}${gapsContext}${contextualGuidelines}
+Profile Summary:
+${profileSummary}${batchingGuidelines}${activityGuidelines}
 
-Style:
-- Conversational and human. Avoid robotic phrasing and redundant confirmations.
-- Keep replies under ~120 words. Use one question or a small batch per turn.
+Conversation Style:
+- Professional but warm tone - avoid excessive exclamation marks
+- Use natural acknowledgments: "Got it", "Good base to work with", "Solid foundation"
+- Avoid repetitive "Thanks [name]!" openings
+- Keep responses under 100 words
+- Be conversational, not robotic
 
-Behavior:
-- If the user provides multiple details, accept them and continue without confirmation.
-- NEVER ask about information already captured in the profile above.
-- Acknowledge captured information briefly (e.g., "Great! For your [specific objective]...")
-- Use profile context to ask relevant follow-up questions.
-- ONLY provide a comprehensive summary when essentials are complete AND you're ready to move to the next phase of onboarding.
-- Do NOT summarize all captured information after every user response - this feels unnatural.
-- Focus on profile building, not workout recommendations or exercise suggestions.
-- Ask follow-up questions based on gaps, but don't recite everything you know about them.
+CRITICAL RULES:
+- NEVER ask about information already captured in the profile above
+- When multiple essentials are missing, ask for them ALL in one message
+- Batch related questions together (don't ask one at a time)
+- Reference their specific goal when transitioning between topics
+- Accept multiple details without excessive confirmation
 `;
 }
 
