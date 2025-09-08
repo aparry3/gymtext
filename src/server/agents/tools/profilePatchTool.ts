@@ -101,9 +101,29 @@ export const profilePatchTool = tool(
 
         const currentActivities = currentProfile.activityData || [];
         
-        // Merge each new activity
-        mergedActivityData = (updates.activityData || []).reduce(
-          (acc: ActivityData, newActivity: any) => mergeActivityData(acc, newActivity as AnyActivity), // eslint-disable-line @typescript-eslint/no-explicit-any
+        // Clean and sanitize activity data before merging
+        const sanitizedActivities = (updates.activityData || []).map((activity: AnyActivity) => {  
+          // Remove null values from keyMetrics
+          if (activity.keyMetrics) {
+            const cleanKeyMetrics: Record<string, unknown> = {};  
+            for (const [key, value] of Object.entries(activity.keyMetrics)) {
+              if (value !== null && value !== undefined) {
+                cleanKeyMetrics[key] = value;
+              }
+            }
+            activity.keyMetrics = Object.keys(cleanKeyMetrics).length > 0 ? cleanKeyMetrics : undefined;
+          }
+          
+          // Ensure arrays are properly defined
+          activity.equipment = Array.isArray(activity.equipment) ? activity.equipment : [];
+          activity.goals = Array.isArray(activity.goals) ? activity.goals : [];
+          
+          return activity;
+        });
+        
+        // Merge each sanitized activity
+        mergedActivityData = sanitizedActivities.reduce(
+          (acc: ActivityData, newActivity: AnyActivity) => mergeActivityData(acc, newActivity),
           currentActivities
         );
         
