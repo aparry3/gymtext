@@ -97,9 +97,18 @@ ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - Skiing: ski, skiing, snowboard, snowboarding, slopes
 - Other: climbing, swimming, tennis, basketball, soccer, etc.
 
+🎯 GENDER DETECTION GUIDELINES:
+- DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"
+- NAME-BASED INFERENCE (0.8 confidence): Common gendered names like "Michael" (male), "Sarah" (female)
+  - Only use for very common, unambiguous names: Aaron, David, John, Michael → male; Sarah, Jennifer, Lisa, Emily → female
+  - Skip ambiguous names: Alex, Jordan, Taylor, Casey, etc.
+- CONTEXTUAL CLUES (0.7 confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
+- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say"
+- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary"
+
 CONFIDENCE SCORING GUIDELINES:
 - 0.9–1.0: Direct, explicit statements about current situation.
-  Examples: "I train 5 days a week", "I weigh 180 lbs", "My email is john@example.com"
+  Examples: "I train 5 days a week", "I weigh 180 lbs", "My email is john@example.com", "I'm a woman"
 
 - 0.7–0.89: Clear implications or recent changes. 
   Examples: "Started going to the gym", "Bought dumbbells", "Help me get in shape for ski season"
@@ -107,7 +116,8 @@ CONFIDENCE SCORING GUIDELINES:
 - 0.5–0.69: Moderate confidence statements. 
   Examples: "I usually train in the mornings", "I have some equipment at home"
 
-- Below 0.75: DO NOT UPDATE (unless it’s a GOAL statement — goals can be inferred and saved)
+- Below 0.75: DO NOT UPDATE (unless it's a GOAL statement — goals can be inferred and saved)
+- GENDER: Use 0.8+ for name inference, 0.7+ for contextual clues, 0.9+ for explicit statements
 
 INFORMATION TO EXTRACT (fitness > contact):
 
@@ -166,6 +176,10 @@ INFORMATION TO EXTRACT (fitness > contact):
    - Training level
    - Workout style preferences
    - Enjoyed/disliked exercises
+
+7. Demographics & Personal Information
+   - Gender (male, female, non-binary, prefer-not-to-say)
+   - Age (if mentioned)
 
 CONTACT INFORMATION (update_user_info):
 - Name, email, phone

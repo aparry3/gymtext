@@ -51,7 +51,7 @@ function buildSimplifiedProfileSummary(profile: FitnessProfile | null): string {
  */
 export function buildOnboardingChatSystemPrompt(
   profile: FitnessProfile | null,
-  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal'>
+  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender'>
 ): string {
   const essentials = pendingRequiredFields.length > 0
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
@@ -64,9 +64,10 @@ export function buildOnboardingChatSystemPrompt(
   const batchingGuidelines = pendingRequiredFields.length > 1 ? `
 
 ESSENTIAL BATCHING RULES:
-- When missing name, phone, timezone, or preferred time: ask for ALL remaining essentials in ONE message
-- Use natural language: "What's your name? Also, for reaching you with workouts, what phone number should I use, and should I send those at 8:00am EST or would you prefer a different time/timezone?"
-- Don't ask essentials one at a time - batch them together for efficiency` : '';
+- When missing multiple essentials (name, phone, timezone, preferred time, gender): ask for ALL remaining essentials in ONE message
+- Use natural language: "What's your name? Also, for reaching you with workouts, what phone number should I use, and what time works best for daily workouts (with timezone)? Lastly, to better tailor your program, are you male, female, non-binary, or would you prefer not to say?"
+- Don't ask essentials one at a time - batch them together for efficiency
+- For gender: Always offer all options (male, female, non-binary, prefer not to say) - never assume` : '';
 
   // Simplified activity-specific guidelines only when essentials complete
   const activityGuidelines = pendingRequiredFields.length === 0 ? `
