@@ -11,7 +11,7 @@ export type OnboardingEvent =
   | { type: 'profile_update'; data: Partial<FitnessProfile> }
   | { type: 'ready_to_save'; data: { canSave: boolean; missing: string[] } }
   | { type: 'user_created'; data: { user: User; success: true } }
-  | { type: 'milestone'; data: 'essentials_complete' | 'ask_next' | 'summary' }
+  | { type: 'milestone'; data: 'essentials_complete' | 'ask_next' | 'summary' | 'natural_summary' | 'natural_summary_incomplete' | 'final_confirmation' }
   | { type: 'error'; data: string };
 
 export interface OnboardingMessageInput {
@@ -41,6 +41,9 @@ export class OnboardingChatService {
 
   async *streamMessage(input: OnboardingMessageInput): AsyncGenerator<OnboardingEvent> {
     const { message, currentUser = {}, currentProfile = {}, saveWhenReady = false, conversationHistory = [] } = input;
+
+    // Count user messages for natural pacing (including current message)
+    const userMessageCount = conversationHistory.filter(m => m.role === 'user').length + 1;
 
     // Track the state for this conversation turn
     let updatedUser = { ...currentUser };
@@ -140,7 +143,7 @@ export class OnboardingChatService {
 
     // Generate chat response
     try {
-      const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired);
+      const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired, userMessageCount);
       const chatResult = await this.chatAgent({
         userName: updatedUser.name || 'there',
         message,
@@ -150,6 +153,7 @@ export class OnboardingChatService {
         context: { 
           onboarding: true, 
           pendingRequiredFields: pendingRequired,
+          userMessageCount, // Pass message count for natural pacing
           recentMessages: recentMessages.join('\n') // Pass recent conversation context
         },
         systemPromptOverride: systemPrompt,
@@ -162,9 +166,13 @@ export class OnboardingChatService {
         yield { type: 'token', data: text.slice(i, i + chunkSize) };
       }
 
-      // Determine milestone
-      if (canSave) {
-        yield { type: 'milestone', data: 'summary' };
+      // Determine milestone based on natural pacing
+      if (userMessageCount >= 5 && canSave) {
+        yield { type: 'milestone', data: 'natural_summary' };
+      } else if (userMessageCount >= 5) {
+        yield { type: 'milestone', data: 'natural_summary_incomplete' };
+      } else if (canSave && saveWhenReady) {
+        yield { type: 'milestone', data: 'final_confirmation' };
       } else {
         yield { type: 'milestone', data: 'ask_next' };
       }

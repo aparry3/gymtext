@@ -56,7 +56,8 @@ function buildSimplifiedProfileSummary(profile: FitnessProfile | null): string {
  */
 export function buildOnboardingChatSystemPrompt(
   profile: FitnessProfile | null,
-  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'>
+  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'>,
+  userMessageCount?: number
 ): string {
   const essentials = pendingRequiredFields.length > 0
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
@@ -104,6 +105,7 @@ Approach:
 
 Context:
 ${essentials}
+${userMessageCount ? `User message count: ${userMessageCount}` : ''}
 Profile Summary:
 ${profileSummary}${batchingGuidelines}${activityGuidelines}
 
