@@ -3,11 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #2563EB;
+  --primary-foreground: #ffffff;
+  --secondary: #3B82F6;
+  --accent: #1E40AF;
+  --muted: #F1F5F9;
+  --border: #E2E8F0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,6 +28,12 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --primary: #3B82F6;
+    --primary-foreground: #ffffff;
+    --secondary: #60A5FA;
+    --accent: #2563EB;
+    --muted: #1E293B;
+    --border: #334155;
   }
 }
 

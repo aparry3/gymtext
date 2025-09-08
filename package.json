@@ -46,7 +46,8 @@
     "test:docker:unit": "./scripts/docker/run-tests.sh unit",
     "test:docker:integration": "./scripts/docker/run-tests.sh integration",
     "test:docker:watch": "./scripts/docker/run-tests.sh watch keep",
-    "test:docker:coverage": "./scripts/docker/run-tests.sh coverage"
+    "test:docker:coverage": "./scripts/docker/run-tests.sh coverage",
+    "favicon:generate": "node scripts/generate-favicons.js"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
@@ -98,6 +99,7 @@
     "inquirer": "^12.9.2",
     "kysely-codegen": "^0.18.5",
     "postcss": "^8.4.35",
+    "sharp": "^0.34.3",
     "table": "^6.9.0",
     "tailwindcss": "^4",
     "tsx": "^4.7.1",

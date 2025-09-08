@@ -264,12 +264,12 @@ export default function ChatContainer() {
       <div className="w-full">
         {/* Hero Section */}
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-50 via-white to-white" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />
           
           <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-sm text-emerald-700 backdrop-blur mb-6">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-sm text-blue-700 backdrop-blur mb-6">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 AI Fitness Coach
               </div>
               <h1 className="text-5xl font-bold tracking-tight text-gray-900 mb-4">
@@ -312,7 +312,7 @@ export default function ChatContainer() {
                   <button
                     onClick={send}
                     disabled={!input.trim()}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Get Started
                   </button>
@@ -323,19 +323,19 @@ export default function ChatContainer() {
             {/* Quick Actions */}
             <div className="mt-8 flex items-center justify-center gap-8 text-sm text-gray-500">
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Personalized plans
               </div>
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 SMS coaching
               </div>
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 5-minute setup
@@ -401,21 +401,21 @@ export default function ChatContainer() {
                 </p>
                 <ul className="space-y-4">
                   <li className="flex gap-3">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-semibold">1</div>
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 text-primary flex items-center justify-center text-sm font-semibold">1</div>
                     <div>
                       <p className="font-semibold text-gray-900">Quick chat onboarding</p>
                       <p className="text-gray-600">Tell us your goals, schedule, and equipment in a simple conversation</p>
                     </div>
                   </li>
                   <li className="flex gap-3">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-semibold">2</div>
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 text-primary flex items-center justify-center text-sm font-semibold">2</div>
                     <div>
                       <p className="font-semibold text-gray-900">AI builds your plan</p>
                       <p className="text-gray-600">Get a structured program with progressive overload and periodization</p>
                     </div>
                   </li>
                   <li className="flex gap-3">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-semibold">3</div>
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 text-primary flex items-center justify-center text-sm font-semibold">3</div>
                     <div>
                       <p className="font-semibold text-gray-900">Daily SMS coaching</p>
                       <p className="text-gray-600">Receive workouts, reminders, and adjustments via text</p>
@@ -429,8 +429,8 @@ export default function ChatContainer() {
                     <p className="text-sm text-gray-500 mb-1">You</p>
                     <p className="text-gray-900">I want to build muscle but only have 30 minutes a day</p>
                   </div>
-                  <div className="bg-emerald-50 rounded-lg p-4 shadow-sm">
-                    <p className="text-sm text-emerald-600 mb-1">GymText Coach</p>
+                  <div className="bg-blue-50 rounded-lg p-4 shadow-sm">
+                    <p className="text-sm text-primary mb-1">GymText Coach</p>
                     <p className="text-gray-900">Perfect! I&apos;ll create a time-efficient program focused on compound movements. What equipment do you have access to?</p>
                   </div>
                 </div>
@@ -447,7 +447,7 @@ export default function ChatContainer() {
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="h-12 w-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <div className="h-12 w-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
@@ -456,7 +456,7 @@ export default function ChatContainer() {
                 <p className="text-gray-600">Real mesocycles, deload weeks, and progressive overload built into every plan</p>
               </div>
               <div className="text-center">
-                <div className="h-12 w-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <div className="h-12 w-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -465,7 +465,7 @@ export default function ChatContainer() {
                 <p className="text-gray-600">Workouts adapt to your availability, from 2-6 days per week</p>
               </div>
               <div className="text-center">
-                <div className="h-12 w-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <div className="h-12 w-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
@@ -488,7 +488,7 @@ export default function ChatContainer() {
             </p>
             <button
               onClick={() => inputRef.current?.focus()}
-              className="px-8 py-4 bg-emerald-600 text-white rounded-lg text-lg font-semibold hover:bg-emerald-700 transition-colors"
+              className="px-8 py-4 bg-primary text-white rounded-lg text-lg font-semibold hover:bg-accent transition-colors"
             >
               Start Your Free Trial
             </button>
@@ -515,7 +515,7 @@ export default function ChatContainer() {
               </span>
             )}
             {essentialsComplete && (
-              <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+              <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
                 Account Created
               </span>
             )}
@@ -553,7 +553,7 @@ export default function ChatContainer() {
                 </span>
               )}
               {essentialsComplete && (
-                <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+                <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
                   Account Created
                 </span>
               )}
@@ -600,12 +600,12 @@ export default function ChatContainer() {
                       className={
                         m.role === 'user'
                           ? 'max-w-[70%] rounded-2xl bg-gray-100 px-4 py-2 text-gray-900'
-                          : `max-w-[70%] ${m.summary ? 'rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3' : ''} text-gray-900`
+                          : `max-w-[70%] ${m.summary ? 'rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3' : ''} text-gray-900`
                       }
                       id={`msg-${m.id}`}
                     >
                       {m.summary && (
-                        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
                           Essentials Summary
                         </div>
                       )}
@@ -667,7 +667,7 @@ export default function ChatContainer() {
       </div>
 
       {/* Desktop Profile Section - Right side (40%), only visible on larger screens */}
-      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-emerald-50 to-blue-50 overflow-hidden h-full">
+      <div className="hidden lg:block lg:w-2/5 border-l border-gray-200 bg-gradient-to-b from-blue-50 to-blue-100 overflow-hidden h-full">
         <ProfileView
           currentUser={currentUser}
           currentProfile={currentProfile}
