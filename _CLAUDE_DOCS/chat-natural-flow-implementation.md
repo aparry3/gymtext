@@ -64,20 +64,20 @@ if (userMessageCount >= 5 && canSave) {
 
 ---
 
-### Phase 2: Natural Summary Prompts & Formatting ⏳
+### Phase 2: Natural Summary Prompts & Formatting ✅
 
 **Goal**: Update the chat agent to recognize when to provide natural summaries and format them with structured markdown.
 
-#### Files to Modify:
-- `src/server/agents/onboardingChat/prompts.ts`
+#### Files Modified:
+- `src/server/agents/onboardingChat/prompts.ts` ✅
 
 #### Tasks:
-- [ ] **2.1 Add Message Count to System Prompt**
+- [x] **2.1 Add Message Count to System Prompt** ✅
   - Pass user message count to `buildOnboardingChatSystemPrompt()`
   - Add conversation flow guidance based on message count
   - Add specific instructions for message 5+ behavior
 
-- [ ] **2.2 Create Natural Summary Formatting Guidelines**
+- [x] **2.2 Create Natural Summary Formatting Guidelines** ✅
   - Add markdown formatting instructions (** for headers, • for lists)
   - Define structured summary template with sections
   - Add trainer-like language patterns: "I think I've got all I need..."
@@ -105,6 +105,29 @@ SUMMARY TRIGGER (Message ${userMessageCount}):
 - Mention: "You can save your profile anytime using the button on the right"
 ` : ''}
 ```
+
+### Phase 2 Implementation Summary ✅
+
+**Changes Made**:
+1. **Conversation Flow Guidance**: Added dynamic conversation flow section (lines 94-107) that:
+   - Provides different instructions for messages 1-4 vs 5+
+   - Triggers natural summary behavior at message 5+
+   - Includes specific formatting instructions and trainer-like language
+
+2. **Summary Template**: Added detailed structured summary template (lines 156-180) with:
+   - **Your Information** section (name, age, contact, gender, timezone)
+   - **Your Goals** section (primary goal, specific target, timeline)
+   - **Training Setup** section (experience, training days, equipment, preferred time)
+   - Markdown formatting with **bold headers** and • bullet points
+
+3. **Natural Language Patterns**: Defined trainer-like language:
+   - "I think I've got all I need to put together a program for you"
+   - "Does this look good, or should we adjust anything?"
+   - "You can also save your profile anytime using the button on the right"
+
+**Testing Status**: ✅ TypeScript compilation clean, ✅ ESLint passes
+
+---
 
 ### Phase 3: Structured Summary Formatting Function ⏳
 

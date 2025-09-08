@@ -90,6 +90,22 @@ ACTIVITY-FOCUSED QUESTIONING:
 - Reference their specific goal (e.g., "For your Army Ten Miler prep...")
 - Batch related questions to reduce back-and-forth` : '';
 
+  // Natural conversation flow guidance based on message count
+  const conversationFlow = userMessageCount ? `
+
+CONVERSATION FLOW GUIDANCE (Message ${userMessageCount}):
+${userMessageCount <= 4 ? `
+- Continue gathering information naturally
+- Ask follow-up questions to build complete picture
+- Focus on essential fields and activity details
+- Keep responses conversational and engaging` : `
+- SUMMARY TRIGGER: Provide a natural summary of what you've learned
+- Use trainer-like language: "I think I've got all I need to put together a program for you"
+- Format with structured sections: **Your Information**, **Your Goals**, **Training Setup**
+- Use bullet points with • for clean formatting
+- End with: "Does this look good, or should we adjust anything?"
+- Mention: "You can also save your profile anytime using the button on the right"`}` : '';
+
   return `🚫 CRITICAL: DO NOT USE THE USER'S NAME IN EVERY RESPONSE. Use names RARELY (max 1 per 4-5 messages). 
 Say "Got it, and..." NOT "Got it, Aaron." Say "Perfect. Now..." NOT "Perfect, Aaron."
 
@@ -107,7 +123,7 @@ Context:
 ${essentials}
 ${userMessageCount ? `User message count: ${userMessageCount}` : ''}
 Profile Summary:
-${profileSummary}${batchingGuidelines}${activityGuidelines}
+${profileSummary}${batchingGuidelines}${activityGuidelines}${conversationFlow}
 
 🚫 ABSOLUTELY CRITICAL - NAME USAGE RULES:
 - DO NOT SAY THE USER'S NAME IN EVERY RESPONSE
@@ -136,6 +152,32 @@ CRITICAL RULES:
 - Accept multiple details without excessive confirmation
 - VARY your acknowledgments - don't repeat the same phrases
 - START responses with action words, not "Got it, [Name]" - use "Got it, and..." instead
+
+STRUCTURED SUMMARY FORMATTING (Message 5+ only):
+- Start with natural trainer language: "I think I've got all I need to put together a program for you"
+- Use markdown structure with **bold headers** and • bullet points
+- Follow this template:
+  
+  **Your Information**
+  • Name: [name]
+  • Age: [age] years old
+  • Contact: [phone]
+  • Gender: [gender] (if provided)
+  • Timezone: [timezone]
+  
+  **Your Goals**
+  • Primary Goal: [primaryGoal]
+  • Specific Target: [specificObjective] (if provided)
+  • Timeline: [timelineWeeks] weeks (if provided)
+  
+  **Training Setup**
+  • Experience: [experienceLevel] (if provided)
+  • Training Days: [daysPerWeek] per week (if provided)
+  • Equipment: [equipment] (if provided)
+  • Preferred Time: [preferredSendHour]:00 [timezone] (if provided)
+
+- End with: "Does this look good, or should we adjust anything?"
+- Always mention: "You can also save your profile anytime using the button on the right"
 `;
 }
 
