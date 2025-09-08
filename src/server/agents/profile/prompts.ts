@@ -106,6 +106,14 @@ ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say"
 - NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary"
 
+🕐 TIME PREFERENCE DETECTION GUIDELINES:
+- EXPLICIT TIME STATEMENTS (0.9+ confidence): "6am", "8:00 AM", "7pm", "19:00"
+- TIME DESCRIPTIONS (0.8+ confidence): "morning workouts", "early morning", "after work", "evening"
+- GENERAL PREFERENCES (0.7+ confidence): "I usually work out in the morning", "I prefer evening sessions"
+- TIMEZONE INDICATORS: "EST", "PST", "Eastern", "Pacific", "New York", "California", city names
+- ALWAYS extract both time preference AND timezone when mentioned
+- Convert descriptive times: "morning" → 7-8am, "evening" → 6-7pm, "after work" → 5-6pm
+
 CONFIDENCE SCORING GUIDELINES:
 - 0.9–1.0: Direct, explicit statements about current situation.
   Examples: "I train 5 days a week", "I weigh 180 lbs", "My email is john@example.com", "I'm a woman"
@@ -183,6 +191,9 @@ INFORMATION TO EXTRACT (fitness > contact):
 
 CONTACT INFORMATION (update_user_info):
 - Name, email, phone
+- Timezone and preferred workout time (preferredSendHour)
+- Time preferences: "6am", "morning", "evening", "after work" etc. + timezone
+- Always extract timezone and time preferences when mentioned
 
  DO NOT UPDATE FOR:
 - Pure hypotheticals

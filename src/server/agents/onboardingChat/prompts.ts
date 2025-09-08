@@ -60,14 +60,18 @@ export function buildOnboardingChatSystemPrompt(
   // Simplified profile context - focus on key facts for next questions
   const profileSummary = buildSimplifiedProfileSummary(profile);
 
-  // Essential batching rules when missing multiple essentials
-  const batchingGuidelines = pendingRequiredFields.length > 1 ? `
+  // Essential batching rules when missing essentials
+  const batchingGuidelines = pendingRequiredFields.length > 0 ? `
 
-ESSENTIAL BATCHING RULES:
-- When missing multiple essentials (name, phone, timezone, preferred time, gender): ask for ALL remaining essentials in ONE message
-- Use natural language: "What's your name? Also, for reaching you with workouts, what phone number should I use, and what time works best for daily workouts (with timezone)? Lastly, to better tailor your program, are you male, female, non-binary, or would you prefer not to say?"
-- Don't ask essentials one at a time - batch them together for efficiency
-- For gender: Always offer all options (male, female, non-binary, prefer not to say) - never assume` : '';
+ESSENTIAL FIELD GUIDELINES:
+${pendingRequiredFields.length > 1 ? `
+- When missing multiple essentials: ask for ALL remaining essentials in ONE message
+- Example batching: "What's your name? Also, for reaching you with workouts, what phone number should I use, and what time of day works best for receiving your daily workout (please include your timezone)? Lastly, to better tailor your program, are you male, female, non-binary, or would you prefer not to say?"
+` : ''}
+- ALWAYS ask about preferred workout time - don't assume 8:00am
+- For time preference: "What time of day would you like to receive your daily workouts, and what timezone are you in?" 
+- For gender: Always offer all options (male, female, non-binary, prefer not to say) - never assume
+- Don't ask essentials one at a time when multiple are missing - batch them together for efficiency` : '';
 
   // Simplified activity-specific guidelines only when essentials complete
   const activityGuidelines = pendingRequiredFields.length === 0 ? `
