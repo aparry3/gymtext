@@ -177,11 +177,11 @@ export class OnboardingChatService {
   private computePendingRequiredFields(
     profile: Partial<FitnessProfile>,
     user: Partial<User>
-  ): Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender'> {
+  ): Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'> {
     // Focus on essentials needed to create user account and start profile building
-    // Email is now optional - collect name, phone, timezone, preferred send hour, primary goal, and gender
+    // Email is now optional - collect name, phone, timezone, preferred send hour, primary goal, gender, and age
     // Additional contextual completeness is handled by computeContextualGaps() in the prompts
-    const missing: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender'> = [];    
+    const missing: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'> = [];    
     
     if (!user.name) missing.push('name');
     if (!user.phoneNumber) missing.push('phone');
@@ -189,6 +189,7 @@ export class OnboardingChatService {
     if (user.preferredSendHour === undefined || user.preferredSendHour === null) missing.push('preferredSendHour');
     if (!profile.primaryGoal) missing.push('primaryGoal');
     if (!profile.gender) missing.push('gender');
+    if (!profile.age) missing.push('age');
 
     return missing;
   }

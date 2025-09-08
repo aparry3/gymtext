@@ -56,7 +56,7 @@ function buildSimplifiedProfileSummary(profile: FitnessProfile | null): string {
  */
 export function buildOnboardingChatSystemPrompt(
   profile: FitnessProfile | null,
-  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender'>
+  pendingRequiredFields: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'>
 ): string {
   const essentials = pendingRequiredFields.length > 0
     ? `Essentials missing: ${pendingRequiredFields.join(', ')}.`
@@ -71,11 +71,12 @@ export function buildOnboardingChatSystemPrompt(
 ESSENTIAL FIELD GUIDELINES:
 ${pendingRequiredFields.length > 1 ? `
 - When missing multiple essentials: ask for ALL remaining essentials in ONE message
-- Example batching: "What's your name? Also, for reaching you with workouts, what phone number should I use, and what time of day works best for receiving your daily workout (please include your timezone)? Lastly, to better tailor your program, are you male, female, non-binary, or would you prefer not to say?"
+- Example batching: "What's your name and age? Also, for reaching you with workouts, what phone number should I use, and what time of day works best for receiving your daily workout (please include your timezone)? Lastly, to better tailor your program, are you male, female, non-binary, or would you prefer not to say?"
 ` : ''}
 - ALWAYS ask about preferred workout time - don't assume 8:00am
 - For time preference: "What time of day would you like to receive your daily workouts, and what timezone are you in?" 
 - For gender: Always offer all options (male, female, non-binary, prefer not to say) - never assume
+- For age: Ask naturally "What's your age?" or "How old are you?" - age helps tailor fitness programs
 - Don't ask essentials one at a time when multiple are missing - batch them together for efficiency` : '';
 
   // Simplified activity-specific guidelines only when essentials complete
