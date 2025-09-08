@@ -97,14 +97,17 @@ ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - Skiing: ski, skiing, snowboard, snowboarding, slopes
 - Other: climbing, swimming, tennis, basketball, soccer, etc.
 
-🎯 GENDER DETECTION GUIDELINES:
-- DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"
-- NAME-BASED INFERENCE (0.8 confidence): Common gendered names like "Michael" (male), "Sarah" (female)
+🎯 GENDER DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
+- EXPLICIT GENDER WORDS (0.95+ confidence): "male", "female", "man", "woman", "guy", "girl"
+- DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"  
+- NAME-BASED INFERENCE (0.8+ confidence): Common gendered names like "Michael" (male), "Sarah" (female)
   - Only use for very common, unambiguous names: Aaron, David, John, Michael → male; Sarah, Jennifer, Lisa, Emily → female
   - Skip ambiguous names: Alex, Jordan, Taylor, Casey, etc.
-- CONTEXTUAL CLUES (0.7 confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
-- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say"
-- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary"
+- CONTEXTUAL CLUES (0.75+ confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
+- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say" (0.9+ confidence)
+- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary" (0.9+ confidence)
+
+⚠️ CRITICAL: If a user says "Aaron, male, phone, time" - MUST extract gender: "male" with 0.95+ confidence
 
 🕐 TIME PREFERENCE DETECTION GUIDELINES:
 - EXPLICIT TIME STATEMENTS (0.9+ confidence): "6am", "8:00 AM", "7pm", "19:00"
@@ -125,7 +128,8 @@ CONFIDENCE SCORING GUIDELINES:
   Examples: "I usually train in the mornings", "I have some equipment at home"
 
 - Below 0.75: DO NOT UPDATE (unless it's a GOAL statement — goals can be inferred and saved)
-- GENDER: Use 0.8+ for name inference, 0.7+ for contextual clues, 0.9+ for explicit statements
+- GENDER: Use 0.8+ for name inference, 0.75+ for contextual clues, 0.9+ for explicit statements
+- GENDER EXTRACTION: When users explicitly state "male", "female", "non-binary" - treat as 0.95 confidence
 
 INFORMATION TO EXTRACT (fitness > contact):
 

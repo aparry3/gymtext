@@ -28,8 +28,8 @@ export function determineSectionOrder(
       id: 'personalInfo',
       title: 'Personal Information',
       priority: 1,
-      hasData: hasPersonalInfoData(userData),
-      dataCount: countPersonalInfoFields(userData),
+      hasData: hasPersonalInfoData(userData, profileData),
+      dataCount: countPersonalInfoFields(userData, profileData),
     },
     {
       id: 'goals',
@@ -152,17 +152,19 @@ export function getEmptyStateMessage(sectionType: SectionType): string {
 }
 
 // Helper functions for data checking
-function hasPersonalInfoData(userData: ProcessedUserData): boolean {
-  return !!(userData.name || userData.email || userData.phoneNumber);
+function hasPersonalInfoData(userData: ProcessedUserData, profileData: ProcessedProfileData): boolean {
+  return !!(userData.name || userData.email || userData.phoneNumber || profileData.gender || profileData.age);
 }
 
-function countPersonalInfoFields(userData: ProcessedUserData): number {
+function countPersonalInfoFields(userData: ProcessedUserData, profileData: ProcessedProfileData): number {
   let count = 0;
   if (userData.name) count++;
   if (userData.email) count++;
   if (userData.phoneNumber) count++;
   if (userData.timezone) count++;
   if (userData.preferredSendHour !== null) count++;
+  if (profileData.gender) count++;
+  if (profileData.age) count++;
   return count;
 }
 

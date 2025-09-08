@@ -87,7 +87,7 @@ export default function ProfileView({
     const sectionComponent = (() => {
       switch (section.id) {
         case 'personalInfo':
-          return <PersonalInfoSection key={section.id} userData={processedUserData} {...commonProps} />;
+          return <PersonalInfoSection key={section.id} userData={processedUserData} profileData={processedProfileData} {...commonProps} />;
         case 'goals':
           return <GoalsSection key={section.id} profileData={processedProfileData} {...commonProps} />;
         case 'trainingStatus':

@@ -39,6 +39,11 @@ function buildSimplifiedProfileSummary(profile: FitnessProfile | null): string {
     keyFacts.push(`Equipment: ${profile.equipment.access}`);
   }
   
+  // Gender information (important for onboarding context)
+  if (profile.gender) {
+    keyFacts.push(`Gender: ${profile.gender}`);
+  }
+  
   return keyFacts.length > 0 ? keyFacts.join(' | ') : 'No profile information yet.';
 }
 

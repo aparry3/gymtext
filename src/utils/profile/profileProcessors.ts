@@ -17,6 +17,10 @@ export interface ProcessedProfileData {
   eventDate: string | null;
   timelineWeeks: number | null;
   
+  // Personal Information
+  gender: string | null;
+  age: number | null;
+  
   // Experience
   experienceLevel: string | null;
   currentActivity: string | null;
@@ -117,6 +121,8 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
       specificObjective: null,
       eventDate: null,
       timelineWeeks: null,
+      gender: null,
+      age: null,
       experienceLevel: null,
       currentActivity: null,
       currentTraining: null,
@@ -143,6 +149,10 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
     specificObjective: typeof profile.specificObjective === 'string' && profile.specificObjective.trim() ? profile.specificObjective.trim() : null,
     eventDate: typeof profile.eventDate === 'string' && profile.eventDate.trim() ? profile.eventDate.trim() : null,
     timelineWeeks: typeof profile.timelineWeeks === 'number' && profile.timelineWeeks > 0 ? profile.timelineWeeks : null,
+    
+    // Personal Information with validation
+    gender: typeof profile.gender === 'string' && profile.gender.trim() ? profile.gender.trim() : null,
+    age: typeof profile.age === 'number' && profile.age >= 13 && profile.age <= 120 ? profile.age : null,
     
     // Experience with validation
     experienceLevel: typeof profile.experienceLevel === 'string' && profile.experienceLevel.trim() ? profile.experienceLevel.trim() : null,
@@ -173,6 +183,10 @@ export function calculateProfileCompleteness(
     userData.email ? 2 : 0,
     userData.phoneNumber ? 2 : 0,
     
+    // Personal information fields (weight: 2)
+    profileData.gender ? 2 : 0,
+    profileData.age ? 2 : 0,
+    
     // Basic profile fields (weight: 3)
     profileData.primaryGoal ? 3 : 0,
     profileData.experienceLevel ? 3 : 0,
@@ -192,7 +206,7 @@ export function calculateProfileCompleteness(
   ];
   
   const total = fields.reduce((sum, value) => sum + value, 0);
-  const maxPossible = 2 * 3 + 3 * 2 + 2 * 2 + 1 * 8; // 26 total
+  const maxPossible = 2 * 5 + 3 * 2 + 2 * 2 + 1 * 8; // 30 total (added 4 for gender and age)
   
   return Math.round((total / maxPossible) * 100);
 }
