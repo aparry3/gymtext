@@ -2,10 +2,11 @@ import CollapsibleSection from '../components/CollapsibleSection';
 import DataField from '../components/DataField';
 import EmptyState from '../components/EmptyState';
 import { getEmptyStateMessage } from '@/utils/profile/sectionVisibility';
-import type { ProcessedUserData } from '@/utils/profile/profileProcessors';
+import type { ProcessedUserData, ProcessedProfileData } from '@/utils/profile/profileProcessors';
 
 interface PersonalInfoSectionProps {
   userData: ProcessedUserData;
+  profileData?: ProcessedProfileData;
   isExpanded?: boolean;
   onToggle?: (expanded: boolean) => void;
   dataCount?: number;
@@ -19,11 +20,12 @@ const PersonalInfoIcon = () => (
 
 export default function PersonalInfoSection({
   userData,
+  profileData,
   isExpanded,
   onToggle,
   dataCount,
 }: PersonalInfoSectionProps) {
-  const hasData = !!(userData.name || userData.email || userData.phoneNumber);
+  const hasData = !!(userData.name || userData.email || userData.phoneNumber || profileData?.gender || profileData?.age);
 
   if (!hasData) {
     return (
@@ -65,6 +67,30 @@ export default function PersonalInfoSection({
           label="Phone"
           value={userData.phoneNumber}
         />
+        {profileData?.gender && (
+          <DataField
+            label="Gender"
+            value={profileData.gender}
+            formatter={(gender) => {
+              if (typeof gender !== 'string') return 'Not specified';
+              // Capitalize and format the gender values
+              const genderMap: Record<string, string> = {
+                'male': 'Male',
+                'female': 'Female',
+                'non-binary': 'Non-binary',
+                'prefer-not-to-say': 'Prefer not to say'
+              };
+              return genderMap[gender] || gender.charAt(0).toUpperCase() + gender.slice(1);
+            }}
+          />
+        )}
+        {profileData?.age && (
+          <DataField
+            label="Age"
+            value={profileData.age}
+            formatter={(age) => typeof age === 'number' ? `${age} years old` : 'Not specified'}
+          />
+        )}
         {userData.timezone && (
           <DataField
             label="Timezone"

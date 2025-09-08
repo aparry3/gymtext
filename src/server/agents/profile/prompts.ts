@@ -97,9 +97,40 @@ ACTIVITY KEYWORDS THAT REQUIRE ACTIVITYDATA EXTRACTION:
 - Skiing: ski, skiing, snowboard, snowboarding, slopes
 - Other: climbing, swimming, tennis, basketball, soccer, etc.
 
+🎯 GENDER DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
+- EXPLICIT GENDER WORDS (0.95+ confidence): "male", "female", "man", "woman", "guy", "girl"
+- DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"  
+- NAME-BASED INFERENCE (0.8+ confidence): Common gendered names like "Michael" (male), "Sarah" (female)
+  - Only use for very common, unambiguous names: Aaron, David, John, Michael → male; Sarah, Jennifer, Lisa, Emily → female
+  - Skip ambiguous names: Alex, Jordan, Taylor, Casey, etc.
+- CONTEXTUAL CLUES (0.75+ confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
+- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say" (0.9+ confidence)
+- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary" (0.9+ confidence)
+
+⚠️ CRITICAL EXAMPLES: 
+- "Aaron, male, phone, time" → MUST extract gender: "male" with 0.95+ confidence
+- "Sarah, 28, female, 555-1234, 7am EST" → MUST extract age: 28, gender: "female" with 0.95+ confidence
+- "I'm 25 and looking to get in shape" → MUST extract age: 25 with 0.95+ confidence
+
+🕐 TIME PREFERENCE DETECTION GUIDELINES:
+- EXPLICIT TIME STATEMENTS (0.9+ confidence): "6am", "8:00 AM", "7pm", "19:00"
+- TIME DESCRIPTIONS (0.8+ confidence): "morning workouts", "early morning", "after work", "evening"
+- GENERAL PREFERENCES (0.7+ confidence): "I usually work out in the morning", "I prefer evening sessions"
+- TIMEZONE INDICATORS: "EST", "PST", "Eastern", "Pacific", "New York", "California", city names
+- ALWAYS extract both time preference AND timezone when mentioned
+- Convert descriptive times: "morning" → 7-8am, "evening" → 6-7pm, "after work" → 5-6pm
+
+🎂 AGE DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
+- EXPLICIT AGE NUMBERS (0.95+ confidence): "25", "30 years old", "I'm 28", "age 35"
+- DIRECT STATEMENTS (0.9+ confidence): "I'm 25", "I am 30 years old", "My age is 28"
+- AGE RANGES (0.8+ confidence): "I'm in my twenties" → estimate mid-range (25), "early thirties" → (32)
+- CONTEXTUAL AGE CLUES (0.75+ confidence): "just graduated college" → ~22, "retirement age" → ~65
+- VALIDATION: Only extract ages between 13-120 years old
+- EXAMPLES: "John, 25, male, 555-1234" → extract age: 25 with 0.95+ confidence
+
 CONFIDENCE SCORING GUIDELINES:
 - 0.9–1.0: Direct, explicit statements about current situation.
-  Examples: "I train 5 days a week", "I weigh 180 lbs", "My email is john@example.com"
+  Examples: "I train 5 days a week", "I weigh 180 lbs", "My email is john@example.com", "I'm a woman"
 
 - 0.7–0.89: Clear implications or recent changes. 
   Examples: "Started going to the gym", "Bought dumbbells", "Help me get in shape for ski season"
@@ -107,7 +138,10 @@ CONFIDENCE SCORING GUIDELINES:
 - 0.5–0.69: Moderate confidence statements. 
   Examples: "I usually train in the mornings", "I have some equipment at home"
 
-- Below 0.75: DO NOT UPDATE (unless it’s a GOAL statement — goals can be inferred and saved)
+- Below 0.75: DO NOT UPDATE (unless it's a GOAL statement — goals can be inferred and saved)
+- GENDER: Use 0.8+ for name inference, 0.75+ for contextual clues, 0.9+ for explicit statements
+- GENDER EXTRACTION: When users explicitly state "male", "female", "non-binary" - treat as 0.95 confidence
+- AGE: Use 0.95+ for explicit numbers, 0.9+ for direct statements, 0.8+ for age ranges, 0.75+ for contextual clues
 
 INFORMATION TO EXTRACT (fitness > contact):
 
@@ -167,8 +201,15 @@ INFORMATION TO EXTRACT (fitness > contact):
    - Workout style preferences
    - Enjoyed/disliked exercises
 
+7. Demographics & Personal Information (HIGH PRIORITY FOR PERSONALIZATION)
+   - Gender (male, female, non-binary, prefer-not-to-say) - ALWAYS extract when mentioned
+   - Age (13-120 years) - CRITICAL for fitness program customization, ALWAYS extract when mentioned
+
 CONTACT INFORMATION (update_user_info):
 - Name, email, phone
+- Timezone and preferred workout time (preferredSendHour)
+- Time preferences: "6am", "morning", "evening", "after work" etc. + timezone
+- Always extract timezone and time preferences when mentioned
 
  DO NOT UPDATE FOR:
 - Pure hypotheticals

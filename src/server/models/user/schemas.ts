@@ -195,7 +195,7 @@ export const FitnessProfileSchema = z.object({
   fitnessGoals: z.string().optional(),
   skillLevel: z.string().optional(),
   exerciseFrequency: z.string().optional(),
-  gender: z.string().optional(),
+  gender: z.enum(['male', 'female', 'non-binary', 'prefer-not-to-say']).optional(),
   age: z.number().int().min(13).max(120).optional(),
   
   // New comprehensive profile fields
