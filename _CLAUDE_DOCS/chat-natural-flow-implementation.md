@@ -6,26 +6,27 @@ Transform the onboarding chat from a technical requirement-driven flow to a natu
 
 ## Implementation Phases
 
-### Phase 1: Backend Message Counting & Natural Pacing ⏳
+### Phase 1: Backend Message Counting & Natural Pacing ✅
 
 **Goal**: Add message counting logic and natural summary triggers based on conversation depth rather than field completion.
 
-#### Files to Modify:
-- `src/server/services/onboardingChatService.ts`
+#### Files Modified:
+- `src/server/services/onboardingChatService.ts` ✅
+- `src/server/agents/onboardingChat/prompts.ts` ✅
 
 #### Tasks:
-- [ ] **1.1 Add Message Counting Logic**
+- [x] **1.1 Add Message Counting Logic** ✅
   - Extract user message count from `conversationHistory`
   - Account for current message (`conversationHistory.filter(m => m.role === 'user').length + 1`)
   - Pass message count to chat agent context
 
-- [ ] **1.2 Update Milestone Logic**  
+- [x] **1.2 Update Milestone Logic** ✅
   - Replace current `if (canSave) yield 'summary'` with natural pacing
   - Add `natural_summary` milestone for message 5+ regardless of field completion
   - Add `natural_summary_incomplete` for when summary shown but fields missing
   - Reserve `final_confirmation` for explicit user save confirmation
 
-- [ ] **1.3 Update Event Types**
+- [x] **1.3 Update Event Types** ✅
   - Add new milestone types: `'natural_summary'`, `'natural_summary_incomplete'`, `'final_confirmation'`
   - Update TypeScript types in service
 
@@ -46,6 +47,23 @@ if (userMessageCount >= 5 && canSave) {
 }
 ```
 
+### Phase 1 Implementation Summary ✅
+
+**Changes Made**:
+1. **Message Counting**: Added `userMessageCount` calculation in `onboardingChatService.ts` line 46
+2. **Milestone Logic**: Updated milestone determination (lines 170-178) to use natural pacing:
+   - Messages 1-4: `ask_next`
+   - Message 5+ with complete profile: `natural_summary`
+   - Message 5+ with incomplete profile: `natural_summary_incomplete`
+   - Explicit save request: `final_confirmation`
+3. **Event Types**: Extended milestone union type to include new milestone types
+4. **System Prompt**: Updated `buildOnboardingChatSystemPrompt()` to accept and display message count
+5. **Context**: Added `userMessageCount` to chat agent context
+
+**Testing Status**: ✅ TypeScript compilation clean, ✅ ESLint passes
+
+---
+
 ### Phase 2: Natural Summary Prompts & Formatting ⏳
 
 **Goal**: Update the chat agent to recognize when to provide natural summaries and format them with structured markdown.
@@ -64,7 +82,7 @@ if (userMessageCount >= 5 && canSave) {
   - Define structured summary template with sections
   - Add trainer-like language patterns: "I think I've got all I need..."
 
-- [ ] **2.3 Update Function Signature**
+- [x] **2.3 Update Function Signature** ✅ (Completed in Phase 1)
   - Modify `buildOnboardingChatSystemPrompt()` to accept message count parameter
   - Update call sites in `onboardingChatService.ts`
 
