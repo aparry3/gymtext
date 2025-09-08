@@ -210,23 +210,51 @@ export default function ProfileView({
           {/* Missing fields alert */}
           {missingFields.length > 0 && (
             <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-sm text-amber-800">
-                <strong>Still need:</strong> {missingFields.map(field => {
-                  const fieldNames: Record<string, string> = {
-                    'name': 'your name',
-                    'email': 'email address',
-                    'phone': 'phone number',
-                    'primaryGoal': 'fitness goal'
-                  };
-                  return fieldNames[field] || field;
-                }).join(', ')}
-              </p>
+              <div className="flex items-start gap-3">
+                <svg className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <p className="text-sm text-amber-800 font-medium mb-1">
+                    Just a few more details needed
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    <strong>Still need:</strong> {missingFields.map(field => {
+                      const fieldNames: Record<string, string> = {
+                        'name': 'your name',
+                        'email': 'email address', 
+                        'phone': 'phone number',
+                        'timezone': 'timezone',
+                        'preferredSendHour': 'preferred workout time',
+                        'primaryGoal': 'fitness goal',
+                        'gender': 'gender',
+                        'age': 'age'
+                      };
+                      return fieldNames[field] || field;
+                    }).join(', ')}
+                  </p>
+                  <p className="text-xs text-amber-600 mt-2">
+                    Keep chatting to complete your profile, then you can start your coaching journey!
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Save button */}
+          {/* Save button with enhanced messaging */}
           {canSave && onSaveProfile && (
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
+              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-center gap-2 text-green-700 text-sm font-medium mb-1">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Ready to Start
+                </div>
+                <p className="text-green-600 text-xs leading-relaxed">
+                  You can save your profile anytime and start your fitness journey. Don&apos;t worry if you missed something - you can always text us later to update your information!
+                </p>
+              </div>
               <button
                 onClick={onSaveProfile}
                 disabled={!canSave || isStreaming}

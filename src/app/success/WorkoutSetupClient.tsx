@@ -93,10 +93,26 @@ export default function WorkoutSetupClient({ user }: { user: UserCookieData | nu
       )}
 
       {status === 'completed' && (
-        <p className="text-lg text-[#7a8599] mb-8">
-          Your workout plan is ready! You&apos;ll receive your first workout via text message soon. 
-          Get ready to start your fitness journey!
-        </p>
+        <div className="mb-8 space-y-4">
+          <p className="text-lg text-[#7a8599]">
+            Your workout plan is ready! You&apos;ll receive your first workout via text message soon. 
+            Get ready to start your fitness journey!
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+            <div className="flex items-start gap-3">
+              <svg className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-blue-900 mb-1">Need to update your profile?</h3>
+                <p className="text-sm text-blue-700">
+                  No problem! Just text us anytime with updates to your goals, schedule, or fitness information. 
+                  Your AI coach will automatically update your profile and adjust your workouts accordingly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {status === 'error' && (
