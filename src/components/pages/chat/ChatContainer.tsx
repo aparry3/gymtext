@@ -1,12 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { User, FitnessProfile } from '@/server/models/userModel';
 import ProfileView from './profile/ProfileView';
 import ProfileDrawer from './ProfileDrawer';
 import { initializeViewportHeight } from '@/shared/utils/viewport';
 
-type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'user_created' | 'milestone' | 'error';
+type EventType = 'token' | 'user_update' | 'profile_update' | 'ready_to_save' | 'natural_summary' | 'natural_summary_incomplete' | 'final_confirmation' | 'user_created' | 'milestone' | 'error';
 type Role = 'user' | 'assistant';
 
 interface ChatMessage {
@@ -14,6 +16,7 @@ interface ChatMessage {
   role: Role;
   content: string;
   summary?: boolean;
+  summaryType?: 'natural' | 'final';
 }
 
 export default function ChatContainer() {
@@ -147,6 +150,29 @@ export default function ChatContainer() {
             const saveData = data as { canSave: boolean; missing: string[] };
             setCanSave(saveData.canSave);
             setMissingFields(saveData.missing);
+          } else if (event === 'natural_summary' || event === 'natural_summary_incomplete') {
+            // Handle direct natural summary events
+            const anchorId = currentAssistantIdRef.current;
+            if (anchorId) {
+              setSummaryAnchorId(anchorId);
+              setMessages((prev) => prev.map(m => 
+                m.id === anchorId 
+                  ? { ...m, summary: true, summaryType: 'natural' }
+                  : m
+              ));
+            }
+          } else if (event === 'final_confirmation') {
+            // Handle direct final confirmation events
+            setEssentialsComplete(true);
+            const anchorId = currentAssistantIdRef.current;
+            if (anchorId) {
+              setSummaryAnchorId(anchorId);
+              setMessages((prev) => prev.map(m => 
+                m.id === anchorId 
+                  ? { ...m, summary: true, summaryType: 'final' }
+                  : m
+              ));
+            }
           } else if (event === 'user_created') {
             const userData = data as { user: User; success: true };
             setCreatedUser(userData.user);
@@ -158,7 +184,31 @@ export default function ChatContainer() {
           } else if (event === 'milestone') {
             if (data === 'essentials_complete') {
               setEssentialsComplete(true);
+            } else if (data === 'natural_summary' || data === 'natural_summary_incomplete') {
+              // Show natural summary with gentle styling
+              const anchorId = currentAssistantIdRef.current;
+              if (anchorId) {
+                setSummaryAnchorId(anchorId);
+                setMessages((prev) => prev.map(m => 
+                  m.id === anchorId 
+                    ? { ...m, summary: true, summaryType: 'natural' }
+                    : m
+                ));
+              }
+            } else if (data === 'final_confirmation') {
+              // Show final confirmation with stronger styling
+              setEssentialsComplete(true);
+              const anchorId = currentAssistantIdRef.current;
+              if (anchorId) {
+                setSummaryAnchorId(anchorId);
+                setMessages((prev) => prev.map(m => 
+                  m.id === anchorId 
+                    ? { ...m, summary: true, summaryType: 'final' }
+                    : m
+                ));
+              }
             } else if (data === 'summary') {
+              // Legacy support for old summary events
               setEssentialsComplete(true);
               const anchorId = currentAssistantIdRef.current;
               if (anchorId) {
@@ -599,17 +649,44 @@ export default function ChatContainer() {
                     <div
                       className={
                         m.role === 'user'
-                          ? 'max-w-[70%] rounded-2xl bg-gray-100 px-4 py-2 text-gray-900'
-                          : `max-w-[70%] ${m.summary ? 'rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3' : ''} text-gray-900`
+                          ? 'max-w-[85%] md:max-w-[70%] rounded-2xl bg-gray-100 px-4 py-2 text-gray-900'
+                          : `max-w-[95%] md:max-w-[85%] ${
+                              m.summary 
+                                ? m.summaryType === 'final'
+                                  ? 'rounded-2xl border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-4 shadow-md'
+                                  : 'rounded-2xl border border-blue-300 bg-gradient-to-br from-blue-50/30 to-blue-50 px-4 py-3 shadow-sm'
+                                : 'px-0 py-0'
+                            } text-gray-900`
                       }
                       id={`msg-${m.id}`}
                     >
                       {m.summary && (
-                        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                          Essentials Summary
+                        <div className={`mb-3 text-xs font-bold uppercase tracking-wide ${
+                          m.summaryType === 'final' 
+                            ? 'text-blue-600 flex items-center gap-2' 
+                            : 'text-blue-500'
+                        }`}>
+                          {m.summaryType === 'final' ? (
+                            <>
+                              <svg className="h-3 w-3 fill-current" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              Final Confirmation
+                            </>
+                          ) : (
+                            'Summary'
+                          )}
                         </div>
                       )}
-                      <div>{m.content}</div>
+                      {m.summary ? (
+                        <div className="prose prose-sm md:prose-base max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 prose-strong:font-semibold prose-ul:space-y-1">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {m.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div>{m.content}</div>
+                      )}
                     </div>
                   </div>
                 ))}
