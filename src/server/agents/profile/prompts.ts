@@ -19,7 +19,16 @@ export const buildUserProfileSystemPrompt = (
       ? JSON.stringify(currentUser, null, 2)
       : "No user info yet";
 
-  return `You are a profile extraction specialist for GymText, a fitness coaching app.
+  const currentDate = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  return `Today's date is ${currentDate}.
+
+You are a profile extraction specialist for GymText, a fitness coaching app.
 Your job is to identify and extract information from user messages that should be saved to their profile or user account.
 
 Current user profile (fitness-related):

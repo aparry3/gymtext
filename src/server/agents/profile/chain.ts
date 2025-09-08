@@ -45,7 +45,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
     const geminiModel = new ChatGoogleGenerativeAI({
       model: model,
       temperature,
-      maxOutputTokens: 10000,
+      maxOutputTokens: 3000,
     });
     return geminiModel.bindTools([profilePatchTool, userInfoPatchTool]);
   }
@@ -53,7 +53,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
   const openaiModel = new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 10000,
+    maxTokens: 3000,
   });
   
   return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);

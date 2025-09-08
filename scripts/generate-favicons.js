@@ -4,7 +4,7 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const logoPath = path.join(__dirname, '../public/gymtext_logo.png');
+const logoPath = path.join(__dirname, '../public/IconBG.png');
 const publicDir = path.join(__dirname, '../public');
 const appDir = path.join(__dirname, '../src/app');
 
@@ -20,7 +20,7 @@ const faviconSizes = [
 
 async function generateFavicons() {
   try {
-    console.log('🚀 Starting favicon generation from gymtext_logo.png...');
+    console.log('🚀 Starting favicon generation from IconBG.png...');
     
     // Check if logo exists
     if (!fs.existsSync(logoPath)) {
