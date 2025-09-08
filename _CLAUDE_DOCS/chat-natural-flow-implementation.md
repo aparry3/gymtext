@@ -129,22 +129,22 @@ SUMMARY TRIGGER (Message ${userMessageCount}):
 
 ---
 
-### Phase 3: Structured Summary Formatting Function ⏳
+### Phase 3: Structured Summary Formatting Function ✅
 
 **Goal**: Create a dedicated function to generate well-formatted summaries with proper structure and sections.
 
-#### Files to Create/Modify:
-- `src/server/services/onboardingChatService.ts` (add formatting function)
-- OR `src/server/utils/summaryFormatter.ts` (new file)
+#### Files Modified:
+- `src/server/services/onboardingChatService.ts` ✅
+- `src/server/agents/onboardingChat/prompts.ts` ✅
 
 #### Tasks:
-- [ ] **3.1 Create Summary Formatting Function**
+- [x] **3.1 Create Summary Formatting Function** ✅
   - Build `formatNaturalSummary(user, profile)` function
   - Include sections: Your Information, Your Goals, Training Setup
   - Handle optional fields gracefully (only show if present)
   - Return markdown-formatted string
 
-- [ ] **3.2 Integrate with Chat Agent**
+- [x] **3.2 Integrate with Chat Agent** ✅
   - Pass formatted summary to chat agent when `userMessageCount >= 5`
   - Ensure summary appears in AI response with proper formatting
   - Test various completion states (complete vs incomplete profiles)
@@ -175,6 +175,49 @@ ${user.preferredSendHour ? `• Preferred Time: ${user.preferredSendHour}:00 ${u
 Does this look good, or should we adjust anything? You can also save your profile anytime using the button on the right.`;
 }
 ```
+
+### Phase 3 Implementation Summary ✅
+
+**Changes Made**:
+1. **Summary Formatting Function** (`onboardingChatService.ts` lines 209-243):
+   - Created `formatNaturalSummary()` private method
+   - Three structured sections: **Your Information**, **Your Goals**, **Training Setup**
+   - Smart filtering to exclude empty fields using `.filter(Boolean)`
+   - Clean bullet point formatting with proper spacing
+
+2. **Chat Agent Integration** (`onboardingChatService.ts` lines 148-162):
+   - Generate `formattedSummary` when `userMessageCount >= 5`
+   - Pass summary in context object to chat agent
+   - AI can use pre-formatted summary directly
+
+3. **Prompt Enhancement** (`prompts.ts` lines 102-107):
+   - Updated conversation flow to prioritize `formattedSummary` from context
+   - Fallback to manual formatting if no pre-formatted summary
+   - Clear instructions for using provided formatted content
+
+**Summary Template Structure**:
+```markdown
+I think I've got all I need to put together a program for you. Take a look at this summary:
+
+**Your Information**
+• Name: [name]
+• Age: [age] years old
+• Contact: [phone]
+
+**Your Goals** 
+• Primary Goal: [goal]
+• Specific Target: [objective]
+
+**Training Setup**
+• Experience: [level]
+• Training Days: [days] per week
+
+Does this look good, or should we adjust anything? You can also save your profile anytime using the button on the right.
+```
+
+**Testing Status**: ✅ TypeScript compilation clean, ✅ ESLint passes
+
+---
 
 ### Phase 4: Frontend Event Handling & States ⏳
 

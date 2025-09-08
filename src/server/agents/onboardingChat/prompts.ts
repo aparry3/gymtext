@@ -99,8 +99,8 @@ ${userMessageCount <= 4 ? `
 - Ask follow-up questions to build complete picture
 - Focus on essential fields and activity details
 - Keep responses conversational and engaging` : `
-- SUMMARY TRIGGER: Provide a natural summary of what you've learned
-- Use trainer-like language: "I think I've got all I need to put together a program for you"
+- SUMMARY TRIGGER: If a formattedSummary is provided in context, use it directly as your response
+- If no formattedSummary, create a natural summary using trainer language: "I think I've got all I need..."
 - Format with structured sections: **Your Information**, **Your Goals**, **Training Setup**
 - Use bullet points with • for clean formatting
 - End with: "Does this look good, or should we adjust anything?"

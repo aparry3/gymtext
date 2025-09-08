@@ -144,6 +144,10 @@ export class OnboardingChatService {
     // Generate chat response
     try {
       const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired, userMessageCount);
+      
+      // Generate formatted summary for message 5+ 
+      const formattedSummary = userMessageCount >= 5 ? this.formatNaturalSummary(updatedUser, updatedProfile) : null;
+      
       const chatResult = await this.chatAgent({
         userName: updatedUser.name || 'there',
         message,
@@ -154,7 +158,8 @@ export class OnboardingChatService {
           onboarding: true, 
           pendingRequiredFields: pendingRequired,
           userMessageCount, // Pass message count for natural pacing
-          recentMessages: recentMessages.join('\n') // Pass recent conversation context
+          recentMessages: recentMessages.join('\n'), // Pass recent conversation context
+          formattedSummary // Pass pre-formatted summary when ready
         },
         systemPromptOverride: systemPrompt,
         config: { temperature: 0.7, verbose: process.env.NODE_ENV === 'development' },
@@ -200,5 +205,45 @@ export class OnboardingChatService {
     if (!profile.age) missing.push('age');
 
     return missing;
+  }
+
+  /**
+   * Format a natural summary for presentation to the user
+   * Uses structured markdown with sections and bullet points
+   */
+  private formatNaturalSummary(user: Partial<User>, profile: Partial<FitnessProfile>): string {
+    const infoItems = [
+      user.name && `• Name: ${user.name}`,
+      profile.age && `• Age: ${profile.age} years old`,
+      user.phoneNumber && `• Contact: ${user.phoneNumber}`,
+      profile.gender && `• Gender: ${profile.gender}`,
+      user.timezone && `• Timezone: ${user.timezone}`
+    ].filter(Boolean);
+
+    const goalItems = [
+      profile.primaryGoal && `• Primary Goal: ${profile.primaryGoal}`,
+      profile.specificObjective && `• Specific Target: ${profile.specificObjective}`,
+      profile.timelineWeeks && `• Timeline: ${profile.timelineWeeks} weeks`
+    ].filter(Boolean);
+
+    const trainingItems = [
+      profile.experienceLevel && `• Experience: ${profile.experienceLevel}`,
+      profile.availability?.daysPerWeek && `• Training Days: ${profile.availability.daysPerWeek} per week`,
+      profile.equipment?.access && `• Equipment: ${profile.equipment.access}`,
+      user.preferredSendHour && user.timezone && `• Preferred Time: ${user.preferredSendHour}:00 ${user.timezone}`
+    ].filter(Boolean);
+
+    return `I think I've got all I need to put together a program for you. Take a look at this summary:
+
+**Your Information**
+${infoItems.join('\n')}
+
+**Your Goals**
+${goalItems.join('\n')}
+
+**Training Setup**
+${trainingItems.join('\n')}
+
+Does this look good, or should we adjust anything? You can also save your profile anytime using the button on the right.`;
   }
 }
