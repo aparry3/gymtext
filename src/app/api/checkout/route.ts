@@ -51,13 +51,20 @@ export async function POST(request: Request) {
         // Save new user to database
         user = await userRepository.create(userData);
 
-        // Create fitness profile for new user
+        // Create fitness profile for new user using new schema structure
         const fitnessProfileData: CreateFitnessProfileData = {
-          primaryGoal: formData.fitnessGoals,
-          experienceLevel: formData.skillLevel,
+          goals: {
+            primary: formData.fitnessGoals,
+            timeline: 12 // Default 12 weeks
+          },
           availability: {
-            daysPerWeek: parseInt(formData.exerciseFrequency, 10)
-          }
+            daysPerWeek: parseInt(formData.exerciseFrequency, 10),
+            minutesPerSession: 60 // Default 60 minutes
+          },
+          equipmentAccess: {
+            gymAccess: true // Default assume gym access for checkout users
+          },
+          activityData: [] // Start with empty activity data
         };
 
         await userRepository.createOrUpdateFitnessProfile(user.id, fitnessProfileData);

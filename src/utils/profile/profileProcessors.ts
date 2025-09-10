@@ -145,10 +145,10 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
 
   return {
     // Goals with validation
-    primaryGoal: typeof profile.primaryGoal === 'string' && profile.primaryGoal.trim() ? profile.primaryGoal.trim() : null,
-    specificObjective: typeof profile.specificObjective === 'string' && profile.specificObjective.trim() ? profile.specificObjective.trim() : null,
-    eventDate: typeof profile.eventDate === 'string' && profile.eventDate.trim() ? profile.eventDate.trim() : null,
-    timelineWeeks: typeof profile.timelineWeeks === 'number' && profile.timelineWeeks > 0 ? profile.timelineWeeks : null,
+    primaryGoal: typeof profile.goals?.primary === 'string' && profile.goals.primary.trim() ? profile.goals.primary.trim() : null,
+    specificObjective: typeof profile.goals?.specific === 'string' && profile.goals.specific.trim() ? profile.goals.specific.trim() : null,
+    eventDate: null, // Not used in new schema
+    timelineWeeks: typeof profile.goals?.timeline === 'number' && profile.goals.timeline > 0 ? profile.goals.timeline : null,
     
     // Personal Information with validation
     gender: typeof profile.gender === 'string' && profile.gender.trim() ? profile.gender.trim() : null,

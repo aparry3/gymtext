@@ -24,6 +24,8 @@ export async function up(db: Kysely<DB>): Promise<void> {
     .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
     .addColumn('name', 'varchar(255)', (col) => col.notNull())
     .addColumn('phone_number', 'varchar(20)', (col) => col.notNull().unique())
+    .addColumn('age', 'integer')
+    .addColumn('gender', 'varchar(20)')
     .addColumn('email', 'varchar(255)', (col) => col.unique())
     .addColumn('stripe_customer_id', 'varchar(255)', (col) => col.unique())
     .addColumn('preferred_send_hour', 'integer', (col) => col.defaultTo(8).notNull())
@@ -130,8 +132,8 @@ export async function up(db: Kysely<DB>): Promise<void> {
       col.notNull().check(sql`direction IN ('inbound', 'outbound')`)
     )
     .addColumn('content', 'text', (col) => col.notNull())
-    .addColumn('phone_from', 'varchar(20)', (col) => col.notNull())
-    .addColumn('phone_to', 'varchar(20)', (col) => col.notNull())
+    .addColumn('phone_from', 'varchar(20)')
+    .addColumn('phone_to', 'varchar(20)')
     .addColumn('twilio_message_sid', 'varchar(100)')
     .addColumn('metadata', 'jsonb', (col) => col.defaultTo(sql`'{}'::jsonb`))
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
@@ -262,208 +264,6 @@ export async function up(db: Kysely<DB>): Promise<void> {
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
     .execute();
 
-  // =======================
-  // CREATE ALL INDEXES
-  // =======================
-  
-  // Users indexes
-  await db.schema
-    .createIndex('idx_users_stripe_customer_id')
-    .on('users')
-    .column('stripe_customer_id')
-    .execute();
-  
-  await db.schema
-    .createIndex('idx_users_send_hour')
-    .on('users')
-    .column('preferred_send_hour')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_users_timezone')
-    .on('users')
-    .column('timezone')
-    .execute();
-
-  // Profile updates indexes
-  await db.schema
-    .createIndex('idx_profile_updates_user_id')
-    .on('profile_updates')
-    .column('user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_profile_updates_created_at')
-    .on('profile_updates')
-    .column('created_at')
-    .execute();
-
-  // Subscriptions indexes
-  await db.schema
-    .createIndex('idx_subscriptions_user_id')
-    .on('subscriptions')
-    .column('user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_subscriptions_stripe_subscription_id')
-    .on('subscriptions')
-    .column('stripe_subscription_id')
-    .execute();
-
-  // Conversations indexes
-  await db.schema
-    .createIndex('idx_conversations_user_id')
-    .on('conversations')
-    .column('user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_conversations_last_message_at')
-    .on('conversations')
-    .column('last_message_at')
-    .using('btree')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_conversations_status')
-    .on('conversations')
-    .column('status')
-    .where('status', '=', 'active')
-    .execute();
-
-  // Messages indexes
-  await db.schema
-    .createIndex('idx_messages_conversation_id')
-    .on('messages')
-    .column('conversation_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_messages_created_at')
-    .on('messages')
-    .column('created_at')
-    .using('btree')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_messages_user_id_created_at')
-    .on('messages')
-    .columns(['user_id', 'created_at'])
-    .execute();
-
-  // Conversation topics indexes
-  await db.schema
-    .createIndex('idx_conversation_topics_conversation_id')
-    .on('conversation_topics')
-    .column('conversation_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_conversation_topics_topic')
-    .on('conversation_topics')
-    .columns(['topic', 'confidence'])
-    .execute();
-
-  // Fitness plans indexes
-  await db.schema
-    .createIndex('idx_fitness_plans_client')
-    .on('fitness_plans')
-    .columns(['client_id', 'start_date'])
-    .execute();
-
-  await db.schema
-    .createIndex('idx_fitness_plans_client_fitness')
-    .on('fitness_plans')
-    .column('client_id')
-    .execute();
-
-  // Microcycles indexes
-  await db.schema
-    .createIndex('microcycles_unique_week')
-    .on('microcycles')
-    .columns(['user_id', 'fitness_plan_id', 'mesocycle_index', 'week_number'])
-    .unique()
-    .execute();
-  
-  await db.schema
-    .createIndex('microcycles_active_user')
-    .on('microcycles')
-    .columns(['user_id', 'is_active'])
-    .execute();
-
-  // Workout instances indexes
-  await db.schema
-    .createIndex('idx_workout_instances_daily')
-    .on('workout_instances')
-    .columns(['client_id', 'date'])
-    .execute();
-
-  await db.schema
-    .createIndex('idx_workout_instances_microcycle')
-    .on('workout_instances')
-    .columns(['microcycle_id', 'date'])
-    .execute();
-
-  // Add unique constraint for workout_instances
-  await sql`
-    ALTER TABLE workout_instances
-    ADD CONSTRAINT unique_workout_instance_daily_session
-    UNIQUE (client_id, date, session_type)
-  `.execute(db);
-
-  // Admin activity logs indexes
-  await db.schema
-    .createIndex('idx_admin_activity_logs_target')
-    .on('admin_activity_logs')
-    .column('target_user_id')
-    .execute();
-
-  await db.schema
-    .createIndex('idx_admin_activity_logs_created_at')
-    .on('admin_activity_logs')
-    .column('created_at')
-    .execute();
-
-  // =======================
-  // PERFORMANCE INDEXES (from 20250813_add_performance_indexes.ts)
-  // =======================
-  
-  // Composite index for fitness plans (most common query pattern)
-  await db.schema
-    .createIndex('idx_fitness_plans_user_active')
-    .on('fitness_plans')
-    .columns(['client_id', 'current_mesocycle_index'])
-    .where('current_mesocycle_index', 'is not', null)
-    .execute();
-
-  // Composite index for recent conversations
-  await db.schema
-    .createIndex('idx_conversations_user_active_recent')
-    .on('conversations')
-    .columns(['user_id', 'status', 'last_message_at'])
-    .where('status', '=', 'active')
-    .execute();
-
-  // Index for recent message lookups
-  await db.schema
-    .createIndex('idx_messages_conversation_recent')
-    .on('messages')
-    .columns(['conversation_id', 'created_at'])
-    .execute();
-
-  // Index for workout instance date range queries
-  await db.schema
-    .createIndex('idx_workout_instances_date_range')
-    .on('workout_instances')
-    .columns(['client_id', 'date', 'session_type'])
-    .execute();
-
-  // Partial index for active microcycles
-  await sql`CREATE INDEX idx_microcycles_active ON microcycles (user_id) WHERE is_active = true`.execute(db);
-
-  // Index for subscription status checks
-  await sql`CREATE INDEX idx_subscriptions_active ON subscriptions (user_id, status) WHERE status = 'active'`.execute(db);
 }
 
 export async function down(db: Kysely<DB>): Promise<void> {
@@ -475,56 +275,6 @@ export async function down(db: Kysely<DB>): Promise<void> {
   await sql`DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;`.execute(db);
   await sql`DROP TRIGGER IF EXISTS update_users_updated_at ON users;`.execute(db);
 
-  // Drop performance indexes
-  await db.schema.dropIndex('idx_subscriptions_active').ifExists().execute();
-  await db.schema.dropIndex('idx_microcycles_active').ifExists().execute();
-  await db.schema.dropIndex('idx_workout_instances_date_range').ifExists().execute();
-  await db.schema.dropIndex('idx_messages_conversation_recent').ifExists().execute();
-  await db.schema.dropIndex('idx_conversations_user_active_recent').ifExists().execute();
-  await db.schema.dropIndex('idx_fitness_plans_user_active').ifExists().execute();
-
-  // Drop admin activity logs indexes
-  await db.schema.dropIndex('idx_admin_activity_logs_created_at').ifExists().execute();
-  await db.schema.dropIndex('idx_admin_activity_logs_target').ifExists().execute();
-
-  // Drop workout instances indexes
-  await db.schema.dropIndex('idx_workout_instances_microcycle').ifExists().execute();
-  await db.schema.dropIndex('idx_workout_instances_daily').ifExists().execute();
-
-  // Drop microcycles indexes
-  await db.schema.dropIndex('microcycles_active_user').ifExists().execute();
-  await db.schema.dropIndex('microcycles_unique_week').ifExists().execute();
-
-  // Drop fitness plans indexes
-  await db.schema.dropIndex('idx_fitness_plans_client_fitness').ifExists().execute();
-  await db.schema.dropIndex('idx_fitness_plans_client').ifExists().execute();
-
-  // Drop conversation topics indexes
-  await db.schema.dropIndex('idx_conversation_topics_topic').ifExists().execute();
-  await db.schema.dropIndex('idx_conversation_topics_conversation_id').ifExists().execute();
-
-  // Drop messages indexes
-  await db.schema.dropIndex('idx_messages_user_id_created_at').ifExists().execute();
-  await db.schema.dropIndex('idx_messages_created_at').ifExists().execute();
-  await db.schema.dropIndex('idx_messages_conversation_id').ifExists().execute();
-
-  // Drop conversations indexes
-  await db.schema.dropIndex('idx_conversations_status').ifExists().execute();
-  await db.schema.dropIndex('idx_conversations_last_message_at').ifExists().execute();
-  await db.schema.dropIndex('idx_conversations_user_id').ifExists().execute();
-
-  // Drop subscriptions indexes
-  await db.schema.dropIndex('idx_subscriptions_stripe_subscription_id').ifExists().execute();
-  await db.schema.dropIndex('idx_subscriptions_user_id').ifExists().execute();
-
-  // Drop profile updates indexes
-  await db.schema.dropIndex('idx_profile_updates_created_at').ifExists().execute();
-  await db.schema.dropIndex('idx_profile_updates_user_id').ifExists().execute();
-
-  // Drop users indexes
-  await db.schema.dropIndex('idx_users_timezone').ifExists().execute();
-  await db.schema.dropIndex('idx_users_send_hour').ifExists().execute();
-  await db.schema.dropIndex('idx_users_stripe_customer_id').ifExists().execute();
 
   // Drop tables in reverse order of dependencies
   await db.schema.dropTable('admin_activity_logs').ifExists().execute();

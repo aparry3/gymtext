@@ -179,11 +179,16 @@ export class UserRepository extends BaseRepository {
 
     // Merge the new profile data with existing profile
     const existingProfile = this.parseProfile(user.profile) || {};
+    
+    // Ensure required fields have defaults for new schema structure
     const updatedProfile: FitnessProfile = {
+      equipmentAccess: { gymAccess: false }, // Default no gym access
+      availability: { daysPerWeek: 3, minutesPerSession: 60 }, // Default 3 days, 60 minutes  
+      goals: { primary: 'General fitness improvement', timeline: 12 }, // Default goal
+      activityData: [], // Start with empty activities
       ...existingProfile,
       ...profileData,
-      userId,
-      version: (existingProfile.version || 0) + 1
+      userId
     };
 
     // Update the user's profile field

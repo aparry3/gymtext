@@ -107,21 +107,21 @@ class DailyCycleFlow {
       userId = users[0].id;
     }
 
-    const user = await this.db.getUserWithProfile(userId);
+    const user = await this.db.getUserWithProfile(userId!);
     if (!user) {
       throw new Error(`User ${userId} not found`);
     }
 
     // Verify user has a fitness plan
-    const plan = await this.db.getFitnessPlan(userId);
+    const plan = await this.db.getFitnessPlan(userId!);
     if (!plan) {
       throw new Error(`User ${userId} has no fitness plan`);
     }
 
-    this.result.userId = userId;
+    this.result.userId = userId!;
     this.result.userName = user.name || undefined;
 
-    return userId;
+    return userId!;
   }
 
   /**

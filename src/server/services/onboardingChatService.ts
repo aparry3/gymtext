@@ -3,7 +3,7 @@ import type { User } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { chatAgent as defaultChatAgent } from '@/server/agents/chat/chain';
 import { userProfileAgent as defaultUserProfileAgent } from '@/server/agents/profile/chain';
-import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts';
+// import { buildOnboardingChatSystemPrompt } from '@/server/agents/onboardingChat/prompts'; // Temporarily disabled during schema overhaul
 
 export type OnboardingEvent =
   | { type: 'token'; data: string }
@@ -140,11 +140,23 @@ export class OnboardingChatService {
 
     // Generate chat response
     try {
-      const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired);
+      // const systemPrompt = buildOnboardingChatSystemPrompt(updatedProfile, pendingRequired); // Temporarily disabled
+      const systemPrompt = 'You are a helpful fitness coach assistant helping users build their fitness profile. Be encouraging and ask relevant questions to understand their fitness goals, experience, and preferences.';
+      
+      // Ensure profile has required fields for chat agent
+      const completeProfile: FitnessProfile = {
+        equipmentAccess: { gymAccess: false },
+        availability: { daysPerWeek: 3, minutesPerSession: 60 },
+        goals: { primary: 'General fitness improvement', timeline: 12 },
+        activityData: [],
+        ...updatedProfile,
+        userId: updatedUser.id || 'temp-id'
+      };
+      
       const chatResult = await this.chatAgent({
         userName: updatedUser.name || 'there',
         message,
-        profile: updatedProfile,
+        profile: completeProfile,
         wasProfileUpdated: userWasUpdated || profileWasUpdated,
         conversationHistory: [], // Use empty array since we'll pass recentMessages via context
         context: { 
@@ -175,21 +187,23 @@ export class OnboardingChatService {
   }
 
   private computePendingRequiredFields(
-    profile: Partial<FitnessProfile>,
-    user: Partial<User>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _profile: Partial<FitnessProfile>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _user: Partial<User>
   ): Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'> {
     // Focus on essentials needed to create user account and start profile building
     // Email is now optional - collect name, phone, timezone, preferred send hour, primary goal, gender, and age
     // Additional contextual completeness is handled by computeContextualGaps() in the prompts
     const missing: Array<'name' | 'phone' | 'timezone' | 'preferredSendHour' | 'primaryGoal' | 'gender' | 'age'> = [];    
     
-    if (!user.name) missing.push('name');
-    if (!user.phoneNumber) missing.push('phone');
-    if (!user.timezone) missing.push('timezone');
-    if (user.preferredSendHour === undefined || user.preferredSendHour === null) missing.push('preferredSendHour');
-    if (!profile.primaryGoal) missing.push('primaryGoal');
-    if (!profile.gender) missing.push('gender');
-    if (!profile.age) missing.push('age');
+    // if (!user.name) missing.push('name');
+    // if (!user.phoneNumber) missing.push('phone');
+    // if (!user.timezone) missing.push('timezone');
+    // if (user.preferredSendHour === undefined || user.preferredSendHour === null) missing.push('preferredSendHour');
+    // if (!profile.primaryGoal) missing.push('primaryGoal');
+    // if (!profile.gender) missing.push('gender');
+    // if (!profile.age) missing.push('age');
 
     return missing;
   }

@@ -9,11 +9,11 @@ export const buildChatSystemPrompt = (
   wasProfileUpdated: boolean = false
 ): string => {
   const profileSummary = profile ? `
-- Fitness Level: ${profile.experienceLevel || 'Not specified'}
-- Primary Goal: ${profile.primaryGoal || 'Not specified'}
+- Primary Goal: ${profile.goals?.primary || 'Not specified'}
 - Training Days: ${profile.availability?.daysPerWeek || 'Not specified'} days per week
-- Equipment: ${profile.equipment?.access || 'Not specified'}
-- Current Training: ${profile.currentTraining?.programName || 'Not specified'}` : 'No profile available';
+- Session Length: ${profile.availability?.minutesPerSession || 'Not specified'} minutes
+- Gym Access: ${profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
+- Activities: ${profile.activityData?.map(a => a.type).join(', ') || 'Not specified'}` : 'No profile available';
 
   const updateAcknowledgment = wasProfileUpdated ? `
 
@@ -49,9 +49,10 @@ You are a professional fitness coach and personal trainer assistant for GymText.
 
 <User Information>
 - Name: ${user.name}
-- Fitness Level: ${user.parsedProfile?.experienceLevel || 'Not specified'}
-- Goals: ${user.parsedProfile?.primaryGoal || 'Not specified'}
+- Primary Goal: ${user.parsedProfile?.goals?.primary || 'Not specified'}
 - Training Days: ${user.parsedProfile?.availability?.daysPerWeek || 'Not specified'} days per week
+- Session Length: ${user.parsedProfile?.availability?.minutesPerSession || 'Not specified'} minutes
+- Gym Access: ${user.parsedProfile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
 </User Information>
 
 <Conversation History>
@@ -141,8 +142,8 @@ export const motivationalPrompt = (
 Create a motivational message for ${user.name}.
 
 <User Info>
-- Goals: ${user.parsedProfile?.primaryGoal || 'General fitness'}
-- Level: ${user.parsedProfile?.experienceLevel || 'Beginner'}
+- Goals: ${user.parsedProfile?.goals?.primary || 'General fitness'}
+- Gym Access: ${user.parsedProfile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
 ${achievement ? `- Recent Achievement: ${achievement}` : ''}
 ${currentStreak ? `- Current Streak: ${currentStreak} days` : ''}
 </User Info>

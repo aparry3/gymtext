@@ -271,7 +271,8 @@ export function extractProfileUpdates(message: string): Partial<FitnessProfile> 
   if (daysMatch) {
     updates.availability = {
       ...updates.availability,
-      daysPerWeek: parseInt(daysMatch[1])
+      daysPerWeek: parseInt(daysMatch[1]),
+      minutesPerSession: updates.availability?.minutesPerSession || 60 // Default 60 minutes
     };
   }
 
@@ -280,31 +281,37 @@ export function extractProfileUpdates(message: string): Partial<FitnessProfile> 
   if (minutesMatch) {
     updates.availability = {
       ...updates.availability,
+      daysPerWeek: updates.availability?.daysPerWeek || 3, // Default 3 days
       minutesPerSession: parseInt(minutesMatch[1])
     };
   }
 
   // Extract gym membership
   if (/planet fitness|gold'?s? gym|la fitness|anytime fitness/i.test(message)) {
-    updates.equipment = {
-      ...updates.equipment,
-      access: 'full-gym' as const
+    updates.equipmentAccess = {
+      ...updates.equipmentAccess,
+      gymAccess: true,
+      gymType: 'commercial'
     };
   }
 
   // Extract goals
-  const goalPatterns: Record<string, FitnessProfile['primaryGoal']> = {
-    'get stronger': 'strength',
-    'build muscle': 'muscle-gain',
-    'lose weight': 'fat-loss',
-    'lose fat': 'fat-loss',
-    'improve endurance': 'endurance',
-    'get fit': 'general-fitness'
+  const goalPatterns: Record<string, string> = {
+    'get stronger': 'Build strength',
+    'build muscle': 'Gain muscle mass',
+    'lose weight': 'Lose weight',
+    'lose fat': 'Lose body fat',
+    'improve endurance': 'Improve cardiovascular endurance',
+    'get fit': 'General fitness improvement'
   };
 
   for (const [pattern, goal] of Object.entries(goalPatterns)) {
     if (message.toLowerCase().includes(pattern)) {
-      updates.primaryGoal = goal;
+      updates.goals = {
+        ...updates.goals,
+        primary: goal,
+        timeline: updates.goals?.timeline || 12 // Default 12 weeks
+      };
       break;
     }
   }

@@ -91,8 +91,7 @@ import {
           if (userWithProfile?.parsedProfile) {
             userProfile = {
               ...userProfile,
-              primaryGoal: userWithProfile.parsedProfile.primaryGoal,
-              experienceLevel: userWithProfile.parsedProfile.experienceLevel,
+              primaryGoal: userWithProfile.parsedProfile.goals?.primary,
               // TODO: Add currentProgram and other fields as needed
             };
           }
