@@ -2,7 +2,6 @@
 export * from './schemas';
 
 // Import what we need for the UserModel class
-import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, NewUser, FitnessProfile } from './schemas';
 import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
@@ -14,44 +13,18 @@ export interface UserWithProfile extends User {
   info: string[];
 }
 
+/**
+ * UserModel - Domain logic and validation only
+ * No direct repository access - Services orchestrate repository calls
+ */
 export class UserModel {
-  private userRepository: UserRepository;
-
-  constructor() {
-    this.userRepository = new UserRepository();
-  }
-
-  async createUser(userData: CreateUserData): Promise<User> {
-    // Business logic for user creation
-    this.validateUserData(userData);
-    return await this.userRepository.create(userData);
-  }
-
-  async getUserById(id: string): Promise<User | undefined> {
-    return await this.userRepository.findById(id);
-  }
-
-  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
-    return await this.userRepository.findByPhoneNumber(phoneNumber);
-  }
-
-  async getUserWithProfile(userId: string): Promise<UserWithProfile | undefined> {
-    const result = await this.userRepository.findWithProfile(userId);
-    return result ?? undefined;
-  }
-
-  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
-    // Business logic for fitness profile creation/update
-    // this.validateFitnessProfile(profileData); // Commented out - validation handled by Zod schemas
-    return await this.userRepository.createOrUpdateFitnessProfile(userId, profileData);
-  }
-
-  async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    // Business logic for user updates
-    return await this.userRepository.update(id, updates);
-  }
-
-  private validateUserData(userData: CreateUserData): void {
+  
+  /**
+   * Validates user data for creation
+   * @param userData - User data to validate
+   * @throws Error if validation fails
+   */
+  static validateUserData(userData: CreateUserData): void {
     if (!userData.name || userData.name.trim().length < 2) {
       throw new Error('User name must be at least 2 characters long');
     }
@@ -65,9 +38,90 @@ export class UserModel {
     }
   }
 
-  // Phone validation is now handled by phoneUtils.validateUSPhoneNumber
+  /**
+   * Validates fitness profile data
+   * @param profileData - Profile data to validate
+   * @throws Error if validation fails
+   */
+  static validateFitnessProfileData(profileData: CreateFitnessProfileData): void {
+    // Add fitness profile validation logic here
+    if (profileData.goals?.timeline && (profileData.goals.timeline < 1 || profileData.goals.timeline > 104)) {
+      throw new Error('Goals timeline must be between 1 and 104 weeks');
+    }
+    
+    if (profileData.availability?.daysPerWeek && (profileData.availability.daysPerWeek < 1 || profileData.availability.daysPerWeek > 7)) {
+      throw new Error('Days per week must be between 1 and 7');
+    }
+    
+    if (profileData.availability?.minutesPerSession && (profileData.availability.minutesPerSession < 15 || profileData.availability.minutesPerSession > 240)) {
+      throw new Error('Minutes per session must be between 15 and 240');
+    }
+  }
 
-  private isValidEmail(email: string): boolean {
+  /**
+   * Validates user update data
+   * @param updates - Update data to validate
+   * @throws Error if validation fails
+   */
+  static validateUserUpdates(updates: Partial<User>): void {
+    if (updates.name && updates.name.trim().length < 2) {
+      throw new Error('User name must be at least 2 characters long');
+    }
+    
+    if (updates.phoneNumber && !validateUSPhoneNumber(updates.phoneNumber)) {
+      throw new Error('Valid US phone number is required');
+    }
+    
+    if (updates.email && !this.isValidEmail(updates.email)) {
+      throw new Error('Invalid email format');
+    }
+
+    if (updates.preferredSendHour !== undefined && (updates.preferredSendHour < 0 || updates.preferredSendHour > 23)) {
+      throw new Error('Preferred send hour must be between 0 and 23');
+    }
+
+    if (updates.age !== undefined && updates.age !== null && (updates.age < 1 || updates.age > 120)) {
+      throw new Error('Age must be between 1 and 120');
+    }
+  }
+
+  /**
+   * Transforms user data for display/serialization
+   * @param user - User data from database
+   * @returns Transformed user data
+   */
+  static transformUserForDisplay(user: User): Omit<User, 'profile'> & { hasProfile: boolean } {
+    const { profile, ...userWithoutProfile } = user;
+    return {
+      ...userWithoutProfile,
+      hasProfile: Boolean(profile)
+    };
+  }
+
+  /**
+   * Creates default fitness profile data
+   * @param goals - Primary fitness goals
+   * @returns Default profile structure
+   */
+  static createDefaultFitnessProfile(goals?: string): CreateFitnessProfileData {
+    return {
+      goals: {
+        primary: goals || 'General fitness improvement',
+        timeline: 12
+      },
+      availability: {
+        daysPerWeek: 3,
+        minutesPerSession: 60
+      },
+      equipmentAccess: {
+        gymAccess: true
+      },
+      activityData: [],
+      constraints: []
+    };
+  }
+
+  private static isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }

@@ -1,7 +1,7 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { buildChatSystemPrompt } from '@/server/agents/chat/prompts';
+import { buildChatSystemPrompt } from '@/server/agents/conversation/chat/prompts';
 import type { FitnessProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 

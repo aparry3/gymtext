@@ -11,6 +11,8 @@ export const UserSchema = z.object({
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
+  age: z.number().int().min(1).max(120).nullable(),
+  gender: z.string().nullable(),
   profile: z.unknown().nullable(),
   stripeCustomerId: z.string().nullable(),
   preferredSendHour: z.number().int().min(0).max(23),
@@ -152,10 +154,14 @@ export const CreateUserSchema = z.object({
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
+  age: z.number().int().min(1).max(120).nullable().optional(),
+  gender: z.string().nullable().optional(),
   profile: z.unknown().nullable().optional(),
   isActive: z.boolean().optional().default(true),
   isAdmin: z.boolean().optional().default(false),
   stripeCustomerId: z.string().nullable().optional(),
+  preferredSendHour: z.number().int().min(0).max(23).optional(),
+  timezone: z.string().optional(),
 });
 
 // Schema for updating a user
