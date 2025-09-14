@@ -14,14 +14,13 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 // Form validation schema
 const formSchema = z.object({
-  fitnessGoals: z.string().min(1, 'Please select your fitness goals'),
-  skillLevel: z.string().min(1, 'Please select your skill level'),
-  exerciseFrequency: z.string().min(1, 'Please select your exercise frequency'),
+  fitnessGoals: z.string().optional(),
+  currentExercise: z.string().optional(),
+  injuries: z.string().optional(),
   gender: z.string().min(1, 'Please select your gender'),
   age: z.string().min(1, 'Please enter your age'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
-  email: z.string().email().optional().or(z.literal('')),
   preferredSendHour: z.number().min(0).max(23),
   timezone: z.string().min(1, 'Timezone is required'),
   acceptRisks: z.boolean().refine((val) => val === true, {
@@ -280,59 +279,30 @@ export default function SignupForm() {
           <p className="text-red-600">{errorMessage}</p>
         </div>
       )}
-      
-      {/* Fitness Goals */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals – What do you want to achieve?</label>
-        <select
-          {...register('fitnessGoals')}
+
+        {/* Name */}
+        <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name (What should we call you?)</label>
+        <input
+          type="text"
+          {...register('name')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select your goals</option>
-          <option value="weight_loss">Weight Loss</option>
-          <option value="muscle_gain">Muscle Gain</option>
-          <option value="endurance">Endurance</option>
-          <option value="flexibility">Flexibility</option>
-          <option value="general_fitness">General Fitness</option>
-        </select>
-        {errors.fitnessGoals && (
-          <p className="mt-1 text-sm text-red-500">{errors.fitnessGoals.message}</p>
+        />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
         )}
       </div>
 
-      {/* Skill Level */}
+      {/* Phone Number */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Skill Level – How familiar are you with working out?</label>
-        <select
-          {...register('skillLevel')}
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number (What number should we text your workouts to?)</label>
+        <input
+          type="tel"
+          {...register('phoneNumber')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select your level</option>
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Getting back into it</option>
-          <option value="advanced">Comfortable in the gym</option>
-          <option value="expert">Advanced</option>
-        </select>
-        {errors.skillLevel && (
-          <p className="mt-1 text-sm text-red-500">{errors.skillLevel.message}</p>
-        )}
-      </div>
-
-      {/* Exercise Frequency */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Frequency – How often are you moving your body right now?</label>
-        <select
-          {...register('exerciseFrequency')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select frequency</option>
-          <option value="never">Not at all yet</option>
-          <option value="1-2">Once a week</option>
-          <option value="3-4">2-3 times per week</option>
-          <option value="5+">4+ times per week</option>
-        </select>
-        {errors.exerciseFrequency && (
-          <p className="mt-1 text-sm text-red-500">{errors.exerciseFrequency.message}</p>
+        />
+        {errors.phoneNumber && (
+          <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
         )}
       </div>
 
@@ -367,45 +337,6 @@ export default function SignupForm() {
         )}
       </div>
 
-      {/* Name */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name (What should we call you?)</label>
-        <input
-          type="text"
-          {...register('name')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
-        )}
-      </div>
-
-      {/* Phone Number */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number (What number should we text your workouts to?)</label>
-        <input
-          type="tel"
-          {...register('phoneNumber')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.phoneNumber && (
-          <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
-        )}
-      </div>
-
-      {/* Email (Optional) */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Email (Where should we send additional information?)</label>
-        <input
-          type="email"
-          {...register('email')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-        )}
-      </div>
-
       {/* Daily Message Time */}
       <div>
         <label className="block text-base font-medium mb-2 text-[#2d3748]">Daily Message Time (When should we send your workout?)</label>
@@ -431,6 +362,44 @@ export default function SignupForm() {
           Detected: {detectedTimezone}
         </p>
       </div>
+
+      
+      {/* Fitness Goals */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals – What do you want to achieve?</label>
+        <textarea
+          {...register('fitnessGoals')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.fitnessGoals && (
+          <p className="mt-1 text-sm text-red-500">{errors.fitnessGoals.message}</p>
+        )}
+      </div>
+
+      {/* Current Exercise Activity */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Activity</label>
+        <textarea
+          {...register('currentExercise')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.currentExercise && (
+          <p className="mt-1 text-sm text-red-500">{errors.currentExercise.message}</p>
+        )}
+      </div>
+
+      {/* Injuries */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Injuries</label>
+        <textarea
+          {...register('injuries')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.injuries && (
+          <p className="mt-1 text-sm text-red-500">{errors.injuries.message}</p>
+        )}
+      </div>
+
 
       {/* Accept Risks Checkbox */}
       <div className="flex items-start">

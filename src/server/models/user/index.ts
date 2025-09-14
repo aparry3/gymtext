@@ -65,15 +65,6 @@ export class UserModel {
     }
   }
 
-  // private validateFitnessProfile(profileData: CreateFitnessProfileData): void {
-  //   // With the new flexible profile structure, validation is more lenient
-  //   // We can add specific validations as needed
-  //   if (profileData.experienceLevel && !['beginner', 'intermediate', 'advanced'].includes(profileData.experienceLevel)) {
-  //     // Allow any experience level for flexibility
-  //     console.warn(`Non-standard experience level: ${profileData.experienceLevel}`);
-  //   }
-  // }
-
   // Phone validation is now handled by phoneUtils.validateUSPhoneNumber
 
   private isValidEmail(email: string): boolean {
