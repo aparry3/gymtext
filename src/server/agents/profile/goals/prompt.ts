@@ -28,8 +28,8 @@ ${goalsJson}
 
 User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
-AVAILABLE TOOL:
-- update_user_profile - For goals-related information ONLY
+RESPONSE FORMAT:
+Return structured JSON with extracted goals data. Do NOT call any tools.
 
 � PRIORITY: GOALS ARE THE MOST IMPORTANT UPDATES
 - Always extract goals when they are stated, even if phrased indirectly
@@ -75,11 +75,36 @@ CONFIDENCE SCORING FOR GOALS:
 - 0.6+: General fitness desires ("want to get fit" � general-fitness goal)
 
 GOALS SCHEMA TO EXTRACT:
-- primary: string (required) - One of: strength, fat-loss, muscle-gain, endurance, athletic-performance, general-fitness, rehabilitation, competition-prep
-- specific: string (optional) - Detailed description of the specific objective
-- timeline: number (optional) - Timeline in weeks (1-104)
-- motivation: string (optional) - Why they want to achieve this goal
-- summary: string (optional) - Brief overview of their fitness goals and motivation
+Return in "data" field:
+{
+  "primary": string (required) - One of: strength, fat-loss, muscle-gain, endurance, athletic-performance, general-fitness, rehabilitation, competition-prep
+  "specific": string (optional) - Detailed description of the specific objective
+  "timeline": number (optional) - Timeline in weeks (1-104)
+  "motivation": string (optional) - Why they want to achieve this goal
+  "summary": string (optional) - Brief overview of their fitness goals and motivation
+}
+
+EXAMPLE RESPONSES:
+
+For "I want to get in shape for ski season":
+{
+  "data": {
+    "primary": "endurance",
+    "specific": "ski season preparation",
+    "timeline": 12
+  },
+  "hasData": true,
+  "confidence": 0.85,
+  "reason": "User wants to get in shape for ski season - inferred endurance goal with 12-week timeline"
+}
+
+For "Just went to the gym yesterday":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No goals mentioned - just past activity"
+}
 
 CRITICAL GUIDELINES:
 - ONLY extract goals-related information - ignore equipment, schedule, injuries, etc.
@@ -89,13 +114,5 @@ CRITICAL GUIDELINES:
 - Estimate reasonable timelines when not explicitly stated
 - Focus on NEW or UPDATED goal information only
 
-DO NOT EXTRACT:
-- Activity data (handled by different agent)
-- Equipment or gym information  
-- Schedule or availability
-- Physical metrics or measurements
-- Constraints or injuries
-- Contact information
-
-Remember: You are ONLY responsible for goals extraction. Other agents handle other profile aspects.`;
+Remember: You are ONLY responsible for goals extraction. Return the goals data as JSON.`;
 };

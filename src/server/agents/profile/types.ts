@@ -1,4 +1,4 @@
-import type { FitnessProfile, User } from '../models/user/schemas';
+import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
 
 /**
@@ -35,17 +35,17 @@ export type PromptBuilder = (user: UserWithProfile) => string;
 export interface SubAgentConfig extends ProfileAgentConfig {
   promptBuilder: PromptBuilder;
   agentName: string;
+  outputSchema: any; // eslint-disable-line @typescript-eslint/no-explicit-any -- Zod schema type
 }
 
 /**
- * Sub-agent result - more focused than full ProfileAgentResult
+ * Simple result from sub-agents - just the extracted domain data + metadata
  */
 export interface SubAgentResult {
-  updates: Partial<FitnessProfile> | Partial<User> | null;
-  wasUpdated: boolean;
-  updateSummary?: {
-    fieldsUpdated: string[];
-    reason: string;
-    confidence: number;
-  };
+  // The extracted data for this domain (goals, activities, etc.)
+  data: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // Metadata about the extraction
+  hasData: boolean;
+  confidence: number;
+  reason: string;
 }

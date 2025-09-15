@@ -1,5 +1,5 @@
 // Import the new modular architecture
-import { createGoalsAgent } from './goals/chain';
+import { extractGoalsData } from './goals/chain';
 import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
 import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
@@ -30,15 +30,26 @@ export const userProfileAgentModular = async ({
     
     // For now, just route everything to Goals Agent
     // TODO: Add intelligent routing based on message content
-    const goalsAgent = createGoalsAgent();
-    const goalsResult = await goalsAgent({ message, user, config });
+    const goalsResult = await extractGoalsData(message, user, config);
     
-    // Convert SubAgentResult to ProfileAgentResult format
+    // For demo purposes, convert to old format (in real usage, caller would handle patch tools)
+    if (goalsResult.hasData && goalsResult.confidence > 0.7 && goalsResult.data) {
+      return {
+        profile: { goals: goalsResult.data } as FitnessProfile,
+        user: user,
+        wasUpdated: true,
+        updateSummary: {
+          fieldsUpdated: ['goals'],
+          reason: goalsResult.reason,
+          confidence: goalsResult.confidence
+        }
+      };
+    }
+    
     return {
-      profile: goalsResult.updates as FitnessProfile | null,
+      profile: user.parsedProfile as FitnessProfile | null,
       user: user,
-      wasUpdated: goalsResult.wasUpdated,
-      updateSummary: goalsResult.updateSummary
+      wasUpdated: false
     };
     
   } catch (error) {

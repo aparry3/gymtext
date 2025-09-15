@@ -1,46 +1,41 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { profilePatchTool } from '../tools/profilePatchTool';
-import { userInfoPatchTool } from '../tools/userInfoPatchTool';
+import { z } from 'zod';
 import type { UserWithProfile } from '../../models/userModel';
 import type { 
   ProfileAgentConfig, 
-  PromptBuilder, 
   SubAgentResult,
   SubAgentConfig 
 } from './types';
 
 /**
- * Initialize the model with tools
+ * Initialize the model with structured output using the provided schema
  */
-const initializeModel = (config: ProfileAgentConfig = {}) => {
+const initializeModel = (config: ProfileAgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
     model = 'gpt-4-turbo', 
     temperature = 0.2
   } = config;
 
   if (model.startsWith('gemini')) {
-    const geminiModel = new ChatGoogleGenerativeAI({
+    return new ChatGoogleGenerativeAI({
       model: model,
       temperature,
-      maxOutputTokens: 3000,
-    });
-    return geminiModel.bindTools([profilePatchTool, userInfoPatchTool]);
+      maxOutputTokens: 2000,
+    }).withStructuredOutput(outputSchema);
   }
 
-  const openaiModel = new ChatOpenAI({
+  return new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 3000,
-  });
-  
-  return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);
+    maxTokens: 2000,
+  }).withStructuredOutput(outputSchema);
 };
 
 /**
- * Base agent that can be specialized with different prompt builders
- * This consolidates all the LLM instantiation and tool calling logic
+ * Create sub-agent that returns domain-specific JSON data with schema validation
+ * The caller (service/another agent) handles applying the data via patch tools
  */
 export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
   return async ({
@@ -55,133 +50,47 @@ export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
     
     try {
       const { verbose = false } = config;
-      const { promptBuilder, agentName } = subAgentConfig;
+      const { promptBuilder, agentName, outputSchema } = subAgentConfig;
       
-      // Merge configs (passed config overrides subAgentConfig)
+      // Merge configs
       const finalConfig = { ...subAgentConfig, ...config };
       
-      // Initialize the model with tools
-      const model = initializeModel(finalConfig);
+      // Initialize model with the provided schema
+      const model = initializeModel(finalConfig, outputSchema);
       
-      // Build the domain-specific prompt using the user context
+      // Build domain-specific prompt
       const systemPrompt = promptBuilder(user);
       
-      // Create the message array
       const messages = [
         new SystemMessage(systemPrompt),
         new HumanMessage(message)
       ];
       
       if (verbose) {
-        console.log(`${agentName} analyzing message:`, message);
+        console.log(`${agentName} extracting from message:`, message);
       }
       
-      // Invoke the model with tools
-      const response = await model.invoke(messages);
+      // Get structured output
+      const result = await model.invoke(messages) as SubAgentResult;
       
-      // Track result state
-      let wasUpdated = false;
-      let updates: any = null;  // eslint-disable-line @typescript-eslint/no-explicit-any
-      let combinedFieldsUpdated: string[] = [];
-      let reasons: string[] = [];
-      let maxConfidence = 0;
-      
-      // Process tool calls using the same logic as the original agent
-      if (response.tool_calls && response.tool_calls.length > 0) {
-        if (verbose) {
-          console.log(`${agentName} tool_calls:`, response.tool_calls);
-        }
-        
-        for (const toolCall of response.tool_calls) {
-          if (toolCall.name === 'update_user_profile') {
-            const args = toolCall.args as any;  // eslint-disable-line @typescript-eslint/no-explicit-any
-            
-            if (verbose) {
-              console.log(`${agentName} profilePatchTool called with:`, args);
-            }
-            
-            const result = await profilePatchTool.invoke({
-              ...args,
-              currentProfile: user.parsedProfile || {}
-            });
-            
-            if (result.applied) {
-              wasUpdated = true;
-              updates = result.updatedProfile;
-              combinedFieldsUpdated.push(...(result.fieldsUpdated || []));
-              if (args?.reason) reasons.push(args.reason);
-              if ((args?.confidence ?? 0) > maxConfidence) {
-                maxConfidence = args?.confidence ?? 0;
-              }
-              
-              if (verbose) {
-                console.log(`${agentName} profile update applied:`, {
-                  fieldsUpdated: result.fieldsUpdated,
-                  reason: args?.reason,
-                  confidence: args?.confidence,
-                });
-              }
-            } else if (verbose) {
-              console.log(`${agentName} profile update not applied:`, result.reason);
-            }
-            
-          } else if (toolCall.name === 'update_user_info') {
-            const args = toolCall.args as any;  // eslint-disable-line @typescript-eslint/no-explicit-any
-            
-            if (verbose) {
-              console.log(`${agentName} userInfoPatchTool called with:`, args);
-            }
-            
-            const result = await userInfoPatchTool.invoke({
-              ...args,
-              currentUser: user
-            });
-            
-            if (result.applied) {
-              wasUpdated = true;
-              updates = result.updatedUser;
-              combinedFieldsUpdated.push(...(result.fieldsUpdated || []));
-              if (args?.reason) reasons.push(args.reason);
-              if ((args?.confidence ?? 0) > maxConfidence) {
-                maxConfidence = args?.confidence ?? 0;
-              }
-              
-              if (verbose) {
-                console.log(`${agentName} user info update applied:`, {
-                  fieldsUpdated: result.fieldsUpdated,
-                  reason: args?.reason,
-                  confidence: args?.confidence,
-                });
-              }
-            } else if (verbose) {
-              console.log(`${agentName} user info update not applied:`, result.reason);
-            }
-          }
-        }
-      } else if (verbose) {
-        console.log(`${agentName}: No updates detected in message`);
+      if (verbose) {
+        console.log(`${agentName} result:`, {
+          hasData: result.hasData,
+          confidence: result.confidence,
+          reason: result.reason
+        });
       }
       
-      const updateSummary = combinedFieldsUpdated.length > 0
-        ? {
-            fieldsUpdated: Array.from(new Set(combinedFieldsUpdated)),
-            reason: reasons.filter(Boolean).join('; '),
-            confidence: maxConfidence,
-          }
-        : undefined;
-
-      return {
-        updates,
-        wasUpdated,
-        updateSummary,
-      };
+      return result;
       
     } catch (error) {
       console.error(`${subAgentConfig.agentName} error:`, error);
       
       return {
-        updates: null,
-        wasUpdated: false
+        data: null,
+        hasData: false,
+        confidence: 0,
+        reason: 'Extraction failed due to error'
       };
     }
   };
