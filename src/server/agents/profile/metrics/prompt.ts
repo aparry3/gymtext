@@ -28,10 +28,10 @@ ${metricsJson}
 
 User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
-AVAILABLE TOOL:
-- update_user_profile - For metrics information ONLY (metrics field)
+RESPONSE FORMAT:
+Return structured JSON with extracted metrics data. Do NOT call any tools.
 
-=Ï PHYSICAL METRICS TO EXTRACT:
+=ï¿½ PHYSICAL METRICS TO EXTRACT:
 
 BODY MEASUREMENTS:
 - Weight: "I weigh 180 pounds", "current weight is 75kg", "lost 5 pounds"
@@ -44,21 +44,21 @@ FITNESS LEVEL INDICATORS:
 - Comparative: "fitter than average", "beginner fitness level", "advanced athlete"
 
 WEIGHT EXTRACTION EXAMPLES:
-- "I weigh 180 pounds" ’ {weight: {value: 180, unit: 'lbs', date: today}}
-- "Current weight is 75kg" ’ {weight: {value: 75, unit: 'kg', date: today}}
-- "Lost 5 pounds, now at 165" ’ {weight: {value: 165, unit: 'lbs', date: today}}
-- "Gained some weight, up to 85kg" ’ {weight: {value: 85, unit: 'kg', date: today}}
+- "I weigh 180 pounds" ï¿½ {weight: {value: 180, unit: 'lbs', date: today}}
+- "Current weight is 75kg" ï¿½ {weight: {value: 75, unit: 'kg', date: today}}
+- "Lost 5 pounds, now at 165" ï¿½ {weight: {value: 165, unit: 'lbs', date: today}}
+- "Gained some weight, up to 85kg" ï¿½ {weight: {value: 85, unit: 'kg', date: today}}
 
 HEIGHT EXTRACTION EXAMPLES:
-- "I'm 6 feet tall" ’ {height: 6.0} (stored as feet decimal)
-- "5'8\" height" ’ {height: 5.67} (5 feet 8 inches = 5.67 feet)
-- "172 cm tall" ’ {height: 5.64} (convert cm to feet: 172/30.48)
+- "I'm 6 feet tall" ï¿½ {height: 6.0} (stored as feet decimal)
+- "5'8\" height" ï¿½ {height: 5.67} (5 feet 8 inches = 5.67 feet)
+- "172 cm tall" ï¿½ {height: 5.64} (convert cm to feet: 172/30.48)
 
 FITNESS LEVEL MAPPING:
-- "Out of shape", "sedentary", "just starting" ’ fitnessLevel: 'sedentary'
-- "Somewhat active", "light exercise" ’ fitnessLevel: 'lightly_active'  
-- "Regular workouts", "pretty fit", "train consistently" ’ fitnessLevel: 'moderately_active'
-- "Very fit", "athlete", "train hard daily" ’ fitnessLevel: 'very_active'
+- "Out of shape", "sedentary", "just starting" ï¿½ fitnessLevel: 'sedentary'
+- "Somewhat active", "light exercise" ï¿½ fitnessLevel: 'lightly_active'  
+- "Regular workouts", "pretty fit", "train consistently" ï¿½ fitnessLevel: 'moderately_active'
+- "Very fit", "athlete", "train hard daily" ï¿½ fitnessLevel: 'very_active'
 
 METRICS SCHEMA TO EXTRACT:
 - summary: string (brief overview of physical stats and fitness level)
@@ -79,7 +79,7 @@ UNIT CONVERSIONS:
 CONFIDENCE SCORING:
 - 0.91.0: Direct measurement statements ("I weigh 180", "I'm 5'8\"", "15% body fat")
 - 0.80.89: Clear fitness level descriptions ("I'm pretty fit", "out of shape", "very active")
-- 0.750.79: Implied fitness level ("train every day" ’ very active, "sedentary job" ’ sedentary)
+- 0.750.79: Implied fitness level ("train every day" ï¿½ very active, "sedentary job" ï¿½ sedentary)
 - Below 0.75: DO NOT EXTRACT
 
 MEASUREMENT VALIDATION:
@@ -94,19 +94,55 @@ TEMPORAL CONTEXT:
 - Goal measurements: "I want to weigh..." (don't extract as current metrics)
 - Changes: "lost 10 pounds", "gained muscle" (extract current state if mentioned)
 
+EXAMPLE RESPONSES:
+
+For "I'm 6 feet tall and weigh 180 pounds, pretty fit overall":
+{
+  "data": {
+    "height": 6.0,
+    "weight": {
+      "value": 180,
+      "unit": "lbs",
+      "date": "2024-01-15"
+    },
+    "fitnessLevel": "moderately_active",
+    "summary": "6ft tall, 180lbs, self-described as pretty fit"
+  },
+  "hasData": true,
+  "confidence": 0.95,
+  "reason": "User provided explicit height, weight, and fitness assessment"
+}
+
+For "Lost 5 pounds, now at 165 and about 12% body fat":
+{
+  "data": {
+    "weight": {
+      "value": 165,
+      "unit": "lbs",
+      "date": "2024-01-15" 
+    },
+    "bodyComposition": 12
+  },
+  "hasData": true,
+  "confidence": 0.9,
+  "reason": "User provided current weight and body fat percentage"
+}
+
+For "I want to lose 20 pounds for my wedding":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "Goal weight mentioned, not current measurements"
+}
+
 CRITICAL GUIDELINES:
 - ONLY extract quantitative physical measurements and fitness level assessments
-- Always include units and validate reasonable ranges
+- Always include units and validate reasonable ranges (weight: 80-500lbs, height: 4-7.5ft, body fat: 3-50%)
 - Focus on current/recent measurements, not goals or historical data
-- Convert height to consistent decimal feet format
+- Convert height to consistent decimal feet format (5'8" = 5.67 feet)
 - Preserve weight units as provided (lbs or kg)
+- Add current date for weight measurements
 
-DO NOT EXTRACT:
-- Goals or target measurements (handled by goals agent)
-- Activity-specific performance metrics (handled by activities agent)  
-- Equipment or gym access (handled by environment agent)
-- Injuries or limitations (handled by constraints agent)
-- Demographics like age/gender (handled by user agent)
-
-Remember: You are ONLY responsible for physical measurements and fitness level metrics extraction.`;
+Remember: You are ONLY responsible for physical measurements and fitness level metrics extraction. Return structured JSON only.`;
 };

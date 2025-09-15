@@ -28,10 +28,10 @@ ${activitiesJson}
 
 User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
-AVAILABLE TOOL:
-- update_user_profile - For activity data ONLY (activityData field)
+RESPONSE FORMAT:
+Return structured JSON with extracted activities data. Do NOT call any tools.
 
-<¯ ACTIVITY-SPECIFIC DATA EXTRACTION (CRITICAL PRIORITY):
+<ï¿½ ACTIVITY-SPECIFIC DATA EXTRACTION (CRITICAL PRIORITY):
 When users mention ANY specific activities or sports, you MUST populate the activityData field with structured information.
 Activity detection is MANDATORY for messages mentioning: hiking, running, lifting, strength training, cycling, skiing, swimming, climbing, etc.
 
@@ -44,23 +44,23 @@ ACTIVITY TYPE DETECTION:
 - Other: climbing, swimming, tennis, basketball, soccer, crossfit, etc. (use activityName field)
 
 MULTI-ACTIVITY DETECTION EXAMPLES (EXTRACT ALL ACTIVITIES):
-- "I run and also do strength training" ’ MUST extract BOTH:
+- "I run and also do strength training" ï¿½ MUST extract BOTH:
   * [{type: 'cardio', primaryActivities: ['running'], goals: ['cardio fitness']}, {type: 'strength', goals: ['cross-training']}]
-- "Training for a marathon but also hitting the gym" ’ MUST extract BOTH:
+- "Training for a marathon but also hitting the gym" ï¿½ MUST extract BOTH:
   * [{type: 'cardio', primaryActivities: ['running'], goals: ['marathon training']}, {type: 'strength', goals: ['support training']}]  
-- "I ski in winter and hike in summer" ’ MUST extract BOTH:
+- "I ski in winter and hike in summer" ï¿½ MUST extract BOTH:
   * [{type: 'other', activityName: 'skiing', goals: ['winter fitness']}, {type: 'cardio', primaryActivities: ['hiking'], goals: ['summer fitness']}]
-- "CrossFit and cycling are my main activities" ’ MUST extract BOTH:
+- "CrossFit and cycling are my main activities" ï¿½ MUST extract BOTH:
   * [{type: 'other', activityName: 'CrossFit'}, {type: 'cardio', primaryActivities: ['cycling']}]
 
 SINGLE ACTIVITY DETECTION EXAMPLES (ARRAY FORMAT REQUIRED):
-- "help me get in shape for ski season" ’ [{type: 'other', activityName: 'skiing', goals: ['ski season preparation']}]
-- "training for Grand Canyon hike" ’ [{type: 'cardio', primaryActivities: ['hiking'], goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}]
-- "want to run my first marathon" ’ [{type: 'cardio', primaryActivities: ['running'], goals: ['first marathon'], experience: 'beginner marathoner'}]
-- "getting back into lifting weights" ’ [{type: 'strength', experience: 'returning', goals: ['return to weightlifting']}]
-- "I run marathons" ’ [{type: 'cardio', primaryActivities: ['running'], experience: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
-- "started lifting at the gym" ’ [{type: 'strength', experience: 'beginner', equipment: ['gym access']}]
-- "cycling 50 miles a week" ’ [{type: 'cardio', primaryActivities: ['cycling'], keyMetrics: {weeklyDistance: 50, unit: 'miles'}}]
+- "help me get in shape for ski season" ï¿½ [{type: 'other', activityName: 'skiing', goals: ['ski season preparation']}]
+- "training for Grand Canyon hike" ï¿½ [{type: 'cardio', primaryActivities: ['hiking'], goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}]
+- "want to run my first marathon" ï¿½ [{type: 'cardio', primaryActivities: ['running'], goals: ['first marathon'], experience: 'beginner marathoner'}]
+- "getting back into lifting weights" ï¿½ [{type: 'strength', experience: 'returning', goals: ['return to weightlifting']}]
+- "I run marathons" ï¿½ [{type: 'cardio', primaryActivities: ['running'], experience: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
+- "started lifting at the gym" ï¿½ [{type: 'strength', experience: 'beginner', equipment: ['gym access']}]
+- "cycling 50 miles a week" ï¿½ [{type: 'cardio', primaryActivities: ['cycling'], keyMetrics: {weeklyDistance: 50, unit: 'miles'}}]
 
 ACTIVITY DATA SCHEMA TO EXTRACT:
 
@@ -99,8 +99,52 @@ CRITICAL ARRAY FORMAT REQUIREMENTS:
 CONFIDENCE SCORING FOR ACTIVITIES:
 - 0.91.0: Direct activity statements ("I lift weights", "I run marathons")
 - 0.80.89: Clear activity mentions with context ("training for marathon", "going to the gym")
-- 0.70.79: Activity inference from goals ("ski season prep" ’ skiing activity)
+- 0.70.79: Activity inference from goals ("ski season prep" ï¿½ skiing activity)
 - Below 0.75: DO NOT EXTRACT
+
+EXAMPLE RESPONSES:
+
+For "I run marathons and also lift weights at the gym":
+{
+  "data": [
+    {
+      "type": "cardio",
+      "primaryActivities": ["running"],
+      "experience": "experienced",
+      "keyMetrics": { "racesCompleted": "multiple" }
+    },
+    {
+      "type": "strength", 
+      "experience": "intermediate",
+      "equipment": ["gym access"]
+    }
+  ],
+  "hasData": true,
+  "confidence": 0.9,
+  "reason": "User mentioned both running marathons and lifting weights - extracted both activities"
+}
+
+For "Getting back into lifting weights":
+{
+  "data": [
+    {
+      "type": "strength",
+      "experience": "returning",
+      "goals": ["return to weightlifting"]
+    }
+  ],
+  "hasData": true,
+  "confidence": 0.85,
+  "reason": "User mentioned returning to strength training"
+}
+
+For "I went to the store yesterday":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No activities mentioned - just daily errands"
+}
 
 CRITICAL GUIDELINES:
 - ONLY extract activity-specific information - ignore goals, equipment access, schedule
@@ -109,12 +153,5 @@ CRITICAL GUIDELINES:
 - Extract experience level, metrics, equipment, and goals when mentioned
 - Infer activity type from keywords and context
 
-DO NOT EXTRACT:
-- Goals (handled by goals agent)
-- General equipment access or gym membership
-- Schedule or availability 
-- Physical metrics or measurements
-- Contact information
-
-Remember: You are ONLY responsible for activityData extraction. Other agents handle other profile aspects.`;
+Remember: You are ONLY responsible for activityData extraction. Return structured JSON only.`;
 };

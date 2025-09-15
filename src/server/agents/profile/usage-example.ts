@@ -3,6 +3,11 @@
  */
 
 import { extractGoalsData } from './goals/chain';
+import { extractActivitiesData } from './activities/chain';
+import { extractUserData } from './user/chain';
+import { extractConstraintsData } from './constraints/chain';
+import { extractEnvironmentData } from './environment/chain';
+import { extractMetricsData } from './metrics/chain';
 import { profilePatchTool } from '../tools/profilePatchTool';
 import type { UserWithProfile } from '../../models/userModel';
 
@@ -66,24 +71,63 @@ export async function serviceExample() {
 }
 
 /**
- * Example: Another agent calling multiple sub-agents
+ * Example: Another agent calling ALL sub-agents
  */
-export async function anotherAgentExample() {
-  // Another agent could call multiple sub-agents and combine results
-  const user = {} as UserWithProfile; // Mock user
-  const message = "I want to lose 20 pounds and I go to Planet Fitness 3 times a week";
+export async function allSubAgentsExample() {
+  // Mock comprehensive user message
+  const user: UserWithProfile = {
+    id: 'test-user-2',
+    name: 'Jane Smith', 
+    age: null,
+    email: null,
+    phoneNumber: '+1234567890',
+    gender: null,
+    profile: null,
+    stripeCustomerId: null,
+    preferredSendHour: 7,
+    timezone: 'America/New_York',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    parsedProfile: {},
+    info: []
+  } as UserWithProfile;
+
+  const message = "Hi, I'm Sarah, 28 years old, female. I weigh 140 lbs and I'm 5'6\". I want to lose 15 pounds for my wedding in 6 months. I go to Planet Fitness 4 times a week for about 45 minutes each. I run marathons and also do strength training. I have a bad knee from an old injury so I avoid high-impact exercises. I prefer morning workouts around 6am EST.";
   
-  // Call multiple sub-agents
-  const goalsData = await extractGoalsData(message, user);
-  // const activitiesData = await extractActivitiesData(message, user);  // When implemented
-  // const environmentData = await extractEnvironmentData(message, user);  // When implemented
+  console.log('🧪 Testing ALL sub-agents with comprehensive message\n');
+
+  // Call all sub-agents in parallel
+  const [
+    goalsResult,
+    activitiesResult, 
+    userResult,
+    constraintsResult,
+    environmentResult,
+    metricsResult
+  ] = await Promise.all([
+    extractGoalsData(message, user),
+    extractActivitiesData(message, user),
+    extractUserData(message, user),
+    extractConstraintsData(message, user),
+    extractEnvironmentData(message, user),
+    extractMetricsData(message, user)
+  ]);
   
-  // The calling agent/service decides how to combine and apply the results
-  console.log('Multiple extractions:', {
-    goals: goalsData,
-    // activities: activitiesData,
-    // environment: environmentData
-  });
+  console.log('🎯 Goals:', goalsResult.hasData ? goalsResult.data : 'None');
+  console.log('🏃 Activities:', activitiesResult.hasData ? activitiesResult.data : 'None');
+  console.log('👤 User:', userResult.hasData ? userResult.data : 'None');  
+  console.log('🚨 Constraints:', constraintsResult.hasData ? constraintsResult.data : 'None');
+  console.log('🏋️ Environment:', environmentResult.hasData ? environmentResult.data : 'None');
+  console.log('📏 Metrics:', metricsResult.hasData ? metricsResult.data : 'None');
+  
+  return {
+    goals: goalsResult,
+    activities: activitiesResult,
+    user: userResult,
+    constraints: constraintsResult,
+    environment: environmentResult,
+    metrics: metricsResult
+  };
 }
 
-export { serviceExample, anotherAgentExample };
+export { serviceExample, allSubAgentsExample };

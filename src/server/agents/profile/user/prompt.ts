@@ -31,25 +31,24 @@ Your ONLY job is to identify and extract user demographics and contact informati
 Current user info:
 ${JSON.stringify(userJson, null, 2)}
 
-AVAILABLE TOOLS:
-- update_user_info - For contact details (name, email, phoneNumber, timezone, preferredSendHour)
-- update_user_profile - For demographics that go in fitness profile (age, gender in metrics)
+RESPONSE FORMAT:
+Return structured JSON with extracted user data. Do NOT call any tools.
 
-<¯ GENDER DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
+<ï¿½ GENDER DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
 - EXPLICIT GENDER WORDS (0.95+ confidence): "male", "female", "man", "woman", "guy", "girl"
 - DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"  
 - NAME-BASED INFERENCE (0.8+ confidence): Common gendered names like "Michael" (male), "Sarah" (female)
-  - Only use for very common, unambiguous names: Aaron, David, John, Michael ’ male; Sarah, Jennifer, Lisa, Emily ’ female
+  - Only use for very common, unambiguous names: Aaron, David, John, Michael ï¿½ male; Sarah, Jennifer, Lisa, Emily ï¿½ female
   - Skip ambiguous names: Alex, Jordan, Taylor, Casey, etc.
 - CONTEXTUAL CLUES (0.75+ confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
-- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" ’ gender: "prefer-not-to-say" (0.9+ confidence)
-- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" ’ gender: "non-binary" (0.9+ confidence)
+- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" ï¿½ gender: "prefer-not-to-say" (0.9+ confidence)
+- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" ï¿½ gender: "non-binary" (0.9+ confidence)
 
-<‚ AGE DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
+<ï¿½ AGE DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
 - EXPLICIT AGE NUMBERS (0.95+ confidence): "25", "30 years old", "I'm 28", "age 35"
 - DIRECT STATEMENTS (0.9+ confidence): "I'm 25", "I am 30 years old", "My age is 28"
-- AGE RANGES (0.8+ confidence): "I'm in my twenties" ’ estimate mid-range (25), "early thirties" ’ (32)
-- CONTEXTUAL AGE CLUES (0.75+ confidence): "just graduated college" ’ ~22, "retirement age" ’ ~65
+- AGE RANGES (0.8+ confidence): "I'm in my twenties" ï¿½ estimate mid-range (25), "early thirties" ï¿½ (32)
+- CONTEXTUAL AGE CLUES (0.75+ confidence): "just graduated college" ï¿½ ~22, "retirement age" ï¿½ ~65
 - VALIDATION: Only extract ages between 13-120 years old
 
 =P TIME PREFERENCE DETECTION GUIDELINES:
@@ -58,9 +57,9 @@ AVAILABLE TOOLS:
 - GENERAL PREFERENCES (0.7+ confidence): "I usually work out in the morning", "I prefer evening sessions"
 - TIMEZONE INDICATORS: "EST", "PST", "Eastern", "Pacific", "New York", "California", city names
 - ALWAYS extract both time preference AND timezone when mentioned
-- Convert descriptive times: "morning" ’ 7-8am, "evening" ’ 6-7pm, "after work" ’ 5-6pm
+- Convert descriptive times: "morning" ï¿½ 7-8am, "evening" ï¿½ 6-7pm, "after work" ï¿½ 5-6pm
 
-=ç CONTACT INFORMATION EXTRACTION:
+=ï¿½ CONTACT INFORMATION EXTRACTION:
 - NAME: Full name extraction, proper capitalization
 - EMAIL: Valid email addresses only
 - PHONE: US phone numbers, normalized format
@@ -73,25 +72,59 @@ CONFIDENCE SCORING:
 - Below 0.75: DO NOT EXTRACT (except goals - handled by different agent)
 
 EXAMPLES OF HIGH-PRIORITY EXTRACTION:
-- "Aaron, male, phone, time" ’ MUST extract gender: "male" with 0.95+ confidence
-- "Sarah, 28, female, 555-1234, 7am EST" ’ MUST extract age: 28, gender: "female", phone, time, timezone
-- "I'm 25 and looking to get in shape" ’ MUST extract age: 25 with 0.95+ confidence
-- "My email is john@example.com" ’ extract email with 0.95+ confidence
-- "I prefer morning workouts around 6am Pacific time" ’ extract preferredSendHour: 6, timezone: Pacific
+- "Aaron, male, phone, time" ï¿½ MUST extract gender: "male" with 0.95+ confidence
+- "Sarah, 28, female, 555-1234, 7am EST" ï¿½ MUST extract age: 28, gender: "female", phone, time, timezone
+- "I'm 25 and looking to get in shape" ï¿½ MUST extract age: 25 with 0.95+ confidence
+- "My email is john@example.com" ï¿½ extract email with 0.95+ confidence
+- "I prefer morning workouts around 6am Pacific time" ï¿½ extract preferredSendHour: 6, timezone: Pacific
+
+EXAMPLE RESPONSES:
+
+For "Hi, I'm Sarah, 28 years old, female, my email is sarah@example.com and I prefer 7am workouts":
+{
+  "data": {
+    "demographics": {
+      "age": 28,
+      "gender": "female"
+    },
+    "contact": {
+      "name": "Sarah",
+      "email": "sarah@example.com",
+      "preferredSendHour": 7
+    }
+  },
+  "hasData": true,
+  "confidence": 0.95,
+  "reason": "User provided explicit demographics and contact information"
+}
+
+For "I'm a 25-year-old guy looking to get fit":
+{
+  "data": {
+    "demographics": {
+      "age": 25,
+      "gender": "male"
+    }
+  },
+  "hasData": true,
+  "confidence": 0.95,
+  "reason": "User provided age and gender explicitly"
+}
+
+For "I went to the gym yesterday":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No user demographics or contact info mentioned"
+}
 
 CRITICAL GUIDELINES:
 - ONLY extract user demographics and contact information
-- Age and gender go in fitness profile (use update_user_profile tool)
-- Contact details go in user record (use update_user_info tool)
+- Age and gender go in demographics section for profile
+- Contact details go in contact section for user record  
 - Be more aggressive with explicit demographic statements
-- Always validate phone numbers, emails, and timezones
+- Always validate ages (13-120), emails, and times (0-23)
 
-DO NOT EXTRACT:
-- Fitness goals (handled by goals agent)
-- Activity data (handled by activities agent)
-- Equipment or gym information
-- Physical metrics like weight/height (handled by metrics agent)
-- Constraints or injuries
-
-Remember: You are ONLY responsible for user demographics and contact info extraction.`;
+Remember: You are ONLY responsible for user demographics and contact info extraction. Return structured JSON only.`;
 };

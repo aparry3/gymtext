@@ -31,10 +31,10 @@ ${JSON.stringify(environmentJson, null, 2)}
 
 User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
-AVAILABLE TOOL:
-- update_user_profile - For environment information ONLY (equipmentAccess and availability fields)
+RESPONSE FORMAT:
+Return structured JSON with extracted environment data. Do NOT call any tools.
 
-<Ë EQUIPMENT ACCESS EXTRACTION:
+<ï¿½ EQUIPMENT ACCESS EXTRACTION:
 
 GYM ACCESS DETECTION:
 - Commercial gyms: "Planet Fitness", "Gold's Gym", "LA Fitness", "Anytime Fitness", "24 Hour Fitness"
@@ -49,12 +49,12 @@ HOME EQUIPMENT EXTRACTION:
 - Specialty: "power rack", "bench", "cable machine", "olympic weights"
 
 EQUIPMENT ACCESS EXAMPLES:
-- "I go to Planet Fitness" ’ {gymAccess: true, gymType: 'commercial', summary: 'Planet Fitness membership'}
-- "I have a home gym with dumbbells and a bench" ’ {gymAccess: false, gymType: 'home', homeEquipment: ['dumbbells', 'bench']}
-- "Just bodyweight workouts at home" ’ {gymAccess: false, gymType: 'home', homeEquipment: ['bodyweight'], limitations: ['no equipment']}
-- "YMCA member with full access" ’ {gymAccess: true, gymType: 'community'}
+- "I go to Planet Fitness" ï¿½ {gymAccess: true, gymType: 'commercial', summary: 'Planet Fitness membership'}
+- "I have a home gym with dumbbells and a bench" ï¿½ {gymAccess: false, gymType: 'home', homeEquipment: ['dumbbells', 'bench']}
+- "Just bodyweight workouts at home" ï¿½ {gymAccess: false, gymType: 'home', homeEquipment: ['bodyweight'], limitations: ['no equipment']}
+- "YMCA member with full access" ï¿½ {gymAccess: true, gymType: 'community'}
 
-=Å AVAILABILITY EXTRACTION:
+=ï¿½ AVAILABILITY EXTRACTION:
 
 SCHEDULE PATTERNS:
 - Days per week: "train 5 days a week", "workout 3x per week", "exercise daily"
@@ -62,9 +62,9 @@ SCHEDULE PATTERNS:
 - Time preferences: "morning workouts", "evening training", "lunch break sessions"
 
 AVAILABILITY EXAMPLES:
-- "I workout 4 days a week for about an hour" ’ {daysPerWeek: 4, minutesPerSession: 60}
-- "30 minute morning sessions, 5x per week" ’ {daysPerWeek: 5, minutesPerSession: 30, preferredTimes: ['morning']}
-- "I can only train weekends due to work" ’ {daysPerWeek: 2, schedule: 'weekends only'}
+- "I workout 4 days a week for about an hour" ï¿½ {daysPerWeek: 4, minutesPerSession: 60}
+- "30 minute morning sessions, 5x per week" ï¿½ {daysPerWeek: 5, minutesPerSession: 30, preferredTimes: ['morning']}
+- "I can only train weekends due to work" ï¿½ {daysPerWeek: 2, schedule: 'weekends only'}
 
 SCHEMA TO EXTRACT:
 
@@ -93,6 +93,53 @@ TEMPORARY SCHEDULING NOTES:
 - Temporary changes: "taking a break", "reduced schedule this month"
 - These should be captured as schedule notes, not permanent profile changes
 
+EXAMPLE RESPONSES:
+
+For "I go to Planet Fitness 4 days a week for about an hour each time":
+{
+  "data": {
+    "equipmentAccess": {
+      "gymAccess": true,
+      "gymType": "commercial",
+      "summary": "Planet Fitness membership"
+    },
+    "availability": {
+      "daysPerWeek": 4,
+      "minutesPerSession": 60,
+      "summary": "Regular 4-day training schedule"
+    }
+  },
+  "hasData": true,
+  "confidence": 0.9,
+  "reason": "User specified gym membership, training frequency, and session duration"
+}
+
+For "I have dumbbells at home but can only work out on weekends":
+{
+  "data": {
+    "equipmentAccess": {
+      "gymAccess": false,
+      "gymType": "home", 
+      "homeEquipment": ["dumbbells"]
+    },
+    "availability": {
+      "daysPerWeek": 2,
+      "schedule": "weekends only"
+    }
+  },
+  "hasData": true,
+  "confidence": 0.85,
+  "reason": "User has home equipment with limited weekend availability"
+}
+
+For "I love running marathons":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No equipment access or availability information mentioned"
+}
+
 CRITICAL GUIDELINES:
 - ONLY extract equipment and scheduling information
 - Focus on current access and typical availability patterns
@@ -100,12 +147,5 @@ CRITICAL GUIDELINES:
 - Note limitations and restrictions that affect programming
 - Distinguish between temporary and permanent schedule changes
 
-DO NOT EXTRACT:
-- Specific exercises or activities (handled by activities agent)
-- Goals or objectives (handled by goals agent)
-- Physical limitations or injuries (handled by constraints agent)
-- Demographics or contact info (handled by user agent)
-- Body measurements (handled by metrics agent)
-
-Remember: You are ONLY responsible for equipment access and availability extraction. This affects workout programming and scheduling.`;
+Remember: You are ONLY responsible for equipment access and availability extraction. Return structured JSON only.`;
 };

@@ -29,10 +29,10 @@ ${constraintsJson}
 
 User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
-AVAILABLE TOOL:
-- update_user_profile - For constraints information ONLY (constraints field)
+RESPONSE FORMAT:
+Return structured JSON with extracted constraints data. Do NOT call any tools.
 
-=¨ CONSTRAINT TYPES TO DETECT:
+=ï¿½ CONSTRAINT TYPES TO DETECT:
 
 INJURY CONSTRAINTS:
 - Current injuries: "hurt my back", "tweaked my knee", "shoulder pain"
@@ -54,10 +54,10 @@ PREFERENCE CONSTRAINTS:
 - Equipment avoidance: "no machines", "bodyweight only", "avoid heavy weights"
 
 CONSTRAINT EXTRACTION EXAMPLES:
-- "I hurt my back last week" ’ [{type: 'injury', description: 'recent back injury', severity: 'moderate', status: 'active'}]
-- "Bad knees from soccer" ’ [{type: 'injury', description: 'knee issues from soccer', severity: 'mild', status: 'active', affectedMovements: ['jumping', 'running']}]
-- "Doctor says no overhead pressing after shoulder surgery" ’ [{type: 'medical', description: 'post-surgical shoulder restriction', severity: 'severe', status: 'active', affectedMovements: ['overhead pressing']}]
-- "I hate burpees and avoid jumping exercises" ’ [{type: 'preference', description: 'dislikes burpees and jumping exercises', status: 'active'}]
+- "I hurt my back last week" ï¿½ [{type: 'injury', description: 'recent back injury', severity: 'moderate', status: 'active'}]
+- "Bad knees from soccer" ï¿½ [{type: 'injury', description: 'knee issues from soccer', severity: 'mild', status: 'active', affectedMovements: ['jumping', 'running']}]
+- "Doctor says no overhead pressing after shoulder surgery" ï¿½ [{type: 'medical', description: 'post-surgical shoulder restriction', severity: 'severe', status: 'active', affectedMovements: ['overhead pressing']}]
+- "I hate burpees and avoid jumping exercises" ï¿½ [{type: 'preference', description: 'dislikes burpees and jumping exercises', status: 'active'}]
 
 CONSTRAINT SCHEMA TO EXTRACT:
 - id: string (auto-generated unique identifier)
@@ -85,23 +85,60 @@ CONFIDENCE SCORING FOR CONSTRAINTS:
 - Below 0.75: DO NOT EXTRACT
 
 TEMPORARY VS PERMANENT CONSTRAINTS:
-- Temporary: "taking this week off", "resting a tweaked muscle" ’ status: 'active' but note temporary nature
-- Permanent: "chronic condition", "permanent restriction" ’ status: 'active'
-- Resolved: "my back is better now", "injury healed" ’ status: 'resolved'
+- Temporary: "taking this week off", "resting a tweaked muscle" ï¿½ status: 'active' but note temporary nature
+- Permanent: "chronic condition", "permanent restriction" ï¿½ status: 'active'
+- Resolved: "my back is better now", "injury healed" ï¿½ status: 'resolved'
+
+EXAMPLE RESPONSES:
+
+For "I hurt my back last week and doctor says no heavy lifting":
+{
+  "data": [
+    {
+      "id": "back-injury-001",
+      "type": "injury",
+      "description": "recent back injury with doctor restriction", 
+      "severity": "severe",
+      "affectedMovements": ["heavy lifting", "deadlifts", "squats"],
+      "status": "active"
+    }
+  ],
+  "hasData": true,
+  "confidence": 0.95,
+  "reason": "User reported recent back injury with explicit doctor restriction"
+}
+
+For "I hate burpees and avoid jumping exercises":
+{
+  "data": [
+    {
+      "id": "exercise-preference-001",
+      "type": "preference", 
+      "description": "dislikes burpees and jumping exercises",
+      "affectedMovements": ["burpees", "jumping", "plyometrics"],
+      "status": "active"
+    }
+  ],
+  "hasData": true,
+  "confidence": 0.8,
+  "reason": "User expressed strong preference against specific exercise types"
+}
+
+For "I'm feeling great and ready to work out":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No constraints, injuries, or limitations mentioned"
+}
 
 CRITICAL SAFETY GUIDELINES:
 - ALWAYS extract injury and medical information - this affects workout safety
 - Be conservative with severity assessment - err on the side of caution
 - Extract both current and past injuries that might affect training
 - Note doctor restrictions with high confidence
-- Don't extract general fatigue or temporary soreness unless significant
+- Generate unique IDs for each constraint
+- Always use array format, even for single constraints
 
-DO NOT EXTRACT:
-- Goals or objectives (handled by goals agent)
-- Activity preferences that aren't safety-related
-- Equipment access issues (handled by environment agent)
-- General fitness level (handled by metrics agent)
-- Schedule constraints (handled by environment agent)
-
-Remember: You are ONLY responsible for safety-critical constraints extraction. This information directly affects workout modifications and safety.`;
+Remember: You are ONLY responsible for safety-critical constraints extraction. Return structured JSON only.`;
 };
