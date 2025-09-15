@@ -1,33 +1,58 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { profilePatchTool } from '@/server/agents/tools/profilePatchTool';
-import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
+// Import the new modular architecture
+import { createGoalsAgent } from './goals/chain';
 import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
-import type { FitnessProfile, User } from '@/server/models/user/schemas';
+import type { FitnessProfile, User } from '../../models/user/schemas';
+import type { UserWithProfile } from '../../models/userModel';
+import type { ProfileAgentResult, ProfileAgentConfig } from './types';
+
+// Types are now imported from ./types.ts
 
 /**
- * Result type returned by the UserProfileAgent
+ * NEW MODULAR ARCHITECTURE - Route to specialized sub-agents
+ * This is the future direction for profile extraction
  */
-export interface ProfileAgentResult {
-  profile: FitnessProfile | null;
-  user?: Partial<User>;
-  wasUpdated: boolean;
-  updateSummary?: {
-    fieldsUpdated: string[];
-    reason: string;
-    confidence: number;
-  };
-}
+export const userProfileAgentModular = async ({
+  message,
+  user,
+  config = {},
+}: {
+  message: string;
+  user: UserWithProfile;
+  config?: ProfileAgentConfig;
+}): Promise<ProfileAgentResult> => {
+  
+  try {
+    const { verbose = false } = config;
+    
+    if (verbose) {
+      console.log(`[ModularProfileAgent] Processing message for user ${user.id}`);
+    }
+    
+    // For now, just route everything to Goals Agent
+    // TODO: Add intelligent routing based on message content
+    const goalsAgent = createGoalsAgent();
+    const goalsResult = await goalsAgent({ message, user, config });
+    
+    // Convert SubAgentResult to ProfileAgentResult format
+    return {
+      profile: goalsResult.updates as FitnessProfile | null,
+      user: user,
+      wasUpdated: goalsResult.wasUpdated,
+      updateSummary: goalsResult.updateSummary
+    };
+    
+  } catch (error) {
+    console.error('[ModularProfileAgent] Error:', error);
+    
+    return {
+      profile: user.parsedProfile as FitnessProfile | null,
+      user: user,
+      wasUpdated: false
+    };
+  }
+};
 
-/**
- * Configuration for the UserProfileAgent
- */
-export interface ProfileAgentConfig {
-  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro';
-  temperature?: number;
-  verbose?: boolean;
-}
+// ORIGINAL MONOLITHIC AGENT (PRESERVED FOR BACKWARD COMPATIBILITY)
 
 /**
  * Initialize the profile extraction model with tools
