@@ -1,68 +1,51 @@
 import { z } from 'zod';
 
 /**
- * Schema for strength activity data
+ * Schema for strength activity data - matches StrengthDataSchema from main schemas
  */
 export const StrengthActivitySchema = z.object({
   type: z.literal('strength'),
-  experience: z.enum(['beginner', 'intermediate', 'advanced', 'returning']).optional(),
+  summary: z.string().optional().describe('Brief overview of strength training background'),
+  experience: z.enum(['beginner', 'intermediate', 'advanced']), // Made required to match main, removed 'returning'
   currentProgram: z.string().optional(),
-  keyMetrics: z.object({
-    trainingDays: z.number().int().min(1).max(7).optional(),
-    benchPress: z.number().positive().optional(),
-    squat: z.number().positive().optional(),
-    deadlift: z.number().positive().optional()
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
+  keyLifts: z.record(z.string(), z.number()).optional(), // Changed from keyMetrics to keyLifts to match main
   preferences: z.object({
     workoutStyle: z.string().optional(),
     likedExercises: z.array(z.string()).optional(),
     dislikedExercises: z.array(z.string()).optional()
-  }).optional()
+  }).optional(),
+  trainingFrequency: z.number().int().min(1).max(7) // Added required field from main schema
 });
 
 /**
- * Schema for cardio activity data
+ * Schema for cardio activity data - matches CardioDataSchema from main schemas
  */
 export const CardioActivitySchema = z.object({
   type: z.literal('cardio'),
+  summary: z.string().optional().describe('Brief overview of cardio activities and background'),
+  experience: z.enum(['beginner', 'intermediate', 'advanced']),
   primaryActivities: z.array(z.string()),
-  experience: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   keyMetrics: z.object({
     weeklyDistance: z.number().positive().optional(),
     longestSession: z.number().positive().optional(),
     averagePace: z.string().optional(),
-    unit: z.enum(['miles', 'km']).optional()
+    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional() // Added from main schema
   }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
   preferences: z.object({
     indoor: z.boolean().optional(),
     outdoor: z.boolean().optional(),
+    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional(), // Added from main schema
     timeOfDay: z.array(z.string()).optional()
-  }).optional()
+  }).optional(),
+  frequency: z.number().int().min(1).max(7) // Added required field from main schema
 });
 
 /**
- * Schema for other activity types
- */
-export const OtherActivitySchema = z.object({
-  type: z.literal('other'),
-  activityName: z.string(),
-  experience: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
-  keyMetrics: z.record(z.unknown()).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional()
-});
-
-/**
- * Union schema for all activity types
+ * Union schema for activity types - matches ActivityDataSchema from main schemas (only strength + cardio)
  */
 export const ActivitySchema = z.union([
   StrengthActivitySchema,
-  CardioActivitySchema,
-  OtherActivitySchema
+  CardioActivitySchema
 ]);
 
 /**
@@ -83,7 +66,6 @@ export const ActivitiesExtractionSchema = z.object({
 // Export the inferred types
 export type StrengthActivity = z.infer<typeof StrengthActivitySchema>;
 export type CardioActivity = z.infer<typeof CardioActivitySchema>;
-export type OtherActivity = z.infer<typeof OtherActivitySchema>;
 export type Activity = z.infer<typeof ActivitySchema>;
 export type ActivitiesData = z.infer<typeof ActivitiesDataSchema>;
 export type ActivitiesExtractionResult = z.infer<typeof ActivitiesExtractionSchema>;

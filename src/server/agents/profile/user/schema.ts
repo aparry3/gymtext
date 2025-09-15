@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 /**
- * Schema for user demographics that go in the profile
+ * Schema for user demographics that go in the profile - matches UserSchema from main schemas
  */
 export const UserDemographicsSchema = z.object({
-  age: z.number().int().min(13).max(120).optional(),
-  gender: z.enum(['male', 'female', 'non-binary', 'prefer-not-to-say']).optional()
+  age: z.number().int().min(1).max(120).optional(), // Changed min from 13 to 1 to match main schema
+  gender: z.string().optional() // Changed from enum to string to match main schema (which uses z.string().nullable())
 });
 
 /**

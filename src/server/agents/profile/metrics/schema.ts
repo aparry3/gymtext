@@ -10,7 +10,7 @@ export const WeightSchema = z.object({
 });
 
 /**
- * Schema for metrics extraction data
+ * Schema for metrics extraction data - matches UserMetricsSchema from main schemas
  */
 export const MetricsDataSchema = z.object({
   summary: z.string().optional().describe('Brief overview of physical stats and fitness level'),

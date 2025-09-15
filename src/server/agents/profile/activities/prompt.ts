@@ -41,7 +41,7 @@ ACTIVITY TYPE DETECTION:
 - Cycling: bike, biking, cycling, cyclist, ride, riding
 - Hiking: hike, hiking, trail, mountain, backpacking, trekking
 - Skiing: ski, skiing, snowboard, snowboarding, slopes
-- Other: climbing, swimming, tennis, basketball, soccer, crossfit, etc. (use activityName field)
+- Other sports: Try to categorize as either strength or cardio based on the primary training component
 
 MULTI-ACTIVITY DETECTION EXAMPLES (EXTRACT ALL ACTIVITIES):
 - "I run and also do strength training" � MUST extract BOTH:
@@ -110,13 +110,13 @@ For "I run marathons and also lift weights at the gym":
     {
       "type": "cardio",
       "primaryActivities": ["running"],
-      "experience": "experienced",
-      "keyMetrics": { "racesCompleted": "multiple" }
+      "experience": "advanced",
+      "frequency": 4
     },
     {
       "type": "strength", 
       "experience": "intermediate",
-      "equipment": ["gym access"]
+      "trainingFrequency": 3
     }
   ],
   "hasData": true,
@@ -129,8 +129,9 @@ For "Getting back into lifting weights":
   "data": [
     {
       "type": "strength",
-      "experience": "returning",
-      "goals": ["return to weightlifting"]
+      "experience": "beginner",
+      "summary": "Getting back into weightlifting after break",
+      "trainingFrequency": 3
     }
   ],
   "hasData": true,
