@@ -19,7 +19,7 @@ export interface ProfileAgentResult {
  * Configuration for ProfileAgents
  */
 export interface ProfileAgentConfig {
-  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro' | 'gemini-2.5-flash';
+  model?: 'gpt-5-nano' | 'gemini-2.5-flash';
   temperature?: number;
   verbose?: boolean;
 }

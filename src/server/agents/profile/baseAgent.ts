@@ -14,7 +14,7 @@ import type {
  */
 const initializeModel = (config: ProfileAgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
-    model = 'gpt-4-turbo', 
+    model = 'gpt-5-nano', 
     temperature = 0.2
   } = config;
 

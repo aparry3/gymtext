@@ -229,7 +229,6 @@ export type UserUpdate = Updateable<Users>;
 
 // Zod-inferred types (for validation)
 export type FitnessProfile = z.infer<typeof FitnessProfileSchema>;
-export type UserWithProfile = z.infer<typeof UserWithProfileSchema>;
 
 // NEW - Activity-specific data types (only strength + cardio)
 export type ActivityData = z.infer<typeof ActivityDataSchema>;

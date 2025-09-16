@@ -13,7 +13,7 @@ export const createUserAgent = () => createSubAgent({
   promptBuilder: buildUserPromptWithContext,
   agentName: 'UserAgent',
   outputSchema: UserExtractionSchema,
-  model: 'gpt-4-turbo',
+  model: 'gpt-5-nano',
   temperature: 0.2  // Low temperature for consistent demographic extraction
 });
 
