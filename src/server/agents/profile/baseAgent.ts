@@ -1,7 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { z } from 'zod';
 import type { UserWithProfile } from '../../models/userModel';
 import type { 
   ProfileAgentConfig, 

@@ -77,32 +77,18 @@ function mergeActivityData(
 export const profilePatchTool = tool(
   async ({ currentProfile, updates, reason, confidence }) => {
     try {
-      // Check confidence threshold (raised to 0.75)
-      const CONFIDENCE_THRESHOLD = 0.75;
-      
-      if (confidence < CONFIDENCE_THRESHOLD) {
-        console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
-        return {
-          applied: false,
-          reason: 'Low confidence',
-          confidence,
-          threshold: CONFIDENCE_THRESHOLD,
-          updatedProfile: currentProfile
-        };
-      }
-
-      // Handle activityData array merging specially
-      let mergedActivityData = currentProfile.activityData;
+      // Handle activityData array merging locally for compatibility
+      const processedUpdates = { ...updates };
       if (updates.activityData) {
         if (!Array.isArray(updates.activityData)) {
           // Convert single activity to array format for consistency
-          updates.activityData = [updates.activityData] as ActivityData;
+          processedUpdates.activityData = [updates.activityData] as ActivityData;
         }
 
         const currentActivities = currentProfile.activityData || [];
         
         // Clean and sanitize activity data before merging
-        const sanitizedActivities = (updates.activityData || []).map((activity: AnyActivity) => {  
+        const sanitizedActivities = (processedUpdates.activityData || []).map((activity: AnyActivity) => {  
           // Remove null values from keyMetrics
           if (activity.keyMetrics) {
             const cleanKeyMetrics: Record<string, unknown> = {};  
@@ -122,32 +108,39 @@ export const profilePatchTool = tool(
         });
         
         // Merge each sanitized activity
-        mergedActivityData = sanitizedActivities.reduce(
+        const mergedActivityData = sanitizedActivities.reduce(
           (acc: ActivityData, newActivity: AnyActivity) => mergeActivityData(acc, newActivity),
           currentActivities
         );
         
-        // Remove from updates to prevent simple overwrite
-        delete updates.activityData;
+        processedUpdates.activityData = mergedActivityData;
+      }
+
+      // For now, just handle the patching logic locally until we refactor to use service methods
+      // Check confidence threshold (raised to 0.75)
+      const CONFIDENCE_THRESHOLD = 0.75;
+      
+      if (confidence < CONFIDENCE_THRESHOLD) {
+        console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
+        return {
+          applied: false,
+          reason: 'Low confidence',
+          confidence,
+          threshold: CONFIDENCE_THRESHOLD,
+          updatedProfile: currentProfile
+        };
       }
 
       // Merge updates into current profile
       const updatedProfile: Partial<FitnessProfile> = {
         ...currentProfile,
-        ...updates,
-        // Apply merged activity data
-        ...(mergedActivityData && { activityData: mergedActivityData })
+        ...processedUpdates
       };
 
       // Get list of fields that were updated
-      const fieldsUpdated = Object.keys(updates).filter(key => 
-        updates[key as keyof FitnessProfile] !== undefined
+      const fieldsUpdated = Object.keys(processedUpdates).filter(key => 
+        processedUpdates[key as keyof FitnessProfile] !== undefined
       );
-      
-      // Add activityData to fieldsUpdated if it was merged
-      if (mergedActivityData !== currentProfile.activityData) {
-        fieldsUpdated.push('activityData');
-      }
 
       console.log(`Profile update applied:`, {
         confidence,

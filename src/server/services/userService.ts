@@ -2,6 +2,7 @@ import { UserModel, CreateUserData, CreateFitnessProfileData } from '@/server/mo
 import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
+import { fitnessProfileService, CreateFitnessProfileRequest } from './fitnessProfileService';
 
 export interface CreateUserRequest {
   name: string;
@@ -70,44 +71,52 @@ export class UserService {
       // Create the user using repository
       const user = await this.userRepository.create(userData);
 
-      // TODO: Add service layer for profile parsing and creation
-      // For now, create basic fitness profile from form data or use default
-      const fitnessProfileData: CreateFitnessProfileData = request.fitnessGoals || request.currentExercise || request.injuries
-        ? {
-            goals: {
-              primary: request.fitnessGoals || '',
-              timeline: 12 // Default 12 weeks
-            },
-            availability: {
-              daysPerWeek: 3, // Default value - TODO: parse from text fields
-              minutesPerSession: 60 // Default value - TODO: parse from text fields
-            },
-            equipmentAccess: {
-              gymAccess: true // Default assumption - TODO: parse from text fields
-            },
-            constraints: request.injuries ? [{
-              id: crypto.randomUUID(),
-              type: 'injury' as const,
-              description: request.injuries,
-              status: 'active' as const
-            }] : [],
-            activityData: [] // Start with empty activity data
-          }
-        : UserModel.createDefaultFitnessProfile(request.fitnessGoals);
-
-      // Validate fitness profile data using domain model
-      UserModel.validateFitnessProfileData(fitnessProfileData);
-
-      // Create fitness profile using repository
-      const profile = await this.userRepository.createOrUpdateFitnessProfile(user.id, fitnessProfileData);
-      if (!profile) {
-        throw new Error('Failed to create fitness profile');
+      // Get user with profile for agent processing
+      const userWithProfile = await this.userRepository.findWithProfile(user.id);
+      if (!userWithProfile) {
+        throw new Error('Failed to retrieve created user');
       }
 
-      // TODO: Additional service layer calls:
-      // - Parse text fields for structured data extraction
-      // - Generate initial fitness plan
-      // - Send welcome message
+      // Prepare fitness profile request from form data
+      const fitnessProfileRequest: CreateFitnessProfileRequest = {
+        fitnessGoals: request.fitnessGoals,
+        currentExercise: request.currentExercise,
+        injuries: request.injuries,
+      };
+
+      // Check if we have any fitness profile data to process
+      const hasFitnessData = Object.values(fitnessProfileRequest).some(value => value && value.trim());
+
+      let profile: FitnessProfile;
+
+      if (hasFitnessData) {
+        // Use fitness profile service to process text fields and create profile
+        const fitnessProfileResult = await fitnessProfileService.onboardFitnessProfile(userWithProfile, fitnessProfileRequest);
+        
+        // If fitness profile service returns null (circuit breaker open), create default profile
+        if (!fitnessProfileResult) {
+          const defaultProfileData = UserModel.createDefaultFitnessProfile();
+          UserModel.validateFitnessProfileData(defaultProfileData);
+          
+          const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
+          if (!createdProfile) {
+            throw new Error('Failed to create fallback fitness profile');
+          }
+          profile = createdProfile;
+        } else {
+          profile = fitnessProfileResult;
+        }
+      } else {
+        // Create default fitness profile if no data provided
+        const defaultProfileData = UserModel.createDefaultFitnessProfile();
+        UserModel.validateFitnessProfileData(defaultProfileData);
+        
+        const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
+        if (!createdProfile) {
+          throw new Error('Failed to create default fitness profile');
+        }
+        profile = createdProfile;
+      }
 
       return { user, profile };
     });

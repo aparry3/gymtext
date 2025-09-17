@@ -7,18 +7,6 @@ import { parseLocationToTimezone, isValidTimezone } from '@/shared/utils/timezon
 
 export const userInfoPatchTool = tool(
   async ({ currentUser, updates, reason, confidence }) => {
-    const CONFIDENCE_THRESHOLD = 0.75;
-
-    if (confidence < CONFIDENCE_THRESHOLD) {
-      return {
-        applied: false,
-        reason: 'Low confidence',
-        confidence,
-        threshold: CONFIDENCE_THRESHOLD,
-        updatedUser: currentUser
-      } as const;
-    }
-
     // Normalize inputs
     let { name, email } = updates;
     const { phoneNumber, timezone, preferredSendHour } = updates;
@@ -54,14 +42,12 @@ export const userInfoPatchTool = tool(
       }
     }
 
-    const fieldsUpdated: string[] = [];
-    const userUpdate: Partial<User> = { ...currentUser };
+    const userUpdate: Partial<User> = {};
 
     if (typeof name === 'string') {
       name = name.trim();
       if (name.length > 0) {
         userUpdate.name = name;
-        fieldsUpdated.push('name');
       }
     }
     if (typeof email === 'string') {
@@ -70,27 +56,23 @@ export const userInfoPatchTool = tool(
       const EmailSchema = z.string().email();
       if (EmailSchema.safeParse(email).success) {
         userUpdate.email = email;
-        fieldsUpdated.push('email');
       }
     }
     if (typeof phoneNumber === 'string' && normalizedPhone) {
       // Validate using centralized US phone validation
       if (validateUSPhoneNumber(normalizedPhone)) {
         userUpdate.phoneNumber = normalizedPhone;
-        fieldsUpdated.push('phoneNumber');
       }
     }
     if (normalizedTimezone) {
       userUpdate.timezone = normalizedTimezone;
-      fieldsUpdated.push('timezone');
     }
     if (normalizedPreferredSendHour !== undefined) {
       userUpdate.preferredSendHour = normalizedPreferredSendHour;
-      fieldsUpdated.push('preferredSendHour');
     }
 
     // Nothing valid to update
-    if (fieldsUpdated.length === 0) {
+    if (Object.keys(userUpdate).length === 0) {
       return {
         applied: false,
         reason: 'No valid fields to update',
@@ -100,15 +82,36 @@ export const userInfoPatchTool = tool(
       } as const;
     }
 
+    // For now, handle locally until we refactor to use service methods
+    const CONFIDENCE_THRESHOLD = 0.75;
+
+    if (confidence < CONFIDENCE_THRESHOLD) {
+      return {
+        applied: false,
+        reason: 'Low confidence',
+        confidence,
+        threshold: CONFIDENCE_THRESHOLD,
+        updatedUser: currentUser
+      } as const;
+    }
+
+    const fieldsUpdated = Object.keys(userUpdate);
+
     console.log(`User info update applied:`, {
       confidence,
       reason,
       fieldsUpdated
     });
 
+    // Merge updates into current user for return value
+    const updatedUser: Partial<User> = {
+      ...currentUser,
+      ...userUpdate
+    };
+
     return {
       applied: true,
-      updatedUser: userUpdate,
+      updatedUser,
       fieldsUpdated,
       confidence,
       reason,

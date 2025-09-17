@@ -6,7 +6,7 @@ import { z } from 'zod';
 export const GoalsDataSchema = z.object({
   summary: z.string().optional().describe('Brief overview of fitness goals and motivation'),
   primary: z.string().describe('Primary fitness goal category'), // Changed from enum to string to match main schema
-  timeline: z.number().optional().describe('Timeline in weeks (1-104)'), // Made required to match main
+  timeline: z.number().int().min(1).max(104).describe('Timeline in weeks (1-104)'), // Made required to match main
   specific: z.string().optional().describe('Specific objective or event (e.g., "ski season preparation", "wedding")'),
   motivation: z.string().optional().describe('Why they want to achieve this goal')
 });
