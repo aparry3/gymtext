@@ -37,7 +37,7 @@ export const CardioActivitySchema = z.object({
     groupVsIndividual: z.enum(['group', 'individual', 'both']).nullable().optional(), // Added from main schema
     timeOfDay: z.array(z.string()).nullable().optional()
   }).nullable().optional(),
-  frequency: z.number().int().min(1).max(7) // Added required field from main schema
+  frequency: z.number().int().min(1).max(7).nullable().optional() // Added required field from main schema
 });
 
 /**

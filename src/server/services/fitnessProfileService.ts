@@ -149,6 +149,28 @@ export class FitnessProfileService {
         messages.constraints ? constraintsAgent({ message: messages.constraints, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No constraints data provided' } as const),
       ]);
 
+      // Log agent results for debugging
+      console.log('Agent results:', {
+        goals: {
+          hasData: goalsResult.hasData,
+          confidence: goalsResult.confidence,
+          reason: goalsResult.reason,
+          data: goalsResult.data
+        },
+        activities: {
+          hasData: activitiesResult.hasData,
+          confidence: activitiesResult.confidence,
+          reason: activitiesResult.reason,
+          data: activitiesResult.data
+        },
+        constraints: {
+          hasData: constraintsResult.hasData,
+          confidence: constraintsResult.confidence,
+          reason: constraintsResult.reason,
+          data: constraintsResult.data
+        }
+      });
+
       // Build profile updates from successful extractions
       const profileUpdates: Partial<FitnessProfile> = {};
       const userUpdates: Partial<User> = {};
