@@ -4,11 +4,11 @@ import { z } from 'zod';
  * Schema for goals extraction data - matches GoalsSchema from main schemas
  */
 export const GoalsDataSchema = z.object({
-  summary: z.string().optional().describe('Brief overview of fitness goals and motivation'),
+  summary: z.string().optional().nullable().describe('Brief overview of fitness goals and motivation'),
   primary: z.string().describe('Primary fitness goal category'), // Changed from enum to string to match main schema
   timeline: z.number().int().min(1).max(104).describe('Timeline in weeks (1-104)'), // Made required to match main
-  specific: z.string().optional().describe('Specific objective or event (e.g., "ski season preparation", "wedding")'),
-  motivation: z.string().optional().describe('Why they want to achieve this goal')
+  specific: z.string().optional().nullable().describe('Specific objective or event (e.g., "ski season preparation", "wedding")'),
+  motivation: z.string().optional().nullable().describe('Why they want to achieve this goal')
 });
 
 /**

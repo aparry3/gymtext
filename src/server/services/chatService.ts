@@ -85,7 +85,7 @@ export class ChatService {
           message,
           currentProfile: currentProfile || {},
           config: {
-            model: 'gpt-5-nano',
+            model: 'gpt-4o-mini',
             temperature: 0.2,
             verbose: process.env.NODE_ENV === 'development'
           }

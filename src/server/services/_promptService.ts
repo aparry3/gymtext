@@ -164,14 +164,14 @@
 
 //   async truncateMessagesToFit(
 //     messages: BaseMessage[],
-//     maxTokens: number,
+//     maxCompletionTokens: number,
 //     preserveSystemMessage: boolean = true
 //   ): Promise<BaseMessage[]> {
 //     // Dynamic import to avoid circular dependencies
 //     const { TokenManager } = await import('@/server/utils/token-manager');
 //     const tokenManager = new TokenManager();
 
-//     return tokenManager.truncateMessagesToLimit(messages, maxTokens, {
+//     return tokenManager.truncateMessagesToLimit(messages, maxCompletionTokens, {
 //       preserveFirst: preserveSystemMessage ? 1 : 0,
 //       preserveLast: 1, // Always keep the current user message
 //     });

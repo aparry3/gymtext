@@ -6,18 +6,18 @@ import { z } from 'zod';
 export const WeightSchema = z.object({
   value: z.number().positive().describe('Weight value'),
   unit: z.enum(['lbs', 'kg']).describe('Weight unit'),
-  date: z.string().optional().describe('Date of measurement (ISO string)')
+  date: z.string().optional().nullable().describe('Date of measurement (ISO string)')
 });
 
 /**
  * Schema for metrics extraction data - matches UserMetricsSchema from main schemas
  */
 export const MetricsDataSchema = z.object({
-  summary: z.string().optional().describe('Brief overview of physical stats and fitness level'),
-  height: z.number().positive().optional().describe('Height in feet decimal (e.g., 5.75 for 5\'9")'),
-  weight: WeightSchema.optional().describe('Current weight with unit'),
-  bodyComposition: z.number().min(1).max(50).optional().describe('Body fat percentage (1-50)'),
-  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional().describe('Self-assessed fitness level')
+  summary: z.string().optional().nullable().describe('Brief overview of physical stats and fitness level'),
+  height: z.number().positive().optional().nullable().describe('Height in feet decimal (e.g., 5.75 for 5\'9")'),
+  weight: WeightSchema.optional().nullable().describe('Current weight with unit'),
+  bodyComposition: z.number().min(1).max(50).optional().nullable().describe('Body fat percentage (1-50)'),
+  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional().nullable().describe('Self-assessed fitness level')
 });
 
 /**

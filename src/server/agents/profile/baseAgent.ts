@@ -13,7 +13,7 @@ import type {
  */
 const initializeModel = (config: ProfileAgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
-    model = 'gpt-5-nano', 
+    model = 'gemini-2.5-flash', 
     temperature = 0.2
   } = config;
 
@@ -28,7 +28,7 @@ const initializeModel = (config: ProfileAgentConfig = {}, outputSchema: any) => 
   return new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 2000,
+    maxCompletionTokens: 2000,
   }).withStructuredOutput(outputSchema);
 };
 

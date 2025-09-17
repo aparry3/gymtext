@@ -13,7 +13,7 @@ export const createEnvironmentAgent = () => createSubAgent({
   promptBuilder: buildEnvironmentPromptWithContext,
   agentName: 'EnvironmentAgent',
   outputSchema: EnvironmentExtractionSchema,
-  model: 'gpt-5-nano',
+  model: 'gpt-4o-mini',
   temperature: 0.2  // Low temperature for consistent environment extraction
 });
 

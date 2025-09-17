@@ -7,8 +7,8 @@ export const ConstraintSchema = z.object({
   id: z.string().describe('Unique identifier for the constraint'),
   type: z.enum(['injury', 'mobility', 'medical', 'preference']).describe('Type of constraint'),
   description: z.string().describe('Clear description of the constraint'),
-  severity: z.enum(['mild', 'moderate', 'severe']).optional().describe('Severity level (not applicable for preferences)'),
-  affectedMovements: z.array(z.string()).optional().describe('List of movements that should be modified/avoided'),
+  severity: z.enum(['mild', 'moderate', 'severe']).nullable().optional().describe('Severity level (not applicable for preferences)'),
+  affectedMovements: z.array(z.string()).nullable().optional().describe('List of movements that should be modified/avoided'),
   status: z.enum(['active', 'resolved']).describe('Current status of the constraint')
 });
 

@@ -5,15 +5,15 @@ import { z } from 'zod';
  */
 export const StrengthActivitySchema = z.object({
   type: z.literal('strength'),
-  summary: z.string().optional().describe('Brief overview of strength training background'),
+  summary: z.string().nullable().optional().describe('Brief overview of strength training background'),
   experience: z.enum(['beginner', 'intermediate', 'advanced']), // Made required to match main, removed 'returning'
-  currentProgram: z.string().optional(),
-  keyLifts: z.record(z.string(), z.number()).optional(), // Changed from keyMetrics to keyLifts to match main
+  currentProgram: z.string().nullable().optional(),
+  keyLifts: z.record(z.string(), z.number()).nullable().optional(), // Changed from keyMetrics to keyLifts to match main
   preferences: z.object({
-    workoutStyle: z.string().optional(),
-    likedExercises: z.array(z.string()).optional(),
-    dislikedExercises: z.array(z.string()).optional()
-  }).optional(),
+    workoutStyle: z.string().nullable().optional(),
+    likedExercises: z.array(z.string()).nullable().optional(),
+    dislikedExercises: z.array(z.string()).nullable().optional()
+  }).nullable().optional(),
   trainingFrequency: z.number().int().min(1).max(7) // Added required field from main schema
 });
 
@@ -22,21 +22,21 @@ export const StrengthActivitySchema = z.object({
  */
 export const CardioActivitySchema = z.object({
   type: z.literal('cardio'),
-  summary: z.string().optional().describe('Brief overview of cardio activities and background'),
+  summary: z.string().nullable().optional().describe('Brief overview of cardio activities and background'),
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
   primaryActivities: z.array(z.string()),
   keyMetrics: z.object({
-    weeklyDistance: z.number().positive().optional(),
-    longestSession: z.number().positive().optional(),
-    averagePace: z.string().optional(),
-    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional() // Added from main schema
-  }).optional(),
+    weeklyDistance: z.number().positive().nullable().optional(),
+    longestSession: z.number().positive().nullable().optional(),
+    averagePace: z.string().nullable().optional(),
+    preferredIntensity: z.enum(['low', 'moderate', 'high']).nullable().optional() // Added from main schema
+  }).nullable().optional(),
   preferences: z.object({
-    indoor: z.boolean().optional(),
-    outdoor: z.boolean().optional(),
-    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional(), // Added from main schema
-    timeOfDay: z.array(z.string()).optional()
-  }).optional(),
+    indoor: z.boolean().nullable().optional(),
+    outdoor: z.boolean().nullable().optional(),
+    groupVsIndividual: z.enum(['group', 'individual', 'both']).nullable().optional(), // Added from main schema
+    timeOfDay: z.array(z.string()).nullable().optional()
+  }).nullable().optional(),
   frequency: z.number().int().min(1).max(7) // Added required field from main schema
 });
 

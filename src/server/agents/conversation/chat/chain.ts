@@ -43,7 +43,7 @@ const initializeModel = (config: ChatAgentConfig = {}) => {
   return new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 5000,
+    maxCompletionTokens: 5000,
   });
 };
 

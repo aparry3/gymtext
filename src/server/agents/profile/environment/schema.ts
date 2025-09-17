@@ -4,30 +4,30 @@ import { z } from 'zod';
  * Schema for equipment access information
  */
 export const EquipmentAccessSchema = z.object({
-  summary: z.string().optional().describe('Brief overview of equipment situation'),
+  summary: z.string().optional().nullable().describe('Brief overview of equipment situation'),
   gymAccess: z.boolean().describe('Whether user has gym access'),
-  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().describe('Type of gym access'),
-  homeEquipment: z.array(z.string()).optional().describe('Equipment available at home'),
-  limitations: z.array(z.string()).optional().describe('Equipment restrictions or limitations')
+  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable().describe('Type of gym access'),
+  homeEquipment: z.array(z.string()).optional().nullable().describe('Equipment available at home'),
+  limitations: z.array(z.string()).optional().nullable().describe('Equipment restrictions or limitations')
 });
 
 /**
  * Schema for training availability
  */
 export const AvailabilitySchema = z.object({
-  summary: z.string().optional().describe('Brief overview of schedule and availability'),
+  summary: z.string().optional().nullable().describe('Brief overview of schedule and availability'),
   daysPerWeek: z.number().int().min(1).max(7).describe('Training days per week'),
   minutesPerSession: z.number().int().min(15).max(240).describe('Typical session duration in minutes'),
-  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().describe('Preferred workout times'),
-  schedule: z.string().optional().describe('Additional schedule information or constraints')
+  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().nullable().describe('Preferred workout times'),
+  schedule: z.string().optional().nullable().describe('Additional schedule information or constraints')
 });
 
 /**
  * Schema for environment extraction data
  */
 export const EnvironmentDataSchema = z.object({
-  equipmentAccess: EquipmentAccessSchema.optional().describe('Equipment and facility access information'),
-  availability: AvailabilitySchema.optional().describe('Training schedule and availability information')
+  equipmentAccess: EquipmentAccessSchema.optional().nullable().describe('Equipment and facility access information'),
+  availability: AvailabilitySchema.optional().nullable().describe('Training schedule and availability information')
 });
 
 /**

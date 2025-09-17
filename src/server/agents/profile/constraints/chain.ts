@@ -13,7 +13,7 @@ export const createConstraintsAgent = () => createSubAgent({
   promptBuilder: buildConstraintsPromptWithContext,
   agentName: 'ConstraintsAgent',
   outputSchema: ConstraintsExtractionSchema,
-  model: 'gpt-5-nano',
+  model: 'gpt-4o-mini',
   temperature: 0.1  // Very low temperature for safety-critical constraint extraction
 });
 

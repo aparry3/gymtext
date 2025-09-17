@@ -76,7 +76,7 @@ export const userProfileAgentModular = async ({
  */
 const initializeModel = (config: ProfileAgentConfig = {}) => {
   const { 
-    model = 'gpt-5-nano', 
+    model = 'gpt-4o-mini', 
     temperature = 0.2  // Low temperature for consistent extraction
   } = config;
 
@@ -94,7 +94,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
   const openaiModel = new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 3000,
+    maxCompletionTokens: 3000,
   });
   
   return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);

@@ -61,7 +61,7 @@ export class TokenManager {
    */
   truncateMessagesToLimit(
     messages: BaseMessage[],
-    maxTokens: number,
+    maxCompletionTokens: number,
     options: {
       preserveFirst?: number;
       preserveLast?: number;
@@ -71,7 +71,7 @@ export class TokenManager {
     
     // If all messages fit, return them all
     const totalTokens = this.countMessagesTokens(messages);
-    if (totalTokens <= maxTokens) {
+    if (totalTokens <= maxCompletionTokens) {
       return messages;
     }
 
@@ -95,7 +95,7 @@ export class TokenManager {
     
     for (let i = removable.length - 1; i >= 0; i--) {
       const msgTokens = this.countMessageTokens(removable[i]);
-      if (currentTokens + msgTokens <= maxTokens) {
+      if (currentTokens + msgTokens <= maxCompletionTokens) {
         result.push(removable[i]);
         currentTokens += msgTokens;
       }

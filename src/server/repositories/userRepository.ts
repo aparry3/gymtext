@@ -129,7 +129,7 @@ export class UserRepository extends BaseRepository {
       .selectFrom('users')
       .where('id', '=', id)
       .selectAll()
-      .executeTakeFirstOrThrow());
+      .executeTakeFirst());
   }
 
   async findByPhoneNumber(phoneNumber: string): Promise<UserWithProfile | undefined> {
@@ -137,7 +137,7 @@ export class UserRepository extends BaseRepository {
       .selectFrom('users')
       .where('phoneNumber', '=', phoneNumber)
       .selectAll()
-      .executeTakeFirstOrThrow());
+      .executeTakeFirst());
   }
 
   async findByEmail(email: string): Promise<UserWithProfile | undefined> {
@@ -145,7 +145,7 @@ export class UserRepository extends BaseRepository {
       .selectFrom('users')
       .where('email', '=', email)
       .selectAll()
-      .executeTakeFirstOrThrow());
+      .executeTakeFirst());
   }
 
   async findByStripeCustomerId(stripeCustomerId: string): Promise<UserWithProfile | undefined> {
@@ -153,7 +153,7 @@ export class UserRepository extends BaseRepository {
       .selectFrom('users')
       .where('stripeCustomerId', '=', stripeCustomerId)
       .selectAll()
-      .executeTakeFirstOrThrow());
+      .executeTakeFirst());
   }
 
   async update(id: string, userData: Partial<CreateUserData>): Promise<UserWithProfile | undefined> {
@@ -165,7 +165,7 @@ export class UserRepository extends BaseRepository {
       })
       .where('id', '=', id)
       .returningAll()
-      .executeTakeFirstOrThrow());
+      .executeTakeFirst());
   }
 
   async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile | undefined> {

@@ -25,20 +25,20 @@ export const UserSchema = z.object({
 
 // NEW - Simplified Availability Schema
 export const AvailabilitySchema = z.object({
-  summary: z.string().optional(), // Brief overview of schedule and availability
+  summary: z.string().optional().nullable(), // Brief overview of schedule and availability
   daysPerWeek: z.number().int().min(1).max(7),
   minutesPerSession: z.number().int().min(15).max(240),
-  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional(),
-  schedule: z.string().optional(),
+  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().nullable(),
+  schedule: z.string().optional().nullable(),
 });
 
 // NEW - Equipment Access Schema
 export const EquipmentAccessSchema = z.object({
-  summary: z.string().optional(), // Brief overview of equipment situation
+  summary: z.string().optional().nullable(), // Brief overview of equipment situation
   gymAccess: z.boolean(),
-  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional(),
-  homeEquipment: z.array(z.string()).optional(),
-  limitations: z.array(z.string()).optional(),
+  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable(),
+  homeEquipment: z.array(z.string()).optional().nullable(),
+  limitations: z.array(z.string()).optional().nullable(),
 });
 
 // DELETED - PreferencesSchema moved to activity-specific data
@@ -47,18 +47,18 @@ export const EquipmentAccessSchema = z.object({
 export const WeightSchema = z.object({
   value: z.number().positive(),
   unit: z.enum(['lbs', 'kg']),
-  date: z.string().optional(),
+  date: z.string().optional().nullable(),
 });
 
 // DELETED - PRLiftSchema replaced with flexible keyLifts record
 
 // NEW - Simplified User Metrics Schema
 export const UserMetricsSchema = z.object({
-  summary: z.string().optional(), // Brief overview of physical stats and fitness level
-  height: z.number().positive().optional(),
-  weight: WeightSchema.optional(),
-  bodyComposition: z.number().min(1).max(50).optional(),
-  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional(),
+  summary: z.string().optional().nullable(), // Brief overview of physical stats and fitness level
+  height: z.number().positive().optional().nullable(),
+  weight: WeightSchema.optional().nullable(),
+  bodyComposition: z.number().min(1).max(50).optional().nullable(),
+  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional().nullable(),
 });
 
 // NEW - Simplified Constraint Schema
@@ -66,8 +66,8 @@ export const ConstraintSchema = z.object({
   id: z.string(),
   type: z.enum(['injury', 'mobility', 'medical', 'preference']),
   description: z.string(),
-  severity: z.enum(['mild', 'moderate', 'severe']).optional(),
-  affectedMovements: z.array(z.string()).optional(),
+  severity: z.enum(['mild', 'moderate', 'severe']).optional().nullable(),
+  affectedMovements: z.array(z.string()).optional().nullable(),
   status: z.enum(['active', 'resolved']),
 });
 
@@ -77,15 +77,15 @@ export const ConstraintSchema = z.object({
 // NEW - Simplified Strength Data Schema
 export const StrengthDataSchema = z.object({
   type: z.literal('strength'),
-  summary: z.string().optional(), // Brief overview of strength training background
+  summary: z.string().optional().nullable(), // Brief overview of strength training background
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
-  currentProgram: z.string().optional(),
-  keyLifts: z.record(z.string(), z.number()).optional(),
+  currentProgram: z.string().optional().nullable(),
+  keyLifts: z.record(z.string(), z.number()).optional().nullable(),
   preferences: z.object({
-    workoutStyle: z.string().optional(),
-    likedExercises: z.array(z.string()).optional(),
-    dislikedExercises: z.array(z.string()).optional(),
-  }).optional(),
+    workoutStyle: z.string().optional().nullable(),
+    likedExercises: z.array(z.string()).optional().nullable(),
+    dislikedExercises: z.array(z.string()).optional().nullable(),
+  }).optional().nullable(),
   trainingFrequency: z.number().int().min(1).max(7),
 });
 
@@ -94,21 +94,21 @@ export const StrengthDataSchema = z.object({
 // NEW - Simplified Cardio Data Schema (replaces running, cycling, general)
 export const CardioDataSchema = z.object({
   type: z.literal('cardio'),
-  summary: z.string().optional(), // Brief overview of cardio activities and background
+  summary: z.string().optional().nullable(), // Brief overview of cardio activities and background
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
   primaryActivities: z.array(z.string()),
   keyMetrics: z.object({
-    weeklyDistance: z.number().positive().optional(),
-    longestSession: z.number().positive().optional(),
-    averagePace: z.string().optional(),
-    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional(),
-  }).optional(),
+    weeklyDistance: z.number().positive().optional().nullable(),
+    longestSession: z.number().positive().optional().nullable(),
+    averagePace: z.string().optional().nullable(),
+    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional().nullable(),
+  }).optional().nullable(),
   preferences: z.object({
-    indoor: z.boolean().optional(),
-    outdoor: z.boolean().optional(),
-    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional(),
-    timeOfDay: z.array(z.string()).optional(),
-  }).optional(),
+    indoor: z.boolean().optional().nullable(),
+    outdoor: z.boolean().optional().nullable(),
+    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional().nullable(),
+    timeOfDay: z.array(z.string()).optional().nullable(),
+  }).optional().nullable(),
   frequency: z.number().int().min(1).max(7),
 });
 
@@ -121,40 +121,40 @@ export const ActivityDataSchema = z.array(z.union([
 
 // NEW - Simplified Goals Schema
 export const GoalsSchema = z.object({
-  summary: z.string().optional(), // Brief overview of fitness goals and motivation
+  summary: z.string().optional().nullable(), // Brief overview of fitness goals and motivation
   primary: z.string(),
-  timeline: z.number().int().min(1).max(104).optional(), // 1-104 weeks
-  specific: z.string().optional(),
-  motivation: z.string().optional(),
+  timeline: z.number().int().min(1).max(104).optional().nullable(), // 1-104 weeks
+  specific: z.string().optional().nullable(),
+  motivation: z.string().optional().nullable(),
 });
 
 // THE ONLY FITNESS PROFILE SCHEMA - COMPLETE REPLACEMENT
 export const FitnessProfileSchema = z.object({
   goals: GoalsSchema,
 
-  equipmentAccess: EquipmentAccessSchema.optional(),
-  availability: AvailabilitySchema.optional(),
-  constraints: z.array(ConstraintSchema).optional(),
-  metrics: UserMetricsSchema.optional(),
+  equipmentAccess: EquipmentAccessSchema.optional().nullable(),
+  availability: AvailabilitySchema.optional().nullable(),
+  constraints: z.array(ConstraintSchema).optional().nullable(),
+  metrics: UserMetricsSchema.optional().nullable(),
   
-  activityData: ActivityDataSchema.optional(),
+  activityData: ActivityDataSchema.optional().nullable(),
 });
 
 // Schema for creating a new user
 export const CreateUserSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email().nullable().optional(),
+  name: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
-  age: z.number().int().min(1).max(120).nullable().optional(),
-  gender: z.string().nullable().optional(),
-  profile: z.unknown().nullable().optional(),
-  isActive: z.boolean().optional().default(true),
-  isAdmin: z.boolean().optional().default(false),
-  stripeCustomerId: z.string().nullable().optional(),
-  preferredSendHour: z.number().int().min(0).max(23).optional(),
-  timezone: z.string().optional(),
+  age: z.number().int().min(1).max(120).optional().nullable(),
+  gender: z.string().optional().nullable(),
+  profile: z.unknown().optional().nullable(),
+  isActive: z.boolean().optional().nullable().default(true),
+  isAdmin: z.boolean().optional().nullable().default(false),
+  stripeCustomerId: z.string().optional().nullable(),
+  preferredSendHour: z.number().int().min(0).max(23).optional().nullable(),
+  timezone: z.string().optional().nullable(),
 });
 
 // Schema for updating a user
@@ -175,7 +175,7 @@ export const ProfileUpdatePatchSchema = z.object({
 export const ProfileUpdateRequestSchema = z.object({
   updates: FitnessProfileSchema.partial(),
   source: z.enum(['chat', 'form', 'admin', 'api', 'system']),
-  reason: z.string().optional(),
+  reason: z.string().optional().nullable(),
 });
 
 // Kysely-based types (using database schema)
