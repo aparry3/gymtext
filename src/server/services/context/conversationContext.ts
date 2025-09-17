@@ -88,10 +88,10 @@ import {
   
         if (options.includeUserProfile !== false) {
           const userWithProfile = await this.userRepo.findWithProfile(userId);
-          if (userWithProfile?.parsedProfile) {
+          if (userWithProfile?.profile) {
             userProfile = {
               ...userProfile,
-              primaryGoal: userWithProfile.parsedProfile.goals?.primary,
+              primaryGoal: userWithProfile.profile.goals?.primary,
               // TODO: Add currentProgram and other fields as needed
             };
           }

@@ -49,10 +49,10 @@ You are a professional fitness coach and personal trainer assistant for GymText.
 
 <User Information>
 - Name: ${user.name}
-- Primary Goal: ${user.parsedProfile?.goals?.primary || 'Not specified'}
-- Training Days: ${user.parsedProfile?.availability?.daysPerWeek || 'Not specified'} days per week
-- Session Length: ${user.parsedProfile?.availability?.minutesPerSession || 'Not specified'} minutes
-- Gym Access: ${user.parsedProfile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
+- Primary Goal: ${user.profile?.goals?.primary || 'Not specified'}
+- Training Days: ${user.profile?.availability?.daysPerWeek || 'Not specified'} days per week
+- Session Length: ${user.profile?.availability?.minutesPerSession || 'Not specified'} minutes
+- Gym Access: ${user.profile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
 </User Information>
 
 <Conversation History>
@@ -142,8 +142,8 @@ export const motivationalPrompt = (
 Create a motivational message for ${user.name}.
 
 <User Info>
-- Goals: ${user.parsedProfile?.goals?.primary || 'General fitness'}
-- Gym Access: ${user.parsedProfile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
+- Goals: ${user.profile?.goals?.primary || 'General fitness'}
+- Gym Access: ${user.profile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
 ${achievement ? `- Recent Achievement: ${achievement}` : ''}
 ${currentStreak ? `- Current Streak: ${currentStreak} days` : ''}
 </User Info>

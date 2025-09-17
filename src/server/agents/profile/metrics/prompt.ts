@@ -6,7 +6,7 @@ import type { UserWithProfile } from '../../../models/userModel';
  * Focuses on quantitative health and fitness data
  */
 export const buildMetricsPromptWithContext = (user: UserWithProfile): string => {
-  const currentMetrics = user.parsedProfile?.metrics;
+  const currentMetrics = user.profile?.metrics;
   const metricsJson = currentMetrics && Object.keys(currentMetrics).length > 0
     ? JSON.stringify(currentMetrics, null, 2)
     : "No metrics recorded yet";

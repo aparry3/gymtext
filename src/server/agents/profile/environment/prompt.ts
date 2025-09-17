@@ -6,8 +6,8 @@ import type { UserWithProfile } from '../../../models/userModel';
  * Focuses on the training environment and logistical constraints
  */
 export const buildEnvironmentPromptWithContext = (user: UserWithProfile): string => {
-  const currentEquipment = user.parsedProfile?.equipmentAccess;
-  const currentAvailability = user.parsedProfile?.availability;
+  const currentEquipment = user.profile?.equipmentAccess;
+  const currentAvailability = user.profile?.availability;
   
   const environmentJson = {
     equipmentAccess: currentEquipment || "No equipment info yet",

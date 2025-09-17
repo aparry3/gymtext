@@ -4,6 +4,11 @@ import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './pr
 import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
 import type { ProfileAgentResult, ProfileAgentConfig } from './types';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatOpenAI } from '@langchain/openai';
+import { profilePatchTool } from '../tools/profilePatchTool';
+import { userInfoPatchTool } from '../tools/userInfoPatchTool';
 
 // Types are now imported from ./types.ts
 
@@ -47,7 +52,7 @@ export const userProfileAgentModular = async ({
     }
     
     return {
-      profile: user.parsedProfile as FitnessProfile | null,
+      profile: user.profile as FitnessProfile | null,
       user: user,
       wasUpdated: false
     };
@@ -56,7 +61,7 @@ export const userProfileAgentModular = async ({
     console.error('[ModularProfileAgent] Error:', error);
     
     return {
-      profile: user.parsedProfile as FitnessProfile | null,
+      profile: user.profile as FitnessProfile | null,
       user: user,
       wasUpdated: false
     };

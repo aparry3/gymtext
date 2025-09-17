@@ -34,13 +34,7 @@ export async function POST(request: Request) {
         phone: formData.phoneNumber, // Stripe expects 'phone' field name
         ...(formData.email && { email: formData.email }),
         metadata: {
-          primaryGoal: formData.fitnessGoals,
-          experienceLevel: formData.skillLevel,
-          daysPerWeek: formData.exerciseFrequency,
-          gender: formData.gender,
-          age: formData.age,
-          timezone: formData.timezone,
-          preferredSendHour: formData.preferredSendHour.toString()
+          userId: user?.id,
         }
       });
 

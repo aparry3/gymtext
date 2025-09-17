@@ -1,29 +1,34 @@
-import { NextResponse } from 'next/server';
-import { userService } from '@/server/services/userService';
+import { after, NextResponse } from 'next/server';
+import { CreateUserRequest, userService } from '@/server/services/userService';
+import { CreateFitnessProfileRequest, fitnessProfileService } from '@/server/services/fitnessProfileService';
 
 export async function POST(request: Request) {
   try {
     // Get the form data from the request
-    const formData = await request.json();
+    const formData = await request.json() as CreateUserRequest & CreateFitnessProfileRequest;
     
     // TODO: Add validation for incoming form data
     
     // Use service layer for user creation
-    const result = await userService.createUser({
+    const user = await userService.createUser({
       name: formData.name,
       phoneNumber: formData.phoneNumber,
-      age: parseInt(formData.age, 10),
+      age: formData.age,
       gender: formData.gender,
       timezone: formData.timezone,
       preferredSendHour: formData.preferredSendHour,
-      fitnessGoals: formData.fitnessGoals,
-      currentExercise: formData.currentExercise,
-      injuries: formData.injuries,
     });
     
+    after(async () => {
+      await fitnessProfileService.createFitnessProfile(user, {
+        fitnessGoals: formData.fitnessGoals,
+        currentExercise: formData.currentExercise,
+        injuries: formData.injuries,
+      });
+    });
     return NextResponse.json({
       success: true,
-      userId: result.user.id,
+      userId: user.id,
       message: 'User created successfully'
     });
     

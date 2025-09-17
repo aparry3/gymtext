@@ -1,8 +1,7 @@
-import { UserModel, CreateUserData, CreateFitnessProfileData } from '@/server/models/userModel';
+import { UserModel, CreateUserData, CreateFitnessProfileData, UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { fitnessProfileService, CreateFitnessProfileRequest } from './fitnessProfileService';
 
 export interface CreateUserRequest {
   name: string;
@@ -13,15 +12,6 @@ export interface CreateUserRequest {
   preferredSendHour: number;
   email?: string;
   stripeCustomerId?: string;
-  // Fitness profile fields
-  fitnessGoals?: string;
-  currentExercise?: string;
-  injuries?: string;
-}
-
-export interface CreateUserResult {
-  user: User;
-  profile: FitnessProfile;
 }
 
 export class UserService {
@@ -45,8 +35,8 @@ export class UserService {
     return UserService.instance;
   }
 
-  async createUser(request: CreateUserRequest): Promise<CreateUserResult> {
-    const result = await this.circuitBreaker.execute(async () => {
+  async createUser(request: CreateUserRequest): Promise<UserWithProfile> {
+    const result = await this.circuitBreaker.execute<UserWithProfile>(async (): Promise<UserWithProfile> => {
       // Check if user already exists using repository
       const existingUser = await this.userRepository.findByPhoneNumber(request.phoneNumber);
       if (existingUser) {
@@ -63,6 +53,7 @@ export class UserService {
         preferredSendHour: request.preferredSendHour,
         email: request.email || null,
         stripeCustomerId: request.stripeCustomerId || null,
+        profile: null,
       };
 
       // Validate user data using domain model
@@ -77,48 +68,8 @@ export class UserService {
         throw new Error('Failed to retrieve created user');
       }
 
-      // Prepare fitness profile request from form data
-      const fitnessProfileRequest: CreateFitnessProfileRequest = {
-        fitnessGoals: request.fitnessGoals,
-        currentExercise: request.currentExercise,
-        injuries: request.injuries,
-      };
 
-      // Check if we have any fitness profile data to process
-      const hasFitnessData = Object.values(fitnessProfileRequest).some(value => value && value.trim());
-
-      let profile: FitnessProfile;
-
-      if (hasFitnessData) {
-        // Use fitness profile service to process text fields and create profile
-        const fitnessProfileResult = await fitnessProfileService.onboardFitnessProfile(userWithProfile, fitnessProfileRequest);
-        
-        // If fitness profile service returns null (circuit breaker open), create default profile
-        if (!fitnessProfileResult) {
-          const defaultProfileData = UserModel.createDefaultFitnessProfile();
-          UserModel.validateFitnessProfileData(defaultProfileData);
-          
-          const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
-          if (!createdProfile) {
-            throw new Error('Failed to create fallback fitness profile');
-          }
-          profile = createdProfile;
-        } else {
-          profile = fitnessProfileResult;
-        }
-      } else {
-        // Create default fitness profile if no data provided
-        const defaultProfileData = UserModel.createDefaultFitnessProfile();
-        UserModel.validateFitnessProfileData(defaultProfileData);
-        
-        const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
-        if (!createdProfile) {
-          throw new Error('Failed to create default fitness profile');
-        }
-        profile = createdProfile;
-      }
-
-      return { user, profile };
+      return userWithProfile;
     });
     
     if (!result) {

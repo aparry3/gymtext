@@ -6,7 +6,7 @@ import type { UserWithProfile } from '../../../models/userModel';
  * This is the HIGHEST PRIORITY agent - goals should be updated more aggressively than other fields
  */
 export const buildGoalsPromptWithContext = (user: UserWithProfile): string => {
-  const currentGoals = user.parsedProfile?.goals;
+  const currentGoals = user.profile?.goals;
   const goalsJson = currentGoals && Object.keys(currentGoals).length > 0
     ? JSON.stringify(currentGoals, null, 2)
     : "No goals set yet";

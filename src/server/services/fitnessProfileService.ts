@@ -1,22 +1,18 @@
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserModel, UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createGoalsAgent } from '../agents/profile/goals/chain';
 import { createActivitiesAgent } from '../agents/profile/activities/chain';
 import { createConstraintsAgent } from '../agents/profile/constraints/chain';
-import { createUserAgent } from '../agents/profile/user/chain';
-import { createEnvironmentAgent } from '../agents/profile/environment/chain';
-import { createMetricsAgent } from '../agents/profile/metrics/chain';
+// import { createUserAgent } from '../agents/profile/user/chain';
+// import { createEnvironmentAgent } from '../agents/profile/environment/chain';
+// import { createMetricsAgent } from '../agents/profile/metrics/chain';
 
 export interface CreateFitnessProfileRequest {
   fitnessGoals?: string;
   currentExercise?: string;
   injuries?: string;
-  physicalMetrics?: string;
-  equipment?: string;
-  schedule?: string;
-  preferences?: string;
 }
 
 
@@ -58,10 +54,10 @@ export class FitnessProfileService {
       console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
       // Return current profile without changes
       const userWithProfile = await this.userRepository.findWithProfile(userId);
-      if (!userWithProfile?.parsedProfile) {
+      if (!userWithProfile?.profile) {
         throw new Error('Unable to retrieve current profile');
       }
-      return userWithProfile.parsedProfile;
+      return userWithProfile.profile;
     }
 
     try {
@@ -83,10 +79,10 @@ export class FitnessProfileService {
 
       // If no profile updates, return current profile
       const userWithProfile = await this.userRepository.findWithProfile(userId);
-      if (!userWithProfile?.parsedProfile) {
+      if (!userWithProfile?.profile) {
         throw new Error('Unable to retrieve current profile');
       }
-      return userWithProfile.parsedProfile;
+      return userWithProfile.profile;
 
     } catch (error) {
       console.error('Profile patch error:', error);
@@ -98,33 +94,25 @@ export class FitnessProfileService {
    * Main onboarding method that processes fitness profile information using sub-agents
    */
   async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
-    return this.circuitBreaker.execute<FitnessProfile>(async (): Promise<FitnessProfile> => {
       // Initialize all agents
       const goalsAgent = createGoalsAgent();
       const activitiesAgent = createActivitiesAgent();
       const constraintsAgent = createConstraintsAgent();
-      const userAgent = createUserAgent();
-      const environmentAgent = createEnvironmentAgent();
-      const metricsAgent = createMetricsAgent();
+      // const environmentAgent = createEnvironmentAgent();
+      // const metricsAgent = createMetricsAgent();
 
       // Prepare messages for each agent based on request data
       const messages = {
         goals: request.fitnessGoals,
         activities: request.currentExercise,
         constraints: request.injuries,
-        userInfo: [request.fitnessGoals, request.currentExercise, request.injuries].filter(Boolean).join(' '),
-        environment: [request.equipment, request.schedule, request.preferences].filter(Boolean).join(' '),
-        metrics: request.physicalMetrics
       };
 
       // Run all agents in parallel for efficiency
-      const [goalsResult, activitiesResult, constraintsResult, userResult, environmentResult, metricsResult] = await Promise.all([
+      const [goalsResult, activitiesResult, constraintsResult] = await Promise.all([
         messages.goals ? goalsAgent({ message: messages.goals, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No goals data provided' } as const),
         messages.activities ? activitiesAgent({ message: messages.activities, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No activities data provided' } as const),
         messages.constraints ? constraintsAgent({ message: messages.constraints, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No constraints data provided' } as const),
-        messages.userInfo ? userAgent({ message: messages.userInfo, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No user data provided' } as const),
-        messages.environment ? environmentAgent({ message: messages.environment, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No environment data provided' } as const),
-        messages.metrics ? metricsAgent({ message: messages.metrics, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No metrics data provided' } as const)
       ]);
 
       // Build profile updates from successful extractions
@@ -158,50 +146,6 @@ export class FitnessProfileService {
         maxConfidence = Math.max(maxConfidence, constraintsResult.confidence);
       }
 
-      // Process user demographics
-      if (userResult.hasData && userResult.data && userResult.confidence > 0.5) {
-        if (userResult.data.demographics) {
-          // Demographics go to user record
-          if (userResult.data.demographics.age !== undefined) {
-            userUpdates.age = userResult.data.demographics.age;
-            allFieldsUpdated.push('age');
-          }
-          if (userResult.data.demographics.gender !== undefined) {
-            userUpdates.gender = userResult.data.demographics.gender;
-            allFieldsUpdated.push('gender');
-          }
-        }
-        if (userResult.data.contact) {
-          // Contact info goes to user record
-          Object.assign(userUpdates, userResult.data.contact);
-          allFieldsUpdated.push(...Object.keys(userResult.data.contact));
-        }
-        reasons.push(userResult.reason);
-        maxConfidence = Math.max(maxConfidence, userResult.confidence);
-      }
- 
-      // Process environment
-      if (environmentResult.hasData && environmentResult.data && environmentResult.confidence > 0.5) {
-        if (environmentResult.data.availability) {
-          profileUpdates.availability = environmentResult.data.availability;
-          allFieldsUpdated.push('availability');
-        }
-        if (environmentResult.data.equipmentAccess) {
-          profileUpdates.equipmentAccess = environmentResult.data.equipmentAccess;
-          allFieldsUpdated.push('equipmentAccess');
-        }
-        reasons.push(environmentResult.reason);
-        maxConfidence = Math.max(maxConfidence, environmentResult.confidence);
-      }
-
-      // Process metrics
-      if (metricsResult.hasData && metricsResult.data && metricsResult.confidence > 0.5) {
-        profileUpdates.metrics = metricsResult.data;
-        allFieldsUpdated.push('metrics');
-        reasons.push(metricsResult.reason);
-        maxConfidence = Math.max(maxConfidence, metricsResult.confidence);
-      }
-
       // Apply updates using the patch service method
       if (Object.keys(profileUpdates).length > 0 || Object.keys(userUpdates).length > 0) {
         return await this.patchProfile(
@@ -213,22 +157,58 @@ export class FitnessProfileService {
         );
       }
 
-      // If no updates to apply, return current profile or create default
-      if (!user.parsedProfile) {
-        // Create a minimal default profile if none exists
-        const defaultProfileData = {
-          equipmentAccess: { gymAccess: true },
-          availability: { daysPerWeek: 3, minutesPerSession: 60 },
-          goals: { primary: 'general fitness', timeline: 12 },
-          activityData: []
-        };
-        return await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
-      }
+      return user.profile!;
+  }
 
-      // TypeScript now knows parsedProfile is not null due to the check above
-      return user.parsedProfile!;
+  async createFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
+    return this.circuitBreaker.execute<FitnessProfile>(async (): Promise<FitnessProfile> => {
+
+      // Prepare fitness profile request from form data
+      const fitnessProfileRequest: CreateFitnessProfileRequest = {
+        fitnessGoals: request.fitnessGoals,
+        currentExercise: request.currentExercise,
+        injuries: request.injuries,
+      };
+
+      // Check if we have any fitness profile data to process
+      const hasFitnessData = Object.values(fitnessProfileRequest).some(value => value && value.trim());
+
+      let profile: FitnessProfile;
+
+      if (hasFitnessData) {
+        // Use fitness profile service to process text fields and create profile
+        const fitnessProfileResult = await fitnessProfileService.onboardFitnessProfile(user, fitnessProfileRequest);
+        
+        // If fitness profile service returns null (circuit breaker open), create default profile
+        if (!fitnessProfileResult) {
+          const defaultProfileData = UserModel.createDefaultFitnessProfile();
+          UserModel.validateFitnessProfileData(defaultProfileData);
+          
+          const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
+          if (!createdProfile) {
+            throw new Error('Failed to create fallback fitness profile');
+          }
+          profile = createdProfile;
+        } else {
+          profile = fitnessProfileResult;
+        }
+      } else if (!user.profile) {
+        // Create default fitness profile if no data provided
+        const defaultProfileData = UserModel.createDefaultFitnessProfile();
+        UserModel.validateFitnessProfileData(defaultProfileData);
+        
+        const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
+        if (!createdProfile) {
+          throw new Error('Failed to create default fitness profile');
+        }
+        profile = createdProfile;
+      } else {
+        profile = user.profile;
+      }
+      return profile;
     });
   }
+    
 }
 
 // Export singleton instance

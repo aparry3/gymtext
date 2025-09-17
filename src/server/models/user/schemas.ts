@@ -143,7 +143,7 @@ export const FitnessProfileSchema = z.object({
 
 // User with profile schema
 export const UserWithProfileSchema = UserSchema.extend({
-  parsedProfile: FitnessProfileSchema.nullable(),
+  profile: FitnessProfileSchema.nullable(),
   info: z.array(z.string()),
 });
 

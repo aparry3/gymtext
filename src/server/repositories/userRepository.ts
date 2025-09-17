@@ -1,11 +1,12 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import { sql } from 'kysely';
-import type { 
-  User, 
-  FitnessProfile, 
-  UserWithProfile, 
-  CreateUserData, 
-  CreateFitnessProfileData 
+import { 
+  type User, 
+  type FitnessProfile, 
+  type UserWithProfile, 
+  type CreateUserData, 
+  type CreateFitnessProfileData, 
+  UserModel
 } from '@/server/models/userModel';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
 
@@ -99,17 +100,13 @@ export class UserRepository extends BaseRepository {
       .limit(pageSize)
       .execute();
 
-    const users: UserWithProfile[] = usersRows.map((u) => ({
-      ...u,
-      parsedProfile: this.parseProfile(u.profile),
-      info: []
-    }));
+    const users: UserWithProfile[] = usersRows.map((u) => (UserModel.fromDb(u)));
 
     return { users, total };
   }
 
-  async create(userData: CreateUserData): Promise<User> {
-    return await this.db
+  async create(userData: CreateUserData): Promise<UserWithProfile> {
+    return UserModel.fromDb(await this.db
       .insertInto('users')
       .values({
         name: userData.name,
@@ -123,43 +120,43 @@ export class UserRepository extends BaseRepository {
         updatedAt: new Date(),
       })
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirstOrThrow());
   }
 
-  async findById(id: string): Promise<User | undefined> {
-    return await this.db
+  async findById(id: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('id', '=', id)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow());
   }
 
-  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
-    return await this.db
+  async findByPhoneNumber(phoneNumber: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('phoneNumber', '=', phoneNumber)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow());
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return await this.db
+  async findByEmail(email: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('email', '=', email)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow());
   }
 
-  async findByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
-    return await this.db
+  async findByStripeCustomerId(stripeCustomerId: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('stripeCustomerId', '=', stripeCustomerId)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow());
   }
 
-  async update(id: string, userData: Partial<CreateUserData>): Promise<User> {
-    return await this.db
+  async update(id: string, userData: Partial<CreateUserData>): Promise<UserWithProfile> {
+    return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
         ...userData,
@@ -167,7 +164,7 @@ export class UserRepository extends BaseRepository {
       })
       .where('id', '=', id)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirstOrThrow());
   }
 
   async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
@@ -178,7 +175,7 @@ export class UserRepository extends BaseRepository {
     }
 
     // Merge the new profile data with existing profile
-    const existingProfile = this.parseProfile(user.profile) || {};
+    const existingProfile = user.profile
     
     // Ensure required fields have defaults for new schema structure
     const updatedProfile: FitnessProfile = {
@@ -223,11 +220,7 @@ export class UserRepository extends BaseRepository {
       return null;
     }
 
-    return {
-      ...user,
-      parsedProfile: this.parseProfile(user.profile),
-      info: []
-    };
+    return UserModel.fromDb(user)
   }
 
   async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {
@@ -236,14 +229,14 @@ export class UserRepository extends BaseRepository {
       return undefined;
     }
     
-    return this.parseProfile(user.profile) || undefined;
+    return UserModel.parseProfile(user.profile) || undefined;
   }
 
   async updatePreferences(userId: string, preferences: { 
     preferredSendHour?: number; 
     timezone?: string; 
-  }): Promise<User> {
-    return await this.db
+  }): Promise<UserWithProfile> {
+    return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
         ...preferences,
@@ -251,7 +244,7 @@ export class UserRepository extends BaseRepository {
       })
       .where('id', '=', userId)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirstOrThrow());
   }
 
   async findUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
@@ -272,11 +265,7 @@ export class UserRepository extends BaseRepository {
       try {
         const localHour = getLocalHourForTimezone(currentUtcDate, user.timezone);
         if (localHour === user.preferredSendHour) {
-          matchingUsers.push({
-            ...user,
-            parsedProfile: this.parseProfile(user.profile),
-            info: []
-          });
+          matchingUsers.push(UserModel.fromDb(user));
         }
       } catch (error) {
         console.error(`Error processing user ${user.id} timezone:`, error);
@@ -314,28 +303,6 @@ export class UserRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return {
-      ...result,
-      parsedProfile: this.parseProfile(result.profile),
-      info: []
-    };
-  }
-
-  private parseProfile(profile: unknown): FitnessProfile | null {
-    if (!profile || (typeof profile === 'object' && Object.keys(profile).length === 0)) {
-      return null;
-    }
-    
-    // If it's a string, parse it
-    if (typeof profile === 'string') {
-      try {
-        return JSON.parse(profile) as FitnessProfile;
-      } catch {
-        return null;
-      }
-    }
-    
-    // If it's already an object, return it
-    return profile as FitnessProfile;
+      return UserModel.fromDb(result);
   }
 }

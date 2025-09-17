@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { TimeSelector } from '@/components/ui/TimeSelector';
 import { TimezoneDisplay } from '@/components/ui/TimezoneDisplay';
 
@@ -30,96 +30,71 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-function PaymentRequestForm({ formData }: { formData: FormData }) {
+function ExpressCheckoutForm({ formData, onCanMakePaymentChange }: { formData: FormData; onCanMakePaymentChange: (canMake: boolean) => void }) {
   const stripe = useStripe();
   const elements = useElements();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
-  const [canMakePayment, setCanMakePayment] = useState(false);
 
-  useEffect(() => {
+  const handleExpressCheckout = async (event: any) => {
     if (!stripe || !elements) return;
 
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: 'GymText Monthly Subscription',
-        amount: 1999, // $19.99
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-      requestPayerPhone: true,
-    });
+    // Format phone number with +1 prefix if not already present
+    const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
+    
+    try {
+      // Create checkout session on the server
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          phoneNumber: formattedPhoneNumber,
+          // Add subscription specific details
+          plan: 'monthly',
+          priceId: 'price_monthly_subscription',
+          // Add implicit consent to receive text messages
+          acceptTexts: true,
+          paymentMethodId: event.expressPaymentType ? undefined : event.paymentMethod?.id
+        }),
+      });
 
-    pr.on('paymentmethod', async (ev) => {
-      // Format phone number with +1 prefix if not already present
-      const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
+      if (!response.ok) {
+        console.error('Payment failed:', await response.text());
+        return;
+      }
+
+      const responseData = await response.json();
       
-      try {
-        // Create checkout session on the server
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...formData,
-            phoneNumber: formattedPhoneNumber,
-            // Add subscription specific details
-            plan: 'monthly',
-            priceId: 'price_monthly_subscription',
-            // Add implicit consent to receive text messages
-            acceptTexts: true,
-            paymentMethodId: ev.paymentMethod.id
-          }),
-        });
-
-        if (!response.ok) {
-          ev.complete('fail');
-          console.error('Payment failed:', await response.text());
-          return;
-        }
-
-        const responseData = await response.json();
-        
-        // Mark the payment as successful
-        ev.complete('success');
-        
-        // Check if we have a redirectUrl and redirect to it
-        if (responseData.redirectUrl) {
-          window.location.href = responseData.redirectUrl;
-        } else {
-          // Fallback to success page
-          window.location.href = '/success';
-        }
-      } catch (error) {
-        console.error('Express checkout error:', error);
-        ev.complete('fail');
+      // Check if we have a redirectUrl and redirect to it
+      if (responseData.redirectUrl) {
+        window.location.href = responseData.redirectUrl;
+      } else {
+        // Fallback to success page
+        window.location.href = '/success';
       }
-    });
+    } catch (error) {
+      console.error('Express checkout error:', error);
+    }
+  };
 
-    pr.canMakePayment().then(result => {
-      if (result) {
-        setCanMakePayment(true);
-        setPaymentRequest(pr);
-      }
-    });
-  }, [stripe, elements, formData]);
-
-  if (!canMakePayment) {
-    return null;
-  }
+  const handleReadyEvent = (event: any) => {
+    onCanMakePaymentChange(event.availablePaymentMethods?.length > 0);
+  };
 
   return (
-    <PaymentRequestButtonElement
+    <ExpressCheckoutElement
+      onConfirm={handleExpressCheckout}
+      onReady={handleReadyEvent}
       options={{
-        paymentRequest,
-        style: {
-          paymentRequestButton: {
-            theme: 'dark',
-            height: '44px',
-          },
+        buttonTheme: {
+          applePay: 'black',
+          googlePay: 'black',
+        },
+        buttonHeight: 44,
+        wallets: {
+          applePay: 'auto',
+          googlePay: 'auto',
         },
       }}
     />
@@ -132,6 +107,7 @@ export default function SignupForm() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [formValues, setFormValues] = useState<FormData | null>(null);
   const [detectedTimezone, setDetectedTimezone] = useState<string>('America/New_York');
+  const [canMakeExpressPayment, setCanMakeExpressPayment] = useState<boolean | null>(null);
 
   const {
     register,
@@ -230,20 +206,35 @@ export default function SignupForm() {
         <h2 className="text-2xl font-bold text-center mb-6">Choose Your Payment Method</h2>
         
         <Elements stripe={stripePromise}>
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
-            <PaymentRequestForm formData={formValues} />
-          </div>
+          {canMakeExpressPayment && (
+            <>
+              <div className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
+                <ExpressCheckoutForm 
+                  formData={formValues} 
+                  onCanMakePaymentChange={setCanMakeExpressPayment}
+                />
+              </div>
+              
+              <div className="relative mb-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or pay with card</span>
+                </div>
+              </div>
+            </>
+          )}
+          {canMakeExpressPayment === null && (
+            <div className="mb-8">
+              <ExpressCheckoutForm 
+                formData={formValues} 
+                onCanMakePaymentChange={setCanMakeExpressPayment}
+              />
+            </div>
+          )}
         </Elements>
-        
-        <div className="relative mb-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or pay with card</span>
-          </div>
-        </div>
         
         <button
           onClick={() => onSubmit(formValues)}

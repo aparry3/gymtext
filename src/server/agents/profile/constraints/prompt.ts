@@ -6,7 +6,7 @@ import type { UserWithProfile } from '../../../models/userModel';
  * This is SAFETY-CRITICAL information that affects workout safety
  */
 export const buildConstraintsPromptWithContext = (user: UserWithProfile): string => {
-  const currentConstraints = user.parsedProfile?.constraints;
+  const currentConstraints = user.profile?.constraints;
   const constraintsJson = currentConstraints && currentConstraints.length > 0
     ? JSON.stringify(currentConstraints, null, 2)
     : "No constraints recorded yet";

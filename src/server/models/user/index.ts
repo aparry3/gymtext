@@ -8,9 +8,8 @@ import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
-export interface UserWithProfile extends User {
-  parsedProfile: FitnessProfile | null;
-  info: string[];
+export type UserWithProfile = Omit<User, 'profile'> & {
+  profile: FitnessProfile | null;
 }
 
 /**
@@ -18,7 +17,32 @@ export interface UserWithProfile extends User {
  * No direct repository access - Services orchestrate repository calls
  */
 export class UserModel {
-  
+  static fromDb(user: User): UserWithProfile {
+    return {
+      ...user,
+      profile: this.parseProfile(user.profile)
+    };
+  }
+
+  static parseProfile(profile: unknown): FitnessProfile | null {
+    if (!profile || (typeof profile === 'object' && Object.keys(profile).length === 0)) {
+      return null;
+    }
+    
+    // If it's a string, parse it
+    if (typeof profile === 'string') {
+      try {
+        return JSON.parse(profile) as FitnessProfile;
+      } catch {
+        return null;
+      }
+    }
+    
+    // If it's already an object, return it
+    return profile as FitnessProfile;
+  }
+
+
   /**
    * Validates user data for creation
    * @param userData - User data to validate

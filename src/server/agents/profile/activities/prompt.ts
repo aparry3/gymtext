@@ -6,7 +6,7 @@ import type { UserWithProfile } from '../../../models/userModel';
  * This is the SECOND HIGHEST PRIORITY agent after goals - never skip activity data when mentioned
  */
 export const buildActivitiesPromptWithContext = (user: UserWithProfile): string => {
-  const currentActivities = user.parsedProfile?.activityData;
+  const currentActivities = user.profile?.activityData;
   const activitiesJson = currentActivities && currentActivities.length > 0
     ? JSON.stringify(currentActivities, null, 2)
     : "No activities recorded yet";

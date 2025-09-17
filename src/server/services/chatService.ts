@@ -74,7 +74,7 @@ export class ChatService {
         : null;
 
       // Step 2: Run UserProfileAgent to extract and update profile
-      let currentProfile = user.parsedProfile;
+      let currentProfile = user.profile;
       let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {
@@ -178,7 +178,7 @@ export class ChatService {
   ): Promise<string> {
     try {
       // Run profile extraction if enabled
-      let currentProfile = user.parsedProfile;
+      let currentProfile = user.profile;
       let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {
