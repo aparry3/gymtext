@@ -100,27 +100,28 @@ export class UserRepository extends BaseRepository {
       .limit(pageSize)
       .execute();
 
-    const users: UserWithProfile[] = usersRows.map((u) => (UserModel.fromDb(u)));
+    const users: UserWithProfile[] = usersRows.map((u) => (UserModel.fromDb(u))).filter((u) => u !== undefined);
 
     return { users, total };
   }
 
-  async create(userData: CreateUserData): Promise<UserWithProfile> {
-    return UserModel.fromDb(await this.db
-      .insertInto('users')
-      .values({
-        name: userData.name,
-        phoneNumber: userData.phoneNumber,
-        email: userData.email || null,
-        stripeCustomerId: userData.stripeCustomerId || null,
-        timezone: userData.timezone,
-        preferredSendHour: userData.preferredSendHour,
-        profile: userData.profile || {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow());
+  async create(userData: CreateUserData): Promise<UserWithProfile | undefined> {
+    const user = await this.db
+    .insertInto('users')
+    .values({
+      name: userData.name,
+      phoneNumber: userData.phoneNumber,
+      email: userData.email || null,
+      stripeCustomerId: userData.stripeCustomerId || null,
+      timezone: userData.timezone,
+      preferredSendHour: userData.preferredSendHour,
+      profile: userData.profile || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+    return UserModel.fromDb(user);
   }
 
   async findById(id: string): Promise<UserWithProfile | undefined> {
@@ -155,7 +156,7 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirstOrThrow());
   }
 
-  async update(id: string, userData: Partial<CreateUserData>): Promise<UserWithProfile> {
+  async update(id: string, userData: Partial<CreateUserData>): Promise<UserWithProfile | undefined> {
     return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
@@ -167,7 +168,7 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirstOrThrow());
   }
 
-  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
+  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile | undefined> {
     // Get the current user
     const user = await this.findById(userId);
     if (!user) {
@@ -179,13 +180,9 @@ export class UserRepository extends BaseRepository {
     
     // Ensure required fields have defaults for new schema structure
     const updatedProfile: FitnessProfile = {
-      equipmentAccess: { gymAccess: false }, // Default no gym access
-      availability: { daysPerWeek: 3, minutesPerSession: 60 }, // Default 3 days, 60 minutes  
-      goals: { primary: 'General fitness improvement', timeline: 12 }, // Default goal
-      activityData: [], // Start with empty activities
+      goals: { primary: 'General fitness improvement' }, // Default goal
       ...existingProfile,
       ...profileData,
-      userId
     };
 
     // Update the user's profile field
@@ -213,11 +210,11 @@ export class UserRepository extends BaseRepository {
     return updatedProfile;
   }
 
-  async findWithProfile(userId: string): Promise<UserWithProfile | null> {
+  async findWithProfile(userId: string): Promise<UserWithProfile | undefined> {
     const user = await this.findById(userId);
     
     if (!user) {
-      return null;
+      return undefined;
     }
 
     return UserModel.fromDb(user)
@@ -235,7 +232,7 @@ export class UserRepository extends BaseRepository {
   async updatePreferences(userId: string, preferences: { 
     preferredSendHour?: number; 
     timezone?: string; 
-  }): Promise<UserWithProfile> {
+  }): Promise<UserWithProfile | undefined> {
     return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
@@ -265,7 +262,7 @@ export class UserRepository extends BaseRepository {
       try {
         const localHour = getLocalHourForTimezone(currentUtcDate, user.timezone);
         if (localHour === user.preferredSendHour) {
-          matchingUsers.push(UserModel.fromDb(user));
+          matchingUsers.push(UserModel.fromDb(user)!);
         }
       } catch (error) {
         console.error(`Error processing user ${user.id} timezone:`, error);
@@ -289,7 +286,7 @@ export class UserRepository extends BaseRepository {
    * Patch the user's profile with a partial update using JSONB merge
    * This performs a deep merge of the provided patch with the existing profile
    */
-  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile> {
+  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile | undefined> {
     // Use PostgreSQL's JSONB merge operator to deep merge the patch
     // The || operator merges two JSONB values, with the right-hand value overwriting keys
     const result = await this.db

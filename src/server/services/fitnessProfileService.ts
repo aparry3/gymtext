@@ -1,5 +1,6 @@
 import { UserModel, UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
+import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createGoalsAgent } from '../agents/profile/goals/chain';
@@ -15,11 +16,19 @@ export interface CreateFitnessProfileRequest {
   injuries?: string;
 }
 
+export interface ProfilePatchOptions {
+  source: string;
+  reason: string;
+  confidence: number;
+  path?: string;
+}
+
 
 export class FitnessProfileService {
   private static instance: FitnessProfileService;
   private circuitBreaker: CircuitBreaker;
   private userRepository: UserRepository;
+  private profileUpdateRepository: ProfileUpdateRepository;
 
   private constructor() {
     this.circuitBreaker = new CircuitBreaker({
@@ -28,6 +37,7 @@ export class FitnessProfileService {
       monitoringPeriod: 60000 // 1 minute
     });
     this.userRepository = new UserRepository();
+    this.profileUpdateRepository = new ProfileUpdateRepository();
   }
 
   public static getInstance(): FitnessProfileService {
@@ -39,19 +49,19 @@ export class FitnessProfileService {
 
   /**
    * Service method to patch a user's fitness profile using extracted data
+   * Applies updates and stores patch information for audit trail
    * Returns the updated profile after applying changes to the database
    */
-  private async patchProfile(
+  public async patchProfile(
     userId: string,
     profileUpdates: Partial<FitnessProfile>,
-    userUpdates: Partial<User> = {},
-    reason: string,
-    confidence: number
+    options: ProfilePatchOptions,
+    userUpdates: Partial<User> = {}
   ): Promise<FitnessProfile> {
     const CONFIDENCE_THRESHOLD = 0.75;
     
-    if (confidence < CONFIDENCE_THRESHOLD) {
-      console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
+    if (options.confidence < CONFIDENCE_THRESHOLD) {
+      console.log(`Profile update skipped - low confidence: ${options.confidence} < ${CONFIDENCE_THRESHOLD}`);
       // Return current profile without changes
       const userWithProfile = await this.userRepository.findWithProfile(userId);
       if (!userWithProfile?.profile) {
@@ -68,13 +78,32 @@ export class FitnessProfileService {
 
       // Update profile if there are profile updates
       if (Object.keys(profileUpdates).length > 0) {
-        const updatedProfile = await this.userRepository.createOrUpdateFitnessProfile(userId, profileUpdates);
+        // Use the repository's patchProfile method for atomic JSONB merge
+        const updatedUserWithProfile = await this.userRepository.patchProfile(userId, profileUpdates);
+        
+        if (!updatedUserWithProfile?.profile) {
+          throw new Error('Failed to update fitness profile');
+        }
+
+        // Store the patch in profile_updates table for audit trail
+        const updateRecord: NewProfileUpdate = {
+          userId,
+          patch: JSON.parse(JSON.stringify(profileUpdates)), // Ensure it's a plain object
+          source: options.source,
+          reason: options.reason,
+          path: options.path || null,
+        };
+
+        await this.profileUpdateRepository.create(updateRecord);
+
         console.log(`Profile update applied:`, {
-          confidence,
-          reason,
+          confidence: options.confidence,
+          reason: options.reason,
+          source: options.source,
           fieldsUpdated: Object.keys(profileUpdates)
         });
-        return updatedProfile;
+        
+        return updatedUserWithProfile.profile;
       }
 
       // If no profile updates, return current profile
@@ -92,8 +121,13 @@ export class FitnessProfileService {
 
   /**
    * Main onboarding method that processes fitness profile information using sub-agents
+   * Returns profile updates and metadata for patch operations
    */
-  async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
+  async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<{
+    profileUpdates: Partial<FitnessProfile>;
+    userUpdates: Partial<User>;
+    options: ProfilePatchOptions;
+  } | null> {
       // Initialize all agents
       const goalsAgent = createGoalsAgent();
       const activitiesAgent = createActivitiesAgent();
@@ -146,22 +180,26 @@ export class FitnessProfileService {
         maxConfidence = Math.max(maxConfidence, constraintsResult.confidence);
       }
 
-      // Apply updates using the patch service method
-      if (Object.keys(profileUpdates).length > 0 || Object.keys(userUpdates).length > 0) {
-        return await this.patchProfile(
-          user.id,
-          profileUpdates,
-          userUpdates,
-          reasons.join('; '),
-          maxConfidence
-        );
+      // Return null if no updates were extracted
+      if (Object.keys(profileUpdates).length === 0 && Object.keys(userUpdates).length === 0) {
+        return null;
       }
 
-      return user.profile!;
+      // Return the updates and options for patching
+      return {
+        profileUpdates,
+        userUpdates,
+        options: {
+          source: 'fitness_profile_onboarding',
+          reason: reasons.join(', '),
+          confidence: maxConfidence,
+          path: 'onboarding'
+        }
+      };
   }
 
   async createFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
-    return this.circuitBreaker.execute<FitnessProfile>(async (): Promise<FitnessProfile> => {
+    return this.circuitBreaker.execute<FitnessProfile | null>(async (): Promise<FitnessProfile | null> => {
 
       // Prepare fitness profile request from form data
       const fitnessProfileRequest: CreateFitnessProfileRequest = {
@@ -173,39 +211,25 @@ export class FitnessProfileService {
       // Check if we have any fitness profile data to process
       const hasFitnessData = Object.values(fitnessProfileRequest).some(value => value && value.trim());
 
-      let profile: FitnessProfile;
-
       if (hasFitnessData) {
-        // Use fitness profile service to process text fields and create profile
-        const fitnessProfileResult = await fitnessProfileService.onboardFitnessProfile(user, fitnessProfileRequest);
+        // Use onboard method to process text fields and get updates
+        const onboardResult = await this.onboardFitnessProfile(user, fitnessProfileRequest);
         
-        // If fitness profile service returns null (circuit breaker open), create default profile
-        if (!fitnessProfileResult) {
-          const defaultProfileData = UserModel.createDefaultFitnessProfile();
-          UserModel.validateFitnessProfileData(defaultProfileData);
-          
-          const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
-          if (!createdProfile) {
-            throw new Error('Failed to create fallback fitness profile');
-          }
-          profile = createdProfile;
-        } else {
-          profile = fitnessProfileResult;
+        if (!onboardResult) {
+          throw new Error('Failed to extract fitness profile data');
         }
-      } else if (!user.profile) {
-        // Create default fitness profile if no data provided
-        const defaultProfileData = UserModel.createDefaultFitnessProfile();
-        UserModel.validateFitnessProfileData(defaultProfileData);
+
+        // Apply the profile patch using the extracted updates
+        const updatedProfile = await this.patchProfile(
+          user.id,
+          onboardResult.profileUpdates,
+          onboardResult.options,
+          onboardResult.userUpdates
+        );
         
-        const createdProfile = await this.userRepository.createOrUpdateFitnessProfile(user.id, defaultProfileData);
-        if (!createdProfile) {
-          throw new Error('Failed to create default fitness profile');
-        }
-        profile = createdProfile;
-      } else {
-        profile = user.profile;
-      }
-      return profile;
+        return updatedProfile;
+      } 
+      return null;
     });
   }
     

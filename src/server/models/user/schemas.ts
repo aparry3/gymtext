@@ -123,28 +123,21 @@ export const ActivityDataSchema = z.array(z.union([
 export const GoalsSchema = z.object({
   summary: z.string().optional(), // Brief overview of fitness goals and motivation
   primary: z.string(),
-  timeline: z.number().int().min(1).max(104), // 1-104 weeks
+  timeline: z.number().int().min(1).max(104).optional(), // 1-104 weeks
   specific: z.string().optional(),
   motivation: z.string().optional(),
 });
 
 // THE ONLY FITNESS PROFILE SCHEMA - COMPLETE REPLACEMENT
 export const FitnessProfileSchema = z.object({
-  userId: z.string().uuid().optional(),
-  
-  equipmentAccess: EquipmentAccessSchema,
-  availability: AvailabilitySchema,
   goals: GoalsSchema,
+
+  equipmentAccess: EquipmentAccessSchema.optional(),
+  availability: AvailabilitySchema.optional(),
   constraints: z.array(ConstraintSchema).optional(),
   metrics: UserMetricsSchema.optional(),
   
-  activityData: ActivityDataSchema,
-});
-
-// User with profile schema
-export const UserWithProfileSchema = UserSchema.extend({
-  profile: FitnessProfileSchema.nullable(),
-  info: z.array(z.string()),
+  activityData: ActivityDataSchema.optional(),
 });
 
 // Schema for creating a new user
@@ -183,43 +176,6 @@ export const ProfileUpdateRequestSchema = z.object({
   updates: FitnessProfileSchema.partial(),
   source: z.enum(['chat', 'form', 'admin', 'api', 'system']),
   reason: z.string().optional(),
-});
-
-// Simplified schemas for LLM structured output
-
-// UPDATED - Minimal profile schema for quick updates (aligned with new schema)
-export const MinimalProfileUpdateSchema = z.object({
-  'goals.primary': z.string().optional(),
-  'availability.daysPerWeek': z.number().int().min(1).max(7).optional(),
-  'availability.minutesPerSession': z.number().int().min(15).max(240).optional(),
-  'equipmentAccess.gymAccess': z.boolean().optional(),
-});
-
-// Schema for extracting profile info from conversation
-export const ExtractedProfileInfoSchema = z.object({
-  updates: z.record(z.string(), z.unknown()),
-  confidence: z.enum(['high', 'medium', 'low']),
-  needsClarification: z.array(z.string()).optional(),
-  suggestedQuestions: z.array(z.string()).optional(),
-});
-
-// UPDATED - Schema for workout preferences extraction (aligned with new schema)
-export const WorkoutPreferencesExtractionSchema = z.object({
-  strengthPreferences: z.object({
-    workoutStyle: z.string().optional(),
-    likedExercises: z.array(z.string()).optional(),
-    dislikedExercises: z.array(z.string()).optional(),
-  }).optional(),
-  cardioPreferences: z.object({
-    indoor: z.boolean().optional(),
-    outdoor: z.boolean().optional(),
-    primaryActivities: z.array(z.string()).optional(),
-  }).optional(),
-  constraints: z.array(z.object({
-    type: z.enum(['injury', 'mobility', 'medical', 'preference']),
-    description: z.string(),
-    severity: z.enum(['mild', 'moderate', 'severe']).optional(),
-  })).optional(),
 });
 
 // Kysely-based types (using database schema)

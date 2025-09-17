@@ -28,28 +28,24 @@ const formSchema = z.object({
   }),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema> & { userId?: string };
 
 function ExpressCheckoutForm({ formData, onCanMakePaymentChange }: { formData: FormData; onCanMakePaymentChange: (canMake: boolean) => void }) {
   const stripe = useStripe();
   const elements = useElements();
 
-  const handleExpressCheckout = async (event: any) => {
+  const handleExpressCheckout = async (event: { expressPaymentType?: string; paymentMethod?: { id: string } }) => {
     if (!stripe || !elements) return;
-
-    // Format phone number with +1 prefix if not already present
-    const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
     
     try {
-      // Create checkout session on the server
+      // Create checkout session on the server with existing user
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          phoneNumber: formattedPhoneNumber,
+          userId: formData.userId,
           // Add subscription specific details
           plan: 'monthly',
           priceId: 'price_monthly_subscription',
@@ -78,8 +74,14 @@ function ExpressCheckoutForm({ formData, onCanMakePaymentChange }: { formData: F
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReadyEvent = (event: any) => {
-    onCanMakePaymentChange(event.availablePaymentMethods?.length > 0);
+    // Check if any payment methods are available
+    const hasPaymentMethods = event.availablePaymentMethods && 
+      Object.keys(event.availablePaymentMethods).some(key => 
+        event.availablePaymentMethods[key] === true
+      );
+    onCanMakePaymentChange(hasPaymentMethods);
   };
 
   return (
@@ -139,14 +141,45 @@ export default function SignupForm() {
     }
   }, [setValue]);
 
-  const handleContinue = (data: FormData) => {
-    // Format phone number with +1 prefix
-    const formattedData = {
-      ...data,
-      phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
-    };
-    setFormValues(formattedData);
-    setShowPaymentOptions(true);
+  const handleContinue = async (data: FormData) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      // Format phone number with +1 prefix
+      const formattedData = {
+        ...data,
+        phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
+      };
+
+      // First create the user
+      const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        throw new Error(errorData.message || 'Failed to create user');
+      }
+
+      const userData = await userResponse.json();
+      
+      // Store the user data with the user ID for checkout
+      setFormValues({
+        ...formattedData,
+        userId: userData.userId
+      });
+      setShowPaymentOptions(true);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -154,18 +187,14 @@ export default function SignupForm() {
     setErrorMessage(null);
     
     try {
-      // Format phone number with +1 prefix if not already present
-      const formattedPhoneNumber = data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`;
-      
-      // Create checkout session on the server
+      // Create checkout session on the server with existing user
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
-          phoneNumber: formattedPhoneNumber,
+          userId: data.userId,
           // Add subscription specific details
           plan: 'monthly',
           priceId: 'price_monthly_subscription',

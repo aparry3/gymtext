@@ -17,11 +17,11 @@ export type UserWithProfile = Omit<User, 'profile'> & {
  * No direct repository access - Services orchestrate repository calls
  */
 export class UserModel {
-  static fromDb(user: User): UserWithProfile {
-    return {
+  static fromDb(user?: User): UserWithProfile | undefined {
+    return user ? {
       ...user,
       profile: this.parseProfile(user.profile)
-    };
+    } : undefined;
   }
 
   static parseProfile(profile: unknown): FitnessProfile | null {

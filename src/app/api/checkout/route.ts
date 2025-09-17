@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { CreateUserData, CreateFitnessProfileData } from '@/server/models/userModel';
 import { setUserCookie } from '@/shared/utils/cookies';
 
 // Initialize Stripe with the secret key
@@ -11,71 +10,38 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: Request) {
   try {
-    // Get the form data from the request
-    const formData = await request.json();
+    // Get the request data
+    const requestData = await request.json();
     
-    // Check if user already exists
+    // Get the user by ID
     const userRepository = new UserRepository();
-    let user = await userRepository.findByPhoneNumber(formData.phoneNumber);
+    const user = await userRepository.findById(requestData.userId);
     
-    // If user doesn't exist, create new user data
-    const userData: CreateUserData = {
-      name: formData.name,
-      phoneNumber: formData.phoneNumber,
-      email: formData.email || null,
-      timezone: formData.timezone,
-      preferredSendHour: formData.preferredSendHour,
-    };
+    if (!user) {
+      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    }
 
     try {
-      // Create or update customer in Stripe
+      // Create customer in Stripe
       const customer = await stripe.customers.create({
-        name: formData.name,
-        phone: formData.phoneNumber, // Stripe expects 'phone' field name
-        ...(formData.email && { email: formData.email }),
+        name: user.name,
+        phone: user.phoneNumber,
+        ...(user.email && { email: user.email }),
         metadata: {
-          userId: user?.id,
+          userId: user.id,
         }
       });
 
-      // Add Stripe customer ID to user data
-      userData.stripeCustomerId = customer.id;
-
-      if (!user) {
-        // Save new user to database
-        user = await userRepository.create(userData);
-
-        // Create fitness profile for new user using new schema structure
-        const fitnessProfileData: CreateFitnessProfileData = {
-          goals: {
-            primary: formData.fitnessGoals,
-            timeline: 12 // Default 12 weeks
-          },
-          availability: {
-            daysPerWeek: parseInt(formData.exerciseFrequency, 10),
-            minutesPerSession: 60 // Default 60 minutes
-          },
-          equipmentAccess: {
-            gymAccess: true // Default assume gym access for checkout users
-          },
-          activityData: [] // Start with empty activity data
-        };
-
-        await userRepository.createOrUpdateFitnessProfile(user.id, fitnessProfileData);
-      } else {
-        // Update existing user with new Stripe customer ID and time preferences
-        user = await userRepository.update(user.id, { 
-          stripeCustomerId: customer.id,
-          timezone: formData.timezone,
-          preferredSendHour: formData.preferredSendHour
-        });
-      }
+      // Update user with Stripe customer ID
+      await userRepository.update(user.id, { 
+        stripeCustomerId: customer.id
+      });
 
       // Check if we have a direct payment method ID (Apple Pay/Google Pay)
-      if (formData.paymentMethodId) {
+      if (requestData.paymentMethodId) {
         try {
           // Attach payment method to customer
-          await stripe.paymentMethods.attach(formData.paymentMethodId, {
+          await stripe.paymentMethods.attach(requestData.paymentMethodId, {
             customer: customer.id,
           });
           
@@ -87,7 +53,7 @@ export async function POST(request: Request) {
                 price: process.env.STRIPE_PRICE_ID,
               },
             ],
-            default_payment_method: formData.paymentMethodId,
+            default_payment_method: requestData.paymentMethodId,
             payment_behavior: 'default_incomplete',
             expand: ['latest_invoice.payment_intent'],
           });

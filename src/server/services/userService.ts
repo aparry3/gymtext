@@ -61,7 +61,10 @@ export class UserService {
 
       // Create the user using repository
       const user = await this.userRepository.create(userData);
-
+      if (!user) {
+        throw new Error('Failed to create user');
+      }
+      
       // Get user with profile for agent processing
       const userWithProfile = await this.userRepository.findWithProfile(user.id);
       if (!userWithProfile) {
