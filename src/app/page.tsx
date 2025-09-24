@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import SignUpForm from '@/components/pages/SignUp'
 import { Bebas_Neue } from 'next/font/google'
+import Image from 'next/image'
 
 const bn = Bebas_Neue({ weight: "400", subsets: ["latin"] });
 
@@ -22,7 +23,16 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white py-4 border-b border-gray-100">
         <div className="container mx-auto px-4">
-          <h2 className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}>GYMTEXT</h2>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/IconInverse.png"
+              alt="GymText Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10"
+            />
+            <h2 className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}>GYMTEXT</h2>
+          </div>
         </div>
       </header>
       

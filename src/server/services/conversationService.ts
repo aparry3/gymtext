@@ -5,7 +5,7 @@ import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../models/_types';
 import { UserRepository } from '../repositories/userRepository';
 import { UserWithProfile } from '../models/userModel';
-import { summaryAgent } from '../agents/summary/chain';
+import { summaryAgent } from '../agents/conversation/summary/chain';
 
 interface StoreInboundMessageParams {
   userId: string;

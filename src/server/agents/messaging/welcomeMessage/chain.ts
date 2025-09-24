@@ -1,5 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { welcomePrompt } from '@/server/agents/welcomeMessage/prompts';
+import { welcomePrompt } from '@/server/agents/messaging/welcomeMessage/prompts';
 import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
 

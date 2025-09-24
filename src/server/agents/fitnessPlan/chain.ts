@@ -6,14 +6,13 @@ import { FitnessProfileContext } from '@/server/services/context/fitnessProfileC
 
 const llm = new ChatGoogleGenerativeAI({ temperature: 0.3, model: "gemini-2.0-flash" });
 
-export const fitnessPlanAgent = {
-  invoke: async ({ user, context }: { user: UserWithProfile, context?: object }): Promise<{ user: UserWithProfile, context?: object, program: FitnessPlanOverview }> => {
-    const fitnessProfileContextService = new FitnessProfileContext(user);
-    const fitnessProfile = await fitnessProfileContextService.getContext();
+export const generateFitnessPlan = async (user: UserWithProfile, config?: object): Promise<FitnessPlanOverview> => {
+    const fitnessProfileContextService = new FitnessProfileContext();
+    const fitnessProfile = await fitnessProfileContextService.getContext(user);
     
     const prompt = outlinePrompt(user, fitnessProfile);
     const structuredModel = llm.withStructuredOutput(FitnessPlanModel.schema);
     
     const result = await structuredModel.invoke(prompt);
-    return { user, context, program: result as unknown as FitnessPlanOverview };
-}};
+    return result as unknown as FitnessPlanOverview;
+}
