@@ -1,11 +1,12 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import { sql } from 'kysely';
-import type { 
-  User, 
-  FitnessProfile, 
-  UserWithProfile, 
-  CreateUserData, 
-  CreateFitnessProfileData 
+import { 
+  type User, 
+  type FitnessProfile, 
+  type UserWithProfile, 
+  type CreateUserData, 
+  type CreateFitnessProfileData, 
+  UserModel
 } from '@/server/models/userModel';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
 
@@ -99,67 +100,64 @@ export class UserRepository extends BaseRepository {
       .limit(pageSize)
       .execute();
 
-    const users: UserWithProfile[] = usersRows.map((u) => ({
-      ...u,
-      parsedProfile: this.parseProfile(u.profile),
-      info: []
-    }));
+    const users: UserWithProfile[] = usersRows.map((u) => (UserModel.fromDb(u))).filter((u) => u !== undefined);
 
     return { users, total };
   }
 
-  async create(userData: CreateUserData): Promise<User> {
-    return await this.db
-      .insertInto('users')
-      .values({
-        name: userData.name,
-        phoneNumber: userData.phoneNumber,
-        email: userData.email || null,
-        stripeCustomerId: userData.stripeCustomerId || null,
-        timezone: userData.timezone,
-        preferredSendHour: userData.preferredSendHour,
-        profile: userData.profile || {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+  async create(userData: CreateUserData): Promise<UserWithProfile | undefined> {
+    const user = await this.db
+    .insertInto('users')
+    .values({
+      name: userData.name,
+      phoneNumber: userData.phoneNumber,
+      email: userData.email || null,
+      stripeCustomerId: userData.stripeCustomerId || null,
+      timezone: userData.timezone,
+      preferredSendHour: userData.preferredSendHour,
+      profile: userData.profile || {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+    return UserModel.fromDb(user);
   }
 
-  async findById(id: string): Promise<User | undefined> {
-    return await this.db
+  async findById(id: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('id', '=', id)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirst());
   }
 
-  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
-    return await this.db
+  async findByPhoneNumber(phoneNumber: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('phoneNumber', '=', phoneNumber)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirst());
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return await this.db
+  async findByEmail(email: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('email', '=', email)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirst());
   }
 
-  async findByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
-    return await this.db
+  async findByStripeCustomerId(stripeCustomerId: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .selectFrom('users')
       .where('stripeCustomerId', '=', stripeCustomerId)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirst());
   }
 
-  async update(id: string, userData: Partial<CreateUserData>): Promise<User> {
-    return await this.db
+  async update(id: string, userData: Partial<CreateUserData>): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
         ...userData,
@@ -167,10 +165,10 @@ export class UserRepository extends BaseRepository {
       })
       .where('id', '=', id)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst());
   }
 
-  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
+  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile | undefined> {
     // Get the current user
     const user = await this.findById(userId);
     if (!user) {
@@ -178,12 +176,13 @@ export class UserRepository extends BaseRepository {
     }
 
     // Merge the new profile data with existing profile
-    const existingProfile = this.parseProfile(user.profile) || {};
+    const existingProfile = user.profile
+    
+    // Ensure required fields have defaults for new schema structure
     const updatedProfile: FitnessProfile = {
+      goals: { primary: 'General fitness improvement' }, // Default goal
       ...existingProfile,
       ...profileData,
-      userId,
-      version: (existingProfile.version || 0) + 1
     };
 
     // Update the user's profile field
@@ -211,18 +210,14 @@ export class UserRepository extends BaseRepository {
     return updatedProfile;
   }
 
-  async findWithProfile(userId: string): Promise<UserWithProfile | null> {
+  async findWithProfile(userId: string): Promise<UserWithProfile | undefined> {
     const user = await this.findById(userId);
     
     if (!user) {
-      return null;
+      return undefined;
     }
 
-    return {
-      ...user,
-      parsedProfile: this.parseProfile(user.profile),
-      info: []
-    };
+    return UserModel.fromDb(user)
   }
 
   async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {
@@ -231,14 +226,14 @@ export class UserRepository extends BaseRepository {
       return undefined;
     }
     
-    return this.parseProfile(user.profile) || undefined;
+    return UserModel.parseProfile(user.profile) || undefined;
   }
 
   async updatePreferences(userId: string, preferences: { 
     preferredSendHour?: number; 
     timezone?: string; 
-  }): Promise<User> {
-    return await this.db
+  }): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
       .updateTable('users')
       .set({
         ...preferences,
@@ -246,7 +241,7 @@ export class UserRepository extends BaseRepository {
       })
       .where('id', '=', userId)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirstOrThrow());
   }
 
   async findUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
@@ -267,11 +262,7 @@ export class UserRepository extends BaseRepository {
       try {
         const localHour = getLocalHourForTimezone(currentUtcDate, user.timezone);
         if (localHour === user.preferredSendHour) {
-          matchingUsers.push({
-            ...user,
-            parsedProfile: this.parseProfile(user.profile),
-            info: []
-          });
+          matchingUsers.push(UserModel.fromDb(user)!);
         }
       } catch (error) {
         console.error(`Error processing user ${user.id} timezone:`, error);
@@ -295,7 +286,7 @@ export class UserRepository extends BaseRepository {
    * Patch the user's profile with a partial update using JSONB merge
    * This performs a deep merge of the provided patch with the existing profile
    */
-  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile> {
+  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile | undefined> {
     // Use PostgreSQL's JSONB merge operator to deep merge the patch
     // The || operator merges two JSONB values, with the right-hand value overwriting keys
     const result = await this.db
@@ -309,28 +300,6 @@ export class UserRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return {
-      ...result,
-      parsedProfile: this.parseProfile(result.profile),
-      info: []
-    };
-  }
-
-  private parseProfile(profile: unknown): FitnessProfile | null {
-    if (!profile || (typeof profile === 'object' && Object.keys(profile).length === 0)) {
-      return null;
-    }
-    
-    // If it's a string, parse it
-    if (typeof profile === 'string') {
-      try {
-        return JSON.parse(profile) as FitnessProfile;
-      } catch {
-        return null;
-      }
-    }
-    
-    // If it's already an object, return it
-    return profile as FitnessProfile;
+      return UserModel.fromDb(result);
   }
 }

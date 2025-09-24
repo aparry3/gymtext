@@ -1,33 +1,74 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { profilePatchTool } from '@/server/agents/tools/profilePatchTool';
-import { userInfoPatchTool } from '@/server/agents/tools/userInfoPatchTool';
+// Import the new modular architecture
+import { extractGoalsData } from './goals/chain';
 import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
-import type { FitnessProfile, User } from '@/server/models/user/schemas';
+import type { FitnessProfile, User } from '../../models/user/schemas';
+import type { UserWithProfile } from '../../models/userModel';
+import type { ProfileAgentResult, ProfileAgentConfig } from './types';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatOpenAI } from '@langchain/openai';
+import { profilePatchTool } from '../tools/profilePatchTool';
+import { userInfoPatchTool } from '../tools/userInfoPatchTool';
+
+// Types are now imported from ./types.ts
 
 /**
- * Result type returned by the UserProfileAgent
+ * NEW MODULAR ARCHITECTURE - Route to specialized sub-agents
+ * This is the future direction for profile extraction
  */
-export interface ProfileAgentResult {
-  profile: FitnessProfile | null;
-  user?: Partial<User>;
-  wasUpdated: boolean;
-  updateSummary?: {
-    fieldsUpdated: string[];
-    reason: string;
-    confidence: number;
-  };
-}
+export const userProfileAgentModular = async ({
+  message,
+  user,
+  config = {},
+}: {
+  message: string;
+  user: UserWithProfile;
+  config?: ProfileAgentConfig;
+}): Promise<ProfileAgentResult> => {
+  
+  try {
+    const { verbose = false } = config;
+    
+    if (verbose) {
+      console.log(`[ModularProfileAgent] Processing message for user ${user.id}`);
+    }
+    
+    // For now, just route everything to Goals Agent
+    // TODO: Add intelligent routing based on message content
+    const goalsResult = await extractGoalsData(message, user, config);
+    
+    // For demo purposes, convert to old format (in real usage, caller would handle patch tools)
+    if (goalsResult.hasData && goalsResult.confidence > 0.7 && goalsResult.data) {
+      return {
+        profile: { goals: goalsResult.data } as FitnessProfile,
+        user: user,
+        wasUpdated: true,
+        updateSummary: {
+          fieldsUpdated: ['goals'],
+          reason: goalsResult.reason,
+          confidence: goalsResult.confidence
+        }
+      };
+    }
+    
+    return {
+      profile: user.profile as FitnessProfile | null,
+      user: user,
+      wasUpdated: false
+    };
+    
+  } catch (error) {
+    console.error('[ModularProfileAgent] Error:', error);
+    
+    return {
+      profile: user.profile as FitnessProfile | null,
+      user: user,
+      wasUpdated: false
+    };
+  }
+};
 
-/**
- * Configuration for the UserProfileAgent
- */
-export interface ProfileAgentConfig {
-  model?: 'gpt-4-turbo' | 'gpt-4' | 'gpt-3.5-turbo' | 'gemini-pro';
-  temperature?: number;
-  verbose?: boolean;
-}
+// ORIGINAL MONOLITHIC AGENT (PRESERVED FOR BACKWARD COMPATIBILITY)
 
 /**
  * Initialize the profile extraction model with tools
@@ -35,7 +76,7 @@ export interface ProfileAgentConfig {
  */
 const initializeModel = (config: ProfileAgentConfig = {}) => {
   const { 
-    model = 'gpt-4-turbo', 
+    model = 'gemini-2.5-flash', 
     temperature = 0.2  // Low temperature for consistent extraction
   } = config;
 
@@ -53,7 +94,7 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
   const openaiModel = new ChatOpenAI({
     model: model,
     temperature,
-    maxTokens: 3000,
+    maxCompletionTokens: 3000,
   });
   
   return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);

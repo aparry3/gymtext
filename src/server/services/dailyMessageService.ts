@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { dailyWorkoutAgent } from '@/server/agents/dailyWorkout/chain';
+import { dailyWorkoutAgent } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
 
 interface BatchResult {
   processed: number;

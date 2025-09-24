@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { TimeSelector } from '@/components/ui/TimeSelector';
 import { TimezoneDisplay } from '@/components/ui/TimezoneDisplay';
 
@@ -14,14 +14,13 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 // Form validation schema
 const formSchema = z.object({
-  fitnessGoals: z.string().min(1, 'Please select your fitness goals'),
-  skillLevel: z.string().min(1, 'Please select your skill level'),
-  exerciseFrequency: z.string().min(1, 'Please select your exercise frequency'),
+  fitnessGoals: z.string().optional(),
+  currentExercise: z.string().optional(),
+  injuries: z.string().optional(),
   gender: z.string().min(1, 'Please select your gender'),
   age: z.string().min(1, 'Please enter your age'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
-  email: z.string().email().optional().or(z.literal('')),
   preferredSendHour: z.number().min(0).max(23),
   timezone: z.string().min(1, 'Timezone is required'),
   acceptRisks: z.boolean().refine((val) => val === true, {
@@ -29,98 +28,75 @@ const formSchema = z.object({
   }),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema> & { userId?: string };
 
-function PaymentRequestForm({ formData }: { formData: FormData }) {
+function ExpressCheckoutForm({ formData, onCanMakePaymentChange }: { formData: FormData; onCanMakePaymentChange: (canMake: boolean) => void }) {
   const stripe = useStripe();
   const elements = useElements();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
-  const [canMakePayment, setCanMakePayment] = useState(false);
 
-  useEffect(() => {
+  const handleExpressCheckout = async (event: { expressPaymentType?: string; paymentMethod?: { id: string } }) => {
     if (!stripe || !elements) return;
+    
+    try {
+      // Create checkout session on the server with existing user
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: formData.userId,
+          // Add subscription specific details
+          plan: 'monthly',
+          priceId: 'price_monthly_subscription',
+          // Add implicit consent to receive text messages
+          acceptTexts: true,
+          paymentMethodId: event.expressPaymentType ? undefined : event.paymentMethod?.id
+        }),
+      });
 
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: 'GymText Monthly Subscription',
-        amount: 1999, // $19.99
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-      requestPayerPhone: true,
-    });
+      if (!response.ok) {
+        console.error('Payment failed:', await response.text());
+        return;
+      }
 
-    pr.on('paymentmethod', async (ev) => {
-      // Format phone number with +1 prefix if not already present
-      const formattedPhoneNumber = formData.phoneNumber.startsWith('+1') ? formData.phoneNumber : `+1${formData.phoneNumber}`;
+      const responseData = await response.json();
       
-      try {
-        // Create checkout session on the server
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...formData,
-            phoneNumber: formattedPhoneNumber,
-            // Add subscription specific details
-            plan: 'monthly',
-            priceId: 'price_monthly_subscription',
-            // Add implicit consent to receive text messages
-            acceptTexts: true,
-            paymentMethodId: ev.paymentMethod.id
-          }),
-        });
-
-        if (!response.ok) {
-          ev.complete('fail');
-          console.error('Payment failed:', await response.text());
-          return;
-        }
-
-        const responseData = await response.json();
-        
-        // Mark the payment as successful
-        ev.complete('success');
-        
-        // Check if we have a redirectUrl and redirect to it
-        if (responseData.redirectUrl) {
-          window.location.href = responseData.redirectUrl;
-        } else {
-          // Fallback to success page
-          window.location.href = '/success';
-        }
-      } catch (error) {
-        console.error('Express checkout error:', error);
-        ev.complete('fail');
+      // Check if we have a redirectUrl and redirect to it
+      if (responseData.redirectUrl) {
+        window.location.href = responseData.redirectUrl;
+      } else {
+        // Fallback to success page
+        window.location.href = '/success';
       }
-    });
+    } catch (error) {
+      console.error('Express checkout error:', error);
+    }
+  };
 
-    pr.canMakePayment().then(result => {
-      if (result) {
-        setCanMakePayment(true);
-        setPaymentRequest(pr);
-      }
-    });
-  }, [stripe, elements, formData]);
-
-  if (!canMakePayment) {
-    return null;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleReadyEvent = (event: any) => {
+    // Check if any payment methods are available
+    const hasPaymentMethods = event.availablePaymentMethods && 
+      Object.keys(event.availablePaymentMethods).some(key => 
+        event.availablePaymentMethods[key] === true
+      );
+    onCanMakePaymentChange(hasPaymentMethods);
+  };
 
   return (
-    <PaymentRequestButtonElement
+    <ExpressCheckoutElement
+      onConfirm={handleExpressCheckout}
+      onReady={handleReadyEvent}
       options={{
-        paymentRequest,
-        style: {
-          paymentRequestButton: {
-            theme: 'dark',
-            height: '44px',
-          },
+        buttonTheme: {
+          applePay: 'black',
+          googlePay: 'black',
+        },
+        buttonHeight: 44,
+        wallets: {
+          applePay: 'auto',
+          googlePay: 'auto',
         },
       }}
     />
@@ -133,6 +109,7 @@ export default function SignupForm() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [formValues, setFormValues] = useState<FormData | null>(null);
   const [detectedTimezone, setDetectedTimezone] = useState<string>('America/New_York');
+  const [canMakeExpressPayment, setCanMakeExpressPayment] = useState<boolean | null>(null);
 
   const {
     register,
@@ -164,14 +141,45 @@ export default function SignupForm() {
     }
   }, [setValue]);
 
-  const handleContinue = (data: FormData) => {
-    // Format phone number with +1 prefix
-    const formattedData = {
-      ...data,
-      phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
-    };
-    setFormValues(formattedData);
-    setShowPaymentOptions(true);
+  const handleContinue = async (data: FormData) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      // Format phone number with +1 prefix
+      const formattedData = {
+        ...data,
+        phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
+      };
+
+      // First create the user
+      const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        throw new Error(errorData.message || 'Failed to create user');
+      }
+
+      const userData = await userResponse.json();
+      
+      // Store the user data with the user ID for checkout
+      setFormValues({
+        ...formattedData,
+        userId: userData.userId
+      });
+      setShowPaymentOptions(true);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -179,18 +187,14 @@ export default function SignupForm() {
     setErrorMessage(null);
     
     try {
-      // Format phone number with +1 prefix if not already present
-      const formattedPhoneNumber = data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`;
-      
-      // Create checkout session on the server
+      // Create checkout session on the server with existing user
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
-          phoneNumber: formattedPhoneNumber,
+          userId: data.userId,
           // Add subscription specific details
           plan: 'monthly',
           priceId: 'price_monthly_subscription',
@@ -231,20 +235,35 @@ export default function SignupForm() {
         <h2 className="text-2xl font-bold text-center mb-6">Choose Your Payment Method</h2>
         
         <Elements stripe={stripePromise}>
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
-            <PaymentRequestForm formData={formValues} />
-          </div>
+          {canMakeExpressPayment && (
+            <>
+              <div className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
+                <ExpressCheckoutForm 
+                  formData={formValues} 
+                  onCanMakePaymentChange={setCanMakeExpressPayment}
+                />
+              </div>
+              
+              <div className="relative mb-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or pay with card</span>
+                </div>
+              </div>
+            </>
+          )}
+          {canMakeExpressPayment === null && (
+            <div className="mb-8">
+              <ExpressCheckoutForm 
+                formData={formValues} 
+                onCanMakePaymentChange={setCanMakeExpressPayment}
+              />
+            </div>
+          )}
         </Elements>
-        
-        <div className="relative mb-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or pay with card</span>
-          </div>
-        </div>
         
         <button
           onClick={() => onSubmit(formValues)}
@@ -280,59 +299,30 @@ export default function SignupForm() {
           <p className="text-red-600">{errorMessage}</p>
         </div>
       )}
-      
-      {/* Fitness Goals */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals – What do you want to achieve?</label>
-        <select
-          {...register('fitnessGoals')}
+
+        {/* Name */}
+        <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name (What should we call you?)</label>
+        <input
+          type="text"
+          {...register('name')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select your goals</option>
-          <option value="weight_loss">Weight Loss</option>
-          <option value="muscle_gain">Muscle Gain</option>
-          <option value="endurance">Endurance</option>
-          <option value="flexibility">Flexibility</option>
-          <option value="general_fitness">General Fitness</option>
-        </select>
-        {errors.fitnessGoals && (
-          <p className="mt-1 text-sm text-red-500">{errors.fitnessGoals.message}</p>
+        />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
         )}
       </div>
 
-      {/* Skill Level */}
+      {/* Phone Number */}
       <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Skill Level – How familiar are you with working out?</label>
-        <select
-          {...register('skillLevel')}
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number (What number should we text your workouts to?)</label>
+        <input
+          type="tel"
+          {...register('phoneNumber')}
           className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select your level</option>
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Getting back into it</option>
-          <option value="advanced">Comfortable in the gym</option>
-          <option value="expert">Advanced</option>
-        </select>
-        {errors.skillLevel && (
-          <p className="mt-1 text-sm text-red-500">{errors.skillLevel.message}</p>
-        )}
-      </div>
-
-      {/* Exercise Frequency */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Frequency – How often are you moving your body right now?</label>
-        <select
-          {...register('exerciseFrequency')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        >
-          <option value="">Select frequency</option>
-          <option value="never">Not at all yet</option>
-          <option value="1-2">Once a week</option>
-          <option value="3-4">2-3 times per week</option>
-          <option value="5+">4+ times per week</option>
-        </select>
-        {errors.exerciseFrequency && (
-          <p className="mt-1 text-sm text-red-500">{errors.exerciseFrequency.message}</p>
+        />
+        {errors.phoneNumber && (
+          <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
         )}
       </div>
 
@@ -367,45 +357,6 @@ export default function SignupForm() {
         )}
       </div>
 
-      {/* Name */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Full Name (What should we call you?)</label>
-        <input
-          type="text"
-          {...register('name')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
-        )}
-      </div>
-
-      {/* Phone Number */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Phone Number (What number should we text your workouts to?)</label>
-        <input
-          type="tel"
-          {...register('phoneNumber')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.phoneNumber && (
-          <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
-        )}
-      </div>
-
-      {/* Email (Optional) */}
-      <div>
-        <label className="block text-base font-medium mb-2 text-[#2d3748]">Email (Where should we send additional information?)</label>
-        <input
-          type="email"
-          {...register('email')}
-          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
-        />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-        )}
-      </div>
-
       {/* Daily Message Time */}
       <div>
         <label className="block text-base font-medium mb-2 text-[#2d3748]">Daily Message Time (When should we send your workout?)</label>
@@ -431,6 +382,44 @@ export default function SignupForm() {
           Detected: {detectedTimezone}
         </p>
       </div>
+
+      
+      {/* Fitness Goals */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Fitness Goals – What do you want to achieve?</label>
+        <textarea
+          {...register('fitnessGoals')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.fitnessGoals && (
+          <p className="mt-1 text-sm text-red-500">{errors.fitnessGoals.message}</p>
+        )}
+      </div>
+
+      {/* Current Exercise Activity */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Current Exercise Activity</label>
+        <textarea
+          {...register('currentExercise')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.currentExercise && (
+          <p className="mt-1 text-sm text-red-500">{errors.currentExercise.message}</p>
+        )}
+      </div>
+
+      {/* Injuries */}
+      <div>
+        <label className="block text-base font-medium mb-2 text-[#2d3748]">Injuries</label>
+        <textarea
+          {...register('injuries')}
+          className="w-full px-4 py-3 rounded-md bg-white text-[#2d3748] border border-gray-300 focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] text-base"
+        />
+        {errors.injuries && (
+          <p className="mt-1 text-sm text-red-500">{errors.injuries.message}</p>
+        )}
+      </div>
+
 
       {/* Accept Risks Checkbox */}
       <div className="flex items-start">

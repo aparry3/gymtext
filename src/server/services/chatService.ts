@@ -1,6 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { userProfileAgent } from '@/server/agents/profile/chain';
-import { chatAgent } from '@/server/agents/chat/chain';
+import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { ConversationContextService } from '@/server/services/context/conversationContext';
 import { MessageRepository } from '@/server/repositories/messageRepository';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
@@ -74,7 +74,7 @@ export class ChatService {
         : null;
 
       // Step 2: Run UserProfileAgent to extract and update profile
-      let currentProfile = user.parsedProfile;
+      let currentProfile = user.profile;
       let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {
@@ -85,7 +85,7 @@ export class ChatService {
           message,
           currentProfile: currentProfile || {},
           config: {
-            model: 'gpt-4-turbo',
+            model: 'gemini-2.5-flash',
             temperature: 0.2,
             verbose: process.env.NODE_ENV === 'development'
           }
@@ -178,7 +178,7 @@ export class ChatService {
   ): Promise<string> {
     try {
       // Run profile extraction if enabled
-      let currentProfile = user.parsedProfile;
+      let currentProfile = user.profile;
       let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {

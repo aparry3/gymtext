@@ -77,32 +77,18 @@ function mergeActivityData(
 export const profilePatchTool = tool(
   async ({ currentProfile, updates, reason, confidence }) => {
     try {
-      // Check confidence threshold (raised to 0.75)
-      const CONFIDENCE_THRESHOLD = 0.75;
-      
-      if (confidence < CONFIDENCE_THRESHOLD) {
-        console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
-        return {
-          applied: false,
-          reason: 'Low confidence',
-          confidence,
-          threshold: CONFIDENCE_THRESHOLD,
-          updatedProfile: currentProfile
-        };
-      }
-
-      // Handle activityData array merging specially
-      let mergedActivityData = currentProfile.activityData;
+      // Handle activityData array merging locally for compatibility
+      const processedUpdates = { ...updates };
       if (updates.activityData) {
         if (!Array.isArray(updates.activityData)) {
           // Convert single activity to array format for consistency
-          updates.activityData = [updates.activityData] as ActivityData;
+          processedUpdates.activityData = [updates.activityData] as ActivityData;
         }
 
         const currentActivities = currentProfile.activityData || [];
         
-        // Clean and sanitize activity data before merging
-        const sanitizedActivities = (updates.activityData || []).map((activity: AnyActivity) => {  
+        // Clean and sanitize activity data before merging  
+        const sanitizedActivities = (processedUpdates.activityData || []).map((activity: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any  
           // Remove null values from keyMetrics
           if (activity.keyMetrics) {
             const cleanKeyMetrics: Record<string, unknown> = {};  
@@ -122,32 +108,39 @@ export const profilePatchTool = tool(
         });
         
         // Merge each sanitized activity
-        mergedActivityData = sanitizedActivities.reduce(
+        const mergedActivityData = sanitizedActivities.reduce(
           (acc: ActivityData, newActivity: AnyActivity) => mergeActivityData(acc, newActivity),
           currentActivities
         );
         
-        // Remove from updates to prevent simple overwrite
-        delete updates.activityData;
+        processedUpdates.activityData = mergedActivityData;
+      }
+
+      // For now, just handle the patching logic locally until we refactor to use service methods
+      // Check confidence threshold (raised to 0.75)
+      const CONFIDENCE_THRESHOLD = 0.75;
+      
+      if (confidence < CONFIDENCE_THRESHOLD) {
+        console.log(`Profile update skipped - low confidence: ${confidence} < ${CONFIDENCE_THRESHOLD}`);
+        return {
+          applied: false,
+          reason: 'Low confidence',
+          confidence,
+          threshold: CONFIDENCE_THRESHOLD,
+          updatedProfile: currentProfile
+        };
       }
 
       // Merge updates into current profile
       const updatedProfile: Partial<FitnessProfile> = {
         ...currentProfile,
-        ...updates,
-        // Apply merged activity data
-        ...(mergedActivityData && { activityData: mergedActivityData })
+        ...processedUpdates
       };
 
       // Get list of fields that were updated
-      const fieldsUpdated = Object.keys(updates).filter(key => 
-        updates[key as keyof FitnessProfile] !== undefined
+      const fieldsUpdated = Object.keys(processedUpdates).filter(key => 
+        processedUpdates[key as keyof FitnessProfile] !== undefined
       );
-      
-      // Add activityData to fieldsUpdated if it was merged
-      if (mergedActivityData !== currentProfile.activityData) {
-        fieldsUpdated.push('activityData');
-      }
 
       console.log(`Profile update applied:`, {
         confidence,
@@ -203,111 +196,3 @@ export const profilePatchTool = tool(
     })
   }
 );
-
-/**
- * Helper function to determine confidence level for different types of statements
- */
-export function assessConfidence(statement: string): number {
-  // Direct, present-tense statements
-  const directPatterns = [
-    /^i (now |currently )?train/i,
-    /^i go to .* gym/i,
-    /^i have .* equipment/i,
-    /^my goal is/i,
-    /^i weigh/i,
-    /^i am \d+ (years old|cm|feet)/i,
-    /^i want to/i
-  ];
-
-  // Past tense statements indicating change
-  const changePatterns = [
-    /^i (just |recently )?joined/i,
-    /^i (just |recently )?started/i,
-    /^i (just |recently )?bought/i,
-    /^i switched to/i,
-    /^i changed my/i
-  ];
-
-  // Uncertain or hypothetical statements
-  const uncertainPatterns = [
-    /maybe/i,
-    /might/i,
-    /possibly/i,
-    /thinking about/i,
-    /considering/i,
-    /what if/i,
-    /should i/i,
-    /could i/i,
-    /\?$/
-  ];
-
-  // Check for uncertainty first
-  if (uncertainPatterns.some(pattern => pattern.test(statement))) {
-    return 0.3; // Low confidence
-  }
-
-  // Check for direct statements
-  if (directPatterns.some(pattern => pattern.test(statement))) {
-    return 0.95; // Very high confidence
-  }
-
-  // Check for change statements
-  if (changePatterns.some(pattern => pattern.test(statement))) {
-    return 0.85; // High confidence
-  }
-
-  // Default moderate confidence for other statements
-  return 0.6;
-}
-
-/**
- * Helper to extract specific updates from a message
- */
-export function extractProfileUpdates(message: string): Partial<FitnessProfile> {
-  const updates: Partial<FitnessProfile> = {};
-
-  // Extract training frequency
-  const daysMatch = message.match(/(\d+)\s*days?\s*(a|per)?\s*week/i);
-  if (daysMatch) {
-    updates.availability = {
-      ...updates.availability,
-      daysPerWeek: parseInt(daysMatch[1])
-    };
-  }
-
-  // Extract session duration
-  const minutesMatch = message.match(/(\d+)\s*minutes?\s*(per|each)?\s*session/i);
-  if (minutesMatch) {
-    updates.availability = {
-      ...updates.availability,
-      minutesPerSession: parseInt(minutesMatch[1])
-    };
-  }
-
-  // Extract gym membership
-  if (/planet fitness|gold'?s? gym|la fitness|anytime fitness/i.test(message)) {
-    updates.equipment = {
-      ...updates.equipment,
-      access: 'full-gym' as const
-    };
-  }
-
-  // Extract goals
-  const goalPatterns: Record<string, FitnessProfile['primaryGoal']> = {
-    'get stronger': 'strength',
-    'build muscle': 'muscle-gain',
-    'lose weight': 'fat-loss',
-    'lose fat': 'fat-loss',
-    'improve endurance': 'endurance',
-    'get fit': 'general-fitness'
-  };
-
-  for (const [pattern, goal] of Object.entries(goalPatterns)) {
-    if (message.toLowerCase().includes(pattern)) {
-      updates.primaryGoal = goal;
-      break;
-    }
-  }
-
-  return updates;
-}

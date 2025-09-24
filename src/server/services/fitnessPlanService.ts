@@ -1,7 +1,7 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { FitnessPlan, FitnessPlanModel } from '../models/fitnessPlan';
 import { UserWithProfile } from '../models/userModel';
-import { fitnessPlanAgent } from '../agents/fitnessPlan/chain';
+import { generateFitnessPlan } from '../agents/fitnessPlan/chain';
 
 export class FitnessPlanService {
   constructor(
@@ -9,9 +9,9 @@ export class FitnessPlanService {
   ) {}
 
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-    const agentResponse = await fitnessPlanAgent.invoke({ user });
+    const agentResponse = await generateFitnessPlan(user);
 
-    const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse.program);
+    const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
     console.log('fitnessPlan', JSON.stringify(fitnessPlan, null, 2));
     const savedFitnessPlan = await this.fitnessPlanRepo.insertFitnessPlan(fitnessPlan);
     if (!fitnessPlan.mesocycles || fitnessPlan.mesocycles.length === 0) {

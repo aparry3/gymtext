@@ -11,6 +11,8 @@ export const UserSchema = z.object({
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
+  age: z.number().int().min(1).max(120).nullable(),
+  gender: z.string().nullable(),
   profile: z.unknown().nullable(),
   stripeCustomerId: z.string().nullable(),
   preferredSendHour: z.number().int().min(0).max(23),
@@ -19,221 +21,140 @@ export const UserSchema = z.object({
   updatedAt: z.date(),
 });
 
-// Current training sub-schema
-export const CurrentTrainingSchema = z.object({
-  programName: z.string().optional(),
-  weeksCompleted: z.number().int().min(0).optional(),
-  focus: z.string().optional(),
-  notes: z.string().optional(),
-});
+// DELETED - CurrentTrainingSchema replaced with activity-specific data
 
-// Availability sub-schema
+// NEW - Simplified Availability Schema
 export const AvailabilitySchema = z.object({
-  daysPerWeek: z.number().int().min(1).max(7).optional(),
-  minutesPerSession: z.number().int().min(15).max(240).optional(),
-  preferredTimes: z.string().optional(),
-  travelPattern: z.string().optional(),
-  notes: z.string().optional(),
+  summary: z.string().optional().nullable(), // Brief overview of schedule and availability
+  daysPerWeek: z.number().int().min(1).max(7),
+  minutesPerSession: z.number().int().min(15).max(240),
+  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().nullable(),
+  schedule: z.string().optional().nullable(),
 });
 
-// Equipment sub-schema
-export const EquipmentSchema = z.object({
-  access: z.string().optional(),
-  location: z.string().optional(),
-  items: z.array(z.string()).optional(),
-  constraints: z.array(z.string()).optional(),
+// NEW - Equipment Access Schema
+export const EquipmentAccessSchema = z.object({
+  summary: z.string().optional().nullable(), // Brief overview of equipment situation
+  gymAccess: z.boolean(),
+  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable(),
+  homeEquipment: z.array(z.string()).optional().nullable(),
+  limitations: z.array(z.string()).optional().nullable(),
 });
 
-// Preferences sub-schema
-export const PreferencesSchema = z.object({
-  workoutStyle: z.string().optional(),
-  enjoyedExercises: z.array(z.string()).optional(),
-  dislikedExercises: z.array(z.string()).optional(),
-  coachingTone: z.enum(['friendly', 'tough-love', 'clinical', 'cheerleader']).optional(),
-  musicOrVibe: z.string().optional(),
-});
+// DELETED - PreferencesSchema moved to activity-specific data
 
-// Weight schema for metrics
+// Weight schema for metrics (kept but simplified)
 export const WeightSchema = z.object({
   value: z.number().positive(),
   unit: z.enum(['lbs', 'kg']),
+  date: z.string().optional().nullable(),
 });
 
-// PR lift schema
-export const PRLiftSchema = z.object({
-  weight: z.number().positive(),
-  unit: z.enum(['lbs', 'kg']),
-  reps: z.number().int().positive().optional(),
-  date: z.string().optional(),
+// DELETED - PRLiftSchema replaced with flexible keyLifts record
+
+// NEW - Simplified User Metrics Schema
+export const UserMetricsSchema = z.object({
+  summary: z.string().optional().nullable(), // Brief overview of physical stats and fitness level
+  height: z.number().positive().optional().nullable(),
+  weight: WeightSchema.optional().nullable(),
+  bodyComposition: z.number().min(1).max(50).optional().nullable(),
+  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional().nullable(),
 });
 
-// Metrics sub-schema
-export const MetricsSchema = z.object({
-  heightCm: z.number().positive().optional(),
-  bodyweight: WeightSchema.optional(),
-  bodyFatPercent: z.number().min(1).max(50).optional(),
-  prLifts: z.record(z.string(), PRLiftSchema).optional(),
-});
-
-// Constraint schema
+// NEW - Simplified Constraint Schema
 export const ConstraintSchema = z.object({
   id: z.string(),
-  type: z.enum(['injury', 'equipment', 'schedule', 'mobility', 'preference', 'other']),
-  label: z.string(),
-  severity: z.enum(['mild', 'moderate', 'severe']).optional(),
-  affectedAreas: z.array(z.string()).optional(),
-  modifications: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  type: z.enum(['injury', 'mobility', 'medical', 'preference']),
+  description: z.string(),
+  severity: z.enum(['mild', 'moderate', 'severe']).optional().nullable(),
+  affectedMovements: z.array(z.string()).optional().nullable(),
   status: z.enum(['active', 'resolved']),
 });
 
-// Activity-specific data schemas
-export const HikingDataSchema = z.object({
-  type: z.literal('hiking'),
-  experienceLevel: z.string().optional(),
-  keyMetrics: z.object({
-    longestHike: z.number().positive().nullable().optional(),
-    elevationComfort: z.string().optional(),
-    packWeight: z.number().positive().nullable().optional(),
-    weeklyHikes: z.number().int().positive().nullable().optional(),
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
-});
 
-export const RunningDataSchema = z.object({
-  type: z.literal('running'),
-  experienceLevel: z.string().optional(),
-  keyMetrics: z.object({
-    weeklyMileage: z.number().positive().nullable().optional(),
-    longestRun: z.number().positive().nullable().optional(),
-    averagePace: z.string().optional(),
-    racesCompleted: z.number().int().nonnegative().nullable().optional(),
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
-});
+// DELETED - RunningDataSchema consolidated into CardioDataSchema
 
+// NEW - Simplified Strength Data Schema
 export const StrengthDataSchema = z.object({
   type: z.literal('strength'),
-  experienceLevel: z.string().optional(),
+  summary: z.string().optional().nullable(), // Brief overview of strength training background
+  experience: z.enum(['beginner', 'intermediate', 'advanced']),
+  currentProgram: z.string().optional().nullable(),
+  keyLifts: z.record(z.string(), z.number()).optional().nullable(),
+  preferences: z.object({
+    workoutStyle: z.string().optional().nullable(),
+    likedExercises: z.array(z.string()).optional().nullable(),
+    dislikedExercises: z.array(z.string()).optional().nullable(),
+  }).optional().nullable(),
+  trainingFrequency: z.number().int().min(1).max(7),
+});
+
+// DELETED - CyclingDataSchema consolidated into CardioDataSchema
+
+// NEW - Simplified Cardio Data Schema (replaces running, cycling, general)
+export const CardioDataSchema = z.object({
+  type: z.literal('cardio'),
+  summary: z.string().optional().nullable(), // Brief overview of cardio activities and background
+  experience: z.enum(['beginner', 'intermediate', 'advanced']),
+  primaryActivities: z.array(z.string()),
   keyMetrics: z.object({
-    trainingDays: z.number().int().min(1).max(7).nullable().optional(),
-    benchPress: z.number().positive().nullable().optional(),
-    squat: z.number().positive().nullable().optional(),
-    deadlift: z.number().positive().nullable().optional(),
-    overhead: z.number().positive().nullable().optional(),
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
+    weeklyDistance: z.number().positive().optional().nullable(),
+    longestSession: z.number().positive().optional().nullable(),
+    averagePace: z.string().optional().nullable(),
+    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional().nullable(),
+  }).optional().nullable(),
+  preferences: z.object({
+    indoor: z.boolean().optional().nullable(),
+    outdoor: z.boolean().optional().nullable(),
+    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional().nullable(),
+    timeOfDay: z.array(z.string()).optional().nullable(),
+  }).optional().nullable(),
+  frequency: z.number().int().min(1).max(7),
 });
 
-export const CyclingDataSchema = z.object({
-  type: z.literal('cycling'),
-  experienceLevel: z.string().optional(),
-  keyMetrics: z.object({
-    weeklyHours: z.number().positive().nullable().optional(),
-    longestRide: z.number().positive().nullable().optional(),
-    averageSpeed: z.number().positive().nullable().optional(),
-    terrainTypes: z.array(z.string()).optional(),
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
-});
-
-export const SkiingDataSchema = z.object({
-  type: z.literal('skiing'),
-  experienceLevel: z.string().optional(),
-  keyMetrics: z.object({
-    daysPerSeason: z.number().int().positive().nullable().optional(),
-    terrainComfort: z.array(z.string()).optional(),
-    yearsSkiing: z.number().int().positive().nullable().optional(),
-    mountainTypes: z.array(z.string()).optional(),
-  }).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
-});
-
-export const GeneralActivityDataSchema = z.object({
-  type: z.literal('other'),
-  activityName: z.string().optional(),
-  experienceLevel: z.string().optional(),
-  keyMetrics: z.record(z.string(), z.union([z.number(), z.string(), z.null()])).optional(),
-  equipment: z.array(z.string()).optional(),
-  goals: z.array(z.string()).optional(),
-  experience: z.string().optional(),
-  lastUpdated: z.coerce.date().optional(),
-});
-
-// Activity data schema - array of typed activity objects
-export const ActivityDataSchema = z.union([
-  HikingDataSchema,
-  RunningDataSchema, 
+// NEW - Simplified Activity Data Schema (only strength + cardio)
+export const ActivityDataSchema = z.array(z.union([
   StrengthDataSchema,
-  CyclingDataSchema,
-  SkiingDataSchema,
-  GeneralActivityDataSchema
-]).array().optional();
+  CardioDataSchema,
+]));
 
-// Complete fitness profile schema
-export const FitnessProfileSchema = z.object({
-  version: z.number().optional(),
-  userId: z.string().uuid().optional(),
-  
-  // Legacy fields for backward compatibility
-  fitnessGoals: z.string().optional(),
-  skillLevel: z.string().optional(),
-  exerciseFrequency: z.string().optional(),
-  gender: z.enum(['male', 'female', 'non-binary', 'prefer-not-to-say']).optional(),
-  age: z.number().int().min(13).max(120).optional(),
-  
-  // New comprehensive profile fields
-  primaryGoal: z.string().optional(),
-  specificObjective: z.string().optional(),
-  eventDate: z.string().optional(),
-  timelineWeeks: z.number().int().min(1).max(52).optional(),
-  experienceLevel: z.string().optional(),
-  
-  currentActivity: z.string().optional(),
-  currentTraining: CurrentTrainingSchema.optional(),
-  availability: AvailabilitySchema.optional(),
-  equipment: EquipmentSchema.optional(),
-  preferences: PreferencesSchema.optional(),
-  metrics: MetricsSchema.optional(),
-  constraints: z.array(ConstraintSchema).optional(),
-  
-  // Activity-specific data for enhanced intelligence  
-  activityData: ActivityDataSchema,
+
+// NEW - Simplified Goals Schema
+export const GoalsSchema = z.object({
+  summary: z.string().optional().nullable(), // Brief overview of fitness goals and motivation
+  primary: z.string(),
+  timeline: z.number().int().min(1).max(104).optional().nullable(), // 1-104 weeks
+  specific: z.string().optional().nullable(),
+  motivation: z.string().optional().nullable(),
 });
 
-// User with profile schema
-export const UserWithProfileSchema = UserSchema.extend({
-  parsedProfile: FitnessProfileSchema.nullable(),
-  info: z.array(z.string()),
+// THE ONLY FITNESS PROFILE SCHEMA - COMPLETE REPLACEMENT
+export const FitnessProfileSchema = z.object({
+  goals: GoalsSchema,
+
+  equipmentAccess: EquipmentAccessSchema.optional().nullable(),
+  availability: AvailabilitySchema.optional().nullable(),
+  constraints: z.array(ConstraintSchema).optional().nullable(),
+  metrics: UserMetricsSchema.optional().nullable(),
+  
+  activityData: ActivityDataSchema.optional().nullable(),
 });
 
 // Schema for creating a new user
 export const CreateUserSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email().nullable().optional(),
+  name: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
-  profile: z.unknown().nullable().optional(),
-  isActive: z.boolean().optional().default(true),
-  isAdmin: z.boolean().optional().default(false),
-  stripeCustomerId: z.string().nullable().optional(),
+  age: z.number().int().min(1).max(120).optional().nullable(),
+  gender: z.string().optional().nullable(),
+  profile: z.unknown().optional().nullable(),
+  isActive: z.boolean().optional().nullable().default(true),
+  isAdmin: z.boolean().optional().nullable().default(false),
+  stripeCustomerId: z.string().optional().nullable(),
+  preferredSendHour: z.number().int().min(0).max(23).optional().nullable(),
+  timezone: z.string().optional().nullable(),
 });
 
 // Schema for updating a user
@@ -254,50 +175,7 @@ export const ProfileUpdatePatchSchema = z.object({
 export const ProfileUpdateRequestSchema = z.object({
   updates: FitnessProfileSchema.partial(),
   source: z.enum(['chat', 'form', 'admin', 'api', 'system']),
-  reason: z.string().optional(),
-});
-
-// Simplified schemas for LLM structured output
-
-// Minimal profile schema for quick updates
-export const MinimalProfileUpdateSchema = z.object({
-  primaryGoal: z.string().optional(),
-  experienceLevel: z.string().optional(),
-  daysPerWeek: z.number().int().min(1).max(7).optional(),
-  minutesPerSession: z.number().int().min(15).max(240).optional(),
-});
-
-// Schema for extracting profile info from conversation
-export const ExtractedProfileInfoSchema = z.object({
-  updates: z.record(z.string(), z.unknown()),
-  confidence: z.enum(['high', 'medium', 'low']),
-  needsClarification: z.array(z.string()).optional(),
-  suggestedQuestions: z.array(z.string()).optional(),
-});
-
-// Schema for workout preferences extraction
-export const WorkoutPreferencesExtractionSchema = z.object({
-  workoutStyle: z.string().optional(),
-  enjoyedExercises: z.array(z.string()).optional(),
-  dislikedExercises: z.array(z.string()).optional(),
-  constraints: z.array(z.object({
-    type: z.string(),
-    description: z.string(),
-    severity: z.enum(['mild', 'moderate', 'severe']).optional(),
-  })).optional(),
-});
-
-// Schema for goal analysis
-export const GoalAnalysisSchema = z.object({
-  primaryGoal: z.string(),
-  specificObjective: z.string(),
-  recommendedTimelineWeeks: z.number().int(),
-  requiredFrequency: z.object({
-    daysPerWeek: z.number().int(),
-    minutesPerSession: z.number().int(),
-  }),
-  keyFocusAreas: z.array(z.string()),
-  potentialChallenges: z.array(z.string()),
+  reason: z.string().optional().nullable(),
 });
 
 // Kysely-based types (using database schema)
@@ -306,23 +184,14 @@ export type NewUser = Insertable<Users>;
 export type UserUpdate = Updateable<Users>;
 
 // Zod-inferred types (for validation)
-export type UserValidation = z.infer<typeof UserSchema>;
 export type FitnessProfile = z.infer<typeof FitnessProfileSchema>;
-export type UserWithProfile = z.infer<typeof UserWithProfileSchema>;
-export type CreateUser = z.infer<typeof CreateUserSchema>;
-export type UpdateUser = z.infer<typeof UpdateUserSchema>;
-export type CreateFitnessProfile = z.infer<typeof CreateFitnessProfileSchema>;
-export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
-export type ExtractedProfileInfo = z.infer<typeof ExtractedProfileInfoSchema>;
-export type WorkoutPreferencesExtraction = z.infer<typeof WorkoutPreferencesExtractionSchema>;
-export type GoalAnalysis = z.infer<typeof GoalAnalysisSchema>;
 
-// Activity-specific data types
+// NEW - Activity-specific data types (only strength + cardio)
 export type ActivityData = z.infer<typeof ActivityDataSchema>;
-export type ActivityDataArray = ActivityData; // Explicit array type alias
-export type HikingData = z.infer<typeof HikingDataSchema>;
-export type RunningData = z.infer<typeof RunningDataSchema>;
 export type StrengthData = z.infer<typeof StrengthDataSchema>;
-export type CyclingData = z.infer<typeof CyclingDataSchema>;
-export type SkiingData = z.infer<typeof SkiingDataSchema>;
-export type GeneralActivityData = z.infer<typeof GeneralActivityDataSchema>;
+export type CardioData = z.infer<typeof CardioDataSchema>;
+export type EquipmentAccess = z.infer<typeof EquipmentAccessSchema>;
+export type Availability = z.infer<typeof AvailabilitySchema>;
+export type Goals = z.infer<typeof GoalsSchema>;
+export type UserMetrics = z.infer<typeof UserMetricsSchema>;
+export type Constraint = z.infer<typeof ConstraintSchema>;
