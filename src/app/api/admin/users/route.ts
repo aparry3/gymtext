@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { UserModel, type CreateUserData, type CreateFitnessProfileData } from '@/server/models/userModel';
+import { UserService, type CreateUserRequest } from '@/server/services/userService';
+import { type CreateFitnessProfileData } from '@/server/models/userModel';
 import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function GET(request: Request) {
@@ -39,19 +40,20 @@ export async function POST(request: Request) {
       age,
     } = body || {};
 
-    const userInput: CreateUserData = {
+    const userInput: CreateUserRequest = {
       name,
       phoneNumber,
-      email: email ?? null,
-      stripeCustomerId: null,
+      email: email || undefined,
       timezone,
       preferredSendHour,
-      // createdAt/updatedAt/id are DB-managed; omit here
-    } as CreateUserData;
+      age: age || undefined,
+      gender: gender || undefined,
+      stripeCustomerId: undefined,
+    };
 
-    const userModel = new UserModel();
+    const userService = UserService.getInstance();
     const activity = new AdminActivityLogRepository();
-    const user = await userModel.createUser(userInput);
+    const user = await userService.createUser(userInput);
 
     // Optionally create a fitness profile when fields are provided
     if (fitnessGoals || skillLevel || exerciseFrequency || gender || age) {
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
         age: age ?? '30',
       } as CreateFitnessProfileData;
       try {
-        await userModel.createOrUpdateFitnessProfile(user.id, profileInput);
+        await userService.updateFitnessProfile(user.id, profileInput);
       } catch (e) {
         // Ignore profile errors to not block user creation
         console.warn('Profile creation failed for new user', e);

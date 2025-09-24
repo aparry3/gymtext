@@ -87,8 +87,8 @@ export const profilePatchTool = tool(
 
         const currentActivities = currentProfile.activityData || [];
         
-        // Clean and sanitize activity data before merging
-        const sanitizedActivities = (processedUpdates.activityData || []).map((activity: AnyActivity) => {  
+        // Clean and sanitize activity data before merging  
+        const sanitizedActivities = (processedUpdates.activityData || []).map((activity: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any  
           // Remove null values from keyMetrics
           if (activity.keyMetrics) {
             const cleanKeyMetrics: Record<string, unknown> = {};  

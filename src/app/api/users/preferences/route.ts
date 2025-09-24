@@ -128,6 +128,13 @@ export async function PUT(request: Request) {
     
     const updatedUser = await userRepository.updatePreferences(userId, updateData);
     
+    if (!updatedUser) {
+      return NextResponse.json(
+        { error: 'Failed to update preferences' },
+        { status: 500 }
+      );
+    }
+    
     // Calculate the next message delivery time
     const now = DateTime.now().setZone(updatedUser.timezone);
     let nextDelivery = now.set({ 

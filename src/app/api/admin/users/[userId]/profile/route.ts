@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { UserModel, type CreateFitnessProfileData } from '@/server/models/userModel';
+import { UserService } from '@/server/services/userService';
+import { type CreateFitnessProfileData } from '@/server/models/userModel';
 
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
   try {
@@ -13,8 +14,8 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       age: body.age,
     } as CreateFitnessProfileData;
 
-    const userModel = new UserModel();
-    const profile = await userModel.createOrUpdateFitnessProfile(userId, input);
+    const userService = UserService.getInstance();
+    const profile = await userService.updateFitnessProfile(userId, input);
     return NextResponse.json({ profile }, { status: 201 });
   } catch (err) {
     console.error('[admin users profile] POST failed', err);

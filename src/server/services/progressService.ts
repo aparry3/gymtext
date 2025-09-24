@@ -4,7 +4,7 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { UserWithProfile } from '@/server/models/userModel';
-import { microcyclePatternAgent } from '@/server/agents/microcyclePattern/chain';
+import { microcyclePatternAgent } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
 
 export interface ProgressInfo {
   mesocycleIndex: number;

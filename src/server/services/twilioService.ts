@@ -1,6 +1,6 @@
 import { FitnessPlan } from '../models/fitnessPlan';
 import { UserWithProfile } from '../models/userModel';
-import { welcomeMessageAgent } from '../agents/welcomeMessage/chain';
+import { welcomeMessageAgent } from '../agents/messaging/welcomeMessage/chain';
 
 export class MessageService {
   constructor(

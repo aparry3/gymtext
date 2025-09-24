@@ -1,4 +1,4 @@
-import { UserModel, UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';

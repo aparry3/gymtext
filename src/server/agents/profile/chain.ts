@@ -76,7 +76,7 @@ export const userProfileAgentModular = async ({
  */
 const initializeModel = (config: ProfileAgentConfig = {}) => {
   const { 
-    model = 'gpt-4o-mini', 
+    model = 'gemini-2.5-flash', 
     temperature = 0.2  // Low temperature for consistent extraction
   } = config;
 

@@ -40,8 +40,8 @@ export const dailyWorkoutAgent = {
     } = context;
 
     // Get fitness profile context
-    const fitnessProfileContext = new FitnessProfileContext(user);
-    const fitnessProfile = await fitnessProfileContext.getContext();
+    const fitnessProfileContext = new FitnessProfileContext();
+    const fitnessProfile = await fitnessProfileContext.getContext(user);
 
     // Generate prompt
     const prompt = dailyWorkoutPrompt(

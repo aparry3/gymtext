@@ -150,23 +150,23 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
     eventDate: null, // Not used in new schema
     timelineWeeks: typeof profile.goals?.timeline === 'number' && profile.goals.timeline > 0 ? profile.goals.timeline : null,
     
-    // Personal Information with validation
-    gender: typeof profile.gender === 'string' && profile.gender.trim() ? profile.gender.trim() : null,
-    age: typeof profile.age === 'number' && profile.age >= 13 && profile.age <= 120 ? profile.age : null,
+    // Personal Information with validation - LEGACY CODE - gender/age moved to User object
+    gender: null, // typeof profile.gender === 'string' && profile.gender.trim() ? profile.gender.trim() : null,
+    age: null, // typeof profile.age === 'number' && profile.age >= 13 && profile.age <= 120 ? profile.age : null,
     
-    // Experience with validation
-    experienceLevel: typeof profile.experienceLevel === 'string' && profile.experienceLevel.trim() ? profile.experienceLevel.trim() : null,
-    currentActivity: typeof profile.currentActivity === 'string' && profile.currentActivity.trim() ? profile.currentActivity.trim() : null,
+    // Experience with validation - LEGACY CODE - these fields removed from schema
+    experienceLevel: null, // typeof profile.experienceLevel === 'string' && profile.experienceLevel.trim() ? profile.experienceLevel.trim() : null,
+    currentActivity: null, // typeof profile.currentActivity === 'string' && profile.currentActivity.trim() ? profile.currentActivity.trim() : null,
     
-    // Nested objects with validation
-    currentTraining: isValidObject(profile.currentTraining) ? profile.currentTraining as ProcessedProfileData['currentTraining'] : null,
+    // Nested objects with validation - LEGACY CODE - updated for new schema
+    currentTraining: null, // isValidObject(profile.currentTraining) ? profile.currentTraining as ProcessedProfileData['currentTraining'] : null,
     availability: isValidObject(profile.availability) ? profile.availability as ProcessedProfileData['availability'] : null,
-    equipment: isValidObject(profile.equipment) ? profile.equipment as ProcessedProfileData['equipment'] : null,
-    preferences: isValidObject(profile.preferences) ? profile.preferences as ProcessedProfileData['preferences'] : null,
+    equipment: isValidObject(profile.equipmentAccess) ? profile.equipmentAccess as ProcessedProfileData['equipment'] : null,
+    preferences: null, // isValidObject(profile.preferences) ? profile.preferences as ProcessedProfileData['preferences'] : null,
     metrics: isValidObject(profile.metrics) ? profile.metrics as ProcessedProfileData['metrics'] : null,
     
-    // Arrays with validation
-    constraints: isValidArray(profile.constraints) ? profile.constraints as ProcessedProfileData['constraints'] : null,
+    // Arrays with validation - LEGACY CODE - constraint schema changed
+    constraints: null, // isValidArray(profile.constraints) ? profile.constraints as ProcessedProfileData['constraints'] : null,
     
     // Activity data with validation (now handles array)
     activityData: isValidArray(profile.activityData) ? profile.activityData : null,

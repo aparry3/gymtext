@@ -13,7 +13,7 @@ export const createMetricsAgent = () => createSubAgent({
   promptBuilder: buildMetricsPromptWithContext,
   agentName: 'MetricsAgent',
   outputSchema: MetricsExtractionSchema,
-  model: 'gpt-4o-mini',
+  model: 'gemini-2.5-flash',
   temperature: 0.1  // Very low temperature for precise numerical extraction
 });
 
