@@ -4,7 +4,7 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { UserWithProfile } from '@/server/models/userModel';
-import { microcyclePatternAgent } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
+import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
 
 export interface ProgressInfo {
   mesocycleIndex: number;
@@ -225,7 +225,7 @@ export class ProgressService {
   ): Promise<MicrocyclePattern> {
     try {
       // Use AI agent to generate pattern
-      const pattern = await microcyclePatternAgent.invoke({
+      const pattern = await generateMicrocyclePattern({
         mesocycle,
         weekNumber,
         programType,

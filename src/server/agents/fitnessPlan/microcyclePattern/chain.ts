@@ -16,27 +16,24 @@ export interface MicrocyclePatternContext {
   notes?: string | null;
 }
 
-export const microcyclePatternAgent = {
-  invoke: async (context: MicrocyclePatternContext): Promise<MicrocyclePattern> => {
-    const { mesocycle, weekNumber, programType, notes } = context;
-    
-    const prompt = microcyclePatternPrompt(
-      mesocycle,
-      weekNumber,
-      programType,
-      notes
-    );
-    
-    const structuredModel = llm.withStructuredOutput(_MicrocyclePatternSchema);
-    
-    try {
-      const result = await structuredModel.invoke(prompt);
-      return result as MicrocyclePattern;
-    } catch (error) {
-      console.error('Error generating microcycle pattern:', error);
-      // Return a basic fallback pattern if generation fails
-      return generateFallbackPattern(weekNumber, programType, mesocycle);
-    }
+export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
+  const { mesocycle, weekNumber, programType, notes } = context;
+  const prompt = microcyclePatternPrompt(
+    mesocycle,
+    weekNumber,
+    programType,
+    notes
+  );
+  
+  const structuredModel = llm.withStructuredOutput(_MicrocyclePatternSchema);
+  
+  try {
+    const result = await structuredModel.invoke(prompt);
+    return result as MicrocyclePattern;
+  } catch (error) {
+    console.error('Error generating microcycle pattern:', error);
+    // Return a basic fallback pattern if generation fails
+    return generateFallbackPattern(weekNumber, programType, mesocycle);
   }
 };
 
