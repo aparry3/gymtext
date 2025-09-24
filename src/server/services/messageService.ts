@@ -6,10 +6,18 @@ import { FitnessPlan } from '../models';
 import { WorkoutInstance } from '../models/workout';
 
 export class MessageService {
+  private static instance: MessageService;
   private conversationService: ConversationService;
-  constructor(
-  ) {
-    this.conversationService = new ConversationService();
+
+  private constructor() {
+    this.conversationService = ConversationService.getInstance();
+  }
+
+  public static getInstance(): MessageService {
+    if (!MessageService.instance) {
+      MessageService.instance = new MessageService();
+    }
+    return MessageService.instance;
   }
 
   public async buildWelcomeMessage(user: UserWithProfile, fitnessPlan: FitnessPlan): Promise<string> {
@@ -47,3 +55,6 @@ export class MessageService {
     return message;
   }
 }
+
+// Export singleton instance
+export const messageService = MessageService.getInstance();

@@ -1,6 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { ChatService } from '@/server/services/chatService';
-import { ConversationService } from '@/server/services/conversationService';
+import { chatService, conversationService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
@@ -47,13 +46,12 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // Initialize conversation storage service
-    const conversationStorage = new ConversationService();
+    // Use singleton conversation service
     
     // Store the inbound message and get conversation ID
     let conversationId: string | undefined;
     try {
-      const storedMessage = await conversationStorage.storeInboundMessage({
+      const storedMessage = await conversationService.storeInboundMessage({
         userId: user.id,
         from,
         to,
@@ -71,7 +69,6 @@ export async function POST(req: NextRequest) {
     }
     
     // Generate chat response using LLM
-    const chatService = new ChatService();
     const chatResponse = await chatService.handleIncomingMessage(
       userWithProfile, 
       incomingMessage,
@@ -80,7 +77,7 @@ export async function POST(req: NextRequest) {
     
     // Store the outbound message (non-blocking)
     try {
-      const stored = await conversationStorage.storeOutboundMessage(
+      const stored = await conversationService.storeOutboundMessage(
         user.id,
         from, // User's number is the to
         chatResponse,

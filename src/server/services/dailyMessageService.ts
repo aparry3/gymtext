@@ -6,8 +6,7 @@ import { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { dailyWorkoutAgent } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
+import { generateDailyWorkout } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
 
 interface BatchResult {
   processed: number;
@@ -31,6 +30,7 @@ export interface ProcessOptions {
 }
 
 export class DailyMessageService {
+  private static instance: DailyMessageService;
   private userRepository: UserRepository;
   private workoutRepository: WorkoutInstanceRepository;
   private messageService: MessageService;
@@ -38,20 +38,20 @@ export class DailyMessageService {
   private fitnessPlanRepo: FitnessPlanRepository;
   private batchSize: number;
 
-  constructor(
-    userRepository: UserRepository,
-    workoutRepository: WorkoutInstanceRepository,
-    messageService: MessageService,
-    fitnessPlanRepository: FitnessPlanRepository,
-    microcycleRepository: MicrocycleRepository,
-    batchSize: number = 10
-  ) {
-    this.userRepository = userRepository;
-    this.workoutRepository = workoutRepository;
-    this.messageService = messageService;
-    this.fitnessPlanRepo = fitnessPlanRepository;
-    this.progressService = new ProgressService(fitnessPlanRepository, microcycleRepository);
+  private constructor(batchSize: number = 10) {
+    this.userRepository = new UserRepository();
+    this.workoutRepository = new WorkoutInstanceRepository();
+    this.messageService = MessageService.getInstance();
+    this.fitnessPlanRepo = new FitnessPlanRepository();
+    this.progressService = ProgressService.getInstance();
     this.batchSize = batchSize;
+  }
+
+  public static getInstance(batchSize: number = 10): DailyMessageService {
+    if (!DailyMessageService.instance) {
+      DailyMessageService.instance = new DailyMessageService(batchSize);
+    }
+    return DailyMessageService.instance;
   }
 
   /**
@@ -294,7 +294,7 @@ export class DailyMessageService {
       const recentWorkouts = await this.workoutRepository.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate sophisticated workout
-      const enhancedWorkout = await dailyWorkoutAgent.invoke({
+      const enhancedWorkout = await generateDailyWorkout({
         user,
         date: targetDate.toJSDate(),
         dayPlan: dayPattern,
@@ -595,3 +595,6 @@ export class DailyMessageService {
     return await this.sendDailyMessage(user, options);
   }
 }
+
+// Export singleton instance
+export const dailyMessageService = DailyMessageService.getInstance();

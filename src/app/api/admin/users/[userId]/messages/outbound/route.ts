@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { MessageService } from '@/server/services/messageService';
+import { messageService } from '@/server/services';
 import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
@@ -25,8 +25,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       return NextResponse.json({ success: true, dryRun: true });
     }
 
-    const svc = new MessageService();
-    await svc.sendMessage(user, message);
+    await messageService.sendMessage(user, message);
     await new AdminActivityLogRepository().log({ targetUserId: userId, action: 'admin.send_outbound_sms', payload: { dryRun: false }, result: 'success' });
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -4,9 +4,19 @@ import { UserWithProfile } from '../models/userModel';
 import { generateFitnessPlan } from '../agents/fitnessPlan/chain';
 
 export class FitnessPlanService {
-  constructor(
-    private fitnessPlanRepo: FitnessPlanRepository,
-  ) {}
+  private static instance: FitnessPlanService;
+  private fitnessPlanRepo: FitnessPlanRepository;
+
+  private constructor() {
+    this.fitnessPlanRepo = new FitnessPlanRepository();
+  }
+
+  public static getInstance(): FitnessPlanService {
+    if (!FitnessPlanService.instance) {
+      FitnessPlanService.instance = new FitnessPlanService();
+    }
+    return FitnessPlanService.instance;
+  }
 
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
     const agentResponse = await generateFitnessPlan(user);
@@ -21,3 +31,6 @@ export class FitnessPlanService {
     return savedFitnessPlan;
   }
 }
+
+// Export singleton instance
+export const fitnessPlanService = FitnessPlanService.getInstance();

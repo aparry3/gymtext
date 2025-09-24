@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server';
-import { UserRepository } from '@/server/repositories/userRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MessageService } from '@/server/services/messageService';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { DailyMessageService } from '@/server/services/dailyMessageService';
-import { postgresDb } from '@/server/connections/postgres/postgres';
+import { dailyMessageService } from '@/server/services';
 import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
@@ -23,13 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       date = (form.get('date') as string) || undefined;
       dryRun = (form.get('dryRun') as string) === 'true';
     }
-    const dailyMessageService = new DailyMessageService(
-      new UserRepository(),
-      new WorkoutInstanceRepository(),
-      new MessageService(),
-      new FitnessPlanRepository(),
-      new MicrocycleRepository(postgresDb)
-    );
+    // Use singleton daily message service
     const result = await dailyMessageService.sendTestMessage(userId, {
       currentDate: date ? new Date(date) : undefined,
       dryRun: !!dryRun,

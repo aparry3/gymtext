@@ -23,14 +23,22 @@ const ENABLE_PROFILE_UPDATES = process.env.PROFILE_PATCH_ENABLED !== 'false';
  * - SMS length constraints are enforced
  */
 export class ChatService {
+  private static instance: ChatService;
   private contextService: ConversationContextService;
   private messageRepo: MessageRepository;
   private conversationRepo: ConversationRepository;
 
-  constructor() {
-    this.contextService = new ConversationContextService();
+  private constructor() {
+    this.contextService = ConversationContextService.getInstance();
     this.messageRepo = new MessageRepository();
     this.conversationRepo = new ConversationRepository();
+  }
+
+  public static getInstance(): ChatService {
+    if (!ChatService.instance) {
+      ChatService.instance = new ChatService();
+    }
+    return ChatService.instance;
   }
 
   /**
@@ -217,3 +225,6 @@ export class ChatService {
   }
 
 }
+
+// Export singleton instance
+export const chatService = ChatService.getInstance();

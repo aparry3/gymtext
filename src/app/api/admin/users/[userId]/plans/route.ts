@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { FitnessPlanService } from '@/server/services/fitnessPlanService';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { fitnessPlanService } from '@/server/services';
 import { AdminActivityLogRepository } from '@/server/repositories/adminActivityLogRepository';
 
 export async function POST(_request: Request, context: { params: Promise<{ userId: string }> }) {
@@ -12,8 +11,7 @@ export async function POST(_request: Request, context: { params: Promise<{ userI
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    const service = new FitnessPlanService(new FitnessPlanRepository());
-    const plan = await service.createFitnessPlan(user);
+    const plan = await fitnessPlanService.createFitnessPlan(user);
     await new AdminActivityLogRepository().log({ targetUserId: userId, action: 'admin.generate_plan', payload: {}, result: 'success' });
     return NextResponse.json({ plan }, { status: 201 });
   } catch (err) {

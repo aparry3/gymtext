@@ -16,13 +16,14 @@ interface StoreInboundMessageParams {
 }
 
 export class ConversationService {
+  private static instance: ConversationService;
   private conversationRepo: ConversationRepository;
   private userRepo: UserRepository;
   private messageRepo: MessageRepository;
   private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
-  constructor() {
+  private constructor() {
     this.conversationRepo = new ConversationRepository();
     this.userRepo = new UserRepository();
     this.messageRepo = new MessageRepository();
@@ -32,6 +33,13 @@ export class ConversationService {
       resetTimeout: 60000, // 1 minute
       monitoringPeriod: 60000 // 1 minute
     });
+  }
+
+  public static getInstance(): ConversationService {
+    if (!ConversationService.instance) {
+      ConversationService.instance = new ConversationService();
+    }
+    return ConversationService.instance;
   }
 
   async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
@@ -148,3 +156,6 @@ export class ConversationService {
     return await this.messageRepo.findByConversationId(conversationId);
   }
 }
+
+// Export singleton instance
+export const conversationService = ConversationService.getInstance();

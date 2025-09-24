@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { FitnessPlanService } from '@/server/services/fitnessPlanService';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { MessageService } from '@/server/services/messageService';
-import { DailyMessageService } from '@/server/services/dailyMessageService';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { fitnessPlanService, messageService } from '@/server/services';
 // import { MesocycleService } from '@/server/services/mesocycleService'; // TODO: Update for refactor
 
 export async function POST(req: NextRequest) {
@@ -31,16 +26,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fitnessPlanService = new FitnessPlanService(new FitnessPlanRepository());
     const fitnessPlan = await fitnessPlanService.createFitnessPlan(user);
 
-    const messageService = new MessageService();
     const welcomeMessage = await messageService.buildWelcomeMessage(user, fitnessPlan);
     await messageService.sendMessage(user, welcomeMessage);
-
-    const dailyMessageService = new DailyMessageService();
-
-    const await generateDailyWorkout
     // TODO: Update for refactor - generate workout on-demand instead
     // const mesocycleService = new MesocycleService();
     // const nextMesocycle = await mesocycleService.getNextMesocycle(user, fitnessPlan);
