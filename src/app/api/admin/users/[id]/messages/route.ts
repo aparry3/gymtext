@@ -30,11 +30,11 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
-    await dailyMessageService.sendDailyMessage(user);
+    const messageResult = await dailyMessageService.sendDailyMessage(user);
     
     return NextResponse.json({ 
       success: true, 
-      message: 'Daily message sent successfully' 
+      message: messageResult.messageText 
     });
   } catch (error) {
     console.error('Error sending daily message:', error);
