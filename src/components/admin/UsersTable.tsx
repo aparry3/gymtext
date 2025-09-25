@@ -39,7 +39,7 @@ export function UsersTable({
 
   if (users.length === 0) {
     return (
-      <div className="rounded-xl border">
+      <div className="rounded-2xl bg-white shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.05]">
         <div className="p-8 text-center">
           <p className="text-muted-foreground">No users found</p>
         </div>
@@ -48,11 +48,11 @@ export function UsersTable({
   }
 
   return (
-    <div className="rounded-xl border">
+    <div className="rounded-2xl bg-white shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.05]">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-100">
               <th className="p-4 text-left">
                 <SortableHeader 
                   label="User" 
@@ -153,7 +153,7 @@ function UserRow({ user }: UserRowProps) {
   }
 
   return (
-    <tr className="border-b hover:bg-muted/50 transition-colors">
+    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200">
       <td className="p-4">
         <div className="flex items-center gap-3">
           <Avatar>
@@ -223,11 +223,11 @@ function UserRow({ user }: UserRowProps) {
 
 function UsersTableSkeleton() {
   return (
-    <div className="rounded-xl border">
+    <div className="rounded-2xl bg-white shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.05]">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-100">
               <th className="p-4 text-left">User</th>
               <th className="p-4 text-left">Contact</th>
               <th className="p-4 text-left">Details</th>
@@ -237,7 +237,7 @@ function UsersTableSkeleton() {
           </thead>
           <tbody>
             {Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i} className="border-b">
+              <tr key={i} className="border-b border-gray-50">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-10 w-10 rounded-full" />

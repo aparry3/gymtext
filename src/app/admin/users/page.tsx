@@ -238,8 +238,9 @@ function AdminUsersPageContent() {
   }, [fetchUsers, filters, currentPage, sort])
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="space-y-6">
         {/* Header */}
         <AdminHeader
           title="Users"
@@ -319,6 +320,7 @@ function AdminUsersPageContent() {
             itemsPerPage={10}
           />
         )}
+        </div>
       </div>
     </div>
   )
@@ -334,17 +336,17 @@ interface StatsCardProps {
 
 function StatsCard({ title, value, icon, variant, isLoading = false }: StatsCardProps) {
   const variantStyles = {
-    primary: 'bg-primary/10 text-primary',
-    success: 'bg-green-100 text-green-700',
-    warning: 'bg-orange-100 text-orange-700',
-    info: 'bg-blue-100 text-blue-700'
+    primary: 'bg-blue-50 text-blue-600 border-blue-100',
+    success: 'bg-green-50 text-green-600 border-green-100',
+    warning: 'bg-amber-50 text-amber-600 border-amber-100',
+    info: 'bg-purple-50 text-purple-600 border-purple-100'
   }
 
   if (isLoading) {
     return (
-      <Card className="p-6">
+      <Card className="p-6 hover:shadow-xl transition-shadow duration-200">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded" />
+          <Skeleton className="h-12 w-12 rounded-xl" />
           <div className="space-y-2">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-6 w-8" />
@@ -355,14 +357,14 @@ function StatsCard({ title, value, icon, variant, isLoading = false }: StatsCard
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded ${variantStyles[variant]}`}>
+    <Card className="p-6 hover:shadow-xl transition-shadow duration-200 border group">
+      <div className="flex items-center gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl border transition-colors duration-200 ${variantStyles[variant]} group-hover:scale-105`}>
           {icon}
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-semibold">{value}</p>
+          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
       </div>
     </Card>

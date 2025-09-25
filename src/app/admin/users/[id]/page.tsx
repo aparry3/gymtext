@@ -379,10 +379,11 @@ export default function AdminUserDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb>
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="space-y-6">
+          {/* Breadcrumb */}
+          <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
@@ -603,6 +604,7 @@ export default function AdminUserDetailPage() {
         ) : (
           <EmptyProfileState />
         )}
+        </div>
       </div>
     </div>
   )
@@ -664,18 +666,18 @@ interface ConstraintCardProps {
 
 function ConstraintCard({ constraint }: ConstraintCardProps) {
   const severityColors = {
-    mild: 'bg-orange-100 text-orange-700 border-orange-200',
-    moderate: 'bg-orange-200 text-orange-800 border-orange-300',
-    severe: 'bg-red-100 text-red-700 border-red-200'
+    mild: 'bg-orange-50 text-orange-700 border-orange-100 ring-orange-100',
+    moderate: 'bg-orange-100 text-orange-800 border-orange-200 ring-orange-200',
+    severe: 'bg-red-50 text-red-700 border-red-100 ring-red-100'
   }
 
   const statusColors = {
-    active: 'bg-red-100 text-red-700',
-    resolved: 'bg-green-100 text-green-700'
+    active: 'bg-red-50 text-red-700',
+    resolved: 'bg-green-50 text-green-700'
   }
 
   return (
-    <div className={`rounded-lg border p-4 ${constraint.severity ? severityColors[constraint.severity] : 'bg-gray-100 border-gray-200'}`}>
+    <div className={`rounded-xl border p-4 ring-1 ${constraint.severity ? severityColors[constraint.severity] : 'bg-gray-50 border-gray-100 ring-gray-100'}`}>
       <div className="mb-2 flex items-start justify-between">
         <h4 className="font-medium">{constraint.description}</h4>
         <Badge className={statusColors[constraint.status]} variant="secondary">
@@ -710,43 +712,45 @@ function EmptyProfileState() {
 
 function UserDetailSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="space-y-6">
-        <Skeleton className="h-6 w-48" />
-        
-        <Card className="p-6">
-          <div className="flex items-start gap-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-32" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-20" />
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="space-y-6">
+          <Skeleton className="h-6 w-48" />
+          
+          <Card className="p-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
               </div>
             </div>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4">
+                <Skeleton className="h-16 w-full" />
+              </Card>
+            ))}
           </div>
-        </Card>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              <Skeleton className="h-16 w-full" />
-            </Card>
-          ))}
-        </div>
-
-        <div className="space-y-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="p-6">
-              <Skeleton className="h-6 w-24 mb-4" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </Card>
-          ))}
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-6 w-24 mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </div>
