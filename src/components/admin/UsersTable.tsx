@@ -39,7 +39,7 @@ export function UsersTable({
 
   if (users.length === 0) {
     return (
-      <div className="rounded-md border">
+      <div className="rounded-xl border">
         <div className="p-8 text-center">
           <p className="text-muted-foreground">No users found</p>
         </div>
@@ -48,7 +48,7 @@ export function UsersTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xl border">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -223,7 +223,7 @@ function UserRow({ user }: UserRowProps) {
 
 function UsersTableSkeleton() {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xl border">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
