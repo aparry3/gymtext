@@ -10,96 +10,16 @@ import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AdminUser, UserFilters, UserSort } from '@/types/admin'
 
-// Mock data - replace with actual API calls later
-const mockUsers: AdminUser[] = [
-  {
-    id: 'cus_Pa1Xyz123',
-    name: 'Ava Johnson',
-    email: 'ava@example.com',
-    phoneNumber: '+13334567890',
-    age: 32,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pa1Xyz123',
-    preferredSendHour: 7,
-    timezone: 'America/New_York',
-    createdAt: new Date('2024-03-15'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  {
-    id: 'cus_Pb2Abc456',
-    name: 'Marcus Chen',
-    email: 'marcus.chen@example.com',
-    phoneNumber: '+13336543210',
-    age: 28,
-    gender: 'male',
-    profile: null,
-    stripeCustomerId: 'cus_Pb2Abc456',
-    preferredSendHour: 6,
-    timezone: 'America/Los_Angeles',
-    createdAt: new Date('2024-04-20'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  {
-    id: 'cus_Pc3Def789',
-    name: 'Sarah Williams',
-    email: null,
-    phoneNumber: '+13338901234',
-    age: 26,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pc3Def789',
-    preferredSendHour: 8,
-    timezone: 'America/Chicago',
-    createdAt: new Date('2024-06-10'),
-    updatedAt: new Date(),
-    hasProfile: false,
-  },
-  {
-    id: 'cus_Pd4Ghi012',
-    name: 'David Rodriguez',
-    email: 'david.r@example.com',
-    phoneNumber: '+13331098765',
-    age: 35,
-    gender: 'male',
-    profile: null,
-    stripeCustomerId: 'cus_Pd4Ghi012',
-    preferredSendHour: 19,
-    timezone: 'America/Denver',
-    createdAt: new Date('2024-07-05'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  {
-    id: 'cus_Pe5Jkl345',
-    name: 'Emily Thompson',
-    email: 'emily.t@example.com',
-    phoneNumber: '+13334321987',
-    age: 29,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pe5Jkl345',
-    preferredSendHour: 7,
-    timezone: 'America/New_York',
-    createdAt: new Date('2024-05-18'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  }
-]
-
-const mockStats = {
-  totalUsers: 8,
-  withEmail: 6,
-  withProfile: 6,
-  activeToday: 11
-}
 
 function AdminUsersPageContent() {
   const searchParams = useSearchParams()
   const [users, setUsers] = useState<AdminUser[]>([])
-  const [stats, setStats] = useState(mockStats)
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    withEmail: 0,
+    withProfile: 0,
+    activeToday: 0
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -116,7 +36,7 @@ function AdminUsersPageContent() {
 
   const [filters, setFilters] = useState<UserFilters>(initialFilters)
 
-  // Mock data fetcher - replace with actual API call
+  // API data fetcher
   const fetchUsers = useCallback(async (
     filters: UserFilters, 
     page: number, 
@@ -126,86 +46,31 @@ function AdminUsersPageContent() {
     setError(null)
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // Build query parameters
+      const params = new URLSearchParams()
+      
+      if (filters.search) params.set('search', filters.search)
+      if (filters.hasEmail !== undefined) params.set('hasEmail', String(filters.hasEmail))
+      if (filters.hasProfile !== undefined) params.set('hasProfile', String(filters.hasProfile))
+      if (filters.gender) params.set('gender', filters.gender)
+      
+      params.set('page', String(page))
+      params.set('pageSize', '10')
+      params.set('sortField', sort.field)
+      params.set('sortDirection', sort.direction)
 
-      let filteredUsers = [...mockUsers]
+      const response = await fetch(`/api/admin/users?${params.toString()}`)
+      const result = await response.json()
 
-      // Apply filters
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase()
-        filteredUsers = filteredUsers.filter(user =>
-          user.name?.toLowerCase().includes(searchLower) ||
-          user.email?.toLowerCase().includes(searchLower) ||
-          user.id.toLowerCase().includes(searchLower)
-        )
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to fetch users')
       }
 
-      if (filters.hasEmail !== undefined) {
-        filteredUsers = filteredUsers.filter(user =>
-          filters.hasEmail ? user.email !== null : user.email === null
-        )
-      }
+      const { users: fetchedUsers, pagination, stats: fetchedStats } = result.data
 
-      if (filters.hasProfile !== undefined) {
-        filteredUsers = filteredUsers.filter(user =>
-          user.hasProfile === filters.hasProfile
-        )
-      }
-
-      if (filters.gender) {
-        filteredUsers = filteredUsers.filter(user =>
-          user.gender === filters.gender
-        )
-      }
-
-      // Apply sorting
-      filteredUsers.sort((a, b) => {
-        let aValue: string | number | Date
-        let bValue: string | number | Date
-
-        switch (sort.field) {
-          case 'name':
-            aValue = a.name || ''
-            bValue = b.name || ''
-            break
-          case 'email':
-            aValue = a.email || ''
-            bValue = b.email || ''
-            break
-          case 'createdAt':
-            aValue = a.createdAt
-            bValue = b.createdAt
-            break
-          case 'age':
-            aValue = a.age || 0
-            bValue = b.age || 0
-            break
-          case 'timezone':
-            aValue = a.timezone || ''
-            bValue = b.timezone || ''
-            break
-          default:
-            aValue = a.name || ''
-            bValue = b.name || ''
-        }
-
-        if (sort.direction === 'desc') {
-          return aValue < bValue ? 1 : -1
-        }
-        return aValue > bValue ? 1 : -1
-      })
-
-      // Apply pagination
-      const itemsPerPage = 10
-      const total = filteredUsers.length
-      const totalPages = Math.ceil(total / itemsPerPage)
-      const startIndex = (page - 1) * itemsPerPage
-      const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage)
-
-      setUsers(paginatedUsers)
-      setTotalPages(totalPages)
-      setStats(mockStats) // In real app, this would come from API
+      setUsers(fetchedUsers)
+      setTotalPages(pagination.totalPages)
+      setStats(fetchedStats)
 
     } catch (err) {
       setError('Failed to load users')

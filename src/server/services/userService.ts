@@ -2,6 +2,7 @@ import { UserModel, CreateUserData, CreateFitnessProfileData, UserWithProfile } 
 import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
+import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/types/admin';
 
 export interface CreateUserRequest {
   name: string;
@@ -132,6 +133,112 @@ export class UserService {
     }
     
     return result;
+  }
+
+  // Admin-specific methods
+  async listUsersForAdmin(filters: UserFilters & { page?: number; pageSize?: number; sort?: UserSort }): Promise<AdminUsersResponse> {
+    const result = await this.circuitBreaker.execute(async () => {
+      const { page = 1, pageSize = 20, sort = { field: 'createdAt', direction: 'desc' }, ...restFilters } = filters;
+      
+      // Convert admin filters to repository filters
+      const repoParams = {
+        q: restFilters.search,
+        hasProfile: restFilters.hasProfile,
+        createdFrom: restFilters.createdAfter,
+        createdTo: restFilters.createdBefore,
+        page,
+        pageSize,
+        sort: `${sort.field}:${sort.direction}`
+      };
+
+      const { users, total } = await this.userRepository.list(repoParams);
+      
+      // Transform users to AdminUser format
+      const adminUsers: AdminUser[] = users.map(user => this.transformToAdminUser(user));
+      
+      // Calculate stats
+      const stats = await this.calculateUserStats();
+
+      const pagination: Pagination = {
+        page,
+        limit: pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      };
+
+      return {
+        users: adminUsers,
+        pagination,
+        stats
+      };
+    });
+
+    if (!result) {
+      throw new Error('Failed to fetch users');
+    }
+
+    return result;
+  }
+
+  async getUserForAdmin(id: string): Promise<AdminUserDetailResponse> {
+    const result = await this.circuitBreaker.execute(async () => {
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const adminUser = this.transformToAdminUser(user);
+      
+      return {
+        user: adminUser,
+        profile: user.profile,
+        recentActivity: {
+          totalMessages: 0,
+          totalWorkouts: 0
+        }
+      };
+    });
+
+    if (!result) {
+      throw new Error('Failed to fetch user');
+    }
+
+    return result;
+  }
+
+  private transformToAdminUser(user: UserWithProfile): AdminUser {
+    const hasProfile = Boolean(user.profile && Object.keys(user.profile).length > 0);
+    
+    return {
+      ...user,
+      hasProfile,
+      profileSummary: hasProfile && user.profile ? {
+        primaryGoal: user.profile.goals?.primary,
+        experienceLevel: user.profile.activityData?.[0]?.experience || 'Not specified'
+      } : undefined,
+      stats: {
+        totalWorkouts: 0,
+        isActiveToday: false
+      }
+    };
+  }
+
+  private async calculateUserStats() {
+    // Get basic counts from repository
+    const allUsersResult = await this.userRepository.list({ pageSize: 1000 });
+    const users = allUsersResult.users;
+    
+    const totalUsers = users.length;
+    const withEmail = users.filter(u => u.email).length;
+    const withProfile = users.filter(u => u.profile && Object.keys(u.profile).length > 0).length;
+    const activeToday = 0; // TODO: Implement active user tracking
+
+    return {
+      totalUsers,
+      withEmail,
+      withProfile,
+      activeToday
+    };
   }
 }
 

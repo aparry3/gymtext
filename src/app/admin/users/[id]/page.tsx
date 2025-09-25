@@ -18,250 +18,6 @@ import {
   BreadcrumbPage 
 } from '@/components/ui/breadcrumb'
 
-// Mock user data - replace with API call later
-const mockUsers: Record<string, AdminUser> = {
-  'cus_Pa1Xyz123': {
-    id: 'cus_Pa1Xyz123',
-    name: 'Ava Johnson',
-    email: 'ava@example.com',
-    phoneNumber: '+13334567890',
-    age: 32,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pa1Xyz123',
-    preferredSendHour: 7,
-    timezone: 'America/New_York',
-    createdAt: new Date('2024-03-15'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  'cus_Pb2Abc456': {
-    id: 'cus_Pb2Abc456',
-    name: 'Marcus Chen',
-    email: 'marcus.chen@example.com',
-    phoneNumber: '+13336543210',
-    age: 28,
-    gender: 'male',
-    profile: null,
-    stripeCustomerId: 'cus_Pb2Abc456',
-    preferredSendHour: 6,
-    timezone: 'America/Los_Angeles',
-    createdAt: new Date('2024-04-20'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  'cus_Pc3Def789': {
-    id: 'cus_Pc3Def789',
-    name: 'Sarah Williams',
-    email: null,
-    phoneNumber: '+13338901234',
-    age: 26,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pc3Def789',
-    preferredSendHour: 8,
-    timezone: 'America/Chicago',
-    createdAt: new Date('2024-06-10'),
-    updatedAt: new Date(),
-    hasProfile: false,
-  },
-  'cus_Pd4Ghi012': {
-    id: 'cus_Pd4Ghi012',
-    name: 'David Rodriguez',
-    email: 'david.r@example.com',
-    phoneNumber: '+13331098765',
-    age: 35,
-    gender: 'male',
-    profile: null,
-    stripeCustomerId: 'cus_Pd4Ghi012',
-    preferredSendHour: 19,
-    timezone: 'America/Denver',
-    createdAt: new Date('2024-07-05'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  },
-  'cus_Pe5Jkl345': {
-    id: 'cus_Pe5Jkl345',
-    name: 'Emily Thompson',
-    email: 'emily.t@example.com',
-    phoneNumber: '+13334321987',
-    age: 29,
-    gender: 'female',
-    profile: null,
-    stripeCustomerId: 'cus_Pe5Jkl345',
-    preferredSendHour: 7,
-    timezone: 'America/New_York',
-    createdAt: new Date('2024-05-18'),
-    updatedAt: new Date(),
-    hasProfile: true,
-  }
-}
-
-// Mock profiles for different users
-const mockProfiles: Record<string, FitnessProfile | null> = {
-  'cus_Pa1Xyz123': {
-  goals: {
-    primary: 'Build strength',
-    summary: '3x/week progressive overload',
-    timeline: 16,
-    specific: 'Increase squat, bench, and deadlift',
-    motivation: 'Want to feel stronger and more confident'
-  },
-  availability: {
-    summary: '3 days per week, 60 minutes sessions in the morning',
-    daysPerWeek: 3,
-    minutesPerSession: 60,
-    preferredTimes: ['morning'],
-    schedule: 'Monday, Wednesday, Friday mornings'
-  },
-  equipmentAccess: {
-    summary: 'Full commercial gym access with home backup equipment',
-    gymAccess: true,
-    gymType: 'commercial',
-    homeEquipment: ['bands', 'kettlebell'],
-    limitations: []
-  },
-  constraints: [
-    {
-      id: '1',
-      type: 'injury',
-      description: 'Left shoulder impingement',
-      severity: 'mild',
-      affectedMovements: ['overhead press', 'lateral raises'],
-      status: 'active'
-    }
-  ],
-  metrics: {
-    summary: 'Moderately active with some strength training background',
-    height: 168,
-    weight: { value: 145, unit: 'lbs', date: '2024-09-20' },
-    bodyComposition: null,
-    fitnessLevel: 'moderately_active'
-  },
-  activityData: [
-    {
-      type: 'strength',
-      summary: 'Intermediate lifter with 2+ years experience',
-      experience: 'intermediate',
-      currentProgram: null,
-      keyLifts: {
-        squat: 185,
-        deadlift: 225
-      },
-      preferences: {
-        workoutStyle: 'compound movements',
-        likedExercises: ['squats', 'deadlifts'],
-        dislikedExercises: ['burpees']
-      },
-      trainingFrequency: 3
-    },
-    {
-      type: 'cardio',
-      summary: 'Enjoys walking for general fitness',
-      experience: 'beginner',
-      primaryActivities: ['walking'],
-      keyMetrics: {
-        weeklyDistance: null,
-        longestSession: null,
-        averagePace: null,
-        preferredIntensity: 'low'
-      },
-      preferences: {
-        indoor: false,
-        outdoor: true,
-        groupVsIndividual: 'individual',
-        timeOfDay: ['morning']
-      },
-      frequency: 2
-    }
-  ]
-  },
-  'cus_Pb2Abc456': {
-    goals: {
-      primary: 'Weight loss',
-      summary: 'Cardio focused with some strength training',
-      timeline: 12,
-    },
-    availability: {
-      daysPerWeek: 4,
-      minutesPerSession: 45,
-      preferredTimes: ['evening'],
-    },
-    equipmentAccess: {
-      gymAccess: true,
-      gymType: 'commercial',
-    },
-    constraints: [],
-    metrics: {
-      height: 175,
-      weight: { value: 180, unit: 'lbs' },
-      fitnessLevel: 'lightly_active'
-    },
-    activityData: [
-      {
-        type: 'cardio',
-        experience: 'intermediate',
-        primaryActivities: ['running', 'cycling'],
-        frequency: 4
-      }
-    ]
-  },
-  // Users without profiles
-  'cus_Pc3Def789': null,
-  'cus_Pd4Ghi012': {
-    goals: {
-      primary: 'General fitness',
-      timeline: 8,
-    },
-    availability: {
-      daysPerWeek: 3,
-      minutesPerSession: 90,
-    },
-    equipmentAccess: {
-      gymAccess: false,
-      homeEquipment: ['dumbbells', 'resistance bands'],
-    },
-    constraints: [],
-    metrics: {
-      fitnessLevel: 'very_active'
-    },
-    activityData: []
-  },
-  'cus_Pe5Jkl345': {
-    goals: {
-      primary: 'Muscle gain',
-      summary: 'Bodybuilding focused training',
-      timeline: 20,
-    },
-    availability: {
-      daysPerWeek: 5,
-      minutesPerSession: 75,
-      preferredTimes: ['morning'],
-    },
-    equipmentAccess: {
-      gymAccess: true,
-      gymType: 'commercial',
-    },
-    constraints: [],
-    metrics: {
-      height: 162,
-      weight: { value: 130, unit: 'lbs' },
-      fitnessLevel: 'moderately_active'
-    },
-    activityData: [
-      {
-        type: 'strength',
-        experience: 'advanced',
-        keyLifts: {
-          squat: 155,
-          bench: 115,
-          deadlift: 185
-        },
-        trainingFrequency: 5
-      }
-    ]
-  }
-}
 
 export default function AdminUserDetailPage() {
   const { id } = useParams()
@@ -272,24 +28,23 @@ export default function AdminUserDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSendingWorkout, setIsSendingWorkout] = useState(false)
 
-  // Mock data fetcher - replace with actual API call
+  // API data fetcher
   const fetchUser = useCallback(async (userId: string) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const response = await fetch(`/api/admin/users/${userId}`)
+      const result = await response.json()
 
-      const foundUser = mockUsers[userId]
-      const foundProfile = mockProfiles[userId]
-
-      if (foundUser) {
-        setUser(foundUser)
-        setProfile(foundProfile)
-      } else {
-        throw new Error('User not found')
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to fetch user')
       }
+
+      const { user: fetchedUser, profile: fetchedProfile } = result.data
+
+      setUser(fetchedUser)
+      setProfile(fetchedProfile)
     } catch (err) {
       setError('Failed to load user')
       console.error('Error fetching user:', err)
@@ -323,12 +78,22 @@ export default function AdminUserDetailPage() {
 
     setIsSendingWorkout(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // In a real app, you'd call the workout API here
-      console.log('Workout sent to user:', user.name)
+      const response = await fetch(`/api/admin/users/${user.id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to send daily message')
+      }
+      
+      console.log('Daily message sent to user:', user.name)
     } catch (err) {
-      console.error('Failed to send workout:', err)
+      console.error('Failed to send daily message:', err)
     } finally {
       setIsSendingWorkout(false)
     }
@@ -368,9 +133,10 @@ export default function AdminUserDetailPage() {
     return phone
   }
 
-  const formatMemberSince = (date: Date) => {
+  const formatMemberSince = (date: Date | string) => {
     const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    const diffTime = Math.abs(now.getTime() - dateObj.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
@@ -438,7 +204,7 @@ export default function AdminUserDetailPage() {
                 className="gap-2"
               >
                 <Send className={`h-4 w-4 ${isSendingWorkout ? 'animate-pulse' : ''}`} />
-                {isSendingWorkout ? 'Sending...' : 'Send Workout'}
+                {isSendingWorkout ? 'Sending...' : 'Send Daily Message'}
               </Button>
             </div>
           </div>
