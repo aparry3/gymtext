@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     await messageService.sendMessage(user, welcomeMessage);
     // TODO: Update for refactor - generate workout on-demand instead
 
-    const dailyMessage = await dailyMessageService.sendDailyMessage(user);
+    void dailyMessageService.sendDailyMessage(user);
     
     return NextResponse.json({ success: true, message: 'User onboarded successfully' })
   } catch (error) {

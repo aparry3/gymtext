@@ -7,7 +7,6 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
-import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 
 interface BatchResult {
   processed: number;

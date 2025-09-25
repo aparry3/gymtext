@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { dailyMessageService, fitnessPlanService, messageService } from '@/server/services';
+import { dailyMessageService } from '@/server/services';
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const body = await req.json();
     const { userId } = await params;
     
     if (!userId) {
@@ -25,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ use
       );
     }
 
-    const dailyMessage = await dailyMessageService.sendDailyMessage(user);
+    await dailyMessageService.sendDailyMessage(user);
     
     return NextResponse.json({ success: true, message: 'dailyMessage sent successfully' })
   } catch (error) {
