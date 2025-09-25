@@ -4,12 +4,21 @@ import { ConversationService } from './conversationService';
 import { dailyMessageAgent, welcomeMessageAgent } from '../agents';
 import { FitnessPlan } from '../models';
 import { WorkoutInstance } from '../models/workout';
+import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 
 export class MessageService {
+  private static instance: MessageService;
   private conversationService: ConversationService;
-  constructor(
-  ) {
-    this.conversationService = new ConversationService();
+
+  private constructor() {
+    this.conversationService = ConversationService.getInstance();
+  }
+
+  public static getInstance(): MessageService {
+    if (!MessageService.instance) {
+      MessageService.instance = new MessageService();
+    }
+    return MessageService.instance;
   }
 
   public async buildWelcomeMessage(user: UserWithProfile, fitnessPlan: FitnessPlan): Promise<string> {
@@ -27,7 +36,7 @@ export class MessageService {
   }
 
 
-  public async sendMessage(user: UserWithProfile, message: string): Promise<string> {
+  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageInstance> {
     try {
         const stored = await this.conversationService.storeOutboundMessage(
             user.id,
@@ -42,8 +51,11 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    await twilioClient.sendSMS(user.phoneNumber, message);
+    const messageInstance = await twilioClient.sendSMS(user.phoneNumber, message);
 
-    return message;
+    return messageInstance;
   }
 }
+
+// Export singleton instance
+export const messageService = MessageService.getInstance();

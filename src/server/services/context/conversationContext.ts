@@ -11,17 +11,25 @@ import {
   import { UserRepository } from '@/server/repositories/userRepository';
   
   export class ConversationContextService {
+    private static instance: ConversationContextService;
     private config: ContextConfig;
     private contextCache: Map<string, CachedContext> = new Map();
     private conversationRepo: ConversationRepository;
     private messageRepo: MessageRepository;
     private userRepo: UserRepository;
   
-    constructor(config?: Partial<ContextConfig>) {
+    private constructor(config?: Partial<ContextConfig>) {
       this.config = { ...getContextConfig(), ...config };
       this.conversationRepo = new ConversationRepository();
       this.messageRepo = new MessageRepository();
       this.userRepo = new UserRepository();
+    }
+
+    public static getInstance(config?: Partial<ContextConfig>): ConversationContextService {
+      if (!ConversationContextService.instance) {
+        ConversationContextService.instance = new ConversationContextService(config);
+      }
+      return ConversationContextService.instance;
     }
   
     async getContext(
@@ -166,3 +174,6 @@ import {
       }
     }
   }
+
+  // Export singleton instance
+  export const conversationContextService = ConversationContextService.getInstance();

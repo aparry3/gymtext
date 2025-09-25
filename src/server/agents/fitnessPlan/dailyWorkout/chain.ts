@@ -27,53 +27,51 @@ export interface DailyWorkoutContext {
   recentWorkouts?: WorkoutInstance[];
 }
 
-export const dailyWorkoutAgent = {
-  invoke: async (context: DailyWorkoutContext): Promise<EnhancedWorkoutInstance> => {
-    const { 
-      user, 
-      date, 
-      dayPlan, 
-      microcycle, 
-      mesocycle, 
-      fitnessPlan, 
-      recentWorkouts 
-    } = context;
+export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<EnhancedWorkoutInstance> => {
+  const { 
+    user, 
+    date, 
+    dayPlan, 
+    microcycle, 
+    mesocycle, 
+    fitnessPlan, 
+    recentWorkouts 
+  } = context;
 
-    // Get fitness profile context
-    const fitnessProfileContext = new FitnessProfileContext();
-    const fitnessProfile = await fitnessProfileContext.getContext(user);
+  // Get fitness profile context
+  const fitnessProfileContext = new FitnessProfileContext();
+  const fitnessProfile = await fitnessProfileContext.getContext(user);
 
-    // Generate prompt
-    const prompt = dailyWorkoutPrompt(
-      user,
-      fitnessProfile,
-      dayPlan,
-      microcycle.pattern,
-      mesocycle,
-      fitnessPlan.programType,
-      recentWorkouts
-    );
+  // Generate prompt
+  const prompt = dailyWorkoutPrompt(
+    user,
+    fitnessProfile,
+    dayPlan,
+    microcycle.pattern,
+    mesocycle,
+    fitnessPlan.programType,
+    recentWorkouts
+  );
 
-    // Use structured output for the enhanced workout schema
-    const structuredModel = llm.withStructuredOutput(_EnhancedWorkoutInstanceSchema);
+  // Use structured output for the enhanced workout schema
+  const structuredModel = llm.withStructuredOutput(_EnhancedWorkoutInstanceSchema);
 
-    try {
-      // Generate the workout
-      const workout = await structuredModel.invoke(prompt);
-      
-      // Ensure date is set correctly
-      return {
-        ...workout,
-        date
-      } as EnhancedWorkoutInstance;
-    } catch (error) {
-      console.error('Error generating workout with AI:', error);
-      
-      // Generate fallback workout
-      return generateFallbackWorkout(date, dayPlan, mesocycle, microcycle.pattern);
-    }
+  try {
+    // Generate the workout
+    const workout = await structuredModel.invoke(prompt);
+    
+    // Ensure date is set correctly
+    return {
+      ...workout,
+      date
+    } as EnhancedWorkoutInstance;
+  } catch (error) {
+    console.error('Error generating workout with AI:', error);
+    
+    // Generate fallback workout
+    return generateFallbackWorkout(date, dayPlan, mesocycle, microcycle.pattern);
   }
-};
+}
 
 /**
  * Generate a fallback workout if AI generation fails

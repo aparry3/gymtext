@@ -1,45 +1,90 @@
 @import "tailwindcss";
 
+/* Soft and friendly design system with HSL colors */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563EB;
-  --primary-foreground: #ffffff;
-  --secondary: #3B82F6;
-  --accent: #1E40AF;
-  --muted: #F1F5F9;
-  --border: #E2E8F0;
+  /* Background and foreground colors */
+  --background: 0 0% 100%;
+  --foreground: 215 25% 15%;
+
+  /* Card and surface colors */
+  --card: 0 0% 100%;
+  --card-foreground: 215 25% 15%;
+
+  /* Popover colors */
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 25% 15%;
+
+  /* Primary brand colors - softer blue */
+  --primary: 213 94% 68%;
+  --primary-foreground: 0 0% 100%;
+  --primary-muted: 213 94% 95%;
+
+  /* Secondary colors - lighter grays */
+  --secondary: 210 17% 95%;
+  --secondary-foreground: 215 25% 15%;
+
+  /* Muted and accent colors */
+  --muted: 210 17% 97%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 17% 95%;
+  --accent-foreground: 215 25% 15%;
+
+  /* Status colors - friendlier tones */
+  --success: 143 85% 42%;
+  --success-foreground: 0 0% 100%;
+  --success-muted: 143 85% 96%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  --warning-muted: 38 92% 95%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Border and input styling */
+  --border: 210 17% 90%;
+  --input: 210 17% 95%;
+  --ring: 213 94% 68%;
+
+  /* Admin specific tokens */
+  --admin-header: 215 28% 17%;
+  --admin-sidebar: 215 28% 17%;
+  --admin-surface: 0 0% 100%;
+  --admin-surface-elevated: 0 0% 100%;
+  --admin-border-subtle: 210 17% 93%;
+  
+  /* Border radius - softer, more rounded */
+  --radius: 0.75rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #3B82F6;
-    --primary-foreground: #ffffff;
-    --secondary: #60A5FA;
-    --accent: #2563EB;
-    --muted: #1E293B;
-    --border: #334155;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: Arial, Helvetica, sans-serif;
 }
 

@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "source .env.local && next dev --turbopack",
-    "build": "next build",
+    "build": "source .env.local && next build",
     "build:local": "source .env.local && next build",
     "start": "next start",
     "lint": "next lint",
     "predev": "source .env.local && pnpm db:codegen",
-    "prebuild": "pnpm db:codegen",
+    "prebuild": "source .env.local && pnpm db:codegen",
     "premigrate": "pnpm db:codegen",
     "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
     "db:migrate": "tsx scripts/migrations/run.ts up",
@@ -77,6 +77,7 @@
     "redis": "^5.6.0",
     "stripe": "^14.9.0",
     "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
     "twilio": "^5.5.2",
     "uuid": "^11.1.0",
     "zod": "^3.22.4"

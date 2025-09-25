@@ -4,7 +4,8 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { UserWithProfile } from '@/server/models/userModel';
-import { microcyclePatternAgent } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
+import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export interface ProgressInfo {
   mesocycleIndex: number;
@@ -15,10 +16,21 @@ export interface ProgressInfo {
 }
 
 export class ProgressService {
-  constructor(
-    private fitnessPlanRepo: FitnessPlanRepository,
-    private microcycleRepo: MicrocycleRepository
-  ) {}
+  private static instance: ProgressService;
+  private fitnessPlanRepo: FitnessPlanRepository;
+  private microcycleRepo: MicrocycleRepository;
+
+  private constructor() {
+    this.fitnessPlanRepo = new FitnessPlanRepository();
+    this.microcycleRepo = new MicrocycleRepository(postgresDb);
+  }
+
+  public static getInstance(): ProgressService {
+    if (!ProgressService.instance) {
+      ProgressService.instance = new ProgressService();
+    }
+    return ProgressService.instance;
+  }
 
   async getCurrentProgress(userId: string): Promise<ProgressInfo | null> {
     const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
@@ -225,7 +237,7 @@ export class ProgressService {
   ): Promise<MicrocyclePattern> {
     try {
       // Use AI agent to generate pattern
-      const pattern = await microcyclePatternAgent.invoke({
+      const pattern = await generateMicrocyclePattern({
         mesocycle,
         weekNumber,
         programType,
@@ -264,3 +276,6 @@ export class ProgressService {
     };
   }
 }
+
+// Export singleton instance
+export const progressService = ProgressService.getInstance();

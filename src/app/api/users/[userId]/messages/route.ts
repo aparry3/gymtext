@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { dailyMessageService, fitnessPlanService, messageService } from '@/server/services';
+import { dailyMessageService } from '@/server/services';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const body = await req.json();
-    const { userId } = body;
+    const { userId } = await params;
     
     if (!userId) {
       return NextResponse.json(
@@ -25,15 +24,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fitnessPlan = await fitnessPlanService.createFitnessPlan(user);
-
-    const welcomeMessage = await messageService.buildWelcomeMessage(user, fitnessPlan);
-    await messageService.sendMessage(user, welcomeMessage);
-    // TODO: Update for refactor - generate workout on-demand instead
-
-    void dailyMessageService.sendDailyMessage(user);
+    await dailyMessageService.sendDailyMessage(user);
     
-    return NextResponse.json({ success: true, message: 'User onboarded successfully' })
+    return NextResponse.json({ success: true, message: 'dailyMessage sent successfully' })
   } catch (error) {
     console.error('Error in fitness program creation:', error);
     return NextResponse.json(
