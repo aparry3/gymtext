@@ -4,6 +4,7 @@ import { ConversationService } from './conversationService';
 import { dailyMessageAgent, welcomeMessageAgent } from '../agents';
 import { FitnessPlan } from '../models';
 import { WorkoutInstance } from '../models/workout';
+import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 
 export class MessageService {
   private static instance: MessageService;
@@ -35,7 +36,7 @@ export class MessageService {
   }
 
 
-  public async sendMessage(user: UserWithProfile, message: string): Promise<string> {
+  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageInstance> {
     try {
         const stored = await this.conversationService.storeOutboundMessage(
             user.id,
@@ -50,9 +51,9 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    await twilioClient.sendSMS(user.phoneNumber, message);
+    const messageInstance = await twilioClient.sendSMS(user.phoneNumber, message);
 
-    return message;
+    return messageInstance;
   }
 }
 

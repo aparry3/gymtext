@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
+import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 
 interface BatchResult {
   processed: number;
@@ -19,6 +20,8 @@ interface MessageResult {
   success: boolean;
   userId: string;
   error?: string;
+  messageText?: string;
+  messageId?: string;
 }
 
 export interface ProcessOptions {
@@ -171,7 +174,7 @@ export class DailyMessageService {
   /**
    * Sends a daily message to a single user
    */
-  private async sendDailyMessage(
+  public async sendDailyMessage(
     user: UserWithProfile,
     options: ProcessOptions = {}
   ): Promise<MessageResult> {
@@ -223,15 +226,21 @@ export class DailyMessageService {
           phoneNumber: user.phoneNumber,
           messagePreview: message.substring(0, 100) + '...'
         });
+        return {
+          success: true,
+          userId: user.id,
+          messageText: message
+        };
       } else {
-        await this.messageService.sendMessage(user, message);
+        const messageInstance = await this.messageService.sendMessage(user, message);
         console.log(`Successfully sent daily message to user ${user.id}`);
+        return {
+          success: true,
+          userId: user.id,
+          messageText: message,
+          messageId: messageInstance.sid
+        };
       }
-
-      return {
-        success: true,
-        userId: user.id
-      };
     } catch (error) {
       console.error(`Error sending daily message to user ${user.id}:`, error);
       return {
