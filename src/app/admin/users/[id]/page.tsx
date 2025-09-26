@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ProgramTab } from '@/components/pages/admin/ProgramTab'
 import { 
   Breadcrumb, 
   BreadcrumbList, 
@@ -235,141 +237,155 @@ export default function AdminUserDetailPage() {
           />
         </div>
 
-        {/* Profile Content */}
-        {profile ? (
-          <div className="space-y-6">
-            {/* Goals */}
-            <ProfileSection
-              title="Goals"
-              icon={<Target className="h-5 w-5" />}
-            >
-              <div className="space-y-2">
-                <div><strong>Primary Goal:</strong> {profile.goals.primary}</div>
-                <div><strong>Summary:</strong> {profile.goals.summary}</div>
-                <div><strong>Timeline:</strong> {profile.goals.timeline} weeks</div>
-              </div>
-            </ProfileSection>
+        {/* Tabs Content */}
+        <Tabs defaultValue="profile" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="program">Program</TabsTrigger>
+          </TabsList>
 
-            {/* Availability & Equipment */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <ProfileSection
-                title="Availability"
-                icon={<Calendar className="h-5 w-5" />}
-              >
-                <div className="space-y-2">
-                  <div><strong>Frequency:</strong> {profile.availability?.daysPerWeek} days/week</div>
-                  <div><strong>Session Length:</strong> {profile.availability?.minutesPerSession} minutes</div>
-                  <div><strong>Preferred Times:</strong> {profile.availability?.preferredTimes?.join(', ') || 'Not specified'}</div>
-                </div>
-              </ProfileSection>
-
-              <ProfileSection
-                title="Equipment Access"
-                icon={<Dumbbell className="h-5 w-5" />}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <strong>Gym Access:</strong>
-                    {profile.equipmentAccess?.gymAccess ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-red-600" />
-                    )}
-                    <Badge variant={profile.equipmentAccess?.gymAccess ? "default" : "secondary"}>
-                      {profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
-                    </Badge>
+          <TabsContent value="profile">
+            {/* Profile Content */}
+            {profile ? (
+              <div className="space-y-6">
+                {/* Goals */}
+                <ProfileSection
+                  title="Goals"
+                  icon={<Target className="h-5 w-5" />}
+                >
+                  <div className="space-y-2">
+                    <div><strong>Primary Goal:</strong> {profile.goals.primary}</div>
+                    <div><strong>Summary:</strong> {profile.goals.summary}</div>
+                    <div><strong>Timeline:</strong> {profile.goals.timeline} weeks</div>
                   </div>
-                  <div><strong>Gym Type:</strong> {profile.equipmentAccess?.gymType || 'Not specified'}</div>
-                  {profile.equipmentAccess?.homeEquipment && profile.equipmentAccess.homeEquipment.length > 0 && (
-                    <div><strong>Home Equipment:</strong> {profile.equipmentAccess.homeEquipment.join(', ')}</div>
-                  )}
-                </div>
-              </ProfileSection>
-            </div>
+                </ProfileSection>
 
-            {/* Constraints */}
-            {profile.constraints && profile.constraints.length > 0 && (
-              <ProfileSection
-                title="Constraints"
-                icon={<AlertTriangle className="h-5 w-5" />}
-              >
-                <div className="space-y-3">
-                  {profile.constraints.map((constraint) => (
-                    <ConstraintCard key={constraint.id} constraint={constraint} />
-                  ))}
-                </div>
-              </ProfileSection>
-            )}
+                {/* Availability & Equipment */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <ProfileSection
+                    title="Availability"
+                    icon={<Calendar className="h-5 w-5" />}
+                  >
+                    <div className="space-y-2">
+                      <div><strong>Frequency:</strong> {profile.availability?.daysPerWeek} days/week</div>
+                      <div><strong>Session Length:</strong> {profile.availability?.minutesPerSession} minutes</div>
+                      <div><strong>Preferred Times:</strong> {profile.availability?.preferredTimes?.join(', ') || 'Not specified'}</div>
+                    </div>
+                  </ProfileSection>
 
-            {/* Metrics & Activity Data */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <ProfileSection
-                title="Metrics"
-                icon={<TrendingUp className="h-5 w-5" />}
-              >
-                <div className="space-y-2">
-                  {profile.metrics?.height && (
-                    <div className="flex items-center gap-2">
-                      <Ruler className="h-4 w-4 text-muted-foreground" />
-                      <span><strong>Height:</strong> {profile.metrics.height} cm</span>
-                    </div>
-                  )}
-                  {profile.metrics?.weight && (
-                    <div className="flex items-center gap-2">
-                      <Weight className="h-4 w-4 text-muted-foreground" />
-                      <span><strong>Weight:</strong> {profile.metrics.weight.value} {profile.metrics.weight.unit}</span>
-                    </div>
-                  )}
-                  {profile.metrics?.fitnessLevel && (
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                      <span><strong>Fitness Level:</strong> {profile.metrics.fitnessLevel.replace('_', ' ')}</span>
-                    </div>
-                  )}
-                </div>
-              </ProfileSection>
-
-              <ProfileSection
-                title="Activity Data"
-                icon={<Activity className="h-5 w-5" />}
-              >
-                <div className="space-y-3">
-                  {profile.activityData?.map((activity, index) => (
-                    <div key={index} className="space-y-1">
+                  <ProfileSection
+                    title="Equipment Access"
+                    icon={<Dumbbell className="h-5 w-5" />}
+                  >
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>
-                          {activity.type}
-                        </Badge>
-                        <Badge variant="outline">
-                          {activity.experience}
+                        <strong>Gym Access:</strong>
+                        {profile.equipmentAccess?.gymAccess ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        )}
+                        <Badge variant={profile.equipmentAccess?.gymAccess ? "default" : "secondary"}>
+                          {profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Frequency:</strong> {activity.type === 'strength' ? activity.trainingFrequency : activity.frequency}x/week
-                      </div>
-                      {activity.type === 'strength' && activity.keyLifts && Object.keys(activity.keyLifts).length > 0 && (
-                        <div className="text-sm">
-                          <strong>Key lifts:</strong>{' '}
-                          {Object.entries(activity.keyLifts)
-                            .filter(([, weight]) => weight)
-                            .map(([lift, weight]) => `${lift}: ${weight}lbs`)
-                            .join(', ')}
+                      <div><strong>Gym Type:</strong> {profile.equipmentAccess?.gymType || 'Not specified'}</div>
+                      {profile.equipmentAccess?.homeEquipment && profile.equipmentAccess.homeEquipment.length > 0 && (
+                        <div><strong>Home Equipment:</strong> {profile.equipmentAccess.homeEquipment.join(', ')}</div>
+                      )}
+                    </div>
+                  </ProfileSection>
+                </div>
+
+                {/* Constraints */}
+                {profile.constraints && profile.constraints.length > 0 && (
+                  <ProfileSection
+                    title="Constraints"
+                    icon={<AlertTriangle className="h-5 w-5" />}
+                  >
+                    <div className="space-y-3">
+                      {profile.constraints.map((constraint) => (
+                        <ConstraintCard key={constraint.id} constraint={constraint} />
+                      ))}
+                    </div>
+                  </ProfileSection>
+                )}
+
+                {/* Metrics & Activity Data */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <ProfileSection
+                    title="Metrics"
+                    icon={<TrendingUp className="h-5 w-5" />}
+                  >
+                    <div className="space-y-2">
+                      {profile.metrics?.height && (
+                        <div className="flex items-center gap-2">
+                          <Ruler className="h-4 w-4 text-muted-foreground" />
+                          <span><strong>Height:</strong> {profile.metrics.height} cm</span>
                         </div>
                       )}
-                      {activity.type === 'cardio' && (
-                        <div className="text-sm text-muted-foreground">
-                          <strong>Activities:</strong> {activity.primaryActivities.join(', ')}
+                      {profile.metrics?.weight && (
+                        <div className="flex items-center gap-2">
+                          <Weight className="h-4 w-4 text-muted-foreground" />
+                          <span><strong>Weight:</strong> {profile.metrics.weight.value} {profile.metrics.weight.unit}</span>
+                        </div>
+                      )}
+                      {profile.metrics?.fitnessLevel && (
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-muted-foreground" />
+                          <span><strong>Fitness Level:</strong> {profile.metrics.fitnessLevel.replace('_', ' ')}</span>
                         </div>
                       )}
                     </div>
-                  ))}
+                  </ProfileSection>
+
+                  <ProfileSection
+                    title="Activity Data"
+                    icon={<Activity className="h-5 w-5" />}
+                  >
+                    <div className="space-y-3">
+                      {profile.activityData?.map((activity, index) => (
+                        <div key={index} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>
+                              {activity.type}
+                            </Badge>
+                            <Badge variant="outline">
+                              {activity.experience}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <strong>Frequency:</strong> {activity.type === 'strength' ? activity.trainingFrequency : activity.frequency}x/week
+                          </div>
+                          {activity.type === 'strength' && activity.keyLifts && Object.keys(activity.keyLifts).length > 0 && (
+                            <div className="text-sm">
+                              <strong>Key lifts:</strong>{' '}
+                              {Object.entries(activity.keyLifts)
+                                .filter(([, weight]) => weight)
+                                .map(([lift, weight]) => `${lift}: ${weight}lbs`)
+                                .join(', ')}
+                            </div>
+                          )}
+                          {activity.type === 'cardio' && (
+                            <div className="text-sm text-muted-foreground">
+                              <strong>Activities:</strong> {activity.primaryActivities.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ProfileSection>
                 </div>
-              </ProfileSection>
-            </div>
-          </div>
-        ) : (
-          <EmptyProfileState />
-        )}
+              </div>
+            ) : (
+              <EmptyProfileState />
+            )}
+          </TabsContent>
+
+          <TabsContent value="program">
+            <ProgramTab userId={id as string} />
+          </TabsContent>
+        </Tabs>
         </div>
       </div>
     </div>
