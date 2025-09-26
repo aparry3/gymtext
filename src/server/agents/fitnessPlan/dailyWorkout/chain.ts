@@ -8,8 +8,9 @@ import { FitnessProfileContext } from '@/server/services/context/fitnessProfileC
 import { dailyWorkoutPrompt } from './prompts';
 
 const llm = new ChatGoogleGenerativeAI({ 
-  temperature: 0.3, 
-  model: "gemini-2.0-flash" 
+  temperature: 0.2, 
+  model: "gemini-2.5-flash",
+  // maxOutputTokens: 4096  // Limit output to prevent truncation
 });
 
 export interface DailyWorkoutContext {
@@ -56,21 +57,69 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
   // Use structured output for the enhanced workout schema
   const structuredModel = llm.withStructuredOutput(_EnhancedWorkoutInstanceSchema);
 
-  try {
-    // Generate the workout
-    const workout = await structuredModel.invoke(prompt);
-    
-    // Ensure date is set correctly
-    return {
-      ...workout,
-      date
-    } as EnhancedWorkoutInstance;
-  } catch (error) {
-    console.error('Error generating workout with AI:', error);
-    
-    // Generate fallback workout
-    return generateFallbackWorkout(date, dayPlan, mesocycle, microcycle.pattern);
+  // Retry mechanism for transient errors
+  const maxRetries = 2;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`Attempting to generate workout (attempt ${attempt + 1}/${maxRetries})`);
+      
+      // Generate the workout
+      const workout = await structuredModel.invoke(prompt);
+      
+      // Ensure we have a valid response
+      if (!workout) {
+        throw new Error('AI returned null/undefined workout');
+      }
+
+      // Convert date string to Date object if needed
+      const workoutWithDate = {
+        ...workout,
+        date: typeof workout.date === 'string' ? new Date(workout.date) : workout.date || date
+      };
+
+      // Validate the workout structure
+      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workoutWithDate);
+      
+      // Additional validation
+      if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
+        throw new Error('Workout has no blocks');
+      }
+      
+      console.log(`Successfully generated workout with ${validatedWorkout.blocks.length} blocks`);
+      
+      // Ensure date is set correctly
+      return {
+        ...validatedWorkout,
+        date
+      } as EnhancedWorkoutInstance;
+    } catch (error) {
+      console.error(`Error generating workout with AI (attempt ${attempt + 1}):`, error);
+      
+      // Log more details about the error for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack?.substring(0, 500),
+          name: error.name,
+          attempt: attempt + 1
+        });
+      }
+
+      // If it's the last attempt, break out of the loop
+      if (attempt === maxRetries - 1) {
+        break;
+      }
+
+      // Wait a bit before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
+    }
   }
+
+  console.error('All AI generation attempts failed, falling back to basic workout');
+  
+  // Generate fallback workout
+  return generateFallbackWorkout(date, dayPlan, mesocycle, microcycle.pattern);
 }
 
 /**
