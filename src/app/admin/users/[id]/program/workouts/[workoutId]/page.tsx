@@ -68,21 +68,30 @@ export default function WorkoutDetailPage() {
       setError(null)
 
       try {
-        const response = await fetch(`/api/admin/users/${id}/workout/${workoutId}`)
+        const apiUrl = `/api/admin/users/${id}/workouts/${workoutId}`
+        console.log('Fetching workout from:', apiUrl)
+        console.log('User ID:', id, 'Workout ID:', workoutId)
+        
+        const response = await fetch(apiUrl)
+        console.log('Response status:', response.status)
         
         if (!response.ok) {
-          throw new Error('Failed to fetch workout')
+          const errorText = await response.text()
+          console.error('API Error Response:', errorText)
+          throw new Error(`Failed to fetch workout: ${response.status}`)
         }
 
         const result = await response.json()
+        console.log('API Result:', result)
+        
         if (result.success) {
           setWorkout(result.data)
         } else {
           setError(result.message || 'Failed to load workout')
         }
       } catch (err) {
-        setError('Failed to load workout data')
         console.error('Error fetching workout:', err)
+        setError('Failed to load workout data')
       } finally {
         setIsLoading(false)
       }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -127,6 +128,7 @@ export function ProgramTab({ userId }: ProgramTabProps) {
               mesocycle={mesocycle} 
               index={index}
               isCurrent={index === fitnessPlan.currentMesocycleIndex}
+              userId={userId}
             />
           ))}
         </div>
@@ -135,7 +137,7 @@ export function ProgramTab({ userId }: ProgramTabProps) {
       {/* Recent Workouts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Recent Workouts</h3>
-        <RecentWorkoutsTable workouts={recentWorkouts} />
+        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} />
       </div>
     </div>
   )
@@ -208,9 +210,18 @@ interface MesocycleCardProps {
   userId: string
 }
 
-function MesocycleCard({ mesocycle, index, isCurrent }: Omit<MesocycleCardProps, 'userId'>) {
+function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardProps) {
+  const router = useRouter()
+  
+  const handleClick = () => {
+    router.push(`/admin/users/${userId}/program/mesocycles/${index}`)
+  }
+
   return (
-    <Card className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
+    <Card 
+      className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${isCurrent ? 'ring-2 ring-primary' : ''}`}
+      onClick={handleClick}
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h4 className="font-medium">{mesocycle.name}</h4>
@@ -251,7 +262,8 @@ interface RecentWorkoutsTableProps {
   userId: string
 }
 
-function RecentWorkoutsTable({ workouts }: Omit<RecentWorkoutsTableProps, 'userId'>) {
+function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
+  const router = useRouter()
   if (workouts.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -283,7 +295,11 @@ function RecentWorkoutsTable({ workouts }: Omit<RecentWorkoutsTableProps, 'userI
           </thead>
           <tbody className="divide-y">
             {workouts.map((workout) => (
-              <tr key={workout.id} className="hover:bg-muted/30 cursor-pointer">
+              <tr 
+                key={workout.id} 
+                className="hover:bg-muted/30 cursor-pointer"
+                onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+              >
                 <td className="px-4 py-3 text-sm">
                   {new Date(workout.date).toLocaleDateString()}
                 </td>
