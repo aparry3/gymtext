@@ -135,4 +135,30 @@ export class MicrocycleRepository {
 
     return result.numDeletedRows > 0;
   }
+
+  async getMicrocyclesByMesocycleIndex(userId: string, mesocycleIndex: number): Promise<Microcycle[]> {
+    const results = await this.db
+      .selectFrom('microcycles')
+      .selectAll()
+      .where('userId', '=', userId)
+      .where('mesocycleIndex', '=', mesocycleIndex)
+      .orderBy('weekNumber', 'asc')
+      .execute();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return results.map((r) => MicrocycleModel.fromDB(r as any));
+  }
+
+  async getAllMicrocycles(userId: string): Promise<Microcycle[]> {
+    const results = await this.db
+      .selectFrom('microcycles')
+      .selectAll()
+      .where('userId', '=', userId)
+      .orderBy('mesocycleIndex', 'asc')
+      .orderBy('weekNumber', 'asc')
+      .execute();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return results.map((r) => MicrocycleModel.fromDB(r as any));
+  }
 }

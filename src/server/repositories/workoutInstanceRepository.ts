@@ -66,9 +66,29 @@ export class WorkoutInstanceRepository extends BaseRepository {
   /**
    * Get recent workouts for a user
    * @param userId The user's ID
-   * @param days Number of days to look back
+   * @param limit Number of workouts to return (default 10)
    */
   async getRecentWorkouts(
+    userId: string,
+    limit: number = 10
+  ): Promise<WorkoutInstance[]> {
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .orderBy('date', 'desc')
+      .limit(limit)
+      .selectAll()
+      .execute();
+    
+    return results;
+  }
+
+  /**
+   * Get recent workouts for a user by date range
+   * @param userId The user's ID
+   * @param days Number of days to look back
+   */
+  async getRecentWorkoutsByDays(
     userId: string,
     days: number = 7
   ): Promise<WorkoutInstance[]> {
@@ -144,5 +164,65 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .executeTakeFirst();
     
     return Number(result.numDeletedRows);
+  }
+
+  /**
+   * Get a workout by its ID
+   * @param workoutId The workout's ID
+   */
+  async getWorkoutById(workoutId: string): Promise<WorkoutInstance | undefined> {
+    const result = await this.db
+      .selectFrom('workoutInstances')
+      .selectAll()
+      .where('id', '=', workoutId)
+      .executeTakeFirst();
+    
+    return result;
+  }
+
+  /**
+   * Get workouts by microcycle and mesocycle
+   * @param userId The user's ID
+   * @param mesocycleId The mesocycle ID
+   * @param microcycleId The microcycle ID
+   */
+  async getWorkoutsByMicrocycle(
+    userId: string,
+    mesocycleId: string,
+    microcycleId: string
+  ): Promise<WorkoutInstance[]> {
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .where('mesocycleId', '=', mesocycleId)
+      .where('microcycleId', '=', microcycleId)
+      .orderBy('date', 'asc')
+      .selectAll()
+      .execute();
+    
+    return results;
+  }
+
+  /**
+   * Get workouts by date range for microcycle week view
+   * @param userId The user's ID
+   * @param startDate Start date of the week
+   * @param endDate End date of the week
+   */
+  async getWorkoutsByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<WorkoutInstance[]> {
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
+      .orderBy('date', 'asc')
+      .selectAll()
+      .execute();
+    
+    return results;
   }
 }
