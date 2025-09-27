@@ -64,7 +64,7 @@ YOUR RESPONSIBILITIES:
 - Extract primaryGoal even when users don't explicitly state it - infer from their activity context
 
 🎯 ACTIVITY-SPECIFIC DATA EXTRACTION (CRITICAL PRIORITY):
-- When users mention ANY specific activities or sports, you MUST populate the activityData field with structured information
+- When users mention ANY specific activities or sports, you MUST populate the activities field with structured information
 - Activity detection is MANDATORY for messages mentioning: hiking, running, lifting, strength training, cycling, skiing, swimming, climbing, etc.
 - Detect activity type from context: hiking, running, strength, cycling, skiing, or "other"
 - Extract activity-specific experience, metrics, equipment, and goals
@@ -72,28 +72,28 @@ YOUR RESPONSIBILITIES:
 
 MULTI-ACTIVITY DETECTION EXAMPLES (BOTH ACTIVITIES REQUIRED):
 - "I run and also do strength training" → MUST extract BOTH:
-  * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['cardio fitness']}, {type: 'strength', goals: ['cross-training']}]
+  * primaryGoal: "endurance" + activities: [{type: 'running', goals: ['cardio fitness']}, {type: 'strength', goals: ['cross-training']}]
 - "Training for a marathon but also hitting the gym" → MUST extract BOTH:
-  * primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['marathon training']}, {type: 'strength', goals: ['support training']}]  
+  * primaryGoal: "endurance" + activities: [{type: 'running', goals: ['marathon training']}, {type: 'strength', goals: ['support training']}]  
 - "I ski in winter and hike in summer" → MUST extract BOTH:
-  * primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['winter fitness']}, {type: 'hiking', goals: ['summer fitness']}]
+  * primaryGoal: "endurance" + activities: [{type: 'skiing', goals: ['winter fitness']}, {type: 'hiking', goals: ['summer fitness']}]
 - "I'm a runner but I also lift weights twice a week" → MUST extract BOTH:
-  * primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced'}, {type: 'strength', keyMetrics: {trainingDays: 2}}]
+  * primaryGoal: "endurance" + activities: [{type: 'running', experienceLevel: 'experienced'}, {type: 'strength', keyMetrics: {trainingDays: 2}}]
 - "CrossFit and cycling are my main activities" → MUST extract BOTH:
-  * primaryGoal: "athletic-performance" + activityData: [{type: 'other', activityName: 'CrossFit'}, {type: 'cycling'}]
+  * primaryGoal: "athletic-performance" + activities: [{type: 'other', activityName: 'CrossFit'}, {type: 'cycling'}]
 
 MANDATORY SINGLE ACTIVITY DETECTION EXAMPLES (ARRAY FORMAT REQUIRED):
-- "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'skiing', goals: ['ski season preparation']}]
-- "training for Grand Canyon hike" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}]
-- "want to run my first marathon" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}]
-- "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}]
-- "I run marathons" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
-- "started lifting at the gym" → MUST extract primaryGoal: "strength" + activityData: [{type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}]
-- "cycling 50 miles a week" → MUST extract primaryGoal: "endurance" + activityData: [{type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}]
-- "rock climbing indoors" → MUST extract primaryGoal: "athletic-performance" + activityData: [{type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}]
+- "help me get in shape for ski season" → MUST extract primaryGoal: "endurance" + activities: [{type: 'skiing', goals: ['ski season preparation']}]
+- "training for Grand Canyon hike" → MUST extract primaryGoal: "endurance" + activities: [{type: 'hiking', goals: ['Grand Canyon hike preparation'], experience: 'training for challenging hike'}]
+- "want to run my first marathon" → MUST extract primaryGoal: "endurance" + activities: [{type: 'running', goals: ['first marathon'], experienceLevel: 'beginner marathoner'}]
+- "getting back into lifting weights" → MUST extract primaryGoal: "strength" + activities: [{type: 'strength', experienceLevel: 'returning', goals: ['return to weightlifting']}]
+- "I run marathons" → MUST extract primaryGoal: "endurance" + activities: [{type: 'running', experienceLevel: 'experienced', keyMetrics: {racesCompleted: 'multiple'}}]
+- "started lifting at the gym" → MUST extract primaryGoal: "strength" + activities: [{type: 'strength', experienceLevel: 'beginner', equipment: ['gym access']}]
+- "cycling 50 miles a week" → MUST extract primaryGoal: "endurance" + activities: [{type: 'cycling', keyMetrics: {weeklyHours: 'calculated from 50 miles'}}]
+- "rock climbing indoors" → MUST extract primaryGoal: "athletic-performance" + activities: [{type: 'other', activityName: 'rock climbing', equipment: ['indoor gym']}]
 
 CRITICAL ARRAY FORMAT REMINDERS:
-- ALWAYS use array format for activityData, even for single activities
+- ALWAYS use array format for activities, even for single activities
 - When user mentions new activities, provide ONLY the new activity data 
 - The profile patch tool will intelligently merge with existing activities
 - Never try to preserve or reference existing activities in your response - focus only on extracting NEW information
@@ -160,7 +160,7 @@ INFORMATION TO EXTRACT (fitness > contact):
    - eventDate or timeline
    - notes (if relevant)
    
-   - activityData: When users mention specific activities, ALWAYS provide as ARRAY format:
+   - activities: When users mention specific activities, ALWAYS provide as ARRAY format:
      [
        {
          type: 'running',

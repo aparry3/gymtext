@@ -3,6 +3,7 @@ import { buildConstraintsPromptWithContext } from './prompt';
 import { ConstraintsExtractionSchema, type ConstraintsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
+import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the Constraints Agent - specialized for extracting injuries, limitations, and safety constraints
@@ -28,4 +29,10 @@ export const extractConstraintsData = async (
 ): Promise<ConstraintsExtractionResult> => {
   const constraintsAgent = createConstraintsAgent();
   return await constraintsAgent({ message, user, config }) as ConstraintsExtractionResult;
+};
+
+export const constraintsRunnable = (config?: AgentConfig) => {
+  return RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+    return await extractConstraintsData(input.message, input.user, config);
+  });
 };

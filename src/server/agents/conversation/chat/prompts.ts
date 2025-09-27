@@ -13,7 +13,7 @@ export const buildChatSystemPrompt = (
 - Training Days: ${profile.availability?.daysPerWeek || 'Not specified'} days per week
 - Session Length: ${profile.availability?.minutesPerSession || 'Not specified'} minutes
 - Gym Access: ${profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
-- Activities: ${profile.activityData?.map(a => a.type).join(', ') || 'Not specified'}` : 'No profile available';
+- Activities: ${profile.activities?.map(a => a.type).join(', ') || 'Not specified'}` : 'No profile available';
 
   const updateAcknowledgment = wasProfileUpdated ? `
 

@@ -3,6 +3,7 @@ import { buildUserPromptWithContext } from './prompt';
 import { UserExtractionSchema, type UserExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
+import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the User Agent - specialized for extracting user demographics and contact information
@@ -28,4 +29,10 @@ export const extractUserData = async (
 ): Promise<UserExtractionResult> => {
   const userAgent = createUserAgent();
   return await userAgent({ message, user, config }) as UserExtractionResult;
+};
+
+export const userRunnable = (config?: AgentConfig) => {
+  return RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+    return await extractUserData(input.message, input.user, config);
+  });
 };

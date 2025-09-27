@@ -34,8 +34,8 @@ export const fitnessProfileSubstring = (user: UserWithProfile): string => {
   }
   
   // Activity experience summaries - background in different training types
-  if (user.profile.activityData?.length) {
-    user.profile.activityData.forEach(activity => {
+  if (user.profile.activities?.length) {
+    user.profile.activities.forEach(activity => {
       if (activity.summary) {
         const activityType = activity.type.toUpperCase();
         profileSections.push(`${activityType}: ${activity.summary}`);

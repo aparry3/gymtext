@@ -6,6 +6,7 @@ import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createGoalsAgent } from '../agents/profile/goals/chain';
 import { createActivitiesAgent } from '../agents/profile/activities/chain';
 import { createConstraintsAgent } from '../agents/profile/constraints/chain';
+import { ProfileExtractionResults } from '../agents/profile/types';
 // import { createUserAgent } from '../agents/profile/user/chain';
 // import { createEnvironmentAgent } from '../agents/profile/environment/chain';
 // import { createMetricsAgent } from '../agents/profile/metrics/chain';
@@ -23,6 +24,16 @@ export interface ProfilePatchOptions {
   path?: string;
 }
 
+type ExtractedUpdates = {
+  profile: Partial<FitnessProfile>;
+  user: Partial<User>;
+  metadata: {
+    source: string;
+    reason: string;
+    confidence: number;
+    path: string;
+  }
+}
 
 export class FitnessProfileService {
   private static instance: FitnessProfileService;
@@ -123,11 +134,7 @@ export class FitnessProfileService {
    * Main onboarding method that processes fitness profile information using sub-agents
    * Returns profile updates and metadata for patch operations
    */
-  async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<{
-    profileUpdates: Partial<FitnessProfile>;
-    userUpdates: Partial<User>;
-    options: ProfilePatchOptions;
-  } | null> {
+  async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<ExtractedUpdates | null> {
       // Initialize all agents
       const goalsAgent = createGoalsAgent();
       const activitiesAgent = createActivitiesAgent();
@@ -149,8 +156,7 @@ export class FitnessProfileService {
         messages.constraints ? constraintsAgent({ message: messages.constraints, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No constraints data provided' } as const),
       ]);
 
-      // Log agent results for debugging
-      console.log('Agent results:', {
+      const results = {
         goals: {
           hasData: goalsResult.hasData,
           confidence: goalsResult.confidence,
@@ -169,8 +175,15 @@ export class FitnessProfileService {
           reason: constraintsResult.reason,
           data: constraintsResult.data
         }
-      });
+      }
+      // Log agent results for debugging
+      console.log('Agent results:', results);
 
+      return this.consolidateResults(results);
+
+  }
+
+  private consolidateResults(results: Partial<ProfileExtractionResults>): ExtractedUpdates | null {
       // Build profile updates from successful extractions
       const profileUpdates: Partial<FitnessProfile> = {};
       const userUpdates: Partial<User> = {};
@@ -179,27 +192,27 @@ export class FitnessProfileService {
       let maxConfidence = 0;
 
       // Process goals
-      if (goalsResult.hasData && goalsResult.data && goalsResult.confidence > 0.5) {
-        profileUpdates.goals = goalsResult.data;
+      if (results.goals && results.goals.hasData && results.goals.data && results.goals.confidence > 0.5) {
+        profileUpdates.goals = results.goals.data;
         allFieldsUpdated.push('goals');
-        reasons.push(goalsResult.reason);
-        maxConfidence = Math.max(maxConfidence, goalsResult.confidence);
+        reasons.push(results.goals.reason);
+        maxConfidence = Math.max(maxConfidence, results.goals.confidence);
       }
 
       // Process activities
-      if (activitiesResult.hasData && activitiesResult.data && activitiesResult.confidence > 0.5) {
-        profileUpdates.activityData = activitiesResult.data;
-        allFieldsUpdated.push('activityData');
-        reasons.push(activitiesResult.reason);
-        maxConfidence = Math.max(maxConfidence, activitiesResult.confidence);
+      if (results.activities && results.activities.hasData && results.activities.data && results.activities.confidence > 0.5) {
+        profileUpdates.activities = results.activities.data;
+        allFieldsUpdated.push('activities');
+        reasons.push(results.activities.reason);
+        maxConfidence = Math.max(maxConfidence, results.activities.confidence);
       }
 
       // Process constraints
-      if (constraintsResult.hasData && constraintsResult.data && constraintsResult.confidence > 0.5) {
-        profileUpdates.constraints = constraintsResult.data;
+      if (results.constraints && results.constraints.hasData && results.constraints.data && results.constraints.confidence > 0.5) {
+        profileUpdates.constraints = results.constraints.data;
         allFieldsUpdated.push('constraints');
-        reasons.push(constraintsResult.reason);
-        maxConfidence = Math.max(maxConfidence, constraintsResult.confidence);
+        reasons.push(results.constraints.reason);
+        maxConfidence = Math.max(maxConfidence, results.constraints.confidence);
       }
 
       // Return null if no updates were extracted
@@ -209,9 +222,9 @@ export class FitnessProfileService {
 
       // Return the updates and options for patching
       return {
-        profileUpdates,
-        userUpdates,
-        options: {
+        profile: profileUpdates,
+        user: userUpdates,
+        metadata: {
           source: 'fitness_profile_onboarding',
           reason: reasons.join(', '),
           confidence: maxConfidence,
@@ -244,9 +257,9 @@ export class FitnessProfileService {
         // Apply the profile patch using the extracted updates
         const updatedProfile = await this.patchProfile(
           user.id,
-          onboardResult.profileUpdates,
-          onboardResult.options,
-          onboardResult.userUpdates
+          onboardResult.profile,
+          onboardResult.metadata,
+          onboardResult.user
         );
         
         return updatedProfile;

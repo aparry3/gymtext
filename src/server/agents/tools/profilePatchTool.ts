@@ -77,18 +77,18 @@ function mergeActivityData(
 export const profilePatchTool = tool(
   async ({ currentProfile, updates, reason, confidence }) => {
     try {
-      // Handle activityData array merging locally for compatibility
+      // Handle activities array merging locally for compatibility
       const processedUpdates = { ...updates };
-      if (updates.activityData) {
-        if (!Array.isArray(updates.activityData)) {
+      if (updates.activities) {
+        if (!Array.isArray(updates.activities)) {
           // Convert single activity to array format for consistency
-          processedUpdates.activityData = [updates.activityData] as ActivityData;
+          processedUpdates.activities = [updates.activities] as ActivityData;
         }
 
-        const currentActivities = currentProfile.activityData || [];
+        const currentActivities = currentProfile.activities || [];
         
         // Clean and sanitize activity data before merging  
-        const sanitizedActivities = (processedUpdates.activityData || []).map((activity: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any  
+        const sanitizedActivities = (processedUpdates.activities || []).map((activity: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any  
           // Remove null values from keyMetrics
           if (activity.keyMetrics) {
             const cleanKeyMetrics: Record<string, unknown> = {};  
@@ -113,7 +113,7 @@ export const profilePatchTool = tool(
           currentActivities
         );
         
-        processedUpdates.activityData = mergedActivityData;
+        processedUpdates.activities = mergedActivityData;
       }
 
       // For now, just handle the patching logic locally until we refactor to use service methods

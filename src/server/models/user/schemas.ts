@@ -109,7 +109,7 @@ export const CardioDataSchema = z.object({
     groupVsIndividual: z.enum(['group', 'individual', 'both']).optional().nullable(),
     timeOfDay: z.array(z.string()).optional().nullable(),
   }).optional().nullable(),
-  frequency: z.number().int().min(1).max(7),
+  frequency: z.number().int().min(1).max(7).optional().nullable(),
 });
 
 // NEW - Simplified Activity Data Schema (only strength + cardio)
@@ -137,7 +137,7 @@ export const FitnessProfileSchema = z.object({
   constraints: z.array(ConstraintSchema).optional().nullable(),
   metrics: UserMetricsSchema.optional().nullable(),
   
-  activityData: ActivityDataSchema.optional().nullable(),
+  activities: ActivityDataSchema.optional().nullable(),
 });
 
 // Schema for creating a new user

@@ -3,6 +3,7 @@ import { buildGoalsPromptWithContext } from './prompt';
 import { GoalsExtractionSchema, type GoalsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
+import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the Goals Agent - specialized for extracting fitness goals data as JSON
@@ -27,4 +28,14 @@ export const extractGoalsData = async (
 ): Promise<GoalsExtractionResult> => {
   const goalsAgent = createGoalsAgent();
   return await goalsAgent({ message, user, config }) as GoalsExtractionResult;
+};
+
+/**
+ * Create a runnable for extracting goals data
+ * For use in RunnableMap with other profile subagents
+ */
+export const goalsRunnable = (config?: AgentConfig) => {
+  return RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+    return await extractGoalsData(input.message, input.user, config);
+  });
 };

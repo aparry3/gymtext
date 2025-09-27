@@ -344,7 +344,7 @@ export default function AdminUserDetailPage() {
                     icon={<Activity className="h-5 w-5" />}
                   >
                     <div className="space-y-3">
-                      {profile.activityData?.map((activity, index) => (
+                      {profile.activities?.map((activity, index) => (
                         <div key={index} className="space-y-1">
                           <div className="flex items-center gap-2">
                             <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>

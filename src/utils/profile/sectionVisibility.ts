@@ -9,7 +9,7 @@ export type SectionType =
   | 'preferences'
   | 'metrics'
   | 'constraints'
-  | 'activityData';
+  | 'activities';
 
 export interface SectionInfo {
   id: SectionType;
@@ -81,7 +81,7 @@ export function determineSectionOrder(
       dataCount: countConstraintsFields(profileData),
     },
     {
-      id: 'activityData',
+      id: 'activities',
       title: 'Activity-Specific Data',
       priority: 9,
       hasData: hasActivityData(profileData),
@@ -119,7 +119,7 @@ export function shouldShowSection(sectionType: SectionType, userData: ProcessedU
       return hasMetricsData(profileData);
     case 'constraints':
       return hasConstraintsData(profileData);
-    case 'activityData':
+    case 'activities':
       return hasActivityData(profileData);
     default:
       return false;
@@ -144,7 +144,7 @@ export function getEmptyStateMessage(sectionType: SectionType): string {
       return 'Share your physical metrics and performance records when ready.';
     case 'constraints':
       return 'Tell us about any injuries, limitations, or constraints we should know about.';
-    case 'activityData':
+    case 'activities':
       return 'Share details about your specific activities and sports experience.';
     default:
       return 'No data available yet.';
@@ -264,13 +264,13 @@ function countConstraintsFields(profileData: ProcessedProfileData): number {
 }
 
 function hasActivityData(profileData: ProcessedProfileData): boolean {
-  return !!(profileData.activityData && Array.isArray(profileData.activityData) && profileData.activityData.length > 0);
+  return !!(profileData.activities && Array.isArray(profileData.activities) && profileData.activities.length > 0);
 }
 
 function countActivityDataFields(profileData: ProcessedProfileData): number {
-  if (!profileData.activityData || !Array.isArray(profileData.activityData)) return 0;
+  if (!profileData.activities || !Array.isArray(profileData.activities)) return 0;
   // Count total meaningful fields across all activities
-  return profileData.activityData.reduce((total: number, activity: unknown) => {
+  return profileData.activities.reduce((total: number, activity: unknown) => {
     if (typeof activity === 'object' && activity !== null && !Array.isArray(activity)) {
       const activityObj = activity as Record<string, unknown>;
       let count = 0;

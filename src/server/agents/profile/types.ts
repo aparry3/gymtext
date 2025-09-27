@@ -1,7 +1,22 @@
 import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
 import { AgentConfig } from '../base';
+import { ActivitiesExtractionResult } from './activities/schema';
+import { ConstraintsExtractionResult } from './constraints/schema';
+import { EnvironmentExtractionResult } from './environment/schema';
+import { GoalsExtractionResult } from './goals/schema';
+import { MetricsExtractionResult } from './metrics/schema';
+import { UserExtractionResult } from './user/schema';
 
+
+export type ProfileExtractionResults = {
+  goals: GoalsExtractionResult,
+  activities: ActivitiesExtractionResult,
+  metrics: MetricsExtractionResult,
+  constraints: ConstraintsExtractionResult,
+  environment: EnvironmentExtractionResult,
+  user: UserExtractionResult,
+};
 /**
  * Result type returned by any ProfileAgent
  */

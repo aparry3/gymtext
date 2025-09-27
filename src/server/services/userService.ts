@@ -214,7 +214,7 @@ export class UserService {
       hasProfile,
       profileSummary: hasProfile && user.profile ? {
         primaryGoal: user.profile.goals?.primary,
-        experienceLevel: user.profile.activityData?.[0]?.experience || 'Not specified'
+        experienceLevel: user.profile.activities?.[0]?.experience || 'Not specified'
       } : undefined,
       stats: {
         totalWorkouts: 0,

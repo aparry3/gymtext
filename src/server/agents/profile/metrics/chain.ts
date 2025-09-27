@@ -3,6 +3,7 @@ import { buildMetricsPromptWithContext } from './prompt';
 import { MetricsExtractionSchema, type MetricsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
+import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the Metrics Agent - specialized for extracting physical measurements and fitness metrics
@@ -28,4 +29,10 @@ export const extractMetricsData = async (
 ): Promise<MetricsExtractionResult> => {
   const metricsAgent = createMetricsAgent();
   return await metricsAgent({ message, user, config }) as MetricsExtractionResult;
+};
+
+export const metricsRunnable = (config?: AgentConfig) => {
+  return RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+    return await extractMetricsData(input.message, input.user, config);
+  });
 };

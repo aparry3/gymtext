@@ -3,6 +3,7 @@ import { buildEnvironmentPromptWithContext } from './prompt';
 import { EnvironmentExtractionSchema, type EnvironmentExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
+import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the Environment Agent - specialized for extracting equipment access and training availability
@@ -28,4 +29,10 @@ export const extractEnvironmentData = async (
 ): Promise<EnvironmentExtractionResult> => {
   const environmentAgent = createEnvironmentAgent();
   return await environmentAgent({ message, user, config }) as EnvironmentExtractionResult;
+};
+
+export const environmentRunnable = (config?: AgentConfig) => {
+  return RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+    return await extractEnvironmentData(input.message, input.user, config);
+  });
 };

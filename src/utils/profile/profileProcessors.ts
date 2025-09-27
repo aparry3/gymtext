@@ -87,7 +87,7 @@ export interface ProcessedProfileData {
   }> | null;
   
   // Activity Data (now an array)
-  activityData: unknown[] | null;
+  activities: unknown[] | null;
 }
 
 export function processUserData(user: Partial<User> | null | undefined): ProcessedUserData {
@@ -131,7 +131,7 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
       preferences: null,
       metrics: null,
       constraints: null,
-      activityData: null,
+      activities: null,
     };
   }
 
@@ -169,7 +169,7 @@ export function processProfileData(profile: Partial<FitnessProfile> | null | und
     constraints: null, // isValidArray(profile.constraints) ? profile.constraints as ProcessedProfileData['constraints'] : null,
     
     // Activity data with validation (now handles array)
-    activityData: isValidArray(profile.activityData) ? profile.activityData : null,
+    activities: isValidArray(profile.activities) ? profile.activities : null,
   };
 }
 

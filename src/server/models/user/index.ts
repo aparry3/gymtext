@@ -140,7 +140,7 @@ export class UserModel {
       equipmentAccess: {
         gymAccess: true
       },
-      activityData: [],
+      activities: [],
       constraints: []
     };
   }
