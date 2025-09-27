@@ -83,15 +83,11 @@ EXAMPLE RESPONSES:
 For "Hi, I'm Sarah, 28 years old, female, my email is sarah@example.com and I prefer 7am workouts":
 {
   "data": {
-    "demographics": {
-      "age": 28,
-      "gender": "female"
-    },
-    "contact": {
-      "name": "Sarah",
-      "email": "sarah@example.com",
-      "preferredSendHour": 7
-    }
+    "name": "Sarah",
+    "age": 28,
+    "gender": "female",
+    "email": "sarah@example.com",
+    "preferredSendHour": 7
   },
   "hasData": true,
   "confidence": 0.95,
@@ -101,10 +97,8 @@ For "Hi, I'm Sarah, 28 years old, female, my email is sarah@example.com and I pr
 For "I'm a 25-year-old guy looking to get fit":
 {
   "data": {
-    "demographics": {
-      "age": 25,
-      "gender": "male"
-    }
+    "age": 25,
+    "gender": "male"
   },
   "hasData": true,
   "confidence": 0.95,
@@ -121,8 +115,7 @@ For "I went to the gym yesterday":
 
 CRITICAL GUIDELINES:
 - ONLY extract user demographics and contact information
-- Age and gender go in demographics section for profile
-- Contact details go in contact section for user record  
+- Return flat structure with all user fields at top level
 - Be more aggressive with explicit demographic statements
 - Always validate ages (13-120), emails, and times (0-23)
 

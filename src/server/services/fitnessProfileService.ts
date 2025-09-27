@@ -215,36 +215,10 @@ export class FitnessProfileService {
         maxConfidence = Math.max(maxConfidence, results.constraints.confidence);
       }
 
-      // Process user demographics and contact info
+      // Process user data (flat structure)
       if (results.user && results.user.hasData && results.user.data && results.user.confidence > 0.5) {
-        // Handle demographics (goes to user table, not profile)
-        if (results.user.data.demographics) {
-          if (results.user.data.demographics.age !== undefined) {
-            userUpdates.age = results.user.data.demographics.age;
-          }
-          if (results.user.data.demographics.gender !== undefined) {
-            userUpdates.gender = results.user.data.demographics.gender;
-          }
-        }
-        
-        // Handle contact info (goes to user table)
-        if (results.user.data.contact) {
-          if (results.user.data.contact.name !== undefined) {
-            userUpdates.name = results.user.data.contact.name ?? undefined;
-          }
-          if (results.user.data.contact.email !== undefined) {
-            userUpdates.email = results.user.data.contact.email;
-          }
-          if (results.user.data.contact.phoneNumber !== undefined) {
-            userUpdates.phoneNumber = results.user.data.contact.phoneNumber ?? undefined;
-          }
-          if (results.user.data.contact.timezone !== undefined) {
-            userUpdates.timezone = results.user.data.contact.timezone ?? undefined;
-          }
-          if (results.user.data.contact.preferredSendHour !== undefined) {
-            userUpdates.preferredSendHour = results.user.data.contact.preferredSendHour ?? undefined;
-          }
-        }
+        // Directly assign the flat user data, filtering out undefined values
+        Object.assign(userUpdates, results.user.data);
         
         allFieldsUpdated.push('user');
         reasons.push(results.user.reason);

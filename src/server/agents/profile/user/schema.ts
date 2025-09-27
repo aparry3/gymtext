@@ -1,31 +1,20 @@
 import { z } from 'zod';
 
 /**
- * Schema for user demographics that go in the profile - matches UserSchema from main schemas
- */
-export const UserDemographicsSchema = z.object({
-  age: z.number().int().min(1).max(120).optional().nullable(), // Changed min from 13 to 1 to match main schema
-  gender: z.string().optional().nullable() // Changed from enum to string to match main schema (which uses z.string().nullable())
-});
-
-/**
- * Schema for user contact information
- */
-export const UserContactSchema = z.object({
-  name: z.string().min(1).optional().nullable(),
-  email: z.string().email().optional().nullable(),
-  phoneNumber: z.string().optional().nullable(),
-  timezone: z.string().optional().nullable(),
-  preferredSendHour: z.number().int().min(0).max(23).optional().nullable()
-});
-
-/**
- * Schema for user extraction data
+ * Schema for user extraction data - flattened structure matching Partial<Omit<User, 'profile'>>
  */
 export const UserDataSchema = z.object({
-  demographics: UserDemographicsSchema.optional().nullable().describe('Demographics for profile (age, gender)'),
-  contact: UserContactSchema.optional().nullable().describe('Contact information for user record')
-});
+  name: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
+  phoneNumber: z.string().optional().nullable(),
+  age: z.number().int().min(1).max(120).optional().nullable(),
+  gender: z.string().optional().nullable(),
+  stripeCustomerId: z.string().optional().nullable(),
+  preferredSendHour: z.number().int().min(0).max(23).optional().nullable(),
+  timezone: z.string().optional().nullable(),
+  isActive: z.boolean().optional().nullable(),
+  isAdmin: z.boolean().optional().nullable(),
+}).describe('Flat user data structure');
 
 /**
  * Full user extraction result schema
@@ -38,7 +27,5 @@ export const UserExtractionSchema = z.object({
 });
 
 // Export the inferred types
-export type UserDemographics = z.infer<typeof UserDemographicsSchema>;
-export type UserContact = z.infer<typeof UserContactSchema>;
 export type UserData = z.infer<typeof UserDataSchema>;
 export type UserExtractionResult = z.infer<typeof UserExtractionSchema>;
