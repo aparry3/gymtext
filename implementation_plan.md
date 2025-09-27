@@ -328,7 +328,7 @@ Transform the complex temp session-based onboarding flow into a simple pass-thro
   - Deleted `tests/unit/server/agents/tools/userInfoPatchTool.validation.test.ts` - Obsolete validation tests
   - Removed empty session directories from source and tests
 - Updated type definitions and removed session-related interfaces:
-  - Cleaned up ProfileAgentConfig to remove `mode` and `tempSessionId` properties
+  - Cleaned up AgentConfig to remove `mode` and `tempSessionId` properties
   - Updated userProfileAgent to use pass-through approach with partial objects
   - Updated buildUserProfileSystemPrompt to work with Partial<FitnessProfile>
   - Fixed all TypeScript errors related to null vs partial type mismatches

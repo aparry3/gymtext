@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildGoalsPromptWithContext } from './prompt';
 import { GoalsExtractionSchema, type GoalsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the Goals Agent - specialized for extracting fitness goals data as JSON
@@ -23,7 +23,7 @@ export const createGoalsAgent = () => createSubAgent({
 export const extractGoalsData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<GoalsExtractionResult> => {
   const goalsAgent = createGoalsAgent();
   return await goalsAgent({ message, user, config }) as GoalsExtractionResult;

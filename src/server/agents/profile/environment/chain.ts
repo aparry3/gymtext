@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildEnvironmentPromptWithContext } from './prompt';
 import { EnvironmentExtractionSchema, type EnvironmentExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the Environment Agent - specialized for extracting equipment access and training availability
@@ -24,7 +24,7 @@ export const createEnvironmentAgent = () => createSubAgent({
 export const extractEnvironmentData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<EnvironmentExtractionResult> => {
   const environmentAgent = createEnvironmentAgent();
   return await environmentAgent({ message, user, config }) as EnvironmentExtractionResult;

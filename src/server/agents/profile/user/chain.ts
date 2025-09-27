@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildUserPromptWithContext } from './prompt';
 import { UserExtractionSchema, type UserExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the User Agent - specialized for extracting user demographics and contact information
@@ -24,7 +24,7 @@ export const createUserAgent = () => createSubAgent({
 export const extractUserData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<UserExtractionResult> => {
   const userAgent = createUserAgent();
   return await userAgent({ message, user, config }) as UserExtractionResult;

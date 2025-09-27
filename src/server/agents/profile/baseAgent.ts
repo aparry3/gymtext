@@ -3,15 +3,15 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { UserWithProfile } from '../../models/userModel';
 import type { 
-  ProfileAgentConfig, 
   SubAgentResult,
   SubAgentConfig 
 } from './types';
+import { AgentConfig } from '../base';
 
 /**
  * Initialize the model with structured output using the provided schema
  */
-const initializeModel = (config: ProfileAgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+const initializeModel = (config: AgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
     model = 'gemini-2.5-flash', 
     temperature = 0.2
@@ -44,7 +44,7 @@ export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
   }: {
     message: string;
     user: UserWithProfile;
-    config?: ProfileAgentConfig;
+    config?: AgentConfig;
   }): Promise<SubAgentResult> => {
     
     try {

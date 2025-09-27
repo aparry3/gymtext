@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildConstraintsPromptWithContext } from './prompt';
 import { ConstraintsExtractionSchema, type ConstraintsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the Constraints Agent - specialized for extracting injuries, limitations, and safety constraints
@@ -24,7 +24,7 @@ export const createConstraintsAgent = () => createSubAgent({
 export const extractConstraintsData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<ConstraintsExtractionResult> => {
   const constraintsAgent = createConstraintsAgent();
   return await constraintsAgent({ message, user, config }) as ConstraintsExtractionResult;

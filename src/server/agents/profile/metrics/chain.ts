@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildMetricsPromptWithContext } from './prompt';
 import { MetricsExtractionSchema, type MetricsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the Metrics Agent - specialized for extracting physical measurements and fitness metrics
@@ -24,7 +24,7 @@ export const createMetricsAgent = () => createSubAgent({
 export const extractMetricsData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<MetricsExtractionResult> => {
   const metricsAgent = createMetricsAgent();
   return await metricsAgent({ message, user, config }) as MetricsExtractionResult;

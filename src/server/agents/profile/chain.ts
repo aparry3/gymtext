@@ -1,14 +1,14 @@
 // Import the new modular architecture
 import { extractGoalsData } from './goals/chain';
-import { buildUserProfileSystemPrompt, buildContextualProfilePrompt } from './prompts';
 import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
-import type { ProfileAgentResult, ProfileAgentConfig } from './types';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { ChatOpenAI } from '@langchain/openai';
+import type { ProfileAgentResult } from './types';
 import { profilePatchTool } from '../tools/profilePatchTool';
 import { userInfoPatchTool } from '../tools/userInfoPatchTool';
+import { AgentConfig } from '../base';
+import { RunnableMap } from '@langchain/core/runnables';
+import { extractActivitiesData } from './activities/chain';
+import { extractMetricsData } from './metrics/chain';
 
 // Types are now imported from ./types.ts
 
@@ -23,7 +23,7 @@ export const userProfileAgentModular = async ({
 }: {
   message: string;
   user: UserWithProfile;
-  config?: ProfileAgentConfig;
+  config?: AgentConfig;
 }): Promise<ProfileAgentResult> => {
   
   try {
@@ -68,37 +68,6 @@ export const userProfileAgentModular = async ({
   }
 };
 
-// ORIGINAL MONOLITHIC AGENT (PRESERVED FOR BACKWARD COMPATIBILITY)
-
-/**
- * Initialize the profile extraction model with tools
- * Using lower temperature for consistent extraction
- */
-const initializeModel = (config: ProfileAgentConfig = {}) => {
-  const { 
-    model = 'gemini-2.5-flash', 
-    temperature = 0.2  // Low temperature for consistent extraction
-  } = config;
-
-  // Use OpenAI for now (better tool calling support)
-  // Can switch to Gemini later if needed
-  if (model.startsWith('gemini')) {
-    const geminiModel = new ChatGoogleGenerativeAI({
-      model: model,
-      temperature,
-      maxOutputTokens: 3000,
-    });
-    return geminiModel.bindTools([profilePatchTool, userInfoPatchTool]);
-  }
-
-  const openaiModel = new ChatOpenAI({
-    model: model,
-    temperature,
-    maxCompletionTokens: 3000,
-  });
-  
-  return openaiModel.bindTools([profilePatchTool, userInfoPatchTool]);
-};
 
 /**
  * UserProfileAgent - Extracts and updates user profile information (Phase 4 - Pass-through)
@@ -106,41 +75,15 @@ const initializeModel = (config: ProfileAgentConfig = {}) => {
  * This agent analyzes user messages for fitness-related information
  * and returns updated partial profile objects using pure functions
  */
-export const userProfileAgent = async ({
-  userId, // Kept for backward compatibility but not used in pass-through mode
-  message,
-  currentProfile,
-  currentUser = {},
-  config = {},
-  recentMessages = [],
-}: {
-  userId: string;
-  message: string;
-  currentProfile: Partial<FitnessProfile>;
-  currentUser?: Partial<User>;
-  config?: ProfileAgentConfig;
-  recentMessages?: string[];
-}): Promise<ProfileAgentResult> => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _userId = userId; // Suppress unused variable warning
-  
+export const updateUserProfile = async (
+  message: string,
+  user: UserWithProfile,
+  config?: AgentConfig
+): Promise<ProfileAgentResult> => {  
   try {
     const { verbose = false } = config;
     
-    // Initialize the model with tools
-    const model = initializeModel(config);
-    
-    // Build the system prompt with conversation context if available
-    const systemPrompt = recentMessages.length > 0 
-      ? buildContextualProfilePrompt(currentProfile as FitnessProfile, recentMessages, currentUser)
-      : buildUserProfileSystemPrompt(currentProfile, currentUser);
-    
-    // Create the message array
-    const messages = [
-      new SystemMessage(systemPrompt),
-      new HumanMessage(message)
-    ];
-    
+   
     if (verbose) {
       console.log('UserProfileAgent analyzing message:', message);
     }
@@ -148,6 +91,15 @@ export const userProfileAgent = async ({
     // Invoke the model with the tool - no config needed for pass-through
     const response = await model.invoke(messages);
     
+    const profileUpdates = new RunnableMap({
+      goals: extractGoalsData(message, user, config),
+      activities: extractActivitiesData(message, user, config),
+      metrics: extractMetricsData(message, user, config),
+      constraints: extractConstraintsData(message, user, config),
+      environment: extractEnvironmentData(message, user, config),
+      equipment: extractEquipmentData(message, user, config),
+
+    })
     // Types for tool handling
     interface ToolState {
       wasUpdated: boolean;
@@ -296,84 +248,4 @@ export const userProfileAgent = async ({
       wasUpdated: false
     };
   }
-};
-
-/**
- * Batch process multiple messages through the UserProfileAgent
- * Useful for processing conversation history or bulk updates
- */
-export const batchProfileExtraction = async ({
-  userId,
-  messages,
-  currentProfile,
-  currentUser = {},
-  config = {},
-  recentMessages = [],
-}: {
-  userId: string;
-  messages: string[];
-  currentProfile: Partial<FitnessProfile>;
-  currentUser?: Partial<User>;
-  config?: ProfileAgentConfig;
-  recentMessages?: string[];
-}): Promise<ProfileAgentResult> => {
-  let profile = currentProfile;
-  let user = currentUser;
-  let totalUpdates = 0;
-  const allFieldsUpdated: string[] = [];
-  
-  for (const message of messages) {
-    const result = await userProfileAgent({
-      userId,
-      message,
-      currentProfile: profile,
-      currentUser: user,
-      config,
-      recentMessages
-    });
-    
-    if (result.wasUpdated) {
-      if (result.profile) {
-        profile = result.profile as Partial<FitnessProfile>;
-      }
-      if (result.user) {
-        user = result.user;
-      }
-      totalUpdates++;
-      
-      if (result.updateSummary) {
-        allFieldsUpdated.push(...result.updateSummary.fieldsUpdated);
-      }
-    }
-  }
-  
-  return {
-    profile: profile as FitnessProfile,
-    user,
-    wasUpdated: totalUpdates > 0,
-    updateSummary: totalUpdates > 0 ? {
-      fieldsUpdated: [...new Set(allFieldsUpdated)], // Remove duplicates
-      reason: `Batch processed ${messages.length} messages`,
-      confidence: 0.8 // Average confidence for batch
-    } : undefined
-  };
-};
-
-/**
- * Test the agent with a sample message (for debugging)
- */
-export const testProfileExtraction = async (
-  message: string,
-  currentProfile: Partial<FitnessProfile> = {},
-  currentUser: Partial<User> = {}
-): Promise<ProfileAgentResult> => {
-  console.log('Testing profile extraction with message:', message);
-  
-  return userProfileAgent({
-    userId: 'test-user',
-    message,
-    currentProfile,
-    currentUser,
-    config: { verbose: true }
-  });
 };

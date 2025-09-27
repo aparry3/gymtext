@@ -1,5 +1,6 @@
 import type { FitnessProfile, User } from '../../models/user/schemas';
 import type { UserWithProfile } from '../../models/userModel';
+import { AgentConfig } from '../base';
 
 /**
  * Result type returned by any ProfileAgent
@@ -16,15 +17,6 @@ export interface ProfileAgentResult {
 }
 
 /**
- * Configuration for ProfileAgents
- */
-export interface ProfileAgentConfig {
-  model?: 'gpt-5-nano' | 'gemini-2.5-flash';
-  temperature?: number;
-  verbose?: boolean;
-}
-
-/**
  * Prompt builder function type - takes user context and returns system prompt
  */
 export type PromptBuilder = (user: UserWithProfile) => string;
@@ -32,7 +24,7 @@ export type PromptBuilder = (user: UserWithProfile) => string;
 /**
  * Sub-agent configuration
  */
-export interface SubAgentConfig extends ProfileAgentConfig {
+export interface SubAgentConfig extends AgentConfig {
   promptBuilder: PromptBuilder;
   agentName: string;
   outputSchema: any; // eslint-disable-line @typescript-eslint/no-explicit-any -- Zod schema type

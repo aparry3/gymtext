@@ -2,7 +2,7 @@ import { createSubAgent } from '../baseAgent';
 import { buildActivitiesPromptWithContext } from './prompt';
 import { ActivitiesExtractionSchema, type ActivitiesExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
-import type { ProfileAgentConfig } from '../types';
+import type { AgentConfig } from '../../base';
 
 /**
  * Create the Activities Agent - specialized for extracting activity-specific data and experience
@@ -24,7 +24,7 @@ export const createActivitiesAgent = () => createSubAgent({
 export const extractActivitiesData = async (
   message: string,
   user: UserWithProfile,
-  config?: ProfileAgentConfig
+  config?: AgentConfig
 ): Promise<ActivitiesExtractionResult> => {
   const activitiesAgent = createActivitiesAgent();
   return await activitiesAgent({ message, user, config }) as ActivitiesExtractionResult;
