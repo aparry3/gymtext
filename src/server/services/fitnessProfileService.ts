@@ -215,6 +215,63 @@ export class FitnessProfileService {
         maxConfidence = Math.max(maxConfidence, results.constraints.confidence);
       }
 
+      // Process user demographics and contact info
+      if (results.user && results.user.hasData && results.user.data && results.user.confidence > 0.5) {
+        // Handle demographics (goes to user table, not profile)
+        if (results.user.data.demographics) {
+          if (results.user.data.demographics.age !== undefined) {
+            userUpdates.age = results.user.data.demographics.age;
+          }
+          if (results.user.data.demographics.gender !== undefined) {
+            userUpdates.gender = results.user.data.demographics.gender;
+          }
+        }
+        
+        // Handle contact info (goes to user table)
+        if (results.user.data.contact) {
+          if (results.user.data.contact.name !== undefined) {
+            userUpdates.name = results.user.data.contact.name ?? undefined;
+          }
+          if (results.user.data.contact.email !== undefined) {
+            userUpdates.email = results.user.data.contact.email;
+          }
+          if (results.user.data.contact.phoneNumber !== undefined) {
+            userUpdates.phoneNumber = results.user.data.contact.phoneNumber ?? undefined;
+          }
+          if (results.user.data.contact.timezone !== undefined) {
+            userUpdates.timezone = results.user.data.contact.timezone ?? undefined;
+          }
+          if (results.user.data.contact.preferredSendHour !== undefined) {
+            userUpdates.preferredSendHour = results.user.data.contact.preferredSendHour ?? undefined;
+          }
+        }
+        
+        allFieldsUpdated.push('user');
+        reasons.push(results.user.reason);
+        maxConfidence = Math.max(maxConfidence, results.user.confidence);
+      }
+
+      // Process environment data
+      if (results.environment && results.environment.hasData && results.environment.data && results.environment.confidence > 0.5) {
+        if (results.environment.data.equipmentAccess) {
+          profileUpdates.equipmentAccess = results.environment.data.equipmentAccess;
+        }
+        if (results.environment.data.availability) {
+          profileUpdates.availability = results.environment.data.availability;
+        }
+        allFieldsUpdated.push('environment');
+        reasons.push(results.environment.reason);
+        maxConfidence = Math.max(maxConfidence, results.environment.confidence);
+      }
+
+      // Process metrics data
+      if (results.metrics && results.metrics.hasData && results.metrics.data && results.metrics.confidence > 0.5) {
+        profileUpdates.metrics = results.metrics.data;
+        allFieldsUpdated.push('metrics');
+        reasons.push(results.metrics.reason);
+        maxConfidence = Math.max(maxConfidence, results.metrics.confidence);
+      }
+
       // Return null if no updates were extracted
       if (Object.keys(profileUpdates).length === 0 && Object.keys(userUpdates).length === 0) {
         return null;
