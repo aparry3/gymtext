@@ -90,11 +90,6 @@ export class ChatService {
         const profileResult = await updateUserProfile(
           message,
           user,
-          {
-            model: 'gemini-2.5-flash',
-            temperature: 0.2,
-            verbose: process.env.NODE_ENV === 'development'
-          }
       );
         
         // Update our local profile reference
@@ -191,7 +186,6 @@ export class ChatService {
         userName: user.name,
         message,
         profile: currentProfile,
-        config: { temperature: 0.7 }
       });
       
       // Enforce SMS length
