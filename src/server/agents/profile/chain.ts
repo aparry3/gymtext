@@ -1,8 +1,7 @@
 // Import the new modular architecture
-import { extractGoalsData, goalsRunnable } from './goals/chain';
-import type { FitnessProfile } from '../../models/user/schemas';
+import { goalsRunnable } from './goals/chain';
 import type { UserWithProfile } from '../../models/userModel';
-import type { ProfileAgentResult, ProfileExtractionResults } from './types';
+import type { ProfileExtractionResults } from './types';
 import { AgentConfig } from '../base';
 import { RunnableLambda, RunnableMap, RunnableSequence } from '@langchain/core/runnables';
 import { activitiesRunnable } from './activities/chain';
@@ -10,6 +9,8 @@ import { metricsRunnable } from './metrics/chain';
 import { constraintsRunnable } from './constraints/chain';
 import { environmentRunnable } from './environment/chain';
 import { userRunnable } from './user/chain';
+import { fitnessProfileService } from '@/server/services';
+import { ProfilePatchResult } from '@/server/services/fitnessProfileService';
 
 
 /**
@@ -22,7 +23,7 @@ export const updateUserProfile = async (
   message: string,
   user: UserWithProfile,
   config?: AgentConfig
-): Promise<ProfileAgentResult> => {  
+): Promise<ProfilePatchResult> => {  
   try {
     const profileUpdatesRunnable = RunnableMap.from({
       goals: goalsRunnable(config),
@@ -34,7 +35,7 @@ export const updateUserProfile = async (
     })
 
     const patchProfileRunnable = RunnableLambda.from(async (input: ProfileExtractionResults) => {
-      return await patchProfile();
+      return await fitnessProfileService.patchProfile(user, 'chat', input);
     })
 
     const profileUpdateSequence = RunnableSequence.from([
@@ -42,24 +43,21 @@ export const updateUserProfile = async (
       patchProfileRunnable,
     ])
     
+    const profilePatchResult = await profileUpdateSequence.invoke({ message, user });
 
-    const responses = await profileUpdatesRunnable.invoke({ message, user });
-
-    return {
-      profile: updatedProfile as FitnessProfile,
-      user: updatedUser,
-      wasUpdated,
-      updateSummary,
-    };
+    return profilePatchResult;
     
   } catch (error) {
     console.error('UserProfileAgent error:', error);
     
     // Return the original profile and user on error
     return {
-      profile: currentProfile as FitnessProfile,
-      user: currentUser,
-      wasUpdated: false
+      user: user,
+      summary: {
+        source: 'chat',
+        reason: 'Error',
+        confidence: 0,
+      }
     };
   }
 };

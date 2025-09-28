@@ -6,7 +6,7 @@ import { UserWithProfile } from "../models";
  * Configuration for ProfileAgents
  */
 export interface AgentConfig {
-    model?: 'gpt-5-nano' | 'gemini-2.5-flash';
+    model?: 'gpt-5-nano' | 'gemini-2.5-flash' | 'gpt-4o';
     temperature?: number;
     verbose?: boolean;
   }

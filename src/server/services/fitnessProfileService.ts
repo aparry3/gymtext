@@ -7,9 +7,7 @@ import { createGoalsAgent } from '../agents/profile/goals/chain';
 import { createActivitiesAgent } from '../agents/profile/activities/chain';
 import { createConstraintsAgent } from '../agents/profile/constraints/chain';
 import { ProfileExtractionResults } from '../agents/profile/types';
-// import { createUserAgent } from '../agents/profile/user/chain';
-// import { createEnvironmentAgent } from '../agents/profile/environment/chain';
-// import { createMetricsAgent } from '../agents/profile/metrics/chain';
+
 
 export interface CreateFitnessProfileRequest {
   fitnessGoals?: string;
@@ -24,15 +22,20 @@ export interface ProfilePatchOptions {
   path?: string;
 }
 
+type UpdateMetadata = {
+  source: string;
+  reason: string;
+  confidence: number;
+}
 type ExtractedUpdates = {
   profile: Partial<FitnessProfile>;
   user: Partial<User>;
-  metadata: {
-    source: string;
-    reason: string;
-    confidence: number;
-    path: string;
-  }
+  metadata: UpdateMetadata;
+}
+
+export type ProfilePatchResult = {
+  user: UserWithProfile;
+  summary: ProfilePatchOptions;
 }
 
 export class FitnessProfileService {
@@ -63,34 +66,28 @@ export class FitnessProfileService {
    * Applies updates and stores patch information for audit trail
    * Returns the updated profile after applying changes to the database
    */
-  public async patchProfile(
-    userId: string,
-    profileUpdates: Partial<FitnessProfile>,
-    options: ProfilePatchOptions,
-    userUpdates: Partial<User> = {}
-  ): Promise<FitnessProfile> {
+  private async applyPatches(
+    user: UserWithProfile,
+    updates: ExtractedUpdates
+  ): Promise<UserWithProfile> {
     const CONFIDENCE_THRESHOLD = 0.75;
     
-    if (options.confidence < CONFIDENCE_THRESHOLD) {
-      console.log(`Profile update skipped - low confidence: ${options.confidence} < ${CONFIDENCE_THRESHOLD}`);
+    if (updates.metadata.confidence < CONFIDENCE_THRESHOLD) {
+      console.log(`Profile update skipped - low confidence: ${updates.metadata.confidence} < ${CONFIDENCE_THRESHOLD}`);
       // Return current profile without changes
-      const userWithProfile = await this.userRepository.findWithProfile(userId);
-      if (!userWithProfile?.profile) {
-        throw new Error('Unable to retrieve current profile');
-      }
-      return userWithProfile.profile;
+      return user;
     }
 
     try {
       // Update user demographics first if needed
-      if (Object.keys(userUpdates).length > 0) {
-        await this.userRepository.update(userId, userUpdates);
+      if (Object.keys(updates.user).length > 0) {
+        await this.userRepository.update(user.id, updates.user);
       }
 
       // Update profile if there are profile updates
-      if (Object.keys(profileUpdates).length > 0) {
+      if (Object.keys(updates.profile).length > 0) {
         // Use the repository's patchProfile method for atomic JSONB merge
-        const updatedUserWithProfile = await this.userRepository.patchProfile(userId, profileUpdates);
+        const updatedUserWithProfile = await this.userRepository.patchProfile(user.id, updates.profile);
         
         if (!updatedUserWithProfile?.profile) {
           throw new Error('Failed to update fitness profile');
@@ -98,31 +95,26 @@ export class FitnessProfileService {
 
         // Store the patch in profile_updates table for audit trail
         const updateRecord: NewProfileUpdate = {
-          userId,
-          patch: JSON.parse(JSON.stringify(profileUpdates)), // Ensure it's a plain object
-          source: options.source,
-          reason: options.reason,
-          path: options.path || null,
+          userId: user.id,
+          patch: JSON.parse(JSON.stringify(updates.profile)), // Ensure it's a plain object
+          source: updates.metadata.source,
+          reason: updates.metadata.reason,
+          path: null,
         };
 
         await this.profileUpdateRepository.create(updateRecord);
 
         console.log(`Profile update applied:`, {
-          confidence: options.confidence,
-          reason: options.reason,
-          source: options.source,
-          fieldsUpdated: Object.keys(profileUpdates)
+          confidence: updates.metadata.confidence,
+          reason: updates.metadata.reason,
+          source: updates.metadata.source,
+          fieldsUpdated: Object.keys(updates.profile)
         });
         
-        return updatedUserWithProfile.profile;
+        return updatedUserWithProfile;
       }
 
-      // If no profile updates, return current profile
-      const userWithProfile = await this.userRepository.findWithProfile(userId);
-      if (!userWithProfile?.profile) {
-        throw new Error('Unable to retrieve current profile');
-      }
-      return userWithProfile.profile;
+      return user;
 
     } catch (error) {
       console.error('Profile patch error:', error);
@@ -134,7 +126,7 @@ export class FitnessProfileService {
    * Main onboarding method that processes fitness profile information using sub-agents
    * Returns profile updates and metadata for patch operations
    */
-  async onboardFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<ExtractedUpdates | null> {
+  async extractFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<Partial<ProfileExtractionResults> | null> {
       // Initialize all agents
       const goalsAgent = createGoalsAgent();
       const activitiesAgent = createActivitiesAgent();
@@ -179,11 +171,11 @@ export class FitnessProfileService {
       // Log agent results for debugging
       console.log('Agent results:', results);
 
-      return this.consolidateResults(results);
+      return results;
 
   }
 
-  private consolidateResults(results: Partial<ProfileExtractionResults>): ExtractedUpdates | null {
+  private consolidateResults(source: string, results: Partial<ProfileExtractionResults>): ExtractedUpdates | null {
       // Build profile updates from successful extractions
       const profileUpdates: Partial<FitnessProfile> = {};
       const userUpdates: Partial<User> = {};
@@ -256,10 +248,9 @@ export class FitnessProfileService {
         profile: profileUpdates,
         user: userUpdates,
         metadata: {
-          source: 'fitness_profile_onboarding',
+          source: source,
           reason: reasons.join(', '),
           confidence: maxConfidence,
-          path: 'onboarding'
         }
       };
   }
@@ -279,26 +270,35 @@ export class FitnessProfileService {
 
       if (hasFitnessData) {
         // Use onboard method to process text fields and get updates
-        const onboardResult = await this.onboardFitnessProfile(user, fitnessProfileRequest);
+        const onboardResult = await this.extractFitnessProfile(user, fitnessProfileRequest);
         
         if (!onboardResult) {
           throw new Error('Failed to extract fitness profile data');
         }
 
-        // Apply the profile patch using the extracted updates
-        const updatedProfile = await this.patchProfile(
-          user.id,
-          onboardResult.profile,
-          onboardResult.metadata,
-          onboardResult.user
-        );
-        
-        return updatedProfile;
+        const updatedUser = await this.patchProfile(user, 'onboarding', onboardResult);
+
+        return updatedUser.user.profile;
       } 
       return null;
     });
   }
-    
+
+  public async patchProfile(user: UserWithProfile, source: string,results: Partial<ProfileExtractionResults>): Promise<ProfilePatchResult> {
+    const updates = this.consolidateResults(source, results);
+    if (!updates) {
+      throw new Error('Failed to consolidate fitness profile data');
+    }
+    // Apply the profile patch using the extracted updates
+    const updatedUser = await this.applyPatches(
+      user,
+      updates
+    );
+    return {
+      user: updatedUser,
+      summary: updates.metadata
+    };
+  } 
 }
 
 // Export singleton instance

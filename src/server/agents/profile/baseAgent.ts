@@ -13,7 +13,7 @@ import { AgentConfig } from '../base';
  */
 const initializeModel = (config: AgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
-    model = 'gemini-2.5-flash', 
+    model = 'gpt-4o', 
     temperature = 0.2
   } = config;
 

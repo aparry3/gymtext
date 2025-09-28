@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { userProfileAgent } from '@/server/agents/profile/chain';
+import { updateUserProfile } from '@/server/agents/profile/chain';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { ConversationContextService } from '@/server/services/context/conversationContext';
 import { MessageRepository } from '@/server/repositories/messageRepository';
@@ -83,33 +83,23 @@ export class ChatService {
 
       // Step 2: Run UserProfileAgent to extract and update profile
       let currentProfile = user.profile;
-      let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {
         console.log(`[ChatService] Running UserProfileAgent for user ${user.id}`);
         
-        const profileResult = await userProfileAgent({
-          userId: user.id,
+        const profileResult = await updateUserProfile(
           message,
-          currentProfile: currentProfile || {},
-          config: {
+          user,
+          {
             model: 'gemini-2.5-flash',
             temperature: 0.2,
             verbose: process.env.NODE_ENV === 'development'
           }
-        });
+      );
         
         // Update our local profile reference
-        currentProfile = profileResult.profile;
-        wasProfileUpdated = profileResult.wasUpdated;
+        currentProfile = profileResult.user.profile;
         
-        if (wasProfileUpdated && profileResult.updateSummary) {
-          console.log(`[ChatService] Profile updated for user ${user.id}:`, {
-            fieldsUpdated: profileResult.updateSummary.fieldsUpdated,
-            reason: profileResult.updateSummary.reason,
-            confidence: profileResult.updateSummary.confidence
-          });
-        }
       }
 
       // Step 3: Get conversation context and history
@@ -139,7 +129,6 @@ export class ChatService {
         userName: user.name,
         message,
         profile: currentProfile,
-        wasProfileUpdated,
         conversationHistory,
         context: context ? (context as unknown as Record<string, unknown>) : {},
         config: {
@@ -187,18 +176,14 @@ export class ChatService {
     try {
       // Run profile extraction if enabled
       let currentProfile = user.profile;
-      let wasProfileUpdated = false;
       
       if (ENABLE_PROFILE_UPDATES) {
-        const profileResult = await userProfileAgent({
-          userId: user.id,
+        const profileResult = await updateUserProfile(
           message,
-          currentProfile: currentProfile || {},
-          config: { verbose: false }
-        });
+          user
+        );
         
-        currentProfile = profileResult.profile;
-        wasProfileUpdated = profileResult.wasUpdated;
+        currentProfile = profileResult.user.profile;
       }
       
       // Generate response without full context
@@ -206,7 +191,6 @@ export class ChatService {
         userName: user.name,
         message,
         profile: currentProfile,
-        wasProfileUpdated,
         config: { temperature: 0.7 }
       });
       

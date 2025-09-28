@@ -14,7 +14,6 @@ export const createActivitiesAgent = () => createSubAgent({
   promptBuilder: buildActivitiesPromptWithContext,
   agentName: 'ActivitiesAgent',
   outputSchema: ActivitiesExtractionSchema,
-  model: 'gemini-2.5-flash',
   temperature: 0.2  // Lower temperature for consistent activity extraction
 });
 
