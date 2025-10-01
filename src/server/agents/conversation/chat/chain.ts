@@ -29,6 +29,7 @@ export const chatAgent = async (
   message: string,
   conversationHistory?: Message[],
 ) => {
+  console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
   // Sequence 1
   // 1. Create model
@@ -64,8 +65,21 @@ export const chatAgent = async (
       current.confidence > max.confidence ? current : max
     );
 
+    // Log triage results
+    console.log('[CHAT AGENT] Triage results:', {
+      allIntents: input.triage.intents,
+      primaryIntent: {
+        intent: primaryIntent.intent,
+        confidence: primaryIntent.confidence,
+        reasoning: primaryIntent.reasoning
+      }
+    });
+
     // Get the appropriate agent for this intent
     const agent = TriageActionMap[primaryIntent.intent];
+
+    // Log which sub-agent is being invoked
+    console.log(`[CHAT AGENT] Invoking ${primaryIntent.intent} sub-agent with confidence ${primaryIntent.confidence}`);
 
     // Prepare the input for the subagent
     const subagentInput = {
@@ -77,7 +91,11 @@ export const chatAgent = async (
     };
 
     // Invoke the appropriate subagent
-    return await agent.invoke(subagentInput);
+    const result = await agent.invoke(subagentInput);
+
+    console.log(`[CHAT AGENT] ${primaryIntent.intent} sub-agent completed successfully`);
+
+    return result;
   });
 
   const sequence = RunnableSequence.from([

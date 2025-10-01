@@ -14,7 +14,8 @@ export const createGoalsAgent = () => createSubAgent({
   promptBuilder: buildGoalsPromptWithContext,
   agentName: 'GoalsAgent',
   outputSchema: GoalsExtractionSchema,
-  temperature: 0.3  // Slightly higher for goals creativity
+  model: 'gpt-5-nano',
+  temperature: 1  // Slightly higher for goals creativity
 });
 
 /**

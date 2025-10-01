@@ -13,7 +13,7 @@ import { AgentConfig } from '../base';
  */
 const initializeModel = (config: AgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { 
-    model = 'gpt-4o', 
+    model = 'gemini-2.5-flash', 
     temperature = 0.2
   } = config;
 
@@ -28,6 +28,7 @@ const initializeModel = (config: AgentConfig = {}, outputSchema: any) => { // es
   return new ChatOpenAI({
     model: model,
     temperature,
+    reasoningEffort: 'low',
     maxCompletionTokens: 2000,
   }).withStructuredOutput(outputSchema);
 };

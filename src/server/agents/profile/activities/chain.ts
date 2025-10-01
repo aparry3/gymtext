@@ -14,7 +14,8 @@ export const createActivitiesAgent = () => createSubAgent({
   promptBuilder: buildActivitiesPromptWithContext,
   agentName: 'ActivitiesAgent',
   outputSchema: ActivitiesExtractionSchema,
-  temperature: 0.2  // Lower temperature for consistent activity extraction
+  model: 'gpt-5-nano',
+  temperature: 1  // Lower temperature for consistent activity extraction
 });
 
 /**

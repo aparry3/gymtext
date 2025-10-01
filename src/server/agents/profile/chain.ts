@@ -22,8 +22,10 @@ export const updateUserProfile = async (
   message: string,
   user: UserWithProfile,
   config?: AgentConfig
-): Promise<ProfilePatchResult> => {  
+): Promise<ProfilePatchResult> => {
   try {
+    console.log('[PROFILE AGENT] Starting profile extraction for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
+
     const profileUpdatesRunnable = RunnableMap.from({
       goals: goalsRunnable(config),
       activities: activitiesRunnable(config),
@@ -33,15 +35,21 @@ export const updateUserProfile = async (
     })
 
     const patchProfileRunnable = RunnableLambda.from(async (input: ProfileExtractionResults) => {
-      console.log("UPDATES INPUT",input)
-      return await fitnessProfileService.patchProfile(user, 'chat', input);
+      console.log('[PROFILE AGENT] Profile extraction results:', input);
+      const result = await fitnessProfileService.patchProfile(user, 'chat', input);
+      console.log('[PROFILE AGENT] Profile patch completed:', {
+        updated: result.summary?.reason !== 'No updates detected',
+        reason: result.summary?.reason,
+        confidence: result.summary?.confidence
+      });
+      return result;
     })
 
     const profileUpdateSequence = RunnableSequence.from([
       profileUpdatesRunnable,
       patchProfileRunnable,
     ])
-    
+
     const profilePatchResult = await profileUpdateSequence.invoke({ message, user });
 
     return profilePatchResult;

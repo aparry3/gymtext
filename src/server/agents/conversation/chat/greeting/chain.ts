@@ -15,4 +15,4 @@ export type GreetingResponse = z.infer<typeof GreetingResponseSchema>;
  * Greeting agent runnable - handles greetings, thanks, and general conversation
  */
 export const greetingAgentRunnable = () =>
-  createChatSubagentRunnable(buildGreetingSystemPrompt, GreetingResponseSchema);
+  createChatSubagentRunnable(buildGreetingSystemPrompt, GreetingResponseSchema, undefined, 'GREETING');

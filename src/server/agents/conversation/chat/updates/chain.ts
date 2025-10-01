@@ -15,4 +15,4 @@ export type UpdatesResponse = z.infer<typeof UpdatesResponseSchema>;
  * Updates agent runnable - handles user progress updates and status reports
  */
 export const updatesAgentRunnable = () =>
-  createChatSubagentRunnable(buildUpdatesSystemPrompt, UpdatesResponseSchema);
+  createChatSubagentRunnable(buildUpdatesSystemPrompt, UpdatesResponseSchema, undefined, 'UPDATES');

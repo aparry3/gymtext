@@ -10,9 +10,9 @@ export const ModificationsResponseSchema = z.object({
   requiresNewWorkout: z.boolean().describe('Whether the request requires generating a new workout'),
   modificationDetails: z.object({
     type: z.enum(['exercise_swap', 'equipment_limitation', 'intensity_adjustment', 'skip_component', 'add_work', 'injury_workaround', 'complete_change']),
-    specificExercise: z.string().optional().describe('Specific exercise mentioned for swap'),
-    alternativeSuggested: z.string().optional().describe('Alternative exercise suggested in response'),
-  }).optional(),
+    specificExercise: z.string().nullable().optional().describe('Specific exercise mentioned for swap'),
+    alternativeSuggested: z.string().nullable().optional().describe('Alternative exercise suggested in response'),
+  }).nullable().optional(),
 });
 
 export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
@@ -21,4 +21,4 @@ export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
  * Modifications agent runnable - handles workout change and modification requests
  */
 export const modificationsAgentRunnable = () =>
-  createChatSubagentRunnable(buildModificationsSystemPrompt, ModificationsResponseSchema);
+  createChatSubagentRunnable(buildModificationsSystemPrompt, ModificationsResponseSchema, undefined, 'MODIFICATIONS');
