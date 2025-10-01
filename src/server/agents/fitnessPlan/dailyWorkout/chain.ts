@@ -51,7 +51,7 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
 
   // Use structured output for the enhanced workout schema
   const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema, {
-    temperature: 0.2,
+    model: 'gemini-2.5-flash',
     maxTokens: 4096
   });
 

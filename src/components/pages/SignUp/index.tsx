@@ -4,13 +4,8 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { TimeSelector } from '@/components/ui/TimeSelector';
 import { TimezoneDisplay } from '@/components/ui/TimezoneDisplay';
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // Form validation schema
 const formSchema = z.object({
@@ -28,88 +23,12 @@ const formSchema = z.object({
   }),
 });
 
-type FormData = z.infer<typeof formSchema> & { userId?: string };
-
-function ExpressCheckoutForm({ formData, onCanMakePaymentChange }: { formData: FormData; onCanMakePaymentChange: (canMake: boolean) => void }) {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const handleExpressCheckout = async (event: { expressPaymentType?: string; paymentMethod?: { id: string } }) => {
-    if (!stripe || !elements) return;
-    
-    try {
-      // Create checkout session on the server with existing user
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: formData.userId,
-          // Add subscription specific details
-          plan: 'monthly',
-          priceId: 'price_monthly_subscription',
-          // Add implicit consent to receive text messages
-          acceptTexts: true,
-          paymentMethodId: event.expressPaymentType ? undefined : event.paymentMethod?.id
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Payment failed:', await response.text());
-        return;
-      }
-
-      const responseData = await response.json();
-      
-      // Check if we have a redirectUrl and redirect to it
-      if (responseData.redirectUrl) {
-        window.location.href = responseData.redirectUrl;
-      } else {
-        // Fallback to success page
-        window.location.href = '/success';
-      }
-    } catch (error) {
-      console.error('Express checkout error:', error);
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleReadyEvent = (event: any) => {
-    // Check if any payment methods are available
-    const hasPaymentMethods = event.availablePaymentMethods && 
-      Object.keys(event.availablePaymentMethods).some(key => 
-        event.availablePaymentMethods[key] === true
-      );
-    onCanMakePaymentChange(hasPaymentMethods);
-  };
-
-  return (
-    <ExpressCheckoutElement
-      onConfirm={handleExpressCheckout}
-      onReady={handleReadyEvent}
-      options={{
-        buttonTheme: {
-          applePay: 'black',
-          googlePay: 'black',
-        },
-        buttonHeight: 44,
-        wallets: {
-          applePay: 'auto',
-          googlePay: 'auto',
-        },
-      }}
-    />
-  );
-}
+type FormData = z.infer<typeof formSchema>;
 
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
-  const [formValues, setFormValues] = useState<FormData | null>(null);
   const [detectedTimezone, setDetectedTimezone] = useState<string>('America/New_York');
-  const [canMakeExpressPayment, setCanMakeExpressPayment] = useState<boolean | null>(null);
 
   const {
     register,
@@ -141,7 +60,7 @@ export default function SignupForm() {
     }
   }, [setValue]);
 
-  const handleContinue = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -152,148 +71,21 @@ export default function SignupForm() {
         phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
       };
 
-      // First create the user
-      const userResponse = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formattedData),
-      });
+      // Store form data in sessionStorage for the success page to use
+      sessionStorage.setItem('gymtext_signup_data', JSON.stringify(formattedData));
 
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json();
-        throw new Error(errorData.message || 'Failed to create user');
-      }
-
-      const userData = await userResponse.json();
-      
-      // Store the user data with the user ID for checkout
-      setFormValues({
-        ...formattedData,
-        userId: userData.userId
-      });
-      setShowPaymentOptions(true);
+      // Redirect to success/loading page
+      window.location.href = '/success';
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error preparing signup:', error);
       setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    
-    try {
-      // Create checkout session on the server with existing user
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: data.userId,
-          // Add subscription specific details
-          plan: 'monthly',
-          priceId: 'price_monthly_subscription',
-          // Add implicit consent to receive text messages
-          acceptTexts: true
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Something went wrong');
-      }
-
-      const { sessionId } = await response.json();
-      
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Failed to load Stripe');
-      }
-      
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      
-      if (error) {
-        throw new Error(error.message || 'Failed to redirect to checkout');
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (showPaymentOptions && formValues) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center mb-6">Choose Your Payment Method</h2>
-        
-        <Elements stripe={stripePromise}>
-          {canMakeExpressPayment && (
-            <>
-              <div className="mb-8">
-                <h3 className="text-lg font-medium mb-3">Express Checkout</h3>
-                <ExpressCheckoutForm 
-                  formData={formValues} 
-                  onCanMakePaymentChange={setCanMakeExpressPayment}
-                />
-              </div>
-              
-              <div className="relative mb-8">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or pay with card</span>
-                </div>
-              </div>
-            </>
-          )}
-          {canMakeExpressPayment === null && (
-            <div className="mb-8">
-              <ExpressCheckoutForm 
-                formData={formValues} 
-                onCanMakePaymentChange={setCanMakeExpressPayment}
-              />
-            </div>
-          )}
-        </Elements>
-        
-        <button
-          onClick={() => onSubmit(formValues)}
-          disabled={isLoading}
-          className="w-full bg-[#4338ca] text-white py-3 px-4 rounded-md hover:bg-[#3730a3] focus:outline-none focus:ring-2 focus:ring-[#4338ca] focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium tracking-wide"
-        >
-          {isLoading ? 'Processing...' : 'Continue to Card Payment'}
-        </button>
-        
-        <button
-          onClick={() => setShowPaymentOptions(false)}
-          className="w-full mt-4 py-2 px-4 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Back to Form
-        </button>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm text-[#7a8599] mb-2">
-            Secure payment powered by Stripe
-          </p>
-          <p className="text-sm text-[#7a8599]">
-            By proceeding, you agree to receive text messages from GYMTEXT.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <form onSubmit={handleSubmit(handleContinue)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {errorMessage && (
         <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6">
           <p className="text-red-600">{errorMessage}</p>
@@ -448,11 +240,8 @@ export default function SignupForm() {
       >
         {isLoading ? 'Processing...' : '💪 Send It'}
       </button>
-      
+
       <div className="text-center mt-4">
-        <p className="text-sm text-[#7a8599] mb-2">
-          Secure payment powered by Stripe
-        </p>
         <p className="text-sm text-[#7a8599]">
           By submitting this form, you agree to receive text messages from GYMTEXT.
         </p>

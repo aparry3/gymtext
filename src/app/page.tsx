@@ -51,9 +51,6 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-[#7a8599] mb-12 tracking-normal leading-relaxed">
               Daily, personalized workouts direct to your phone. No need to think. Just workout.
             </p>
-            <p className="text-[#7a8599] text-base tracking-wide">
-              $9.99/month | Cancel anytime
-            </p>
           </div>
         </section>
 

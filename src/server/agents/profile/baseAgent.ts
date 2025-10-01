@@ -1,37 +1,10 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { UserWithProfile } from '../../models/userModel';
 import type { 
   SubAgentResult,
   SubAgentConfig 
 } from './types';
-import { AgentConfig } from '../base';
-
-/**
- * Initialize the model with structured output using the provided schema
- */
-const initializeModel = (config: AgentConfig = {}, outputSchema: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-  const { 
-    model = 'gemini-2.5-flash', 
-    temperature = 0.2
-  } = config;
-
-  if (model.startsWith('gemini')) {
-    return new ChatGoogleGenerativeAI({
-      model: model,
-      temperature,
-      maxOutputTokens: 2000,
-    }).withStructuredOutput(outputSchema);
-  }
-
-  return new ChatOpenAI({
-    model: model,
-    temperature,
-    reasoningEffort: 'low',
-    maxCompletionTokens: 2000,
-  }).withStructuredOutput(outputSchema);
-};
+import { AgentConfig, initializeModel } from '../base';
 
 /**
  * Create sub-agent that returns domain-specific JSON data with schema validation

@@ -5,14 +5,14 @@ export const _WorkoutBlockItemSchema = z.object({
   type: z.enum(['prep', 'compound', 'secondary', 'accessory', 'core', 'cardio', 'cooldown'])
     .describe("Type of exercise in the workout"),
   exercise: z.string().describe("Name of the exercise"),
-  sets: z.number().optional().describe("Number of sets"),
-  reps: z.string().optional().describe("Number of reps (can be range like '6-8' or number like '10')"),
-  durationSec: z.number().optional().describe("Duration in seconds"),
-  durationMin: z.number().optional().describe("Duration in minutes"),
-  RPE: z.number().min(1).max(10).optional().describe("Rate of Perceived Exertion (1-10)"),
-  percentageRM: z.number().min(0).max(100).optional().describe("Percentage of 1 Rep Max"),
-  rest: z.string().optional().describe("Rest period between sets"),
-  notes: z.string().optional().describe("Additional notes for the exercise")
+  sets: z.number().nullable().optional().describe("Number of sets"),
+  reps: z.string().nullable().optional().describe("Number of reps (can be range like '6-8' or number like '10')"),
+  durationSec: z.number().nullable().optional().describe("Duration in seconds"),
+  durationMin: z.number().nullable().optional().describe("Duration in minutes"),
+  RPE: z.number().min(1).max(10).nullable().optional().describe("Rate of Perceived Exertion (1-10)"),
+  percentageRM: z.number().min(0).max(100).nullable().optional().describe("Percentage of 1 Rep Max"),
+  rest: z.string().nullable().optional().describe("Rest period between sets"),
+  notes: z.string().nullable().optional().describe("Additional notes for the exercise")
 }).strict();
 
 export const _WorkoutBlockSchema = z.object({
@@ -25,8 +25,8 @@ export const _WorkoutModificationSchema = z.object({
   replace: z.object({
     exercise: z.string().describe("Exercise to replace"),
     with: z.string().describe("Replacement exercise")
-  }).optional(),
-  adjustment: z.string().optional().describe("Adjustment to make (e.g., 'reduce weight by 20%')"),
+  }).nullable().optional(),
+  adjustment: z.string().nullable().optional().describe("Adjustment to make (e.g., 'reduce weight by 20%')"),
   note: z.string().describe("Explanation for the modification")
 }).strict();
 
@@ -35,14 +35,14 @@ export const _EnhancedWorkoutInstanceSchema = z.object({
   date: z.date().describe("Date of the workout"),
   theme: z.string().describe("Overall theme of the workout (e.g., 'Upper Push', 'Lower Power')"),
   blocks: z.array(_WorkoutBlockSchema).describe("Structured blocks of the workout"),
-  modifications: z.array(_WorkoutModificationSchema).optional().describe("Modifications for special conditions"),
+  modifications: z.array(_WorkoutModificationSchema).nullable().optional().describe("Modifications for special conditions"),
   targetMetrics: z.object({
-    totalVolume: z.number().optional(),
-    totalDistance: z.number().optional(),
-    totalDuration: z.number().optional(),
-    averageIntensity: z.number().optional()
-  }).optional().describe("Target metrics for the workout"),
-  notes: z.string().optional().describe("Additional notes for the workout")
+    totalVolume: z.number().nullable().optional(),
+    totalDistance: z.number().nullable().optional(),
+    totalDuration: z.number().nullable().optional(),
+    averageIntensity: z.number().nullable().optional()
+  }).nullable().optional().describe("Target metrics for the workout"),
+  notes: z.string().nullable().optional().describe("Additional notes for the workout")
 }).strict();
 
 // Legacy schema for backward compatibility
@@ -61,7 +61,7 @@ export const _WorkoutInstanceSchema = z.object({
       value: z.number().describe("Numeric value for the key")
     }).strict()
   ).describe("Numeric targets such as distanceKm, volumeKg")
-   .optional()
+   .nullable().optional()
 }).strict()
 
 export type LLMWorkoutInstance = z.infer<typeof _WorkoutInstanceSchema>;

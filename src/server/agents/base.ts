@@ -38,6 +38,7 @@ export const initializeModel = (outputSchema?: any,config?: AgentConfig): any =>
         model: model,
         temperature,
         maxCompletionTokens: maxTokens,
+        reasoningEffort: 'low',
       })
       if (outputSchema) {
         return llm.withStructuredOutput(outputSchema);
