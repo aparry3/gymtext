@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createChatSubagentRunnable } from '../baseAgent';
-import { buildUpdatesSystemPrompt } from './prompts';
+import { UPDATES_SYSTEM_PROMPT, buildUpdatesUserMessage } from './prompts';
 
 /**
  * Schema for updates agent output
@@ -15,4 +15,4 @@ export type UpdatesResponse = z.infer<typeof UpdatesResponseSchema>;
  * Updates agent runnable - handles user progress updates and status reports
  */
 export const updatesAgentRunnable = () =>
-  createChatSubagentRunnable(buildUpdatesSystemPrompt, UpdatesResponseSchema, undefined, 'UPDATES');
+  createChatSubagentRunnable(UPDATES_SYSTEM_PROMPT, buildUpdatesUserMessage, UpdatesResponseSchema, undefined, 'UPDATES');

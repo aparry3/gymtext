@@ -19,13 +19,15 @@ export interface ChatSubagentInput {
 
 /**
  * Creates a base runnable for chat subagents
- * @param promptBuilder - Function that builds the system prompt
+ * @param systemPrompt - Static system prompt
+ * @param userMessageBuilder - Function that builds the dynamic user message
  * @param outputSchema - Zod schema for structured output
  * @param config - Optional agent configuration
  * @returns RunnableLambda that processes the input and returns structured output
  */
 export const createChatSubagentRunnable = <T extends z.ZodType>(
-  promptBuilder: (input: ChatSubagentInput) => string,
+  systemPrompt: string,
+  userMessageBuilder: (input: ChatSubagentInput) => string,
   outputSchema?: T,
   config?: AgentConfig,
   agentName?: string
@@ -42,7 +44,7 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
 
     const model = initializeModel(outputSchema, config);
 
-    const systemPrompt = promptBuilder(input);
+    const userMessage = userMessageBuilder(input);
     const messages = [
       {
         role: 'system',
@@ -50,7 +52,7 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
       },
       {
         role: 'user',
-        content: input.message,
+        content: userMessage,
       }
     ];
 
@@ -71,7 +73,7 @@ ${systemPrompt}
 ---
 
 USER MESSAGE:
-${input.message}
+${userMessage}
 
 ---
 

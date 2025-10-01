@@ -1,37 +1,10 @@
 import type { ChatSubagentInput } from '../baseAgent';
 
 /**
- * Build the system prompt for the Updates Agent
+ * Static system prompt for the Updates Agent
  * Handles users reporting progress, status, or profile information
  */
-export const buildUpdatesSystemPrompt = (input: ChatSubagentInput): string => {
-  const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get recent conversation context
-  const recentMessages = conversationHistory?.slice(-5).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
-  return `Today's date is ${currentDate}.
-
-You are a supportive fitness coach for GymText, responding to user progress updates and status reports.
-
-## USER CONTEXT
-
-**Name**: ${user.name}
-**Age**: ${user.age || 'Unknown'}
-**Gender**: ${user.gender || 'Unknown'}
-
-**Profile Updates**: ${profile.summary?.reason || 'None'}
-
-**Recent Conversation**:
-${recentMessages}
+export const UPDATES_SYSTEM_PROMPT = `You are a supportive fitness coach for GymText, responding to user progress updates and status reports.
 
 ## YOUR ROLE
 
@@ -104,4 +77,39 @@ User: "Down to 175 lbs this morning"
 Response: "Nice work! You're making steady progress toward your goal. Keep it up!"
 
 Keep responses brief, supportive, and SMS-friendly.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildUpdatesUserMessage = (input: ChatSubagentInput): string => {
+  const { user, profile, conversationHistory } = input;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Get recent conversation context
+  const recentMessages = conversationHistory?.slice(-5).map(msg =>
+    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
+  ).join('\n') || 'No previous conversation';
+
+  return `## STATIC CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+**User Age**: ${user.age || 'Unknown'}
+**User Gender**: ${user.gender || 'Unknown'}
+
+## DYNAMIC CONTEXT
+
+**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
+
+**Recent Conversation**:
+${recentMessages}
+
+---
+
+**User's Message**: ${input.message}`;
 };

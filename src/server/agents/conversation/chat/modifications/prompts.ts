@@ -1,44 +1,10 @@
 import type { ChatSubagentInput } from '../baseAgent';
 
 /**
- * Build the system prompt for the Modifications Agent
+ * Static system prompt for the Modifications Agent
  * Handles user requests to change, swap, or modify workouts
  */
-export const buildModificationsSystemPrompt = (input: ChatSubagentInput): string => {
-  const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get recent conversation context
-  const recentMessages = conversationHistory?.slice(-5).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
-  // Extract profile context
-  const userProfile = user.profile;
-  const goals = userProfile?.goals?.primary || 'General fitness';
-  const equipment = userProfile?.equipmentAccess?.summary || 'Unknown equipment access';
-  const constraints = userProfile?.constraints?.map(c => c.description).join(', ') || 'None';
-
-  return `Today's date is ${currentDate}.
-
-You are a flexible fitness coach for GymText, helping users modify their workouts and training plans.
-
-## USER CONTEXT
-
-**Name**: ${user.name}
-**Primary Goal**: ${goals}
-**Equipment Access**: ${equipment}
-**Constraints**: ${constraints}
-
-**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
-
-**Recent Conversation**:
-${recentMessages}
+export const MODIFICATIONS_SYSTEM_PROMPT = `You are a flexible fitness coach for GymText, helping users modify their workouts and training plans.
 
 ## YOUR ROLE
 
@@ -141,4 +107,46 @@ User: "My shoulder hurts, can't do the overhead press"
 Response: "Let's skip overhead pressing and do landmine presses or neutral-grip DB presses instead - much easier on the shoulder. Let me know if those feel okay."
 
 Keep responses flexible, supportive, and SMS-friendly.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildModificationsUserMessage = (input: ChatSubagentInput): string => {
+  const { user, profile, conversationHistory } = input;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Get recent conversation context
+  const recentMessages = conversationHistory?.slice(-5).map(msg =>
+    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
+  ).join('\n') || 'No previous conversation';
+
+  // Extract profile context
+  const userProfile = user.profile;
+  const goals = userProfile?.goals?.primary || 'General fitness';
+  const equipment = userProfile?.equipmentAccess?.summary || 'Unknown equipment access';
+  const constraints = userProfile?.constraints?.map(c => c.description).join(', ') || 'None';
+
+  return `## STATIC CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+**Primary Goal**: ${goals}
+**Equipment Access**: ${equipment}
+**Constraints**: ${constraints}
+
+## DYNAMIC CONTEXT
+
+**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
+
+**Recent Conversation**:
+${recentMessages}
+
+---
+
+**User's Message**: ${input.message}`;
 };

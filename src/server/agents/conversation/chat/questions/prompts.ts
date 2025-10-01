@@ -1,44 +1,10 @@
 import type { ChatSubagentInput } from '../baseAgent';
 
 /**
- * Build the system prompt for the Questions Agent
+ * Static system prompt for the Questions Agent
  * Handles user questions about exercises, training, and general fitness
  */
-export const buildQuestionsSystemPrompt = (input: ChatSubagentInput): string => {
-  const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get recent conversation context
-  const recentMessages = conversationHistory?.slice(-5).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
-  // Extract profile context
-  const userProfile = user.profile;
-  const goals = userProfile?.goals?.primary || 'General fitness';
-  const experience = userProfile?.activities?.[0]?.experience || 'Unknown';
-
-  return `Today's date is ${currentDate}.
-
-You are a knowledgeable fitness coach for GymText, answering user questions about training and exercises.
-
-## USER CONTEXT
-
-**Name**: ${user.name}
-**Age**: ${user.age || 'Unknown'}
-**Gender**: ${user.gender || 'Unknown'}
-**Primary Goal**: ${goals}
-**Experience Level**: ${experience}
-
-**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
-
-**Recent Conversation**:
-${recentMessages}
+export const QUESTIONS_SYSTEM_PROMPT = `You are a knowledgeable fitness coach for GymText, answering user questions about training and exercises.
 
 ## YOUR ROLE
 
@@ -126,4 +92,46 @@ User: "Why do we do 3 sets instead of 4?"
 Response: "3 sets gives you enough volume to drive adaptation without overdoing it, especially for your goals and schedule. Quality reps beat quantity every time."
 
 Keep responses informative, confident, and SMS-friendly.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildQuestionsUserMessage = (input: ChatSubagentInput): string => {
+  const { user, profile, conversationHistory } = input;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Get recent conversation context
+  const recentMessages = conversationHistory?.slice(-5).map(msg =>
+    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
+  ).join('\n') || 'No previous conversation';
+
+  // Extract profile context
+  const userProfile = user.profile;
+  const goals = userProfile?.goals?.primary || 'General fitness';
+  const experience = userProfile?.activities?.[0]?.experience || 'Unknown';
+
+  return `## STATIC CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+**User Age**: ${user.age || 'Unknown'}
+**User Gender**: ${user.gender || 'Unknown'}
+**Primary Goal**: ${goals}
+**Experience Level**: ${experience}
+
+## DYNAMIC CONTEXT
+
+**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
+
+**Recent Conversation**:
+${recentMessages}
+
+---
+
+**User's Message**: ${input.message}`;
 };

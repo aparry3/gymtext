@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createChatSubagentRunnable } from '../baseAgent';
-import { buildQuestionsSystemPrompt } from './prompts';
+import { QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage } from './prompts';
 
 /**
  * Schema for questions agent output
@@ -15,4 +15,4 @@ export type QuestionsResponse = z.infer<typeof QuestionsResponseSchema>;
  * Questions agent runnable - handles user questions and information requests
  */
 export const questionsAgentRunnable = () =>
-  createChatSubagentRunnable(buildQuestionsSystemPrompt, QuestionsResponseSchema, undefined, 'QUESTIONS');
+  createChatSubagentRunnable(QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage, QuestionsResponseSchema, undefined, 'QUESTIONS');

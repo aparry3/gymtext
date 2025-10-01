@@ -1,34 +1,10 @@
 import type { ChatSubagentInput } from '../baseAgent';
 
 /**
- * Build the system prompt for the Greeting Agent
+ * Static system prompt for the Greeting Agent
  * Handles greetings, thanks, and general conversation
  */
-export const buildGreetingSystemPrompt = (input: ChatSubagentInput): string => {
-  const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get recent conversation context
-  const recentMessages = conversationHistory?.slice(-5).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
-  return `Today's date is ${currentDate}.
-
-You are a friendly fitness coach for GymText, responding to greetings and general conversation.
-
-## USER CONTEXT
-
-**Name**: ${user.name}
-**Profile Updates**: ${profile.summary || 'None'}
-
-**Recent Conversation**:
-${recentMessages}
+export const GREETING_SYSTEM_PROMPT = `You are a friendly fitness coach for GymText, responding to greetings and general conversation.
 
 ## YOUR ROLE
 
@@ -60,4 +36,37 @@ User: "..."
 Response: "Not sure what you're looking for? I'm here to help with your training!"
 
 Keep responses concise and actionable for SMS delivery.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildGreetingUserMessage = (input: ChatSubagentInput): string => {
+  const { user, profile, conversationHistory } = input;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Get recent conversation context
+  const recentMessages = conversationHistory?.slice(-5).map(msg =>
+    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
+  ).join('\n') || 'No previous conversation';
+
+  return `## STATIC CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+
+## DYNAMIC CONTEXT
+
+**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
+
+**Recent Conversation**:
+${recentMessages}
+
+---
+
+**User's Message**: ${input.message}`;
 };

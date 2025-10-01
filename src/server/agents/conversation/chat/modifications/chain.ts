@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createChatSubagentRunnable } from '../baseAgent';
-import { buildModificationsSystemPrompt } from './prompts';
+import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 
 /**
  * Schema for modifications agent output
@@ -21,4 +21,4 @@ export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
  * Modifications agent runnable - handles workout change and modification requests
  */
 export const modificationsAgentRunnable = () =>
-  createChatSubagentRunnable(buildModificationsSystemPrompt, ModificationsResponseSchema, undefined, 'MODIFICATIONS');
+  createChatSubagentRunnable(MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage, ModificationsResponseSchema, undefined, 'MODIFICATIONS');
