@@ -230,14 +230,6 @@ export class FitnessProfileService {
         maxConfidence = Math.max(maxConfidence, results.environment.confidence);
       }
 
-      // Process metrics data
-      if (results.metrics && results.metrics.hasData && results.metrics.data && results.metrics.confidence > 0.5) {
-        profileUpdates.metrics = results.metrics.data;
-        allFieldsUpdated.push('metrics');
-        reasons.push(results.metrics.reason);
-        maxConfidence = Math.max(maxConfidence, results.metrics.confidence);
-      }
-
       // Return null if no updates were extracted
       if (Object.keys(profileUpdates).length === 0 && Object.keys(userUpdates).length === 0) {
         return null;
@@ -287,7 +279,14 @@ export class FitnessProfileService {
   public async patchProfile(user: UserWithProfile, source: string,results: Partial<ProfileExtractionResults>): Promise<ProfilePatchResult> {
     const updates = this.consolidateResults(source, results);
     if (!updates) {
-      throw new Error('Failed to consolidate fitness profile data');
+      return {
+        user: user,
+        summary: {
+          source: source,
+          reason: 'No updates were extracted',
+          confidence: 0,
+        }
+      };
     }
     // Apply the profile patch using the extracted updates
     const updatedUser = await this.applyPatches(

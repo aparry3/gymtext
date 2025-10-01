@@ -1,4 +1,3 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { UserWithProfile } from '@/server/models/userModel';
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';

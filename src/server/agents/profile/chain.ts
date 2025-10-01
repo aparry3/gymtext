@@ -5,7 +5,6 @@ import type { ProfileExtractionResults } from './types';
 import { AgentConfig } from '../base';
 import { RunnableLambda, RunnableMap, RunnableSequence } from '@langchain/core/runnables';
 import { activitiesRunnable } from './activities/chain';
-import { metricsRunnable } from './metrics/chain';
 import { constraintsRunnable } from './constraints/chain';
 import { environmentRunnable } from './environment/chain';
 import { userRunnable } from './user/chain';
@@ -28,13 +27,13 @@ export const updateUserProfile = async (
     const profileUpdatesRunnable = RunnableMap.from({
       goals: goalsRunnable(config),
       activities: activitiesRunnable(config),
-      metrics: metricsRunnable(config),
       constraints: constraintsRunnable(config),
       environment: environmentRunnable(config),
       user: userRunnable(config)
     })
 
     const patchProfileRunnable = RunnableLambda.from(async (input: ProfileExtractionResults) => {
+      console.log("UPDATES INPUT",input)
       return await fitnessProfileService.patchProfile(user, 'chat', input);
     })
 
