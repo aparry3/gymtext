@@ -61,3 +61,7 @@ export const updateUserProfile = async (
     };
   }
 };
+
+export const profileAgentRunnable = (config?: AgentConfig) => RunnableLambda.from(async (input: { message: string; user: UserWithProfile }) => {
+  return await updateUserProfile(input.message, input.user, config);
+});

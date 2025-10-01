@@ -8,7 +8,7 @@ import { UserWithProfile } from "../models";
 export interface AgentConfig {
     model?: 'gpt-5-nano' | 'gemini-2.5-flash' | 'gpt-4o';
     temperature?: number;
-    verbose?: boolean;
+    maxTokens?: number;
   }
   
   
@@ -19,21 +19,21 @@ export interface Agent<T> {
 /**
  * Initialize the model with structured output using the provided schema
  */
-export const initializeModel = (config?: AgentConfig, outputSchema?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const { model = 'gemini-2.5-flash', temperature = 0.2 } = config || {};
+export const initializeModel = (outputSchema?: any,config?: AgentConfig) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { model = 'gpt-5-nano', temperature = 0.2, maxTokens = 2000 } = config || {};
   
     let llm: ChatGoogleGenerativeAI | ChatOpenAI;
     if (model.startsWith('gemini')) {
       llm = new ChatGoogleGenerativeAI({
         model: model,
         temperature,
-        maxOutputTokens: 2000,
+        maxOutputTokens: maxTokens,
       })
     } else {
         llm = new ChatOpenAI({
         model: model,
         temperature,
-        maxCompletionTokens: 2000,
+        maxCompletionTokens: maxTokens,
         })
     }
     if (outputSchema) {

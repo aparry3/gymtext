@@ -1,5 +1,4 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { updateUserProfile } from '@/server/agents/profile/chain';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { ConversationContextService } from '@/server/services/context/conversationContext';
 import { MessageRepository } from '@/server/repositories/messageRepository';
@@ -7,7 +6,6 @@ import { ConversationRepository } from '@/server/repositories/conversationReposi
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
-const ENABLE_PROFILE_UPDATES = process.env.PROFILE_PATCH_ENABLED !== 'false';
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
@@ -81,21 +79,7 @@ export class ChatService {
         ? await this.conversationRepo.findById(conversationId)
         : null;
 
-      // Step 2: Run UserProfileAgent to extract and update profile
-      let currentProfile = user.profile;
-      
-      if (ENABLE_PROFILE_UPDATES) {
-        console.log(`[ChatService] Running UserProfileAgent for user ${user.id}`);
-        
-        const profileResult = await updateUserProfile(
-          message,
-          user,
-      );
-        
-        // Update our local profile reference
-        currentProfile = profileResult.user.profile;
-        
-      }
+     
 
       // Step 3: Get conversation context and history
       // Exclude the current message that was just stored by the API route
@@ -108,29 +92,13 @@ export class ChatService {
             })
         : [];
       
-      // Note: context.recentMessages will include the current message since it was already stored
-      // This is okay since we're using conversationHistory for the actual chat history
-      // The context is mainly for workout history and user profile data
-      const context = await this.contextService.getContext(user.id, {
-        includeUserProfile: true,
-        includeWorkoutHistory: true,
-        messageLimit: 0  // Don't include messages in context since we handle them separately
-      });
 
-      // Step 4: Run ChatAgent with the current profile and update status
-      console.log(`[ChatService] Running ChatAgent for user ${user.id}`);
       
-      const chatResult = await chatAgent({
-        userName: user.name,
+      const chatResult = await chatAgent(
+        user,
         message,
-        profile: currentProfile,
         conversationHistory,
-        context: context ? (context as unknown as Record<string, unknown>) : {},
-        config: {
-          model: 'gemini-2.5-flash',
-          temperature: 0.7,
-        }
-      });
+      );
       
       // Step 5: Enforce SMS length constraints
       // Note: Message storage is handled by the API route
@@ -158,50 +126,6 @@ export class ChatService {
       return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
     }
   }
-
-  /**
-   * Handles a simple message without conversation context.
-   * Useful for quick responses or testing.
-   */
-  async handleSimpleMessage(
-    user: UserWithProfile,
-    message: string
-  ): Promise<string> {
-    try {
-      // Run profile extraction if enabled
-      let currentProfile = user.profile;
-      
-      if (ENABLE_PROFILE_UPDATES) {
-        const profileResult = await updateUserProfile(
-          message,
-          user
-        );
-        
-        currentProfile = profileResult.user.profile;
-      }
-      
-      // Generate response without full context
-      const chatResult = await chatAgent({
-        userName: user.name,
-        message,
-        profile: currentProfile,
-      });
-      
-      // Enforce SMS length
-      const responseText = chatResult.response.trim();
-      if (responseText.length > SMS_MAX_LENGTH) {
-        return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
-      }
-      
-      return responseText;
-      
-    } catch (error) {
-      console.error('[ChatService] Error in simple message handler:', error);
-      return "Sorry, I'm having trouble with that. Please try again!";
-    }
-  }
-
 }
-
 // Export singleton instance
 export const chatService = ChatService.getInstance();

@@ -6,12 +6,8 @@ import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '@/server
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { dailyWorkoutPrompt } from './prompts';
+import { initializeModel } from '../../base';
 
-const llm = new ChatGoogleGenerativeAI({ 
-  temperature: 0.2, 
-  model: "gemini-2.5-flash",
-  // maxOutputTokens: 4096  // Limit output to prevent truncation
-});
 
 export interface DailyWorkoutContext {
   user: UserWithProfile;
@@ -55,7 +51,10 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
   );
 
   // Use structured output for the enhanced workout schema
-  const structuredModel = llm.withStructuredOutput(_EnhancedWorkoutInstanceSchema);
+  const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema, {
+    temperature: 0.2,
+    maxTokens: 4096
+  });
 
   // Retry mechanism for transient errors
   const maxRetries = 2;
@@ -65,7 +64,7 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
       console.log(`Attempting to generate workout (attempt ${attempt + 1}/${maxRetries})`);
       
       // Generate the workout
-      const workout = await structuredModel.invoke(prompt);
+      const workout = await structuredModel.invoke(prompt) as EnhancedWorkoutInstance;
       
       // Ensure we have a valid response
       if (!workout) {
