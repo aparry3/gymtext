@@ -51,8 +51,6 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
 
   // Use structured output for the enhanced workout schema
   const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema, {
-    model: 'gemini-2.5-flash',
-    maxTokens: 4096
   });
 
   // Retry mechanism for transient errors
@@ -70,25 +68,26 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
         throw new Error('AI returned null/undefined workout');
       }
 
-      // Convert date string to Date object if needed
-      const workoutWithDate = {
-        ...workout,
-        date: typeof workout.date === 'string' ? new Date(workout.date) : workout.date || date
-      };
-
       // Validate the workout structure
-      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workoutWithDate);
+      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workout);
+      
       
       // Additional validation
       if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
         throw new Error('Workout has no blocks');
       }
       
+      // Convert date string to Date object if needed
+      const validatedWorkoutWithDate = {
+        ...workout,
+        date: new Date()
+      };
+      
       console.log(`Successfully generated workout with ${validatedWorkout.blocks.length} blocks`);
       
       // Ensure date is set correctly
       return {
-        ...validatedWorkout,
+        ...validatedWorkoutWithDate,
         date
       } as EnhancedWorkoutInstance;
     } catch (error) {

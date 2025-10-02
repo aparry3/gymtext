@@ -32,7 +32,6 @@ export const _WorkoutModificationSchema = z.object({
 
 // Enhanced workout instance schema
 export const _EnhancedWorkoutInstanceSchema = z.object({
-  date: z.date().describe("Date of the workout"),
   theme: z.string().describe("Overall theme of the workout (e.g., 'Upper Push', 'Lower Power')"),
   blocks: z.array(_WorkoutBlockSchema).describe("Structured blocks of the workout"),
   modifications: z.array(_WorkoutModificationSchema).nullable().optional().describe("Modifications for special conditions"),
@@ -68,4 +67,4 @@ export type LLMWorkoutInstance = z.infer<typeof _WorkoutInstanceSchema>;
 export type WorkoutBlockItem = z.infer<typeof _WorkoutBlockItemSchema>;
 export type WorkoutBlock = z.infer<typeof _WorkoutBlockSchema>;
 export type WorkoutModification = z.infer<typeof _WorkoutModificationSchema>;
-export type EnhancedWorkoutInstance = z.infer<typeof _EnhancedWorkoutInstanceSchema>;
+export type EnhancedWorkoutInstance = z.infer<typeof _EnhancedWorkoutInstanceSchema> & { date: Date };

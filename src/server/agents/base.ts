@@ -21,7 +21,7 @@ export interface Agent<T> {
  * Initialize the model with structured output using the provided schema
  */
 export const initializeModel = (outputSchema?: any,config?: AgentConfig): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 2000 } = config || {};
+    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 4096 } = config || {};
 
     if (model.startsWith('gemini')) {
       const llm = new ChatGoogleGenerativeAI({

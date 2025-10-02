@@ -80,7 +80,6 @@ ${fitnessProfile}
 <Output Format>
 Return a JSON object matching the EnhancedWorkoutInstance schema:
 {
-  "date": "current date",
   "theme": "workout theme",
   "blocks": [
     {
