@@ -56,42 +56,6 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
       }
     ];
 
-    // Write prompts to temp file for debugging
-    try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      const tempFilePath = path.join(process.cwd(), '_temp.txt');
-      const timestamp = new Date().toISOString();
-      const content = `
-===============================================
-${name} Agent - ${timestamp}
-===============================================
-
-SYSTEM PROMPT:
-${systemPrompt}
-
----
-
-USER MESSAGE:
-${userMessage}
-
----
-
-TRIAGE INFO:
-${JSON.stringify(input.triage, null, 2)}
-
----
-
-PROFILE SUMMARY:
-${JSON.stringify(input.profile.summary, null, 2)}
-
-===============================================
-
-`;
-      await fs.appendFile(tempFilePath, content);
-    } catch (err) {
-      console.error(`[${name}] Failed to write to temp file:`, err);
-    }
 
     let result: z.infer<T>;
     try {
