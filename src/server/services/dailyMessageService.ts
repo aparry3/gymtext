@@ -6,7 +6,7 @@ import { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { generateDailyWorkout } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
+import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 
 interface BatchResult {
   processed: number;

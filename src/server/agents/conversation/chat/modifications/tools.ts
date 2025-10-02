@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { WorkoutModificationService } from '@/server/services/workoutModificationService';
+import { workoutModificationService } from '@/server/services/workoutModificationService';
 
 // Define schemas separately to avoid deep type instantiation
 const SubstituteExerciseSchema = z.object({
@@ -26,8 +26,7 @@ export const substituteExerciseTool = new DynamicStructuredTool({
   preferences, or other constraints. This modifies the existing workout in place.`,
   schema: SubstituteExerciseSchema,
   func: async ({ userId, workoutDate, exerciseToReplace, replacementExercise, reason, blockName }: SubstituteExerciseInput) => {
-    const service = WorkoutModificationService.getInstance();
-    const result = await service.substituteExercise({
+    const result = await workoutModificationService.substituteExercise({
       userId,
       workoutDate: new Date(workoutDate),
       exerciseToReplace,
@@ -66,8 +65,7 @@ export const modifyWorkoutTool = new DynamicStructuredTool({
   This regenerates the entire workout while maintaining training principles.`,
   schema: ModifyWorkoutSchema,
   func: async ({ userId, workoutDate, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput) => {
-    const service = WorkoutModificationService.getInstance();
-    const result = await service.modifyWorkout({
+    const result = await workoutModificationService.modifyWorkout({
       userId,
       workoutDate: new Date(workoutDate),
       constraints,
@@ -108,8 +106,7 @@ export const modifyWeekTool = new DynamicStructuredTool({
   or other factors that affect multiple days. This updates the microcycle pattern and regenerates workouts.`,
   schema: ModifyWeekSchema,
   func: async ({ userId, startDate, modifications, constraints, reason }: ModifyWeekInput) => {
-    const service = WorkoutModificationService.getInstance();
-    const result = await service.modifyWeek({
+    const result = await workoutModificationService.modifyWeek({
       userId,
       startDate: new Date(startDate),
       modifications,

@@ -2,7 +2,7 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/dailyWorkout/chain';
+import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
 import type { EnhancedWorkoutInstance, WorkoutBlockItem } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
