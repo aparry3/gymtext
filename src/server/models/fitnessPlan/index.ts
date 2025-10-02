@@ -92,7 +92,7 @@ export class FitnessPlanModel implements FitnessPlan {
       lengthWeeks: fitnessPlanOverview.lengthWeeks,
       notes: fitnessPlanOverview.notes || null,
       currentMesocycleIndex: 0,
-      currentMicrocycleWeek: 1,
+      currentMicrocycleWeek: 0,
       cycleStartDate: new Date(),
       overview: fitnessPlanOverview.overview,
       clientId: user.id,

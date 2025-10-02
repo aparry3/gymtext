@@ -192,7 +192,7 @@ function MicrocycleHeader({ microcycle }: { microcycle: Microcycle }) {
     <Card className="p-6">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">Week {microcycle.weekNumber}</h1>
+          <h1 className="text-2xl font-semibold">Week {microcycle.weekNumber + 1}</h1>
           <p className="text-muted-foreground">
             {startDate} - {endDate}
           </p>

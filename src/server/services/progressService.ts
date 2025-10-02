@@ -38,7 +38,7 @@ export class ProgressService {
     }
 
     const mesocycleIndex = plan.currentMesocycleIndex ?? 0;
-    const microcycleWeek = plan.currentMicrocycleWeek ?? 1;
+    const microcycleWeek = plan.currentMicrocycleWeek ?? 0; // 0-based to match mesocycleIndex
     
     // Ensure mesocycleIndex is within bounds
     if (mesocycleIndex >= plan.mesocycles.length) {
@@ -126,22 +126,22 @@ export class ProgressService {
 
     const currentMesocycle = progress.mesocycle;
 
-    if (progress.microcycleWeek >= currentMesocycle.weeks) {
-      // Move to next mesocycle
+    if (progress.microcycleWeek >= currentMesocycle.weeks - 1) {
+      // Move to next mesocycle (microcycleWeek is 0-based, so last week is weeks - 1)
       const nextMesocycleIndex = progress.mesocycleIndex + 1;
-      
+
       if (nextMesocycleIndex >= plan.mesocycles.length) {
         // Completed all mesocycles, restart from beginning
         await this.fitnessPlanRepo.updateProgress(userId, {
           currentMesocycleIndex: 0,
-          currentMicrocycleWeek: 1,
+          currentMicrocycleWeek: 0,
           cycleStartDate: new Date(),
         });
         console.log(`User ${userId} completed all mesocycles, restarting from beginning`);
       } else {
         await this.fitnessPlanRepo.updateProgress(userId, {
           currentMesocycleIndex: nextMesocycleIndex,
-          currentMicrocycleWeek: 1,
+          currentMicrocycleWeek: 0,
           cycleStartDate: new Date(),
         });
         console.log(`User ${userId} advanced to mesocycle ${nextMesocycleIndex}`);
@@ -175,13 +175,13 @@ export class ProgressService {
       // Completed all mesocycles, restart from beginning
       await this.fitnessPlanRepo.updateProgress(userId, {
         currentMesocycleIndex: 0,
-        currentMicrocycleWeek: 1,
+        currentMicrocycleWeek: 0,
         cycleStartDate: new Date(),
       });
     } else {
       await this.fitnessPlanRepo.updateProgress(userId, {
         currentMesocycleIndex: nextMesocycleIndex,
-        currentMicrocycleWeek: 1,
+        currentMicrocycleWeek: 0,
         cycleStartDate: new Date(),
       });
     }
@@ -193,13 +193,13 @@ export class ProgressService {
   async resetProgress(userId: string): Promise<void> {
     await this.fitnessPlanRepo.updateProgress(userId, {
       currentMesocycleIndex: 0,
-      currentMicrocycleWeek: 1,
+      currentMicrocycleWeek: 0,
       cycleStartDate: new Date(),
     });
 
     // Deactivate all previous microcycles
     await this.microcycleRepo.deactivatePreviousMicrocycles(userId);
-    
+
     console.log(`Reset progress for user ${userId}`);
   }
 
@@ -235,19 +235,19 @@ export class ProgressService {
     notes?: string | null
   ): Promise<MicrocyclePattern> {
     try {
-      // Use AI agent to generate pattern
+      // Use AI agent to generate pattern (weekNumber is now 0-based)
       const pattern = await generateMicrocyclePattern({
         mesocycle,
-        weekNumber,
+        weekNumber, // Agent expects 1-based week number
         programType,
         notes
       });
-      
+
       console.log(`Generated AI pattern for week ${weekNumber} of ${mesocycle.name}`);
       return pattern;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);
-      
+
       // Fallback to basic pattern if AI fails
       return this.generateFallbackPattern(mesocycle, weekNumber);
     }
@@ -257,12 +257,13 @@ export class ProgressService {
     mesocycle: MesocycleOverview,
     weekNumber: number
   ): MicrocyclePattern {
-    const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
+    // weekNumber is now 0-based (0, 1, 2, 3 for a 4-week mesocycle)
+    const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks - 1;
     const load = isDeloadWeek ? 'light' : 'moderate';
 
     // Simple fallback pattern
     return {
-      weekIndex: weekNumber - 1, // Convert 1-based weekNumber to 0-based weekIndex
+      weekIndex: weekNumber, // weekNumber is already 0-based, same as weekIndex
       days: [
         { day: 'MONDAY', theme: 'Training Day 1', load },
         { day: 'TUESDAY', theme: 'Training Day 2', load },

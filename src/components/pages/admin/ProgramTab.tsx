@@ -181,7 +181,7 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
         <div className="text-right">
           <div className="text-sm text-muted-foreground">Current Progress</div>
           <div className="font-medium">
-            Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek}
+            Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek + 1}
           </div>
           {currentMesocycle && (
             <div className="text-sm text-muted-foreground">
@@ -309,8 +309,8 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">
-                  {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined 
-                    ? `M${workout.mesocycleIndex + 1} W${workout.microcycleWeek}`
+                  {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
+                    ? `M${workout.mesocycleIndex + 1} W${workout.microcycleWeek + 1}`
                     : '-'
                   }
                 </td>

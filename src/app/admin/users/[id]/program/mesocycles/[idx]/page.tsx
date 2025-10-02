@@ -228,8 +228,8 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek 
 
   const getWeekStatus = (weekNumber: number) => {
     if (currentWeek === -1) return 'upcoming'
-    if (weekNumber < currentWeek) return 'past'
-    if (weekNumber === currentWeek) return 'current'
+    if (weekNumber < currentWeek + 1) return 'past' // currentWeek is 0-based, weekNumber is 1-based for display
+    if (weekNumber === currentWeek + 1) return 'current'
     return 'upcoming'
   }
 
