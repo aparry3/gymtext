@@ -1,8 +1,7 @@
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { UserWithProfile } from '../../models/userModel';
-import type { 
+import type {
   SubAgentResult,
-  SubAgentConfig 
+  SubAgentConfig
 } from './types';
 import { AgentConfig, initializeModel } from '../base';
 
@@ -20,29 +19,30 @@ export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
     user: UserWithProfile;
     config?: AgentConfig;
   }): Promise<SubAgentResult> => {
-    
+
     try {
       const { verbose = false } = config;
       const { promptBuilder, agentName, outputSchema } = subAgentConfig;
-      
+
       // Merge configs
       const finalConfig = { ...subAgentConfig, ...config };
-      
-      // Initialize model with the provided schema
-      const model = initializeModel(finalConfig, outputSchema);
-      
+
+      // Initialize model with the provided schema (correct argument order!)
+      const model = initializeModel(outputSchema, finalConfig);
+
       // Build domain-specific prompt
       const systemPrompt = promptBuilder(user);
-      
+
+      // Format messages for our OpenAI wrapper
       const messages = [
-        new SystemMessage(systemPrompt),
-        new HumanMessage(message)
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
       ];
-      
+
       if (verbose) {
         console.log(`${agentName} extracting from message:`, message);
       }
-      
+
       // Get structured output
       const result = await model.invoke(messages) as SubAgentResult;
       
