@@ -134,7 +134,7 @@ function generateFallbackWorkout(
   microcycle: MicrocyclePattern
 ): EnhancedWorkoutInstance {
   const load = dayPlan.load || 'moderate';
-  const isDeload = mesocycle.deload && microcycle.weekIndex === mesocycle.weeks;
+  const isDeload = mesocycle.deload && microcycle.weekIndex === mesocycle.weeks - 1; // Compare 0-based weekIndex with weeks count
   const adjustedLoad = isDeload ? 'light' : load;
 
   // Rest day

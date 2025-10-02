@@ -74,13 +74,29 @@ export class WorkoutInstanceRepository extends BaseRepository {
   ): Promise<WorkoutInstance[]> {
     const results = await this.db
       .selectFrom('workoutInstances')
-      .where('clientId', '=', userId)
-      .orderBy('date', 'desc')
+      .leftJoin('microcycles', 'workoutInstances.microcycleId', 'microcycles.id')
+      .select([
+        'workoutInstances.id',
+        'workoutInstances.clientId',
+        'workoutInstances.fitnessPlanId',
+        'workoutInstances.mesocycleId',
+        'workoutInstances.microcycleId',
+        'workoutInstances.date',
+        'workoutInstances.sessionType',
+        'workoutInstances.goal',
+        'workoutInstances.details',
+        'workoutInstances.completedAt',
+        'workoutInstances.createdAt',
+        'workoutInstances.updatedAt',
+        'microcycles.mesocycleIndex',
+        'microcycles.weekNumber as microcycleWeek'
+      ])
+      .where('workoutInstances.clientId', '=', userId)
+      .orderBy('workoutInstances.date', 'desc')
       .limit(limit)
-      .selectAll()
       .execute();
-    
-    return results;
+
+    return results as unknown as WorkoutInstance[];
   }
 
   /**
@@ -216,13 +232,29 @@ export class WorkoutInstanceRepository extends BaseRepository {
   ): Promise<WorkoutInstance[]> {
     const results = await this.db
       .selectFrom('workoutInstances')
-      .where('clientId', '=', userId)
-      .where('date', '>=', startDate)
-      .where('date', '<=', endDate)
-      .orderBy('date', 'asc')
-      .selectAll()
+      .leftJoin('microcycles', 'workoutInstances.microcycleId', 'microcycles.id')
+      .select([
+        'workoutInstances.id',
+        'workoutInstances.clientId',
+        'workoutInstances.fitnessPlanId',
+        'workoutInstances.mesocycleId',
+        'workoutInstances.microcycleId',
+        'workoutInstances.date',
+        'workoutInstances.sessionType',
+        'workoutInstances.goal',
+        'workoutInstances.details',
+        'workoutInstances.completedAt',
+        'workoutInstances.createdAt',
+        'workoutInstances.updatedAt',
+        'microcycles.mesocycleIndex',
+        'microcycles.weekNumber as microcycleWeek'
+      ])
+      .where('workoutInstances.clientId', '=', userId)
+      .where('workoutInstances.date', '>=', startDate)
+      .where('workoutInstances.date', '<=', endDate)
+      .orderBy('workoutInstances.date', 'asc')
       .execute();
-    
-    return results;
+
+    return results as unknown as WorkoutInstance[];
   }
 }

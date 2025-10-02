@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
+import { FitnessPlan, MesocycleOverview } from '@/server/models/fitnessPlan';
 import { UserWithProfile } from '@/server/models/userModel';
 import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
@@ -32,9 +32,7 @@ export class ProgressService {
     return ProgressService.instance;
   }
 
-  async getCurrentProgress(userId: string): Promise<ProgressInfo | null> {
-    const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
-    
+  async getCurrentProgress(plan: FitnessPlan): Promise<ProgressInfo | null> {
     if (!plan || !plan.mesocycles || plan.mesocycles.length === 0) {
       return null;
     }
@@ -67,7 +65,7 @@ export class ProgressService {
       return null;
     }
 
-    const progress = await this.getCurrentProgress(user.id);
+    const progress = await this.getCurrentProgress(plan);
     if (!progress) {
       console.log(`No progress info found for user ${user.id}`);
       return null;
@@ -115,15 +113,16 @@ export class ProgressService {
   }
 
   async advanceWeek(userId: string): Promise<void> {
-    const progress = await this.getCurrentProgress(userId);
-    if (!progress) {
-      throw new Error(`No progress found for user ${userId}`);
-    }
-
     const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
     if (!plan) {
       throw new Error(`No fitness plan found for user ${userId}`);
     }
+
+    const progress = await this.getCurrentProgress(plan);
+    if (!progress) {
+      throw new Error(`No progress found for user ${userId}`);
+    }
+
 
     const currentMesocycle = progress.mesocycle;
 
@@ -165,7 +164,7 @@ export class ProgressService {
       throw new Error(`No fitness plan found for user ${userId}`);
     }
 
-    const progress = await this.getCurrentProgress(userId);
+    const progress = await this.getCurrentProgress(plan);
     if (!progress) {
       throw new Error(`No progress found for user ${userId}`);
     }
@@ -260,10 +259,10 @@ export class ProgressService {
   ): MicrocyclePattern {
     const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
     const load = isDeloadWeek ? 'light' : 'moderate';
-    
+
     // Simple fallback pattern
     return {
-      weekIndex: weekNumber,
+      weekIndex: weekNumber - 1, // Convert 1-based weekNumber to 0-based weekIndex
       days: [
         { day: 'MONDAY', theme: 'Training Day 1', load },
         { day: 'TUESDAY', theme: 'Training Day 2', load },

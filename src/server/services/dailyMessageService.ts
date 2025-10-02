@@ -283,7 +283,7 @@ export class DailyMessageService {
         return null;
       }
 
-      const progress = await this.progressService.getCurrentProgress(user.id);
+      const progress = await this.progressService.getCurrentProgress(plan);
       if (!progress) {
         console.log(`No progress found for user ${user.id}`);
         return null;

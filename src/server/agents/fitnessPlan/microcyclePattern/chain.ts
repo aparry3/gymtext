@@ -44,10 +44,11 @@ function generateFallbackPattern(
 ): MicrocyclePattern {
   const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
   const load = isDeloadWeek ? 'light' : 'moderate';
-  
+  const weekIndex = weekNumber - 1; // Convert 1-based weekNumber to 0-based weekIndex
+
   const patterns: Record<string, MicrocyclePattern> = {
     strength: {
-      weekIndex: weekNumber,
+      weekIndex,
       days: [
         { day: 'MONDAY', theme: 'Lower Body', load },
         { day: 'TUESDAY', theme: 'Upper Push', load },
@@ -59,7 +60,7 @@ function generateFallbackPattern(
       ],
     },
     endurance: {
-      weekIndex: weekNumber,
+      weekIndex,
       days: [
         { day: 'MONDAY', theme: 'Easy Run', load: 'light' },
         { day: 'TUESDAY', theme: 'Interval Training', load },
@@ -71,7 +72,7 @@ function generateFallbackPattern(
       ],
     },
     hybrid: {
-      weekIndex: weekNumber,
+      weekIndex,
       days: [
         { day: 'MONDAY', theme: 'Strength Training', load },
         { day: 'TUESDAY', theme: 'Cardio', load },
@@ -83,10 +84,10 @@ function generateFallbackPattern(
       ],
     },
   };
-  
+
   // Default pattern if program type not found
   const defaultPattern: MicrocyclePattern = {
-    weekIndex: weekNumber,
+    weekIndex,
     days: [
       { day: 'MONDAY', theme: 'Training Day 1', load },
       { day: 'TUESDAY', theme: 'Training Day 2', load },
@@ -97,6 +98,6 @@ function generateFallbackPattern(
       { day: 'SUNDAY', theme: 'Rest' },
     ],
   };
-  
+
   return patterns[programType] || defaultPattern;
 }
