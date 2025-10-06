@@ -24,14 +24,13 @@ export interface DailyWorkoutContext {
 }
 
 export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<EnhancedWorkoutInstance> => {
-  const { 
-    user, 
-    date, 
-    dayPlan, 
-    microcycle, 
-    mesocycle, 
-    fitnessPlan, 
-    recentWorkouts 
+  const {
+    user,
+    dayPlan,
+    microcycle,
+    mesocycle,
+    fitnessPlan,
+    recentWorkouts
   } = context;
 
   // Get fitness profile context

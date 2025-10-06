@@ -42,73 +42,75 @@ export const modificationsAgentRunnable = (): RunnableLambda<ChatSubagentInput, 
     };
 
     const messages: any[] = [systemMessage, userMessage]; // eslint-disable-line @typescript-eslint/no-explicit-any
-    let toolCallCount = 0;
-    const maxToolCalls = 5; // Prevent infinite loops
 
-    // Agent loop: call tools until we get a final response
-    while (toolCallCount < maxToolCalls) {
-      const response = await modelWithTools.invoke(messages);
+    // Call model with tools
+    const response = await modelWithTools.invoke(messages);
 
-      // Check if there are tool calls
-      if (response.tool_calls && response.tool_calls.length > 0) {
-        console.log(`[${agentName}] Tool calls:`, response.tool_calls.map((tc: any) => tc.name)); // eslint-disable-line @typescript-eslint/no-explicit-any
+    // Check if there are tool calls
+    if (response.tool_calls && response.tool_calls.length > 0) {
+      console.log(`[${agentName}] Tool calls:`, response.tool_calls.map((tc: any) => tc.name)); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        // Add AI message with tool calls to history
-        messages.push({
-          role: 'assistant',
-          content: response.content || '',
-          tool_calls: response.tool_calls,
-        } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      // Add AI message with tool calls to history
+      messages.push({
+        role: 'assistant',
+        content: response.content || '',
+        tool_calls: response.tool_calls,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        // Execute each tool call
-        for (const toolCall of response.tool_calls) {
-          const tool = modificationTools.find(t => t.name === toolCall.name);
+      // Execute each tool call
+      for (const toolCall of response.tool_calls) {
+        const tool = modificationTools.find(t => t.name === toolCall.name);
 
-          if (!tool) {
-            console.error(`[${agentName}] Tool not found: ${toolCall.name}`);
-            continue;
-          }
-
-          try {
-            console.log(`[${agentName}] Executing tool: ${toolCall.name}`, toolCall.args);
-            const toolResult = await tool.invoke(toolCall.args);
-            console.log(`[${agentName}] Tool result:`, toolResult);
-
-            // Add tool result to messages
-            messages.push({
-              role: 'tool',
-              content: toolResult,
-              tool_call_id: toolCall.id,
-            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-          } catch (error) {
-            console.error(`[${agentName}] Error executing tool ${toolCall.name}:`, error);
-            messages.push({
-              role: 'tool',
-              content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              tool_call_id: toolCall.id,
-            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-          }
+        if (!tool) {
+          console.error(`[${agentName}] Tool not found: ${toolCall.name}`);
+          continue;
         }
 
-        toolCallCount++;
-      } else {
-        // No more tool calls, we have our final response
-        const finalResponse = response.content as string;
+        try {
+          console.log(`[${agentName}] Executing tool: ${toolCall.name}`, toolCall.args);
+          // Use type assertion to handle union type from modificationTools array
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const toolResult = await (tool as any).invoke(toolCall.args);
+          console.log(`[${agentName}] Tool result:`, toolResult);
 
-        console.log(`[${agentName}] Generated final response:`, {
-          response: finalResponse.substring(0, 100) + (finalResponse.length > 100 ? '...' : ''),
-        });
-
-        return {
-          response: finalResponse,
-        };
+          // Add tool result to messages
+          messages.push({
+            role: 'tool',
+            content: toolResult,
+            tool_call_id: toolCall.id,
+          } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        } catch (error) {
+          console.error(`[${agentName}] Error executing tool ${toolCall.name}:`, error);
+          messages.push({
+            role: 'tool',
+            content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            tool_call_id: toolCall.id,
+          } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        }
       }
-    }
 
-    // If we hit the max tool calls, return a fallback response
-    console.warn(`[${agentName}] Hit max tool calls (${maxToolCalls}), returning fallback`);
-    return {
-      response: "I've made the modifications to your workout. Let me know if you need anything else!",
-    };
+      // Call model again with tool results to get final response
+      const finalResponse = await modelWithTools.invoke(messages);
+      const responseText = finalResponse.content as string;
+
+      console.log(`[${agentName}] Generated final response after tools:`, {
+        response: responseText.substring(0, 100) + (responseText.length > 100 ? '...' : ''),
+      });
+
+      return {
+        response: responseText,
+      };
+    } else {
+      // No tool calls, we have our final response
+      const finalResponse = response.content as string;
+
+      console.log(`[${agentName}] Generated final response:`, {
+        response: finalResponse.substring(0, 100) + (finalResponse.length > 100 ? '...' : ''),
+      });
+
+      return {
+        response: finalResponse,
+      };
+    }
   });
 };
