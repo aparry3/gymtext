@@ -3,17 +3,16 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import type { EnhancedWorkoutInstance, WorkoutBlockItem } from '@/server/models/workout';
+import { updateExisitngWorkout, type Modification } from '@/server/agents/fitnessPlan/workouts/update/chain';
+import type { EnhancedWorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from './userService';
 
 interface SubstituteExerciseParams {
   userId: string;
   workoutDate: Date;
-  exerciseToReplace: string;
-  replacementExercise?: string;
+  exercises: string[];
   reason: string;
-  blockName?: string;
 }
 
 interface SubstituteExerciseResult {
@@ -87,11 +86,11 @@ export class WorkoutInstanceService {
   }
 
   /**
-   * Substitute a specific exercise in a workout
+   * Substitute a specific exercise in a workout using the workout update agent
    */
   public async substituteExercise(params: SubstituteExerciseParams): Promise<SubstituteExerciseResult> {
     try {
-      const { userId, workoutDate, exerciseToReplace, replacementExercise, reason, blockName } = params;
+      const { userId, workoutDate, exercises, reason } = params;
 
       // Get the workout for the specified date
       const workout = await this.workoutRepo.findByClientIdAndDate(userId, workoutDate);
@@ -103,57 +102,38 @@ export class WorkoutInstanceService {
         };
       }
 
-      // Parse the workout details
-      const workoutDetails: EnhancedWorkoutInstance = typeof workout.details === 'string'
-        ? JSON.parse(workout.details)
-        : workout.details;
-
-      if (!workoutDetails.blocks || workoutDetails.blocks.length === 0) {
+      // Get user with profile
+      const user = await this.userService.getUserWithProfile(userId);
+      if (!user) {
         return {
           success: false,
-          error: 'Workout has no blocks to modify',
+          error: 'User not found',
         };
       }
 
-      let exerciseFound = false;
-      let actualReplacement = replacementExercise;
+      // Build modification object for the agent
+      const modifications: Modification[] = exercises.map(exercise => ({
+        exercise,
+        reason,
+        constraints: [],
+      }));
 
-      // Find and replace the exercise
-      for (const block of workoutDetails.blocks) {
-        // If blockName is specified, only search in that block
-        if (blockName && block.name !== blockName) {
-          continue;
-        }
-
-        for (const item of block.items) {
-          if (item.exercise.toLowerCase().includes(exerciseToReplace.toLowerCase())) {
-            // If no replacement was specified, generate a similar one
-            if (!actualReplacement) {
-              actualReplacement = await this.suggestReplacement(item, reason);
-            }
-
-            item.exercise = actualReplacement;
-            item.notes = `${item.notes || ''} (Substituted: ${reason})`.trim();
-            exerciseFound = true;
-          }
-        }
-      }
-
-      if (!exerciseFound) {
-        return {
-          success: false,
-          error: `Exercise "${exerciseToReplace}" not found in the workout${blockName ? ` block "${blockName}"` : ''}`,
-        };
-      }
+      // Use the workout update agent to perform the substitution
+      const updatedWorkout = await updateExisitngWorkout({
+        workout,
+        user,
+        modifications,
+      });
 
       // Update the workout in the database
       await this.workoutRepo.update(workout.id, {
-        details: workoutDetails as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        details: updatedWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       });
+
+
 
       return {
         success: true,
-        replacementExercise: actualReplacement,
         message: `Updated workout for ${workoutDate.toLocaleDateString()}`,
       };
     } catch (error) {
@@ -270,58 +250,6 @@ export class WorkoutInstanceService {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
-  }
-
-  /**
-   * Suggest a replacement exercise based on the original exercise and reason
-   */
-  private async suggestReplacement(item: WorkoutBlockItem, reason: string): Promise<string> {
-    // Simple heuristic-based replacement suggestions
-    // In a real implementation, this could use an LLM or a more sophisticated exercise database
-
-    const exercise = item.exercise.toLowerCase();
-
-    // Equipment-based substitutions
-    if (reason.toLowerCase().includes('barbell')) {
-      if (exercise.includes('bench press')) return 'Dumbbell Bench Press';
-      if (exercise.includes('squat')) return 'Goblet Squat';
-      if (exercise.includes('deadlift')) return 'Dumbbell Romanian Deadlift';
-      if (exercise.includes('row')) return 'Dumbbell Row';
-      if (exercise.includes('overhead press')) return 'Dumbbell Overhead Press';
-    }
-
-    if (reason.toLowerCase().includes('dumbbell')) {
-      if (exercise.includes('bench')) return 'Push-ups';
-      if (exercise.includes('squat')) return 'Bodyweight Squat';
-      if (exercise.includes('row')) return 'Inverted Row';
-    }
-
-    // Bodyweight alternatives
-    if (reason.toLowerCase().includes('no equipment') || reason.toLowerCase().includes('home')) {
-      if (exercise.includes('bench press')) return 'Push-ups';
-      if (exercise.includes('squat')) return 'Bodyweight Squat';
-      if (exercise.includes('deadlift')) return 'Single Leg Deadlift';
-      if (exercise.includes('row')) return 'Inverted Row';
-      if (exercise.includes('overhead press')) return 'Pike Push-ups';
-    }
-
-    // Injury-based substitutions
-    if (reason.toLowerCase().includes('shoulder')) {
-      if (exercise.includes('overhead')) return 'Landmine Press';
-      if (exercise.includes('bench press')) return 'Floor Press';
-    }
-
-    if (reason.toLowerCase().includes('knee')) {
-      if (exercise.includes('squat')) return 'Box Squat';
-      if (exercise.includes('lunge')) return 'Step-ups';
-    }
-
-    // Default: return a generic alternative based on exercise type
-    if (item.type === 'compound') return 'Compound Movement (specify)';
-    if (item.type === 'accessory') return 'Accessory Exercise (specify)';
-    if (item.type === 'cardio') return 'Cardio Alternative';
-
-    return `Alternative for ${item.exercise}`;
   }
 
   /**

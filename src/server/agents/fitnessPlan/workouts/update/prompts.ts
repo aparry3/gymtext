@@ -4,7 +4,6 @@ export interface Modification {
   exercise: string;
   reason: string;
   constraints?: string[];
-  replacementExercise?: string;
 }
 
 export const WORKOUT_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in workout modifications. Your task is to update existing workouts by ONLY replacing the specific exercises or blocks that need modification.
@@ -64,7 +63,6 @@ export const updateExistingWorkoutPrompt = (
   const modificationsText = modifications.map((mod, idx) => `
 ${idx + 1}. Exercise to replace: "${mod.exercise}"
    Reason: ${mod.reason}
-   ${mod.replacementExercise ? `Specific replacement: ${mod.replacementExercise}` : 'Replacement: Choose appropriate alternative'}
    ${mod.constraints && mod.constraints.length > 0 ? `Constraints: ${mod.constraints.join(', ')}` : ''}
   `.trim()).join('\n\n');
 
