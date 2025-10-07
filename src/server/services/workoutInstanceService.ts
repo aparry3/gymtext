@@ -2,8 +2,8 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { updateExisitngWorkout, type Modification } from '@/server/agents/fitnessPlan/workouts/update/chain';
+import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
+import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
 import type { EnhancedWorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from './userService';
@@ -17,7 +17,7 @@ interface SubstituteExerciseParams {
 
 interface SubstituteExerciseResult {
   success: boolean;
-  replacementExercise?: string;
+  modificationsApplied?: string[];
   message?: string;
   error?: string;
 }
@@ -25,6 +25,7 @@ interface SubstituteExerciseResult {
 interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
+  reason: string;
   constraints: string[];
   preferredEquipment?: string[];
   focusAreas?: string[];
@@ -33,6 +34,7 @@ interface ModifyWorkoutParams {
 interface ModifyWorkoutResult {
   success: boolean;
   workout?: EnhancedWorkoutInstance;
+  modificationsApplied?: string[];
   message?: string;
   error?: string;
 }
@@ -118,23 +120,26 @@ export class WorkoutInstanceService {
         constraints: [],
       }));
 
-      // Use the workout update agent to perform the substitution
-      const updatedWorkout = await updateExisitngWorkout({
+      // Use the substitute exercises agent to perform the substitution
+      const updatedWorkout = await substituteExercises({
         workout,
         user,
         modifications,
       });
 
+      // Extract the modifications applied (remove the date field before saving)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { modificationsApplied, date, ...workoutToSave } = updatedWorkout;
+
       // Update the workout in the database
       await this.workoutRepo.update(workout.id, {
-        details: updatedWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       });
-
-
 
       return {
         success: true,
-        message: `Updated workout for ${workoutDate.toLocaleDateString()}`,
+        modificationsApplied,
+        message: `Updated workout for ${workoutDate.toLocaleDateString()}. Applied ${modificationsApplied.length} modifications.`,
       };
     } catch (error) {
       console.error('Error substituting exercise:', error);
@@ -150,7 +155,7 @@ export class WorkoutInstanceService {
    */
   public async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
     try {
-      const { userId, workoutDate, constraints, preferredEquipment } = params;
+      const { userId, workoutDate, reason, constraints, preferredEquipment, focusAreas } = params;
 
       // Get user with profile
       const user = await this.userService.getUserWithProfile(userId);
@@ -171,77 +176,35 @@ export class WorkoutInstanceService {
         };
       }
 
-      // Get microcycle and fitness plan info
-      if (!existingWorkout.microcycleId) {
-        return {
-          success: false,
-          error: 'Workout has no associated microcycle',
-        };
-      }
-
-      const microcycle = await this.microcycleRepo.getMicrocycleById(existingWorkout.microcycleId);
-      const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(userId);
-
-      if (!microcycle || !fitnessPlan) {
-        return {
-          success: false,
-          error: 'Could not find training plan information',
-        };
-      }
-
-      // Find the day in the microcycle pattern
-      const dayOfWeek = workoutDate.toLocaleDateString('en-US', { weekday: 'long' });
-      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
-
-      if (!dayPlan) {
-        return {
-          success: false,
-          error: 'Could not find day plan in microcycle',
-        };
-      }
-
-      // Get the mesocycle from fitness plan
-      const mesocycle = fitnessPlan.mesocycles[microcycle.mesocycleIndex];
-
-      if (!mesocycle) {
-        return {
-          success: false,
-          error: 'Could not find mesocycle information',
-        };
-      }
-
-      if (!fitnessPlan.id) {
-        return {
-          success: false,
-          error: 'Fitness plan has no ID',
-        };
-      }
-
-      // Temporarily update user profile with constraints
-      const modifiedUser = this.applyConstraintsToUser(user, constraints, preferredEquipment);
-
-      // Generate a new workout with the constraints
-      const context: DailyWorkoutContext = {
-        user: modifiedUser,
-        date: workoutDate,
-        dayPlan,
-        microcycle,
-        mesocycle,
-        fitnessPlan,
-        recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
+      // Build replace workout params for the agent
+      const replaceParams: ReplaceWorkoutParams = {
+        reason,
+        constraints,
+        preferredEquipment,
+        focusAreas,
       };
 
-      const newWorkout = await generateDailyWorkout(context);
+      // Use the replace workout agent to modify the workout
+      const updatedWorkout = await replaceWorkout({
+        workout: existingWorkout,
+        user,
+        params: replaceParams,
+      });
+
+      // Extract the modifications applied (remove the date field before saving)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { modificationsApplied, date, ...workoutToSave } = updatedWorkout;
 
       // Update the workout in the database
       await this.workoutRepo.update(existingWorkout.id, {
-        details: newWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       });
 
       return {
         success: true,
-        workout: newWorkout,
-        message: `Generated modified workout for ${workoutDate.toLocaleDateString()}`,
+        workout: updatedWorkout,
+        modificationsApplied,
+        message: `Modified workout for ${workoutDate.toLocaleDateString()}. Applied ${modificationsApplied.length} modifications.`,
       };
     } catch (error) {
       console.error('Error modifying workout:', error);

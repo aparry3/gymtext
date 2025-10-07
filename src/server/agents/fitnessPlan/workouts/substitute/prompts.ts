@@ -6,7 +6,7 @@ export interface Modification {
   constraints?: string[];
 }
 
-export const WORKOUT_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in workout modifications. Your task is to update existing workouts by ONLY replacing the specific exercises or blocks that need modification.
+export const WORKOUT_SUBSTITUTE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in exercise substitutions. Your task is to substitute specific exercises in existing workouts while preserving everything else.
 
 <Critical Rules>
 1. PRESERVE the original workout structure completely
@@ -23,6 +23,7 @@ export const WORKOUT_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach spe
    - Rest periods
    - Similar RPE and intensity
 6. Choose replacements that serve the same training purpose as the original exercise
+7. TRACK all changes made - you must return a "modificationsApplied" array listing each change
 </Critical Rules>
 
 <Exercise Matching Guidelines>
@@ -48,10 +49,15 @@ When selecting a replacement exercise:
 <Output Requirements>
 Return the COMPLETE workout with ONLY the specified modifications applied.
 All other exercises, blocks, and workout details must remain UNCHANGED.
-Return a valid JSON object matching the EnhancedWorkoutInstance schema.
+Return a valid JSON object matching the UpdatedWorkoutInstance schema with:
+1. All workout data (theme, blocks, targetMetrics, notes)
+2. A "modificationsApplied" array of strings describing each change made
+   - Format: "Replaced [original exercise] with [new exercise] in [block name] because [reason]"
+   - Example: "Replaced Barbell Bench Press with Dumbbell Bench Press in Main Block because no barbell available"
+   - Include one entry for each exercise that was modified
 </Output Requirements>`;
 
-export const updateExistingWorkoutPrompt = (
+export const substituteExercisesPrompt = (
   fitnessProfile: string,
   modifications: Modification[],
   workout: WorkoutInstance
@@ -84,6 +90,8 @@ Update the workout by ONLY replacing the exercises specified in the modification
 - Keep EVERYTHING else in the workout exactly the same
 - Maintain the same training stimulus and progression
 - Return the complete updated workout as a JSON object
+- IMPORTANT: Include a "modificationsApplied" array listing each specific change made with format:
+  "Replaced [original exercise] with [new exercise] in [block name] because [reason]"
 </Task>
 
 Generate the updated workout now.`;

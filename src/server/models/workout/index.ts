@@ -18,11 +18,12 @@ export type WorkoutInstanceBreakdown = LLMWorkoutInstance & {
 }
 
 // Export new enhanced types
-export type { 
-  WorkoutBlock, 
-  WorkoutBlockItem, 
-  WorkoutModification, 
-  EnhancedWorkoutInstance 
+export type {
+  WorkoutBlock,
+  WorkoutBlockItem,
+  WorkoutModification,
+  EnhancedWorkoutInstance,
+  UpdatedWorkoutInstance
 } from './schema';
 
 export class WorkoutInstanceModel implements NewWorkoutInstance {

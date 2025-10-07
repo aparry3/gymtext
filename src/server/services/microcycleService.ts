@@ -2,7 +2,7 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
+import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
 import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from './userService';
@@ -21,6 +21,7 @@ interface ModifyWeekParams {
 interface ModifyWeekResult {
   success: boolean;
   modifiedDays?: number;
+  modificationsApplied?: string[];
   message?: string;
   error?: string;
 }
@@ -129,27 +130,34 @@ export class MicrocycleService {
       // Apply constraints to user temporarily
       const modifiedUser = this.applyConstraintsToUser(user, constraints, undefined);
 
-      // Generate a new microcycle pattern with the modifications
-      const modificationNotes = modifications.map(m => `${m.day}: ${m.change}`).join('; ');
-      const allNotes = [modificationNotes, reason, ...constraints].filter(Boolean).join('; ');
+      // Build microcycle update params for the agent
+      const updateParams: MicrocycleUpdateParams = {
+        modifications,
+        constraints,
+        reason,
+      };
 
-      const newPattern = await generateMicrocyclePattern({
+      // Use the microcycle update agent to modify the pattern
+      const updatedPattern = await updateMicrocyclePattern({
+        currentPattern: relevantMicrocycle.pattern,
+        params: updateParams,
         mesocycle,
-        weekNumber: relevantMicrocycle.weekNumber,
         programType: fitnessPlan.programType,
-        notes: allNotes,
       });
+
+      // Extract the modifications applied (remove before saving)
+      const { modificationsApplied, ...patternToSave } = updatedPattern;
 
       // Update the microcycle with the new pattern
       await this.microcycleRepo.updateMicrocycle(relevantMicrocycle.id, {
-        pattern: newPattern,
+        pattern: patternToSave,
       });
 
       // Regenerate workouts for the modified days
       let modifiedCount = 0;
       for (const mod of modifications) {
         const dayOfWeek = mod.day;
-        const dayPlan = newPattern.days.find(d => d.day === dayOfWeek);
+        const dayPlan = patternToSave.days.find(d => d.day === dayOfWeek);
 
         if (!dayPlan) continue;
 
@@ -198,7 +206,8 @@ export class MicrocycleService {
       return {
         success: true,
         modifiedDays: modifiedCount,
-        message: `Updated ${modifiedCount} workouts for the week starting ${startDate.toLocaleDateString()}`,
+        modificationsApplied,
+        message: `Updated ${modifiedCount} workouts for the week starting ${startDate.toLocaleDateString()}. Applied ${modificationsApplied.length} pattern modifications.`,
       };
     } catch (error) {
       console.error('Error modifying week:', error);

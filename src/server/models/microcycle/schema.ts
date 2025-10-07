@@ -12,6 +12,10 @@ export const _MicrocyclePatternSchema = z.object({
   days: z.array(_DayPatternSchema).length(7).describe('Training pattern for each day of the week'),
 });
 
+export const _UpdatedMicrocyclePatternSchema = _MicrocyclePatternSchema.extend({
+  modificationsApplied: z.array(z.string()).describe('List of specific changes made to the weekly pattern (e.g., "Changed Monday from Upper Push to Home Upper - no gym access")')
+});
+
 export const _MicrocycleSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
@@ -28,4 +32,5 @@ export const _MicrocycleSchema = z.object({
 
 export type DayPattern = z.infer<typeof _DayPatternSchema>;
 export type MicrocyclePattern = z.infer<typeof _MicrocyclePatternSchema>;
+export type UpdatedMicrocyclePattern = z.infer<typeof _UpdatedMicrocyclePatternSchema>;
 export type MicrocycleSchema = z.infer<typeof _MicrocycleSchema>;

@@ -44,6 +44,11 @@ export const _EnhancedWorkoutInstanceSchema = z.object({
   notes: z.string().nullable().optional().describe("Additional notes for the workout")
 }).strict();
 
+// Updated workout instance schema with modifications tracking
+export const _UpdatedWorkoutInstanceSchema = _EnhancedWorkoutInstanceSchema.extend({
+  modificationsApplied: z.array(z.string()).describe("List of specific changes made to the workout (e.g., 'Replaced Barbell Bench Press with Dumbbell Bench Press due to no barbell available')")
+}).strict();
+
 // Legacy schema for backward compatibility
 export const _WorkoutInstanceSchema = z.object({
   sessionType: z.enum(["run","lift","metcon","mobility","rest","other"]).describe("Primary modality"),
@@ -68,3 +73,4 @@ export type WorkoutBlockItem = z.infer<typeof _WorkoutBlockItemSchema>;
 export type WorkoutBlock = z.infer<typeof _WorkoutBlockSchema>;
 export type WorkoutModification = z.infer<typeof _WorkoutModificationSchema>;
 export type EnhancedWorkoutInstance = z.infer<typeof _EnhancedWorkoutInstanceSchema> & { date: Date };
+export type UpdatedWorkoutInstance = z.infer<typeof _UpdatedWorkoutInstanceSchema> & { date: Date };

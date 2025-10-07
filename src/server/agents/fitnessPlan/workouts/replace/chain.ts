@@ -1,23 +1,23 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
-import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
+import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
-import { updateExistingWorkoutPrompt, type Modification, WORKOUT_UPDATE_SYSTEM_PROMPT } from './prompts';
+import { replaceWorkoutPrompt, type ReplaceWorkoutParams, WORKOUT_REPLACE_SYSTEM_PROMPT } from './prompts';
 import { initializeModel } from '@/server/agents/base';
 
-export type { Modification };
+export type { ReplaceWorkoutParams };
 
-export interface ExisitngWorkoutContext {
+export interface ReplaceWorkoutContext {
   workout: WorkoutInstance;
   user: UserWithProfile;
-  modifications: Modification[];
+  params: ReplaceWorkoutParams;
 }
 
-export const updateExisitngWorkout = async (context: ExisitngWorkoutContext): Promise<EnhancedWorkoutInstance> => {
-  const { 
-    workout, 
+export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<UpdatedWorkoutInstance> => {
+  const {
+    workout,
     user,
-    modifications,
+    params,
   } = context;
 
   // Get fitness profile context
@@ -25,33 +25,32 @@ export const updateExisitngWorkout = async (context: ExisitngWorkoutContext): Pr
   const fitnessProfile = await fitnessProfileContext.getContext(user);
 
   // Generate prompt
-  const prompt = updateExistingWorkoutPrompt(
+  const prompt = replaceWorkoutPrompt(
     fitnessProfile,
-    modifications,
+    params,
     workout
   );
 
-  // Use structured output for the enhanced workout schema
-  const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema);
+  // Use structured output for the updated workout schema
+  const structuredModel = initializeModel(_UpdatedWorkoutInstanceSchema);
 
   // Retry mechanism for transient errors
   const maxRetries = 2;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      console.log(`Attempting to generate workout (attempt ${attempt + 1}/${maxRetries})`);
-      
+      console.log(`Attempting to replace workout (attempt ${attempt + 1}/${maxRetries})`);
+
       // Generate the workout
-      const updatedWorkout = await structuredModel.invoke([WORKOUT_UPDATE_SYSTEM_PROMPT, prompt]) as EnhancedWorkoutInstance;
-      
+      const updatedWorkout = await structuredModel.invoke([WORKOUT_REPLACE_SYSTEM_PROMPT, prompt]) as UpdatedWorkoutInstance;
+
       // Ensure we have a valid response
       if (!updatedWorkout) {
         throw new Error('AI returned null/undefined workout');
       }
 
       // Validate the workout structure
-      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(updatedWorkout);
-
+      const validatedWorkout = _UpdatedWorkoutInstanceSchema.parse(updatedWorkout);
 
       // Additional validation
       if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
@@ -59,17 +58,17 @@ export const updateExisitngWorkout = async (context: ExisitngWorkoutContext): Pr
       }
 
       // Combine validated workout with date from original workout
-      const validatedWorkoutWithDate: EnhancedWorkoutInstance = {
+      const validatedWorkoutWithDate: UpdatedWorkoutInstance = {
         ...validatedWorkout,
         date: workout.date
       };
 
-      console.log(`Successfully updated workout with ${validatedWorkout.blocks.length} blocks`);
+      console.log(`Successfully replaced workout with ${validatedWorkout.blocks.length} blocks and ${validatedWorkout.modificationsApplied?.length || 0} modifications`);
 
       return validatedWorkoutWithDate;
     } catch (error) {
-      console.error(`Error generating workout with AI (attempt ${attempt + 1}):`, error);
-      
+      console.error(`Error replacing workout (attempt ${attempt + 1}):`, error);
+
       // Log more details about the error for debugging
       if (error instanceof Error) {
         console.error('Error details:', {
@@ -90,5 +89,5 @@ export const updateExisitngWorkout = async (context: ExisitngWorkoutContext): Pr
     }
   }
 
-  throw new Error('Failed to generate workout after all attempts');
+  throw new Error('Failed to replace workout after all attempts');
 }

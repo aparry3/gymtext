@@ -10,6 +10,10 @@ export interface MicrocyclePattern {
   }>;
 }
 
+export interface UpdatedMicrocyclePattern extends MicrocyclePattern {
+  modificationsApplied: string[];
+}
+
 export interface Microcycle {
   id: string;
   userId: string;

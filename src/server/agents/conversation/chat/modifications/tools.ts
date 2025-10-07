@@ -6,15 +6,10 @@ import { tool } from '@langchain/core/tools';
 const SubstituteExerciseSchema = z.object({
   userId: z.string().describe('The user ID'),
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
-  exerciseToReplace: z.string().describe('The name of the exercise to replace'),
-  replacementExercise: z
-    .string()
-    .optional()
-    .describe('Optional: specific exercise to replace it with. If not provided, the AI will suggest alternatives.'),
+  exercises: z.array(z.string()).describe('List of exercises to replace (e.g., ["Barbell Bench Press", "Squat"])'),
   reason: z
     .string()
     .describe('Reason for the substitution (e.g., "No barbell available", "Shoulder injury")'),
-  blockName: z.string().optional().describe('Optional: name of the block containing the exercise'),
 });
 
 type SubstituteExerciseInput = z.infer<typeof SubstituteExerciseSchema>;
@@ -22,22 +17,19 @@ type SubstituteExerciseInput = z.infer<typeof SubstituteExerciseSchema>;
 const substituteFunction = async ({
   userId,
   workoutDate,
-  exerciseToReplace,
-  replacementExercise,
+  exercises,
   reason,
-  blockName,
 }: SubstituteExerciseInput): Promise<string> => {
   const result = await workoutInstanceService.substituteExercise({
     userId,
     workoutDate: new Date(workoutDate),
-    exerciseToReplace,
-    replacementExercise,
+    exercises,
     reason,
-    blockName,
   });
 
   if (result.success) {
-    return `Successfully replaced "${exerciseToReplace}" with "${result.replacementExercise}". ${result.message || ''}`.trim();
+    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No modifications';
+    return `Successfully updated workout. ${result.message || ''}\n\nModifications:\n- ${modificationsText}`.trim();
   }
   return `Failed to substitute exercise: ${result.error}`;
 };
@@ -54,6 +46,7 @@ preferences, or other constraints. This modifies the existing workout in place.`
 const ModifyWorkoutSchema = z.object({
   userId: z.string().describe('The user ID'),
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
+  reason: z.string().describe('Reason for the modification'),
   constraints: z.array(z.string()).describe('List of constraints or modifications needed (e.g., "No gym equipment", "Avoid shoulder exercises", "30 minutes max")'),
   preferredEquipment: z.array(z.string()).optional().describe('Optional: equipment available (e.g., ["dumbbells", "resistance bands"])'),
   focusAreas: z.array(z.string()).optional().describe('Optional: specific areas to focus on or avoid'),
@@ -61,17 +54,19 @@ const ModifyWorkoutSchema = z.object({
 
 type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
 
-const modifyWorkoutFunction = async ({ userId, workoutDate, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<string> => {
+const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<string> => {
   const result = await workoutInstanceService.modifyWorkout({
     userId,
     workoutDate: new Date(workoutDate),
+    reason,
     constraints,
     preferredEquipment,
     focusAreas,
   });
 
   if (result.success) {
-    return `Successfully generated modified workout. ${result.message || ''} The workout has been updated with ${result.workout?.blocks.length || 0} blocks.`;
+    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No specific modifications tracked';
+    return `Successfully modified workout. ${result.message || ''}\n\nModifications:\n- ${modificationsText}`.trim();
   } else {
     return `Failed to modify workout: ${result.error}`;
   }
@@ -112,7 +107,8 @@ const modifyWeekFunction = async ({ userId, startDate, modifications, constraint
   });
 
   if (result.success) {
-    return `Successfully modified the week starting ${startDate}. ${result.message || ''} Updated ${result.modifiedDays || 0} days.`;
+    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No specific modifications tracked';
+    return `Successfully modified the week starting ${startDate}. ${result.message || ''}\n\nPattern Modifications:\n- ${modificationsText}`.trim();
   } else {
     return `Failed to modify week: ${result.error}`;
   }
