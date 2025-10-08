@@ -137,17 +137,17 @@ const modifyWeekFunction = async ({ userId, targetDay, changes, reason }: Modify
  * Use cases:
  * 1. **Muscle Group Swaps**: User wants different muscle group today
  *    Example: "Gym is packed, can you give me a back workout instead of chest?"
- *    → Changes today to back, then checks remaining days to avoid back-to-back back days
- *    → May shuffle another day to maintain muscle group balance
+ *    -> Changes today to back, then checks remaining days to avoid back-to-back back days
+ *    -> May shuffle another day to maintain muscle group balance
  *
  * 2. **Multi-Day Equipment Changes**: Travel affecting multiple days
  *    Example: "I'm traveling Mon-Fri with only hotel gym access"
- *    → Updates pattern for remaining days with equipment constraints
- *    → Regenerates today's workout for hotel gym
+ *    -> Updates pattern for remaining days with equipment constraints
+ *    -> Regenerates today's workout for hotel gym
  *
  * 3. **Multi-Day Schedule Changes**: Time constraints for rest of week
  *    Example: "Only 30 minutes available for workouts the rest of this week"
- *    → Condenses remaining workouts to fit time constraint
+ *    -> Condenses remaining workouts to fit time constraint
  *
  * Note: Updates the weekly pattern for coherence. Regenerates today's workout ONLY if today's pattern
  * changed (e.g., modifying Thursday might cause Monday to be reshuffled from cardio to strength).

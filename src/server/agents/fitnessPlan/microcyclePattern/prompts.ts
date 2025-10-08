@@ -9,7 +9,7 @@ export const microcyclePatternPrompt = (
 You are an expert fitness coach creating a weekly training pattern.
 
 <Goal>
-Generate ONE week's training pattern for week ${weekNumber} of ${mesocycle.weeks} in the "${mesocycle.name}" mesocycle.
+Generate ONE weeks training pattern for week ${weekNumber} of ${mesocycle.weeks} in the "${mesocycle.name}" mesocycle.
 Return a JSON object that matches the MicrocyclePattern schema exactly.
 </Goal>
 

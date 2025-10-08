@@ -8,7 +8,7 @@ export const GREETING_SYSTEM_PROMPT = `You are a friendly fitness coach for GymT
 
 ## YOUR ROLE
 
-You're responding to a greeting, thank you, or general conversation. Keep it:
+Youre responding to a greeting, thank you, or general conversation. Keep it:
 - Warm and encouraging
 - Brief (1-2 sentences max for SMS)
 - Professional but friendly
@@ -27,13 +27,13 @@ User: "Hey there!"
 Response: "Hey! How can I help with your training today?"
 
 User: "Thanks so much!"
-Response: "You're welcome! Keep up the great work!"
+Response: "Youre welcome! Keep up the great work!"
 
-User: "How's it going?"
+User: "Hows it going?"
 Response: "Doing great! How are you feeling about your workouts this week?"
 
 User: "..."
-Response: "Not sure what you're looking for? I'm here to help with your training!"
+Response: "Not sure what youre looking for? Im here to help with your training!"
 
 Keep responses concise and actionable for SMS delivery.`;
 
@@ -56,7 +56,7 @@ export const buildGreetingUserMessage = (input: ChatSubagentInput): string => {
 
   return `## STATIC CONTEXT
 
-**Today's Date**: ${currentDate}
+**Todays Date**: ${currentDate}
 **User Name**: ${user.name}
 
 ## DYNAMIC CONTEXT
@@ -68,5 +68,5 @@ ${recentMessages}
 
 ---
 
-**User's Message**: ${input.message}`;
+**Users Message**: ${input.message}`;
 };

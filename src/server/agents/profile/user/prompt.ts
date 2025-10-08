@@ -12,19 +12,19 @@ Return structured JSON with extracted user data. Do NOT call any tools.
 
 GENDER DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
 - EXPLICIT GENDER WORDS (0.95+ confidence): "male", "female", "man", "woman", "guy", "girl"
-- DIRECT STATEMENTS (0.9+ confidence): "I'm a guy", "I'm female", "I'm a woman", "I identify as non-binary"
+- DIRECT STATEMENTS (0.9+ confidence): "Im a guy", "Im female", "Im a woman", "I identify as non-binary"
 - NAME-BASED INFERENCE (0.8+ confidence): Common gendered names like "Michael" (male), "Sarah" (female)
-  - Only use for very common, unambiguous names: Aaron, David, John, Michael → male; Sarah, Jennifer, Lisa, Emily → female
+  - Only use for very common, unambiguous names: Aaron, David, John, Michael -> male; Sarah, Jennifer, Lisa, Emily -> female
   - Skip ambiguous names: Alex, Jordan, Taylor, Casey, etc.
 - CONTEXTUAL CLUES (0.75+ confidence): "as a mother", "when I was pregnant", "my boyfriend", "my wife"
-- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "don't want to say" → gender: "prefer-not-to-say" (0.9+ confidence)
-- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" → gender: "non-binary" (0.9+ confidence)
+- PREFER NOT TO SAY: If user says "prefer not to say", "rather not share", "dont want to say" -> gender: "prefer-not-to-say" (0.9+ confidence)
+- NON-BINARY INDICATORS: "non-binary", "they/them", "genderqueer", "enby" -> gender: "non-binary" (0.9+ confidence)
 
 AGE DETECTION GUIDELINES (CRITICAL - ALWAYS EXTRACT WHEN MENTIONED):
-- EXPLICIT AGE NUMBERS (0.95+ confidence): "25", "30 years old", "I'm 28", "age 35"
-- DIRECT STATEMENTS (0.9+ confidence): "I'm 25", "I am 30 years old", "My age is 28"
-- AGE RANGES (0.8+ confidence): "I'm in my twenties" → estimate mid-range (25), "early thirties" → (32)
-- CONTEXTUAL AGE CLUES (0.75+ confidence): "just graduated college" → ~22, "retirement age" → ~65
+- EXPLICIT AGE NUMBERS (0.95+ confidence): "25", "30 years old", "Im 28", "age 35"
+- DIRECT STATEMENTS (0.9+ confidence): "Im 25", "I am 30 years old", "My age is 28"
+- AGE RANGES (0.8+ confidence): "Im in my twenties" -> estimate mid-range (25), "early thirties" -> (32)
+- CONTEXTUAL AGE CLUES (0.75+ confidence): "just graduated college" -> ~22, "retirement age" -> ~65
 - VALIDATION: Only extract ages between 13-120 years old
 
 TIME PREFERENCE DETECTION GUIDELINES:
@@ -33,7 +33,7 @@ TIME PREFERENCE DETECTION GUIDELINES:
 - GENERAL PREFERENCES (0.7+ confidence): "I usually work out in the morning", "I prefer evening sessions"
 - TIMEZONE INDICATORS: "EST", "PST", "Eastern", "Pacific", "New York", "California", city names
 - ALWAYS extract both time preference AND timezone when mentioned
-- Convert descriptive times: "morning" → 7-8am, "evening" → 6-7pm, "after work" → 5-6pm
+- Convert descriptive times: "morning" -> 7-8am, "evening" -> 6-7pm, "after work" -> 5-6pm
 
 CONTACT INFORMATION EXTRACTION:
 - NAME: Full name extraction, proper capitalization
@@ -48,15 +48,15 @@ CONFIDENCE SCORING:
 - Below 0.75: DO NOT EXTRACT
 
 EXAMPLES OF HIGH-PRIORITY EXTRACTION:
-- "Aaron, male, phone, time" → MUST extract gender: "male" with 0.95+ confidence
-- "Sarah, 28, female, 555-1234, 7am EST" → MUST extract age: 28, gender: "female", phone, time, timezone
-- "I'm 25 and looking to get in shape" → MUST extract age: 25 with 0.95+ confidence
-- "My email is john@example.com" → extract email with 0.95+ confidence
-- "I prefer morning workouts around 6am Pacific time" → extract preferredSendHour: 6, timezone: Pacific
+- "Aaron, male, phone, time" -> MUST extract gender: "male" with 0.95+ confidence
+- "Sarah, 28, female, 555-1234, 7am EST" -> MUST extract age: 28, gender: "female", phone, time, timezone
+- "Im 25 and looking to get in shape" -> MUST extract age: 25 with 0.95+ confidence
+- "My email is john@example.com" -> extract email with 0.95+ confidence
+- "I prefer morning workouts around 6am Pacific time" -> extract preferredSendHour: 6, timezone: Pacific
 
 EXAMPLE RESPONSES:
 
-For "Hi, I'm Sarah, 28 years old, female, my email is sarah@example.com and I prefer 7am workouts":
+For "Hi, Im Sarah, 28 years old, female, my email is sarah@example.com and I prefer 7am workouts":
 {
   "data": {
     "name": "Sarah",
@@ -70,7 +70,7 @@ For "Hi, I'm Sarah, 28 years old, female, my email is sarah@example.com and I pr
   "reason": "User provided explicit demographics and contact information"
 }
 
-For "I'm a 25-year-old guy looking to get fit":
+For "Im a 25-year-old guy looking to get fit":
 {
   "data": {
     "age": 25,
@@ -120,12 +120,12 @@ export const buildUserUserMessage = (user: UserWithProfile, message: string): st
 
   return `## CONTEXT
 
-**Today's Date**: ${currentDate}
+**Todays Date**: ${currentDate}
 
 **Current User Info**:
 ${JSON.stringify(userJson, null, 2)}
 
 ---
 
-**User's Message**: ${message}`;
+**Users Message**: ${message}`;
 };

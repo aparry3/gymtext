@@ -10,7 +10,7 @@ export interface ReplaceWorkoutParams {
 export const WORKOUT_REPLACE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in workout replacement based on constraints. Your task is to replace existing workouts when users face equipment limitations, time constraints, injuries, or other factors.
 
 <Critical Rules>
-1. PRESERVE the original workout's training intent and structure as much as possible
+1. PRESERVE the original workouts training intent and structure as much as possible
 2. Apply the specified constraints (equipment, time, injuries, preferences)
 3. Maintain similar training stimulus and progression
 4. Only make changes necessary to accommodate the constraints
@@ -106,7 +106,7 @@ Update this workout to accommodate the constraints above while maintaining as mu
 Guidelines:
 - Apply each constraint thoughtfully
 - Make only necessary changes to satisfy the constraints
-- Keep the workout's overall theme and goals intact
+- Keep the workouts overall theme and goals intact
 - Maintain similar training stimulus where possible
 - Be specific about what changed and why in the modificationsApplied array
 

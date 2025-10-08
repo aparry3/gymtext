@@ -17,10 +17,10 @@ export const dailyWorkoutPrompt = (
   programType: string,
   recentWorkouts?: WorkoutInstance[]
 ) => `
-You are an elite personal fitness coach creating today's detailed workout.
+You are an elite personal fitness coach creating todays detailed workout.
 
 <Goal>
-Generate a comprehensive workout for ${user.name} that matches today's training theme and intensity.
+Generate a comprehensive workout for ${user.name} that matches todays training theme and intensity.
 The workout must be structured with blocks and include specific exercise details.
 </Goal>
 
@@ -28,7 +28,7 @@ The workout must be structured with blocks and include specific exercise details
 - Program type: ${programType}
 - Current mesocycle: ${mesocycle.name} (week ${microcycle.weekIndex} of ${mesocycle.weeks})
 - Mesocycle focus: ${mesocycle.focus.join(', ')}
-- Today's theme: ${dayPlan.theme}
+- Todays theme: ${dayPlan.theme}
 - Load level: ${dayPlan.load || 'moderate'}
 ${dayPlan.notes ? `- Special notes: ${dayPlan.notes}` : ''}
 ${mesocycle.deload && microcycle.weekIndex === mesocycle.weeks ? '- This is a DELOAD week - reduce volume and intensity' : ''}

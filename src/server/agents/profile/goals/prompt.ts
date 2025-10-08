@@ -15,17 +15,17 @@ CRITICAL: BE EXTREMELY CONSERVATIVE WITH GOAL UPDATES
 Goals should VERY RARELY be updated. Only extract goal updates when the user EXPLICITLY states they want to change their long-term fitness goals.
 
 DO NOT EXTRACT GOALS FROM:
-- Short-term workout preferences ("can we do beach workouts this week", "let's focus on legs today")
-- Temporary constraints ("I'm traveling this week", "I'm at the beach this week")
+- Short-term workout preferences ("can we do beach workouts this week", "lets focus on legs today")
+- Temporary constraints ("Im traveling this week", "Im at the beach this week")
 - Activity mentions without explicit goal language ("I went hiking yesterday", "doing some running")
 - Equipment availability ("I only have dumbbells this week")
 - Schedule changes ("can we workout in the morning instead")
-- Environmental changes ("I'm at a hotel gym", "working out at home this week")
-- One-time requests ("can we focus on arms today", "let's do cardio instead")
+- Environmental changes ("Im at a hotel gym", "working out at home this week")
+- One-time requests ("can we focus on arms today", "lets do cardio instead")
 - Workout modifications ("can we update my workouts to be beach workouts")
 
 ONLY EXTRACT GOALS WHEN USER EXPLICITLY USES GOAL LANGUAGE:
-- "Let's UPDATE MY GOAL to run 30 miles instead of 20"
+- "Lets UPDATE MY GOAL to run 30 miles instead of 20"
 - "I want to CHANGE MY GOAL from fat loss to muscle gain"
 - "My NEW FITNESS GOAL is to complete a marathon"
 - "Can we CHANGE MY GOAL to focus on strength training?"
@@ -41,40 +41,40 @@ The user MUST use words like:
 WITHOUT this explicit goal language, DO NOT extract a goal update.
 
 VALID GOAL EXTRACTION EXAMPLES:
-- "Let's update the goal of my fitness plan to run 30 miles instead of 20"
-  → Extract: goal update with explicit language
+- "Lets update the goal of my fitness plan to run 30 miles instead of 20"
+  -> Extract: goal update with explicit language
 
 - "I want to change my goal from fat loss to muscle gain"
-  → Extract: explicit goal change statement
+  -> Extract: explicit goal change statement
 
 - "My new fitness goal is to complete a marathon in under 4 hours"
-  → Extract: explicit new goal statement
+  -> Extract: explicit new goal statement
 
 INVALID - REJECT THESE:
-- "I'm at the beach this week, can we update my workouts to be beach workouts"
-  → REJECT: No goal language, just temporary workout modification
+- "Im at the beach this week, can we update my workouts to be beach workouts"
+  -> REJECT: No goal language, just temporary workout modification
 
-- "Let's do some running this week"
-  → REJECT: Short-term preference, no goal language
+- "Lets do some running this week"
+  -> REJECT: Short-term preference, no goal language
 
 - "I want to focus on arms today"
-  → REJECT: One-time request, no goal language
+  -> REJECT: One-time request, no goal language
 
 - "Can we add some cardio to my plan?"
-  → REJECT: Workout preference, not a goal change
+  -> REJECT: Workout preference, not a goal change
 
-- "I'm training for a marathon"
-  → REJECT: Activity mention without explicit goal change language
+- "Im training for a marathon"
+  -> REJECT: Activity mention without explicit goal change language
 
 - "Help me get in shape for ski season"
-  → REJECT: No explicit goal language (this is a temporary objective)
+  -> REJECT: No explicit goal language (this is a temporary objective)
 
 CONFIDENCE SCORING (VERY STRICT):
 - 0.9-1.0: User explicitly uses "goal" language and clearly states what they want to change
   Example: "change my goal to X", "my new goal is Y"
 
 - 0.8-0.89: User uses goal-related language but less explicit
-  Example: "I want to focus on powerlifting now" (implies goal change but doesn't say "goal")
+  Example: "I want to focus on powerlifting now" (implies goal change but doesnt say "goal")
 
 - Below 0.8: REJECT - Not confident enough for goal update
 
@@ -90,7 +90,7 @@ Return in "data" field ONLY when confidence >= 0.8:
 
 EXAMPLE RESPONSES:
 
-For "Let's update my goal to train for a marathon":
+For "Lets update my goal to train for a marathon":
 {
   "data": {
     "primary": "endurance",
@@ -101,7 +101,7 @@ For "Let's update my goal to train for a marathon":
   "reason": "User explicitly requested to update their goal with clear goal language"
 }
 
-For "I'm at the beach this week, can we update my workouts to be beach workouts":
+For "Im at the beach this week, can we update my workouts to be beach workouts":
 {
   "data": null,
   "hasData": false,
@@ -144,7 +144,7 @@ export const buildGoalsUserMessage = (user: UserWithProfile, message: string): s
 
   return `## CONTEXT
 
-**Today's Date**: ${currentDate}
+**Todays Date**: ${currentDate}
 **User Name**: ${user.name}
 **User Age**: ${user.age || 'Unknown'}
 
@@ -153,5 +153,5 @@ ${goalsJson}
 
 ---
 
-**User's Message**: ${message}`;
+**Users Message**: ${message}`;
 };
