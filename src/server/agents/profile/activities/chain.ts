@@ -6,8 +6,8 @@ import type { AgentConfig } from '../../base';
 import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
- * Create the Activities Agent - specialized for extracting activity-specific data and experience
- * This is the SECOND HIGHEST PRIORITY agent - activity data is critical after goals
+ * Create the Activities Agent - specialized for extracting CURRENT/PAST activity data and experience
+ * CONSERVATIVE: Only extracts information about what user CURRENTLY does or HAS DONE, not future aspirations
  * Returns structured activity data as array - caller handles patch tool application.
  */
 export const createActivitiesAgent = () => createSubAgent({

@@ -195,7 +195,9 @@ export class MicrocycleService {
         console.log(`[MODIFY_WEEK] Today's pattern changed from "${todayOriginalPlan?.theme}" to "${todayUpdatedPlan?.theme}" - regenerating workout`);
 
         // Find today's date within the microcycle's week
-        const todayDate = this.findDateForDay(relevantMicrocycle.startDate, todayDayOfWeek);
+        // Convert todayDayOfWeek from uppercase to title case for findDateForDay
+        const todayDayTitleCase = todayDayOfWeek.charAt(0) + todayDayOfWeek.slice(1).toLowerCase();
+        const todayDate = this.findDateForDay(relevantMicrocycle.startDate, todayDayTitleCase);
 
         // Check if a workout exists for today
         const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, todayDate);

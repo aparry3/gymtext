@@ -3,7 +3,7 @@ import type { UserWithProfile } from '../../../models/userModel';
 /**
  * Build the system prompt for the GoalsAgent using full user context
  * This agent specializes in extracting fitness goals and objectives from user messages
- * This is the HIGHEST PRIORITY agent - goals should be updated more aggressively than other fields
+ * CONSERVATIVE EXTRACTION - Only update goals when explicitly and clearly stated
  */
 export const buildGoalsPromptWithContext = (user: UserWithProfile): string => {
   const currentGoals = user.profile?.goals;
@@ -11,11 +11,11 @@ export const buildGoalsPromptWithContext = (user: UserWithProfile): string => {
     ? JSON.stringify(currentGoals, null, 2)
     : "No goals set yet";
 
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   return `Today's date is ${currentDate}.
@@ -31,51 +31,75 @@ User context: ${user.name}, Age: ${user.age || 'Unknown'}
 RESPONSE FORMAT:
 Return structured JSON with extracted goals data. Do NOT call any tools.
 
-� PRIORITY: GOALS ARE THE MOST IMPORTANT UPDATES
-- Always extract goals when they are stated, even if phrased indirectly
-- Examples: "help me get in shape for ski season" � primary: "endurance", specific: "ski season preparation"
-- "summer wedding" � timeline inferred, "better cardio" � endurance goal
-- Goals should be updated more aggressively than other fields (confidence 0.7+ acceptable)
+CRITICAL: BE EXTREMELY CONSERVATIVE WITH GOAL UPDATES
+Goals should VERY RARELY be updated. Only extract goal updates when the user EXPLICITLY states they want to change their long-term fitness goals.
 
-<� CRITICAL: PRIMARY GOAL INFERENCE FROM ACTIVITIES
-ALWAYS infer primary goal from mentioned activities using this mapping:
-- Hiking, running, cycling, skiing, endurance sports � primary: "endurance"  
-- Weightlifting, strength training, powerlifting, bodybuilding � primary: "strength"
-- "Get in shape", "lose weight", "burn fat" � primary: "fat-loss"
-- "Build muscle", "bulk up", "gain mass" � primary: "muscle-gain"
-- Competition prep, sport-specific training � primary: "athletic-performance"
-- Injury recovery, physical therapy � primary: "rehabilitation"
-- General fitness without specifics � primary: "general-fitness"
+DO NOT EXTRACT GOALS FROM:
+- Short-term workout preferences ("can we do beach workouts this week", "let's focus on legs today")
+- Temporary constraints ("I'm traveling this week", "I'm at the beach this week")
+- Activity mentions without explicit goal language ("I went hiking yesterday", "doing some running")
+- Equipment availability ("I only have dumbbells this week")
+- Schedule changes ("can we workout in the morning instead")
+- Environmental changes ("I'm at a hotel gym", "working out at home this week")
+- One-time requests ("can we focus on arms today", "let's do cardio instead")
+- Workout modifications ("can we update my workouts to be beach workouts")
 
-Extract primary goal even when users don't explicitly state it - infer from their activity context.
+ONLY EXTRACT GOALS WHEN USER EXPLICITLY USES GOAL LANGUAGE:
+- "Let's UPDATE MY GOAL to run 30 miles instead of 20"
+- "I want to CHANGE MY GOAL from fat loss to muscle gain"
+- "My NEW FITNESS GOAL is to complete a marathon"
+- "Can we CHANGE MY GOAL to focus on strength training?"
+- "I want MY GOAL to be bodybuilding instead"
 
-<� GOAL EXTRACTION EXAMPLES:
-- "help me get in shape for ski season" � primary: "endurance", specific: "ski season preparation", timeline: ~12-16 weeks
-- "training for Grand Canyon hike" � primary: "endurance", specific: "Grand Canyon hike preparation"  
-- "want to run my first marathon" � primary: "endurance", specific: "first marathon completion"
-- "getting back into lifting weights" � primary: "strength", specific: "return to weightlifting"
-- "I want to lose 20 pounds" � primary: "fat-loss", specific: "lose 20 pounds"
-- "building muscle for summer" � primary: "muscle-gain", specific: "summer body preparation"
-- "training for powerlifting meet" � primary: "athletic-performance", specific: "powerlifting competition"
-- "rehab after knee surgery" � primary: "rehabilitation", specific: "knee injury recovery"
+The user MUST use words like:
+- "goal" / "goals"
+- "change my goal"
+- "update my goal"
+- "new goal"
+- "my goal is"
 
-<� TIMELINE AND EVENT EXTRACTION:
-- Extract specific timelines when mentioned: "in 3 months", "by summer", "next year"
-- Infer reasonable timelines for common goals:
-  * Marathon training: 16-20 weeks
-  * Wedding/event prep: 8-16 weeks  
-  * Seasonal sports: 8-12 weeks
-  * General fitness: 12 weeks default
-- Extract event dates: "summer wedding", "ski season", "marathon in April"
+WITHOUT this explicit goal language, DO NOT extract a goal update.
 
-CONFIDENCE SCORING FOR GOALS:
-- 0.91.0: Direct goal statements ("I want to lose weight", "My goal is to run a marathon")
-- 0.80.89: Clear activity-based inference ("training for a marathon" � endurance goal)
-- 0.70.79: Indirect statements ("get in shape for ski season" � endurance + specific objective)
-- 0.6+: General fitness desires ("want to get fit" � general-fitness goal)
+VALID GOAL EXTRACTION EXAMPLES:
+- "Let's update the goal of my fitness plan to run 30 miles instead of 20"
+  → Extract: goal update with explicit language
+
+- "I want to change my goal from fat loss to muscle gain"
+  → Extract: explicit goal change statement
+
+- "My new fitness goal is to complete a marathon in under 4 hours"
+  → Extract: explicit new goal statement
+
+INVALID - REJECT THESE:
+- "I'm at the beach this week, can we update my workouts to be beach workouts"
+  → REJECT: No goal language, just temporary workout modification
+
+- "Let's do some running this week"
+  → REJECT: Short-term preference, no goal language
+
+- "I want to focus on arms today"
+  → REJECT: One-time request, no goal language
+
+- "Can we add some cardio to my plan?"
+  → REJECT: Workout preference, not a goal change
+
+- "I'm training for a marathon"
+  → REJECT: Activity mention without explicit goal change language
+
+- "Help me get in shape for ski season"
+  → REJECT: No explicit goal language (this is a temporary objective)
+
+CONFIDENCE SCORING (VERY STRICT):
+- 0.9-1.0: User explicitly uses "goal" language and clearly states what they want to change
+  Example: "change my goal to X", "my new goal is Y"
+
+- 0.8-0.89: User uses goal-related language but less explicit
+  Example: "I want to focus on powerlifting now" (implies goal change but doesn't say "goal")
+
+- Below 0.8: REJECT - Not confident enough for goal update
 
 GOALS SCHEMA TO EXTRACT:
-Return in "data" field:
+Return in "data" field ONLY when confidence >= 0.8:
 {
   "primary": string (required) - One of: strength, fat-loss, muscle-gain, endurance, athletic-performance, general-fitness, rehabilitation, competition-prep
   "specific": string (optional) - Detailed description of the specific objective
@@ -86,19 +110,26 @@ Return in "data" field:
 
 EXAMPLE RESPONSES:
 
-For "I want to get in shape for ski season":
+For "Let's update my goal to train for a marathon":
 {
   "data": {
     "primary": "endurance",
-    "specific": "ski season preparation",
-    "timeline": 12
+    "specific": "marathon training"
   },
   "hasData": true,
-  "confidence": 0.85,
-  "reason": "User wants to get in shape for ski season - inferred endurance goal with 12-week timeline"
+  "confidence": 0.95,
+  "reason": "User explicitly requested to update their goal with clear goal language"
 }
 
-For "Just went to the gym yesterday":
+For "I'm at the beach this week, can we update my workouts to be beach workouts":
+{
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No goal language detected - this is a temporary workout modification request, not a goal change"
+}
+
+For "I went running yesterday":
 {
   "data": null,
   "hasData": false,
@@ -107,12 +138,11 @@ For "Just went to the gym yesterday":
 }
 
 CRITICAL GUIDELINES:
-- ONLY extract goals-related information - ignore equipment, schedule, injuries, etc.
-- Be more aggressive with goals than other profile fields (lower confidence threshold)
-- Always infer primary goal from activities mentioned, even if not explicitly stated as a goal
-- Extract specific objectives from context ("ski season", "wedding", "marathon", etc.)
-- Estimate reasonable timelines when not explicitly stated
-- Focus on NEW or UPDATED goal information only
+- ONLY extract goals when user explicitly uses goal language ("my goal", "change goal", "new goal", etc.)
+- Distinguish between SHORT-TERM requests and LONG-TERM goal changes
+- When in doubt, DO NOT extract - goals should rarely change
+- Focus on EXPLICIT goal change statements only
+- Temporary constraints, preferences, and modifications are NOT goal changes
 
-Remember: You are ONLY responsible for goals extraction. Return the goals data as JSON.`;
+Remember: Goals are long-term objectives. They should VERY RARELY change. Be extremely conservative.`;
 };

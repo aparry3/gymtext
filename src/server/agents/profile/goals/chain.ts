@@ -7,7 +7,7 @@ import { RunnableLambda } from '@langchain/core/runnables';
 
 /**
  * Create the Goals Agent - specialized for extracting fitness goals data as JSON
- * This is the HIGHEST PRIORITY agent in the profile system.
+ * CONSERVATIVE: Only extracts goals when explicitly stated using goal language.
  * Returns just the goals data - caller handles patch tool application.
  */
 export const createGoalsAgent = () => createSubAgent({

@@ -30,7 +30,7 @@ You have three tools available:
 3. **modify_week** - Use when the user needs to adjust MULTIPLE DAYS or the WHOLE WEEK
    - Example: "I'm traveling this week and won't have gym access"
    - Example: "I need to skip leg day this week, can we adjust the plan?"
-   - Required: userId, startDate (start of the week), modifications (array of day changes), constraints, reason
+   - Required: userId, targetDay (day to start modifications from, typically today), changes (array of modifications), reason
    - Use for multi-day adjustments or weekly pattern changes
 
 ## TOOL USAGE GUIDELINES
@@ -143,12 +143,16 @@ Keep responses flexible, supportive, and SMS-friendly.`;
  */
 export const buildModificationsUserMessage = (input: ChatSubagentInput): string => {
   const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const now = new Date();
+  const currentDate = now.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
+
+  // Get the current day of the week
+  const currentDayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
 
   // Get recent conversation context
   const recentMessages = conversationHistory?.slice(-5).map(msg =>
@@ -164,6 +168,7 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
   return `## STATIC CONTEXT
 
 **Today's Date**: ${currentDate}
+**Today's Day of Week**: ${currentDayOfWeek}
 **User ID**: ${user.id}
 **User Name**: ${user.name}
 **Primary Goal**: ${goals}
@@ -183,8 +188,10 @@ ${recentMessages}
 
 ## IMPORTANT NOTES FOR TOOL CALLS
 
-- Use today's date (${new Date().toISOString().split('T')[0]}) as the workoutDate for current workout modifications
+- Use today's date (${now.toISOString().split('T')[0]}) as the workoutDate for current workout modifications
 - Use the User ID provided above when calling tools
-- For weekly modifications, calculate the start of the current week (Monday)
+- For weekly modifications (modify_week), use "${currentDayOfWeek}" as the targetDay (today's day of the week)
+  - The targetDay should be the day you're starting the modifications from (typically today)
+  - Example: If today is Tuesday and user wants changes for rest of week, use targetDay: "Tuesday"
 - Always provide clear, specific reasons and constraints when calling tools`;
 };

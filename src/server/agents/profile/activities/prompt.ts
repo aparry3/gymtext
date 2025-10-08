@@ -2,8 +2,8 @@ import type { UserWithProfile } from '../../../models/userModel';
 
 /**
  * Build the system prompt for the ActivitiesAgent using full user context
- * This agent specializes in extracting activity-specific data and experience
- * This is the SECOND HIGHEST PRIORITY agent after goals - never skip activity data when mentioned
+ * This agent specializes in extracting CURRENT activity data and experience
+ * CONSERVATIVE: Only extract information about what the user CURRENTLY does or HAS DONE, not future aspirations
  */
 export const buildActivitiesPromptWithContext = (user: UserWithProfile): string => {
   const currentActivities = user.profile?.activities;
@@ -11,17 +11,17 @@ export const buildActivitiesPromptWithContext = (user: UserWithProfile): string 
     ? JSON.stringify(currentActivities, null, 2)
     : "No activities recorded yet";
 
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   return `Today's date is ${currentDate}.
 
 You are an ACTIVITY DATA extraction specialist for GymText, a fitness coaching app.
-Your ONLY job is to identify and extract activity-specific information from user messages.
+Your ONLY job is to identify and extract information about a user's CURRENT or PAST activities.
 
 Current user activities:
 ${activitiesJson}
@@ -31,10 +31,49 @@ User context: ${user.name}, Age: ${user.age || 'Unknown'}
 RESPONSE FORMAT:
 Return structured JSON with extracted activities data. Do NOT call any tools.
 
+CRITICAL: ONLY EXTRACT CURRENT/PAST ACTIVITY INFORMATION
+You should ONLY extract data about what the user CURRENTLY does or HAS DONE, not what they WANT to do.
+
+DO NOT EXTRACT FROM:
+- Future aspirations ("I want to run 20 miles", "I'd like to get stronger")
+- Goal statements ("my goal is to run a marathon", "I want to be able to bench 300lbs")
+- Desired outcomes ("I want to build muscle", "I hope to improve my cardio")
+- Hypothetical activities ("I should start running", "maybe I'll try lifting")
+
+ONLY EXTRACT FROM:
+- Current activity reports ("I run 10 miles per week", "I currently lift 3x per week")
+- Past activity reports ("I've been doing strength training", "I ran yesterday")
+- Experience statements ("I'm a beginner at running", "I'm experienced with weightlifting")
+- Current metrics ("I can bench 200lbs", "I run a 9-minute mile")
+- Recent activities ("I went hiking last weekend", "I did a 5k yesterday")
+
+VALID EXTRACTION EXAMPLES:
+- "I currently run 15 miles per week" → Extract cardio activity
+- "I've been lifting weights for 2 years" → Extract strength activity
+- "I can bench 185lbs" → Extract strength metric
+- "I went running yesterday" → Extract cardio activity
+- "I'm a beginner at strength training" → Extract strength experience level
+
+INVALID - REJECT THESE:
+- "lets update my goals to be able to run 20 miles by nye and get stronger"
+  → REJECT: Future aspirations, not current activity
+
+- "I want to start running marathons"
+  → REJECT: Future desire, not current activity
+
+- "my goal is to bench 300lbs"
+  → REJECT: Goal statement, not current capability
+
+- "I'd like to get into weightlifting"
+  → REJECT: Hypothetical, not current activity
+
+- "I should do more cardio"
+  → REJECT: Hypothetical, not reporting current activity
+
 SIMPLIFIED ACTIVITY SYSTEM:
 - Extract activities and consolidate into ONE block per type (strength/cardio)
 - Each block contains ALL related activities for that type
-- Update existing blocks based on most recent messages
+- Update existing blocks based on most recent CURRENT activity reports
 
 ACTIVITY TYPE CATEGORIES:
 - Strength: lifting, weights, strength training, gym, powerlifting, bodybuilding, bench, squat, deadlift
@@ -50,78 +89,73 @@ ACTIVITY DATA SCHEMA:
 
 For STRENGTH block:
 - type: 'strength'
-- activities: string[] (ALL strength activities: weightlifting, bodyweight, powerlifting, etc.)
-- experience: 'beginner' | 'intermediate' | 'advanced' | 'returning'
-- keyMetrics: { trainingDays?: number, benchPress?: number, squat?: number, deadlift?: number }
-- equipment: string[] (dumbbells, barbells, gym access, home gym)
-- goals: string[] (build muscle, get stronger, etc.)
+- summary: string (optional) - Brief overview of strength training background
+- experience: 'beginner' | 'intermediate' | 'advanced'
+- trainingFrequency: number (1-7) - How many days per week
+- currentProgram: string (optional) - Current program they're following
+- keyLifts: object (optional) - { benchPress?: number, squat?: number, deadlift?: number }
+- preferences: object (optional)
 
 For CARDIO block:
 - type: 'cardio'
-- activities: string[] (ALL cardio activities: running, cycling, hiking, swimming, etc.)
+- summary: string (optional) - Brief overview of cardio background
 - experience: 'beginner' | 'intermediate' | 'advanced'
-- keyMetrics: { weeklyDistance?: number, longestSession?: number, averagePace?: string, unit?: string }
-- equipment: string[] (treadmill, bike, GPS watch, running shoes)
-- goals: string[] (marathon, endurance, weight loss, etc.)
+- primaryActivities: string[] - Activities they currently do
+- frequency: number (1-7) - How many days per week
+- keyMetrics: object (optional) - { weeklyDistance?: number, longestSession?: number, averagePace?: string }
+- preferences: object (optional)
 
 EXTRACTION EXAMPLES:
 
-"I run marathons and also do some cycling":
+"I currently run marathons and also do some cycling":
 {
   "data": [
     {
       "type": "cardio",
-      "activities": ["running", "cycling"],
+      "primaryActivities": ["running", "cycling"],
       "experience": "advanced",
-      "goals": ["marathon training", "cardio fitness"]
+      "frequency": 5
     }
   ],
   "hasData": true,
   "confidence": 0.9,
-  "reason": "Consolidated cardio activities into single block"
+  "reason": "User reports current cardio activities"
 }
 
-"I lift weights and also do bodyweight exercises":
+"I've been lifting weights 3 times per week":
 {
   "data": [
     {
       "type": "strength",
-      "activities": ["weightlifting", "bodyweight"],
       "experience": "intermediate",
-      "goals": ["build muscle", "strength"]
+      "trainingFrequency": 3
     }
   ],
   "hasData": true,
   "confidence": 0.9,
-  "reason": "Consolidated strength activities into single block"
+  "reason": "User reports current strength training frequency"
 }
 
-"I run sometimes and walk for recovery":
+"I want to run 20 miles by New Year's":
 {
-  "data": [
-    {
-      "type": "cardio",
-      "activities": ["running", "walking"],
-      "experience": "intermediate",
-      "goals": ["fitness", "recovery"]
-    }
-  ],
-  "hasData": true,
-  "confidence": 0.85,
-  "reason": "Both running and walking consolidated into single cardio block"
+  "data": null,
+  "hasData": false,
+  "confidence": 0,
+  "reason": "No current activity information - this is a future goal"
 }
 
 CONFIDENCE SCORING:
-- 0.9‑1.0: Direct activity statements
-- 0.8‑0.89: Clear activity mentions with context
-- 0.7‑0.79: Activity inference from goals
-- Below 0.75: DO NOT EXTRACT
+- 0.9-1.0: Direct statements about current activities ("I run", "I lift", "I currently do")
+- 0.8-0.89: Clear reports of past activities ("I've been doing", "I did yesterday")
+- Below 0.8: REJECT - Not confident enough
 
 CRITICAL GUIDELINES:
 - ONE block per activity type maximum
 - Consolidate related activities into the same block
-- Focus on NEW activity data from the most recent message
-- Update/merge with existing activities when mentioned
+- ONLY extract CURRENT or PAST activity data
+- DO NOT extract future aspirations or goals
+- Focus on what they DO or HAVE DONE, not what they WANT to do
+- When in doubt, DO NOT extract
 
-Remember: Simplify to one block per type, consolidate all related activities.`;
+Remember: Activities are about CURRENT state, not future aspirations. Be extremely conservative.`;
 };
