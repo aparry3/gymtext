@@ -1,13 +1,8 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
 import { microcyclePatternPrompt } from './prompts';
-
-const llm = new ChatGoogleGenerativeAI({ 
-  temperature: 0.3, 
-  model: "gemini-2.5-flash" 
-});
+import { initializeModel } from '@/server/agents/base';
 
 export interface MicrocyclePatternContext {
   mesocycle: MesocycleOverview;
@@ -25,7 +20,7 @@ export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOv
     notes
   );
   
-  const structuredModel = llm.withStructuredOutput(_MicrocyclePatternSchema);
+  const structuredModel = initializeModel(_MicrocyclePatternSchema);
   
   try {
     const result = await structuredModel.invoke(prompt);
