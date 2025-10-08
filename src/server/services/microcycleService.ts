@@ -122,12 +122,15 @@ export class MicrocycleService {
         };
       }
 
-      // Calculate remaining days (today and future days only)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Calculate remaining days (today and future days only) in user's timezone
+      const { DateTime } = await import('luxon');
+      const todayInUserTz = DateTime.now().setZone(user.timezone);
 
       const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-      const todayDayOfWeek = daysOfWeek[today.getDay()];
+      // Luxon weekday is 1-7 (Mon-Sun), JS getDay() is 0-6 (Sun-Sat)
+      // Convert Luxon weekday to JS day: Sunday = 7 -> 0, Monday = 1 -> 1, etc.
+      const todayDayIndex = todayInUserTz.weekday === 7 ? 0 : todayInUserTz.weekday;
+      const todayDayOfWeek = daysOfWeek[todayDayIndex];
 
       // Find today's index
       const todayIndex = daysOfWeek.indexOf(todayDayOfWeek);
@@ -194,10 +197,8 @@ export class MicrocycleService {
       if (todayPlanChanged) {
         console.log(`[MODIFY_WEEK] Today's pattern changed from "${todayOriginalPlan?.theme}" to "${todayUpdatedPlan?.theme}" - regenerating workout`);
 
-        // Find today's date within the microcycle's week
-        // Convert todayDayOfWeek from uppercase to title case for findDateForDay
-        const todayDayTitleCase = todayDayOfWeek.charAt(0) + todayDayOfWeek.slice(1).toLowerCase();
-        const todayDate = this.findDateForDay(relevantMicrocycle.startDate, todayDayTitleCase);
+        // Use today's date in user's timezone (start of day)
+        const todayDate = todayInUserTz.startOf('day').toJSDate();
 
         // Check if a workout exists for today
         const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, todayDate);

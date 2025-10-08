@@ -53,18 +53,18 @@ export class WorkoutInstanceRepository extends BaseRepository {
     clientId: string,
     date: Date
   ): Promise<WorkoutInstance | undefined> {
-    // Normalize to start of day in UTC for comparison
+    // The incoming date is already midnight in the user's timezone (as a UTC timestamp)
+    // We need to find workouts within the next 24 hours from that point
     const startOfDay = new Date(date);
-    startOfDay.setUTCHours(0, 0, 0, 0);
 
     const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+    endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
 
     const result = await this.db
       .selectFrom('workoutInstances')
       .where('clientId', '=', clientId)
       .where('date', '>=', startOfDay)
-      .where('date', '<=', endOfDay)
+      .where('date', '<', endOfDay)
       .selectAll()
       .executeTakeFirst();
 

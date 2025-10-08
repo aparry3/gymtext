@@ -4,6 +4,7 @@ import { substituteExercises, type Modification } from '@/server/agents/fitnessP
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
 import type { EnhancedWorkoutInstance } from '@/server/models/workout';
 import { UserService } from './userService';
+import { DateTime } from 'luxon';
 
 interface SubstituteExerciseParams {
   userId: string;
@@ -87,22 +88,28 @@ export class WorkoutInstanceService {
     try {
       const { userId, workoutDate, exercises, reason } = params;
 
-      // Get the workout for the specified date
-      const workout = await this.workoutRepo.findByClientIdAndDate(userId, workoutDate);
-
-      if (!workout) {
-        return {
-          success: false,
-          error: 'No workout found for the specified date',
-        };
-      }
-
-      // Get user with profile
+      // Get user with profile first to determine timezone
       const user = await this.userService.getUserWithProfile(userId);
       if (!user) {
         return {
           success: false,
           error: 'User not found',
+        };
+      }
+
+      // Convert the workout date to the user's timezone
+      // If the date came as an ISO string like "2024-10-08", it was parsed as UTC midnight
+      // We need to interpret it as a calendar date in the user's timezone instead
+      const dateStr = workoutDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
+      const userLocalDate = DateTime.fromISO(dateStr, { zone: user.timezone }).startOf('day').toJSDate();
+
+      // Get the workout for the specified date
+      const workout = await this.workoutRepo.findByClientIdAndDate(userId, userLocalDate);
+
+      if (!workout) {
+        return {
+          success: false,
+          error: 'No workout found for the specified date',
         };
       }
 
@@ -151,7 +158,7 @@ export class WorkoutInstanceService {
       const { userId, workoutDate, reason, constraints, preferredEquipment, focusAreas } = params;
 
       console.log('Modifying workout', params);
-      // Get user with profile
+      // Get user with profile first to determine timezone
       const user = await this.userService.getUserWithProfile(userId);
       if (!user) {
         return {
@@ -160,8 +167,14 @@ export class WorkoutInstanceService {
         };
       }
 
+      // Convert the workout date to the user's timezone
+      // If the date came as an ISO string like "2024-10-08", it was parsed as UTC midnight
+      // We need to interpret it as a calendar date in the user's timezone instead
+      const dateStr = workoutDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
+      const userLocalDate = DateTime.fromISO(dateStr, { zone: user.timezone }).startOf('day').toJSDate();
+
       // Get the existing workout
-      const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, workoutDate);
+      const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, userLocalDate);
 
       if (!existingWorkout) {
         return {

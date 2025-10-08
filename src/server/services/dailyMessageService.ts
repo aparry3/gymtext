@@ -185,7 +185,7 @@ export class DailyMessageService {
 
       // Get today's workout for the user (use test date if provided)
       const baseDate = options.currentDate || new Date();
-      
+
       // If we have a test date, treat it as a calendar date in the user's timezone
       // Otherwise, use the current time in the user's timezone
       let targetDate: DateTime;
@@ -201,6 +201,7 @@ export class DailyMessageService {
       // First try to get existing workout
       let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
 
+      
       // If no workout exists, generate it on-demand
       if (!workout) {
         console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
@@ -257,6 +258,7 @@ export class DailyMessageService {
     // The date passed in is already the correct date at midnight in the user's timezone
     // We can use it directly for the query
     const workout = await this.workoutRepository.findByClientIdAndDate(userId, date);
+    console.log(`Workout: ${workout}`);
     return workout || null;
   }
 
