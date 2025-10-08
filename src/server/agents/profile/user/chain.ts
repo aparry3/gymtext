@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { buildUserPromptWithContext } from './prompt';
+import { USER_SYSTEM_PROMPT, buildUserUserMessage } from './prompt';
 import { UserExtractionSchema, type UserExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
@@ -11,7 +11,8 @@ import { RunnableLambda } from '@langchain/core/runnables';
  * Returns structured user data - caller handles patch tool application.
  */
 export const createUserAgent = () => createSubAgent({
-  promptBuilder: buildUserPromptWithContext,
+  systemPrompt: USER_SYSTEM_PROMPT,
+  userMessageBuilder: buildUserUserMessage,
   agentName: 'UserAgent',
   outputSchema: UserExtractionSchema,
   model: 'gemini-2.5-flash',

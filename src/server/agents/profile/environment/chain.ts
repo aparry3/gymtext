@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { buildEnvironmentPromptWithContext } from './prompt';
+import { ENVIRONMENT_SYSTEM_PROMPT, buildEnvironmentUserMessage } from './prompt';
 import { EnvironmentExtractionSchema, type EnvironmentExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
@@ -11,7 +11,8 @@ import { RunnableLambda } from '@langchain/core/runnables';
  * Returns structured environment data - caller handles patch tool application.
  */
 export const createEnvironmentAgent = () => createSubAgent({
-  promptBuilder: buildEnvironmentPromptWithContext,
+  systemPrompt: ENVIRONMENT_SYSTEM_PROMPT,
+  userMessageBuilder: buildEnvironmentUserMessage,
   agentName: 'EnvironmentAgent',
   outputSchema: EnvironmentExtractionSchema,
   model: 'gemini-2.5-flash',

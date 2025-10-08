@@ -1,32 +1,12 @@
 import type { UserWithProfile } from '../../../models/userModel';
 
 /**
- * Build the system prompt for the GoalsAgent using full user context
+ * Static system prompt for the GoalsAgent
  * This agent specializes in extracting fitness goals and objectives from user messages
  * CONSERVATIVE EXTRACTION - Only update goals when explicitly and clearly stated
  */
-export const buildGoalsPromptWithContext = (user: UserWithProfile): string => {
-  const currentGoals = user.profile?.goals;
-  const goalsJson = currentGoals && Object.keys(currentGoals).length > 0
-    ? JSON.stringify(currentGoals, null, 2)
-    : "No goals set yet";
-
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  return `Today's date is ${currentDate}.
-
-You are a FITNESS GOALS extraction specialist for GymText, a fitness coaching app.
+export const GOALS_SYSTEM_PROMPT = `You are a FITNESS GOALS extraction specialist for GymText, a fitness coaching app.
 Your ONLY job is to identify and extract goal-related information from user messages.
-
-Current user goals:
-${goalsJson}
-
-User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
 RESPONSE FORMAT:
 Return structured JSON with extracted goals data. Do NOT call any tools.
@@ -145,4 +125,33 @@ CRITICAL GUIDELINES:
 - Temporary constraints, preferences, and modifications are NOT goal changes
 
 Remember: Goals are long-term objectives. They should VERY RARELY change. Be extremely conservative.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildGoalsUserMessage = (user: UserWithProfile, message: string): string => {
+  const currentGoals = user.profile?.goals;
+  const goalsJson = currentGoals && Object.keys(currentGoals).length > 0
+    ? JSON.stringify(currentGoals, null, 2)
+    : "No goals set yet";
+
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return `## CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+**User Age**: ${user.age || 'Unknown'}
+
+**Current User Goals**:
+${goalsJson}
+
+---
+
+**User's Message**: ${message}`;
 };

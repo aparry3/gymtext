@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { buildActivitiesPromptWithContext } from './prompt';
+import { ACTIVITIES_SYSTEM_PROMPT, buildActivitiesUserMessage } from './prompt';
 import { ActivitiesExtractionSchema, type ActivitiesExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
@@ -11,7 +11,8 @@ import { RunnableLambda } from '@langchain/core/runnables';
  * Returns structured activity data as array - caller handles patch tool application.
  */
 export const createActivitiesAgent = () => createSubAgent({
-  promptBuilder: buildActivitiesPromptWithContext,
+  systemPrompt: ACTIVITIES_SYSTEM_PROMPT,
+  userMessageBuilder: buildActivitiesUserMessage,
   agentName: 'ActivitiesAgent',
   outputSchema: ActivitiesExtractionSchema,
 });

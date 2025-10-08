@@ -22,7 +22,7 @@ export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
 
     try {
       const { verbose = false } = config;
-      const { promptBuilder, agentName, outputSchema } = subAgentConfig;
+      const { systemPrompt, userMessageBuilder, agentName, outputSchema } = subAgentConfig;
 
       // Merge configs
       const finalConfig = { ...subAgentConfig, ...config };
@@ -30,13 +30,13 @@ export const createSubAgent = (subAgentConfig: SubAgentConfig) => {
       // Initialize model with the provided schema (correct argument order!)
       const model = initializeModel(outputSchema, finalConfig);
 
-      // Build domain-specific prompt
-      const systemPrompt = promptBuilder(user);
+      // Build dynamic user message with context
+      const userMessage = userMessageBuilder(user, message);
 
       // Format messages for our OpenAI wrapper
       const messages = [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
+        { role: 'user', content: userMessage }
       ];
 
       if (verbose) {

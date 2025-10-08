@@ -1,6 +1,19 @@
 import { z } from 'zod';
 
 /**
+ * Schema for temporary environment changes (travel, temporary location, etc.)
+ */
+export const TemporaryEnvironmentChangeSchema = z.object({
+  id: z.string().describe('Unique identifier for the temporary change'),
+  description: z.string().describe('Description of the temporary change'),
+  startDate: z.string().describe('ISO date string when change starts'),
+  endDate: z.string().optional().nullable().describe('ISO date string when change ends, null for indefinite'),
+  location: z.string().optional().nullable().describe('Temporary location (beach, hotel, home, etc.)'),
+  equipmentAvailable: z.array(z.string()).optional().nullable().describe('Equipment available during this period'),
+  equipmentUnavailable: z.array(z.string()).optional().nullable().describe('Equipment unavailable during this period')
+});
+
+/**
  * Schema for equipment access information
  */
 export const EquipmentAccessSchema = z.object({
@@ -8,7 +21,8 @@ export const EquipmentAccessSchema = z.object({
   gymAccess: z.boolean().describe('Whether user has gym access'),
   gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable().describe('Type of gym access'),
   homeEquipment: z.array(z.string()).optional().nullable().describe('Equipment available at home'),
-  limitations: z.array(z.string()).optional().nullable().describe('Equipment restrictions or limitations')
+  limitations: z.array(z.string()).optional().nullable().describe('Equipment restrictions or limitations'),
+  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).optional().nullable().describe('Temporary environment changes (travel, temporary location, etc.)')
 });
 
 /**
@@ -41,6 +55,7 @@ export const EnvironmentExtractionSchema = z.object({
 });
 
 // Export the inferred types
+export type TemporaryEnvironmentChange = z.infer<typeof TemporaryEnvironmentChangeSchema>;
 export type EquipmentAccess = z.infer<typeof EquipmentAccessSchema>;
 export type Availability = z.infer<typeof AvailabilitySchema>;
 export type EnvironmentData = z.infer<typeof EnvironmentDataSchema>;

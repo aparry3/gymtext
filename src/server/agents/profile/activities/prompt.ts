@@ -1,32 +1,12 @@
 import type { UserWithProfile } from '../../../models/userModel';
 
 /**
- * Build the system prompt for the ActivitiesAgent using full user context
+ * Static system prompt for the ActivitiesAgent
  * This agent specializes in extracting CURRENT activity data and experience
  * CONSERVATIVE: Only extract information about what the user CURRENTLY does or HAS DONE, not future aspirations
  */
-export const buildActivitiesPromptWithContext = (user: UserWithProfile): string => {
-  const currentActivities = user.profile?.activities;
-  const activitiesJson = currentActivities && currentActivities.length > 0
-    ? JSON.stringify(currentActivities, null, 2)
-    : "No activities recorded yet";
-
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  return `Today's date is ${currentDate}.
-
-You are an ACTIVITY DATA extraction specialist for GymText, a fitness coaching app.
+export const ACTIVITIES_SYSTEM_PROMPT = `You are an ACTIVITY DATA extraction specialist for GymText, a fitness coaching app.
 Your ONLY job is to identify and extract information about a user's CURRENT or PAST activities.
-
-Current user activities:
-${activitiesJson}
-
-User context: ${user.name}, Age: ${user.age || 'Unknown'}
 
 RESPONSE FORMAT:
 Return structured JSON with extracted activities data. Do NOT call any tools.
@@ -158,4 +138,33 @@ CRITICAL GUIDELINES:
 - When in doubt, DO NOT extract
 
 Remember: Activities are about CURRENT state, not future aspirations. Be extremely conservative.`;
+
+/**
+ * Build the dynamic user message with context
+ */
+export const buildActivitiesUserMessage = (user: UserWithProfile, message: string): string => {
+  const currentActivities = user.profile?.activities;
+  const activitiesJson = currentActivities && currentActivities.length > 0
+    ? JSON.stringify(currentActivities, null, 2)
+    : "No activities recorded yet";
+
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return `## CONTEXT
+
+**Today's Date**: ${currentDate}
+**User Name**: ${user.name}
+**User Age**: ${user.age || 'Unknown'}
+
+**Current User Activities**:
+${activitiesJson}
+
+---
+
+**User's Message**: ${message}`;
 };

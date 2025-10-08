@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { buildConstraintsPromptWithContext } from './prompt';
+import { CONSTRAINTS_SYSTEM_PROMPT, buildConstraintsUserMessage } from './prompt';
 import { ConstraintsExtractionSchema, type ConstraintsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
@@ -11,7 +11,8 @@ import { RunnableLambda } from '@langchain/core/runnables';
  * Returns structured constraints data - caller handles patch tool application.
  */
 export const createConstraintsAgent = () => createSubAgent({
-  promptBuilder: buildConstraintsPromptWithContext,
+  systemPrompt: CONSTRAINTS_SYSTEM_PROMPT,
+  userMessageBuilder: buildConstraintsUserMessage,
   agentName: 'ConstraintsAgent',
   outputSchema: ConstraintsExtractionSchema,
   // model: 'gemini-2.5-flash',

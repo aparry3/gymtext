@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { buildGoalsPromptWithContext } from './prompt';
+import { GOALS_SYSTEM_PROMPT, buildGoalsUserMessage } from './prompt';
 import { GoalsExtractionSchema, type GoalsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';
@@ -11,7 +11,8 @@ import { RunnableLambda } from '@langchain/core/runnables';
  * Returns just the goals data - caller handles patch tool application.
  */
 export const createGoalsAgent = () => createSubAgent({
-  promptBuilder: buildGoalsPromptWithContext,
+  systemPrompt: GOALS_SYSTEM_PROMPT,
+  userMessageBuilder: buildGoalsUserMessage,
   agentName: 'GoalsAgent',
   outputSchema: GoalsExtractionSchema,
 });

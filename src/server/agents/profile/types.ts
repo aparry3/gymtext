@@ -30,15 +30,16 @@ export interface ProfileAgentResult {
 }
 
 /**
- * Prompt builder function type - takes user context and returns system prompt
+ * User message builder function type - takes user context and message, returns dynamic user message
  */
-export type PromptBuilder = (user: UserWithProfile) => string;
+export type UserMessageBuilder = (user: UserWithProfile, message: string) => string;
 
 /**
  * Sub-agent configuration
  */
 export interface SubAgentConfig extends AgentConfig {
-  promptBuilder: PromptBuilder;
+  systemPrompt: string;  // Static system prompt
+  userMessageBuilder: UserMessageBuilder;  // Dynamic user message builder
   agentName: string;
   outputSchema: any; // eslint-disable-line @typescript-eslint/no-explicit-any -- Zod schema type
 }

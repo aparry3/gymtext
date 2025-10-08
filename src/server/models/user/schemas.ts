@@ -32,6 +32,17 @@ export const AvailabilitySchema = z.object({
   schedule: z.string().optional().nullable(),
 });
 
+// NEW - Temporary Environment Change Schema
+export const TemporaryEnvironmentChangeSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  startDate: z.string(), // ISO date string
+  endDate: z.string().optional().nullable(), // ISO date string or null for indefinite
+  location: z.string().optional().nullable(), // "beach", "hotel", "home", etc.
+  equipmentAvailable: z.array(z.string()).optional().nullable(),
+  equipmentUnavailable: z.array(z.string()).optional().nullable(),
+});
+
 // NEW - Equipment Access Schema
 export const EquipmentAccessSchema = z.object({
   summary: z.string().optional().nullable(), // Brief overview of equipment situation
@@ -39,6 +50,7 @@ export const EquipmentAccessSchema = z.object({
   gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable(),
   homeEquipment: z.array(z.string()).optional().nullable(),
   limitations: z.array(z.string()).optional().nullable(),
+  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).optional().nullable(),
 });
 
 // DELETED - PreferencesSchema moved to activity-specific data
@@ -69,6 +81,9 @@ export const ConstraintSchema = z.object({
   severity: z.enum(['mild', 'moderate', 'severe']).optional().nullable(),
   affectedMovements: z.array(z.string()).optional().nullable(),
   status: z.enum(['active', 'resolved']),
+  startDate: z.string().optional().nullable(), // ISO date string
+  endDate: z.string().optional().nullable(), // ISO date string or null for chronic
+  isTemporary: z.boolean().default(false),
 });
 
 
@@ -195,3 +210,4 @@ export type Availability = z.infer<typeof AvailabilitySchema>;
 export type Goals = z.infer<typeof GoalsSchema>;
 export type UserMetrics = z.infer<typeof UserMetricsSchema>;
 export type Constraint = z.infer<typeof ConstraintSchema>;
+export type TemporaryEnvironmentChange = z.infer<typeof TemporaryEnvironmentChangeSchema>;
