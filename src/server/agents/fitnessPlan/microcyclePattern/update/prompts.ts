@@ -2,27 +2,31 @@ import { MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 
 export interface MicrocycleUpdateParams {
-  modifications: Array<{
-    day: string;
-    change: string;
-  }>;
-  constraints: string[];
-  reason: string;
+  targetDay: string; // The specific day being modified (e.g., "Monday", typically "today")
+  changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 minutes", "Apply hotel gym constraints to remaining days"])
+  reason: string; // Why the modification is needed (e.g., "Gym is too crowded", "Traveling for work")
+  remainingDays?: string[]; // Days that are remaining in the week (today and future)
 }
 
-export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in weekly training pattern modifications. Your task is to update weekly microcycle patterns when users face schedule changes, travel, equipment limitations, or other factors requiring multi-day adjustments.
+export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in weekly training pattern modifications. Your task is to update weekly microcycle patterns when users face schedule changes, travel, equipment limitations, or other factors requiring workout adjustments.
 
 <Critical Rules>
-1. PRESERVE the overall training volume and progression intent of the week
-2. Apply the specified day-specific modifications
-3. Maintain training balance across the week
-4. Ensure adequate rest and recovery
-5. Respect the mesocycle's focus and progression strategy
-6. Only make changes necessary to accommodate the constraints
+1. ONLY modify REMAINING days in the week (days that haven't been completed yet)
+2. PRESERVE the overall training volume and progression intent of the remaining week
+3. Apply the specified day-specific modifications
+4. Maintain training balance and muscle group distribution across remaining days
+5. Ensure adequate rest and recovery between similar muscle groups
+6. Respect the mesocycle's focus and progression strategy
 7. TRACK all changes made - you must return a "modificationsApplied" array listing each change
 </Critical Rules>
 
 <Modification Guidelines>
+
+**Remaining Days Only:**
+- Only modify days that are marked as "remaining" (today and future days)
+- Do NOT change days that have already passed or been completed
+- Preserve completed days' training themes and structure
+
 **Day-Specific Changes:**
 - Apply each requested modification to the specified day
 - Maintain training themes where possible
@@ -30,16 +34,41 @@ export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach 
 - Consider impact on recovery and surrounding days
 
 **Weekly Constraints:**
-- Equipment limitations: Adjust all affected days consistently
+- Equipment limitations: Adjust all affected remaining days consistently
+  Example: "Traveling Mon-Fri, only hotel gym access" → modify Mon-Fri for dumbbells/bodyweight
 - Time constraints: Reduce volume while preserving key work
-- Travel/schedule: Maintain flexibility while keeping training effective
-- Recovery needs: Respect fatigue management across the week
+  Example: "Only 30 minutes per day this week" → condense remaining workouts
+- Environment changes: Adapt to new circumstances
+  Example: "Gym closed today due to weather" → convert to home workout for today
+- Recovery needs: Respect fatigue management across remaining days
 
-**Training Balance:**
-- Maintain muscle group balance across the week
-- Ensure adequate rest between similar training days
-- Preserve key training days (e.g., heavy compound days)
+**Training Balance & Muscle Group Coherence:**
+- When a user swaps muscle groups, ensure remaining days maintain balance
+  Example: "Can you give me a back workout instead of chest today?"
+  → Change today to back, then check remaining days to avoid back-to-back back days
+  → May need to swap another day's back workout to push/chest to maintain balance
+- Maintain muscle group balance across remaining days
+- Ensure adequate rest (48+ hours) between similar muscle groups
+- Preserve key training days (e.g., heavy compound days) where possible
 - Adjust accessory work before main work
+
+**Common Scenarios:**
+1. **Muscle Group Swap**: User wants different muscle group today
+   - Modify target day to new muscle group
+   - Check remaining days for conflicts (same muscle group too close)
+   - Shuffle remaining days if needed to maintain 48hr rest between same muscles
+
+2. **Travel/Equipment Changes**: Limited equipment for multiple days
+   - Modify all affected remaining days for available equipment
+   - Maintain training split and progression with equipment constraints
+
+3. **Time Constraints**: Less time available
+   - Reduce volume/duration for remaining days
+   - Prioritize compound movements
+
+4. **Weather/Facility**: Unexpected closures or conditions
+   - Adapt today's workout to available facilities
+   - Keep remaining days on original plan unless constraints continue
 </Modification Guidelines>
 
 <Output Requirements>
@@ -70,19 +99,29 @@ export const updateMicrocyclePatternPrompt = (
   mesocycle: MesocycleOverview,
   programType: string
 ): string => {
-  const modificationsText = params.modifications.map((m, idx) =>
-    `${idx + 1}. ${m.day}: ${m.change}`
-  ).join('\n');
+  // Identify remaining days vs completed days
+  const remainingDays = params.remainingDays || [];
+  const remainingDaysSet = new Set(remainingDays.map(d => d.toUpperCase()));
 
-  const constraintsText = params.constraints.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
+  const currentDaysText = currentPattern.days.map(d => {
+    const isRemaining = remainingDaysSet.has(d.day);
+    const isTarget = d.day === params.targetDay.toUpperCase();
+    let status = isRemaining ? '[REMAINING - CAN MODIFY]' : '[COMPLETED - DO NOT MODIFY]';
+    if (isTarget) {
+      status = '[TARGET DAY - MODIFY THIS]';
+    }
+    return `${d.day}: ${d.theme}${d.load ? ` (${d.load})` : ''} ${status}`;
+  }).join('\n');
 
-  const currentDaysText = currentPattern.days.map(d =>
-    `${d.day}: ${d.theme}${d.load ? ` (${d.load})` : ''}`
-  ).join('\n');
+  const remainingDaysInfo = remainingDays.length > 0
+    ? `\nRemaining Days (today and future): ${remainingDays.join(', ')}`
+    : '';
+
+  const changesText = params.changes.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
 
   return `<Current Weekly Pattern>
 Week ${currentPattern.weekIndex + 1} of mesocycle
-${currentDaysText}
+${currentDaysText}${remainingDaysInfo}
 </Current Weekly Pattern>
 
 <Mesocycle Context>
@@ -94,25 +133,37 @@ Deload Week: ${mesocycle.deload && currentPattern.weekIndex + 1 === mesocycle.we
 </Mesocycle Context>
 
 <Modification Request>
+Target Day: ${params.targetDay}
+Requested Changes:
+${changesText}
 Reason: ${params.reason}
-
-Day-Specific Modifications:
-${modificationsText}
-
-Overall Constraints:
-${constraintsText}
 </Modification Request>
 
 <Task>
-Update this weekly training pattern to accommodate the requested modifications and constraints while maintaining as much of the original training intent as possible.
+Update this weekly training pattern to accommodate the requested changes while maintaining training balance and coherence for the remaining days.
 
-Guidelines:
-- Apply each day-specific modification
-- Respect the overall constraints for the week
-- Maintain training balance and progression
+**PRIMARY GOAL**: Apply the requested changes to ${params.targetDay} (marked as [TARGET DAY]).
+
+**SECONDARY GOAL**: If changes mention constraints or modifications for "remaining days", "rest of week", or "all days", apply those to other REMAINING days as needed. Also update remaining days to maintain training balance (e.g., if changing to a back workout today, ensure no back-to-back back days).
+
+**CRITICAL RULES**:
+- Modify ${params.targetDay} according to the requested changes
+- If changes mention applying to multiple days or "rest of week", apply those to remaining days
+- Only modify days marked as [REMAINING - CAN MODIFY] or [TARGET DAY]
+- Do NOT change days marked as [COMPLETED - DO NOT MODIFY]
+- Check for muscle group conflicts in remaining days (avoid back-to-back same muscles)
+- Maintain training balance and progression across remaining days
 - Keep the same week index (${currentPattern.weekIndex})
 - Ensure all 7 days are present (Monday-Sunday)
+- Preserve completed days exactly as they were
 - Be specific about what changed and why in the modificationsApplied array
+
+**Examples of interpreting changes:**
+- "Change chest to back workout" → Apply to target day only
+- "Use dumbbells only" → Apply to target day, but consider if it should apply to remaining days too
+- "Hotel gym constraints for rest of week" → Apply to all remaining days
+- "45 minute limit today" → Apply to target day only
+- "30 min per day rest of week" → Apply to all remaining days
 
 Return the complete updated microcycle pattern as a JSON object with detailed modification tracking.
 </Task>

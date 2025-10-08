@@ -55,9 +55,19 @@ export const updateMicrocyclePattern = async (context: MicrocycleUpdateContext):
         throw new Error('Microcycle pattern must have exactly 7 days');
       }
 
-      console.log(`Successfully updated microcycle pattern with ${validatedPattern.modificationsApplied?.length || 0} modifications`);
+      // Convert null values to undefined for TypeScript compatibility
+      const cleanedPattern: UpdatedMicrocyclePattern = {
+        ...validatedPattern,
+        days: validatedPattern.days.map(day => ({
+          ...day,
+          load: day.load ?? undefined,
+          notes: day.notes ?? undefined,
+        })),
+      };
 
-      return validatedPattern;
+      console.log(`Successfully updated microcycle pattern with ${cleanedPattern.modificationsApplied?.length || 0} modifications`);
+
+      return cleanedPattern;
     } catch (error) {
       console.error(`Error updating microcycle pattern (attempt ${attempt + 1}):`, error);
 

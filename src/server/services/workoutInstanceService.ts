@@ -1,11 +1,8 @@
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
 import type { EnhancedWorkoutInstance } from '@/server/models/workout';
-import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from './userService';
 
 interface SubstituteExerciseParams {
@@ -42,14 +39,10 @@ interface ModifyWorkoutResult {
 export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
   private workoutRepo: WorkoutInstanceRepository;
-  private microcycleRepo: MicrocycleRepository;
-  private fitnessPlanRepo: FitnessPlanRepository;
   private userService: UserService;
 
   private constructor() {
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
-    this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
     this.userService = UserService.getInstance();
   }
 
@@ -157,6 +150,7 @@ export class WorkoutInstanceService {
     try {
       const { userId, workoutDate, reason, constraints, preferredEquipment, focusAreas } = params;
 
+      console.log('Modifying workout', params);
       // Get user with profile
       const user = await this.userService.getUserWithProfile(userId);
       if (!user) {
@@ -213,47 +207,6 @@ export class WorkoutInstanceService {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
-  }
-
-  /**
-   * Apply constraints to a user profile temporarily (doesn't save to DB)
-   */
-  private applyConstraintsToUser(
-    user: UserWithProfile,
-    constraints: string[],
-    preferredEquipment?: string[]
-  ): UserWithProfile {
-    const modifiedUser = { ...user };
-
-    if (!modifiedUser.profile) {
-      return modifiedUser;
-    }
-
-    // Update equipment access if specified
-    if (preferredEquipment && preferredEquipment.length > 0) {
-      modifiedUser.profile.equipmentAccess = {
-        gymAccess: modifiedUser.profile.equipmentAccess?.gymAccess ?? false,
-        summary: preferredEquipment.join(', '),
-        gymType: modifiedUser.profile.equipmentAccess?.gymType,
-        homeEquipment: preferredEquipment,
-        limitations: modifiedUser.profile.equipmentAccess?.limitations,
-      };
-    }
-
-    // Add constraints to the profile
-    const constraintObjects = constraints.map((constraint, index) => ({
-      id: `temp-${index}`,
-      description: constraint,
-      type: 'preference' as const,
-      status: 'active' as const,
-    }));
-
-    modifiedUser.profile.constraints = [
-      ...(modifiedUser.profile.constraints || []),
-      ...constraintObjects,
-    ];
-
-    return modifiedUser;
   }
 }
 

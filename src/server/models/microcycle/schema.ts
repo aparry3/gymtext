@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const _DayPatternSchema = z.object({
   day: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
   theme: z.string().describe('Training theme for the day (e.g., "Lower", "Upper Push", "Rest")'),
-  load: z.enum(['light', 'moderate', 'heavy']).optional(),
-  notes: z.string().optional(),
+  load: z.enum(['light', 'moderate', 'heavy']).nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export const _MicrocyclePatternSchema = z.object({

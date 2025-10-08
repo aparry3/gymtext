@@ -36,21 +36,26 @@ export default function AdminChatPage() {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [userName, setUserName] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const scrollToBottom = useCallback(() => {
+    // Use setTimeout to ensure DOM has updated before scrolling
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, scrollToBottom])
 
-  const fetchConversations = useCallback(async () => {
-    setIsLoading(true)
+  const fetchConversations = useCallback(async (isInitialLoad = false) => {
+    if (isInitialLoad) {
+      setIsInitialLoading(true)
+    }
     try {
       const response = await fetch(`/api/admin/users/${id}/chat`)
       const result = await response.json()
@@ -59,31 +64,46 @@ export default function AdminChatPage() {
         throw new Error(result.error || 'Failed to fetch conversations')
       }
 
-      // Flatten all messages from all conversations
-      const allMessages: Message[] = result.data.conversations.flatMap(
-        (conv: Conversation) => conv.messages
-      ).sort((a: Message, b: Message) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      // Get the most recent conversation based on updatedAt
+      const mostRecentConversation = result.data.conversations.reduce(
+        (latest: Conversation | null, current: Conversation) => {
+          if (!latest) return current
+          return new Date(current.updatedAt) > new Date(latest.updatedAt)
+            ? current
+            : latest
+        },
+        null
       )
 
-      setMessages(allMessages)
+      // Get messages from the most recent conversation only
+      const conversationMessages = mostRecentConversation?.messages ?? []
+      const sortedMessages = conversationMessages.sort(
+        (a: Message, b: Message) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      )
 
-      // Fetch user name
-      const userResponse = await fetch(`/api/admin/users/${id}`)
-      const userResult = await userResponse.json()
-      if (userResult.success) {
-        setUserName(userResult.data.user.name || 'User')
+      setMessages(sortedMessages)
+
+      // Fetch user name on initial load
+      if (isInitialLoad) {
+        const userResponse = await fetch(`/api/admin/users/${id}`)
+        const userResult = await userResponse.json()
+        if (userResult.success) {
+          setUserName(userResult.data.user.name || 'User')
+        }
       }
     } catch (err) {
       console.error('Error fetching conversations:', err)
     } finally {
-      setIsLoading(false)
+      if (isInitialLoad) {
+        setIsInitialLoading(false)
+      }
     }
   }, [id])
 
   useEffect(() => {
     if (id) {
-      fetchConversations()
+      fetchConversations(true)
     }
   }, [id, fetchConversations])
 
@@ -132,7 +152,7 @@ export default function AdminChatPage() {
     }
   }
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return <ChatSkeleton />
   }
 

@@ -34,13 +34,16 @@ const substituteFunction = async ({
   return `Failed to substitute exercise: ${result.error}`;
 };
 
-export const substituteExerciseTool = tool(substituteFunction, {
-  name: 'substitute_exercise',
-  description: `Substitute a specific exercise or block in the user's current workout.
+export const substituteExerciseTool = tool(
+  substituteFunction,
+  {
+    name: 'substitute_exercise',
+    description: `Substitute a specific exercise or block in the user's current workout.
 Use this when the user wants to swap one exercise for another due to equipment limitations,
 preferences, or other constraints. This modifies the existing workout in place.`,
-  schema: SubstituteExerciseSchema,
-});
+    schema: SubstituteExerciseSchema,
+  }
+);
 
 
 const ModifyWorkoutSchema = z.object({
@@ -72,59 +75,110 @@ const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints,
   }
 }
 /**
- * Tool for modifying the entire workout
- * Use this when the user needs a completely different workout or significant changes
- * Example: "I can't make it to the gym today, can I get a home workout instead?"
+ * Tool for modifying a single workout WITHOUT altering the rest of the week
+ *
+ * Use this when the user needs to change ONE workout but the rest of the week stays the same.
+ * This is for one-off changes that don't affect training balance or require pattern updates.
+ *
+ * Examples:
+ * - "I can't make it to the gym today, can I get a home workout instead?" (one-day equipment change)
+ * - "I only have 30 minutes today, can you shorten the workout?" (one-day time constraint)
+ * - "Can you remove shoulder exercises today, my shoulder is sore?" (one-day injury accommodation)
+ *
+ * Do NOT use this for muscle group swaps that affect weekly balance - use modify_week instead.
  */
-export const modifyWorkoutTool = tool(modifyWorkoutFunction, {
-  name: 'modify_workout',
-  description: `Generate a modified version of the user's workout for today. Use this when the user needs
-  significant changes to their workout due to equipment limitations, injuries, time constraints, or other factors.
-  This regenerates the entire workout while maintaining training principles.`,
-  schema: ModifyWorkoutSchema,
-});
+export const modifyWorkoutTool = tool(
+  modifyWorkoutFunction,
+  {
+    name: 'modify_workout',
+    description: `Regenerate a SINGLE workout without changing the weekly pattern.
+
+  Use ONLY when the change is isolated to ONE day and doesn't require updating the rest of the week:
+  - One-day equipment changes (e.g., "can't go to gym today, need home workout")
+  - One-day time constraints (e.g., "only 30 min today")
+  - One-day injury accommodations (e.g., "avoid shoulder exercises today")
+
+  DO NOT use for muscle group swaps - use modify_week instead to maintain weekly balance.
+  This tool does NOT update the weekly pattern, only regenerates the single workout.`,
+    schema: ModifyWorkoutSchema,
+  }
+);
 
 const ModifyWeekSchema = z.object({
   userId: z.string().describe('The user ID'),
-  startDate: z.string().describe('Start date of the week to modify (ISO format)'),
-  modifications: z.array(z.object({
-    day: z.string().describe('Day of the week (e.g., "Monday", "Tuesday")'),
-    change: z.string().describe('What change to make (e.g., "Skip", "Make it a home workout", "Light recovery only")'),
-  })).describe('Modifications for specific days of the week'),
-  constraints: z.array(z.string()).describe('Overall constraints for the week (e.g., "No gym access", "Only 30 min per day")'),
-  reason: z.string().describe('Reason for the weekly modification'),
+  targetDay: z.string().describe('The day being modified (e.g., "Monday", "Tuesday", "Wednesday"). Typically "today" or the current day of the week.'),
+  changes: z.array(z.string()).describe('List of all changes and constraints needed. Include everything in this array - both changes to the target day and any constraints for remaining days. Examples: ["Change chest to back workout", "Use dumbbells only for today", "Hotel gym constraints for rest of week", "30 min limit per day"]'),
+  reason: z.string().describe('Why the modification is needed (e.g., "Gym is too crowded for chest workout", "Traveling for work with limited equipment", "Weather preventing outdoor cardio")'),
 });
 
 type ModifyWeekInput = z.infer<typeof ModifyWeekSchema>;
 
-const modifyWeekFunction = async ({ userId, startDate, modifications, constraints, reason }: ModifyWeekInput): Promise<string> => {
+const modifyWeekFunction = async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<string> => {
   const result = await microcycleService.modifyWeek({
     userId,
-    startDate: new Date(startDate),
-    modifications,
-    constraints,
+    targetDay,
+    changes,
     reason,
   });
 
   if (result.success) {
     const modificationsText = result.modificationsApplied?.join('\n- ') || 'No specific modifications tracked';
-    return `Successfully modified the week starting ${startDate}. ${result.message || ''}\n\nPattern Modifications:\n- ${modificationsText}`.trim();
+    return `Successfully modified the week. ${result.message || ''}\n\nPattern Modifications:\n- ${modificationsText}`.trim();
   } else {
     return `Failed to modify week: ${result.error}`;
   }
 }
 /**
- * Tool for modifying the weekly training pattern
- * Use this when the user needs to adjust their training for the entire week
- * Example: "I'm traveling this week and won't have access to a gym"
+ * Tool for modifying the weekly training pattern and today's workout
+ *
+ * This tool intelligently updates the weekly pattern for REMAINING days (today and future) while
+ * only regenerating ONE workout (typically today). It ensures training coherence across the week.
+ *
+ * Use cases:
+ * 1. **Muscle Group Swaps**: User wants different muscle group today
+ *    Example: "Gym is packed, can you give me a back workout instead of chest?"
+ *    → Changes today to back, then checks remaining days to avoid back-to-back back days
+ *    → May shuffle another day to maintain muscle group balance
+ *
+ * 2. **Multi-Day Equipment Changes**: Travel affecting multiple days
+ *    Example: "I'm traveling Mon-Fri with only hotel gym access"
+ *    → Updates pattern for remaining days with equipment constraints
+ *    → Regenerates today's workout for hotel gym
+ *
+ * 3. **Multi-Day Schedule Changes**: Time constraints for rest of week
+ *    Example: "Only 30 minutes available for workouts the rest of this week"
+ *    → Condenses remaining workouts to fit time constraint
+ *
+ * Note: Updates the weekly pattern for coherence. Regenerates today's workout ONLY if today's pattern
+ * changed (e.g., modifying Thursday might cause Monday to be reshuffled from cardio to strength).
+ * Future day workouts will be generated on their respective days using the updated pattern.
+ * Use modify_workout instead if the change is truly isolated to one day and doesn't affect weekly balance.
  */
-export const modifyWeekTool = tool(modifyWeekFunction, {
-  name: 'modify_week',
-  description: `Modify the user's training pattern for the current or upcoming week. Use this when the user
-  needs to adjust their entire week of training due to travel, schedule changes, equipment limitations,
-  or other factors that affect multiple days. This updates the microcycle pattern and regenerates workouts.`,
-  schema: ModifyWeekSchema,
-});
+export const modifyWeekTool = tool(
+  modifyWeekFunction,
+  {
+    name: 'modify_week',
+    description: `Modify the weekly training pattern for remaining days AND regenerate the target day's workout.
+
+  Use this when changes affect training BALANCE or MULTIPLE days:
+  - Muscle group swaps (e.g., "give me back instead of chest") - MUST reshuffle remaining days to avoid conflicts
+  - Multi-day equipment/travel changes (e.g., "traveling with hotel gym access this week")
+  - Multi-day time constraints (e.g., "only 30 min per day rest of week")
+  - Changes requiring pattern updates for coherence
+
+  Do NOT use for isolated one-day changes - use modify_workout instead.
+
+  Parameters:
+  - targetDay: Which day to modify (e.g., "Monday", "Tuesday", or "today")
+  - changes: Array of all modifications and constraints (e.g., ["Change chest to back", "Use dumbbells only", "Hotel gym for rest of week"])
+  - reason: Why the changes are needed
+
+  This updates the microcycle pattern for all remaining days to maintain training balance and muscle group spacing.
+  Intelligently regenerates today's workout ONLY if today's pattern changed as a result of the modification
+  (e.g., modifying Thursday to cardio might cause Monday to shift from cardio to strength for balance).`,
+    schema: ModifyWeekSchema,
+  }
+);
 
 /**
  * Export all modification tools as an array for use in the agent

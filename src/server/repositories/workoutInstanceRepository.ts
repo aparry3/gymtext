@@ -53,13 +53,21 @@ export class WorkoutInstanceRepository extends BaseRepository {
     clientId: string,
     date: Date
   ): Promise<WorkoutInstance | undefined> {
+    // Normalize to start of day in UTC for comparison
+    const startOfDay = new Date(date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
     const result = await this.db
       .selectFrom('workoutInstances')
       .where('clientId', '=', clientId)
-      .where('date', '=', date)
+      .where('date', '>=', startOfDay)
+      .where('date', '<=', endOfDay)
       .selectAll()
       .executeTakeFirst();
-    
+
     return result;
   }
 

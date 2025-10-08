@@ -59,10 +59,58 @@ export class ProgressService {
   }
 
   async getCurrentOrCreateMicrocycle(user: UserWithProfile): Promise<Microcycle | null> {
-    const plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+    let plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
     if (!plan) {
       console.log(`No fitness plan found for user ${user.id}`);
       return null;
+    }
+
+    // Calculate the current calendar week dates
+    const { startDate: currentWeekStart } = this.calculateWeekDates(user.timezone);
+
+    // Check if we need to advance the week automatically
+    let currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+    if (currentMicrocycle) {
+      // Normalize dates to start of day for comparison
+      const normalizedCurrentWeekStart = new Date(currentWeekStart);
+      normalizedCurrentWeekStart.setHours(0, 0, 0, 0);
+
+      // Handle multiple week advances if user hasn't used the app in a while
+      let weeksAdvanced = 0;
+      const maxWeeksToAdvance = 12; // Safety limit to prevent infinite loops
+
+      while (weeksAdvanced < maxWeeksToAdvance) {
+        const currentMicrocycleEnd = new Date(currentMicrocycle.endDate);
+        currentMicrocycleEnd.setHours(0, 0, 0, 0);
+
+        // If the current week starts after the microcycle's end date, we need to advance
+        if (normalizedCurrentWeekStart > currentMicrocycleEnd) {
+          console.log(`[AUTO-ADVANCE] Current week (${normalizedCurrentWeekStart.toISOString()}) is after microcycle end (${currentMicrocycleEnd.toISOString()}), advancing week ${weeksAdvanced + 1} for user ${user.id}`);
+          await this.advanceWeek(user.id);
+          weeksAdvanced++;
+
+          // Refresh the plan and microcycle after advancing
+          plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+          if (!plan) {
+            console.log(`No fitness plan found after advancing for user ${user.id}`);
+            return null;
+          }
+
+          // Get the new current microcycle to check if we need to advance again
+          currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+          if (!currentMicrocycle) {
+            // No more microcycles to check, break out
+            break;
+          }
+        } else {
+          // Current microcycle is still valid for this week
+          break;
+        }
+      }
+
+      if (weeksAdvanced > 0) {
+        console.log(`[AUTO-ADVANCE] Advanced ${weeksAdvanced} week(s) for user ${user.id}`);
+      }
     }
 
     const progress = await this.getCurrentProgress(plan);

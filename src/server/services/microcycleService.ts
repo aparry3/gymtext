@@ -4,18 +4,13 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
 import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from './userService';
 
 interface ModifyWeekParams {
   userId: string;
-  startDate: Date;
-  modifications: Array<{
-    day: string;
-    change: string;
-  }>;
-  constraints: string[];
-  reason: string;
+  targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
+  changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
+  reason: string; // Why the modification is needed
 }
 
 interface ModifyWeekResult {
@@ -81,11 +76,11 @@ export class MicrocycleService {
   }
 
   /**
-   * Modify the weekly pattern and regenerate workouts
+   * Modify the weekly pattern for remaining days and regenerate a single workout
    */
   public async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
     try {
-      const { userId, startDate, modifications, constraints, reason } = params;
+      const { userId, targetDay, changes, reason } = params;
 
       // Get user with profile
       const user = await this.userService.getUserWithProfile(userId);
@@ -105,18 +100,18 @@ export class MicrocycleService {
         };
       }
 
-      // Find the microcycle that contains this date
-      const microcycles = await this.microcycleRepo.getAllMicrocycles(userId);
-      const relevantMicrocycle = microcycles.find(m => {
-        return m.startDate <= startDate && m.endDate >= startDate;
-      });
+      // Get the current active microcycle (the one for this week)
+      const relevantMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(userId);
 
       if (!relevantMicrocycle) {
+        console.error(`[MODIFY_WEEK] No active microcycle found for user ${userId}`);
         return {
           success: false,
-          error: 'No microcycle found for the specified week',
+          error: 'No active microcycle found. Please ensure you have an active fitness plan.',
         };
       }
+
+      console.log(`[MODIFY_WEEK] Using active microcycle ${relevantMicrocycle.id} (${new Date(relevantMicrocycle.startDate).toLocaleDateString()} - ${new Date(relevantMicrocycle.endDate).toLocaleDateString()})`);
 
       // Get the mesocycle
       const mesocycle = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex];
@@ -127,19 +122,49 @@ export class MicrocycleService {
         };
       }
 
-      // Apply constraints to user temporarily
-      const modifiedUser = this.applyConstraintsToUser(user, constraints, undefined);
+      // Calculate remaining days (today and future days only)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      const todayDayOfWeek = daysOfWeek[today.getDay()];
+
+      // Find today's index
+      const todayIndex = daysOfWeek.indexOf(todayDayOfWeek);
+
+      // Get remaining days (today and after)
+      const remainingDays = daysOfWeek.slice(todayIndex);
+
+      console.log(`[MODIFY_WEEK] Today is ${todayDayOfWeek}, remaining days: ${remainingDays.join(', ')}`);
+
+      // Check if the target day is in the remaining days
+      const remainingDaysSet = new Set(remainingDays);
+      const targetDayUpper = targetDay.toUpperCase();
+
+      if (!remainingDaysSet.has(targetDayUpper)) {
+        console.log(`[MODIFY_WEEK] Target day ${targetDay} has already passed`);
+        return {
+          success: false,
+          error: `Cannot modify ${targetDay} - this day has already passed. Today is ${todayDayOfWeek}.`,
+        };
+      }
+
+      console.log(`[MODIFY_WEEK] Target day: ${targetDay}, changes: ${changes.join('; ')}`);
+
+      // Capture the original pattern BEFORE updating
+      const originalPattern = relevantMicrocycle.pattern;
 
       // Build microcycle update params for the agent
       const updateParams: MicrocycleUpdateParams = {
-        modifications,
-        constraints,
+        targetDay,
+        changes,
         reason,
+        remainingDays,
       };
 
       // Use the microcycle update agent to modify the pattern
       const updatedPattern = await updateMicrocyclePattern({
-        currentPattern: relevantMicrocycle.pattern,
+        currentPattern: originalPattern,
         params: updateParams,
         mesocycle,
         programType: fitnessPlan.programType,
@@ -153,61 +178,65 @@ export class MicrocycleService {
         pattern: patternToSave,
       });
 
-      // Regenerate workouts for the modified days
-      let modifiedCount = 0;
-      for (const mod of modifications) {
-        const dayOfWeek = mod.day;
-        const dayPlan = patternToSave.days.find(d => d.day === dayOfWeek);
+      // Check if today's pattern changed - if so, regenerate today's workout
+      // This handles cases where modifying a future day causes today's workout to be reshuffled
+      let workoutRegenerated = false;
 
-        if (!dayPlan) continue;
+      const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);
+      const todayUpdatedPlan = patternToSave.days.find(d => d.day === todayDayOfWeek);
 
-        // Find the date for this day
-        const dayDate = this.findDateForDay(startDate, dayOfWeek);
+      // Check if today's plan actually changed (theme or load)
+      const todayPlanChanged = todayOriginalPlan && todayUpdatedPlan && (
+        todayOriginalPlan.theme !== todayUpdatedPlan.theme ||
+        todayOriginalPlan.load !== todayUpdatedPlan.load
+      );
 
-        // Check if a workout exists for this date
-        const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, dayDate);
+      if (todayPlanChanged) {
+        console.log(`[MODIFY_WEEK] Today's pattern changed from "${todayOriginalPlan?.theme}" to "${todayUpdatedPlan?.theme}" - regenerating workout`);
 
-        // Generate new workout
-        const context: DailyWorkoutContext = {
-          user: modifiedUser,
-          date: dayDate,
-          dayPlan,
-          microcycle: relevantMicrocycle,
-          mesocycle,
-          fitnessPlan,
-          recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
-        };
+        // Find today's date within the microcycle's week
+        const todayDate = this.findDateForDay(relevantMicrocycle.startDate, todayDayOfWeek);
 
-        const newWorkout = await generateDailyWorkout(context);
+        // Check if a workout exists for today
+        const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, todayDate);
 
         if (existingWorkout) {
+          // Generate new workout for today
+          const context: DailyWorkoutContext = {
+            user,
+            date: todayDate,
+            dayPlan: todayUpdatedPlan!,
+            microcycle: relevantMicrocycle,
+            mesocycle,
+            fitnessPlan,
+            recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
+          };
+
+          const newWorkout = await generateDailyWorkout(context);
+
           // Update existing workout
           await this.workoutRepo.update(existingWorkout.id, {
             details: newWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
           });
-        } else {
-          // Create new workout
-          // Note: mesocycleId is set to empty string as MesocycleOverview doesn't have an id field
-          await this.workoutRepo.create({
-            clientId: userId,
-            fitnessPlanId: fitnessPlan.id!,
-            mesocycleId: '', // MesocycleOverview doesn't have an id, using empty string
-            microcycleId: relevantMicrocycle.id,
-            date: dayDate,
-            sessionType: 'other',
-            goal: dayPlan.theme,
-            details: newWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-          });
-        }
 
-        modifiedCount++;
+          workoutRegenerated = true;
+          console.log(`[MODIFY_WEEK] Regenerated today's workout based on updated pattern`);
+        } else {
+          console.log(`[MODIFY_WEEK] No existing workout for today - will be generated during daily message with new pattern`);
+        }
+      } else {
+        console.log(`[MODIFY_WEEK] Today's pattern unchanged - no need to regenerate workout`);
       }
+
+      const message = workoutRegenerated
+        ? `Updated weekly pattern for remaining days and regenerated today's workout (pattern changed). Applied ${modificationsApplied.length} pattern modifications.`
+        : `Updated weekly pattern for remaining days. Applied ${modificationsApplied.length} pattern modifications.`;
 
       return {
         success: true,
-        modifiedDays: modifiedCount,
+        modifiedDays: workoutRegenerated ? 1 : 0,
         modificationsApplied,
-        message: `Updated ${modifiedCount} workouts for the week starting ${startDate.toLocaleDateString()}. Applied ${modificationsApplied.length} pattern modifications.`,
+        message,
       };
     } catch (error) {
       console.error('Error modifying week:', error);
@@ -216,47 +245,6 @@ export class MicrocycleService {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
-  }
-
-  /**
-   * Apply constraints to a user profile temporarily (doesn't save to DB)
-   */
-  private applyConstraintsToUser(
-    user: UserWithProfile,
-    constraints: string[],
-    preferredEquipment?: string[]
-  ): UserWithProfile {
-    const modifiedUser = { ...user };
-
-    if (!modifiedUser.profile) {
-      return modifiedUser;
-    }
-
-    // Update equipment access if specified
-    if (preferredEquipment && preferredEquipment.length > 0) {
-      modifiedUser.profile.equipmentAccess = {
-        gymAccess: modifiedUser.profile.equipmentAccess?.gymAccess ?? false,
-        summary: preferredEquipment.join(', '),
-        gymType: modifiedUser.profile.equipmentAccess?.gymType,
-        homeEquipment: preferredEquipment,
-        limitations: modifiedUser.profile.equipmentAccess?.limitations,
-      };
-    }
-
-    // Add constraints to the profile
-    const constraintObjects = constraints.map((constraint, index) => ({
-      id: `temp-${index}`,
-      description: constraint,
-      type: 'preference' as const,
-      status: 'active' as const,
-    }));
-
-    modifiedUser.profile.constraints = [
-      ...(modifiedUser.profile.constraints || []),
-      ...constraintObjects,
-    ];
-
-    return modifiedUser;
   }
 
   /**
