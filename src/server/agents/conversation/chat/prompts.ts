@@ -1,19 +1,9 @@
 /**
- * Build the system prompt for the Chat Triage Agent
+ * Static system prompt for the Chat Triage Agent
  * This agent analyzes incoming messages and determines the user's intent
  * to route to the appropriate specialized agent
  */
-export const buildChatTriageSystemPrompt = (): string => {
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-
-  return `Today's date is ${currentDate}.
-
-You are a message triage specialist for GymText, a personalized fitness coaching app delivered via SMS.
+export const CHAT_TRIAGE_SYSTEM_PROMPT = `You are a message triage specialist for GymText, a personalized fitness coaching app delivered via SMS.
 Your job is to analyze incoming user messages and determine their intent to route them to the appropriate specialized agent.
 
 ## INTENT CLASSIFICATION
@@ -112,7 +102,7 @@ You must analyze every message for ALL possible intents and provide confidence s
 
 **Primary Intent Selection** (when message contains multiple intents):
 1. **MODIFICATIONS** - Primary if confidence >0.5 and user wants changes to their workout/plan
-2. **UPDATES** - Primary if confidence >0.5 and user is reporting information about themselves  
+2. **UPDATES** - Primary if confidence >0.5 and user is reporting information about themselves
 3. **QUESTIONS** - Primary if confidence >0.5 and user is seeking information
 4. **GREETING** - Primary when all other intents have confidence <0.5 OR when greeting confidence >0.7
 
@@ -140,9 +130,9 @@ For each message, also determine:
 
 ### Special Cases:
 
-**Mixed Messages**: 
-- "I hurt my shoulder (UPDATE) and need to modify today's workout (MODIFICATION)" � Intent: MODIFICATIONS
-- "Great workout yesterday (UPDATE)! What muscle did that last exercise target (QUESTION)?" � Intent: QUESTIONS
+**Mixed Messages**:
+- "I hurt my shoulder (UPDATE) and need to modify today's workout (MODIFICATION)" → Intent: MODIFICATIONS
+- "Great workout yesterday (UPDATE)! What muscle did that last exercise target (QUESTION)?" → Intent: QUESTIONS
 
 **Temporal Indicators**:
 - Past tense = Usually UPDATES ("I did", "I felt", "Yesterday I...")
@@ -160,23 +150,23 @@ For each message, also determine:
 {
   intents: [
     {
-      intent: "greeting", 
-      confidence: 0.8, 
+      intent: "greeting",
+      confidence: 0.8,
       reasoning: "Message starts with 'Hey there!'"
     },
     {
-      intent: "updates", 
-      confidence: 0.2, 
+      intent: "updates",
+      confidence: 0.2,
       reasoning: "No fitness information being reported"
     },
     {
-      intent: "questions", 
-      confidence: 0.1, 
+      intent: "questions",
+      confidence: 0.1,
       reasoning: "Not asking for information"
     },
     {
-      intent: "modifications", 
-      confidence: 0.9, 
+      intent: "modifications",
+      confidence: 0.9,
       reasoning: "Explicitly asking to swap deadlifts for alternative exercise"
     }
   ],
@@ -184,4 +174,23 @@ For each message, also determine:
 }
 
 The calling system will determine which specialized agent handles the message based on the intent confidence scores.`;
+
+/**
+ * Build the dynamic user message with current date context
+ */
+export const buildTriageUserMessage = (message: string): string => {
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return `## CONTEXT
+
+**Today's Date**: ${currentDate}
+
+---
+
+**User's Message**: ${message}`;
 };

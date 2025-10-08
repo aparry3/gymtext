@@ -1,4 +1,4 @@
-import { buildChatTriageSystemPrompt } from '@/server/agents/conversation/chat/prompts';
+import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agents/conversation/chat/prompts';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { initializeModel } from '../../base';
@@ -37,17 +37,18 @@ export const chatAgent = async (
   const profileRunnable = profileAgentRunnable();
 
   const triageRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
-      // 3. Create Triage Runnable
-  const messages = [
-    {
-      role: 'system',
-      content: buildChatTriageSystemPrompt(),
-    },
-    {
-      role: 'user',
-      content: input.message,
-    }
-  ]
+    // 3. Create Triage Runnable
+    const userMessage = buildTriageUserMessage(input.message);
+    const messages = [
+      {
+        role: 'system',
+        content: CHAT_TRIAGE_SYSTEM_PROMPT,
+      },
+      {
+        role: 'user',
+        content: userMessage,
+      }
+    ]
     const model = initializeModel(TriageResultSchema);
     return await model.invoke(messages) as TriageResult;
   });
