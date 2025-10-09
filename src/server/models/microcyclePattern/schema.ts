@@ -11,7 +11,7 @@ export const _DayPatternSchema = z.object({
     description: "Training load intensity for the day"
   }).optional(),
   notes: z.string({
-    description: "Additional notes or instructions for the day"
+    description: "Notes about the workout or training day itself (e.g., 'Focus on mind-muscle connection', 'High volume day', 'Active recovery'). NOT for tracking changes made to the pattern."
   }).optional()
 });
 

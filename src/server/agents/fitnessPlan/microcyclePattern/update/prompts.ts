@@ -18,6 +18,7 @@ export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach 
 5. Ensure adequate rest and recovery between similar muscle groups
 6. Respect the mesocycles focus and progression strategy
 7. TRACK all changes made - you must return a "modificationsApplied" array listing each change
+8. IMPORTANT: Day "notes" should describe the workout itself (e.g., "Focus on form", "High volume day"), NOT what changed (change tracking goes in modificationsApplied only)
 </Critical Rules>
 
 <Modification Guidelines>
@@ -74,7 +75,11 @@ export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach 
 <Output Requirements>
 Return the COMPLETE updated microcycle pattern as a valid JSON object matching the UpdatedMicrocyclePattern schema with:
 1. All pattern data (weekIndex, days array)
-2. A "modificationsApplied" array of strings describing each change made
+2. For each day's "notes" field: Provide workout-specific guidance about THAT day's training
+   - Examples: "Focus on form and control", "High volume day - manage fatigue", "Active recovery focus"
+   - DO NOT put change tracking information in notes (e.g., don't say "Changed from chest to back")
+   - Notes should be about the workout itself, not about what was modified
+3. A "modificationsApplied" array of strings describing each change made to the pattern
    - Format: "[Day]: [Change made] - [Why]"
    - Examples:
      - "Monday: Changed from Upper Push to Home Upper Push - no gym access"
@@ -82,15 +87,22 @@ Return the COMPLETE updated microcycle pattern as a valid JSON object matching t
      - "Friday: Reduced from Heavy to Moderate load - fatigue management"
      - "Saturday: Moved Upper Pull to Saturday from Friday - schedule conflict"
    - Include one entry for each day that was modified
+   - This is the ONLY place to track what changes were made
 </Output Requirements>
 
 <Modification Tracking>
-Be specific and comprehensive in tracking modifications:
+Be specific and comprehensive in tracking modifications in the "modificationsApplied" array:
 - Training theme changes (what changed and why)
 - Load adjustments (heavy -> moderate, etc.)
 - Day swaps or moves (moved X from Y to Z)
 - Rest day changes (training day -> rest or vice versa)
 - Volume/intensity modifications
+
+IMPORTANT DISTINCTION:
+- modificationsApplied = What you CHANGED (e.g., "Monday: Changed from Chest to Back - user preference")
+- Day notes = Guidance ABOUT the workout (e.g., "Focus on scapular retraction and control")
+- NEVER put change tracking info in day notes
+- NEVER put workout guidance in modificationsApplied
 </Modification Tracking>`;
 
 export const updateMicrocyclePatternPrompt = (
@@ -164,6 +176,11 @@ Update this weekly training pattern to accommodate the requested changes while m
 - "Hotel gym constraints for rest of week" -> Apply to all remaining days
 - "45 minute limit today" -> Apply to target day only
 - "30 min per day rest of week" -> Apply to all remaining days
+
+**CRITICAL OUTPUT REMINDER:**
+- Day "notes" = Workout guidance (e.g., "Focus on controlled eccentrics", "Pump work today")
+- "modificationsApplied" = Change tracking (e.g., "Monday: Changed Upper Push to Upper Pull - user request")
+- Keep these two completely separate - never mix them!
 
 Return the complete updated microcycle pattern as a JSON object with detailed modification tracking.
 </Task>

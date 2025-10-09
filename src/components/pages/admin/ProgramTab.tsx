@@ -181,7 +181,7 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
         <div className="text-right">
           <div className="text-sm text-muted-foreground">Current Progress</div>
           <div className="font-medium">
-            Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek + 1}
+            Mesocycle {fitnessPlan.currentMesocycleIndex} • Week {fitnessPlan.currentMicrocycleWeek}
           </div>
           {currentMesocycle && (
             <div className="text-sm text-muted-foreground">
@@ -218,14 +218,14 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
   }
 
   return (
-    <Card 
+    <Card
       className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${isCurrent ? 'ring-2 ring-primary' : ''}`}
       onClick={handleClick}
     >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h4 className="font-medium">{mesocycle.name}</h4>
-          <p className="text-sm text-muted-foreground">Mesocycle {index + 1}</p>
+          <p className="text-sm text-muted-foreground">Mesocycle {index}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Badge variant="outline" className="text-xs">
@@ -310,7 +310,7 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">
                   {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
-                    ? `M${workout.mesocycleIndex + 1} W${workout.microcycleWeek + 1}`
+                    ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
                     : '-'
                   }
                 </td>

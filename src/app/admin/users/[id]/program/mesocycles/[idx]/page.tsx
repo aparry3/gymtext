@@ -141,7 +141,7 @@ export default function MesocycleDetailPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Mesocycle {mesocycleIndex + 1}</BreadcrumbPage>
+                <BreadcrumbPage>Mesocycle {mesocycleIndex}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -192,7 +192,7 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
           <div>
             <h1 className="text-2xl font-semibold">{mesocycle.name}</h1>
             <p className="text-muted-foreground">
-              Mesocycle {index + 1} of {total} • {mesocycle.weeks} weeks
+              Mesocycle {index} of {total} • {mesocycle.weeks} weeks
             </p>
           </div>
           
@@ -226,10 +226,10 @@ interface WeekGridProps {
 function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek }: WeekGridProps) {
   const router = useRouter()
 
-  const getWeekStatus = (weekNumber: number) => {
+  const getWeekStatus = (weekIndex: number) => {
     if (currentWeek === -1) return 'upcoming'
-    if (weekNumber < currentWeek + 1) return 'past' // currentWeek is 0-based, weekNumber is 1-based for display
-    if (weekNumber === currentWeek + 1) return 'current'
+    if (weekIndex < currentWeek) return 'past'
+    if (weekIndex === currentWeek) return 'current'
     return 'upcoming'
   }
 
@@ -251,10 +251,9 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: mesocycle.weeks }).map((_, weekIndex) => {
-        const weekNumber = weekIndex + 1
         const microcycle = microcycles.find(m => m.pattern.weekIndex === weekIndex)
-        const status = getWeekStatus(weekNumber)
-        
+        const status = getWeekStatus(weekIndex)
+
         const statusColors = {
           past: 'bg-gray-50 border-gray-200',
           current: 'bg-blue-50 border-blue-200 ring-2 ring-blue-100',
@@ -268,19 +267,19 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek 
         }
 
         return (
-          <Card 
-            key={weekIndex} 
+          <Card
+            key={weekIndex}
             className={`p-4 cursor-pointer hover:shadow-md transition-all ${statusColors[status]}`}
             onClick={() => {
               if (microcycle) {
-                router.push(`/admin/users/${userId}/program/mesocycles/${mesocycleIndex}/weeks/${weekNumber}`)
+                router.push(`/admin/users/${userId}/program/mesocycles/${mesocycleIndex}/weeks/${weekIndex}`)
               }
             }}
           >
             <div className="space-y-3">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">Week {weekNumber}</h4>
-                <Badge 
+                <h4 className="font-medium">Week {weekIndex}</h4>
+                <Badge
                   variant={status === 'current' ? 'default' : 'outline'}
                   className="text-xs"
                 >
