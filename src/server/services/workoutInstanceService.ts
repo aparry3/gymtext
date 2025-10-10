@@ -6,21 +6,22 @@ import type { EnhancedWorkoutInstance } from '@/server/models/workout';
 import { UserService } from './userService';
 import { DateTime } from 'luxon';
 
-interface SubstituteExerciseParams {
+export interface SubstituteExerciseParams {
   userId: string;
   workoutDate: Date;
   exercises: string[];
   reason: string;
 }
 
-interface SubstituteExerciseResult {
+export interface SubstituteExerciseResult {
   success: boolean;
+  workout?: EnhancedWorkoutInstance;
   modificationsApplied?: string[];
   message?: string;
   error?: string;
 }
 
-interface ModifyWorkoutParams {
+export interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
   reason: string;
@@ -29,7 +30,7 @@ interface ModifyWorkoutParams {
   focusAreas?: string[];
 }
 
-interface ModifyWorkoutResult {
+export interface ModifyWorkoutResult {
   success: boolean;
   workout?: EnhancedWorkoutInstance;
   modificationsApplied?: string[];
@@ -138,6 +139,7 @@ export class WorkoutInstanceService {
 
       return {
         success: true,
+        workout: updatedWorkout,
         modificationsApplied,
         message: `Updated workout for ${workoutDate.toLocaleDateString()}. Applied ${modificationsApplied.length} modifications.`,
       };

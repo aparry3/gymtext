@@ -1,9 +1,23 @@
 import { z } from 'zod';
-import { RunnableLambda } from '@langchain/core/runnables';
+import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables';
 import { initializeModel } from '@/server/agents/base';
 import type { ChatSubagentInput } from '../baseAgent';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import { modificationTools } from './tools';
+import { generateModifiedWorkoutMessage } from '@/server/agents/messaging/workoutMessage/chain';
+import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/workoutInstanceService';
+import type { ModifyWeekResult } from '@/server/services/microcycleService';
+import { WorkoutMessageContext } from '@/server/agents/messaging/workoutMessage/types';
+
+// Union type for all modification results
+type ModificationResult = SubstituteExerciseResult | ModifyWorkoutResult | ModifyWeekResult;
+
+// Output from tool execution step
+interface ToolExecutionOutput {
+  toolResult: ModificationResult | null;
+  toolName: string;
+  input: ChatSubagentInput;
+}
 
 /**
  * Schema for modifications agent output
@@ -15,9 +29,9 @@ export const ModificationsResponseSchema = z.object({
 export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
 
 /**
- * Modifications agent runnable - handles workout change and modification requests using tools
+ * Step 1: Tool execution runnable - executes modification tools
  */
-export const modificationsAgentRunnable = (): RunnableLambda<ChatSubagentInput, ModificationsResponse> => {
+const toolExecutionRunnable = (): RunnableLambda<ChatSubagentInput, ToolExecutionOutput> => {
   return RunnableLambda.from(async (input: ChatSubagentInput) => {
     const agentName = 'MODIFICATIONS';
 
@@ -46,18 +60,15 @@ export const modificationsAgentRunnable = (): RunnableLambda<ChatSubagentInput, 
     // Call model with tools
     const response = await modelWithTools.invoke(messages);
 
+    // Track tool results for message generation
+    let toolResult: ModificationResult | null = null;
+    let toolName = '';
+
     // Check if there are tool calls
     if (response.tool_calls && response.tool_calls.length > 0) {
       console.log(`[${agentName}] Tool calls:`, response.tool_calls.map((tc: any) => tc.name)); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      // Add AI message with tool calls to history
-      messages.push({
-        role: 'assistant',
-        content: response.content || '',
-        tool_calls: response.tool_calls,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      // Execute each tool call
+      // Execute each tool call (typically only one for modifications)
       for (const toolCall of response.tool_calls) {
         const tool = modificationTools.find(t => t.name === toolCall.name);
 
@@ -70,47 +81,85 @@ export const modificationsAgentRunnable = (): RunnableLambda<ChatSubagentInput, 
           console.log(`[${agentName}] Executing tool: ${toolCall.name}`, toolCall.args);
           // Use type assertion to handle union type from modificationTools array
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const toolResult = await (tool as any).invoke(toolCall.args);
-          console.log(`[${agentName}] Tool result:`, toolResult);
+          const result = await (tool as any).invoke(toolCall.args) as ModificationResult;
+          console.log(`[${agentName}] Tool result:`, result);
 
-          // Add tool result to messages
-          messages.push({
-            role: 'tool',
-            content: toolResult,
-            tool_call_id: toolCall.id,
-          } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+          // Store the result for message generation
+          toolResult = result;
+          toolName = toolCall.name;
         } catch (error) {
           console.error(`[${agentName}] Error executing tool ${toolCall.name}:`, error);
-          messages.push({
-            role: 'tool',
-            content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            tool_call_id: toolCall.id,
-          } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+          // Create an error result
+          toolResult = {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          };
+          toolName = toolCall.name;
         }
       }
+    }
 
-      // Call model again with tool results to get final response
-      const finalResponse = await modelWithTools.invoke(messages);
-      const responseText = finalResponse.content as string;
+    return { toolResult, toolName, input };
+  });
+};
 
-      console.log(`[${agentName}] Generated final response after tools:`, {
+/**
+ * Step 2: Message generation runnable - converts tool result to user message
+ */
+const messageGenerationRunnable = (): RunnableLambda<ToolExecutionOutput, ModificationsResponse> => {
+  return RunnableLambda.from(async ({ toolResult, input }: ToolExecutionOutput) => {
+    const agentName = 'MODIFICATIONS';
+
+    // If no tool result, return fallback message
+    if (!toolResult) {
+      return {
+        response: 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!',
+      };
+    }
+
+    // If successful and we have a workout, generate a message with it
+    if (toolResult.success && toolResult.workout) {
+      const messageContext: WorkoutMessageContext = {
+        modificationsApplied: toolResult.modificationsApplied,
+        reason: input.message,
+      };
+
+      const responseText = await generateModifiedWorkoutMessage(
+        input.user,
+        toolResult.workout,
+        messageContext
+      );
+
+      console.log(`[${agentName}] Generated message from tool result:`, {
         response: responseText.substring(0, 100) + (responseText.length > 100 ? '...' : ''),
       });
 
       return {
         response: responseText,
       };
-    } else {
-      // No tool calls, we have our final response
-      const finalResponse = response.content as string;
-
-      console.log(`[${agentName}] Generated final response:`, {
-        response: finalResponse.substring(0, 100) + (finalResponse.length > 100 ? '...' : ''),
-      });
-
-      return {
-        response: finalResponse,
-      };
     }
+
+    // If failed or no workout, provide error message
+    const errorMessage = toolResult.error
+      ? `I tried to make that change but ran into an issue: ${toolResult.error}`
+      : 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!';
+
+    return {
+      response: errorMessage,
+    };
   });
+};
+
+/**
+ * Modifications agent runnable - handles workout change and modification requests using tools
+ *
+ * This is a sequence that:
+ * 1. Executes modification tools based on user request
+ * 2. Generates a conversational message about the modification using workoutMessageRunnable
+ */
+export const modificationsAgentRunnable = (): RunnableSequence<ChatSubagentInput, ModificationsResponse> => {
+  return RunnableSequence.from([
+    toolExecutionRunnable(),
+    messageGenerationRunnable(),
+  ]);
 };

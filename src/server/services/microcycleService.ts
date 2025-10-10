@@ -5,16 +5,18 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
 import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { UserService } from './userService';
+import { EnhancedWorkoutInstance } from '../models/workout/schema';
 
-interface ModifyWeekParams {
+export interface ModifyWeekParams {
   userId: string;
   targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
   changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
   reason: string; // Why the modification is needed
 }
 
-interface ModifyWeekResult {
+export interface ModifyWeekResult {
   success: boolean;
+  workout?: EnhancedWorkoutInstance;
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -184,6 +186,7 @@ export class MicrocycleService {
       // Check if today's pattern changed - if so, regenerate today's workout
       // This handles cases where modifying a future day causes today's workout to be reshuffled
       let workoutRegenerated = false;
+      let regeneratedWorkout: import('@/server/models/workout').EnhancedWorkoutInstance | undefined;
 
       const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);
       const todayUpdatedPlan = patternToSave.days.find(d => d.day === todayDayOfWeek);
@@ -222,6 +225,7 @@ export class MicrocycleService {
             details: newWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
           });
 
+          regeneratedWorkout = newWorkout;
           workoutRegenerated = true;
           console.log(`[MODIFY_WEEK] Regenerated today's workout based on updated pattern`);
         } else {
@@ -237,6 +241,7 @@ export class MicrocycleService {
 
       return {
         success: true,
+        workout: regeneratedWorkout,
         modifiedDays: workoutRegenerated ? 1 : 0,
         modificationsApplied,
         message,

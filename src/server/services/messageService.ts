@@ -1,10 +1,12 @@
 import { UserWithProfile } from '../models/userModel';
 import { twilioClient } from '../connections/twilio/twilio';
 import { ConversationService } from './conversationService';
-import { dailyMessageAgent, welcomeMessageAgent } from '../agents';
+import { welcomeMessageAgent } from '../agents';
+import { generateDailyWorkoutMessage, generateModifiedWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
 import { FitnessPlan } from '../models';
-import { WorkoutInstance } from '../models/workout';
+import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
+import type { WorkoutMessageContext } from '../agents/messaging/workoutMessage/types';
 
 export class MessageService {
   private static instance: MessageService;
@@ -29,10 +31,15 @@ export class MessageService {
   }
 
   public async buildDailyMessage(user: UserWithProfile, workout: WorkoutInstance): Promise<string> {
-    const welcomeAgentResponse = await dailyMessageAgent.invoke({ user, context: { workout } });
-    const welcomeMessage = welcomeAgentResponse.value;
+    return await generateDailyWorkoutMessage(user, workout);
+  }
 
-    return String(welcomeMessage);
+  public async buildModificationMessage(
+    user: UserWithProfile,
+    workout: EnhancedWorkoutInstance,
+    context: Omit<WorkoutMessageContext, 'type'>
+  ): Promise<string> {
+    return await generateModifiedWorkoutMessage(user, workout, context);
   }
 
 

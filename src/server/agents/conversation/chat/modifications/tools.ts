@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { workoutInstanceService } from '@/server/services/workoutInstanceService';
-import { microcycleService } from '@/server/services/microcycleService';
+import { workoutInstanceService, type SubstituteExerciseResult } from '@/server/services/workoutInstanceService';
+import { microcycleService, type ModifyWeekResult } from '@/server/services/microcycleService';
 import { tool } from '@langchain/core/tools';
+import type { ModifyWorkoutResult } from '@/server/services/workoutInstanceService';
 
 const SubstituteExerciseSchema = z.object({
   userId: z.string().describe('The user ID'),
@@ -19,19 +20,13 @@ const substituteFunction = async ({
   workoutDate,
   exercises,
   reason,
-}: SubstituteExerciseInput): Promise<string> => {
-  const result = await workoutInstanceService.substituteExercise({
+}: SubstituteExerciseInput): Promise<SubstituteExerciseResult> => {
+  return await workoutInstanceService.substituteExercise({
     userId,
     workoutDate: new Date(workoutDate),
     exercises,
     reason,
   });
-
-  if (result.success) {
-    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No modifications';
-    return `Successfully updated workout. ${result.message || ''}\n\nModifications:\n- ${modificationsText}`.trim();
-  }
-  return `Failed to substitute exercise: ${result.error}`;
 };
 
 export const substituteExerciseTool = tool(
@@ -57,8 +52,8 @@ const ModifyWorkoutSchema = z.object({
 
 type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
 
-const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<string> => {
-  const result = await workoutInstanceService.modifyWorkout({
+const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<ModifyWorkoutResult> => {
+  return await workoutInstanceService.modifyWorkout({
     userId,
     workoutDate: new Date(workoutDate),
     reason,
@@ -66,13 +61,6 @@ const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints,
     preferredEquipment,
     focusAreas,
   });
-
-  if (result.success) {
-    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No specific modifications tracked';
-    return `Successfully modified workout. ${result.message || ''}\n\nModifications:\n- ${modificationsText}`.trim();
-  } else {
-    return `Failed to modify workout: ${result.error}`;
-  }
 }
 /**
  * Tool for modifying a single workout WITHOUT altering the rest of the week
@@ -113,20 +101,13 @@ const ModifyWeekSchema = z.object({
 
 type ModifyWeekInput = z.infer<typeof ModifyWeekSchema>;
 
-const modifyWeekFunction = async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<string> => {
-  const result = await microcycleService.modifyWeek({
+const modifyWeekFunction = async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<ModifyWeekResult> => {
+  return await microcycleService.modifyWeek({
     userId,
     targetDay,
     changes,
     reason,
   });
-
-  if (result.success) {
-    const modificationsText = result.modificationsApplied?.join('\n- ') || 'No specific modifications tracked';
-    return `Successfully modified the week. ${result.message || ''}\n\nPattern Modifications:\n- ${modificationsText}`.trim();
-  } else {
-    return `Failed to modify week: ${result.error}`;
-  }
 }
 /**
  * Tool for modifying the weekly training pattern and today's workout
