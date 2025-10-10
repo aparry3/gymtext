@@ -39,7 +39,9 @@ export default function AdminChatPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [userName, setUserName] = useState<string>('')
+  const [sseConnected, setSseConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const eventSourceRef = useRef<EventSource | null>(null)
 
   const scrollToBottom = useCallback(() => {
     // Use setTimeout to ensure DOM has updated before scrolling
@@ -107,6 +109,65 @@ export default function AdminChatPage() {
     }
   }, [id, fetchConversations])
 
+  // Set up SSE connection for real-time messages
+  useEffect(() => {
+    if (!id) return
+
+    // Try to connect to SSE endpoint (only works with MESSAGING_PROVIDER=local)
+    const eventSource = new EventSource(`/api/messages/stream?userId=${id}`)
+    eventSourceRef.current = eventSource
+
+    eventSource.onopen = () => {
+      console.log('[SSE] Connected to message stream')
+      setSseConnected(true)
+    }
+
+    eventSource.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data)
+
+        if (data.type === 'connected') {
+          console.log('[SSE] Stream ready:', data)
+        } else if (data.type === 'message' && data.message) {
+          // Add the new outbound message to the messages list
+          const newMessage: Message = {
+            id: data.message.id,
+            content: data.message.content,
+            direction: 'outbound',
+            timestamp: data.message.timestamp,
+            from: data.message.from,
+            to: data.message.to,
+          }
+
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) {
+              return prev
+            }
+            return [...prev, newMessage]
+          })
+
+          console.log('[SSE] Received message:', newMessage)
+        }
+      } catch (error) {
+        console.error('[SSE] Error parsing message:', error)
+      }
+    })
+
+    eventSource.onerror = (error) => {
+      console.log('[SSE] Connection error (may not be using local provider):', error)
+      setSseConnected(false)
+      eventSource.close()
+    }
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[SSE] Disconnecting')
+      eventSource.close()
+      setSseConnected(false)
+    }
+  }, [id])
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputMessage.trim() || isSending) return
@@ -142,7 +203,14 @@ export default function AdminChatPage() {
       }
 
       // Remove optimistic message and fetch fresh data
-      await fetchConversations()
+      // If SSE is connected, the response will arrive via SSE
+      // If not, we need to fetch manually
+      if (!sseConnected) {
+        await fetchConversations()
+      } else {
+        // Just remove the optimistic message - the real one will come via SSE
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
+      }
     } catch (err) {
       console.error('Failed to send message:', err)
       // Remove optimistic message on error
@@ -188,6 +256,12 @@ export default function AdminChatPage() {
                   <h1 className="text-xl font-semibold">{userName}</h1>
                   <p className="text-sm text-muted-foreground">
                     Admin Chat Simulator
+                    {sseConnected && (
+                      <span className="ml-2 inline-flex items-center gap-1 text-green-600">
+                        <span className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
+                        Live
+                      </span>
+                    )}
                   </p>
                 </div>
                 <Button

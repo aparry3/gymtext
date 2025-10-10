@@ -1,11 +1,10 @@
 import { UserWithProfile } from '../models/userModel';
-import { twilioClient } from '../connections/twilio/twilio';
+import { messagingClient, type MessageResult } from '../connections/messaging';
 import { ConversationService } from './conversationService';
 import { welcomeMessageAgent } from '../agents';
 import { generateDailyWorkoutMessage, generateModifiedWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
 import { FitnessPlan } from '../models';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
-import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import type { WorkoutMessageContext } from '../agents/messaging/workoutMessage/types';
 
 export class MessageService {
@@ -43,12 +42,18 @@ export class MessageService {
   }
 
 
-  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageInstance> {
+  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
+    // Get the provider from the messaging client
+    const provider = messagingClient.provider;
+
     try {
         const stored = await this.conversationService.storeOutboundMessage(
             user.id,
             user.phoneNumber,
-            message
+            message,
+            undefined, // from (uses default)
+            provider, // messaging provider
+            undefined  // providerMessageId (not available yet)
         );
         if (!stored) {
             console.warn('Circuit breaker prevented storing outbound message');
@@ -58,9 +63,9 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    const messageInstance = await twilioClient.sendSMS(user.phoneNumber, message);
+    const messageResult = await messagingClient.sendMessage(user.phoneNumber, message);
 
-    return messageInstance;
+    return messageResult;
   }
 }
 

@@ -232,13 +232,13 @@ export class DailyMessageService {
           messageText: message
         };
       } else {
-        const messageInstance = await this.messageService.sendMessage(user, message);
+        const messageResult = await this.messageService.sendMessage(user, message);
         console.log(`Successfully sent daily message to user ${user.id}`);
         return {
           success: true,
           userId: user.id,
           messageText: message,
-          messageId: messageInstance.sid
+          messageId: messageResult.messageId
         };
       }
     } catch (error) {

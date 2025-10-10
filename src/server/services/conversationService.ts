@@ -45,7 +45,7 @@ export class ConversationService {
   async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
     return await this.circuitBreaker.execute(async () => {
       const { userId, from, to, content, twilioData } = params;
-      
+
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
 
@@ -57,7 +57,8 @@ export class ConversationService {
         content,
         phoneFrom: from,
         phoneTo: to,
-        twilioMessageSid: (twilioData?.MessageSid as string) || null,
+        provider: 'twilio', // Inbound messages always come from Twilio webhook
+        providerMessageId: (twilioData?.MessageSid as string) || null,
         metadata: (twilioData || {}) as Json
       });
 
@@ -65,10 +66,17 @@ export class ConversationService {
     });
   }
 
-  async storeOutboundMessage(userId: string, to: string, messageContent: string, from: string = process.env.TWILIO_NUMBER || '', twilioMessageSid?: string): Promise<Message | null> {
+  async storeOutboundMessage(
+    userId: string,
+    to: string,
+    messageContent: string,
+    from: string = process.env.TWILIO_NUMBER || '',
+    provider: 'twilio' | 'local' | 'websocket' = 'twilio',
+    providerMessageId?: string
+  ): Promise<Message | null> {
     // TODO: Summarize and save conversation as memory - update previous conversation memory
     return await this.circuitBreaker.execute(async () => {
-      
+
       // Get or create conversation
       const conversation = await this.getOrCreateConversation(userId);
 
@@ -87,7 +95,8 @@ export class ConversationService {
         content: messageContent,
         phoneFrom: from,
         phoneTo: to,
-        twilioMessageSid: twilioMessageSid,
+        provider,
+        providerMessageId: providerMessageId || null,
         metadata: {} as Json,
       });
 
