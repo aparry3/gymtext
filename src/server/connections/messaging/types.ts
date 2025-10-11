@@ -5,6 +5,8 @@
  * Supports Twilio, local development clients, and future messaging providers.
  */
 
+import type { UserWithProfile } from '@/server/models/userModel';
+
 export type MessagingProvider = 'twilio' | 'local' | 'websocket';
 
 export interface MessageResult {
@@ -35,10 +37,10 @@ export interface IMessagingClient {
   readonly provider: MessagingProvider;
 
   /**
-   * Send a message to a recipient
-   * @param to - Recipient phone number or identifier
+   * Send a message to a user
+   * @param user - User object containing phone number and other properties
    * @param message - Message content to send
    * @returns Promise resolving to message result with delivery status
    */
-  sendMessage(to: string, message: string): Promise<MessageResult>;
+  sendMessage(user: UserWithProfile, message: string): Promise<MessageResult>;
 }

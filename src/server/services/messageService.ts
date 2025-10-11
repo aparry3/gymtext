@@ -259,7 +259,7 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    const messageResult = await messagingClient.sendMessage(user.phoneNumber, message);
+    const messageResult = await messagingClient.sendMessage(user, message);
 
     return messageResult;
   }

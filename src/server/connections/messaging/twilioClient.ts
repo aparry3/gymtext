@@ -7,13 +7,14 @@
 
 import { twilioClient as twilioSdk } from '../twilio/twilio';
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
+import type { UserWithProfile } from '@/server/models/userModel';
 
 export class TwilioMessagingClient implements IMessagingClient {
   public readonly provider: MessagingProvider = 'twilio';
 
-  async sendMessage(to: string, message: string): Promise<MessageResult> {
+  async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
     try {
-      const twilioResponse = await twilioSdk.sendSMS(to, message);
+      const twilioResponse = await twilioSdk.sendSMS(user.phoneNumber, message);
 
       return {
         messageId: twilioResponse.sid,

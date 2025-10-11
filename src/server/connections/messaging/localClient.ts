@@ -8,6 +8,7 @@
 
 import { EventEmitter } from 'events';
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
+import type { UserWithProfile } from '@/server/models/userModel';
 
 export interface LocalMessage {
   messageId: string;
@@ -15,7 +16,6 @@ export interface LocalMessage {
   from: string;
   content: string;
   timestamp: Date;
-  userId: string;
 }
 
 export class LocalMessagingClient implements IMessagingClient {
@@ -29,13 +29,10 @@ export class LocalMessagingClient implements IMessagingClient {
     this.eventEmitter.setMaxListeners(100);
   }
 
-  async sendMessage(to: string, message: string): Promise<MessageResult> {
+  async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
     const messageId = `local-${Date.now()}-${++this.messageCounter}`;
     const timestamp = new Date();
-
-    // Extract userId from phone number (simplified for local dev)
-    // In a real implementation, you'd look this up from the database
-    const userId = to.replace(/\D/g, ''); // Remove non-digits as simple ID
+    const to = user.phoneNumber;
 
     const localMessage: LocalMessage = {
       messageId,
@@ -43,7 +40,6 @@ export class LocalMessagingClient implements IMessagingClient {
       from: 'local-system',
       content: message,
       timestamp,
-      userId,
     };
 
     // Emit the message event for SSE listeners
@@ -52,6 +48,7 @@ export class LocalMessagingClient implements IMessagingClient {
     console.log(`[LocalMessagingClient] Message sent (not actual SMS):`, {
       messageId,
       to,
+      userId: user.id,
       preview: message.substring(0, 50),
     });
 
@@ -63,7 +60,8 @@ export class LocalMessagingClient implements IMessagingClient {
       from: 'local-system',
       timestamp,
       metadata: {
-        userId,
+        userId: user.id,
+        phoneNumber: to,
         contentLength: message.length,
       },
     };

@@ -20,9 +20,9 @@ export async function GET(request: NextRequest): Promise<Response> {
     });
   }
 
-  // Optional: Filter by userId from query params
+  // Optional: Filter by phoneNumber from query params
   const { searchParams } = new URL(request.url);
-  const filterUserId = searchParams.get('userId');
+  const filterPhoneNumber = searchParams.get('phoneNumber');
 
   // Create SSE stream
   const encoder = new TextEncoder();
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest): Promise<Response> {
 
       // Set up message listener
       const messageListener = (message: LocalMessage) => {
-        // Filter by userId if specified
-        if (filterUserId && message.userId !== filterUserId) {
+        // Filter by phone number if specified
+        if (filterPhoneNumber && message.to !== filterPhoneNumber) {
           return;
         }
 
@@ -47,7 +47,6 @@ export async function GET(request: NextRequest): Promise<Response> {
             from: message.from,
             content: message.content,
             timestamp: message.timestamp,
-            userId: message.userId,
           },
         };
 
@@ -63,7 +62,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       localMessagingClient.onMessage(messageListener);
 
       console.log('[SSE] Client connected', {
-        filterUserId,
+        filterPhoneNumber,
         activeListeners: localMessagingClient.getListenerCount(),
       });
 

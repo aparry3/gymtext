@@ -39,6 +39,7 @@ export default function AdminChatPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [userName, setUserName] = useState<string>('')
+  const [userPhoneNumber, setUserPhoneNumber] = useState<string>('')
   const [sseConnected, setSseConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
@@ -86,12 +87,13 @@ export default function AdminChatPage() {
 
       setMessages(sortedMessages)
 
-      // Fetch user name on initial load
+      // Fetch user name and phone number on initial load
       if (isInitialLoad) {
         const userResponse = await fetch(`/api/admin/users/${id}`)
         const userResult = await userResponse.json()
         if (userResult.success) {
           setUserName(userResult.data.user.name || 'User')
+          setUserPhoneNumber(userResult.data.user.phoneNumber || '')
         }
       }
     } catch (err) {
@@ -111,10 +113,10 @@ export default function AdminChatPage() {
 
   // Set up SSE connection for real-time messages
   useEffect(() => {
-    if (!id) return
+    if (!id || !userPhoneNumber) return
 
     // Try to connect to SSE endpoint (only works with MESSAGING_PROVIDER=local)
-    const eventSource = new EventSource(`/api/messages/stream?userId=${id}`)
+    const eventSource = new EventSource(`/api/messages/stream?phoneNumber=${encodeURIComponent(userPhoneNumber)}`)
     eventSourceRef.current = eventSource
 
     eventSource.onopen = () => {
@@ -170,7 +172,7 @@ export default function AdminChatPage() {
       eventSource.close()
       setSseConnected(false)
     }
-  }, [id])
+  }, [id, userPhoneNumber])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
