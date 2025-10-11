@@ -1,4 +1,5 @@
 import type { UserWithProfile } from '../../../models/userModel';
+import { DateTime } from 'luxon';
 
 /**
  * Static system prompt for the UserAgent
@@ -111,7 +112,8 @@ export const buildUserUserMessage = (user: UserWithProfile, message: string): st
     preferredSendHour: user.preferredSendHour
   };
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const nowInUserTz = DateTime.now().setZone(user.timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -120,7 +122,7 @@ export const buildUserUserMessage = (user: UserWithProfile, message: string): st
 
   return `## CONTEXT
 
-**Todays Date**: ${currentDate}
+**Todays Date**: ${currentDate} (Timezone: ${user.timezone})
 
 **Current User Info**:
 ${JSON.stringify(userJson, null, 2)}

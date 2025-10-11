@@ -8,6 +8,7 @@
     "build:local": "source .env.local && next build",
     "start": "next start",
     "lint": "next lint",
+    "inngest": "npx inngest-cli@latest dev",
     "predev": "source .env.local && pnpm db:codegen",
     "prebuild": "pnpm db:codegen",
     "premigrate": "pnpm db:codegen",

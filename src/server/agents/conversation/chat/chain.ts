@@ -38,7 +38,7 @@ export const chatAgent = async (
 
   const triageRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
     // 3. Create Triage Runnable
-    const userMessage = buildTriageUserMessage(input.message);
+    const userMessage = buildTriageUserMessage(input.message, input.user.timezone);
     const messages = [
       {
         role: 'system',

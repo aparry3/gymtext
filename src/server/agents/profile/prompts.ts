@@ -1,4 +1,5 @@
 import type { FitnessProfile, User } from '@/server/models/user/schemas';
+import { DateTime } from 'luxon';
 
 /**
  * Build the system prompt for the UserProfileAgent
@@ -7,7 +8,8 @@ import type { FitnessProfile, User } from '@/server/models/user/schemas';
  */
 export const buildUserProfileSystemPrompt = (
   currentProfile: Partial<FitnessProfile> | null,
-  currentUser: Partial<User> | null = null
+  currentUser: Partial<User> | null = null,
+  timezone: string = 'America/New_York' // Default timezone if not provided
 ): string => {
   const profileJson =
     currentProfile && Object.keys(currentProfile).length > 0
@@ -19,14 +21,15 @@ export const buildUserProfileSystemPrompt = (
       ? JSON.stringify(currentUser, null, 2)
       : "No user info yet";
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const nowInUserTz = DateTime.now().setZone(timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
-  return `Todays date is ${currentDate}.
+  return `Todays date is ${currentDate} (Timezone: ${timezone}).
 
 You are a profile extraction specialist for GymText, a fitness coaching app.
 Your job is to identify and extract information from user messages that should be saved to their profile or user account.

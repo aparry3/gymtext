@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { chatService, conversationService, messageService } from '@/server/services';
+import { conversationService, messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface ChatRequestBody {
@@ -46,8 +46,9 @@ export async function POST(
     const adminFrom = user.phoneNumber; // Simulating user's phone
     const adminTo = process.env.TWILIO_NUMBER || '+10000000000'; // Simulating our number
 
-    // Use MessageService to handle the inbound message flow
-    const result = await messageService.receiveMessage({
+    // Use MessageService to ingest the message (async via Inngest)
+    // This matches the production SMS flow for accurate testing
+    const result = await messageService.ingestMessage({
       user: userWithProfile,
       content: message,
       from: adminFrom,
@@ -58,17 +59,17 @@ export async function POST(
         From: adminFrom,
         To: adminTo,
         Body: message,
-      },
-      responseGenerator: (user, content, conversationId) =>
-        chatService.handleIncomingMessage(user, content, conversationId)
+      }
     });
 
-    // Return JSON response instead of TwiML
+    // Return acknowledgment immediately (like SMS webhook)
+    // The actual response will be delivered via SSE when Inngest processes it
     return NextResponse.json({
       success: true,
       data: {
-        response: result.response || '',
+        jobId: result.jobId,
         conversationId: result.conversationId,
+        ackMessage: result.ackMessage,
         timestamp: new Date().toISOString(),
       }
     });

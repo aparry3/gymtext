@@ -2,6 +2,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { WorkoutInstance } from '@/server/models/workout';
+import { DateTime } from 'luxon';
 
 export const dailyWorkoutPrompt = (
   user: UserWithProfile,
@@ -35,7 +36,7 @@ ${mesocycle.deload && microcycle.weekIndex === mesocycle.weeks ? '- This is a DE
 </Context>
 
 <Recent Training History>
-${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorkouts) : 'No recent workouts available'}
+${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorkouts, user.timezone) : 'No recent workouts available'}
 </Recent Training History>
 
 <Requirements>
@@ -118,7 +119,7 @@ Return a JSON object matching the EnhancedWorkoutInstance schema:
 Generate the workout now.
 `;
 
-function formatRecentWorkouts(workouts: WorkoutInstance[]): string {
+function formatRecentWorkouts(workouts: WorkoutInstance[], timezone: string): string {
   if (!workouts || workouts.length === 0) {
     return 'No recent workouts';
   }
@@ -126,7 +127,8 @@ function formatRecentWorkouts(workouts: WorkoutInstance[]): string {
   return workouts
     .slice(0, 3) // Last 3 workouts
     .map(w => {
-      const date = new Date(w.date).toLocaleDateString();
+      const dateInUserTz = DateTime.fromJSDate(new Date(w.date)).setZone(timezone);
+      const date = dateInUserTz.toLocaleString({ month: 'short', day: 'numeric', year: 'numeric' });
       const sessionType = w.sessionType;
       const goal = w.goal || 'No specific goal';
       return `- ${date}: ${sessionType} (${goal})`;

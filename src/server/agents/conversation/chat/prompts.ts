@@ -178,8 +178,10 @@ The calling system will determine which specialized agent handles the message ba
 /**
  * Build the dynamic user message with current date context
  */
-export const buildTriageUserMessage = (message: string): string => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
+export const buildTriageUserMessage = (message: string, timezone: string): string => {
+  const { DateTime } = require('luxon');
+  const nowInUserTz = DateTime.now().setZone(timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -188,7 +190,7 @@ export const buildTriageUserMessage = (message: string): string => {
 
   return `## CONTEXT
 
-**Todays Date**: ${currentDate}
+**Todays Date**: ${currentDate} (Timezone: ${timezone})
 
 ---
 

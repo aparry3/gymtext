@@ -1,4 +1,5 @@
 import type { ChatSubagentInput } from '../baseAgent';
+import { DateTime } from 'luxon';
 
 /**
  * Static system prompt for the Modifications Agent
@@ -143,8 +144,10 @@ Keep responses flexible, supportive, and SMS-friendly.`;
  */
 export const buildModificationsUserMessage = (input: ChatSubagentInput): string => {
   const { user, profile, conversationHistory } = input;
-  const now = new Date();
-  const currentDate = now.toLocaleDateString('en-US', {
+
+  // Get current date/time in user's timezone
+  const nowInUserTz = DateTime.now().setZone(user.timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -152,7 +155,7 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
   });
 
   // Get the current day of the week
-  const currentDayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const currentDayOfWeek = nowInUserTz.toFormat('EEEE'); // Full weekday name (e.g., "Monday")
 
   // Get recent conversation context
   const recentMessages = conversationHistory?.slice(-5).map(msg =>
@@ -188,7 +191,7 @@ ${recentMessages}
 
 ## IMPORTANT NOTES FOR TOOL CALLS
 
-- Use todays date (${now.toISOString().split('T')[0]}) as the workoutDate for current workout modifications
+- Use todays date (${nowInUserTz.toISODate()}) as the workoutDate for current workout modifications (in user's timezone: ${user.timezone})
 - Use the User ID provided above when calling tools
 - For weekly modifications (modify_week), use "${currentDayOfWeek}" as the targetDay (todays day of the week)
   - The targetDay should be the day youre starting the modifications from (typically today)

@@ -1,4 +1,5 @@
 import type { UserWithProfile } from '../../../models/userModel';
+import { DateTime } from 'luxon';
 
 /**
  * Static system prompt for the EnvironmentAgent
@@ -240,7 +241,8 @@ export const buildEnvironmentUserMessage = (user: UserWithProfile, message: stri
     availability: currentAvailability || "No availability info yet"
   };
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const nowInUserTz = DateTime.now().setZone(user.timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -249,7 +251,7 @@ export const buildEnvironmentUserMessage = (user: UserWithProfile, message: stri
 
   return `## CONTEXT
 
-**Todays Date**: ${currentDate}
+**Todays Date**: ${currentDate} (Timezone: ${user.timezone})
 **User Name**: ${user.name}
 **User Age**: ${user.age || 'Unknown'}
 

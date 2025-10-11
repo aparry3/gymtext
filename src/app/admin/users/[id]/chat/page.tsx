@@ -140,11 +140,15 @@ export default function AdminChatPage() {
           }
 
           setMessages(prev => {
-            // Avoid duplicates
-            if (prev.some(m => m.id === newMessage.id)) {
+            // Remove any temporary ack messages (starts with "temp-ack-")
+            // and avoid duplicates
+            const withoutTempAck = prev.filter(m => !m.id.startsWith('temp-ack-'))
+
+            if (withoutTempAck.some(m => m.id === newMessage.id)) {
               return prev
             }
-            return [...prev, newMessage]
+
+            return [...withoutTempAck, newMessage]
           })
 
           console.log('[SSE] Received message:', newMessage)
@@ -177,15 +181,15 @@ export default function AdminChatPage() {
     setIsSending(true)
 
     // Optimistically add user message
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
+    const optimisticUserMessage: Message = {
+      id: `temp-user-${Date.now()}`,
       content: userMessage,
       direction: 'inbound',
       timestamp: new Date().toISOString(),
       from: 'user',
       to: 'system'
     }
-    setMessages(prev => [...prev, optimisticMessage])
+    setMessages(prev => [...prev, optimisticUserMessage])
 
     try {
       const response = await fetch(`/api/admin/users/${id}/chat`, {
@@ -202,19 +206,29 @@ export default function AdminChatPage() {
         throw new Error(result.error || 'Failed to send message')
       }
 
-      // Remove optimistic message and fetch fresh data
-      // If SSE is connected, the response will arrive via SSE
-      // If not, we need to fetch manually
-      if (!sseConnected) {
-        await fetchConversations()
-      } else {
-        // Just remove the optimistic message - the real one will come via SSE
-        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
+      // The API now returns ack instead of the actual response
+      // Show the ack message temporarily (will be replaced by real response via SSE)
+      const ackMessage: Message = {
+        id: `temp-ack-${result.data.jobId}`,
+        content: result.data.ackMessage,
+        direction: 'outbound',
+        timestamp: result.data.timestamp,
+        from: 'system',
+        to: 'user'
       }
+
+      // Add the ack message
+      // The actual response will arrive via SSE and replace this
+      setMessages(prev => [...prev, ackMessage])
+
+      console.log('[Admin Chat] Message queued:', {
+        jobId: result.data.jobId,
+        conversationId: result.data.conversationId,
+      })
     } catch (err) {
       console.error('Failed to send message:', err)
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
+      // Remove optimistic user message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id))
     } finally {
       setIsSending(false)
     }
