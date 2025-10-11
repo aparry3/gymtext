@@ -1,4 +1,5 @@
 import type { ChatSubagentInput } from '../baseAgent';
+import { DateTime } from 'luxon';
 
 /**
  * Static system prompt for the Questions Agent
@@ -98,7 +99,8 @@ Keep responses informative, confident, and SMS-friendly.`;
  */
 export const buildQuestionsUserMessage = (input: ChatSubagentInput): string => {
   const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const nowInUserTz = DateTime.now().setZone(user.timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -117,7 +119,7 @@ export const buildQuestionsUserMessage = (input: ChatSubagentInput): string => {
 
   return `## STATIC CONTEXT
 
-**Todays Date**: ${currentDate}
+**Todays Date**: ${currentDate} (Timezone: ${user.timezone})
 **User Name**: ${user.name}
 **User Age**: ${user.age || 'Unknown'}
 **User Gender**: ${user.gender || 'Unknown'}

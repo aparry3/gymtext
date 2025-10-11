@@ -1,4 +1,5 @@
 import type { ChatSubagentInput } from '../baseAgent';
+import { DateTime } from 'luxon';
 
 /**
  * Static system prompt for the Greeting Agent
@@ -42,7 +43,8 @@ Keep responses concise and actionable for SMS delivery.`;
  */
 export const buildGreetingUserMessage = (input: ChatSubagentInput): string => {
   const { user, profile, conversationHistory } = input;
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const nowInUserTz = DateTime.now().setZone(user.timezone);
+  const currentDate = nowInUserTz.toLocaleString({
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -56,7 +58,7 @@ export const buildGreetingUserMessage = (input: ChatSubagentInput): string => {
 
   return `## STATIC CONTEXT
 
-**Todays Date**: ${currentDate}
+**Todays Date**: ${currentDate} (Timezone: ${user.timezone})
 **User Name**: ${user.name}
 
 ## DYNAMIC CONTEXT
