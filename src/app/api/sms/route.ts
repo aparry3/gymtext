@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { chatService, conversationService } from '@/server/services';
+import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
@@ -8,11 +8,11 @@ export async function POST(req: NextRequest) {
     // Create a TwiML response
     const MessagingResponse = twilio.twiml.MessagingResponse;
     const twiml = new MessagingResponse();
-    
+
     // Parse the form data from the request
     const formData = await req.formData();
     const body = Object.fromEntries(formData);
-    
+
     // Extract message content and phone numbers
     const incomingMessage = body.Body as string || '';
     const from = body.From as string || '';
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
         twiml.message(
             `Sign up now! https://www.gymtext.co/`
-          );      
+          );
           return new NextResponse(twiml.toString(), {
             status: 200,
             headers: {
@@ -32,10 +32,10 @@ export async function POST(req: NextRequest) {
             },
           });
     }
-    
+
     // Get user with profile for chat context
     const userWithProfile = await userRepository.findWithProfile(user.id);
-    
+
     if (!userWithProfile) {
       twiml.message('Sorry, I had trouble loading your profile. Please try again later.');
       return new NextResponse(twiml.toString(), {
@@ -45,55 +45,21 @@ export async function POST(req: NextRequest) {
         },
       });
     }
-    
-    // Use singleton conversation service
-    
-    // Store the inbound message and get conversation ID
-    let conversationId: string | undefined;
-    try {
-      const storedMessage = await conversationService.storeInboundMessage({
-        userId: user.id,
-        from,
-        to,
-        content: incomingMessage,
-        twilioData: body
-      });
-      if (storedMessage) {
-        conversationId = storedMessage.conversationId;
-      } else {
-        console.warn('Circuit breaker prevented storing inbound message');
-      }
-    } catch (error) {
-      // Log error but don't block SMS processing
-      console.error('Failed to store inbound message:', error);
-    }
-    
-    // Generate chat response using LLM
-    const chatResponse = await chatService.handleIncomingMessage(
-      userWithProfile, 
-      incomingMessage,
-      conversationId
-    );
-    
-    // Store the outbound message (non-blocking)
-    try {
-      const stored = await conversationService.storeOutboundMessage(
-        user.id,
-        from, // User's number is the to
-        chatResponse,
-        to // Our Twilio number is the from
-      );
-      if (!stored) {
-        console.warn('Circuit breaker prevented storing outbound message');
-      }
-    } catch (error) {
-      // Log error but don't block SMS processing
-      console.error('Failed to store outbound message:', error);
-    }
-    
-    // Send the chat response
-    twiml.message(chatResponse);
-    
+
+    // Use MessageService to ingest the message (async via Inngest)
+    // This returns immediately with an ack, preventing Twilio webhook timeouts
+    // The actual response will be sent by the Inngest processMessage function
+    const result = await messageService.ingestMessage({
+      user: userWithProfile,
+      content: incomingMessage,
+      from,
+      to,
+      twilioData: body
+    });
+
+    // Send immediate acknowledgment via TwiML
+    twiml.message(result.ackMessage);
+
     // Return the TwiML response with the appropriate content type
     return new NextResponse(twiml.toString(), {
       status: 200,
@@ -103,9 +69,17 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error processing SMS webhook:', error);
-    return NextResponse.json(
-      { error: 'Failed to process SMS' },
-      { status: 500 }
-    );
+
+    // Return error via TwiML
+    const MessagingResponse = twilio.twiml.MessagingResponse;
+    const twiml = new MessagingResponse();
+    twiml.message('Sorry, something went wrong. Please try again later.');
+
+    return new NextResponse(twiml.toString(), {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/xml',
+      },
+    });
   }
 }

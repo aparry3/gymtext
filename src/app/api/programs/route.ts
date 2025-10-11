@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { dailyMessageService, fitnessPlanService, messageService } from '@/server/services';
+import { welcomeMessageAgent } from '@/server/agents';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +28,13 @@ export async function POST(req: NextRequest) {
 
     const fitnessPlan = await fitnessPlanService.createFitnessPlan(user);
 
-    const welcomeMessage = await messageService.buildWelcomeMessage(user, fitnessPlan);
+    // Generate welcome message using the welcome message agent
+    const welcomeAgentResponse = await welcomeMessageAgent.invoke({
+      user,
+      context: { fitnessPlan }
+    });
+    const welcomeMessage = String(welcomeAgentResponse.value);
+
     await messageService.sendMessage(user, welcomeMessage);
     // TODO: Update for refactor - generate workout on-demand instead
 

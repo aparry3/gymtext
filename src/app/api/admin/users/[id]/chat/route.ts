@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { chatService, conversationService } from '@/server/services';
+import { chatService, conversationService, messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface ChatRequestBody {
@@ -46,59 +46,29 @@ export async function POST(
     const adminFrom = user.phoneNumber; // Simulating user's phone
     const adminTo = process.env.TWILIO_NUMBER || '+10000000000'; // Simulating our number
 
-    // Store the inbound message and get conversation ID
-    let conversationId: string | undefined;
-    try {
-      const storedMessage = await conversationService.storeInboundMessage({
-        userId: user.id,
-        from: adminFrom,
-        to: adminTo,
-        content: message,
-        twilioData: {
-          // Minimal Twilio data for admin chat
-          MessageSid: `admin-${Date.now()}`,
-          From: adminFrom,
-          To: adminTo,
-          Body: message,
-        }
-      });
-      if (storedMessage) {
-        conversationId = storedMessage.conversationId;
-      } else {
-        console.warn('Circuit breaker prevented storing inbound message');
-      }
-    } catch (error) {
-      console.error('Failed to store inbound message:', error);
-    }
-
-    // Generate chat response using LLM
-    const chatResponse = await chatService.handleIncomingMessage(
-      userWithProfile,
-      message,
-      conversationId
-    );
-
-    // Store the outbound message (non-blocking)
-    try {
-      const stored = await conversationService.storeOutboundMessage(
-        user.id,
-        adminFrom, // User's number is the to
-        chatResponse,
-        adminTo // Our number is the from
-      );
-      if (!stored) {
-        console.warn('Circuit breaker prevented storing outbound message');
-      }
-    } catch (error) {
-      console.error('Failed to store outbound message:', error);
-    }
+    // Use MessageService to handle the inbound message flow
+    const result = await messageService.receiveMessage({
+      user: userWithProfile,
+      content: message,
+      from: adminFrom,
+      to: adminTo,
+      twilioData: {
+        // Minimal Twilio data for admin chat
+        MessageSid: `admin-${Date.now()}`,
+        From: adminFrom,
+        To: adminTo,
+        Body: message,
+      },
+      responseGenerator: (user, content, conversationId) =>
+        chatService.handleIncomingMessage(user, content, conversationId)
+    });
 
     // Return JSON response instead of TwiML
     return NextResponse.json({
       success: true,
       data: {
-        response: chatResponse,
-        conversationId,
+        response: result.response || '',
+        conversationId: result.conversationId,
         timestamp: new Date().toISOString(),
       }
     });

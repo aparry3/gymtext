@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { generateDailyWorkoutMessage } from '@/server/agents/messaging/workoutMessage/chain';
 
 interface BatchResult {
   processed: number;
@@ -217,8 +218,8 @@ export class DailyMessageService {
         }
       }
 
-      // Build the message
-      const message = await this.messageService.buildDailyMessage(user, workout);
+      // Build the message using the workout message agent
+      const message = await generateDailyWorkoutMessage(user, workout);
       
       // Only send if not in dry-run mode
       if (options.dryRun) {
