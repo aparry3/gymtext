@@ -141,9 +141,10 @@ export class FitnessProfileService {
         constraints: request.injuries,
       };
 
+      const goalsMessage = messages.goals ? `My fitness goals are: ${messages.goals}` : null;
       // Run all agents in parallel for efficiency
       const [goalsResult, activitiesResult, constraintsResult] = await Promise.all([
-        messages.goals ? goalsAgent({ message: messages.goals, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No goals data provided' } as const),
+        goalsMessage ? goalsAgent({ message: goalsMessage, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No goals data provided' } as const),
         messages.activities ? activitiesAgent({ message: messages.activities, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No activities data provided' } as const),
         messages.constraints ? constraintsAgent({ message: messages.constraints, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No constraints data provided' } as const),
       ]);

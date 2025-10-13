@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // Fetch the user from the database
     const userRepository = new UserRepository();
     const user = await userRepository.findWithProfile(userId);
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -26,16 +26,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fitnessPlan = await fitnessPlanService.createFitnessPlan(user);
-
-    // Generate welcome message using the welcome message agent
-    const welcomeAgentResponse = await welcomeMessageAgent.invoke({
-      user,
-      context: { fitnessPlan }
-    });
+    // Send welcome message immediately after signup, before fitness plan generation
+    const welcomeAgentResponse = await welcomeMessageAgent.invoke({ user });
     const welcomeMessage = String(welcomeAgentResponse.value);
-
     await messageService.sendMessage(user, welcomeMessage);
+
+    // Create fitness plan for the user
+    await fitnessPlanService.createFitnessPlan(user);
     // TODO: Update for refactor - generate workout on-demand instead
 
     void dailyMessageService.sendDailyMessage(user);
