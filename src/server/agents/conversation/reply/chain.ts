@@ -2,27 +2,41 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { initializeModel } from '../../base';
 import { REPLY_AGENT_SYSTEM_PROMPT, buildReplyMessage } from './prompts';
+import { z } from 'zod';
 
 /**
- * Reply Agent - Provides quick acknowledgments before full message processing
+ * Schema for reply agent structured output
+ */
+export const ReplyAgentResponseSchema = z.object({
+  reply: z.string().describe('The reply message to send to the user'),
+  needsFullPipeline: z.boolean().describe('Whether this message needs the full chat pipeline (profile extraction, triage, subagents)'),
+  reasoning: z.string().describe('Explanation of why this does or does not need the full pipeline')
+});
+
+export type ReplyAgentResponse = z.infer<typeof ReplyAgentResponseSchema>;
+
+/**
+ * Reply Agent - Provides quick acknowledgments or full answers to general questions
  *
  * This agent generates immediate, natural replies that sound like a real trainer,
- * allowing for fast webhook responses before the full AI processing via Inngest.
+ * allowing for fast webhook responses. It can either:
+ * 1. Provide full answers to general fitness questions (no full pipeline needed)
+ * 2. Provide quick acknowledgments for updates/modifications (full pipeline needed)
  *
  * @param user - The user receiving the message
  * @param message - The incoming message content
  * @param conversationHistory - Optional recent conversation history for context
- * @returns A string containing the quick reply
+ * @returns ReplyAgentResponse with reply text and pipeline routing decision
  */
 export const replyAgent = async (
   user: UserWithProfile,
   message: string,
   conversationHistory?: Message[]
-): Promise<string> => {
+): Promise<ReplyAgentResponse> => {
   console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
-  // Initialize model without structured output - just want raw text response
-  const model = initializeModel();
+  // Initialize model with structured output schema
+  const model = initializeModel(ReplyAgentResponseSchema);
 
   // Build the context message
   const userMessage = buildReplyMessage(message, user, conversationHistory);
@@ -39,15 +53,14 @@ export const replyAgent = async (
     }
   ];
 
-  // Invoke the model and extract the text response
-  const response = await model.invoke(messages);
+  // Invoke the model and get structured response
+  const response = await model.invoke(messages) as ReplyAgentResponse;
 
-  // Extract text content from the response
-  const replyText = typeof response === 'string'
-    ? response
-    : response.content || 'Got it! Give me just a moment.';
+  console.log('[REPLY AGENT] Generated reply:', {
+    reply: response.reply.substring(0, 100) + (response.reply.length > 100 ? '...' : ''),
+    needsFullPipeline: response.needsFullPipeline,
+    reasoning: response.reasoning
+  });
 
-  console.log('[REPLY AGENT] Generated reply:', replyText);
-
-  return replyText;
+  return response;
 };

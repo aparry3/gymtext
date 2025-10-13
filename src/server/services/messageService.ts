@@ -26,10 +26,14 @@ export interface IngestMessageParams {
 export interface IngestMessageResult {
   /** The conversation ID */
   conversationId: string;
-  /** Inngest job ID for tracking */
-  jobId: string;
-  /** Quick acknowledgment message */
+  /** Inngest job ID for tracking (undefined if full pipeline not needed) */
+  jobId?: string;
+  /** Quick acknowledgment or full answer message */
   ackMessage: string;
+  /** Whether this message needs the full chat pipeline */
+  needsFullPipeline: boolean;
+  /** Reasoning for pipeline decision (for debugging) */
+  reasoning: string;
 }
 
 /**
@@ -98,15 +102,17 @@ export class MessageService {
   /**
    * Ingest an inbound message (async path)
    *
-   * Fast path for webhook acknowledgment:
+   * Fast path for webhook acknowledgment with intelligent routing:
    * 1. Store inbound message
-   * 2. Queue async processing job via Inngest
-   * 3. Return immediate acknowledgment
+   * 2. Generate reply using reply agent (may be full answer or quick ack)
+   * 3. Conditionally queue async processing job via Inngest (only if needed)
+   * 4. Return immediate response
    *
-   * The actual response generation happens async via Inngest function.
-   * This prevents Twilio webhook timeouts.
+   * The reply agent determines if the message needs full pipeline processing.
+   * For general questions, full answer is provided immediately with no async job.
+   * For updates/modifications, quick ack is sent and full processing happens async.
    *
-   * @returns IngestMessageResult with conversationId, jobId, and ack message
+   * @returns IngestMessageResult with conversationId, optional jobId, and response
    */
   public async ingestMessage(params: IngestMessageParams): Promise<IngestMessageResult> {
     const { user, content, from, to, twilioData } = params;
@@ -128,32 +134,49 @@ export class MessageService {
     const allMessages = await this.conversationService.getMessages(storedMessage.conversationId);
     const conversationHistory = allMessages.slice(-10); // Last 10 messages for context
 
-    // Generate quick reply using the reply agent
-    const quickReply = await replyAgent(user, content, conversationHistory);
+    // Generate reply using the reply agent (with routing decision)
+    const replyResponse = await replyAgent(user, content, conversationHistory);
 
-    // Queue the message processing job via Inngest
-    const { ids } = await inngest.send({
-      name: 'message/received',
-      data: {
+    console.log('[MessageService] Reply agent decision:', {
+      needsFullPipeline: replyResponse.needsFullPipeline,
+      reasoning: replyResponse.reasoning,
+      replyLength: replyResponse.reply.length
+    });
+
+    // Conditionally queue the message processing job via Inngest
+    let jobId: string | undefined;
+    if (replyResponse.needsFullPipeline) {
+      const { ids } = await inngest.send({
+        name: 'message/received',
+        data: {
+          userId: user.id,
+          conversationId: storedMessage.conversationId,
+          content,
+          from,
+          to,
+        },
+      });
+      jobId = ids[0];
+
+      console.log('[MessageService] Message ingested and queued for full pipeline:', {
         userId: user.id,
         conversationId: storedMessage.conversationId,
-        content,
-        from,
-        to,
-      },
-    });
+        jobId,
+      });
+    } else {
+      console.log('[MessageService] Message fully handled by reply agent, no pipeline needed:', {
+        userId: user.id,
+        conversationId: storedMessage.conversationId,
+      });
+    }
 
-    console.log('[MessageService] Message ingested and queued:', {
-      userId: user.id,
-      conversationId: storedMessage.conversationId,
-      jobId: ids[0],
-    });
-
-    // Return quick acknowledgment
+    // Return response with routing information
     return {
       conversationId: storedMessage.conversationId,
-      jobId: ids[0],
-      ackMessage: quickReply,
+      jobId,
+      ackMessage: replyResponse.reply,
+      needsFullPipeline: replyResponse.needsFullPipeline,
+      reasoning: replyResponse.reasoning,
     };
   }
 
