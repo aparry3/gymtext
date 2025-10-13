@@ -17,6 +17,8 @@ export interface FitnessPlanOverview {
   lengthWeeks: number; // Total weeks
   mesocycles: MesocycleOverview[];
   overview: string;
+  planDescription: string; // Long-form explanation of plan structure
+  reasoning: string; // Detailed decision-making rationale
   notes?: string; // Travel, injuries, etc.
 }
 
@@ -36,6 +38,8 @@ export class FitnessPlanModel implements FitnessPlan {
   currentMicrocycleWeek: number | null;
   cycleStartDate: Date | null;
   overview: string | null;
+  planDescription: string | null;
+  reasoning: string | null;
   startDate: Date;
   clientId: string;
   createdAt: Date;
@@ -52,6 +56,8 @@ export class FitnessPlanModel implements FitnessPlan {
     currentMicrocycleWeek: number | null,
     cycleStartDate: Date | null,
     overview: string,
+    planDescription: string | null,
+    reasoning: string | null,
     startDate: Date,
     clientId: string,
     createdAt: Date,
@@ -67,6 +73,8 @@ export class FitnessPlanModel implements FitnessPlan {
     this.currentMicrocycleWeek = currentMicrocycleWeek;
     this.cycleStartDate = cycleStartDate;
     this.overview = overview;
+    this.planDescription = planDescription;
+    this.reasoning = reasoning;
     this.startDate = startDate;
     this.clientId = clientId;
     this.createdAt = createdAt;
@@ -95,6 +103,8 @@ export class FitnessPlanModel implements FitnessPlan {
       currentMicrocycleWeek: 0,
       cycleStartDate: new Date(),
       overview: fitnessPlanOverview.overview,
+      planDescription: fitnessPlanOverview.planDescription,
+      reasoning: fitnessPlanOverview.reasoning,
       clientId: user.id,
       startDate: new Date(),
     };
