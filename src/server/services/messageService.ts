@@ -143,6 +143,19 @@ export class MessageService {
       replyLength: replyResponse.reply.length
     });
 
+    // Store the outbound response
+    try {
+      await this.conversationService.storeOutboundMessage(
+        user.id,
+        from, // User's phone number
+        replyResponse.reply,
+        to // Our Twilio number
+      );
+    } catch (error) {
+      console.error('[MessageService] Failed to store outbound reply:', error);
+      // Don't block the response
+    }
+
     // Conditionally queue the message processing job via Inngest
     let jobId: string | undefined;
     if (replyResponse.needsFullPipeline) {
