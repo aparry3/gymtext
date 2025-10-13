@@ -2,6 +2,7 @@ import { UserWithProfile } from '../models/userModel';
 import { messagingClient, type MessageResult } from '../connections/messaging';
 import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
+import { replyAgent } from '../agents/conversation/reply/chain';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -123,6 +124,13 @@ export class MessageService {
       throw new Error('Failed to store inbound message');
     }
 
+    // Get recent conversation history for context
+    const allMessages = await this.conversationService.getMessages(storedMessage.conversationId);
+    const conversationHistory = allMessages.slice(-10); // Last 10 messages for context
+
+    // Generate quick reply using the reply agent
+    const quickReply = await replyAgent(user, content, conversationHistory);
+
     // Queue the message processing job via Inngest
     const { ids } = await inngest.send({
       name: 'message/received',
@@ -145,7 +153,7 @@ export class MessageService {
     return {
       conversationId: storedMessage.conversationId,
       jobId: ids[0],
-      ackMessage: "Got it! Let me think about that...",
+      ackMessage: quickReply,
     };
   }
 

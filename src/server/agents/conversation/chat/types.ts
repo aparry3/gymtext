@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * Intent types that the triage agent can identify
  */
-export const MessageIntentSchema = z.enum(['updates', 'questions', 'modifications', 'greeting']);
+export const MessageIntentSchema = z.enum(['updates', 'questions', 'modifications']);
 export type MessageIntent = z.infer<typeof MessageIntentSchema>;
 
 /**

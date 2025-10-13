@@ -6,14 +6,12 @@ import { profileAgentRunnable } from '../../profile/chain';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
 import { MessageIntent, TriageResult, TriageResultSchema } from './types';
 import { ProfilePatchResult } from '@/server/services/fitnessProfileService';
-import { greetingAgentRunnable } from './greeting/chain';
 import { updatesAgentRunnable } from './updates/chain';
 import { questionsAgentRunnable } from './questions/chain';
 import { modificationsAgentRunnable } from './modifications/chain';
 
 
 const TriageActionMap: Record<MessageIntent, Runnable> = {
-  'greeting': greetingAgentRunnable(),
   'updates': updatesAgentRunnable(),
   'questions': questionsAgentRunnable(),
   'modifications': modificationsAgentRunnable(),
@@ -36,7 +34,7 @@ export const chatAgent = async (
   // 2. Create Profile Runnable
   const profileRunnable = profileAgentRunnable();
 
-  const triageRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
+  const routingRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
     // 3. Create Triage Runnable
     const userMessage = buildTriageUserMessage(input.message, input.user.timezone);
     const messages = [
@@ -57,7 +55,7 @@ export const chatAgent = async (
 
   const parallel = RunnablePassthrough.assign({
     profile: profileRunnable,
-    triage: triageRunnable,
+    triage: routingRunnable,
   });
 
   const actionRunnable = RunnableLambda.from(async (input: { profile: ProfilePatchResult, triage: TriageResult, message: string, user: UserWithProfile, conversationHistory?: Message[] }) => {
