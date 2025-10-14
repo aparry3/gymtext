@@ -48,11 +48,32 @@ ${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorko
 
 2. For each exercise, specify:
    - Type (prep, compound, secondary, accessory, core, cardio, cooldown)
-   - Exercise name (be specific)
+   - Exercise name (MUST be specific and actionable - see Exercise Naming Requirements below)
    - Sets and reps (or duration for cardio/conditioning)
    - Rest periods between sets
    - RPE (Rate of Perceived Exertion, 1-10 scale)
    - Any specific notes or cues
+
+**CRITICAL: Exercise Naming Requirements**
+Every exercise MUST be specific enough that a user can immediately perform it without interpretation.
+
+GOOD Examples:
+- "Band Pull-Aparts"
+- "Cat-Cow Stretch"
+- "Scapular Wall Slides"
+- "Arm Circles"
+- "Hip Circles"
+- "Inchworm to Push-up"
+- "World's Greatest Stretch"
+
+BAD Examples (DO NOT USE):
+- "Shoulder mobility sequence" (too vague - which exercises?)
+- "Dynamic warmup" (not specific enough)
+- "Core work" (what exercises specifically?)
+- "Mobility exercises" (which ones?)
+- "Stretching routine" (what stretches?)
+
+If multiple movements are needed for warmup/mobility, list each one separately as its own exercise.
 
 3. Progressive overload:
    - Week 1: Introduction (moderate load)

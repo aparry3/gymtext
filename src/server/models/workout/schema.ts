@@ -4,7 +4,7 @@ import { z } from "zod";
 export const _WorkoutBlockItemSchema = z.object({
   type: z.enum(['prep', 'compound', 'secondary', 'accessory', 'core', 'cardio', 'cooldown'])
     .describe("Type of exercise in the workout"),
-  exercise: z.string().describe("Name of the exercise"),
+  exercise: z.string().describe("Specific, actionable exercise name that a user can immediately perform (e.g., 'Band Pull-Aparts', 'Cat-Cow Stretch', 'Scapular Wall Slides'). Never use vague terms like 'mobility sequence' or 'dynamic warmup'."),
   sets: z.number().nullable().optional().describe("Number of sets"),
   reps: z.string().nullable().optional().describe("Number of reps (can be range like '6-8' or number like '10')"),
   durationSec: z.number().nullable().optional().describe("Duration in seconds"),
