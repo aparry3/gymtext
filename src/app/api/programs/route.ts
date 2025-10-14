@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
-import { dailyMessageService, fitnessPlanService, messageService } from '@/server/services';
-import { welcomeMessageAgent } from '@/server/agents';
+import { onboardingService } from '@/server/services';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { userId } = body;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Fetch the user from the database
     const userRepository = new UserRepository();
     const user = await userRepository.findWithProfile(userId);
@@ -26,17 +25,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Send welcome message immediately after signup, before fitness plan generation
-    const welcomeAgentResponse = await welcomeMessageAgent.invoke({ user });
-    const welcomeMessage = String(welcomeAgentResponse.value);
-    await messageService.sendMessage(user, welcomeMessage);
+    // Orchestrate complete onboarding flow via OnboardingService
+    await onboardingService.onboardUser(user);
 
-    // Create fitness plan for the user
-    await fitnessPlanService.createFitnessPlan(user);
-    // TODO: Update for refactor - generate workout on-demand instead
-
-    void dailyMessageService.sendDailyMessage(user);
-    
     return NextResponse.json({ success: true, message: 'User onboarded successfully' })
   } catch (error) {
     console.error('Error in fitness program creation:', error);

@@ -19,25 +19,36 @@ Generate a single, friendly SMS message that delivers a workout to the user. The
 
 Convert the provided Workout JSON into this format:
 - Start with a brief intro/greeting (1 line)
-- Use a single "Workout:" header
-- List ALL exercises under this header with a dash (-)
+- Use separate sections: "Warmup:", "Workout:", "Cooldown:" (if applicable)
+- List exercises under each header with a dash (-)
 - Use SxR format: "3x10" means 3 sets of 10 reps, "3x6-8" means 3 sets of 6-8 reps
-- Abbreviate common terms: Dumbbell → DB, Romanian → Romanian (keep), Bulgarian → Bulgarian (keep)
-- Keep lines short for easy reading on mobile
+- Abbreviate common terms: Barbell → BB, Dumbbell → DB, Romanian → Romanian (keep), Bulgarian → Bulgarian (keep)
+- Keep exercise lines under ~35 characters when possible for mobile readability
+- List each exercise separately (no grouping with commas)
+- Remove all parenthetical details, alternatives, and extra descriptions from exercise lines
 - End with a brief motivational message (1 line)
 
 **Example Structure:**
 
 [Intro message - context dependent]
 
+Warmup:
+- Hip Circles: 3x12
+- Ankle Mobility: 3x12
+- Leg Swings: 3x12
+- Goblet Squat (light): 2x12
+
 Workout:
-- 90/90 Hip Stretch: 3 rounds/60 sec
-- Belt Squat: 3x10
-- DB Romanian Deadlift: 3x12
-- DB Goblet Squat: 2x12-15
-- DB Bulgarian Split Squat: 3x10 per leg
-- Glute Bridge with DB: 3x15
-- Bird-Dog: 2x12 per side
+- BB Back Squat: 4x5
+- DB RDL: 3x6-8
+- Walking Lunge: 3x10 per leg
+- Leg Extensions: 3x15
+- Lying Leg Curls: 3x15
+- Standing Calf Raises: 4x15
+
+Cooldown:
+- Hamstring Stretch: 2 min
+- Quad Stretch: 2 min
 
 [Closing message - context dependent]
 
@@ -129,14 +140,23 @@ function buildDailyExample(): string {
 <Example>
   Back building day!! Lets build that barn door!
 
+  Warmup:
+  - Band Pull-Aparts: 3x15
+  - Scapular Wall Slides: 3x12
+  - Cat-Cow Stretch: 2x10
+
   Workout:
-  - Deadlifts: 3x6-8
-  - Pull-ups (weighted if needed): 3x to failure
-  - Barbell Rows: 3x8-12
+  - BB Deadlifts: 3x6-8
+  - Pull-ups: 3x to failure
+  - BB Rows: 3x8-12
   - Seated Cable Rows: 3x10-15
   - Hanging Leg Raises: 3x15-20
   - Cable Crunches: 3x15-20
   - Plank: 3x30-60 sec
+
+  Cooldown:
+  - Lat Stretch: 2 min
+  - Lower Back Stretch: 2 min
 
   Focus on form and controlled movements. Let me know if you need any modifications!
 </Example>
@@ -152,11 +172,18 @@ function buildModifiedExample(context: Partial<WorkoutMessageContext>): string {
 <Example>
   Got it! I swapped out bench press for DB press in today's workout.
 
+  Warmup:
+  - Band Dislocations: 3x15
+  - Arm Circles: 2x30 sec
+
   Workout:
   - DB Bench Press: 3x8-12
-  - Overhead Press: 3x6-8
+  - BB Overhead Press: 3x6-8
   - Dips: 3x to failure
-  - Lateral Raises: 3x12-15
+  - DB Lateral Raises: 3x12-15
+
+  Cooldown:
+  - Chest Stretch: 2 min
 
   You're all set! Let me know how it goes.
 </Example>
@@ -168,11 +195,17 @@ function buildModifiedExample(context: Partial<WorkoutMessageContext>): string {
 <Example>
   Sure thing! Modified today's workout for 30 min with home equipment.
 
+  Warmup:
+  - Arm Circles: 2x20 sec
+
   Workout:
   - Push-ups: 3x15-20
   - DB Rows: 3x12-15
   - Pike Push-ups: 3x10-12
-  - Bicep Curls: 3x12-15
+  - DB Bicep Curls: 3x12-15
+
+  Cooldown:
+  - Shoulder Stretch: 1 min
 
   Short and sweet! You got this.
 </Example>
@@ -184,11 +217,18 @@ function buildModifiedExample(context: Partial<WorkoutMessageContext>): string {
 <Example>
   On it! Updated your week and regenerated today's workout.
 
+  Warmup:
+  - Band Pull-Aparts: 3x15
+  - Cat-Cow Stretch: 2x10
+
   Workout:
-  - Deadlifts: 4x6-8
+  - BB Deadlifts: 4x6-8
   - Pull-ups: 3x to failure
-  - Barbell Rows: 3x8-10
+  - BB Rows: 3x8-10
   - Face Pulls: 3x15-20
+
+  Cooldown:
+  - Lat Stretch: 2 min
 
   Shuffled the rest of your week to keep everything balanced. You're good to go!
 </Example>

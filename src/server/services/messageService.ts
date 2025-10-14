@@ -1,8 +1,10 @@
 import { UserWithProfile } from '../models/userModel';
+import { FitnessPlan } from '../models/fitnessPlan';
 import { messagingClient, type MessageResult } from '../connections/messaging';
 import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
+import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -306,6 +308,41 @@ export class MessageService {
     const messageResult = await messagingClient.sendMessage(user, message);
 
     return messageResult;
+  }
+
+  /**
+   * Send welcome message to a user
+   * Wraps welcomeMessageAgent and sends the generated message
+   */
+  public async sendWelcomeMessage(user: UserWithProfile): Promise<MessageResult> {
+    const agentResponse = await welcomeMessageAgent.invoke({ user });
+    const welcomeMessage = String(agentResponse.value);
+    return await this.sendMessage(user, welcomeMessage);
+  }
+
+  /**
+   * Send fitness plan summary messages to a user
+   * Wraps planSummaryMessageAgent and sends the generated messages
+   * Returns the result of the last message sent
+   */
+  public async sendPlanSummary(user: UserWithProfile, plan: FitnessPlan): Promise<MessageResult> {
+    const agentResponse = await planSummaryMessageAgent({ user, plan });
+
+    // Send each message in sequence
+    let lastResult: MessageResult | null = null;
+    for (const message of agentResponse.messages) {
+      lastResult = await this.sendMessage(user, message);
+      // Small delay between messages to ensure proper ordering
+      if (agentResponse.messages.length > 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    if (!lastResult) {
+      throw new Error('No messages were sent');
+    }
+
+    return lastResult;
   }
 }
 

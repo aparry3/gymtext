@@ -10,6 +10,7 @@ export { fitnessProfileService } from '@/server/services/fitnessProfileService';
 export { conversationContextService } from '@/server/services/context/conversationContext';
 export { workoutInstanceService } from '@/server/services/workoutInstanceService';
 export { microcycleService } from '@/server/services/microcycleService';
+export { onboardingService } from '@/server/services/onboardingService';
 
 // Also export classes for type definitions when needed
 export type { ChatService } from '@/server/services/chatService';
@@ -23,3 +24,4 @@ export type { FitnessProfileService } from '@/server/services/fitnessProfileServ
 export type { ConversationContextService } from '@/server/services/context/conversationContext';
 export type { WorkoutInstanceService } from '@/server/services/workoutInstanceService';
 export type { MicrocycleService } from '@/server/services/microcycleService';
+export type { OnboardingService } from '@/server/services/onboardingService';
