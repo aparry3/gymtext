@@ -4,7 +4,7 @@ import { _UpdatedWorkoutInstanceSchema, LongFormWorkoutSchema, LongFormWorkout }
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { longFormPrompt, structuredPrompt, messagePrompt, type Modification } from './prompts';
 import { initializeModel } from '@/server/agents/base';
-import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables';
+import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 
 export type { Modification };
 
@@ -100,20 +100,10 @@ export const substituteExercises = async (context: SubstituteExercisesContext): 
       // Execute the sequence
       const sequence = RunnableSequence.from([
         longFormRunnable,
-        async (longForm: LongFormWorkout) => {
-          // Execute structured and message generation in parallel
-          const [workout, message] = await Promise.all([
-            structuredRunnable.invoke(longForm),
-            messageRunnable.invoke(longForm)
-          ]);
-
-          return {
-            workout,
-            message,
-            description: longForm.description,
-            reasoning: longForm.reasoning
-          };
-        }
+        RunnablePassthrough.assign({
+          workout: structuredRunnable,
+          message: messageRunnable,
+        })
       ]);
 
       const result = await sequence.invoke({});
