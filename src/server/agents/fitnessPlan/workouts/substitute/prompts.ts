@@ -35,6 +35,13 @@ Create a comprehensive workout with substitutions, including two components:
 </Task>
 
 <Current Workout>
+**Original Workout Description:**
+${(workout as any).description || 'No description available - see JSON below'}
+
+**Original Coaching Reasoning:**
+${(workout as any).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+
+**Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}
 </Current Workout>
 
@@ -73,10 +80,15 @@ The "description" field should include (400-600 words):
 <Reasoning Guidelines>
 The "reasoning" field should document ALL decision-making (500-800 words):
 
+**Reference Original Reasoning:**
+- Acknowledge the original exercise choice and its reasoning (if available)
+- Explain why the substitution is necessary
+- Show how the substitute preserves the original intent
+
 **Exercise Substitution Rationale:**
 - Why each specific exercise was replaced
 - How the replacement maintains similar:
-  * Movement patterns
+  * Movement patterns (reference original reasoning if applicable)
   * Muscle groups targeted
   * Training stimulus
   * Intensity and volume
@@ -87,7 +99,7 @@ The "reasoning" field should document ALL decision-making (500-800 words):
 - Why the chosen replacement is optimal given constraints
 
 **Training Intent Preservation:**
-- How substitutions maintain the original workout's goals
+- How substitutions maintain the original workout's goals (reference original description/reasoning)
 - Impact on overall workout effectiveness
 - Why the workout remains effective despite changes
 

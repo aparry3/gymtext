@@ -38,6 +38,13 @@ Create a comprehensive replacement workout with two components:
 </Task>
 
 <Current Workout>
+**Original Workout Description:**
+${(workout as any).description || 'No description available - see JSON below'}
+
+**Original Coaching Reasoning:**
+${(workout as any).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+
+**Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}
 </Current Workout>
 
@@ -78,6 +85,11 @@ Preserve the original workout's training intent as much as possible while accomm
 <Reasoning Guidelines>
 The "reasoning" field should document ALL decision-making (500-800 words):
 
+**Reference Original Reasoning:**
+- Acknowledge and reference the original workout's reasoning (if available)
+- Explain how the replacement builds on or diverges from original intent
+- Show continuity with the original coaching decisions where possible
+
 **Constraint Handling:**
 - How each specific constraint was addressed
 - Why certain exercises were replaced or modified
@@ -86,12 +98,12 @@ The "reasoning" field should document ALL decision-making (500-800 words):
 
 **Exercise Selection:**
 - Why replacement exercises were chosen
-- How they maintain similar movement patterns
+- How they maintain similar movement patterns (reference original reasoning)
 - Muscle group targeting compared to original
 - Intensity and volume adjustments
 
 **Training Intent Preservation:**
-- What aspects of the original workout were kept
+- What aspects of the original workout were kept (reference original description/reasoning)
 - What had to change and why
 - How the replacement maintains program progression
 - Impact on overall training plan
