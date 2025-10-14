@@ -62,7 +62,7 @@ Generate two components:
 Return a JSON object with planDescription and reasoning fields.
 `;
 
-  const model = initializeModel(BackfillSchema, { temperature: 0.5 });
+  const model = initializeModel(BackfillSchema);
   const result = await model.invoke(prompt);
   return result;
 };
