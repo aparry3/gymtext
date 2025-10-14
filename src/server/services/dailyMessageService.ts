@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { generateDailyWorkoutMessage } from '@/server/agents/messaging/workoutMessage/chain';
+import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
 
 interface BatchResult {
   processed: number;
@@ -218,11 +218,10 @@ export class DailyMessageService {
         }
       }
 
-      // Build the message using the workout message agent
-      const message = await generateDailyWorkoutMessage(user, workout);
-      
-      // Only send if not in dry-run mode
+      // Send message using messageService (or dry-run preview)
       if (options.dryRun) {
+        // Generate message for preview without sending
+        const message = await generateDailyWorkoutMessage(user, workout);
         console.log(`[DRY RUN] Would send message to user ${user.id}:`, {
           phoneNumber: user.phoneNumber,
           messagePreview: message.substring(0, 100) + '...'
@@ -233,12 +232,13 @@ export class DailyMessageService {
           messageText: message
         };
       } else {
-        const messageResult = await this.messageService.sendMessage(user, message);
+        // Generate and send message
+        const messageResult = await this.messageService.sendWorkoutMessage(user, workout);
         console.log(`Successfully sent daily message to user ${user.id}`);
         return {
           success: true,
           userId: user.id,
-          messageText: message,
+          messageText: 'Message sent successfully',
           messageId: messageResult.messageId
         };
       }
@@ -334,13 +334,11 @@ export class DailyMessageService {
       // Save the workout to the database
       const savedWorkout = await this.workoutRepository.create(workout);
       console.log(`Generated and saved AI workout for user ${user.id} on ${targetDate.toISODate()}`);
-      
+
       return savedWorkout;
     } catch (error) {
       console.error(`Error generating workout for user ${user.id}:`, error);
-      
-      // Fallback to basic generation if AI fails
-      return this.generateBasicWorkout(user, targetDate);
+      throw error; // Propagate error to be handled upstream
     }
   }
 
@@ -363,247 +361,6 @@ export class DailyMessageService {
     if (themeLower.includes('deload')) return 'deload';
     // Default to strength for hybrid/unknown workouts
     return 'strength';
-  }
-
-  /**
-   * Fallback basic workout generation if AI fails
-   */
-  private async generateBasicWorkout(
-    user: UserWithProfile,
-    targetDate: DateTime
-  ): Promise<WorkoutInstance | null> {
-    try {
-      const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user);
-      if (!microcycle) return null;
-
-      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase();
-      const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
-      if (!dayPattern) return null;
-
-      const workout: NewWorkoutInstance = {
-        // Let database generate UUID automatically
-        clientId: user.id,
-        fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleId: null, // No longer using mesocycles table
-        microcycleId: microcycle.id,
-        date: targetDate.toJSDate(),
-        sessionType: this.mapThemeToSessionType(dayPattern.theme),
-        goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
-        details: JSON.parse(JSON.stringify({
-          theme: dayPattern.theme,
-          load: dayPattern.load,
-          blocks: this.generateBasicExercises(dayPattern.theme, dayPattern.load || 'moderate').blocks
-        })),
-        completedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      const savedWorkout = await this.workoutRepository.create(workout);
-      console.log(`Generated and saved basic workout for user ${user.id} on ${targetDate.toISODate()}`);
-      
-      return savedWorkout;
-    } catch (error) {
-      console.error(`Error generating basic workout for user ${user.id}:`, error);
-      return null;
-    }
-  }
-
-  /**
-   * Generates basic exercises with enhanced block structure (temporary until Phase 5)
-   */
-  private generateBasicExercises(theme: string, load: string): Record<string, unknown> {
-    // This is a temporary implementation using the enhanced block structure
-    // Will be replaced with proper workout generation agent in Phase 5
-    
-    if (theme.toLowerCase().includes('rest')) {
-      return { 
-        blocks: [{
-          name: 'Rest Day',
-          items: []
-        }],
-        rest: true, 
-        description: 'Rest day - focus on recovery' 
-      };
-    }
-
-    const blocks: Array<Record<string, unknown>> = [];
-    
-    // Warm-up block
-    blocks.push({
-      name: 'Warm-up',
-      items: [
-        {
-          type: 'prep',
-          exercise: 'Dynamic Stretching',
-          durationMin: 5,
-          notes: 'Focus on movements related to today\'s training'
-        },
-        {
-          type: 'cardio',
-          exercise: 'Light Cardio',
-          durationMin: 5,
-          RPE: 3
-        }
-      ]
-    });
-
-    // Main block based on theme
-    if (theme.toLowerCase().includes('upper')) {
-      blocks.push({
-        name: 'Main - Upper Body',
-        items: [
-          {
-            type: 'compound',
-            exercise: 'Push-ups',
-            sets: 3,
-            reps: '10-15',
-            rest: '60s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
-          },
-          {
-            type: 'compound',
-            exercise: 'Rows',
-            sets: 3,
-            reps: '10-12',
-            rest: '60s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
-          },
-          {
-            type: 'secondary',
-            exercise: 'Shoulder Press',
-            sets: 3,
-            reps: '10-12',
-            rest: '45s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
-          }
-        ]
-      });
-    } else if (theme.toLowerCase().includes('lower')) {
-      blocks.push({
-        name: 'Main - Lower Body',
-        items: [
-          {
-            type: 'compound',
-            exercise: 'Squats',
-            sets: 3,
-            reps: '10-12',
-            rest: '90s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
-          },
-          {
-            type: 'compound',
-            exercise: 'Lunges',
-            sets: 3,
-            reps: '10 each leg',
-            rest: '60s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
-          },
-          {
-            type: 'compound',
-            exercise: 'Romanian Deadlifts',
-            sets: 3,
-            reps: '8-10',
-            rest: '90s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
-          }
-        ]
-      });
-    } else if (theme.toLowerCase().includes('cardio') || theme.toLowerCase().includes('run')) {
-      blocks.push({
-        name: 'Main - Cardio',
-        items: [
-          {
-            type: 'cardio',
-            exercise: theme,
-            durationMin: load === 'light' ? 20 : load === 'heavy' ? 45 : 30,
-            RPE: load === 'light' ? 4 : load === 'heavy' ? 7 : 6,
-            notes: `Maintain steady pace at ${load} intensity`
-          }
-        ]
-      });
-    } else {
-      // Generic workout with blocks
-      blocks.push({
-        name: 'Main - Full Body',
-        items: [
-          {
-            type: 'compound',
-            exercise: 'Exercise 1',
-            sets: 3,
-            reps: '10-12',
-            rest: '60s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 8 : 7
-          },
-          {
-            type: 'secondary',
-            exercise: 'Exercise 2',
-            sets: 3,
-            reps: '10-12',
-            rest: '60s',
-            RPE: load === 'light' ? 5 : load === 'heavy' ? 7 : 6
-          },
-          {
-            type: 'accessory',
-            exercise: 'Exercise 3',
-            sets: 3,
-            reps: '10-12',
-            rest: '45s',
-            RPE: load === 'light' ? 4 : load === 'heavy' ? 6 : 5
-          }
-        ]
-      });
-    }
-
-    // Cool-down block
-    blocks.push({
-      name: 'Cool-down',
-      items: [
-        {
-          type: 'cooldown',
-          exercise: 'Static Stretching',
-          durationMin: 5,
-          notes: 'Hold each stretch for 30 seconds'
-        },
-        {
-          type: 'cooldown',
-          exercise: 'Foam Rolling',
-          durationMin: 5,
-          notes: 'Focus on tight areas'
-        }
-      ]
-    });
-
-    // Include modifications for common issues
-    const modifications = [];
-    if (theme.toLowerCase().includes('lower')) {
-      modifications.push({
-        condition: 'injury.knee.active',
-        replace: {
-          exercise: 'Lunges',
-          with: 'Step-ups'
-        },
-        note: 'Step-ups are easier on the knees than lunges'
-      });
-    }
-
-    return { 
-      blocks,
-      modifications: modifications.length > 0 ? modifications : undefined
-    };
-  }
-
-  /**
-   * Manually trigger daily messages for testing
-   * Only processes a single user
-   */
-  async sendTestMessage(userId: string, options: ProcessOptions = {}): Promise<MessageResult> {
-    const user = await this.userRepository.findWithProfile(userId);
-    if (!user) {
-      throw new Error(`User ${userId} not found`);
-    }
-
-    return await this.sendDailyMessage(user, options);
   }
 }
 

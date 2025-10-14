@@ -5,6 +5,8 @@ import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
+import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
+import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -196,91 +198,6 @@ export class MessageService {
   }
 
   /**
-   * Receive an inbound message (sync path)
-   *
-   * Orchestrates the full inbound message flow synchronously:
-   * 1. Store inbound message
-   * 2. Generate response (if responseGenerator provided)
-   * 3. Store outbound response (if generated)
-   *
-   * Note: This does NOT send the response - caller is responsible for that.
-   * For webhook responses (Twilio), the response is returned via TwiML.
-   * For API responses, the response is returned in JSON.
-   *
-   * @deprecated Use ingestMessage() for webhooks to avoid timeouts
-   */
-  public async receiveMessage(params: ReceiveMessageParams): Promise<ReceiveMessageResult> {
-    const { user, content, from, to, twilioData, responseGenerator } = params;
-
-    // Store the inbound message
-    let conversationId: string | undefined;
-    let inboundStored = false;
-
-    try {
-      const storedMessage = await this.conversationService.storeInboundMessage({
-        userId: user.id,
-        from,
-        to,
-        content,
-        twilioData
-      });
-
-      if (storedMessage) {
-        conversationId = storedMessage.conversationId;
-        inboundStored = true;
-      } else {
-        console.warn('[MessageService] Circuit breaker prevented storing inbound message');
-      }
-    } catch (error) {
-      console.error('[MessageService] Failed to store inbound message:', error);
-    }
-
-    // If no conversation ID, we can't proceed
-    if (!conversationId) {
-      throw new Error('Failed to store inbound message - no conversation ID');
-    }
-
-    // Generate response if a generator was provided
-    let response: string | undefined;
-    let outboundStored: boolean | undefined;
-
-    if (responseGenerator) {
-      try {
-        response = await responseGenerator(user, content, conversationId);
-
-        // Store the outbound response
-        try {
-          const stored = await this.conversationService.storeOutboundMessage(
-            user.id,
-            from, // User's number is the "to" for our response
-            response,
-            to // Our number is the "from" for our response
-          );
-
-          outboundStored = !!stored;
-
-          if (!stored) {
-            console.warn('[MessageService] Circuit breaker prevented storing outbound message');
-          }
-        } catch (error) {
-          console.error('[MessageService] Failed to store outbound message:', error);
-          outboundStored = false;
-        }
-      } catch (error) {
-        console.error('[MessageService] Failed to generate response:', error);
-        throw error;
-      }
-    }
-
-    return {
-      response,
-      conversationId,
-      inboundStored,
-      outboundStored
-    };
-  }
-
-  /**
    * Send a message to a user
    * Stores the message and sends it via the configured messaging client
    */
@@ -343,6 +260,18 @@ export class MessageService {
     }
 
     return lastResult;
+  }
+
+  /**
+   * Send workout message to a user
+   * Wraps generateDailyWorkoutMessage agent and sends the generated message
+   */
+  public async sendWorkoutMessage(
+    user: UserWithProfile,
+    workout: WorkoutInstance | EnhancedWorkoutInstance
+  ): Promise<MessageResult> {
+    const message = await generateDailyWorkoutMessage(user, workout);
+    return await this.sendMessage(user, message);
   }
 }
 
