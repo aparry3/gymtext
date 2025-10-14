@@ -304,8 +304,9 @@ export class DailyMessageService {
       // Get recent workouts for context (last 7 days)
       const recentWorkouts = await this.workoutRepository.getRecentWorkouts(user.id, 7);
 
-      // Use AI agent to generate sophisticated workout
-      const enhancedWorkout = await generateDailyWorkout({
+      // Use AI agent to generate sophisticated workout (now returns message too!)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { workout: enhancedWorkout, message, description, reasoning } = await generateDailyWorkout({
         user,
         date: targetDate.toJSDate(),
         dayPlan: dayPattern,
@@ -326,6 +327,9 @@ export class DailyMessageService {
         sessionType: this.mapThemeToSessionType(dayPattern.theme),
         goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
         details: JSON.parse(JSON.stringify(enhancedWorkout)),
+        // Note: description and reasoning will be added once migration is run and types are regenerated
+        // description,
+        // reasoning,
         completedAt: null,
         createdAt: new Date(),
         updatedAt: new Date()

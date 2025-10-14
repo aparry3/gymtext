@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+// Long-form workout schema for step 1 of workout generation
+export const LongFormWorkoutSchema = z.object({
+  description: z.string().describe("Detailed long-form description of the workout including all exercises, sets, reps, supersets, and structure"),
+  reasoning: z.string().describe("Comprehensive explanation of all coaching decisions: why exercises were chosen, how they relate to user's goals/plan/profile/constraints, progressive overload strategy, and any modifications made")
+}).strict();
+
+export type LongFormWorkout = z.infer<typeof LongFormWorkoutSchema>;
+
 // Enhanced workout schema components
 export const _WorkoutBlockItemSchema = z.object({
   type: z.enum(['prep', 'compound', 'secondary', 'accessory', 'core', 'cardio', 'cooldown'])

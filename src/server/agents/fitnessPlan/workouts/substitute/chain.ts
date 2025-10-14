@@ -1,9 +1,10 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
-import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { _UpdatedWorkoutInstanceSchema, LongFormWorkoutSchema, LongFormWorkout } from '@/server/models/workout/schema';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
-import { substituteExercisesPrompt, type Modification, WORKOUT_SUBSTITUTE_SYSTEM_PROMPT } from './prompts';
+import { longFormPrompt, structuredPrompt, messagePrompt, type Modification } from './prompts';
 import { initializeModel } from '@/server/agents/base';
+import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables';
 
 export type { Modification };
 
@@ -13,9 +14,21 @@ export interface SubstituteExercisesContext {
   modifications: Modification[];
 }
 
-export const substituteExercises = async (context: SubstituteExercisesContext): Promise<UpdatedWorkoutInstance> => {
-  const { 
-    workout, 
+export interface SubstitutedWorkoutResult {
+  workout: UpdatedWorkoutInstance;
+  message: string;
+  description: string;
+  reasoning: string;
+}
+
+/**
+ * Substitute exercises using two-step process:
+ * 1. Generate long-form workout with substitutions + reasoning
+ * 2. In parallel: convert to JSON structure + SMS message
+ */
+export const substituteExercises = async (context: SubstituteExercisesContext): Promise<SubstitutedWorkoutResult> => {
+  const {
+    workout,
     user,
     modifications,
   } = context;
@@ -24,52 +37,93 @@ export const substituteExercises = async (context: SubstituteExercisesContext): 
   const fitnessProfileContext = new FitnessProfileContext();
   const fitnessProfile = await fitnessProfileContext.getContext(user);
 
-  // Generate prompt
-  const prompt = substituteExercisesPrompt(
-    fitnessProfile,
-    modifications,
-    workout
-  );
+  // Step 1: Generate long-form workout with substitutions and reasoning
+  const longFormRunnable = RunnableLambda.from(async () => {
+    const prompt = longFormPrompt(
+      fitnessProfile,
+      modifications,
+      workout,
+      user
+    );
 
-  // Use structured output for the updated workout schema
-  const structuredModel = initializeModel(_UpdatedWorkoutInstanceSchema);
+    const model = initializeModel(LongFormWorkoutSchema);
+    const result = await model.invoke(prompt);
 
-  // Retry mechanism for transient errors
+    console.log(`Generated long-form workout with substitutions (description: ${result.description.length} chars, reasoning: ${result.reasoning.length} chars)`);
+
+    return result;
+  });
+
+  // Step 2a: Convert long-form to structured JSON
+  const structuredRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    const prompt = structuredPrompt(longForm, user, fitnessProfile);
+    const model = initializeModel(_UpdatedWorkoutInstanceSchema);
+    const updatedWorkout = await model.invoke(prompt) as UpdatedWorkoutInstance;
+
+    // Validate the workout structure
+    const validatedWorkout = _UpdatedWorkoutInstanceSchema.parse(updatedWorkout);
+
+    if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
+      throw new Error('Workout has no blocks');
+    }
+
+    console.log(`Generated structured workout with substitutions: ${validatedWorkout.blocks.length} blocks and ${validatedWorkout.modificationsApplied?.length || 0} modifications`);
+
+    // Add date to workout
+    return {
+      ...validatedWorkout,
+      date: workout.date
+    } as UpdatedWorkoutInstance;
+  });
+
+  // Step 2b: Convert long-form to SMS message
+  const messageRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    const prompt = messagePrompt(longForm, user, fitnessProfile, modifications);
+    const model = initializeModel(undefined);
+    const response = await model.invoke(prompt);
+    const message = typeof response.content === 'string'
+      ? response.content
+      : String(response.content);
+
+    console.log(`Generated SMS message (${message.length} characters)`);
+
+    return message;
+  });
+
+  // Create sequence with retry mechanism
   const maxRetries = 2;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       console.log(`Attempting to substitute exercises (attempt ${attempt + 1}/${maxRetries})`);
 
-      // Generate the workout
-      const updatedWorkout = await structuredModel.invoke([WORKOUT_SUBSTITUTE_SYSTEM_PROMPT, prompt]) as UpdatedWorkoutInstance;
+      // Execute the sequence
+      const sequence = RunnableSequence.from([
+        longFormRunnable,
+        async (longForm: LongFormWorkout) => {
+          // Execute structured and message generation in parallel
+          const [workout, message] = await Promise.all([
+            structuredRunnable.invoke(longForm),
+            messageRunnable.invoke(longForm)
+          ]);
 
-      // Ensure we have a valid response
-      if (!updatedWorkout) {
-        throw new Error('AI returned null/undefined workout');
-      }
+          return {
+            workout,
+            message,
+            description: longForm.description,
+            reasoning: longForm.reasoning
+          };
+        }
+      ]);
 
-      // Validate the workout structure
-      const validatedWorkout = _UpdatedWorkoutInstanceSchema.parse(updatedWorkout);
+      const result = await sequence.invoke({});
 
+      console.log('Successfully substituted exercises with description, reasoning, JSON, and message');
 
-      // Additional validation
-      if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
-        throw new Error('Workout has no blocks');
-      }
-
-      // Combine validated workout with date from original workout
-      const validatedWorkoutWithDate: UpdatedWorkoutInstance = {
-        ...validatedWorkout,
-        date: workout.date
-      };
-
-      console.log(`Successfully substituted exercises with ${validatedWorkout.blocks.length} blocks and ${validatedWorkout.modificationsApplied?.length || 0} modifications`);
-
-      return validatedWorkoutWithDate;
+      return result as SubstitutedWorkoutResult;
     } catch (error) {
       console.error(`Error substituting exercises (attempt ${attempt + 1}):`, error);
-      
+
       // Log more details about the error for debugging
       if (error instanceof Error) {
         console.error('Error details:', {
@@ -91,4 +145,4 @@ export const substituteExercises = async (context: SubstituteExercisesContext): 
   }
 
   throw new Error('Failed to substitute exercises after all attempts');
-}
+};

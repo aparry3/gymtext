@@ -2,11 +2,11 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { Microcycle } from '@/server/models/microcycle';
 import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
-import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { _EnhancedWorkoutInstanceSchema, LongFormWorkoutSchema, LongFormWorkout } from '@/server/models/workout/schema';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
-import { dailyWorkoutPrompt } from './prompts';
+import { longFormPrompt, structuredPrompt, messagePrompt } from './prompts';
 import { initializeModel } from '@/server/agents/base';
-
+import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables';
 
 export interface DailyWorkoutContext {
   user: UserWithProfile;
@@ -23,7 +23,19 @@ export interface DailyWorkoutContext {
   recentWorkouts?: WorkoutInstance[];
 }
 
-export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<EnhancedWorkoutInstance> => {
+export interface GeneratedWorkoutResult {
+  workout: EnhancedWorkoutInstance;
+  message: string;
+  description: string;
+  reasoning: string;
+}
+
+/**
+ * Generate daily workout using two-step process:
+ * 1. Generate long-form workout description + reasoning
+ * 2. In parallel: convert to JSON structure + SMS message
+ */
+export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<GeneratedWorkoutResult> => {
   const {
     user,
     dayPlan,
@@ -37,58 +49,96 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
   const fitnessProfileContext = new FitnessProfileContext();
   const fitnessProfile = await fitnessProfileContext.getContext(user);
 
-  // Generate prompt
-  const prompt = dailyWorkoutPrompt(
-    user,
-    fitnessProfile,
-    dayPlan,
-    microcycle.pattern,
-    mesocycle,
-    fitnessPlan.programType,
-    recentWorkouts
-  );
+  // Step 1: Generate long-form workout description and reasoning
+  const longFormRunnable = RunnableLambda.from(async () => {
+    const prompt = longFormPrompt(
+      user,
+      fitnessProfile,
+      dayPlan,
+      microcycle.pattern,
+      mesocycle,
+      fitnessPlan.programType,
+      recentWorkouts
+    );
 
-  // Use structured output for the enhanced workout schema
-  const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema, {
+    const model = initializeModel(LongFormWorkoutSchema);
+    const result = await model.invoke(prompt);
+
+    console.log(`Generated long-form workout (description: ${result.description.length} chars, reasoning: ${result.reasoning.length} chars)`);
+
+    return result;
   });
 
-  // Retry mechanism for transient errors
+  // Step 2a: Convert long-form to structured JSON
+  const structuredRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    const prompt = structuredPrompt(longForm, user, fitnessProfile);
+    const model = initializeModel(_EnhancedWorkoutInstanceSchema);
+    const workout = await model.invoke(prompt) as EnhancedWorkoutInstance;
+
+    // Validate the workout structure
+    const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workout);
+
+    if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
+      throw new Error('Workout has no blocks');
+    }
+
+    console.log(`Generated structured workout with ${validatedWorkout.blocks.length} blocks`);
+
+    // Add date to workout
+    return {
+      ...validatedWorkout,
+      date: context.date
+    } as EnhancedWorkoutInstance;
+  });
+
+  // Step 2b: Convert long-form to SMS message
+  const messageRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    const prompt = messagePrompt(longForm, user, fitnessProfile);
+    const model = initializeModel(undefined);
+    const response = await model.invoke(prompt);
+    const message = typeof response.content === 'string'
+      ? response.content
+      : String(response.content);
+
+    console.log(`Generated SMS message (${message.length} characters)`);
+
+    return message;
+  });
+
+  // Create sequence with retry mechanism
   const maxRetries = 2;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       console.log(`Attempting to generate workout (attempt ${attempt + 1}/${maxRetries})`);
-      
-      // Generate the workout
-      const workout = await structuredModel.invoke(prompt) as EnhancedWorkoutInstance;
-      
-      // Ensure we have a valid response
-      if (!workout) {
-        throw new Error('AI returned null/undefined workout');
-      }
 
-      // Validate the workout structure
-      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workout);
-      
-      
-      // Additional validation
-      if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
-        throw new Error('Workout has no blocks');
-      }
-      
-      // Convert date string to Date object if needed
-      const validatedWorkoutWithDate = {
-        ...workout,
-        date: new Date()
-      };
-      
-      console.log(`Successfully generated workout with ${validatedWorkout.blocks.length} blocks`);
-      
-      // Ensure date is set correctly
-      return validatedWorkoutWithDate as EnhancedWorkoutInstance;
+      // Execute the sequence
+      const sequence = RunnableSequence.from([
+        longFormRunnable,
+        async (longForm: LongFormWorkout) => {
+          // Execute structured and message generation in parallel
+          const [workout, message] = await Promise.all([
+            structuredRunnable.invoke(longForm),
+            messageRunnable.invoke(longForm)
+          ]);
+
+          return {
+            workout,
+            message,
+            description: longForm.description,
+            reasoning: longForm.reasoning
+          };
+        }
+      ]);
+
+      const result = await sequence.invoke({});
+
+      console.log('Successfully generated workout with description, reasoning, JSON, and message');
+
+      return result as GeneratedWorkoutResult;
     } catch (error) {
-      console.error(`Error generating workout with AI (attempt ${attempt + 1}):`, error);
-      
+      console.error(`Error generating workout (attempt ${attempt + 1}):`, error);
+
       // Log more details about the error for debugging
       if (error instanceof Error) {
         console.error('Error details:', {
@@ -110,4 +160,4 @@ export const generateDailyWorkout = async (context: DailyWorkoutContext): Promis
   }
 
   throw new Error('Failed to generate workout after all attempts');
-}
+};

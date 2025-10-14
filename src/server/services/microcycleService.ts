@@ -218,14 +218,17 @@ export class MicrocycleService {
             recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
           };
 
-          const newWorkout = await generateDailyWorkout(context);
+          const result = await generateDailyWorkout(context);
 
           // Update existing workout
           await this.workoutRepo.update(existingWorkout.id, {
-            details: newWorkout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            // Note: description and reasoning will be added once migration is run and types are regenerated
+            // description: result.description,
+            // reasoning: result.reasoning,
           });
 
-          regeneratedWorkout = newWorkout;
+          regeneratedWorkout = result.workout;
           workoutRegenerated = true;
           console.log(`[MODIFY_WEEK] Regenerated today's workout based on updated pattern`);
         } else {
