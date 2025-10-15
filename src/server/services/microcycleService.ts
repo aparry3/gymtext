@@ -223,9 +223,8 @@ export class MicrocycleService {
           // Update existing workout
           await this.workoutRepo.update(existingWorkout.id, {
             details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-            // Note: description and reasoning will be added once migration is run and types are regenerated
-            // description: result.description,
-            // reasoning: result.reasoning,
+            description: result.description,
+            reasoning: result.reasoning,
           });
 
           regeneratedWorkout = result.workout;

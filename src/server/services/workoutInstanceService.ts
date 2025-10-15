@@ -135,9 +135,8 @@ export class WorkoutInstanceService {
       // Update the workout in the database
       await this.workoutRepo.update(workout.id, {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        // Note: description and reasoning will be added once migration is run and types are regenerated
-        // description: result.description,
-        // reasoning: result.reasoning,
+        description: result.description,
+        reasoning: result.reasoning,
       });
 
       return {
@@ -210,9 +209,8 @@ export class WorkoutInstanceService {
       // Update the workout in the database
       await this.workoutRepo.update(existingWorkout.id, {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        // Note: description and reasoning will be added once migration is run and types are regenerated
-        // description: result.description,
-        // reasoning: result.reasoning,
+        description: result.description,
+        reasoning: result.reasoning,
       });
 
       return {

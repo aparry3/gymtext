@@ -327,9 +327,8 @@ export class DailyMessageService {
         sessionType: this.mapThemeToSessionType(dayPattern.theme),
         goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
         details: JSON.parse(JSON.stringify(enhancedWorkout)),
-        // Note: description and reasoning will be added once migration is run and types are regenerated
-        // description,
-        // reasoning,
+        description,
+        reasoning,
         completedAt: null,
         createdAt: new Date(),
         updatedAt: new Date()
