@@ -39,10 +39,10 @@ Create a comprehensive replacement workout with two components:
 
 <Current Workout>
 **Original Workout Description:**
-${(workout as any).description || 'No description available - see JSON below'}
+${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
 
 **Original Coaching Reasoning:**
-${(workout as any).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
 
 **Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}

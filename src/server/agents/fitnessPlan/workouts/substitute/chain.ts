@@ -2,7 +2,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { longFormPrompt, structuredPrompt, messagePrompt, type Modification } from './prompts';
-import { executeWorkoutChain, WorkoutChainResult } from '../shared/chainFactory';
+import { executeWorkoutChain } from '../shared/chainFactory';
 
 export type { Modification };
 

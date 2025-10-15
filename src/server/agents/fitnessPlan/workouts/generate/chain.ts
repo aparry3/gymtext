@@ -4,7 +4,7 @@ import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { longFormPrompt, structuredPrompt, messagePrompt } from './prompts';
-import { executeWorkoutChain, WorkoutChainResult } from '../shared/chainFactory';
+import { executeWorkoutChain } from '../shared/chainFactory';
 
 export interface DailyWorkoutContext {
   user: UserWithProfile;
