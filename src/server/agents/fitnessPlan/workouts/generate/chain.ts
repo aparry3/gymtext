@@ -3,10 +3,8 @@ import { Microcycle } from '@/server/models/microcycle';
 import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
-import { dailyWorkoutPrompt } from './prompts';
-import { initializeModel } from '@/server/agents/base';
-
+import { longFormPrompt, structuredPrompt, messagePrompt } from './prompts';
+import { executeWorkoutChain } from '../shared/chainFactory';
 
 export interface DailyWorkoutContext {
   user: UserWithProfile;
@@ -23,91 +21,47 @@ export interface DailyWorkoutContext {
   recentWorkouts?: WorkoutInstance[];
 }
 
-export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<EnhancedWorkoutInstance> => {
-  const {
-    user,
-    dayPlan,
-    microcycle,
-    mesocycle,
-    fitnessPlan,
-    recentWorkouts
-  } = context;
-
-  // Get fitness profile context
-  const fitnessProfileContext = new FitnessProfileContext();
-  const fitnessProfile = await fitnessProfileContext.getContext(user);
-
-  // Generate prompt
-  const prompt = dailyWorkoutPrompt(
-    user,
-    fitnessProfile,
-    dayPlan,
-    microcycle.pattern,
-    mesocycle,
-    fitnessPlan.programType,
-    recentWorkouts
-  );
-
-  // Use structured output for the enhanced workout schema
-  const structuredModel = initializeModel(_EnhancedWorkoutInstanceSchema, {
-  });
-
-  // Retry mechanism for transient errors
-  const maxRetries = 2;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      console.log(`Attempting to generate workout (attempt ${attempt + 1}/${maxRetries})`);
-      
-      // Generate the workout
-      const workout = await structuredModel.invoke(prompt) as EnhancedWorkoutInstance;
-      
-      // Ensure we have a valid response
-      if (!workout) {
-        throw new Error('AI returned null/undefined workout');
-      }
-
-      // Validate the workout structure
-      const validatedWorkout = _EnhancedWorkoutInstanceSchema.parse(workout);
-      
-      
-      // Additional validation
-      if (!validatedWorkout.blocks || validatedWorkout.blocks.length === 0) {
-        throw new Error('Workout has no blocks');
-      }
-      
-      // Convert date string to Date object if needed
-      const validatedWorkoutWithDate = {
-        ...workout,
-        date: new Date()
-      };
-      
-      console.log(`Successfully generated workout with ${validatedWorkout.blocks.length} blocks`);
-      
-      // Ensure date is set correctly
-      return validatedWorkoutWithDate as EnhancedWorkoutInstance;
-    } catch (error) {
-      console.error(`Error generating workout with AI (attempt ${attempt + 1}):`, error);
-      
-      // Log more details about the error for debugging
-      if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          stack: error.stack?.substring(0, 500),
-          name: error.name,
-          attempt: attempt + 1
-        });
-      }
-
-      // If it's the last attempt, break out of the loop
-      if (attempt === maxRetries - 1) {
-        break;
-      }
-
-      // Wait a bit before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
-    }
-  }
-
-  throw new Error('Failed to generate workout after all attempts');
+export interface GeneratedWorkoutResult {
+  workout: EnhancedWorkoutInstance & { date: Date };
+  message: string;
+  description: string;
+  reasoning: string;
 }
+
+/**
+ * Generate daily workout using the shared workout chain factory
+ *
+ * Two-step process:
+ * 1. Generate long-form workout description + reasoning
+ * 2. In parallel: convert to JSON structure + SMS message
+ */
+export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<GeneratedWorkoutResult> => {
+  return executeWorkoutChain(context, {
+    // Step 1: Long-form prompt
+    longFormPrompt: (ctx, fitnessProfile) => longFormPrompt(
+      ctx.user,
+      fitnessProfile,
+      ctx.dayPlan,
+      ctx.microcycle.pattern,
+      ctx.mesocycle,
+      ctx.fitnessPlan.programType,
+      ctx.recentWorkouts
+    ),
+
+    // Step 2a: Structured JSON prompt
+    structuredPrompt,
+
+    // Step 2b: SMS message prompt
+    messagePrompt,
+
+    // Schema for validation
+    structuredSchema: _EnhancedWorkoutInstanceSchema,
+
+    // Context extractors
+    getUserFromContext: (ctx) => ctx.user,
+    getDateFromContext: (ctx) => ctx.date,
+
+    // Logging identifier
+    operationName: 'generate workout'
+  });
+};

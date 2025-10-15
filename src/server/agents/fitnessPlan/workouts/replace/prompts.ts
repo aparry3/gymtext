@@ -1,4 +1,6 @@
 import { WorkoutInstance } from '@/server/models/workout';
+import { LongFormWorkout } from '@/server/models/workout/schema';
+import { UserWithProfile } from '@/server/models/userModel';
 
 export interface ReplaceWorkoutParams {
   reason: string;
@@ -7,68 +9,12 @@ export interface ReplaceWorkoutParams {
   focusAreas?: string[];
 }
 
-export const WORKOUT_REPLACE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in workout replacement based on constraints. Your task is to replace existing workouts when users face equipment limitations, time constraints, injuries, or other factors.
-
-<Critical Rules>
-1. PRESERVE the original workouts training intent and structure as much as possible
-2. Apply the specified constraints (equipment, time, injuries, preferences)
-3. Maintain similar training stimulus and progression
-4. Only make changes necessary to accommodate the constraints
-5. Keep the same number of blocks and similar block structure unless constraints require otherwise
-6. Maintain similar volume, intensity, and exercise selection where possible
-7. TRACK all changes made - you must return a "modificationsApplied" array listing each change
-</Critical Rules>
-
-<Constraint Application Guidelines>
-**Equipment Constraints:**
-- Replace exercises with alternatives using available equipment
-- Maintain the same movement patterns and muscle groups
-- Keep similar intensity and volume
-
-**Time Constraints:**
-- Prioritize compound movements
-- Reduce accessory work if needed
-- Consider supersets or circuits to save time
-- Maintain quality over quantity
-
-**Injury Constraints:**
-- Avoid movements that stress the injured area
-- Select pain-free alternatives
-- May need to reduce intensity or volume
-- Prioritize safety while maintaining training effect
-
-**Focus Area Preferences:**
-- Emphasize requested focus areas
-- May adjust exercise selection and volume distribution
-- Keep workout balanced unless user specifically wants otherwise
-</Constraint Application Guidelines>
-
-<Output Requirements>
-Return the COMPLETE modified workout as a valid JSON object matching the UpdatedWorkoutInstance schema with:
-1. All workout data (theme, blocks, targetMetrics, notes)
-2. A "modificationsApplied" array of strings describing each change made
-   - Format: "[Change type]: [What changed] - [Why]"
-   - Examples:
-     - "Equipment: Replaced Barbell Squat with Goblet Squat - no barbell available"
-     - "Time: Reduced accessory work from 4 exercises to 2 - 30 minute time constraint"
-     - "Injury: Replaced Overhead Press with Landmine Press - shoulder injury avoidance"
-     - "Structure: Combined warmup and main block - time efficiency"
-   - Include one entry for each significant modification
-</Output Requirements>
-
-<Modification Tracking>
-Be specific and comprehensive in tracking modifications:
-- Exercise substitutions (what replaced what and why)
-- Volume changes (sets/reps reduced or increased)
-- Block structure changes (combined, removed, reordered)
-- Intensity adjustments (weight, RPE, rest periods)
-- Exercise additions or removals
-</Modification Tracking>`;
-
-export const replaceWorkoutPrompt = (
+// Step 1: Generate long-form replacement workout description and reasoning
+export const longFormPrompt = (
   fitnessProfile: string,
   params: ReplaceWorkoutParams,
-  workout: WorkoutInstance
+  workout: WorkoutInstance,
+  user: UserWithProfile
 ): string => {
   const workoutDetails = typeof workout.details === 'string'
     ? JSON.parse(workout.details)
@@ -82,7 +28,23 @@ export const replaceWorkoutPrompt = (
     ? `Focus areas: ${params.focusAreas.join(', ')}`
     : 'No specific focus areas';
 
-  return `<Current Workout>
+  return `
+You are an expert fitness coach replacing a workout based on new constraints for ${user.name}.
+
+<Task>
+Create a comprehensive replacement workout with two components:
+1. A detailed workout description accommodating all constraints
+2. A thorough coaching rationale explaining all changes and decisions
+</Task>
+
+<Current Workout>
+**Original Workout Description:**
+${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
+
+**Original Coaching Reasoning:**
+${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+
+**Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}
 </Current Workout>
 
@@ -100,18 +62,219 @@ ${equipmentText}
 ${focusText}
 </Modification Request>
 
+<Output Format>
+Return a JSON object with exactly two fields:
+{
+  "description": "Long-form replacement workout description...",
+  "reasoning": "Detailed coaching rationale for all changes..."
+}
+</Output Format>
+
+<Description Guidelines>
+The "description" field should include (400-600 words):
+- Complete replacement workout structure with blocks
+- Every exercise with specific names (never vague terms)
+- Sets, reps, rest periods, and RPE targets
+- Any supersets or circuits clearly indicated
+- Notes on how this replaces the original workout
+- How constraints are accommodated
+- Total estimated duration
+
+Preserve the original workout's training intent as much as possible while accommodating constraints.
+
+<Reasoning Guidelines>
+The "reasoning" field should document ALL decision-making (500-800 words):
+
+**Reference Original Reasoning:**
+- Acknowledge and reference the original workout's reasoning (if available)
+- Explain how the replacement builds on or diverges from original intent
+- Show continuity with the original coaching decisions where possible
+
+**Constraint Handling:**
+- How each specific constraint was addressed
+- Why certain exercises were replaced or modified
+- Trade-offs made to accommodate limitations
+- How training stimulus was preserved despite constraints
+
+**Exercise Selection:**
+- Why replacement exercises were chosen
+- How they maintain similar movement patterns (reference original reasoning)
+- Muscle group targeting compared to original
+- Intensity and volume adjustments
+
+**Training Intent Preservation:**
+- What aspects of the original workout were kept (reference original description/reasoning)
+- What had to change and why
+- How the replacement maintains program progression
+- Impact on overall training plan
+
+**User-Specific Adaptations:**
+- Equipment availability considerations
+- Time constraint management
+- Injury or limitation accommodations
+- Experience level factors
+
+**Modifications Applied:**
+- Specific changes made (list each one)
+- Why each change was necessary
+- How each change maintains effectiveness
+
+Be thorough - this reasoning will help users understand why their workout changed and that it's still effective for their goals.
+
+<Critical Rules>
+1. PRESERVE the original workout's training intent and structure as much as possible
+2. Apply ALL specified constraints
+3. Maintain similar training stimulus and progression
+4. Only make changes necessary to accommodate constraints
+5. Keep similar volume and intensity where possible
+
+Now create the comprehensive replacement workout and reasoning for ${user.name}.
+`;
+};
+
+// Step 2a: Convert long-form description to structured JSON workout
+export const structuredPrompt = (
+  longFormWorkout: LongFormWorkout,
+  user: UserWithProfile,
+  fitnessProfile: string
+) => `
+You are converting a long-form replacement workout description into structured JSON format.
+
+<Long-Form Workout>
+${longFormWorkout.description}
+</Long-Form Workout>
+
+<User Context>
+Name: ${user.name}
+Fitness Profile: ${fitnessProfile}
+</User Context>
+
 <Task>
-Update this workout to accommodate the constraints above while maintaining as much of the original training intent as possible.
-
-Guidelines:
-- Apply each constraint thoughtfully
-- Make only necessary changes to satisfy the constraints
-- Keep the workouts overall theme and goals intact
-- Maintain similar training stimulus where possible
-- Be specific about what changed and why in the modificationsApplied array
-
-Return the complete updated workout as a JSON object with detailed modification tracking.
+Convert the replacement workout description above into a structured JSON object matching the UpdatedWorkoutInstance schema.
+Extract all exercises, sets, reps, rest periods, and organize them into blocks.
+Include a "modificationsApplied" array listing all changes made.
 </Task>
 
-Generate the updated workout now.`;
-};
+<Schema Requirements>
+{
+  "theme": "workout theme from description",
+  "blocks": [
+    {
+      "name": "Block name",
+      "items": [
+        {
+          "type": "prep|compound|secondary|accessory|core|cardio|cooldown",
+          "exercise": "Exact exercise name from description",
+          "sets": number or null,
+          "reps": "number or range" or null,
+          "durationSec": number or null,
+          "durationMin": number or null,
+          "RPE": number (1-10) or null,
+          "rest": "rest period string" or null,
+          "notes": "any exercise-specific notes" or null
+        }
+      ]
+    }
+  ],
+  "modifications": [
+    {
+      "condition": "condition triggering modification",
+      "replace": {
+        "exercise": "exercise to replace",
+        "with": "replacement exercise"
+      },
+      "note": "explanation"
+    }
+  ],
+  "targetMetrics": {
+    "totalVolume": estimated total volume,
+    "totalDuration": estimated duration in minutes,
+    "averageIntensity": average RPE
+  },
+  "notes": "overall workout notes",
+  "modificationsApplied": [
+    "Description of each change made (e.g., 'Equipment: Replaced Barbell Squat with Goblet Squat - no barbell available')"
+  ]
+}
+</Schema Requirements>
+
+<modificationsApplied Format>
+Each entry should follow the pattern:
+- "[Change type]: [What changed] - [Why]"
+
+Examples:
+- "Equipment: Replaced Barbell Bench Press with Dumbbell Bench Press - no barbell available"
+- "Time: Reduced accessory work from 4 exercises to 2 - 30 minute time constraint"
+- "Injury: Replaced Overhead Press with Landmine Press - shoulder injury avoidance"
+- "Structure: Combined warmup and main block - time efficiency"
+
+Include one entry for each significant modification made to the original workout.
+</modificationsApplied Format>
+
+<Guidelines>
+- Preserve exact exercise names from the description
+- Extract all sets, reps, rest periods accurately
+- Categorize exercises appropriately
+- Include all modifications mentioned
+- Calculate or estimate target metrics
+- Be specific and comprehensive in modificationsApplied array
+
+Return ONLY the JSON object - no additional text.
+`;
+
+// Step 2b: Convert long-form description to SMS message
+export const messagePrompt = (
+  longFormWorkout: LongFormWorkout,
+  user: UserWithProfile,
+  fitnessProfile: string,
+  reason: string
+) => `
+You are an elite personal trainer writing an SMS acknowledgment for a modified workout.
+
+<Long-Form Workout>
+${longFormWorkout.description}
+</Long-Form Workout>
+
+<User Context>
+Name: ${user.name}
+Fitness Profile: ${fitnessProfile}
+Reason for modification: ${reason}
+</User Context>
+
+<Task>
+Convert the replacement workout description into a friendly SMS message under 900 characters.
+</Task>
+
+<SMS Format Requirements>
+- Start with enthusiastic acknowledgment ("Sure thing!", "Got it!", "On it!")
+- In ≤1 sentence, briefly explain what you did
+- Use clear sections: "Warmup:", "Workout:", "Cooldown:"
+- List exercises with bullets (-)
+- Use SxR format: "3x10" = 3 sets of 10 reps
+- Abbreviate: Barbell → BB, Dumbbell → DB
+- Keep exercise lines under ~35 characters
+- Remove parenthetical details
+- End with brief encouraging message (≤1 sentence)
+- Total: under 900 characters
+
+<Example>
+Sure thing! Modified today's workout for home equipment.
+
+Warmup:
+- Arm Circles: 2x20 sec
+- Cat-Cow Stretch: 2x10
+
+Workout:
+- Push-ups: 3x15-20
+- DB Rows: 3x12-15
+- Pike Push-ups: 3x10-12
+- DB Bicep Curls: 3x12-15
+
+Cooldown:
+- Shoulder Stretch: 1 min
+
+Short and sweet! You got this.
+</Example>
+
+Return ONLY the SMS message text - no markdown, no extra formatting, no JSON.
+`;

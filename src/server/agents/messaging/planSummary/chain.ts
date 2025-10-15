@@ -24,7 +24,7 @@ export const planSummaryMessageAgent = async (
   const { user, plan } = input;
 
   // Initialize model with structured output
-  const model = initializeModel(PlanSummarySchema, { temperature: 0.7 });
+  const model = initializeModel(PlanSummarySchema);
 
   // Generate prompt
   const prompt = planSummaryPrompt(user, plan);

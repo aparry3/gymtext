@@ -122,7 +122,7 @@ export class WorkoutInstanceService {
       }));
 
       // Use the substitute exercises agent to perform the substitution
-      const updatedWorkout = await substituteExercises({
+      const result = await substituteExercises({
         workout,
         user,
         modifications,
@@ -130,18 +130,20 @@ export class WorkoutInstanceService {
 
       // Extract the modifications applied (remove the date field before saving)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, ...workoutToSave } = updatedWorkout;
+      const { modificationsApplied, date, ...workoutToSave } = result.workout;
 
       // Update the workout in the database
       await this.workoutRepo.update(workout.id, {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        description: result.description,
+        reasoning: result.reasoning,
       });
 
       return {
         success: true,
-        workout: updatedWorkout,
+        workout: result.workout,
         modificationsApplied,
-        message: `Updated workout for ${workoutDate.toLocaleDateString()}. Applied ${modificationsApplied.length} modifications.`,
+        message: result.message,
       };
     } catch (error) {
       console.error('Error substituting exercise:', error);
@@ -194,7 +196,7 @@ export class WorkoutInstanceService {
       };
 
       // Use the replace workout agent to modify the workout
-      const updatedWorkout = await replaceWorkout({
+      const result = await replaceWorkout({
         workout: existingWorkout,
         user,
         params: replaceParams,
@@ -202,18 +204,20 @@ export class WorkoutInstanceService {
 
       // Extract the modifications applied (remove the date field before saving)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, ...workoutToSave } = updatedWorkout;
+      const { modificationsApplied, date, ...workoutToSave } = result.workout;
 
       // Update the workout in the database
       await this.workoutRepo.update(existingWorkout.id, {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        description: result.description,
+        reasoning: result.reasoning,
       });
 
       return {
         success: true,
-        workout: updatedWorkout,
+        workout: result.workout,
         modificationsApplied,
-        message: `Modified workout for ${workoutDate.toLocaleDateString()}. Applied ${modificationsApplied.length} modifications.`,
+        message: result.message,
       };
     } catch (error) {
       console.error('Error modifying workout:', error);

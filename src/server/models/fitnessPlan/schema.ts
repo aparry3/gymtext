@@ -30,5 +30,5 @@ export const _FitnessPlanSchema = z.object({
   }),
   notes: z.string({
     description: "Special considerations like travel plans, injuries, or schedule constraints"
-  }).optional()
+  }).nullable().optional()
 });
