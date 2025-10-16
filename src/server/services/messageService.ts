@@ -1,12 +1,18 @@
 import { UserWithProfile } from '../models/userModel';
 import { FitnessPlan } from '../models/fitnessPlan';
-import { messagingClient, type MessageResult } from '../connections/messaging';
+import { messagingClient } from '../connections/messaging';
 import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
 import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
+import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../models/workout';
+import { Message } from '../models/conversation';
+import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
+import { MicrocycleRepository } from '../repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
+import { postgresDb } from '../connections/postgres/postgres';
+import { DateTime } from 'luxon';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -91,9 +97,15 @@ export interface ReceiveMessageResult {
 export class MessageService {
   private static instance: MessageService;
   private conversationService: ConversationService;
+  private fitnessPlanRepo: FitnessPlanRepository;
+  private microcycleRepo: MicrocycleRepository;
+  private workoutRepo: WorkoutInstanceRepository;
 
   private constructor() {
     this.conversationService = ConversationService.getInstance();
+    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
+    this.microcycleRepo = new MicrocycleRepository(postgresDb);
+    this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
   }
 
   public static getInstance(): MessageService {
@@ -134,12 +146,60 @@ export class MessageService {
       throw new Error('Failed to store inbound message');
     }
 
-    // Get recent conversation history for context
-    const allMessages = await this.conversationService.getMessages(storedMessage.conversationId);
-    const conversationHistory = allMessages.slice(-10); // Last 10 messages for context
+    // Get recent conversation history for context (last 10 messages)
+    const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
 
-    // Generate reply using the reply agent (with routing decision)
-    const replyResponse = await replyAgent(user, content, conversationHistory);
+    // Fetch current context for the reply agent
+    // 1. Fetch fitness plan
+    const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+    const planContext = fitnessPlan ? {
+      overview: fitnessPlan.overview ?? null,
+      planDescription: fitnessPlan.planDescription ?? null,
+      reasoning: fitnessPlan.reasoning ?? null,
+    } : undefined;
+
+    // 2. Fetch current microcycle
+    const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+    const microcycleContext = currentMicrocycle?.pattern;
+
+    // 3. Fetch today's workout
+    const nowInUserTz = DateTime.now().setZone(user.timezone);
+    const todayDate = nowInUserTz.startOf('day').toJSDate();
+    const todayWorkout = await this.workoutRepo.findByClientIdAndDate(user.id, todayDate);
+
+    let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[] } | undefined;
+    if (todayWorkout) {
+      // Parse the workout details to extract blocks
+      let blocks: WorkoutBlock[] = [];
+      try {
+        const details = typeof todayWorkout.details === 'string'
+          ? JSON.parse(todayWorkout.details as string)
+          : todayWorkout.details;
+
+        // Check if details has the new enhanced structure with blocks
+        if (details && typeof details === 'object' && 'blocks' in details) {
+          blocks = details.blocks as WorkoutBlock[];
+        }
+      } catch (error) {
+        console.error('[MessageService] Error parsing workout details:', error);
+      }
+
+      workoutContext = {
+        description: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).description || null,
+        reasoning: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).reasoning || null,
+        blocks,
+      };
+    }
+
+    // Generate reply using the reply agent (with routing decision and context)
+    const replyResponse = await replyAgent(
+      user,
+      content,
+      previousMessages,
+      workoutContext,
+      microcycleContext,
+      planContext
+    );
 
     console.log('[MessageService] Reply agent decision:', {
       needsFullPipeline: replyResponse.needsFullPipeline,
@@ -200,13 +260,15 @@ export class MessageService {
   /**
    * Send a message to a user
    * Stores the message and sends it via the configured messaging client
+   * @returns The stored Message object
    */
-  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
+  public async sendMessage(user: UserWithProfile, message: string): Promise<Message> {
     // Get the provider from the messaging client
     const provider = messagingClient.provider;
 
+    let stored: Message | null = null;
     try {
-        const stored = await this.conversationService.storeOutboundMessage(
+        stored = await this.conversationService.storeOutboundMessage(
             user.id,
             user.phoneNumber,
             message,
@@ -222,16 +284,22 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    const messageResult = await messagingClient.sendMessage(user, message);
+    // Send via messaging client
+    await messagingClient.sendMessage(user, message);
 
-    return messageResult;
+    if (!stored) {
+      throw new Error('Failed to store message');
+    }
+
+    return stored;
   }
 
   /**
    * Send welcome message to a user
    * Wraps welcomeMessageAgent and sends the generated message
+   * @returns The stored Message object
    */
-  public async sendWelcomeMessage(user: UserWithProfile): Promise<MessageResult> {
+  public async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {
     const agentResponse = await welcomeMessageAgent.invoke({ user });
     const welcomeMessage = String(agentResponse.value);
     return await this.sendMessage(user, welcomeMessage);
@@ -240,37 +308,50 @@ export class MessageService {
   /**
    * Send fitness plan summary messages to a user
    * Wraps planSummaryMessageAgent and sends the generated messages
-   * Returns the result of the last message sent
+   * @param user - The user to send to
+   * @param plan - The fitness plan to summarize
+   * @param previousMessages - Optional previous messages for context
+   * @returns Array of stored Message objects
    */
-  public async sendPlanSummary(user: UserWithProfile, plan: FitnessPlan): Promise<MessageResult> {
-    const agentResponse = await planSummaryMessageAgent({ user, plan });
+  public async sendPlanSummary(
+    user: UserWithProfile,
+    plan: FitnessPlan,
+    previousMessages?: Message[]
+  ): Promise<Message[]> {
+    const agentResponse = await planSummaryMessageAgent({ user, plan, previousMessages });
 
     // Send each message in sequence
-    let lastResult: MessageResult | null = null;
+    const sentMessages: Message[] = [];
     for (const message of agentResponse.messages) {
-      lastResult = await this.sendMessage(user, message);
+      const storedMessage = await this.sendMessage(user, message);
+      sentMessages.push(storedMessage);
       // Small delay between messages to ensure proper ordering
       if (agentResponse.messages.length > 1) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
-    if (!lastResult) {
+    if (sentMessages.length === 0) {
       throw new Error('No messages were sent');
     }
 
-    return lastResult;
+    return sentMessages;
   }
 
   /**
    * Send workout message to a user
    * Wraps generateDailyWorkoutMessage agent and sends the generated message
+   * @param user - The user to send to
+   * @param workout - The workout instance
+   * @param previousMessages - Optional previous messages for context
+   * @returns The stored Message object
    */
   public async sendWorkoutMessage(
     user: UserWithProfile,
-    workout: WorkoutInstance | EnhancedWorkoutInstance
-  ): Promise<MessageResult> {
-    const message = await generateDailyWorkoutMessage(user, workout);
+    workout: WorkoutInstance | EnhancedWorkoutInstance,
+    previousMessages?: Message[]
+  ): Promise<Message> {
+    const message = await generateDailyWorkoutMessage(user, workout, previousMessages);
     return await this.sendMessage(user, message);
   }
 }

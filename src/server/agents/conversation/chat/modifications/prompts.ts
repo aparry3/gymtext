@@ -141,9 +141,12 @@ Keep responses flexible, supportive, and SMS-friendly.`;
 
 /**
  * Build the dynamic user message with context
+ *
+ * Note: Conversation history is now passed as structured messages in the message array,
+ * not concatenated into this prompt.
  */
 export const buildModificationsUserMessage = (input: ChatSubagentInput): string => {
-  const { user, profile, conversationHistory } = input;
+  const { user, profile } = input;
 
   // Get current date/time in user's timezone
   const nowInUserTz = DateTime.now().setZone(user.timezone);
@@ -156,11 +159,6 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
 
   // Get the current day of the week
   const currentDayOfWeek = nowInUserTz.toFormat('EEEE'); // Full weekday name (e.g., "Monday")
-
-  // Get recent conversation context
-  const recentMessages = conversationHistory?.slice(-5).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
 
   // Extract profile context
   const userProfile = user.profile;
@@ -181,9 +179,6 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
 ## DYNAMIC CONTEXT
 
 **Recent Profile Updates**: ${profile.summary?.reason || 'None'}
-
-**Recent Conversation**:
-${recentMessages}
 
 ---
 

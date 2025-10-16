@@ -2,6 +2,7 @@ import { UserWithProfile } from '../models/userModel';
 import { FitnessPlanService } from './fitnessPlanService';
 import { MessageService } from './messageService';
 import { DailyMessageService } from './dailyMessageService';
+import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
 
 /**
  * OnboardingService
@@ -12,10 +13,14 @@ import { DailyMessageService } from './dailyMessageService';
  * 3. Send plan summary
  * 4. Send first daily workout
  *
+ * Uses ConversationFlowBuilder to maintain natural conversation flow
+ * and avoid repetitive greetings.
+ *
  * Responsibilities:
  * - Coordinate multiple services for onboarding
  * - Handle onboarding flow logic
  * - Ensure proper sequencing of onboarding steps
+ * - Maintain conversation context across messages
  */
 export class OnboardingService {
   private static instance: OnboardingService;
@@ -46,21 +51,30 @@ export class OnboardingService {
     console.log(`Starting onboarding for user ${user.id}`);
 
     try {
+      // Create conversation flow to track context
+      const flow = new ConversationFlowBuilder();
+
       // Step 1: Send welcome message
       console.log(`[Onboarding] Sending welcome message to ${user.id}`);
-      await this.messageService.sendWelcomeMessage(user);
+      const welcomeMessage = await this.messageService.sendWelcomeMessage(user);
+      flow.addMessage(welcomeMessage);
 
       // Step 2: Create fitness plan
       console.log(`[Onboarding] Creating fitness plan for ${user.id}`);
       const fitnessPlan = await this.fitnessPlanService.createFitnessPlan(user);
 
-      // Step 3: Send plan summary
+      // Step 3: Send plan summary (with context from welcome message)
       console.log(`[Onboarding] Sending plan summary to ${user.id}`);
-      await this.messageService.sendPlanSummary(user, fitnessPlan);
+      const planMessages = await this.messageService.sendPlanSummary(
+        user,
+        fitnessPlan,
+        flow.getRecentMessages()
+      );
+      flow.addMessage(planMessages);
 
-      // Step 4: Send first daily workout
+      // Step 4: Send first daily workout (with context from previous messages)
       console.log(`[Onboarding] Sending first workout to ${user.id}`);
-      await this.dailyMessageService.sendDailyMessage(user);
+      await this.dailyMessageService.sendDailyMessage(user, flow.getRecentMessages());
 
       console.log(`[Onboarding] Successfully completed onboarding for ${user.id}`);
     } catch (error) {

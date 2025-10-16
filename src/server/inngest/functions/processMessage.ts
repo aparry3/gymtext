@@ -43,8 +43,7 @@ export const processMessageFunction = inngest.createFunction(
 
       const chatResponse = await chatService.handleIncomingMessage(
         user,
-        content,
-        conversationId
+        content
       );
       console.log('[Inngest] Response generated, length:', chatResponse.length);
       return chatResponse;
@@ -67,13 +66,13 @@ export const processMessageFunction = inngest.createFunction(
     console.log('[Inngest] Message processing complete:', {
       userId,
       conversationId,
-      messageId: messageResult.messageId,
+      messageId: messageResult.id,
     });
 
     return {
       success: true,
       conversationId,
-      messageId: messageResult.messageId,
+      messageId: messageResult.id,
       responseLength: response.length,
     };
   }

@@ -4,6 +4,7 @@ import { initializeModel } from '../../base';
 import { WorkoutMessageContext, WorkoutMessageInput } from './types';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
 import { UserWithProfile } from '@/server/models/user';
+import { Message } from '@/server/models/conversation';
 
 /**
  * Generates a daily workout message
@@ -12,16 +13,19 @@ import { UserWithProfile } from '@/server/models/user';
  *
  * @param user - User with profile information
  * @param workout - Workout instance to deliver
+ * @param previousMessages - Optional previous messages for context
  * @returns SMS message string
  */
 export const generateDailyWorkoutMessage = async (
   user: UserWithProfile,
-  workout: WorkoutInstance | EnhancedWorkoutInstance
+  workout: WorkoutInstance | EnhancedWorkoutInstance,
+  previousMessages?: Message[]
 ): Promise<string> => {
   return generateWorkoutMessage({
     user,
     workout,
-    type: 'daily'
+    type: 'daily',
+    previousMessages
   });
 };
 

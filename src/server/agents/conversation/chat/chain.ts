@@ -21,11 +21,15 @@ const TriageActionMap: Record<MessageIntent, Runnable> = {
  *
  * This agent is responsible for generating the actual chat response
  * It receives the profile from UserProfileAgent and doesn't fetch it
+ *
+ * @param user - User with profile information
+ * @param message - The incoming message from the user
+ * @param previousMessages - Optional previous messages for conversation context
  */
 export const chatAgent = async (
   user: UserWithProfile,
   message: string,
-  conversationHistory?: Message[],
+  previousMessages?: Message[],
 ) => {
   console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
@@ -58,7 +62,7 @@ export const chatAgent = async (
     triage: routingRunnable,
   });
 
-  const actionRunnable = RunnableLambda.from(async (input: { profile: ProfilePatchResult, triage: TriageResult, message: string, user: UserWithProfile, conversationHistory?: Message[] }) => {
+  const actionRunnable = RunnableLambda.from(async (input: { profile: ProfilePatchResult, triage: TriageResult, message: string, user: UserWithProfile, previousMessages?: Message[] }) => {
     // Find the intent with the highest confidence
     const primaryIntent = input.triage.intents.reduce((max, current) =>
       current.confidence > max.confidence ? current : max
@@ -86,7 +90,7 @@ export const chatAgent = async (
       user: input.user,
       profile: input.profile,
       triage: input.triage,
-      conversationHistory: input.conversationHistory,
+      previousMessages: input.previousMessages,
     };
 
     // Invoke the appropriate subagent
@@ -102,7 +106,7 @@ export const chatAgent = async (
     actionRunnable,
   ]);
 
-  const result = await sequence.invoke({ message, user, conversationHistory });
+  const result = await sequence.invoke({ message, user, previousMessages });
 
   return result;
 };

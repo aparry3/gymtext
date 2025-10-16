@@ -164,6 +164,34 @@ export class ConversationService {
   async getMessages(conversationId: string): Promise<Message[]> {
     return await this.messageRepo.findByConversationId(conversationId);
   }
+
+  /**
+   * Get recent messages for a user
+   *
+   * Convenience method for retrieving the most recent messages from a user's
+   * active conversation. Useful for passing conversation context to agents.
+   *
+   * @param userId - The user ID
+   * @param limit - Maximum number of recent messages to return (default: 10)
+   * @returns Array of recent messages, ordered oldest to newest
+   *
+   * @example
+   * ```typescript
+   * // Get last 10 messages for context
+   * const previousMessages = await conversationService.getRecentMessages(userId);
+   * const response = await chatAgent(user, message, previousMessages);
+   * ```
+   */
+  async getRecentMessages(userId: string, limit: number = 10): Promise<Message[]> {
+    // Get the user's current active conversation
+    const conversation = await this.getOrCreateConversation(userId);
+
+    // Get all messages for this conversation
+    const allMessages = await this.messageRepo.findByConversationId(conversation.id);
+
+    // Return the most recent N messages
+    return allMessages.slice(-limit);
+  }
 }
 
 // Export singleton instance

@@ -5,6 +5,7 @@ import type { Message } from '@/server/models/messageModel';
 import type { ProfilePatchResult } from '@/server/services/fitnessProfileService';
 import type { TriageResult } from './types';
 import { z } from 'zod';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**
  * Input type for chat subagent runnables
@@ -14,7 +15,7 @@ export interface ChatSubagentInput {
   user: UserWithProfile;
   profile: ProfilePatchResult;
   triage: TriageResult;
-  conversationHistory?: Message[];
+  previousMessages?: Message[];
 }
 
 /**
@@ -39,17 +40,24 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
       message: input.message.substring(0, 100) + (input.message.length > 100 ? '...' : ''),
       primaryIntent: input.triage.intents[0]?.intent,
       confidence: input.triage.intents[0]?.confidence,
-      hasProfileUpdates: input.profile.summary?.reason !== 'No updates detected'
+      hasProfileUpdates: input.profile.summary?.reason !== 'No updates detected',
+      previousMessagesCount: input.previousMessages?.length || 0
     });
 
     const model = initializeModel(outputSchema, config);
 
+    // Build the user message (now without conversation history)
     const userMessage = userMessageBuilder(input);
+
+    // Construct message array with proper role structure
     const messages = [
       {
         role: 'system',
         content: systemPrompt,
       },
+      // Add previous messages as structured message objects
+      ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
+      // Current user message
       {
         role: 'user',
         content: userMessage,

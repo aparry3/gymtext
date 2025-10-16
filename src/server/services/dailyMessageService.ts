@@ -8,6 +8,7 @@ import { ProgressService } from './progressService';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
+import { Message } from '@/server/models/conversation';
 
 interface BatchResult {
   processed: number;
@@ -176,8 +177,17 @@ export class DailyMessageService {
    */
   public async sendDailyMessage(
     user: UserWithProfile,
-    options: ProcessOptions = {}
+    optionsOrPreviousMessages?: ProcessOptions | Message[]
   ): Promise<MessageResult> {
+    // Handle overloaded parameter - either ProcessOptions or Message[]
+    let options: ProcessOptions = {};
+    let previousMessages: Message[] | undefined;
+
+    if (Array.isArray(optionsOrPreviousMessages)) {
+      previousMessages = optionsOrPreviousMessages;
+    } else if (optionsOrPreviousMessages) {
+      options = optionsOrPreviousMessages;
+    }
     try {
       console.log(`Processing daily message for user ${user.id}`, {
         dryRun: options.dryRun || false,
@@ -221,7 +231,7 @@ export class DailyMessageService {
       // Send message using messageService (or dry-run preview)
       if (options.dryRun) {
         // Generate message for preview without sending
-        const message = await generateDailyWorkoutMessage(user, workout);
+        const message = await generateDailyWorkoutMessage(user, workout, previousMessages);
         console.log(`[DRY RUN] Would send message to user ${user.id}:`, {
           phoneNumber: user.phoneNumber,
           messagePreview: message.substring(0, 100) + '...'
@@ -233,13 +243,13 @@ export class DailyMessageService {
         };
       } else {
         // Generate and send message
-        const messageResult = await this.messageService.sendWorkoutMessage(user, workout);
+        const storedMessage = await this.messageService.sendWorkoutMessage(user, workout, previousMessages);
         console.log(`Successfully sent daily message to user ${user.id}`);
         return {
           success: true,
           userId: user.id,
           messageText: 'Message sent successfully',
-          messageId: messageResult.messageId
+          messageId: storedMessage.id
         };
       }
     } catch (error) {

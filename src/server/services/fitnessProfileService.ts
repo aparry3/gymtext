@@ -3,9 +3,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createGoalsAgent } from '../agents/profile/goals/chain';
-import { createActivitiesAgent } from '../agents/profile/activities/chain';
-import { createConstraintsAgent } from '../agents/profile/constraints/chain';
+import { updateUserProfile } from '../agents/profile/chain';
 import { ProfileExtractionResults } from '../agents/profile/types';
 
 
@@ -122,59 +120,6 @@ export class FitnessProfileService {
     }
   }
 
-  /**
-   * Main onboarding method that processes fitness profile information using sub-agents
-   * Returns profile updates and metadata for patch operations
-   */
-  async extractFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<Partial<ProfileExtractionResults> | null> {
-      // Initialize all agents
-      const goalsAgent = createGoalsAgent();
-      const activitiesAgent = createActivitiesAgent();
-      const constraintsAgent = createConstraintsAgent();
-      // const environmentAgent = createEnvironmentAgent();
-      // const metricsAgent = createMetricsAgent();
-
-      // Prepare messages for each agent based on request data
-      const messages = {
-        goals: request.fitnessGoals,
-        activities: request.currentExercise,
-        constraints: request.injuries,
-      };
-
-      const goalsMessage = messages.goals ? `My fitness goals are: ${messages.goals}` : null;
-      // Run all agents in parallel for efficiency
-      const [goalsResult, activitiesResult, constraintsResult] = await Promise.all([
-        goalsMessage ? goalsAgent({ message: goalsMessage, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No goals data provided' } as const),
-        messages.activities ? activitiesAgent({ message: messages.activities, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No activities data provided' } as const),
-        messages.constraints ? constraintsAgent({ message: messages.constraints, user }) : Promise.resolve({ data: null, hasData: false, confidence: 0, reason: 'No constraints data provided' } as const),
-      ]);
-
-      const results = {
-        goals: {
-          hasData: goalsResult.hasData,
-          confidence: goalsResult.confidence,
-          reason: goalsResult.reason,
-          data: goalsResult.data
-        },
-        activities: {
-          hasData: activitiesResult.hasData,
-          confidence: activitiesResult.confidence,
-          reason: activitiesResult.reason,
-          data: activitiesResult.data
-        },
-        constraints: {
-          hasData: constraintsResult.hasData,
-          confidence: constraintsResult.confidence,
-          reason: constraintsResult.reason,
-          data: constraintsResult.data
-        }
-      }
-      // Log agent results for debugging
-      console.log('Agent results:', results);
-
-      return results;
-
-  }
 
   private consolidateResults(source: string, results: Partial<ProfileExtractionResults>): ExtractedUpdates | null {
       // Build profile updates from successful extractions
@@ -250,30 +195,34 @@ export class FitnessProfileService {
 
   async createFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
     return this.circuitBreaker.execute<FitnessProfile | null>(async (): Promise<FitnessProfile | null> => {
-
-      // Prepare fitness profile request from form data
-      const fitnessProfileRequest: CreateFitnessProfileRequest = {
-        fitnessGoals: request.fitnessGoals,
-        currentExercise: request.currentExercise,
-        injuries: request.injuries,
-      };
-
       // Check if we have any fitness profile data to process
-      const hasFitnessData = Object.values(fitnessProfileRequest).some(value => value && value.trim());
+      const hasFitnessData = Object.values(request).some(value => value && value.trim());
 
-      if (hasFitnessData) {
-        // Use onboard method to process text fields and get updates
-        const onboardResult = await this.extractFitnessProfile(user, fitnessProfileRequest);
-        
-        if (!onboardResult) {
-          throw new Error('Failed to extract fitness profile data');
-        }
+      if (!hasFitnessData) {
+        return null;
+      }
 
-        const updatedUser = await this.patchProfile(user, 'onboarding', onboardResult);
+      // Build a formatted message from all the request fields
+      const messageParts: string[] = [];
 
-        return updatedUser.user.profile;
-      } 
-      return null;
+      if (request.fitnessGoals?.trim()) {
+        messageParts.push(`***Goals***:\n${request.fitnessGoals.trim()}`);
+      }
+
+      if (request.currentExercise?.trim()) {
+        messageParts.push(`***Current Activity***:\n${request.currentExercise.trim()}`);
+      }
+
+      if (request.injuries?.trim()) {
+        messageParts.push(`***Injuries or Limitations***:\n${request.injuries.trim()}`);
+      }
+
+      const message = messageParts.join('\n\n');
+
+      // Use the unified profile agent to extract and update the profile
+      const result = await updateUserProfile(message, user);
+
+      return result.user.profile;
     });
   }
 

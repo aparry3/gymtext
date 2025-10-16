@@ -1,12 +1,22 @@
 import { DateTime } from 'luxon';
 import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
+import type { WorkoutBlock } from '@/server/models/workout';
+import type { MicrocyclePattern } from '@/server/models/microcycle';
 
 /**
  * Static system prompt for the Reply Agent
  * Provides quick acknowledgments OR full answers to general fitness questions
  */
 export const REPLY_AGENT_SYSTEM_PROMPT = `You are a friendly fitness coach for GymText responding quickly to user messages.
+
+## AVAILABLE CONTEXT
+
+You have access to the following user context (when available):
+- **Fitness Plan**: Overview, detailed description, and reasoning for their current training program
+- **Current Microcycle**: This week's training pattern (which days are scheduled for what type of training)
+- **Today's Workout**: The full workout for today including exercises, sets, reps, and coaching rationale
+
+This context allows you to answer specific questions about their plan, workouts, and programming with accurate information.
 
 ## YOUR ROLE
 
@@ -66,6 +76,18 @@ User: "What's the difference between a barbell and dumbbell bench press?"
 Reply: "Barbells let you lift more weight and are great for building overall strength. Dumbbells give you more range of motion and help fix muscle imbalances. Both are valuable!"
 Reasoning: "General exercise comparison, educational"
 
+User: "What's on my workout for today?"
+Reply: "Today you've got [describe workout from context]. Looking forward to hearing how it goes!"
+Reasoning: "User asking about their specific workout - can answer directly using Today's Workout context"
+
+User: "Why am I doing front squats instead of back squats?"
+Reply: "Based on your program, [explain using plan reasoning from context]. It's designed to [reference goals from plan]."
+Reasoning: "Specific programming question that can be answered using Fitness Plan context"
+
+User: "What am I training tomorrow?"
+Reply: "Tomorrow is [check microcycle pattern]. You'll be hitting [describe theme]. I'll send you the full workout tomorrow morning!"
+Reasoning: "Asking about training schedule - can answer using Current Microcycle context"
+
 ## EXAMPLES - QUICK ACKNOWLEDGMENTS (needsFullPipeline: true)
 
 User: "Is it normal to feel sore in my glutes after those squats?"
@@ -123,11 +145,30 @@ Keep all replies casual, supportive, and human-sounding.`;
 
 /**
  * Build the dynamic user message with context
+ *
+ * Note: Conversation history is now passed as structured messages in the message array,
+ * not concatenated into this prompt.
+ *
+ * @param message - The incoming user message
+ * @param user - User with profile information
+ * @param currentWorkout - Optional current workout context
+ * @param currentMicrocycle - Optional current microcycle pattern
+ * @param fitnessPlan - Optional fitness plan context
  */
 export const buildReplyMessage = (
   message: string,
   user: UserWithProfile,
-  conversationHistory?: Message[]
+  currentWorkout?: {
+    description: string | null;
+    reasoning: string | null;
+    blocks: WorkoutBlock[];
+  },
+  currentMicrocycle?: MicrocyclePattern,
+  fitnessPlan?: {
+    overview: string | null;
+    planDescription: string | null;
+    reasoning: string | null;
+  }
 ): string => {
   const nowInUserTz = DateTime.now().setZone(user.timezone);
   const currentDate = nowInUserTz.toLocaleString({
@@ -137,20 +178,53 @@ export const buildReplyMessage = (
     day: 'numeric'
   });
 
-  // Get recent conversation context (last 3 messages for speed)
-  const recentMessages = conversationHistory?.slice(-3).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
-  return `## CONTEXT
+  let contextMessage = `## CONTEXT
 
 **Date**: ${currentDate}
-**User**: ${user.name}
+**User**: ${user.name}`;
 
-**Recent Conversation**:
-${recentMessages}
+  // Add fitness plan context if available
+  if (fitnessPlan) {
+    contextMessage += `\n\n## FITNESS PLAN CONTEXT`;
 
----
+    if (fitnessPlan.overview) {
+      contextMessage += `\n\n**Plan Overview**: ${fitnessPlan.overview}`;
+    }
+
+    if (fitnessPlan.planDescription) {
+      contextMessage += `\n\n**Plan Description**: ${fitnessPlan.planDescription}`;
+    }
+
+    if (fitnessPlan.reasoning) {
+      contextMessage += `\n\n**Plan Reasoning**: ${fitnessPlan.reasoning}`;
+    }
+  }
+
+  // Add current microcycle context if available
+  if (currentMicrocycle) {
+    contextMessage += `\n\n## CURRENT MICROCYCLE (Week ${currentMicrocycle.weekIndex + 1})`;
+    contextMessage += `\n\n**Weekly Pattern**:`;
+    currentMicrocycle.days.forEach(day => {
+      contextMessage += `\n- ${day.day}: ${day.theme}${day.load ? ` (${day.load} load)` : ''}${day.notes ? ` - ${day.notes}` : ''}`;
+    });
+  }
+
+  // Add current workout context if available
+  if (currentWorkout && currentWorkout.blocks.length > 0) {
+    contextMessage += `\n\n## TODAY'S WORKOUT`;
+
+    if (currentWorkout.description) {
+      contextMessage += `\n\n**Workout Description**: ${currentWorkout.description}`;
+    }
+
+    if (currentWorkout.reasoning) {
+      contextMessage += `\n\n**Workout Reasoning**: ${currentWorkout.reasoning}`;
+    }
+  }
+
+  contextMessage += `\n\n---
 
 **Users Message**: ${message}`;
+
+  return contextMessage;
 };
