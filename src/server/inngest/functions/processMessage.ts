@@ -43,8 +43,7 @@ export const processMessageFunction = inngest.createFunction(
 
       const chatResponse = await chatService.handleIncomingMessage(
         user,
-        content,
-        conversationId
+        content
       );
       console.log('[Inngest] Response generated, length:', chatResponse.length);
       return chatResponse;

@@ -1,5 +1,4 @@
 import { Message } from '@/server/models/conversation';
-import { BaseMessage } from '@langchain/core/messages';
 
 /**
  * ConversationFlowBuilder
@@ -106,11 +105,11 @@ export class ConversationFlowBuilder {
    * ];
    * ```
    */
-  static toMessageArray(messages: Message[]): BaseMessage[] {
+  static toMessageArray(messages: Message[]): Array<{ role: string; content: string }> {
     return messages.map(msg => ({
       role: msg.direction === 'inbound' ? 'user' : 'assistant',
       content: msg.content,
-    })) as BaseMessage[];
+    }));
   }
 
   /**
@@ -137,16 +136,16 @@ export class ConversationFlowBuilder {
   }
 
   /**
-   * Convert messages to LangChain BaseMessage format
+   * Convert messages to LangChain message format
    * @param limit - Optional limit on number of messages to convert
-   * @returns Array of BaseMessage for LangChain
+   * @returns Array formatted for LangChain with proper roles
    */
-  toArray(limit?: number): BaseMessage[] {
+  toArray(limit?: number): Array<{ role: string; content: string }> {
     const messages = this.getRecentMessages(limit);
     return messages.map(msg => ({
       role: msg.direction === 'inbound' ? 'user' : 'assistant',
       content: msg.content,
-    })) as BaseMessage[];
+    }));
   }
 
   /**
