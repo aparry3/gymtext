@@ -6,8 +6,13 @@ import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
 import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
+import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../models/workout';
 import { Message } from '../models/conversation';
+import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
+import { MicrocycleRepository } from '../repositories/microcycleRepository';
+import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
+import { postgresDb } from '../connections/postgres/postgres';
+import { DateTime } from 'luxon';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -92,9 +97,15 @@ export interface ReceiveMessageResult {
 export class MessageService {
   private static instance: MessageService;
   private conversationService: ConversationService;
+  private fitnessPlanRepo: FitnessPlanRepository;
+  private microcycleRepo: MicrocycleRepository;
+  private workoutRepo: WorkoutInstanceRepository;
 
   private constructor() {
     this.conversationService = ConversationService.getInstance();
+    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
+    this.microcycleRepo = new MicrocycleRepository(postgresDb);
+    this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
   }
 
   public static getInstance(): MessageService {
@@ -138,8 +149,57 @@ export class MessageService {
     // Get recent conversation history for context (last 10 messages)
     const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
 
-    // Generate reply using the reply agent (with routing decision)
-    const replyResponse = await replyAgent(user, content, previousMessages);
+    // Fetch current context for the reply agent
+    // 1. Fetch fitness plan
+    const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+    const planContext = fitnessPlan ? {
+      overview: fitnessPlan.overview ?? null,
+      planDescription: fitnessPlan.planDescription ?? null,
+      reasoning: fitnessPlan.reasoning ?? null,
+    } : undefined;
+
+    // 2. Fetch current microcycle
+    const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+    const microcycleContext = currentMicrocycle?.pattern;
+
+    // 3. Fetch today's workout
+    const nowInUserTz = DateTime.now().setZone(user.timezone);
+    const todayDate = nowInUserTz.startOf('day').toJSDate();
+    const todayWorkout = await this.workoutRepo.findByClientIdAndDate(user.id, todayDate);
+
+    let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[] } | undefined;
+    if (todayWorkout) {
+      // Parse the workout details to extract blocks
+      let blocks: WorkoutBlock[] = [];
+      try {
+        const details = typeof todayWorkout.details === 'string'
+          ? JSON.parse(todayWorkout.details as string)
+          : todayWorkout.details;
+
+        // Check if details has the new enhanced structure with blocks
+        if (details && typeof details === 'object' && 'blocks' in details) {
+          blocks = details.blocks as WorkoutBlock[];
+        }
+      } catch (error) {
+        console.error('[MessageService] Error parsing workout details:', error);
+      }
+
+      workoutContext = {
+        description: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).description || null,
+        reasoning: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).reasoning || null,
+        blocks,
+      };
+    }
+
+    // Generate reply using the reply agent (with routing decision and context)
+    const replyResponse = await replyAgent(
+      user,
+      content,
+      previousMessages,
+      workoutContext,
+      microcycleContext,
+      planContext
+    );
 
     console.log('[MessageService] Reply agent decision:', {
       needsFullPipeline: replyResponse.needsFullPipeline,

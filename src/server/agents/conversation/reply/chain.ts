@@ -1,5 +1,7 @@
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
+import type { WorkoutBlock } from '@/server/models/workout';
+import type { MicrocyclePattern } from '@/server/models/microcycle';
 import { initializeModel } from '../../base';
 import { REPLY_AGENT_SYSTEM_PROMPT, buildReplyMessage } from './prompts';
 import { z } from 'zod';
@@ -27,12 +29,26 @@ export type ReplyAgentResponse = z.infer<typeof ReplyAgentResponseSchema>;
  * @param user - The user receiving the message
  * @param message - The incoming message content
  * @param previousMessages - Optional previous messages for conversation context
+ * @param currentWorkout - Optional current workout context (description, reasoning, blocks)
+ * @param currentMicrocycle - Optional current microcycle pattern
+ * @param fitnessPlan - Optional fitness plan context (overview, description, reasoning)
  * @returns ReplyAgentResponse with reply text and pipeline routing decision
  */
 export const replyAgent = async (
   user: UserWithProfile,
   message: string,
-  previousMessages?: Message[]
+  previousMessages?: Message[],
+  currentWorkout?: {
+    description: string | null;
+    reasoning: string | null;
+    blocks: WorkoutBlock[];
+  },
+  currentMicrocycle?: MicrocyclePattern,
+  fitnessPlan?: {
+    overview: string | null;
+    planDescription: string | null;
+    reasoning: string | null;
+  }
 ): Promise<ReplyAgentResponse> => {
   console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
     previousMessagesCount: previousMessages?.length || 0
@@ -42,7 +58,7 @@ export const replyAgent = async (
   const model = initializeModel(ReplyAgentResponseSchema);
 
   // Build the context message (now without conversation history)
-  const userMessage = buildReplyMessage(message, user);
+  const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
 
   // Create the messages array with proper role structure
   const messages = [
