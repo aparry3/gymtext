@@ -1,11 +1,27 @@
 import { UserWithProfile } from "@/server/models/userModel";
 import { FitnessPlan } from "@/server/models/fitnessPlan";
+import { Message } from "@/server/models/conversation";
 
 export const planSummaryPrompt = (
   user: UserWithProfile,
-  plan: FitnessPlan
-) => `
+  plan: FitnessPlan,
+  previousMessages?: Message[]
+) => {
+  const hasContext = previousMessages && previousMessages.length > 0;
+  const contextSection = hasContext
+    ? `
+<Previous Messages>
+${previousMessages.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`).join('\n\n')}
+</Previous Messages>
+
+IMPORTANT: You are continuing a conversation that has already started. DO NOT greet the user by name again. DO NOT introduce yourself again. Just continue naturally with the plan summary.
+`
+    : '';
+
+  return `
 You are a motivational fitness coach sending an exciting SMS message about a new fitness plan.
+
+${contextSection}
 
 <Task>
 Create 2-3 SMS messages (each under 160 characters) that summarize this fitness plan in an exciting, motivational way.
@@ -49,3 +65,4 @@ Return a JSON object with an array of messages:
 
 Now create the motivational SMS messages for ${user.name}'s ${plan.lengthWeeks}-week ${plan.programType} program.
 `;
+};

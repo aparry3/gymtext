@@ -67,17 +67,26 @@ export const buildWorkoutUserMessage = (
   input: WorkoutMessageInput,
   fitnessProfileSubstring: string
 ): string => {
-  const { user, workout, type, context } = input;
+  const { user, workout, type, context, previousMessages } = input;
+
+  const hasPreviousMessages = previousMessages && previousMessages.length > 0;
+  const previousMessagesSection = hasPreviousMessages
+    ? `
+<Previous Messages>
+${previousMessages!.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`).join('\n\n')}
+</Previous Messages>
+`
+    : '';
 
   const contextualGuidance = type === 'daily'
-    ? buildDailyContext(user)
+    ? buildDailyContext(user, hasPreviousMessages)
     : buildModifiedContext(context || {});
 
   const example = type === 'daily'
     ? buildDailyExample()
     : buildModifiedExample(context || {});
 
-  return `${contextualGuidance}
+  return `${previousMessagesSection}${contextualGuidance}
 
 <Profile>
 ${fitnessProfileSubstring}
@@ -95,7 +104,19 @@ Return ONLY the SMS message.`;
 /**
  * Build context-specific guidance for daily messages
  */
-function buildDailyContext(user: UserWithProfile): string {
+function buildDailyContext(user: UserWithProfile, hasPreviousMessages: boolean = false): string {
+  if (hasPreviousMessages) {
+    return `
+  DAILY MESSAGE CONTEXT:
+  * You are CONTINUING a conversation that has already started
+  * DO NOT greet the user by name again
+  * DO NOT introduce yourself again
+  * Jump straight into the workout presentation
+  * Present the workout in a motivational, forward-looking way
+  * Close with a brief motivational cue or check-in (<= 1 sentence).
+  `;
+  }
+
   return `
   DAILY MESSAGE CONTEXT:
   * Start with a short greeting that uses "${user.name}"'s first name, or nickname.

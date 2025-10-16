@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
+import { Message } from '@/server/models/conversation';
 import { initializeModel } from '@/server/agents/base';
 import { planSummaryPrompt } from './prompts';
 
@@ -12,6 +13,7 @@ const PlanSummarySchema = z.object({
 export interface PlanSummaryInput {
   user: UserWithProfile;
   plan: FitnessPlan;
+  previousMessages?: Message[];
 }
 
 export interface PlanSummaryOutput {
@@ -21,13 +23,13 @@ export interface PlanSummaryOutput {
 export const planSummaryMessageAgent = async (
   input: PlanSummaryInput
 ): Promise<PlanSummaryOutput> => {
-  const { user, plan } = input;
+  const { user, plan, previousMessages } = input;
 
   // Initialize model with structured output
   const model = initializeModel(PlanSummarySchema);
 
   // Generate prompt
-  const prompt = planSummaryPrompt(user, plan);
+  const prompt = planSummaryPrompt(user, plan, previousMessages);
 
   // Invoke model
   const result = await model.invoke(prompt);

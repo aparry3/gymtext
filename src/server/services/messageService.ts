@@ -1,12 +1,13 @@
 import { UserWithProfile } from '../models/userModel';
 import { FitnessPlan } from '../models/fitnessPlan';
-import { messagingClient, type MessageResult } from '../connections/messaging';
+import { messagingClient } from '../connections/messaging';
 import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
 import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../models/workout';
+import { Message } from '../models/conversation';
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -200,13 +201,15 @@ export class MessageService {
   /**
    * Send a message to a user
    * Stores the message and sends it via the configured messaging client
+   * @returns The stored Message object
    */
-  public async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
+  public async sendMessage(user: UserWithProfile, message: string): Promise<Message> {
     // Get the provider from the messaging client
     const provider = messagingClient.provider;
 
+    let stored: Message | null = null;
     try {
-        const stored = await this.conversationService.storeOutboundMessage(
+        stored = await this.conversationService.storeOutboundMessage(
             user.id,
             user.phoneNumber,
             message,
@@ -222,16 +225,22 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    const messageResult = await messagingClient.sendMessage(user, message);
+    // Send via messaging client
+    await messagingClient.sendMessage(user, message);
 
-    return messageResult;
+    if (!stored) {
+      throw new Error('Failed to store message');
+    }
+
+    return stored;
   }
 
   /**
    * Send welcome message to a user
    * Wraps welcomeMessageAgent and sends the generated message
+   * @returns The stored Message object
    */
-  public async sendWelcomeMessage(user: UserWithProfile): Promise<MessageResult> {
+  public async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {
     const agentResponse = await welcomeMessageAgent.invoke({ user });
     const welcomeMessage = String(agentResponse.value);
     return await this.sendMessage(user, welcomeMessage);
@@ -240,37 +249,50 @@ export class MessageService {
   /**
    * Send fitness plan summary messages to a user
    * Wraps planSummaryMessageAgent and sends the generated messages
-   * Returns the result of the last message sent
+   * @param user - The user to send to
+   * @param plan - The fitness plan to summarize
+   * @param previousMessages - Optional previous messages for context
+   * @returns Array of stored Message objects
    */
-  public async sendPlanSummary(user: UserWithProfile, plan: FitnessPlan): Promise<MessageResult> {
-    const agentResponse = await planSummaryMessageAgent({ user, plan });
+  public async sendPlanSummary(
+    user: UserWithProfile,
+    plan: FitnessPlan,
+    previousMessages?: Message[]
+  ): Promise<Message[]> {
+    const agentResponse = await planSummaryMessageAgent({ user, plan, previousMessages });
 
     // Send each message in sequence
-    let lastResult: MessageResult | null = null;
+    const sentMessages: Message[] = [];
     for (const message of agentResponse.messages) {
-      lastResult = await this.sendMessage(user, message);
+      const storedMessage = await this.sendMessage(user, message);
+      sentMessages.push(storedMessage);
       // Small delay between messages to ensure proper ordering
       if (agentResponse.messages.length > 1) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
-    if (!lastResult) {
+    if (sentMessages.length === 0) {
       throw new Error('No messages were sent');
     }
 
-    return lastResult;
+    return sentMessages;
   }
 
   /**
    * Send workout message to a user
    * Wraps generateDailyWorkoutMessage agent and sends the generated message
+   * @param user - The user to send to
+   * @param workout - The workout instance
+   * @param previousMessages - Optional previous messages for context
+   * @returns The stored Message object
    */
   public async sendWorkoutMessage(
     user: UserWithProfile,
-    workout: WorkoutInstance | EnhancedWorkoutInstance
-  ): Promise<MessageResult> {
-    const message = await generateDailyWorkoutMessage(user, workout);
+    workout: WorkoutInstance | EnhancedWorkoutInstance,
+    previousMessages?: Message[]
+  ): Promise<Message> {
+    const message = await generateDailyWorkoutMessage(user, workout, previousMessages);
     return await this.sendMessage(user, message);
   }
 }

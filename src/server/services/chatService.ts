@@ -1,6 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
-import { ConversationContextService } from '@/server/services/context/conversationContext';
 import { MessageRepository } from '@/server/repositories/messageRepository';
 import { ConversationRepository } from '@/server/repositories/conversationRepository';
 
@@ -9,11 +8,11 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
- * 
+ *
  * This service orchestrates the two-agent architecture:
  * 1. UserProfileAgent - Extracts and updates profile information
  * 2. ChatAgent - Generates conversational responses
- * 
+ *
  * The service ensures that:
  * - Profile updates happen automatically when users provide new information
  * - Chat responses acknowledge profile updates when they occur
@@ -22,12 +21,10 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
  */
 export class ChatService {
   private static instance: ChatService;
-  private contextService: ConversationContextService;
   private messageRepo: MessageRepository;
   private conversationRepo: ConversationRepository;
 
   private constructor() {
-    this.contextService = ConversationContextService.getInstance();
     this.messageRepo = new MessageRepository();
     this.conversationRepo = new ConversationRepository();
   }
