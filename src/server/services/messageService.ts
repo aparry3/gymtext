@@ -135,12 +135,11 @@ export class MessageService {
       throw new Error('Failed to store inbound message');
     }
 
-    // Get recent conversation history for context
-    const allMessages = await this.conversationService.getMessages(storedMessage.conversationId);
-    const conversationHistory = allMessages.slice(-10); // Last 10 messages for context
+    // Get recent conversation history for context (last 10 messages)
+    const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
 
     // Generate reply using the reply agent (with routing decision)
-    const replyResponse = await replyAgent(user, content, conversationHistory);
+    const replyResponse = await replyAgent(user, content, previousMessages);
 
     console.log('[MessageService] Reply agent decision:', {
       needsFullPipeline: replyResponse.needsFullPipeline,

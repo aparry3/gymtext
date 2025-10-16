@@ -1,7 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
-import { MessageRepository } from '@/server/repositories/messageRepository';
-import { ConversationRepository } from '@/server/repositories/conversationRepository';
+import { ConversationService } from './conversationService';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -21,12 +20,10 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
  */
 export class ChatService {
   private static instance: ChatService;
-  private messageRepo: MessageRepository;
-  private conversationRepo: ConversationRepository;
+  private conversationService: ConversationService;
 
   private constructor() {
-    this.messageRepo = new MessageRepository();
-    this.conversationRepo = new ConversationRepository();
+    this.conversationService = ConversationService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -38,22 +35,21 @@ export class ChatService {
 
   /**
    * Processes an incoming SMS message using the two-agent architecture.
-   * 
+   *
    * @param user - The user object with their profile information
    * @param message - The incoming SMS message text from the user
-   * @param conversationId - Optional conversation ID for context continuity
    * @returns A promise that resolves to the response message text
-   * 
+   *
    * @remarks
    * The method now follows a two-agent pattern:
    * 1. UserProfileAgent analyzes the message for profile updates
    * 2. ChatAgent generates a response using the (potentially updated) profile
-   * 
+   *
    * This architecture ensures:
    * - Profile information is always current
    * - No duplicate LLM calls for the same information
    * - Proper acknowledgment of profile updates in responses
-   * 
+   *
    * @example
    * ```typescript
    * const response = await chatService.handleIncomingMessage(
@@ -65,36 +61,21 @@ export class ChatService {
    */
   async handleIncomingMessage(
     user: UserWithProfile,
-    message: string,
-    conversationId?: string
+    message: string
   ): Promise<string> {
     try {
-      // Step 1: Get conversation if provided
-      // Note: Conversation and message storage is handled by the API route,
-      // not here in the service layer
-      const conversation = conversationId 
-        ? await this.conversationRepo.findById(conversationId)
-        : null;
+      // Get recent conversation context for the user
+      // This retrieves the last 10 messages from their active conversation
+      const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
 
-     
+      // Remove the current message if it was already stored by the API route
+      // (last message might be the one we're currently processing)
+      const contextMessages = previousMessages.slice(0, -1);
 
-      // Step 3: Get conversation context and history
-      // Exclude the current message that was just stored by the API route
-      const conversationHistory = conversation 
-        ? await this.messageRepo.findByConversationId(conversation.id)
-            .then(msgs => {
-              // Remove the last message (current one) and get previous 10
-              const previousMessages = msgs.slice(0, -1);
-              return previousMessages.slice(-10);
-            })
-        : [];
-      
-
-      
       const chatResult = await chatAgent(
         user,
         message,
-        conversationHistory,
+        contextMessages,
       );
       
       // Step 5: Enforce SMS length constraints

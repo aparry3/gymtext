@@ -67,13 +67,13 @@ export const processMessageFunction = inngest.createFunction(
     console.log('[Inngest] Message processing complete:', {
       userId,
       conversationId,
-      messageId: messageResult.messageId,
+      messageId: messageResult.id,
     });
 
     return {
       success: true,
       conversationId,
-      messageId: messageResult.messageId,
+      messageId: messageResult.id,
       responseLength: response.length,
     };
   }

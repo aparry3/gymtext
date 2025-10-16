@@ -1,6 +1,5 @@
 import { DateTime } from 'luxon';
 import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
 
 /**
  * Static system prompt for the Reply Agent
@@ -123,11 +122,16 @@ Keep all replies casual, supportive, and human-sounding.`;
 
 /**
  * Build the dynamic user message with context
+ *
+ * Note: Conversation history is now passed as structured messages in the message array,
+ * not concatenated into this prompt.
+ *
+ * @param message - The incoming user message
+ * @param user - User with profile information
  */
 export const buildReplyMessage = (
   message: string,
-  user: UserWithProfile,
-  conversationHistory?: Message[]
+  user: UserWithProfile
 ): string => {
   const nowInUserTz = DateTime.now().setZone(user.timezone);
   const currentDate = nowInUserTz.toLocaleString({
@@ -137,18 +141,10 @@ export const buildReplyMessage = (
     day: 'numeric'
   });
 
-  // Get recent conversation context (last 3 messages for speed)
-  const recentMessages = conversationHistory?.slice(-3).map(msg =>
-    `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`
-  ).join('\n') || 'No previous conversation';
-
   return `## CONTEXT
 
 **Date**: ${currentDate}
 **User**: ${user.name}
-
-**Recent Conversation**:
-${recentMessages}
 
 ---
 
