@@ -137,6 +137,7 @@ export class WorkoutInstanceService {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
         reasoning: result.reasoning,
+        message: result.message,
       });
 
       return {
@@ -211,6 +212,7 @@ export class WorkoutInstanceService {
         details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
         reasoning: result.reasoning,
+        message: result.message,
       });
 
       return {

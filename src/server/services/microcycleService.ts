@@ -187,6 +187,7 @@ export class MicrocycleService {
       // This handles cases where modifying a future day causes today's workout to be reshuffled
       let workoutRegenerated = false;
       let regeneratedWorkout: import('@/server/models/workout').EnhancedWorkoutInstance | undefined;
+      let workoutMessage: string | undefined;
 
       const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);
       const todayUpdatedPlan = patternToSave.days.find(d => d.day === todayDayOfWeek);
@@ -203,43 +204,61 @@ export class MicrocycleService {
         // Use today's date in user's timezone (start of day)
         const todayDate = todayInUserTz.startOf('day').toJSDate();
 
-        // Check if a workout exists for today
+        // Generate new workout for today with context
+        const context: DailyWorkoutContext = {
+          user,
+          date: todayDate,
+          dayPlan: todayUpdatedPlan!,
+          microcycle: relevantMicrocycle,
+          mesocycle,
+          fitnessPlan,
+          recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
+        };
+
+        const result = await generateDailyWorkout(context);
+
+        // Check if a workout exists for today to update it, otherwise create it
         const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, todayDate);
 
         if (existingWorkout) {
-          // Generate new workout for today
-          const context: DailyWorkoutContext = {
-            user,
-            date: todayDate,
-            dayPlan: todayUpdatedPlan!,
-            microcycle: relevantMicrocycle,
-            mesocycle,
-            fitnessPlan,
-            recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
-          };
-
-          const result = await generateDailyWorkout(context);
-
           // Update existing workout
           await this.workoutRepo.update(existingWorkout.id, {
             details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
             description: result.description,
             reasoning: result.reasoning,
+            message: result.message,
           });
 
-          regeneratedWorkout = result.workout;
-          workoutRegenerated = true;
-          console.log(`[MODIFY_WEEK] Regenerated today's workout based on updated pattern`);
+          console.log(`[MODIFY_WEEK] Regenerated and updated today's workout based on updated pattern`);
         } else {
-          console.log(`[MODIFY_WEEK] No existing workout for today - will be generated during daily message with new pattern`);
+          // Create new workout
+          await this.workoutRepo.create({
+            clientId: userId,
+            fitnessPlanId: fitnessPlan.id!,
+            mesocycleId: null, // No longer using mesocycles table
+            microcycleId: relevantMicrocycle.id,
+            date: todayDate,
+            sessionType: this.mapThemeToSessionType(todayUpdatedPlan!.theme),
+            goal: `${todayUpdatedPlan!.theme}${todayUpdatedPlan!.notes ? ` - ${todayUpdatedPlan!.notes}` : ''}`,
+            details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            description: result.description,
+            reasoning: result.reasoning,
+            message: result.message,
+          });
+
+          console.log(`[MODIFY_WEEK] Created new workout with message for updated pattern`);
         }
+
+        regeneratedWorkout = result.workout;
+        workoutMessage = result.message;
+        workoutRegenerated = true;
       } else {
         console.log(`[MODIFY_WEEK] Today's pattern unchanged - no need to regenerate workout`);
       }
 
-      const message = workoutRegenerated
-        ? `Updated weekly pattern for remaining days and regenerated today's workout (pattern changed). Applied ${modificationsApplied.length} pattern modifications.`
-        : `Updated weekly pattern for remaining days. Applied ${modificationsApplied.length} pattern modifications.`;
+      // Use the agent's message if a workout was generated, otherwise provide a generic message
+      console.log(`[MODIFY_WEEK] Workout message: ${workoutMessage}`);
+      const message = workoutMessage || `Updated weekly pattern for remaining days. Applied ${modificationsApplied.length} pattern modifications.`;
 
       return {
         success: true,
@@ -258,28 +277,24 @@ export class MicrocycleService {
   }
 
   /**
-   * Find the date for a specific day of the week within a week starting from startDate
+   * Map workout theme to session type for database storage
    */
-  private findDateForDay(startDate: Date, dayOfWeek: string): Date {
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const targetDayIndex = daysOfWeek.indexOf(dayOfWeek);
-
-    if (targetDayIndex === -1) {
-      throw new Error(`Invalid day of week: ${dayOfWeek}`);
-    }
-
-    const startDayIndex = startDate.getDay();
-    let daysToAdd = targetDayIndex - startDayIndex;
-
-    // If the target day is before the start day, add 7 days to go to next week
-    if (daysToAdd < 0) {
-      daysToAdd += 7;
-    }
-
-    const targetDate = new Date(startDate);
-    targetDate.setDate(startDate.getDate() + daysToAdd);
-
-    return targetDate;
+  private mapThemeToSessionType(theme: string): string {
+    const themeLower = theme.toLowerCase();
+    // Valid types: strength, cardio, mobility, recovery, assessment, deload
+    if (themeLower.includes('run') || themeLower.includes('cardio') ||
+        themeLower.includes('hiit') || themeLower.includes('metcon') ||
+        themeLower.includes('conditioning')) return 'cardio';
+    if (themeLower.includes('lift') || themeLower.includes('strength') ||
+        themeLower.includes('upper') || themeLower.includes('lower') ||
+        themeLower.includes('push') || themeLower.includes('pull')) return 'strength';
+    if (themeLower.includes('mobility') || themeLower.includes('flexibility') ||
+        themeLower.includes('stretch')) return 'mobility';
+    if (themeLower.includes('rest') || themeLower.includes('recovery')) return 'recovery';
+    if (themeLower.includes('assessment') || themeLower.includes('test')) return 'assessment';
+    if (themeLower.includes('deload')) return 'deload';
+    // Default to strength for hybrid/unknown workouts
+    return 'strength';
   }
 }
 
