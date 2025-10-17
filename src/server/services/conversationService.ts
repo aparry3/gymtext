@@ -87,7 +87,7 @@ export class ConversationService {
         return null;
       }
 
-      // Store the message
+      // Store the message with initial delivery tracking
       const message = await this.messageRepo.create({
         conversationId: conversation.id,
         userId: userId,
@@ -98,6 +98,9 @@ export class ConversationService {
         provider,
         providerMessageId: providerMessageId || null,
         metadata: {} as Json,
+        deliveryStatus: 'queued',
+        deliveryAttempts: 1,
+        lastDeliveryAttemptAt: new Date(),
       });
 
       const summary = await this.summarizeConversation(user, messages);

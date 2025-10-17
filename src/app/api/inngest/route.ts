@@ -24,11 +24,13 @@
 import { serve } from 'inngest/next';
 import { inngest } from '@/server/connections/inngest/client';
 import { processMessageFunction } from '@/server/inngest/functions';
+import { retryMessageFunction } from '@/server/inngest/functions/retryMessage';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
     processMessageFunction,
+    retryMessageFunction,
     // Add more functions here as needed:
     // processComplexMessageFunction,
     // processBatchMessagesFunction,

@@ -20,10 +20,17 @@ class TwilioClient {
   async sendSMS(to: string, message: string): Promise<MessageInstance> {
     try {
       console.log('Sending SMS from:', this.fromNumber, 'to:', to);
+
+      // Build status callback URL if BASE_URL is configured
+      const statusCallback = process.env.BASE_URL
+        ? `${process.env.BASE_URL}/api/twilio/status`
+        : undefined;
+
       const response = await this.client.messages.create({
         body: message,
         from: this.fromNumber,
         to: to,
+        statusCallback,
       });
       return response;
     } catch (error) {
