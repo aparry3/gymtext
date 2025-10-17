@@ -26,6 +26,7 @@ Convert the provided Workout JSON into this format:
 - Keep exercise lines under ~35 characters when possible for mobile readability
 - List each exercise separately (no grouping with commas)
 - Remove all parenthetical details, alternatives, and extra descriptions from exercise lines
+- **For supersets**: Use format "- SUPERSET: <num times>x" with indented exercises below (2 spaces)
 - End with a brief motivational message (1 line)
 
 **Example Structure:**
@@ -42,8 +43,9 @@ Workout:
 - BB Back Squat: 4x5
 - DB RDL: 3x6-8
 - Walking Lunge: 3x10 per leg
-- Leg Extensions: 3x15
-- Lying Leg Curls: 3x15
+- SUPERSET: 3x
+  - Leg Extensions: 15 reps
+  - Lying Leg Curls: 15 reps
 - Standing Calf Raises: 4x15
 
 Cooldown:
@@ -163,8 +165,9 @@ function buildDailyExample(): string {
   - Pull-ups: 3x to failure
   - BB Rows: 3x8-12
   - Seated Cable Rows: 3x10-15
-  - Hanging Leg Raises: 3x15-20
-  - Cable Crunches: 3x15-20
+  - SUPERSET: 3x
+    - Hanging Leg Raises: 15-20 reps
+    - Cable Crunches: 15-20 reps
   - Plank: 3x30-60 sec
 
   Cooldown:
@@ -193,7 +196,9 @@ function buildModifiedExample(context: Partial<WorkoutMessageContext>): string {
   - DB Bench Press: 3x8-12
   - BB Overhead Press: 3x6-8
   - Dips: 3x to failure
-  - DB Lateral Raises: 3x12-15
+  - SUPERSET: 3x
+    - DB Lateral Raises: 12-15 reps
+    - Face Pulls: 12-15 reps
 
   Cooldown:
   - Chest Stretch: 2 min
@@ -214,8 +219,9 @@ function buildModifiedExample(context: Partial<WorkoutMessageContext>): string {
   Workout:
   - Push-ups: 3x15-20
   - DB Rows: 3x12-15
-  - Pike Push-ups: 3x10-12
-  - DB Bicep Curls: 3x12-15
+  - SUPERSET: 3x
+    - Pike Push-ups: 10-12 reps
+    - DB Bicep Curls: 12-15 reps
 
   Cooldown:
   - Shoulder Stretch: 1 min
