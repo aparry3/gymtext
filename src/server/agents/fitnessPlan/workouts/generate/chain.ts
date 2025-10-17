@@ -3,7 +3,7 @@ import { Microcycle } from '@/server/models/microcycle';
 import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { longFormPrompt, structuredPrompt, messagePrompt } from './prompts';
+import { systemPrompt, userPrompt, structuredPrompt, messagePrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 
 export interface DailyWorkoutContext {
@@ -32,13 +32,16 @@ export interface GeneratedWorkoutResult {
  * Generate daily workout using the shared workout chain factory
  *
  * Two-step process:
- * 1. Generate long-form workout description + reasoning
+ * 1. Generate long-form workout description + reasoning (using system + user prompts)
  * 2. In parallel: convert to JSON structure + SMS message
  */
 export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<GeneratedWorkoutResult> => {
   return executeWorkoutChain(context, {
-    // Step 1: Long-form prompt
-    longFormPrompt: (ctx, fitnessProfile) => longFormPrompt(
+    // Step 1: System prompt (static instructions)
+    systemPrompt,
+
+    // Step 1: User prompt (dynamic context)
+    userPrompt: (ctx, fitnessProfile) => userPrompt(
       ctx.user,
       fitnessProfile,
       ctx.dayPlan,
