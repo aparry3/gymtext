@@ -11,6 +11,7 @@ import { Message } from '../models/conversation';
 import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '../repositories/microcycleRepository';
 import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
+import { MessageRepository } from '../repositories/messageRepository';
 import { postgresDb } from '../connections/postgres/postgres';
 import { DateTime } from 'luxon';
 
@@ -284,11 +285,26 @@ export class MessageService {
             console.error('Failed to store outbound message:', error);
         }
 
-    // Send via messaging client
-    await messagingClient.sendMessage(user, message);
-
     if (!stored) {
       throw new Error('Failed to store message');
+    }
+
+    // Send via messaging client and get the result
+    const result = await messagingClient.sendMessage(user, message);
+
+    // Update the stored message with provider message ID from the send result
+    if (result.messageId) {
+      try {
+        const messageRepo = new MessageRepository(postgresDb);
+        await messageRepo.updateProviderMessageId(stored.id, result.messageId);
+        console.log('[MessageService] Updated message with provider ID:', {
+          messageId: stored.id,
+          providerMessageId: result.messageId,
+        });
+      } catch (error) {
+        console.error('[MessageService] Failed to update provider message ID:', error);
+        // Don't throw - message was sent successfully
+      }
     }
 
     return stored;

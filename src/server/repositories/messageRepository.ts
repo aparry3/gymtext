@@ -46,7 +46,58 @@ export class MessageRepository extends BaseRepository {
       .select(({ fn }) => fn.count('id').as('count'))
       .where('conversationId', '=', conversationId)
       .executeTakeFirst();
-    
+
     return Number(result?.count ?? 0);
+  }
+
+  async findByProviderMessageId(providerMessageId: string): Promise<Message | undefined> {
+    return await this.db
+      .selectFrom('messages')
+      .selectAll()
+      .where('providerMessageId', '=', providerMessageId)
+      .executeTakeFirst();
+  }
+
+  async updateDeliveryStatus(
+    messageId: string,
+    status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+    error?: string
+  ): Promise<Message> {
+    return await this.db
+      .updateTable('messages')
+      .set({
+        deliveryStatus: status,
+        deliveryError: error || null,
+        lastDeliveryAttemptAt: new Date(),
+      })
+      .where('id', '=', messageId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  async incrementDeliveryAttempts(messageId: string): Promise<Message> {
+    const message = await this.findById(messageId);
+    if (!message) {
+      throw new Error(`Message ${messageId} not found`);
+    }
+
+    return await this.db
+      .updateTable('messages')
+      .set({
+        deliveryAttempts: (message.deliveryAttempts || 1) + 1,
+        lastDeliveryAttemptAt: new Date(),
+      })
+      .where('id', '=', messageId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  async updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message> {
+    return await this.db
+      .updateTable('messages')
+      .set({ providerMessageId })
+      .where('id', '=', messageId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
   }
 }
