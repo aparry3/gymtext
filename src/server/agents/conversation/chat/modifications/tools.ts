@@ -46,8 +46,8 @@ const ModifyWorkoutSchema = z.object({
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
   reason: z.string().describe('Reason for the modification'),
   constraints: z.array(z.string()).describe('List of constraints or modifications needed (e.g., "No gym equipment", "Avoid shoulder exercises", "30 minutes max")'),
-  preferredEquipment: z.array(z.string()).optional().describe('Optional: equipment available (e.g., ["dumbbells", "resistance bands"])'),
-  focusAreas: z.array(z.string()).optional().describe('Optional: specific areas to focus on or avoid'),
+  preferredEquipment: z.array(z.string()).nullable().optional().describe('Optional: equipment available (e.g., ["dumbbells", "resistance bands"])'),
+  focusAreas: z.array(z.string()).nullable().optional().describe('Optional: specific areas to focus on or avoid'),
 });
 
 type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
@@ -58,8 +58,8 @@ const modifyWorkoutFunction = async ({ userId, workoutDate, reason, constraints,
     workoutDate: new Date(workoutDate),
     reason,
     constraints,
-    preferredEquipment,
-    focusAreas,
+    preferredEquipment: preferredEquipment ?? undefined,
+    focusAreas: focusAreas ?? undefined,
   });
 }
 /**
