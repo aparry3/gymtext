@@ -315,7 +315,6 @@ export class DailyMessageService {
       const recentWorkouts = await this.workoutRepository.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate sophisticated workout (now returns message too!)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { workout: enhancedWorkout, message, description, reasoning } = await generateDailyWorkout({
         user,
         date: targetDate.toJSDate(),
@@ -339,6 +338,7 @@ export class DailyMessageService {
         details: JSON.parse(JSON.stringify(enhancedWorkout)),
         description,
         reasoning,
+        message, // Save the pre-generated message
         completedAt: null,
         createdAt: new Date(),
         updatedAt: new Date()

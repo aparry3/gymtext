@@ -351,7 +351,16 @@ export class MessageService {
     workout: WorkoutInstance | EnhancedWorkoutInstance,
     previousMessages?: Message[]
   ): Promise<Message> {
-    const message = await generateDailyWorkoutMessage(user, workout, previousMessages);
+    // Check if workout already has a message stored
+    let message: string;
+    const workoutId = 'id' in workout ? workout.id : 'unknown';
+    if ('message' in workout && workout.message) {
+      console.log(`[MessageService] Using pre-generated message from workout ${workoutId}`);
+      message = workout.message;
+    } else {
+      console.log(`[MessageService] Generating new message for workout ${workoutId}`);
+      message = await generateDailyWorkoutMessage(user, workout, previousMessages);
+    }
     return await this.sendMessage(user, message);
   }
 }
