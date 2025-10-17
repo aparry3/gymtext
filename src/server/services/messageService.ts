@@ -35,8 +35,6 @@ export interface IngestMessageParams {
  * Result of ingesting an inbound message
  */
 export interface IngestMessageResult {
-  /** The conversation ID */
-  conversationId: string;
   /** Inngest job ID for tracking (undefined if full pipeline not needed) */
   jobId?: string;
   /** Quick acknowledgment or full answer message */
@@ -64,8 +62,7 @@ export interface ReceiveMessageParams {
   /** Optional callback to generate a response */
   responseGenerator?: (
     user: UserWithProfile,
-    content: string,
-    conversationId?: string
+    content: string
   ) => Promise<string>;
 }
 
@@ -75,8 +72,6 @@ export interface ReceiveMessageParams {
 export interface ReceiveMessageResult {
   /** The generated response (if responseGenerator was provided) */
   response?: string;
-  /** The conversation ID */
-  conversationId: string;
   /** Whether the inbound message was stored successfully */
   inboundStored: boolean;
   /** Whether the outbound response was stored successfully (if response was generated) */
@@ -228,7 +223,6 @@ export class MessageService {
         name: 'message/received',
         data: {
           userId: user.id,
-          conversationId: storedMessage.conversationId,
           content,
           from,
           to,
@@ -238,19 +232,16 @@ export class MessageService {
 
       console.log('[MessageService] Message ingested and queued for full pipeline:', {
         userId: user.id,
-        conversationId: storedMessage.conversationId,
         jobId,
       });
     } else {
       console.log('[MessageService] Message fully handled by reply agent, no pipeline needed:', {
         userId: user.id,
-        conversationId: storedMessage.conversationId,
       });
     }
 
     // Return response with routing information
     return {
-      conversationId: storedMessage.conversationId,
       jobId,
       ackMessage: replyResponse.reply,
       needsFullPipeline: replyResponse.needsFullPipeline,

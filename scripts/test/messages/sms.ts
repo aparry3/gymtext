@@ -13,7 +13,6 @@ interface SmsTestOptions {
   sid?: string;
   url?: string;
   context?: boolean;
-  conversationId?: string;
   verbose?: boolean;
   json?: boolean;
 }
@@ -21,7 +20,6 @@ interface SmsTestOptions {
 interface ConversationContext {
   userId: string;
   userName?: string;
-  conversationId?: string;
   messageCount: number;
   lastMessage?: {
     content: string;
@@ -79,61 +77,47 @@ class SmsConversationTester {
     const userWithProfile = await this.db.getUserWithProfile(user.id);
     const fitnessPlan = await this.db.getFitnessPlan(user.id);
     const progress = await this.db.getCurrentProgress(user.id);
-    
-    // Get conversation history
-    const conversations = await this.db.db
-      .selectFrom('conversations')
+
+    // Get message history (no longer using conversations)
+    const messages = await this.db.db
+      .selectFrom('messages')
       .where('userId', '=', user.id!)
       .orderBy('createdAt', 'desc')
       .limit(1)
       .selectAll()
       .execute();
 
-    const conversation = conversations[0];
-    let messageCount = 0;
+    const messageCountResult = await this.db.db
+      .selectFrom('messages')
+      .where('userId', '=', user.id!)
+      .select(({ fn }) => [fn.count<number>('id').as('count')])
+      .executeTakeFirst();
+
+    const messageCount = messageCountResult?.count || 0;
+
     let lastMessage: { content: string; timestamp: Date; isFromUser: boolean; } | undefined = undefined;
-
-    if (conversation) {
-      const messages = await this.db.db
-        .selectFrom('messages')
-        .where('conversationId', '=', conversation.id)
-        .orderBy('createdAt', 'desc')
-        .limit(1)
-        .selectAll()
-        .execute();
-
-      const messageCountResult = await this.db.db
-        .selectFrom('messages')
-        .where('conversationId', '=', conversation.id)
-        .select(({ fn }) => [fn.count<number>('id').as('count')])
-        .executeTakeFirst();
-
-      messageCount = messageCountResult?.count || 0;
-
-      if (messages[0]) {
-        lastMessage = {
-          content: messages[0].content,
-          timestamp: new Date(messages[0].createdAt),
-          isFromUser: messages[0].direction === 'inbound',
-        };
-      }
+    if (messages[0]) {
+      lastMessage = {
+        content: messages[0].content,
+        timestamp: new Date(messages[0].createdAt),
+        isFromUser: messages[0].direction === 'inbound',
+      };
     }
 
     return {
       userId: user.id,
       userName: userWithProfile?.name || undefined,
-      conversationId: conversation?.id,
       messageCount,
       lastMessage,
       fitnessProfile: userWithProfile?.profile ? {
-        goals: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'fitnessGoals' in userWithProfile.profile 
-          ? [userWithProfile.profile.fitnessGoals as string] 
+        goals: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'fitnessGoals' in userWithProfile.profile
+          ? [userWithProfile.profile.fitnessGoals as string]
           : [],
-        level: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'skillLevel' in userWithProfile.profile 
-          ? (userWithProfile.profile.skillLevel as string) 
+        level: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'skillLevel' in userWithProfile.profile
+          ? (userWithProfile.profile.skillLevel as string)
           : 'beginner',
-        frequency: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'exerciseFrequency' in userWithProfile.profile 
-          ? (userWithProfile.profile.exerciseFrequency as string) 
+        frequency: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'exerciseFrequency' in userWithProfile.profile
+          ? (userWithProfile.profile.exerciseFrequency as string)
           : '3x/week',
       } : undefined,
       currentPlan: fitnessPlan && progress ? {
@@ -153,7 +137,6 @@ class SmsConversationTester {
     const data = [
       ['Field', 'Value'],
       ['User', context.userName || context.userId],
-      ['Conversation ID', context.conversationId || 'None'],
       ['Message Count', context.messageCount.toString()],
     ];
 
@@ -230,10 +213,6 @@ async function sendTestSMS(options: SmsTestOptions) {
   formData.append('MessageSid', messageId);
   formData.append('AccountSid', 'ACtest123456789'); // Mock account SID
   formData.append('NumMedia', '0');
-  
-  if (options.conversationId) {
-    formData.append('ConversationId', options.conversationId);
-  }
 
   try {
     if (!options.json) {
@@ -264,7 +243,6 @@ async function sendTestSMS(options: SmsTestOptions) {
           from: options.phone,
           message: options.message,
           messageId,
-          conversationId: options.conversationId,
         },
         response: {
           message: messageContent,

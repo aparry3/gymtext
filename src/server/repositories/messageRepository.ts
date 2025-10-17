@@ -21,15 +21,6 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirst();
   }
 
-  async findByConversationId(conversationId: string): Promise<Message[]> {
-    return await this.db
-      .selectFrom('messages')
-      .selectAll()
-      .where('conversationId', '=', conversationId)
-      .orderBy('createdAt', 'asc')
-      .execute();
-  }
-
   async findByUserId(userId: string, limit: number = 50): Promise<Message[]> {
     return await this.db
       .selectFrom('messages')
@@ -40,11 +31,28 @@ export class MessageRepository extends BaseRepository {
       .execute();
   }
 
-  async countByConversationId(conversationId: string): Promise<number> {
+  /**
+   * Find recent messages for a user, ordered oldest to newest
+   * This is the primary method for getting message history
+   */
+  async findRecentByUserId(userId: string, limit: number = 10): Promise<Message[]> {
+    const messages = await this.db
+      .selectFrom('messages')
+      .selectAll()
+      .where('userId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .execute();
+
+    // Reverse to get oldest-to-newest order (for chat context)
+    return messages.reverse();
+  }
+
+  async countByUserId(userId: string): Promise<number> {
     const result = await this.db
       .selectFrom('messages')
       .select(({ fn }) => fn.count('id').as('count'))
-      .where('conversationId', '=', conversationId)
+      .where('userId', '=', userId)
       .executeTakeFirst();
 
     return Number(result?.count ?? 0);

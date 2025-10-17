@@ -1,20 +1,18 @@
 // Model exports for clean imports
 export { UserModel } from './userModel';
 export { FitnessPlanModel } from './fitnessPlan';
-export { ConversationModel } from './conversation';
 export { MessageModel } from './messageModel';
 export { WorkoutInstanceModel } from './workout';
 
 // Type exports from models
-export type { 
-  User, NewUser, UserUpdate, 
+export type {
+  User, NewUser, UserUpdate,
   FitnessProfile,
-  UserWithProfile, CreateUserData, CreateFitnessProfileData 
+  UserWithProfile, CreateUserData, CreateFitnessProfileData
 } from './userModel';
 
-export type { 
-  Conversation, NewConversation, ConversationUpdate,
-  Message, NewMessage, MessageUpdate 
+export type {
+  Message, NewMessage, MessageUpdate, RecentMessage
 } from './conversation';
 
 export type { 

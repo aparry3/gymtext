@@ -1,6 +1,5 @@
-import { ConversationRepository } from '@/server/repositories/conversationRepository';
 import { MessageRepository } from '@/server/repositories/messageRepository';
-import type { Conversation, Message } from '@/server/models/conversation';
+import type { Message } from '@/server/models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../models/_types';
 import { UserRepository } from '../repositories/userRepository';
@@ -17,17 +16,13 @@ interface StoreInboundMessageParams {
 
 export class ConversationService {
   private static instance: ConversationService;
-  private conversationRepo: ConversationRepository;
   private userRepo: UserRepository;
   private messageRepo: MessageRepository;
-  private conversationTimeoutMinutes: number;
   private circuitBreaker: CircuitBreaker;
 
   private constructor() {
-    this.conversationRepo = new ConversationRepository();
     this.userRepo = new UserRepository();
     this.messageRepo = new MessageRepository();
-    this.conversationTimeoutMinutes = parseInt(process.env.CONVERSATION_TIMEOUT_MINUTES || '1440');
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000, // 1 minute
@@ -46,12 +41,9 @@ export class ConversationService {
     return await this.circuitBreaker.execute(async () => {
       const { userId, from, to, content, twilioData } = params;
 
-      // Get or create conversation
-      const conversation = await this.getOrCreateConversation(userId);
-
-      // Store the message
+      // Store the message directly (no conversation needed)
       const message = await this.messageRepo.create({
-        conversationId: conversation.id,
+        conversationId: null, // No longer using conversations
         userId: userId,
         direction: 'inbound',
         content,
@@ -74,13 +66,8 @@ export class ConversationService {
     provider: 'twilio' | 'local' | 'websocket' = 'twilio',
     providerMessageId?: string
   ): Promise<Message | null> {
-    // TODO: Summarize and save conversation as memory - update previous conversation memory
+    // TODO: Implement periodic message summarization
     return await this.circuitBreaker.execute(async () => {
-
-      // Get or create conversation
-      const conversation = await this.getOrCreateConversation(userId);
-
-      const messages = await this.messageRepo.findByConversationId(conversation.id);
 
       const user = await this.userRepo.findWithProfile(userId);
       if (!user) {
@@ -89,7 +76,7 @@ export class ConversationService {
 
       // Store the message with initial delivery tracking
       const message = await this.messageRepo.create({
-        conversationId: conversation.id,
+        conversationId: null, // No longer using conversations
         userId: userId,
         direction: 'outbound',
         content: messageContent,
@@ -103,76 +90,33 @@ export class ConversationService {
         lastDeliveryAttemptAt: new Date(),
       });
 
-      const summary = await this.summarizeConversation(user, messages);
-      await this.conversationRepo.update(conversation.id, { summary });
+      // Optionally summarize messages periodically (implementation TBD)
+      // For now, we'll skip summarization on every message to improve performance
+      // const messages = await this.getRecentMessages(userId, 50);
+      // const summary = await this.summarizeMessages(user, messages);
+      // Store summary somewhere (TBD - maybe in a separate summaries table)
+
       return message;
     });
   }
 
-  async summarizeConversation(user: UserWithProfile, messages: Message[]): Promise<string> {
-    // TODO: Summarize conversation
+  async summarizeMessages(user: UserWithProfile, messages: Message[]): Promise<string> {
+    // Summarize a batch of messages
     const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
 
     const summary = await summaryAgent.invoke({ user, context: { messages: messagesText } });
     return summary.value;
   }
 
-  async getOrCreateConversation(userId: string): Promise<Conversation> {
-    // Get the user's last conversation
-    const lastConversation = await this.conversationRepo.getLastConversationForUser(userId);
-
-    // Check if we should continue the existing conversation
-    if (lastConversation && this.shouldContinueConversation(lastConversation)) {
-      return lastConversation;
-    }
-    
-    // Mark previous conversation as inactive if exists
-    if (lastConversation && lastConversation.status === 'active') {
-      await this.conversationRepo.markAsInactive(lastConversation.id);
-    }
-    // console.log('conversation', lastConversation);
-
-    // Create a new conversation
-    const now = new Date();
-    const newConversation = await this.conversationRepo.create({
-      userId: userId,
-      startedAt: now.toISOString(),
-      lastMessageAt: now.toISOString(),
-      status: 'active',
-      messageCount: 0,
-      metadata: {} as Json
-    });
-    
-    return newConversation;
-  }
-
-  private shouldContinueConversation(conversation: Conversation): boolean {
-    // Check if conversation is still active
-    if (conversation.status !== 'active') {
-      return false;
-    }
-    
-    // Check timeout
-    const lastMessageTime = new Date(conversation.lastMessageAt);
-    const now = new Date();
-    const diffMinutes = (now.getTime() - lastMessageTime.getTime()) / (1000 * 60);
-    
-    return diffMinutes < this.conversationTimeoutMinutes;
-  }
-
-  async getConversationHistory(userId: string): Promise<Conversation[]> {
-    return await this.conversationRepo.findByUserId(userId);
-  }
-
-  async getMessages(conversationId: string): Promise<Message[]> {
-    return await this.messageRepo.findByConversationId(conversationId);
+  async getMessages(userId: string, limit: number = 50): Promise<Message[]> {
+    return await this.messageRepo.findByUserId(userId, limit);
   }
 
   /**
    * Get recent messages for a user
    *
-   * Convenience method for retrieving the most recent messages from a user's
-   * active conversation. Useful for passing conversation context to agents.
+   * Convenience method for retrieving the most recent messages for a user.
+   * Useful for passing conversation context to agents.
    *
    * @param userId - The user ID
    * @param limit - Maximum number of recent messages to return (default: 10)
@@ -186,14 +130,8 @@ export class ConversationService {
    * ```
    */
   async getRecentMessages(userId: string, limit: number = 10): Promise<Message[]> {
-    // Get the user's current active conversation
-    const conversation = await this.getOrCreateConversation(userId);
-
-    // Get all messages for this conversation
-    const allMessages = await this.messageRepo.findByConversationId(conversation.id);
-
-    // Return the most recent N messages
-    return allMessages.slice(-limit);
+    // Get recent messages directly by userId
+    return await this.messageRepo.findRecentByUserId(userId, limit);
   }
 }
 

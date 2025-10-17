@@ -24,8 +24,8 @@ export class MessageModel {
     return await this.messageRepository.findById(id);
   }
 
-  async getMessagesByConversation(conversationId: string): Promise<Message[]> {
-    return await this.messageRepository.findByConversationId(conversationId);
+  async getMessagesByUser(userId: string, limit?: number): Promise<Message[]> {
+    return await this.messageRepository.findByUserId(userId, limit);
   }
 
   async updateMessage(id: string, updates: Partial<Message>): Promise<Message> {
@@ -45,18 +45,18 @@ export class MessageModel {
   }
 
   private validateMessageData(data: NewMessage): void {
-    if (!data.conversationId) {
-      throw new Error('Conversation ID is required');
+    if (!data.userId) {
+      throw new Error('User ID is required');
     }
-    
+
     if (!data.direction || !['inbound', 'outbound'].includes(data.direction)) {
       throw new Error('Direction must be either "inbound" or "outbound"');
     }
-    
+
     if (!data.content) {
       throw new Error('Message content is required');
     }
-    
+
     this.validateMessageContent(data.content);
   }
 
