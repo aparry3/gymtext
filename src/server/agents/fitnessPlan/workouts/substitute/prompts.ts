@@ -35,32 +35,13 @@ ${idx + 1}. Exercise to replace: "${mod.exercise}"
   `.trim()).join('\n\n');
 
   return `
-You are an expert fitness coach substituting specific exercises in a workout for ${user.name}.
+You are an expert fitness coach substituting specific exercises in a workout.
 
 <Task>
 Create a comprehensive workout with substitutions, including two components:
 1. A detailed workout description with the requested exercise substitutions
 2. A thorough coaching rationale explaining the substitutions
 </Task>
-
-<Current Workout>
-**Original Workout Description:**
-${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
-
-**Original Coaching Reasoning:**
-${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
-
-**Structured Workout JSON:**
-${JSON.stringify(workoutDetails, null, 2)}
-</Current Workout>
-
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
-
-<Modifications Required>
-${modificationsText}
-</Modifications Required>
 
 ${OUTPUT_FORMAT_SECTION}
 
@@ -103,6 +84,26 @@ ${buildReasoningGuidelines("500-800", true)}
 4. Support fuzzy matching for exercise names
 5. Maintain the same training stimulus as the original exercise
 6. Choose replacements that serve the same training purpose
+
+<User Context>
+User: ${user.name}
+
+Current Workout:
+**Original Workout Description:**
+${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
+
+**Original Coaching Reasoning:**
+${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+
+**Structured Workout JSON:**
+${JSON.stringify(workoutDetails, null, 2)}
+
+Fitness Profile:
+${fitnessProfile}
+
+Modifications Required:
+${modificationsText}
+</User Context>
 
 Now create the comprehensive workout with substitutions and reasoning for ${user.name}.
 `.trim();

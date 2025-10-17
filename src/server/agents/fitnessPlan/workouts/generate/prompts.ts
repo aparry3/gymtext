@@ -31,7 +31,7 @@ export const longFormPrompt = (
   programType: string,
   recentWorkouts?: WorkoutInstance[]
 ) => `
-You are an elite personal fitness coach creating today's workout for ${user.name}.
+You are an elite personal fitness coach creating today's workout.
 
 <Task>
 Design a contextually appropriate workout using critical thinking and evidence-based programming.
@@ -42,24 +42,6 @@ Create two components:
 ${STRUCTURE_DECISION_GUIDANCE}
 </Task>
 
-<Context>
-- Program type: ${programType}
-- Current mesocycle: ${mesocycle.name} (week ${microcycle.weekIndex} of ${mesocycle.weeks})
-- Mesocycle focus: ${mesocycle.focus.join(', ')}
-- Today's theme: ${dayPlan.theme}
-- Load level: ${dayPlan.load || 'moderate'}
-${dayPlan.notes ? `- Special notes: ${dayPlan.notes}` : ''}
-${mesocycle.deload && microcycle.weekIndex === mesocycle.weeks ? '- This is a DELOAD week - reduce volume and intensity' : ''}
-</Context>
-
-<Recent Training History>
-${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorkouts, user.timezone) : 'No recent workouts available'}
-</Recent Training History>
-
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
-
 ${OUTPUT_FORMAT_SECTION}
 
 ${buildDescriptionGuidelines("600-900")}
@@ -67,6 +49,25 @@ ${buildDescriptionGuidelines("600-900")}
 ${buildReasoningGuidelines("600-900", false)}
 
 ${WORKOUT_EXAMPLES}
+
+<User Context>
+User: ${user.name}
+
+Program Details:
+- Program type: ${programType}
+- Current mesocycle: ${mesocycle.name} (week ${microcycle.weekIndex} of ${mesocycle.weeks})
+- Mesocycle focus: ${mesocycle.focus.join(', ')}
+- Today's theme: ${dayPlan.theme}
+- Load level: ${dayPlan.load || 'moderate'}
+${dayPlan.notes ? `- Special notes: ${dayPlan.notes}` : ''}
+${mesocycle.deload && microcycle.weekIndex === mesocycle.weeks ? '- This is a DELOAD week - reduce volume and intensity' : ''}
+
+Recent Training History:
+${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorkouts, user.timezone) : 'No recent workouts available'}
+
+Fitness Profile:
+${fitnessProfile}
+</User Context>
 
 Now create the comprehensive workout and reasoning for ${user.name}.
 `.trim();

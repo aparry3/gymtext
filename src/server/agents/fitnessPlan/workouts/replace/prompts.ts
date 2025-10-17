@@ -38,38 +38,13 @@ export const longFormPrompt = (
     : 'No specific focus areas';
 
   return `
-You are an expert fitness coach replacing a workout based on new constraints for ${user.name}.
+You are an expert fitness coach replacing a workout based on new constraints.
 
 <Task>
 Create a comprehensive replacement workout with two components:
 1. A detailed workout description accommodating all constraints
 2. A thorough coaching rationale explaining all changes and decisions
 </Task>
-
-<Current Workout>
-**Original Workout Description:**
-${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
-
-**Original Coaching Reasoning:**
-${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
-
-**Structured Workout JSON:**
-${JSON.stringify(workoutDetails, null, 2)}
-</Current Workout>
-
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
-
-<Modification Request>
-Reason: ${params.reason}
-
-Constraints:
-${constraintsText}
-
-${equipmentText}
-${focusText}
-</Modification Request>
 
 ${OUTPUT_FORMAT_SECTION}
 
@@ -108,6 +83,32 @@ ${buildReasoningGuidelines("500-800", true)}
 3. Maintain similar training stimulus and progression
 4. Only make changes necessary to accommodate constraints
 5. Keep similar volume and intensity where possible
+
+<User Context>
+User: ${user.name}
+
+Current Workout:
+**Original Workout Description:**
+${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
+
+**Original Coaching Reasoning:**
+${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+
+**Structured Workout JSON:**
+${JSON.stringify(workoutDetails, null, 2)}
+
+Fitness Profile:
+${fitnessProfile}
+
+Modification Request:
+Reason: ${params.reason}
+
+Constraints:
+${constraintsText}
+
+${equipmentText}
+${focusText}
+</User Context>
 
 Now create the comprehensive replacement workout and reasoning for ${user.name}.
 `.trim();
