@@ -17,24 +17,8 @@ export interface Modification {
   constraints?: string[];
 }
 
-// Step 1: Generate long-form substitution workout description and reasoning
-export const longFormPrompt = (
-  fitnessProfile: string,
-  modifications: Modification[],
-  workout: WorkoutInstance,
-  user: UserWithProfile
-): string => {
-  const workoutDetails = typeof workout.details === 'string'
-    ? JSON.parse(workout.details)
-    : workout.details;
-
-  const modificationsText = modifications.map((mod, idx) => `
-${idx + 1}. Exercise to replace: "${mod.exercise}"
-   Reason: ${mod.reason}
-   ${mod.constraints && mod.constraints.length > 0 ? `Constraints: ${mod.constraints.join(', ')}` : ''}
-  `.trim()).join('\n\n');
-
-  return `
+// System prompt - static instructions and guidelines
+export const systemPrompt = () => `
 You are an expert fitness coach substituting specific exercises in a workout.
 
 <Task>
@@ -84,8 +68,26 @@ ${buildReasoningGuidelines("500-800", true)}
 4. Support fuzzy matching for exercise names
 5. Maintain the same training stimulus as the original exercise
 6. Choose replacements that serve the same training purpose
+`.trim();
 
-<User Context>
+// User prompt - dynamic context and user-specific data
+export const userPrompt = (
+  fitnessProfile: string,
+  modifications: Modification[],
+  workout: WorkoutInstance,
+  user: UserWithProfile
+) => {
+  const workoutDetails = typeof workout.details === 'string'
+    ? JSON.parse(workout.details)
+    : workout.details;
+
+  const modificationsText = modifications.map((mod, idx) => `
+${idx + 1}. Exercise to replace: "${mod.exercise}"
+   Reason: ${mod.reason}
+   ${mod.constraints && mod.constraints.length > 0 ? `Constraints: ${mod.constraints.join(', ')}` : ''}
+  `.trim()).join('\n\n');
+
+  return `
 User: ${user.name}
 
 Current Workout:
@@ -103,7 +105,6 @@ ${fitnessProfile}
 
 Modifications Required:
 ${modificationsText}
-</User Context>
 
 Now create the comprehensive workout with substitutions and reasoning for ${user.name}.
 `.trim();

@@ -18,26 +18,8 @@ export interface ReplaceWorkoutParams {
   focusAreas?: string[];
 }
 
-// Step 1: Generate long-form replacement workout description and reasoning
-export const longFormPrompt = (
-  fitnessProfile: string,
-  params: ReplaceWorkoutParams,
-  workout: WorkoutInstance,
-  user: UserWithProfile
-): string => {
-  const workoutDetails = typeof workout.details === 'string'
-    ? JSON.parse(workout.details)
-    : workout.details;
-
-  const constraintsText = params.constraints.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
-  const equipmentText = params.preferredEquipment?.length
-    ? `Available equipment: ${params.preferredEquipment.join(', ')}`
-    : 'No specific equipment preferences provided';
-  const focusText = params.focusAreas?.length
-    ? `Focus areas: ${params.focusAreas.join(', ')}`
-    : 'No specific focus areas';
-
-  return `
+// System prompt - static instructions and guidelines
+export const systemPrompt = () => `
 You are an expert fitness coach replacing a workout based on new constraints.
 
 <Task>
@@ -83,8 +65,28 @@ ${buildReasoningGuidelines("500-800", true)}
 3. Maintain similar training stimulus and progression
 4. Only make changes necessary to accommodate constraints
 5. Keep similar volume and intensity where possible
+`.trim();
 
-<User Context>
+// User prompt - dynamic context and user-specific data
+export const userPrompt = (
+  fitnessProfile: string,
+  params: ReplaceWorkoutParams,
+  workout: WorkoutInstance,
+  user: UserWithProfile
+) => {
+  const workoutDetails = typeof workout.details === 'string'
+    ? JSON.parse(workout.details)
+    : workout.details;
+
+  const constraintsText = params.constraints.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
+  const equipmentText = params.preferredEquipment?.length
+    ? `Available equipment: ${params.preferredEquipment.join(', ')}`
+    : 'No specific equipment preferences provided';
+  const focusText = params.focusAreas?.length
+    ? `Focus areas: ${params.focusAreas.join(', ')}`
+    : 'No specific focus areas';
+
+  return `
 User: ${user.name}
 
 Current Workout:
@@ -108,7 +110,6 @@ ${constraintsText}
 
 ${equipmentText}
 ${focusText}
-</User Context>
 
 Now create the comprehensive replacement workout and reasoning for ${user.name}.
 `.trim();

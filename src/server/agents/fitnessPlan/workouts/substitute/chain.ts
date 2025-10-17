@@ -1,7 +1,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { longFormPrompt, structuredPrompt, messagePrompt, type Modification } from './prompts';
+import { systemPrompt, userPrompt, structuredPrompt, messagePrompt, type Modification } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 
 export type { Modification };
@@ -23,13 +23,16 @@ export interface SubstitutedWorkoutResult {
  * Substitute exercises using the shared workout chain factory
  *
  * Two-step process:
- * 1. Generate long-form workout with substitutions + reasoning
+ * 1. Generate long-form workout with substitutions + reasoning (using system + user prompts)
  * 2. In parallel: convert to JSON structure + SMS message
  */
 export const substituteExercises = async (context: SubstituteExercisesContext): Promise<SubstitutedWorkoutResult> => {
   return executeWorkoutChain(context, {
-    // Step 1: Long-form prompt
-    longFormPrompt: (ctx, fitnessProfile) => longFormPrompt(
+    // Step 1: System prompt (static instructions)
+    systemPrompt,
+
+    // Step 1: User prompt (dynamic context)
+    userPrompt: (ctx, fitnessProfile) => userPrompt(
       fitnessProfile,
       ctx.modifications,
       ctx.workout,

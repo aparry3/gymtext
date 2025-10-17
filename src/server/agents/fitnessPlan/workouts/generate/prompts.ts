@@ -16,21 +16,8 @@ import {
   createMessagePrompt,
 } from '../shared/promptHelpers';
 
-// Step 1: Generate long-form workout description and reasoning
-export const longFormPrompt = (
-  user: UserWithProfile,
-  fitnessProfile: string,
-  dayPlan: {
-    day: string;
-    theme: string;
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
-  },
-  microcycle: MicrocyclePattern,
-  mesocycle: MesocycleOverview,
-  programType: string,
-  recentWorkouts?: WorkoutInstance[]
-) => `
+// System prompt - static instructions and guidelines
+export const systemPrompt = () => `
 You are an elite personal fitness coach creating today's workout.
 
 <Task>
@@ -49,8 +36,23 @@ ${buildDescriptionGuidelines("600-900")}
 ${buildReasoningGuidelines("600-900", false)}
 
 ${WORKOUT_EXAMPLES}
+`.trim();
 
-<User Context>
+// User prompt - dynamic context and user-specific data
+export const userPrompt = (
+  user: UserWithProfile,
+  fitnessProfile: string,
+  dayPlan: {
+    day: string;
+    theme: string;
+    load?: 'light' | 'moderate' | 'heavy';
+    notes?: string;
+  },
+  microcycle: MicrocyclePattern,
+  mesocycle: MesocycleOverview,
+  programType: string,
+  recentWorkouts?: WorkoutInstance[]
+) => `
 User: ${user.name}
 
 Program Details:
@@ -67,7 +69,6 @@ ${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorko
 
 Fitness Profile:
 ${fitnessProfile}
-</User Context>
 
 Now create the comprehensive workout and reasoning for ${user.name}.
 `.trim();

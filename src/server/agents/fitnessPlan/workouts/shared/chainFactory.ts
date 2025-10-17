@@ -13,7 +13,8 @@ import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchai
  */
 export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAny> {
   // Prompts - functions that generate prompts from context
-  longFormPrompt: (context: TContext, fitnessProfile: string) => string;
+  systemPrompt: () => string;
+  userPrompt: (context: TContext, fitnessProfile: string) => string;
   structuredPrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string) => string;
   messagePrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string, context: TContext) => string;
 
@@ -68,9 +69,14 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
 
   // Step 1: Generate long-form workout description and reasoning
   const longFormRunnable = RunnableLambda.from(async () => {
-    const prompt = config.longFormPrompt(context, fitnessProfile);
+    const systemMessage = config.systemPrompt();
+    const userMessage = config.userPrompt(context, fitnessProfile);
+
     const model = initializeModel(LongFormWorkoutSchema);
-    const result = await model.invoke(prompt);
+    const result = await model.invoke([
+      { role: 'system', content: systemMessage },
+      { role: 'user', content: userMessage }
+    ]);
 
     console.log(`[${config.operationName}] Generated long-form workout (description: ${result.description.length} chars, reasoning: ${result.reasoning.length} chars)`);
 
