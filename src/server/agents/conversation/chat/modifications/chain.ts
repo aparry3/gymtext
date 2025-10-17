@@ -8,6 +8,7 @@ import { generateModifiedWorkoutMessage } from '@/server/agents/messaging/workou
 import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/workoutInstanceService';
 import type { ModifyWeekResult } from '@/server/services/microcycleService';
 import { WorkoutMessageContext } from '@/server/agents/messaging/workoutMessage/types';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 // Union type for all modification results
 type ModificationResult = SubstituteExerciseResult | ModifyWorkoutResult | ModifyWeekResult;
@@ -55,7 +56,11 @@ const toolExecutionRunnable = (): RunnableLambda<ChatSubagentInput, ToolExecutio
       content: buildModificationsUserMessage(input),
     };
 
-    const messages: any[] = [systemMessage, userMessage]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const messages: any[] = [ // eslint-disable-line @typescript-eslint/no-explicit-any
+      systemMessage,
+      ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
+      userMessage,
+    ];
 
     // Call model with tools
     const response = await modelWithTools.invoke(messages);
@@ -127,7 +132,8 @@ const messageGenerationRunnable = (): RunnableLambda<ToolExecutionOutput, Modifi
       const responseText = await generateModifiedWorkoutMessage(
         input.user,
         toolResult.workout,
-        messageContext
+        messageContext,
+        input.previousMessages
       );
 
       console.log(`[${agentName}] Generated message from tool result:`, {

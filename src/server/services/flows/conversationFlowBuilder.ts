@@ -113,6 +113,44 @@ export class ConversationFlowBuilder {
   }
 
   /**
+   * Filter messages to get proper context for chat agents
+   *
+   * When processing a new inbound message, the database may contain:
+   * - Case 1: [..., user_message] - Last is the current inbound message being processed (duplicate)
+   * - Case 2: [..., reply_agent_message] - Last is the reply agent's acknowledgment (needed for context)
+   *
+   * This method intelligently filters to avoid duplicates while preserving reply agent context.
+   *
+   * @param messages - Array of messages from the database
+   * @returns Filtered messages for use as chat context
+   *
+   * @example
+   * ```typescript
+   * // In chatService when processing a new message:
+   * const recentMessages = await conversationService.getRecentMessages(userId, 10);
+   * const contextMessages = ConversationFlowBuilder.filterMessagesForContext(recentMessages);
+   * const response = await chatAgent(user, message, contextMessages);
+   * ```
+   */
+  static filterMessagesForContext(messages: Message[]): Message[] {
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+
+    const lastMessage = messages[messages.length - 1];
+
+    // If last message is inbound (from user), it's the current message being processed
+    // Remove it to avoid duplicate context
+    if (lastMessage.direction === 'inbound') {
+      return messages.slice(0, -1);
+    }
+
+    // If last message is outbound (from assistant/reply agent), keep it
+    // This is important context from the reply agent that the chat agent needs
+    return messages;
+  }
+
+  /**
    * Add one or more messages to the flow
    */
   addMessage(message: Message | Message[]): void {
