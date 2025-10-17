@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { conversationService, messageService } from '@/server/services';
+import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface ChatRequestBody {
@@ -100,7 +100,7 @@ export async function GET(
     }
 
     // Get message history (flat list, no conversation grouping)
-    const messages = await conversationService.getMessages(userId, 100); // Get last 100 messages
+    const messages = await messageService.getMessages(userId, 100); // Get last 100 messages
 
     return NextResponse.json({
       success: true,

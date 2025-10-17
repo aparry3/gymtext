@@ -1,7 +1,6 @@
 import { UserWithProfile } from '../models/userModel';
 import { FitnessPlan } from '../models/fitnessPlan';
 import { messagingClient } from '../connections/messaging';
-import { ConversationService } from './conversationService';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
@@ -12,8 +11,23 @@ import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '../repositories/microcycleRepository';
 import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
 import { MessageRepository } from '../repositories/messageRepository';
+import { UserRepository } from '../repositories/userRepository';
 import { postgresDb } from '../connections/postgres/postgres';
 import { DateTime } from 'luxon';
+import { CircuitBreaker } from '@/server/utils/circuitBreaker';
+import { Json } from '../models/_types';
+import { summaryAgent } from '../agents/conversation/summary/chain';
+
+/**
+ * Parameters for storing an inbound message
+ */
+export interface StoreInboundMessageParams {
+  userId: string;
+  from: string;
+  to: string;
+  content: string;
+  twilioData?: Record<string, unknown>;
+}
 
 /**
  * Parameters for ingesting an inbound message (async path)
@@ -92,16 +106,24 @@ export interface ReceiveMessageResult {
  */
 export class MessageService {
   private static instance: MessageService;
-  private conversationService: ConversationService;
+  private messageRepo: MessageRepository;
+  private userRepo: UserRepository;
   private fitnessPlanRepo: FitnessPlanRepository;
   private microcycleRepo: MicrocycleRepository;
   private workoutRepo: WorkoutInstanceRepository;
+  private circuitBreaker: CircuitBreaker;
 
   private constructor() {
-    this.conversationService = ConversationService.getInstance();
+    this.messageRepo = new MessageRepository(postgresDb);
+    this.userRepo = new UserRepository(postgresDb);
     this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
+    this.circuitBreaker = new CircuitBreaker({
+      failureThreshold: 5,
+      resetTimeout: 60000, // 1 minute
+      monitoringPeriod: 60000 // 1 minute
+    });
   }
 
   public static getInstance(): MessageService {
@@ -110,6 +132,123 @@ export class MessageService {
     }
     return MessageService.instance;
   }
+
+  // ==========================================
+  // Message Storage Methods
+  // ==========================================
+
+  /**
+   * Store an inbound message to the database
+   */
+  async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
+    return await this.circuitBreaker.execute(async () => {
+      const { userId, from, to, content, twilioData } = params;
+
+      // Store the message directly (no conversation needed)
+      const message = await this.messageRepo.create({
+        conversationId: null, // No longer using conversations
+        userId: userId,
+        direction: 'inbound',
+        content,
+        phoneFrom: from,
+        phoneTo: to,
+        provider: 'twilio', // Inbound messages always come from Twilio webhook
+        providerMessageId: (twilioData?.MessageSid as string) || null,
+        metadata: (twilioData || {}) as Json
+      });
+
+      return message;
+    });
+  }
+
+  /**
+   * Store an outbound message to the database
+   */
+  async storeOutboundMessage(
+    userId: string,
+    to: string,
+    messageContent: string,
+    from: string = process.env.TWILIO_NUMBER || '',
+    provider: 'twilio' | 'local' | 'websocket' = 'twilio',
+    providerMessageId?: string
+  ): Promise<Message | null> {
+    // TODO: Implement periodic message summarization
+    return await this.circuitBreaker.execute(async () => {
+
+      const user = await this.userRepo.findWithProfile(userId);
+      if (!user) {
+        return null;
+      }
+
+      // Store the message with initial delivery tracking
+      const message = await this.messageRepo.create({
+        conversationId: null, // No longer using conversations
+        userId: userId,
+        direction: 'outbound',
+        content: messageContent,
+        phoneFrom: from,
+        phoneTo: to,
+        provider,
+        providerMessageId: providerMessageId || null,
+        metadata: {} as Json,
+        deliveryStatus: 'queued',
+        deliveryAttempts: 1,
+        lastDeliveryAttemptAt: new Date(),
+      });
+
+      // Optionally summarize messages periodically (implementation TBD)
+      // For now, we'll skip summarization on every message to improve performance
+      // const messages = await this.getRecentMessages(userId, 50);
+      // const summary = await this.summarizeMessages(user, messages);
+      // Store summary somewhere (TBD - maybe in a separate summaries table)
+
+      return message;
+    });
+  }
+
+  /**
+   * Get messages for a user
+   */
+  async getMessages(userId: string, limit: number = 50): Promise<Message[]> {
+    return await this.messageRepo.findByUserId(userId, limit);
+  }
+
+  /**
+   * Get recent messages for a user
+   *
+   * Convenience method for retrieving the most recent messages for a user.
+   * Useful for passing conversation context to agents.
+   *
+   * @param userId - The user ID
+   * @param limit - Maximum number of recent messages to return (default: 10)
+   * @returns Array of recent messages, ordered oldest to newest
+   *
+   * @example
+   * ```typescript
+   * // Get last 10 messages for context
+   * const previousMessages = await messageService.getRecentMessages(userId);
+   * const response = await chatAgent(user, message, previousMessages);
+   * ```
+   */
+  async getRecentMessages(userId: string, limit: number = 10): Promise<Message[]> {
+    // Get recent messages directly by userId
+    return await this.messageRepo.findRecentByUserId(userId, limit);
+  }
+
+  /**
+   * Summarize a batch of messages using AI
+   */
+  async summarizeMessages(user: UserWithProfile, messages: Message[]): Promise<string> {
+    // Summarize a batch of messages
+    const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
+
+    const summary = await summaryAgent.invoke({ user, context: { messages: messagesText } });
+    return summary.value;
+  }
+
+  // ==========================================
+  // Message Transport & Orchestration Methods
+  // ==========================================
 
   /**
    * Ingest an inbound message (async path)
@@ -130,7 +269,7 @@ export class MessageService {
     const { user, content, from, to, twilioData } = params;
 
     // Store the inbound message
-    const storedMessage = await this.conversationService.storeInboundMessage({
+    const storedMessage = await this.storeInboundMessage({
       userId: user.id,
       from,
       to,
@@ -143,7 +282,7 @@ export class MessageService {
     }
 
     // Get recent conversation history for context (last 10 messages)
-    const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
+    const previousMessages = await this.getRecentMessages(user.id, 10);
 
     // Fetch current context for the reply agent
     // 1. Fetch fitness plan
@@ -205,7 +344,7 @@ export class MessageService {
 
     // Store the outbound response
     try {
-      await this.conversationService.storeOutboundMessage(
+      await this.storeOutboundMessage(
         user.id,
         from, // User's phone number
         replyResponse.reply,
@@ -260,7 +399,7 @@ export class MessageService {
 
     let stored: Message | null = null;
     try {
-        stored = await this.conversationService.storeOutboundMessage(
+        stored = await this.storeOutboundMessage(
             user.id,
             user.phoneNumber,
             message,
