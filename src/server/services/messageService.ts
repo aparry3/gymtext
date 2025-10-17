@@ -505,7 +505,18 @@ export class MessageService {
       message = workout.message;
     } else {
       console.log(`[MessageService] Generating new message for workout ${workoutId}`);
-      message = await generateDailyWorkoutMessage(user, workout, previousMessages);
+      try {
+        message = await generateDailyWorkoutMessage(user, workout, previousMessages);
+
+        // Save the generated message to the workout instance for future use
+        if ('id' in workout && workout.id) {
+          await this.workoutRepo.update(workout.id, { message });
+          console.log(`[MessageService] Saved generated message to workout ${workout.id}`);
+        }
+      } catch (error) {
+        console.error(`[MessageService] Failed to generate workout message for workout ${workoutId}:`, error);
+        throw new Error('Failed to generate workout message');
+      }
     }
     return await this.sendMessage(user, message);
   }
