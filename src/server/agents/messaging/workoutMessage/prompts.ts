@@ -70,13 +70,6 @@ export const buildWorkoutUserMessage = (
   const { user, workout, type, context, previousMessages } = input;
 
   const hasPreviousMessages = previousMessages && previousMessages.length > 0;
-  const previousMessagesSection = hasPreviousMessages
-    ? `
-<Previous Messages>
-${previousMessages!.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`).join('\n\n')}
-</Previous Messages>
-`
-    : '';
 
   const contextualGuidance = type === 'daily'
     ? buildDailyContext(user, hasPreviousMessages)
@@ -86,7 +79,7 @@ ${previousMessages!.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'
     ? buildDailyExample()
     : buildModifiedExample(context || {});
 
-  return `${previousMessagesSection}${contextualGuidance}
+  return `${contextualGuidance}
 
 <Profile>
 ${fitnessProfileSubstring}
@@ -145,7 +138,6 @@ function buildModifiedContext(context: Partial<WorkoutMessageContext>): string {
   * Modifications made: ${modifications}
 
   TONE REQUIREMENTS:
-  * Start with an enthusiastic acknowledgment ("Sure thing!", "Got it!", "On it!")
   * Briefly explain what you did (1 sentence)
   * Present the modified/updated workout clearly
   * Be conversational and friendly, like texting a friend

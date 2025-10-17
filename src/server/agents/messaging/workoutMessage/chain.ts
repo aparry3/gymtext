@@ -5,6 +5,7 @@ import { WorkoutMessageContext, WorkoutMessageInput } from './types';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
 import { UserWithProfile } from '@/server/models/user';
 import { Message } from '@/server/models/conversation';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**
  * Generates a daily workout message
@@ -37,18 +38,21 @@ export const generateDailyWorkoutMessage = async (
  * @param user - User with profile information
  * @param workout - Workout instance (modified)
  * @param context - Context about the modification
+ * @param previousMessages - Optional previous messages for conversation context
  * @returns SMS message string
  */
 export const generateModifiedWorkoutMessage = async (
   user: UserWithProfile,
   workout: WorkoutInstance | EnhancedWorkoutInstance,
-  context: Omit<WorkoutMessageContext, 'type'>
+  context: Omit<WorkoutMessageContext, 'type'>,
+  previousMessages?: Message[]
 ): Promise<string> => {
   return generateWorkoutMessage({
     user,
     workout,
     type: 'modified',
-    context
+    context,
+    previousMessages
   });
 };
 
@@ -79,8 +83,15 @@ const generateWorkoutMessage = async (input: WorkoutMessageInput): Promise<strin
     content: buildWorkoutUserMessage(input, fitnessProfileSubstring),
   };
 
+  const messages = [
+    systemMessage,
+    ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
+    userMessage,
+  ];
+
+  console.log('Messages:', messages);
   // Generate message
-  const response = await llm.invoke([systemMessage, userMessage]);
+  const response = await llm.invoke(messages);
   const messageContent = typeof response.content === 'string'
     ? response.content
     : String(response.content);

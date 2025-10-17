@@ -1,6 +1,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { ConversationService } from './conversationService';
+import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -68,9 +69,10 @@ export class ChatService {
       // This retrieves the last 10 messages from their active conversation
       const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
 
-      // Remove the current message if it was already stored by the API route
-      // (last message might be the one we're currently processing)
-      const contextMessages = previousMessages.slice(0, -1);
+      // Filter messages for proper context:
+      // - If last message is inbound (user), remove it (duplicate of current message)
+      // - If last message is outbound (reply agent), keep it (needed for context)
+      const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
 
       const chatResult = await chatAgent(
         user,
