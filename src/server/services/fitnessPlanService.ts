@@ -1,15 +1,18 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { FitnessPlan, FitnessPlanModel } from '../models/fitnessPlan';
 import { UserWithProfile } from '../models/userModel';
-import { generateFitnessPlan } from '../agents/fitnessPlan/chain';
+import { createFitnessPlanAgent } from '../agents/fitnessPlan/chain';
+import { FitnessProfileContext } from './context/fitnessProfileContext';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export class FitnessPlanService {
   private static instance: FitnessPlanService;
   private fitnessPlanRepo: FitnessPlanRepository;
+  private contextService: FitnessProfileContext;
 
   private constructor() {
     this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
+    this.contextService = new FitnessProfileContext();
   }
 
   public static getInstance(): FitnessPlanService {
@@ -20,7 +23,12 @@ export class FitnessPlanService {
   }
 
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-    const agentResponse = await generateFitnessPlan(user);
+    // Create agent with injected context service (DI pattern)
+    const fitnessPlanAgent = createFitnessPlanAgent({
+      contextService: this.contextService
+    });
+
+    const agentResponse = await fitnessPlanAgent(user);
 
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
     console.log('fitnessPlan', JSON.stringify(fitnessPlan, null, 2));

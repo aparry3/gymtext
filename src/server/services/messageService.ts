@@ -4,7 +4,8 @@ import { messagingClient } from '../connections/messaging';
 import { inngest } from '../connections/inngest/client';
 import { replyAgent } from '../agents/conversation/reply/chain';
 import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
-import { generateDailyWorkoutMessage } from '../agents/messaging/workoutMessage/chain';
+import { createWorkoutMessageAgent } from '../agents/messaging/workoutMessage/chain';
+import { FitnessProfileContext } from './context/fitnessProfileContext';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../models/workout';
 import { Message } from '../models/conversation';
 import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
@@ -112,6 +113,7 @@ export class MessageService {
   private microcycleRepo: MicrocycleRepository;
   private workoutRepo: WorkoutInstanceRepository;
   private circuitBreaker: CircuitBreaker;
+  private contextService: FitnessProfileContext;
 
   private constructor() {
     this.messageRepo = new MessageRepository(postgresDb);
@@ -119,6 +121,7 @@ export class MessageService {
     this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
+    this.contextService = new FitnessProfileContext();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000, // 1 minute
@@ -506,7 +509,12 @@ export class MessageService {
     } else {
       console.log(`[MessageService] Generating new message for workout ${workoutId}`);
       try {
-        message = await generateDailyWorkoutMessage(user, workout, previousMessages);
+        // Create workout message agent with injected context service (DI pattern)
+        const workoutMessageAgent = createWorkoutMessageAgent({
+          contextService: this.contextService
+        });
+
+        message = await workoutMessageAgent.generateDailyMessage(user, workout, previousMessages);
 
         // Save the generated message to the workout instance for future use
         if ('id' in workout && workout.id) {

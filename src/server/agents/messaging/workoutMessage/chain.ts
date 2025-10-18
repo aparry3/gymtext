@@ -1,4 +1,3 @@
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { WORKOUT_MESSAGE_SYSTEM_PROMPT, buildWorkoutUserMessage } from './prompts';
 import { initializeModel } from '../../base';
 import { WorkoutMessageContext, WorkoutMessageInput } from './types';
@@ -6,95 +5,113 @@ import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workou
 import { UserWithProfile } from '@/server/models/user';
 import { Message } from '@/server/models/conversation';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import type { FitnessProfileContextService } from '@/server/agents/fitnessPlan/chain';
 
 /**
- * Generates a daily workout message
- *
- * Creates a motivational, forward-looking SMS message for daily workout delivery
- *
- * @param user - User with profile information
- * @param workout - Workout instance to deliver
- * @param previousMessages - Optional previous messages for context
- * @returns SMS message string
+ * Dependencies for WorkoutMessage Agent (DI)
  */
-export const generateDailyWorkoutMessage = async (
-  user: UserWithProfile,
-  workout: WorkoutInstance | EnhancedWorkoutInstance,
-  previousMessages?: Message[]
-): Promise<string> => {
-  return generateWorkoutMessage({
-    user,
-    workout,
-    type: 'daily',
-    previousMessages
-  });
-};
+export interface WorkoutMessageAgentDeps {
+  contextService: FitnessProfileContextService;
+}
 
 /**
- * Generates a modified workout message
+ * Creates workout message agent factory with injected dependencies
  *
- * Creates a conversational, explanatory SMS message acknowledging workout modifications
- *
- * @param user - User with profile information
- * @param workout - Workout instance (modified)
- * @param context - Context about the modification
- * @param previousMessages - Optional previous messages for conversation context
- * @returns SMS message string
+ * @param deps - Dependencies including context service
+ * @returns Object with message generation functions
  */
-export const generateModifiedWorkoutMessage = async (
-  user: UserWithProfile,
-  workout: WorkoutInstance | EnhancedWorkoutInstance,
-  context: Omit<WorkoutMessageContext, 'type'>,
-  previousMessages?: Message[]
-): Promise<string> => {
-  return generateWorkoutMessage({
-    user,
-    workout,
-    type: 'modified',
-    context,
-    previousMessages
-  });
-};
+export const createWorkoutMessageAgent = (deps: WorkoutMessageAgentDeps) => {
+  /**
+   * Internal workout message generator
+   *
+   * Core logic for generating SMS workout messages using LangChain
+   * Follows the agent pattern: static system prompt + dynamic user message
+   *
+   * @param input - Complete workout message input
+   * @returns SMS message string
+   */
+  const generateMessage = async (input: WorkoutMessageInput): Promise<string> => {
+    // Initialize model
+    const llm = initializeModel(undefined);
 
-/**
- * Internal workout message generator
- *
- * Core logic for generating SMS workout messages using LangChain
- * Follows the agent pattern: static system prompt + dynamic user message
- *
- * @param input - Complete workout message input
- * @returns SMS message string
- */
-const generateWorkoutMessage = async (input: WorkoutMessageInput): Promise<string> => {
-  // Initialize model
-  const llm = initializeModel(undefined);
+    // Get fitness profile context using injected service (DI pattern)
+    const fitnessProfileSubstring = await deps.contextService.getContext(input.user);
 
-  // Get fitness profile context
-  const fitnessProfileSubstring = await new FitnessProfileContext().getContext(input.user);
+    // Build messages using agent pattern
+    const systemMessage = {
+      role: 'system',
+      content: WORKOUT_MESSAGE_SYSTEM_PROMPT,
+    };
 
-  // Build messages using agent pattern
-  const systemMessage = {
-    role: 'system',
-    content: WORKOUT_MESSAGE_SYSTEM_PROMPT,
+    const userMessage = {
+      role: 'user',
+      content: buildWorkoutUserMessage(input, fitnessProfileSubstring),
+    };
+
+    const messages = [
+      systemMessage,
+      ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
+      userMessage,
+    ];
+
+    console.log('Messages:', messages);
+    // Generate message
+    const response = await llm.invoke(messages);
+    const messageContent = typeof response.content === 'string'
+      ? response.content
+      : String(response.content);
+
+    return messageContent;
   };
 
-  const userMessage = {
-    role: 'user',
-    content: buildWorkoutUserMessage(input, fitnessProfileSubstring),
+  return {
+    /**
+     * Generates a daily workout message
+     *
+     * Creates a motivational, forward-looking SMS message for daily workout delivery
+     *
+     * @param user - User with profile information
+     * @param workout - Workout instance to deliver
+     * @param previousMessages - Optional previous messages for context
+     * @returns SMS message string
+     */
+    generateDailyMessage: async (
+      user: UserWithProfile,
+      workout: WorkoutInstance | EnhancedWorkoutInstance,
+      previousMessages?: Message[]
+    ): Promise<string> => {
+      return generateMessage({
+        user,
+        workout,
+        type: 'daily',
+        previousMessages
+      });
+    },
+
+    /**
+     * Generates a modified workout message
+     *
+     * Creates a conversational, explanatory SMS message acknowledging workout modifications
+     *
+     * @param user - User with profile information
+     * @param workout - Workout instance (modified)
+     * @param context - Context about the modification
+     * @param previousMessages - Optional previous messages for conversation context
+     * @returns SMS message string
+     */
+    generateModifiedMessage: async (
+      user: UserWithProfile,
+      workout: WorkoutInstance | EnhancedWorkoutInstance,
+      context: Omit<WorkoutMessageContext, 'type'>,
+      previousMessages?: Message[]
+    ): Promise<string> => {
+      return generateMessage({
+        user,
+        workout,
+        type: 'modified',
+        context,
+        previousMessages
+      });
+    }
   };
-
-  const messages = [
-    systemMessage,
-    ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
-    userMessage,
-  ];
-
-  console.log('Messages:', messages);
-  // Generate message
-  const response = await llm.invoke(messages);
-  const messageContent = typeof response.content === 'string'
-    ? response.content
-    : String(response.content);
-
-  return messageContent;
 };
