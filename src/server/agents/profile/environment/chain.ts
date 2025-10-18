@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { ENVIRONMENT_SYSTEM_PROMPT, buildEnvironmentUserMessage } from './prompt';
+import { ENVIRONMENT_SYSTEM_PROMPT, buildEnvironmentUserMessage } from './prompts';
 import { EnvironmentExtractionSchema, type EnvironmentExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';

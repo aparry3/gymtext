@@ -1,88 +1,84 @@
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
-import type { WorkoutBlock } from '@/server/models/workout';
-import type { MicrocyclePattern } from '@/server/models/microcycle';
-import { initializeModel } from '../../base';
+import { initializeModel, createRunnableAgent } from '../../base';
 import { REPLY_AGENT_SYSTEM_PROMPT, buildReplyMessage } from './prompts';
-import { z } from 'zod';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import type { ReplyInput, ReplyOutput, ReplyAgentDeps, ReplyAgentResponse } from './types';
+import { ReplyAgentResponseSchema } from './types';
 
 /**
- * Schema for reply agent structured output
- */
-export const ReplyAgentResponseSchema = z.object({
-  reply: z.string().describe('The reply message to send to the user'),
-  needsFullPipeline: z.boolean().describe('Whether this message needs the full chat pipeline (profile extraction, triage, subagents)'),
-  reasoning: z.string().describe('Explanation of why this does or does not need the full pipeline')
-});
-
-export type ReplyAgentResponse = z.infer<typeof ReplyAgentResponseSchema>;
-
-/**
- * Reply Agent - Provides quick acknowledgments or full answers to general questions
+ * Reply Agent Factory
  *
- * This agent generates immediate, natural replies that sound like a real trainer,
+ * Generates immediate, natural replies that sound like a real trainer,
  * allowing for fast webhook responses. It can either:
  * 1. Provide full answers to general fitness questions (no full pipeline needed)
  * 2. Provide quick acknowledgments for updates/modifications (full pipeline needed)
  *
- * @param user - The user receiving the message
- * @param message - The incoming message content
- * @param previousMessages - Optional previous messages for conversation context
- * @param currentWorkout - Optional current workout context (description, reasoning, blocks)
- * @param currentMicrocycle - Optional current microcycle pattern
- * @param fitnessPlan - Optional fitness plan context (overview, description, reasoning)
- * @returns ReplyAgentResponse with reply text and pipeline routing decision
+ * @param deps - Optional dependencies (config)
+ * @returns Agent that generates replies with pipeline routing decisions
+ */
+export const createReplyAgent = (deps?: ReplyAgentDeps) => {
+  return createRunnableAgent<ReplyInput, ReplyOutput>(async (input) => {
+    const { user, message, previousMessages, currentWorkout, currentMicrocycle, fitnessPlan } = input;
+
+    console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
+      previousMessagesCount: previousMessages?.length || 0
+    });
+
+    // Initialize model with structured output schema
+    const model = initializeModel(ReplyAgentResponseSchema, deps?.config);
+
+    // Build the context message
+    const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
+
+    // Create the messages array with proper role structure
+    const messages = [
+      {
+        role: 'system',
+        content: REPLY_AGENT_SYSTEM_PROMPT,
+      },
+      // Add previous messages as structured message objects (last 3 for speed)
+      ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
+      // Current user message
+      {
+        role: 'user',
+        content: userMessage,
+      }
+    ];
+
+    // Invoke the model and get structured response
+    const response = await model.invoke(messages) as ReplyAgentResponse;
+
+    console.log('[REPLY AGENT] Generated reply:', {
+      reply: response.reply.substring(0, 100) + (response.reply.length > 100 ? '...' : ''),
+      needsFullPipeline: response.needsFullPipeline,
+      reasoning: response.reasoning
+    });
+
+    return response;
+  });
+};
+
+/**
+ * @deprecated Legacy export for backward compatibility - use createReplyAgent instead
  */
 export const replyAgent = async (
-  user: UserWithProfile,
+  user: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   message: string,
-  previousMessages?: Message[],
-  currentWorkout?: {
-    description: string | null;
-    reasoning: string | null;
-    blocks: WorkoutBlock[];
-  },
-  currentMicrocycle?: MicrocyclePattern,
-  fitnessPlan?: {
-    overview: string | null;
-    planDescription: string | null;
-    reasoning: string | null;
-  }
+  previousMessages?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+  currentWorkout?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  currentMicrocycle?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  fitnessPlan?: any // eslint-disable-line @typescript-eslint/no-explicit-any
 ): Promise<ReplyAgentResponse> => {
-  console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
-    previousMessagesCount: previousMessages?.length || 0
+  const agent = createReplyAgent();
+  return agent.invoke({
+    user,
+    message,
+    previousMessages,
+    currentWorkout,
+    currentMicrocycle,
+    fitnessPlan
   });
-
-  // Initialize model with structured output schema
-  const model = initializeModel(ReplyAgentResponseSchema);
-
-  // Build the context message (now without conversation history)
-  const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
-
-  // Create the messages array with proper role structure
-  const messages = [
-    {
-      role: 'system',
-      content: REPLY_AGENT_SYSTEM_PROMPT,
-    },
-    // Add previous messages as structured message objects (last 3 for speed)
-    ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
-    // Current user message
-    {
-      role: 'user',
-      content: userMessage,
-    }
-  ];
-
-  // Invoke the model and get structured response
-  const response = await model.invoke(messages) as ReplyAgentResponse;
-
-  console.log('[REPLY AGENT] Generated reply:', {
-    reply: response.reply.substring(0, 100) + (response.reply.length > 100 ? '...' : ''),
-    needsFullPipeline: response.needsFullPipeline,
-    reasoning: response.reasoning
-  });
-
-  return response;
 };
+
+// Re-export types for backward compatibility
+export type { ReplyAgentResponse } from './types';
+export { ReplyAgentResponseSchema } from './types';
