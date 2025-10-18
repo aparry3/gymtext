@@ -1,5 +1,5 @@
 import { UserRepository } from '@/server/repositories/userRepository';
-import { conversationService, messageService } from '@/server/services';
+import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface ChatRequestBody {
@@ -68,7 +68,6 @@ export async function POST(
       success: true,
       data: {
         jobId: result.jobId,
-        conversationId: result.conversationId,
         ackMessage: result.ackMessage,
         timestamp: new Date().toISOString(),
       }
@@ -82,7 +81,7 @@ export async function POST(
   }
 }
 
-// GET endpoint to fetch conversation history
+// GET endpoint to fetch message history
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -100,30 +99,19 @@ export async function GET(
       );
     }
 
-    // Get conversation history
-    const conversations = await conversationService.getConversationHistory(userId);
-
-    // Fetch messages for each conversation
-    const conversationsWithMessages = await Promise.all(
-      conversations.map(async (conversation) => {
-        const messages = await conversationService.getMessages(conversation.id);
-        return {
-          ...conversation,
-          messages
-        };
-      })
-    );
+    // Get message history (flat list, no conversation grouping)
+    const messages = await messageService.getMessages(userId, 100); // Get last 100 messages
 
     return NextResponse.json({
       success: true,
       data: {
-        conversations: conversationsWithMessages,
+        messages,
       }
     });
   } catch (error) {
-    console.error('Error fetching conversation history:', error);
+    console.error('Error fetching message history:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch conversation history' },
+      { success: false, error: 'Failed to fetch message history' },
       { status: 500 }
     );
   }

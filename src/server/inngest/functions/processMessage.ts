@@ -28,7 +28,7 @@ export const processMessageFunction = inngest.createFunction(
   },
   { event: 'message/received' },
   async ({ event, step }) => {
-    const { userId, conversationId, content } = event.data;
+    const { userId, content } = event.data;
 
     // Step 1: Generate response (can be slow - LLM call)
     // Load user fresh in this step to avoid serialization issues
@@ -65,13 +65,11 @@ export const processMessageFunction = inngest.createFunction(
 
     console.log('[Inngest] Message processing complete:', {
       userId,
-      conversationId,
       messageId: messageResult.id,
     });
 
     return {
       success: true,
-      conversationId,
       messageId: messageResult.id,
       responseLength: response.length,
     };

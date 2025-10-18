@@ -1,6 +1,5 @@
 // Export singleton instances directly
 export { chatService } from '@/server/services/chatService';
-export { conversationService } from '@/server/services/conversationService';
 export { fitnessPlanService } from '@/server/services/fitnessPlanService';
 export { progressService } from '@/server/services/progressService';
 export { dailyMessageService } from '@/server/services/dailyMessageService';
@@ -13,7 +12,6 @@ export { onboardingService } from '@/server/services/onboardingService';
 
 // Also export classes for type definitions when needed
 export type { ChatService } from '@/server/services/chatService';
-export type { ConversationService } from '@/server/services/conversationService';
 export type { FitnessPlanService } from '@/server/services/fitnessPlanService';
 export type { ProgressService } from '@/server/services/progressService';
 export type { DailyMessageService } from '@/server/services/dailyMessageService';

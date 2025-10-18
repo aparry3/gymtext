@@ -243,11 +243,10 @@ export class TestDatabase {
       await this._db.deleteFrom('microcycles').where('userId', '=', userId).execute();
       await this._db.deleteFrom('fitnessPlans').where('clientId', '=', userId).execute();
       await this._db.deleteFrom('messages').where('userId', '=', userId).execute();
-      await this._db.deleteFrom('conversations').where('userId', '=', userId).execute();
       await this._db.deleteFrom('subscriptions').where('userId', '=', userId).execute();
       // Profile is now stored in users table, no need to delete separately
       await this._db.deleteFrom('users').where('id', '=', userId).execute();
-      
+
       return true;
     } catch (error) {
       console.error(chalk.red('Error deleting user:'), error);

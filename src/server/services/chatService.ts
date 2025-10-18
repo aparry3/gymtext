@@ -1,6 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
-import { ConversationService } from './conversationService';
+import { MessageService } from './messageService';
 import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
 
 // Configuration from environment variables
@@ -21,10 +21,10 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
  */
 export class ChatService {
   private static instance: ChatService;
-  private conversationService: ConversationService;
+  private messageService: MessageService;
 
   private constructor() {
-    this.conversationService = ConversationService.getInstance();
+    this.messageService = MessageService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -66,8 +66,8 @@ export class ChatService {
   ): Promise<string> {
     try {
       // Get recent conversation context for the user
-      // This retrieves the last 10 messages from their active conversation
-      const previousMessages = await this.conversationService.getRecentMessages(user.id, 10);
+      // This retrieves the last 10 messages for the user
+      const previousMessages = await this.messageService.getRecentMessages(user.id, 10);
 
       // Filter messages for proper context:
       // - If last message is inbound (user), remove it (duplicate of current message)
