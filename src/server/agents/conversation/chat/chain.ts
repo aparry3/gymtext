@@ -2,41 +2,63 @@ import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agen
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { initializeModel } from '../../base';
-import { profileAgentRunnable } from '../../profile/chain';
+import { createProfileAgent, type PatchProfileCallback } from '../../profile/chain';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
 import { MessageIntent, TriageResult, TriageResultSchema } from './types';
 import { ProfilePatchResult } from '@/server/services/fitnessProfileService';
 import { updatesAgentRunnable } from './updates/chain';
 import { questionsAgentRunnable } from './questions/chain';
-import { modificationsAgentRunnable } from './modifications/chain';
+import { createModificationsAgent } from './modifications/chain';
+import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
 
-
-const TriageActionMap: Record<MessageIntent, Runnable> = {
-  'updates': updatesAgentRunnable(),
-  'questions': questionsAgentRunnable(),
-  'modifications': modificationsAgentRunnable(),
+/**
+ * Dependencies for Chat Agent (DI)
+ */
+export interface ChatAgentDeps {
+  patchProfile: PatchProfileCallback;
+  workoutService: WorkoutModificationService;
+  microcycleService: MicrocycleModificationService;
 }
+
+
 /**
  * ChatAgent - Generates conversational responses based on user profile
  *
  * This agent is responsible for generating the actual chat response
  * It receives the profile from UserProfileAgent and doesn't fetch it
  *
+ * @param deps - Dependencies injected by the service (patchProfile callback, services)
  * @param user - User with profile information
  * @param message - The incoming message from the user
  * @param previousMessages - Optional previous messages for conversation context
  */
 export const chatAgent = async (
+  deps: ChatAgentDeps,
   user: UserWithProfile,
   message: string,
   previousMessages?: Message[],
 ) => {
   console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
+  // Create modification tools with injected services (DI pattern)
+  const modificationTools = createModificationTools({
+    workoutService: deps.workoutService,
+    microcycleService: deps.microcycleService,
+  });
+
+  // Create triage action map with injected dependencies
+  const TriageActionMap: Record<MessageIntent, Runnable> = {
+    'updates': updatesAgentRunnable(),
+    'questions': questionsAgentRunnable(),
+    'modifications': createModificationsAgent({ tools: modificationTools }),
+  };
+
   // Sequence 1
   // 1. Create model
-  // 2. Create Profile Runnable
-  const profileRunnable = profileAgentRunnable();
+  // 2. Create Profile Runnable with injected patchProfile callback
+  const profileRunnable = createProfileAgent({
+    patchProfile: deps.patchProfile,
+  });
 
   const routingRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
     // 3. Create Triage Runnable

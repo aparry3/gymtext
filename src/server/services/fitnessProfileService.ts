@@ -3,7 +3,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { updateUserProfile } from '../agents/profile/chain';
+import { createProfileAgent } from '../agents/profile/chain';
 import { ProfileExtractionResults } from '../agents/profile/types';
 
 
@@ -219,8 +219,13 @@ export class FitnessProfileService {
 
       const message = messageParts.join('\n\n');
 
+      // Create profile agent with injected patchProfile callback (DI pattern)
+      const profileAgent = createProfileAgent({
+        patchProfile: this.patchProfile.bind(this),
+      });
+
       // Use the unified profile agent to extract and update the profile
-      const result = await updateUserProfile(message, user);
+      const result = await profileAgent.invoke({ message, user });
 
       return result.user.profile;
     });

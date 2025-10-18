@@ -2,6 +2,9 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { MessageService } from './messageService';
 import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
+import { FitnessProfileService } from './fitnessProfileService';
+import { WorkoutInstanceService } from './workoutInstanceService';
+import { MicrocycleService } from './microcycleService';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -22,9 +25,15 @@ const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
 export class ChatService {
   private static instance: ChatService;
   private messageService: MessageService;
+  private fitnessProfileService: FitnessProfileService;
+  private workoutInstanceService: WorkoutInstanceService;
+  private microcycleService: MicrocycleService;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
+    this.fitnessProfileService = FitnessProfileService.getInstance();
+    this.workoutInstanceService = WorkoutInstanceService.getInstance();
+    this.microcycleService = MicrocycleService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -74,7 +83,18 @@ export class ChatService {
       // - If last message is outbound (reply agent), keep it (needed for context)
       const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
 
+      // Inject dependencies using DI pattern
       const chatResult = await chatAgent(
+        {
+          patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
+          workoutService: {
+            substituteExercise: this.workoutInstanceService.substituteExercise.bind(this.workoutInstanceService),
+            modifyWorkout: this.workoutInstanceService.modifyWorkout.bind(this.workoutInstanceService),
+          },
+          microcycleService: {
+            modifyWeek: this.microcycleService.modifyWeek.bind(this.microcycleService),
+          },
+        },
         user,
         message,
         contextMessages,
