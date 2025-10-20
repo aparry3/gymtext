@@ -3,8 +3,8 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createProfileAgent } from '../agents/profile/chain';
-import { ProfileExtractionResults } from '../agents/profile/types';
+import { createProfileAgent } from '../../agents/profile/chain';
+import { ProfileExtractionResults } from '../../agents/profile/types';
 
 
 export interface CreateFitnessProfileRequest {

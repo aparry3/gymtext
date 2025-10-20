@@ -4,22 +4,17 @@
 // Use these factory functions to create agents with dependency injection
 
 // Base types and helpers
-export { Agent, AgentDeps, AgentConfig, createAgentFromFunction, createRunnableAgent } from './base';
+export { createAgentFromFunction, createRunnableAgent } from './base';
+export type { Agent, AgentDeps, AgentConfig } from './base';
 
 // Fitness Plan Agents
 export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './fitnessPlan/chain';
-export { createMicrocyclePatternAgent, type MicrocyclePatternAgentDeps } from './fitnessPlan/microcyclePattern/chain';
-export { createDailyWorkoutAgent, type DailyWorkoutAgentDeps } from './fitnessPlan/workouts/generate/chain';
 
 // Messaging Agents
 export { createWorkoutMessageAgent, type WorkoutMessageAgentDeps } from './messaging/workoutMessage/chain';
-export { createWelcomeMessageAgent, type WelcomeMessageAgentDeps } from './messaging/welcomeMessage/chain';
-export { createPlanSummaryAgent, type PlanSummaryAgentDeps } from './messaging/planSummary/chain';
 
 // Conversation Agents
-export { createChatAgent, type ChatAgentDeps } from './conversation/chat/chain';
-export { createReplyAgent, type ReplyAgentDeps } from './conversation/reply/chain';
-export { createSummaryAgent, type SummaryAgentDeps } from './conversation/summary/chain';
+export { type ChatAgentDeps } from './conversation/chat/chain';
 
 // Profile Agents
 export { createProfileAgent, type ProfileAgentDeps, type PatchProfileCallback } from './profile/chain';

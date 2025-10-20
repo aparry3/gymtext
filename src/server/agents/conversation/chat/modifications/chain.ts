@@ -4,8 +4,8 @@ import { initializeModel } from '@/server/agents/base';
 import type { ChatSubagentInput } from '../baseAgent';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { StructuredToolInterface } from '@langchain/core/tools';
-import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/workoutInstanceService';
-import type { ModifyWeekResult } from '@/server/services/microcycleService';
+import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services';
+import type { ModifyWeekResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**

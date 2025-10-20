@@ -8,7 +8,7 @@ import { activitiesRunnable } from './activities/chain';
 import { constraintsRunnable } from './constraints/chain';
 import { environmentRunnable } from './environment/chain';
 import { userRunnable } from './user/chain';
-import { ProfilePatchResult } from '@/server/services/fitnessProfileService';
+import { ProfilePatchResult } from '@/server/services';
 
 /**
  * Callback type for patching profile

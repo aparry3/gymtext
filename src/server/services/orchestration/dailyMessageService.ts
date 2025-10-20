@@ -1,11 +1,11 @@
-import { UserRepository } from '@/server/repositories/userRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
-import { MessageService } from './messageService';
+import { MessageService } from '../messaging/messageService';
+import { UserService } from '../user/userService';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
-import { ProgressService } from './progressService';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { ProgressService } from '../training/progressService';
+import { FitnessPlanService } from '../training/fitnessPlanService';
+import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { Message } from '@/server/models/conversation';
 
@@ -25,18 +25,18 @@ interface MessageResult {
 
 export class DailyMessageService {
   private static instance: DailyMessageService;
-  private userRepository: UserRepository;
-  private workoutRepository: WorkoutInstanceRepository;
+  private userService: UserService;
+  private workoutInstanceService: WorkoutInstanceService;
   private messageService: MessageService;
   private progressService: ProgressService;
-  private fitnessPlanRepo: FitnessPlanRepository;
+  private fitnessPlanService: FitnessPlanService;
   private batchSize: number;
 
   private constructor(batchSize: number = 10) {
-    this.userRepository = new UserRepository();
-    this.workoutRepository = new WorkoutInstanceRepository();
+    this.userService = UserService.getInstance();
+    this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.messageService = MessageService.getInstance();
-    this.fitnessPlanRepo = new FitnessPlanRepository();
+    this.fitnessPlanService = FitnessPlanService.getInstance();
     this.progressService = ProgressService.getInstance();
     this.batchSize = batchSize;
   }
@@ -105,7 +105,7 @@ export class DailyMessageService {
    * Gets all users whose local preferred hour matches the current UTC hour
    */
   private async getUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
-    return await this.userRepository.findUsersForHour(currentUtcHour);
+    return await this.userService.getUsersForHour(currentUtcHour);
   }
 
   /**
@@ -203,7 +203,7 @@ export class DailyMessageService {
   private async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
     // The date passed in is already the correct date at midnight in the user's timezone
     // We can use it directly for the query
-    const workout = await this.workoutRepository.findByClientIdAndDate(userId, date);
+    const workout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
     console.log(`Workout: ${workout}`);
     return workout || null;
   }
@@ -225,7 +225,7 @@ export class DailyMessageService {
       }
 
       // Get fitness plan and progress
-      const plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+      const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
       if (!plan) {
         console.log(`No fitness plan found for user ${user.id}`);
         return null;
@@ -240,14 +240,14 @@ export class DailyMessageService {
       // Get the day's pattern from the microcycle
       const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
       const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
-      
+
       if (!dayPattern) {
         console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
         return null;
       }
 
       // Get recent workouts for context (last 7 days)
-      const recentWorkouts = await this.workoutRepository.getRecentWorkouts(user.id, 7);
+      const recentWorkouts = await this.workoutInstanceService.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate sophisticated workout (now returns message too!)
       const { workout: enhancedWorkout, message, description, reasoning } = await generateDailyWorkout({
@@ -280,7 +280,7 @@ export class DailyMessageService {
       };
 
       // Save the workout to the database
-      const savedWorkout = await this.workoutRepository.create(workout);
+      const savedWorkout = await this.workoutInstanceService.createWorkout(workout);
       console.log(`Generated and saved AI workout for user ${user.id} on ${targetDate.toISODate()}`);
 
       return savedWorkout;

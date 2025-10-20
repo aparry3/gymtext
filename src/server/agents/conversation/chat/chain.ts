@@ -5,7 +5,7 @@ import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileAgent, type PatchProfileCallback } from '../../profile/chain';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
 import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatOutput, ChatAgentDeps } from './types';
-import { ProfilePatchResult } from '@/server/services/fitnessProfileService';
+import { ProfilePatchResult } from '@/server/services';
 import { updatesAgentRunnable } from './updates/chain';
 import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { type SubstituteExerciseResult, type ModifyWorkoutResult } from '@/server/services/workoutInstanceService';
-import { type ModifyWeekResult } from '@/server/services/microcycleService';
+import { type SubstituteExerciseResult, type ModifyWorkoutResult } from '@/server/services';
+import { type ModifyWeekResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 
 /**

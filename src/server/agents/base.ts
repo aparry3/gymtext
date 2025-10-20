@@ -1,6 +1,5 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
-import { UserWithProfile } from "../models";
 import { RunnableLambda } from "@langchain/core/runnables";
 
 /**

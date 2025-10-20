@@ -1,23 +1,23 @@
-import { UserWithProfile } from '../models/userModel';
-import { FitnessPlan } from '../models/fitnessPlan';
-import { messagingClient } from '../connections/messaging';
-import { inngest } from '../connections/inngest/client';
-import { replyAgent } from '../agents/conversation/reply/chain';
-import { welcomeMessageAgent, planSummaryMessageAgent } from '../agents';
-import { createWorkoutMessageAgent } from '../agents/messaging/workoutMessage/chain';
-import { FitnessProfileContext } from './context/fitnessProfileContext';
-import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../models/workout';
-import { Message } from '../models/conversation';
-import { FitnessPlanRepository } from '../repositories/fitnessPlanRepository';
-import { MicrocycleRepository } from '../repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '../repositories/workoutInstanceRepository';
-import { MessageRepository } from '../repositories/messageRepository';
-import { UserRepository } from '../repositories/userRepository';
-import { postgresDb } from '../connections/postgres/postgres';
+import { UserWithProfile } from '../../models/userModel';
+import { FitnessPlan } from '../../models/fitnessPlan';
+import { messagingClient } from '../../connections/messaging';
+import { inngest } from '../../connections/inngest/client';
+import { replyAgent } from '../../agents/conversation/reply/chain';
+import { welcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
+import { createWorkoutMessageAgent } from '../../agents/messaging/workoutMessage/chain';
+import { FitnessProfileContext } from '../context/fitnessProfileContext';
+import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
+import { Message } from '../../models/conversation';
+import { MessageRepository } from '../../repositories/messageRepository';
+import { postgresDb } from '../../connections/postgres/postgres';
 import { DateTime } from 'luxon';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { Json } from '../models/_types';
-import { summaryAgent } from '../agents/conversation/summary/chain';
+import { Json } from '../../models/_types';
+import { summaryAgent } from '../../agents/conversation/summary/chain';
+import { UserService } from '../user/userService';
+import { FitnessPlanService } from '../training/fitnessPlanService';
+import { ProgressService } from '../training/progressService';
+import { WorkoutInstanceService } from '../training/workoutInstanceService';
 
 /**
  * Parameters for storing an inbound message
@@ -108,19 +108,19 @@ export interface ReceiveMessageResult {
 export class MessageService {
   private static instance: MessageService;
   private messageRepo: MessageRepository;
-  private userRepo: UserRepository;
-  private fitnessPlanRepo: FitnessPlanRepository;
-  private microcycleRepo: MicrocycleRepository;
-  private workoutRepo: WorkoutInstanceRepository;
+  private userService: UserService;
+  private fitnessPlanService: FitnessPlanService;
+  private progressService: ProgressService;
+  private workoutInstanceService: WorkoutInstanceService;
   private circuitBreaker: CircuitBreaker;
   private contextService: FitnessProfileContext;
 
   private constructor() {
     this.messageRepo = new MessageRepository(postgresDb);
-    this.userRepo = new UserRepository(postgresDb);
-    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
-    this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
+    this.userService = UserService.getInstance();
+    this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.progressService = ProgressService.getInstance();
+    this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.contextService = new FitnessProfileContext();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
@@ -178,7 +178,7 @@ export class MessageService {
     // TODO: Implement periodic message summarization
     return await this.circuitBreaker.execute(async () => {
 
-      const user = await this.userRepo.findWithProfile(userId);
+      const user = await this.userService.getUserWithProfile(userId);
       if (!user) {
         return null;
       }
@@ -289,7 +289,7 @@ export class MessageService {
 
     // Fetch current context for the reply agent
     // 1. Fetch fitness plan
-    const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
+    const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
     const planContext = fitnessPlan ? {
       overview: fitnessPlan.overview ?? null,
       planDescription: fitnessPlan.planDescription ?? null,
@@ -297,13 +297,13 @@ export class MessageService {
     } : undefined;
 
     // 2. Fetch current microcycle
-    const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+    const currentMicrocycle = await this.progressService.getCurrentMicrocycle(user.id);
     const microcycleContext = currentMicrocycle?.pattern;
 
     // 3. Fetch today's workout
     const nowInUserTz = DateTime.now().setZone(user.timezone);
     const todayDate = nowInUserTz.startOf('day').toJSDate();
-    const todayWorkout = await this.workoutRepo.findByClientIdAndDate(user.id, todayDate);
+    const todayWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
 
     let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[] } | undefined;
     if (todayWorkout) {
@@ -518,7 +518,7 @@ export class MessageService {
 
         // Save the generated message to the workout instance for future use
         if ('id' in workout && workout.id) {
-          await this.workoutRepo.update(workout.id, { message });
+          await this.workoutInstanceService.updateWorkoutMessage(workout.id, message);
           console.log(`[MessageService] Saved generated message to workout ${workout.id}`);
         }
       } catch (error) {

@@ -1,23 +1,23 @@
 // Export singleton instances directly
-export { chatService } from '@/server/services/chatService';
-export { fitnessPlanService } from '@/server/services/fitnessPlanService';
-export { progressService } from '@/server/services/progressService';
-export { dailyMessageService } from '@/server/services/dailyMessageService';
-export { userService } from '@/server/services/userService';
-export { messageService } from '@/server/services/messageService';
-export { fitnessProfileService } from '@/server/services/fitnessProfileService';
-export { workoutInstanceService } from '@/server/services/workoutInstanceService';
-export { microcycleService } from '@/server/services/microcycleService';
-export { onboardingService } from '@/server/services/onboardingService';
+export { chatService } from '@/server/services/messaging/chatService';
+export { fitnessPlanService } from '@/server/services/training/fitnessPlanService';
+export { progressService } from '@/server/services/training/progressService';
+export { dailyMessageService } from '@/server/services/orchestration/dailyMessageService';
+export { userService } from '@/server/services/user/userService';
+export { messageService } from '@/server/services/messaging/messageService';
+export { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
+export { workoutInstanceService } from '@/server/services/training/workoutInstanceService';
+export { microcycleService } from '@/server/services/training/microcycleService';
+export { onboardingService } from '@/server/services/orchestration/onboardingService';
 
 // Also export classes for type definitions when needed
-export type { ChatService } from '@/server/services/chatService';
-export type { FitnessPlanService } from '@/server/services/fitnessPlanService';
-export type { ProgressService } from '@/server/services/progressService';
-export type { DailyMessageService } from '@/server/services/dailyMessageService';
-export type { UserService } from '@/server/services/userService';
-export type { MessageService } from '@/server/services/messageService';
-export type { FitnessProfileService } from '@/server/services/fitnessProfileService';
-export type { WorkoutInstanceService } from '@/server/services/workoutInstanceService';
-export type { MicrocycleService } from '@/server/services/microcycleService';
-export type { OnboardingService } from '@/server/services/onboardingService';
+export type { ChatService } from '@/server/services/messaging/chatService';
+export type { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
+export type { ProgressService } from '@/server/services/training/progressService';
+export type { DailyMessageService } from '@/server/services/orchestration/dailyMessageService';
+export type { UserService, CreateUserRequest } from '@/server/services/user/userService';
+export type { MessageService } from '@/server/services/messaging/messageService';
+export type { FitnessProfileService, CreateFitnessProfileRequest, ProfilePatchResult } from '@/server/services/user/fitnessProfileService';
+export type { WorkoutInstanceService, SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/training/workoutInstanceService';
+export type { MicrocycleService, ModifyWeekResult } from '@/server/services/training/microcycleService';
+export type { OnboardingService } from '@/server/services/orchestration/onboardingService';

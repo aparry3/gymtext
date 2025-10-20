@@ -1,8 +1,8 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { FitnessPlan, FitnessPlanModel } from '../models/fitnessPlan';
-import { UserWithProfile } from '../models/userModel';
-import { createFitnessPlanAgent } from '../agents/fitnessPlan/chain';
-import { FitnessProfileContext } from './context/fitnessProfileContext';
+import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
+import { UserWithProfile } from '../../models/userModel';
+import { createFitnessPlanAgent } from '../../agents/fitnessPlan/chain';
+import { FitnessProfileContext } from '../context/fitnessProfileContext';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export class FitnessPlanService {

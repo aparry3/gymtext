@@ -1,10 +1,10 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { chatAgent } from '@/server/agents/conversation/chat/chain';
 import { MessageService } from './messageService';
-import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
-import { FitnessProfileService } from './fitnessProfileService';
-import { WorkoutInstanceService } from './workoutInstanceService';
-import { MicrocycleService } from './microcycleService';
+import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
+import { FitnessProfileService } from '../user/fitnessProfileService';
+import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { MicrocycleService } from '../training/microcycleService';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -102,7 +102,7 @@ export class ChatService {
       
       // Step 5: Enforce SMS length constraints
       // Note: Message storage is handled by the API route
-      const responseText = chatResult.response.trim();
+      const responseText = chatResult.reply.trim();
       
       if (responseText.length > SMS_MAX_LENGTH) {
         return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
