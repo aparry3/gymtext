@@ -2,8 +2,12 @@ import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
 import { microcyclePatternPrompt } from './prompts';
-import { initializeModel } from '@/server/agents/base';
+import { initializeModel, createRunnableAgent } from '@/server/agents/base';
+import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
 
+/**
+ * @deprecated Legacy interface - use MicrocyclePatternInput instead
+ */
 export interface MicrocyclePatternContext {
   mesocycle: MesocycleOverview;
   weekNumber: number;
@@ -11,25 +15,45 @@ export interface MicrocyclePatternContext {
   notes?: string | null;
 }
 
+/**
+ * Microcycle Pattern Agent Factory
+ *
+ * Generates weekly training patterns with progressive overload.
+ * Each pattern specifies daily themes, loads, and training focus.
+ *
+ * @param deps - Optional dependencies (config)
+ * @returns Agent that generates microcycle patterns
+ */
+export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
+  return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
+    const { mesocycle, weekNumber, programType, notes } = input;
+
+    const prompt = microcyclePatternPrompt(
+      mesocycle,
+      weekNumber,
+      programType,
+      notes
+    );
+
+    const structuredModel = initializeModel(_MicrocyclePatternSchema, deps?.config);
+
+    try {
+      const result = await structuredModel.invoke(prompt);
+      return result as MicrocyclePattern;
+    } catch (error) {
+      console.error('Error generating microcycle pattern:', error);
+      // Return a basic fallback pattern if generation fails
+      return generateFallbackPattern(weekNumber, programType, mesocycle);
+    }
+  });
+};
+
+/**
+ * @deprecated Legacy export for backward compatibility - use createMicrocyclePatternAgent instead
+ */
 export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
-  const { mesocycle, weekNumber, programType, notes } = context;
-  const prompt = microcyclePatternPrompt(
-    mesocycle,
-    weekNumber,
-    programType,
-    notes
-  );
-  
-  const structuredModel = initializeModel(_MicrocyclePatternSchema);
-  
-  try {
-    const result = await structuredModel.invoke(prompt);
-    return result as MicrocyclePattern;
-  } catch (error) {
-    console.error('Error generating microcycle pattern:', error);
-    // Return a basic fallback pattern if generation fails
-    return generateFallbackPattern(weekNumber, programType, mesocycle);
-  }
+  const agent = createMicrocyclePatternAgent();
+  return agent.invoke(context);
 };
 
 function generateFallbackPattern(

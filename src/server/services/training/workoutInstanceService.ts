@@ -3,7 +3,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
 import type { EnhancedWorkoutInstance } from '@/server/models/workout';
-import { UserService } from './userService';
+import { UserService } from '../user/userService';
 import { DateTime } from 'luxon';
 
 export interface SubstituteExerciseParams {
@@ -80,6 +80,34 @@ export class WorkoutInstanceService {
     }
 
     return workout;
+  }
+
+  /**
+   * Get a workout by user ID and date
+   */
+  public async getWorkoutByUserIdAndDate(userId: string, date: Date) {
+    return await this.workoutRepo.findByClientIdAndDate(userId, date);
+  }
+
+  /**
+   * Update the message for a workout
+   */
+  public async updateWorkoutMessage(workoutId: string, message: string) {
+    return await this.workoutRepo.update(workoutId, { message });
+  }
+
+  /**
+   * Create a new workout instance
+   */
+  public async createWorkout(workout: import('@/server/models/workout').NewWorkoutInstance) {
+    return await this.workoutRepo.create(workout);
+  }
+
+  /**
+   * Update a workout with new details, description, reasoning, and message
+   */
+  public async updateWorkout(workoutId: string, updates: { details?: import('@/server/models/_types').JsonValue; description?: string; reasoning?: string; message?: string }) {
+    return await this.workoutRepo.update(workoutId, updates);
   }
 
   /**

@@ -2,7 +2,7 @@ import { initializeModel, AgentConfig } from '@/server/agents/base';
 import { RunnableLambda } from '@langchain/core/runnables';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
-import type { ProfilePatchResult } from '@/server/services/fitnessProfileService';
+import type { ProfilePatchResult } from '@/server/services';
 import type { TriageResult } from './types';
 import { z } from 'zod';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';

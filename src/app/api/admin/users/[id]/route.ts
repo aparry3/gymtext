@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userService } from '@/server/services/userService';
+import { userService } from '@/server/services';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

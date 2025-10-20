@@ -1,70 +1,75 @@
-import { UserWithProfile } from '@/server/models/userModel';
-import { Microcycle } from '@/server/models/microcycle';
-import { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
+import { createRunnableAgent } from '@/server/agents/base';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { systemPrompt, userPrompt, structuredPrompt, messagePrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
-
-export interface DailyWorkoutContext {
-  user: UserWithProfile;
-  date: Date;
-  dayPlan: {
-    day: string;
-    theme: string;
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
-  };
-  microcycle: Microcycle;
-  mesocycle: MesocycleOverview;
-  fitnessPlan: FitnessPlan;
-  recentWorkouts?: WorkoutInstance[];
-}
-
-export interface GeneratedWorkoutResult {
-  workout: EnhancedWorkoutInstance & { date: Date };
-  message: string;
-  description: string;
-  reasoning: string;
-}
+import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
 
 /**
- * Generate daily workout using the shared workout chain factory
- *
- * Two-step process:
- * 1. Generate long-form workout description + reasoning (using system + user prompts)
- * 2. In parallel: convert to JSON structure + SMS message
+ * @deprecated Legacy interface - use DailyWorkoutInput instead
+ * Kept for backward compatibility only
  */
-export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<GeneratedWorkoutResult> => {
-  return executeWorkoutChain(context, {
-    // Step 1: System prompt (static instructions)
-    systemPrompt,
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface DailyWorkoutContext extends DailyWorkoutInput {}
 
-    // Step 1: User prompt (dynamic context)
-    userPrompt: (ctx, fitnessProfile) => userPrompt(
-      ctx.user,
-      fitnessProfile,
-      ctx.dayPlan,
-      ctx.microcycle.pattern,
-      ctx.mesocycle,
-      ctx.fitnessPlan.programType,
-      ctx.recentWorkouts
-    ),
+/**
+ * @deprecated Legacy interface - use DailyWorkoutOutput instead
+ * Kept for backward compatibility only
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GeneratedWorkoutResult extends DailyWorkoutOutput {}
 
-    // Step 2a: Structured JSON prompt
-    structuredPrompt,
+/**
+ * Daily Workout Agent Factory
+ *
+ * Generates personalized daily workouts using a two-step process:
+ * 1. Generate long-form workout description + reasoning
+ * 2. In parallel: convert to JSON structure + SMS message
+ *
+ * Uses the shared workout chain factory for consistent workout generation.
+ *
+ * @param deps - Optional dependencies (config)
+ * @returns Agent that generates daily workouts
+ */
+export const createDailyWorkoutAgent = () => {
+  return createRunnableAgent<DailyWorkoutInput, DailyWorkoutOutput>(async (input) => {
+    return executeWorkoutChain(input, {
+      // Step 1: System prompt (static instructions)
+      systemPrompt,
 
-    // Step 2b: SMS message prompt
-    messagePrompt,
+      // Step 1: User prompt (dynamic context)
+      userPrompt: (ctx, fitnessProfile) => userPrompt(
+        ctx.user,
+        fitnessProfile,
+        ctx.dayPlan,
+        ctx.microcycle.pattern,
+        ctx.mesocycle,
+        ctx.fitnessPlan.programType,
+        ctx.recentWorkouts
+      ),
 
-    // Schema for validation
-    structuredSchema: _EnhancedWorkoutInstanceSchema,
+      // Step 2a: Structured JSON prompt
+      structuredPrompt,
 
-    // Context extractors
-    getUserFromContext: (ctx) => ctx.user,
-    getDateFromContext: (ctx) => ctx.date,
+      // Step 2b: SMS message prompt
+      messagePrompt,
 
-    // Logging identifier
-    operationName: 'generate workout'
+      // Schema for validation
+      structuredSchema: _EnhancedWorkoutInstanceSchema,
+
+      // Context extractors
+      getUserFromContext: (ctx) => ctx.user,
+      getDateFromContext: (ctx) => ctx.date,
+
+      // Logging identifier
+      operationName: 'generate workout'
+    });
   });
+};
+
+/**
+ * @deprecated Legacy export for backward compatibility - use createDailyWorkoutAgent instead
+ */
+export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<DailyWorkoutOutput> => {
+  const agent = createDailyWorkoutAgent();
+  return agent.invoke(context);
 };

@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { ACTIVITIES_SYSTEM_PROMPT, buildActivitiesUserMessage } from './prompt';
+import { ACTIVITIES_SYSTEM_PROMPT, buildActivitiesUserMessage } from './prompts';
 import { ActivitiesExtractionSchema, type ActivitiesExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';

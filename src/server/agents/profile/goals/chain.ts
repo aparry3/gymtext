@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { GOALS_SYSTEM_PROMPT, buildGoalsUserMessage } from './prompt';
+import { GOALS_SYSTEM_PROMPT, buildGoalsUserMessage } from './prompts';
 import { GoalsExtractionSchema, type GoalsExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';

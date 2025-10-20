@@ -1,5 +1,5 @@
 import { createSubAgent } from '../baseAgent';
-import { USER_SYSTEM_PROMPT, buildUserUserMessage } from './prompt';
+import { USER_SYSTEM_PROMPT, buildUserUserMessage } from './prompts';
 import { UserExtractionSchema, type UserExtractionResult } from './schema';
 import type { UserWithProfile } from '../../../models/userModel';
 import type { AgentConfig } from '../../base';

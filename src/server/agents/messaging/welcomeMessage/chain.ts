@@ -1,7 +1,18 @@
-import { UserWithProfile } from '@/server/models/userModel';
+import { createRunnableAgent } from '@/server/agents/base';
+import type { WelcomeMessageInput, WelcomeMessageOutput } from './types';
 
-export const welcomeMessageAgent = {
-  invoke: async ({ user }: { user: UserWithProfile }): Promise<{ user: UserWithProfile, value: string }> => {
+/**
+ * Welcome Message Agent Factory
+ *
+ * Creates personalized welcome messages for new users.
+ * Uses static template with user's first name.
+ *
+ * @param deps - Optional dependencies (config)
+ * @returns Agent that generates welcome messages
+ */
+export const createWelcomeMessageAgent = () => {
+  return createRunnableAgent<WelcomeMessageInput, WelcomeMessageOutput>(async (input) => {
+    const { user } = input;
     const userName = user.name?.split(' ')[0] || 'there';
 
     const welcomeMessage = `Hey ${userName}!
@@ -16,6 +27,17 @@ Welcome to GymText.
 
 Text me anytime with questions about your workouts, your plan, or if you just need a little extra help!`;
 
-    return { user, value: welcomeMessage };
+    return { message: welcomeMessage };
+  });
+};
+
+/**
+ * @deprecated Legacy export for backward compatibility - use createWelcomeMessageAgent instead
+ */
+export const welcomeMessageAgent = {
+  invoke: async ({ user }: { user: any }): Promise<{ user: any, value: string }> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const agent = createWelcomeMessageAgent();
+    const result = await agent.invoke({ user });
+    return { user, value: result.message };
   }
-}
+};

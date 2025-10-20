@@ -1,8 +1,8 @@
-import { UserWithProfile } from '../models/userModel';
-import { FitnessPlanService } from './fitnessPlanService';
-import { MessageService } from './messageService';
+import { UserWithProfile } from '../../models/userModel';
+import { FitnessPlanService } from '../training/fitnessPlanService';
+import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
-import { ConversationFlowBuilder } from './flows/conversationFlowBuilder';
+import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 
 /**
  * OnboardingService

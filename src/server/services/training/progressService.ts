@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
-import { FitnessPlan, MesocycleOverview } from '@/server/models/fitnessPlan';
-import { UserWithProfile } from '@/server/models/userModel';
-import { generateMicrocyclePattern } from '@/server/agents/fitnessPlan/microcyclePattern/chain';
+import { Microcycle, MicrocyclePattern } from '../../models/microcycle';
+import { FitnessPlan, MesocycleOverview } from '../../models/fitnessPlan';
+import { UserWithProfile } from '../../models/userModel';
+import { generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export interface ProgressInfo {
@@ -56,6 +56,13 @@ export class ProgressService {
       dayOfWeek,
       cycleStartDate: plan.cycleStartDate as Date | null,
     };
+  }
+
+  /**
+   * Get the current active microcycle for a user without creating one
+   */
+  async getCurrentMicrocycle(userId: string): Promise<Microcycle | null> {
+    return await this.microcycleRepo.getCurrentMicrocycle(userId);
   }
 
   async getCurrentOrCreateMicrocycle(user: UserWithProfile): Promise<Microcycle | null> {

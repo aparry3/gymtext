@@ -2,8 +2,21 @@ import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanModel, FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { longFormPrompt, structuredPrompt } from '@/server/agents/fitnessPlan/prompts';
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { initializeModel } from '@/server/agents/base';
+
+/**
+ * Interface for fitness profile context service (DI)
+ */
+export interface FitnessProfileContextService {
+  getContext: (user: UserWithProfile) => Promise<string>;
+}
+
+/**
+ * Dependencies for FitnessPlan Agent (DI)
+ */
+export interface FitnessPlanAgentDeps {
+  contextService: FitnessProfileContextService;
+}
 
 // Schema for step 1: long-form plan and reasoning
 const LongFormSchema = z.object({
@@ -11,9 +24,15 @@ const LongFormSchema = z.object({
   reasoning: z.string().describe("Detailed explanation of all decisions made")
 });
 
-export const generateFitnessPlan = async (user: UserWithProfile): Promise<FitnessPlanOverview> => {
-    const fitnessProfileContextService = new FitnessProfileContext();
-    const fitnessProfile = await fitnessProfileContextService.getContext(user);
+/**
+ * Creates a fitness plan agent with injected dependencies
+ *
+ * @param deps - Dependencies including context service
+ * @returns Function that generates fitness plans
+ */
+export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
+  return async (user: UserWithProfile): Promise<FitnessPlanOverview> => {
+    const fitnessProfile = await deps.contextService.getContext(user);
 
     // Step 1: Generate long-form plan and reasoning
     const longFormModel = initializeModel(LongFormSchema);
@@ -33,4 +52,13 @@ export const generateFitnessPlan = async (user: UserWithProfile): Promise<Fitnes
     };
 
     return finalResult as FitnessPlanOverview;
-}
+  };
+};
+
+/**
+ * Legacy export for backward compatibility
+ * @deprecated Use createFitnessPlanAgent with dependency injection instead
+ */
+export const generateFitnessPlan = async (): Promise<FitnessPlanOverview> => {
+  throw new Error('generateFitnessPlan is deprecated. Use createFitnessPlanAgent with dependencies injection instead.');
+};

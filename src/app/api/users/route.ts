@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { CreateUserRequest, userService } from '@/server/services/userService';
-import { CreateFitnessProfileRequest, fitnessProfileService } from '@/server/services/fitnessProfileService';
+import { CreateUserRequest, userService } from '@/server/services';
+import { CreateFitnessProfileRequest, fitnessProfileService } from '@/server/services';
 import { setUserCookie } from '@/shared/utils/cookies';
 
 export async function POST(request: Request) {

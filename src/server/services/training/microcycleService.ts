@@ -1,11 +1,11 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
 import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { UserService } from './userService';
-import { EnhancedWorkoutInstance } from '../models/workout/schema';
+import { UserService } from '../user/userService';
+import { FitnessPlanService } from './fitnessPlanService';
+import { WorkoutInstanceService } from './workoutInstanceService';
+import { EnhancedWorkoutInstance } from '../../models/workout/schema';
 
 export interface ModifyWeekParams {
   userId: string;
@@ -26,14 +26,14 @@ export interface ModifyWeekResult {
 export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
-  private fitnessPlanRepo: FitnessPlanRepository;
-  private workoutRepo: WorkoutInstanceRepository;
+  private fitnessPlanService: FitnessPlanService;
+  private workoutInstanceService: WorkoutInstanceService;
   private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
-    this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
+    this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.userService = UserService.getInstance();
   }
 
@@ -63,7 +63,7 @@ export class MicrocycleService {
    */
   public async getMicrocycleByWeek(userId: string, mesocycleIndex: number, weekNumber: number) {
     // First get the fitness plan to get the fitnessPlanId
-    const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+    const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(userId);
 
     if (!fitnessPlan || !fitnessPlan.id) {
       return null;
@@ -94,7 +94,7 @@ export class MicrocycleService {
       }
 
       // Get the current fitness plan
-      const fitnessPlan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+      const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(userId);
       if (!fitnessPlan) {
         return {
           success: false,
@@ -212,27 +212,26 @@ export class MicrocycleService {
           microcycle: relevantMicrocycle,
           mesocycle,
           fitnessPlan,
-          recentWorkouts: await this.workoutRepo.getRecentWorkouts(userId, 5),
+          recentWorkouts: await this.workoutInstanceService.getRecentWorkouts(userId, 5),
         };
 
         const result = await generateDailyWorkout(context);
 
         // Check if a workout exists for today to update it, otherwise create it
-        const existingWorkout = await this.workoutRepo.findByClientIdAndDate(userId, todayDate);
+        const existingWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayDate);
 
         if (existingWorkout) {
           // Update existing workout
-          await this.workoutRepo.update(existingWorkout.id, {
+          await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
             details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
             description: result.description,
             reasoning: result.reasoning,
             message: result.message,
           });
-
           console.log(`[MODIFY_WEEK] Regenerated and updated today's workout based on updated pattern`);
         } else {
           // Create new workout
-          await this.workoutRepo.create({
+          await this.workoutInstanceService.createWorkout({
             clientId: userId,
             fitnessPlanId: fitnessPlan.id!,
             mesocycleId: null, // No longer using mesocycles table
