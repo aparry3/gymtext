@@ -5,3 +5,4 @@
  */
 
 export { processMessageFunction } from './processMessage';
+export { sendDailyWorkoutFunction } from './sendDailyWorkout';
