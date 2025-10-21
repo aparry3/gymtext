@@ -9,13 +9,6 @@ import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { Message } from '@/server/models/conversation';
 
-interface BatchResult {
-  processed: number;
-  failed: number;
-  errors: Array<{ userId: string; error: string }>;
-  duration: number;
-}
-
 interface MessageResult {
   success: boolean;
   userId: string;
@@ -46,106 +39,6 @@ export class DailyMessageService {
       DailyMessageService.instance = new DailyMessageService(batchSize);
     }
     return DailyMessageService.instance;
-  }
-
-  /**
-   * Main entry point for the hourly cron job
-   * Processes all users whose local time matches their preferred send hour
-   */
-  async processHourlyBatch(): Promise<BatchResult> {
-    const startTime = Date.now();
-    const errors: Array<{ userId: string; error: string }> = [];
-    let processed = 0;
-    let failed = 0;
-
-    try {
-      const currentDate = new Date();
-      const currentUtcHour = currentDate.getUTCHours();
-
-      console.log('Starting daily message batch', {
-        utcHour: currentUtcHour,
-        date: currentDate.toISOString()
-      });
-
-      // Get all users who should receive messages this hour
-      const users = await this.getUsersForHour(currentUtcHour);
-      console.log(`Found ${users.length} users to process`);
-
-      // Process users in batches
-      const results = await this.processBatch(users, this.batchSize);
-
-      // Tally results
-      for (const result of results) {
-        if (result.success) {
-          processed++;
-        } else {
-          failed++;
-          if (result.error) {
-            errors.push({ userId: result.userId, error: result.error });
-          }
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      console.log(`Batch complete. Processed: ${processed}, Failed: ${failed}, Duration: ${duration}ms`);
-
-      return {
-        processed,
-        failed,
-        errors,
-        duration
-      };
-    } catch (error) {
-      console.error('Fatal error in processHourlyBatch:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Gets all users whose local preferred hour matches the current UTC hour
-   */
-  private async getUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
-    return await this.userService.getUsersForHour(currentUtcHour);
-  }
-
-  /**
-   * Processes users in batches to avoid overwhelming the system
-   */
-  private async processBatch(
-    users: UserWithProfile[],
-    batchSize: number
-  ): Promise<MessageResult[]> {
-    const results: MessageResult[] = [];
-
-    // Process users in chunks
-    for (let i = 0; i < users.length; i += batchSize) {
-      const batch = users.slice(i, i + batchSize);
-      const batchPromises = batch.map(user => this.sendDailyMessage(user));
-
-      // Use allSettled to ensure we process all users even if some fail
-      const batchResults = await Promise.allSettled(batchPromises);
-
-      // Convert settled results to our MessageResult format
-      batchResults.forEach((result, index) => {
-        const user = batch[index];
-        if (result.status === 'fulfilled') {
-          results.push(result.value);
-        } else {
-          results.push({
-            success: false,
-            userId: user.id,
-            error: result.reason?.message || 'Unknown error'
-          });
-        }
-      });
-
-      // Small delay between batches to avoid rate limits
-      if (i + batchSize < users.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    return results;
   }
 
   /**
@@ -292,23 +185,25 @@ export class DailyMessageService {
 
   /**
    * Maps theme to session type for database storage
+   * Valid frontend types: run, lift, metcon, mobility, rest, other
    */
   private mapThemeToSessionType(theme: string): string {
     const themeLower = theme.toLowerCase();
-    // Valid types: strength, cardio, mobility, recovery, assessment, deload
-    if (themeLower.includes('run') || themeLower.includes('cardio') || 
-        themeLower.includes('hiit') || themeLower.includes('metcon') ||
-        themeLower.includes('conditioning')) return 'cardio';
-    if (themeLower.includes('lift') || themeLower.includes('strength') || 
+
+    // Map to frontend-compatible session types
+    if (themeLower.includes('run') || themeLower.includes('running')) return 'run';
+    if (themeLower.includes('metcon') || themeLower.includes('hiit') ||
+        themeLower.includes('conditioning') || themeLower.includes('cardio')) return 'metcon';
+    if (themeLower.includes('lift') || themeLower.includes('strength') ||
         themeLower.includes('upper') || themeLower.includes('lower') ||
-        themeLower.includes('push') || themeLower.includes('pull')) return 'strength';
+        themeLower.includes('push') || themeLower.includes('pull')) return 'lift';
     if (themeLower.includes('mobility') || themeLower.includes('flexibility') ||
         themeLower.includes('stretch')) return 'mobility';
-    if (themeLower.includes('rest') || themeLower.includes('recovery')) return 'recovery';
-    if (themeLower.includes('assessment') || themeLower.includes('test')) return 'assessment';
-    if (themeLower.includes('deload')) return 'deload';
-    // Default to strength for hybrid/unknown workouts
-    return 'strength';
+    if (themeLower.includes('rest') || themeLower.includes('recovery') ||
+        themeLower.includes('deload')) return 'rest';
+
+    // Default to other for assessment/hybrid/unknown workouts
+    return 'other';
   }
 }
 

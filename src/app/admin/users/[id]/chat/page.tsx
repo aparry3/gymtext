@@ -23,14 +23,6 @@ interface Message {
   to: string
 }
 
-interface Conversation {
-  id: string
-  userId: string
-  messages: Message[]
-  createdAt: string
-  updatedAt: string
-}
-
 export default function AdminChatPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -64,23 +56,12 @@ export default function AdminChatPage() {
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to fetch conversations')
+        throw new Error(result.error || 'Failed to fetch messages')
       }
 
-      // Get the most recent conversation based on updatedAt
-      const mostRecentConversation = result.data.conversations.reduce(
-        (latest: Conversation | null, current: Conversation) => {
-          if (!latest) return current
-          return new Date(current.updatedAt) > new Date(latest.updatedAt)
-            ? current
-            : latest
-        },
-        null
-      )
-
-      // Get messages from the most recent conversation only
-      const conversationMessages = mostRecentConversation?.messages ?? []
-      const sortedMessages = conversationMessages.sort(
+      // Get messages from the API (already sorted by timestamp)
+      const messages = result.data.messages ?? []
+      const sortedMessages = messages.sort(
         (a: Message, b: Message) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       )
@@ -97,7 +78,7 @@ export default function AdminChatPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching conversations:', err)
+      console.error('Error fetching messages:', err)
     } finally {
       if (isInitialLoad) {
         setIsInitialLoading(false)

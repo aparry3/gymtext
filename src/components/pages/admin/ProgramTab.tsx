@@ -281,6 +281,17 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
     other: 'Other'
   }
 
+  // Helper to check if workout date is today
+  const isToday = (date: Date) => {
+    const today = new Date()
+    const workoutDate = new Date(date)
+    return (
+      workoutDate.getDate() === today.getDate() &&
+      workoutDate.getMonth() === today.getMonth() &&
+      workoutDate.getFullYear() === today.getFullYear()
+    )
+  }
+
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -294,33 +305,37 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {workouts.map((workout) => (
-              <tr 
-                key={workout.id} 
-                className="hover:bg-muted/30 cursor-pointer"
-                onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
-              >
-                <td className="px-4 py-3 text-sm">
-                  {new Date(workout.date).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <Badge variant="outline">
-                    {sessionTypeLabels[workout.sessionType]}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3 text-sm text-muted-foreground">
-                  {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
-                    ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
-                    : '-'
-                  }
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <Badge variant={workout.completedAt ? "default" : "secondary"}>
-                    {workout.completedAt ? 'Completed' : 'Planned'}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
+            {workouts.map((workout) => {
+              const isTodayWorkout = isToday(workout.date)
+              return (
+                <tr
+                  key={workout.id}
+                  className={`hover:bg-muted/30 cursor-pointer ${isTodayWorkout ? 'bg-primary/5 ring-2 ring-primary ring-inset' : ''}`}
+                  onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                >
+                  <td className={`px-4 py-3 text-sm ${isTodayWorkout ? 'font-semibold' : ''}`}>
+                    {new Date(workout.date).toLocaleDateString()}
+                    {isTodayWorkout && <span className="ml-2 text-xs text-primary">(Today)</span>}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <Badge variant={isTodayWorkout ? "default" : "outline"}>
+                      {sessionTypeLabels[workout.sessionType] || workout.sessionType}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
+                      ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
+                      : '-'
+                    }
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <Badge variant={workout.completedAt ? "default" : "secondary"}>
+                      {workout.completedAt ? 'Completed' : 'Planned'}
+                    </Badge>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
