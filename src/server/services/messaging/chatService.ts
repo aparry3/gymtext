@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { chatAgent } from '@/server/agents/conversation/chat/chain';
+import { createChatAgent } from '@/server/agents/conversation/chat/chain';
 import { MessageService } from './messageService';
 import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
@@ -83,36 +83,43 @@ export class ChatService {
       // - If last message is outbound (reply agent), keep it (needed for context)
       const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
 
-      // Inject dependencies using DI pattern
-      const chatResult = await chatAgent(
-        {
-          patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
-          workoutService: {
-            substituteExercise: this.workoutInstanceService.substituteExercise.bind(this.workoutInstanceService),
-            modifyWorkout: this.workoutInstanceService.modifyWorkout.bind(this.workoutInstanceService),
-          },
-          microcycleService: {
-            modifyWeek: this.microcycleService.modifyWeek.bind(this.microcycleService),
-          },
+      // Create chat agent with injected dependencies using DI pattern
+      const agent = createChatAgent({
+        patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
+        workoutService: {
+          substituteExercise: this.workoutInstanceService.substituteExercise.bind(this.workoutInstanceService),
+          modifyWorkout: this.workoutInstanceService.modifyWorkout.bind(this.workoutInstanceService),
         },
+        microcycleService: {
+          modifyWeek: this.microcycleService.modifyWeek.bind(this.microcycleService),
+        },
+      });
+
+      // Invoke the agent
+      const chatResult = await agent.invoke({
         user,
         message,
-        contextMessages,
-      );
-      
+        previousMessages: contextMessages,
+      });
+
+      // Validate response exists
+      if (!chatResult?.response) {
+        throw new Error('Chat agent returned invalid response');
+      }
+
       // Step 5: Enforce SMS length constraints
       // Note: Message storage is handled by the API route
-      const responseText = chatResult.reply.trim();
-      
+      const responseText = chatResult.response.trim();
+
       if (responseText.length > SMS_MAX_LENGTH) {
         return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
       }
-      
+
       return responseText;
-      
+
     } catch (error) {
       console.error('[ChatService] Error handling message:', error);
-      
+
       // Log additional context in development
       if (process.env.NODE_ENV === 'development') {
         console.error('Error details:', {
@@ -121,7 +128,7 @@ export class ChatService {
           error: error instanceof Error ? error.stack : error
         });
       }
-      
+
       // Return a helpful fallback message
       return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
     }

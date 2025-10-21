@@ -44,7 +44,7 @@ export interface ChatInput {
  * Output from chat agent
  */
 export interface ChatOutput {
-  reply: string;
+  response: string;
   profileUpdated: boolean;
 }
 

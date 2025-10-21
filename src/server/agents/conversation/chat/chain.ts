@@ -114,7 +114,13 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
 
     console.log(`[CHAT AGENT] ${primaryIntent.intent} sub-agent completed successfully`);
 
-    return result;
+    // Transform sub-agent output to ChatOutput format
+    const profileUpdated = input.profile.summary?.reason !== 'No updates detected';
+
+    return {
+      response: result.response,
+      profileUpdated,
+    };
   });
 
   const sequence = RunnableSequence.from([
