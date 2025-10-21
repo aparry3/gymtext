@@ -59,14 +59,9 @@ export default function AdminChatPage() {
         throw new Error(result.error || 'Failed to fetch messages')
       }
 
-      // Get messages from the API (already sorted by timestamp)
+      // Get messages from the API (already sorted oldest-to-newest)
       const messages = result.data.messages ?? []
-      const sortedMessages = messages.sort(
-        (a: Message, b: Message) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      )
-
-      setMessages(sortedMessages)
+      setMessages(messages)
 
       // Fetch user name and phone number on initial load
       if (isInitialLoad) {

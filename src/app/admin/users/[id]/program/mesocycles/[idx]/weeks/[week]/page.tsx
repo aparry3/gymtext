@@ -269,11 +269,11 @@ function DayCard({ dayName, dayPattern, workouts, userId }: DayCardProps) {
                   onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
                   className="w-full"
                 >
-                  <Badge 
+                  <Badge
                     variant={workout.completedAt ? "default" : "outline"}
                     className="text-xs w-full justify-center cursor-pointer hover:opacity-80"
                   >
-                    {sessionTypeLabels[workout.sessionType]}
+                    {sessionTypeLabels[workout.sessionType] || workout.sessionType || 'Workout'}
                   </Badge>
                 </button>
               ))}

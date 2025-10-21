@@ -219,12 +219,14 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
 
   return (
     <Card
-      className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${isCurrent ? 'ring-2 ring-primary' : ''}`}
+      className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${
+        isCurrent ? 'border-2 border-primary shadow-lg bg-primary/10' : ''
+      }`}
       onClick={handleClick}
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h4 className="font-medium">{mesocycle.name}</h4>
+          <h4 className={`font-medium ${isCurrent ? 'text-primary' : ''}`}>{mesocycle.name}</h4>
           <p className="text-sm text-muted-foreground">Mesocycle {index}</p>
         </div>
         <div className="flex flex-col items-end gap-1">

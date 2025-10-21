@@ -102,10 +102,22 @@ export async function GET(
     // Get message history (flat list, no conversation grouping)
     const messages = await messageService.getMessages(userId, 100); // Get last 100 messages
 
+    // Transform messages to match frontend interface
+    // Frontend expects: { timestamp, from, to, ... }
+    // Database has: { createdAt, phoneFrom, phoneTo, ... }
+    const transformedMessages = messages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      direction: msg.direction,
+      timestamp: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
+      from: msg.phoneFrom || '',
+      to: msg.phoneTo || '',
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        messages,
+        messages: transformedMessages,
       }
     });
   } catch (error) {
