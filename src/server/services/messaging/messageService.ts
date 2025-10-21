@@ -210,10 +210,10 @@ export class MessageService {
   }
 
   /**
-   * Get messages for a user
+   * Get messages for a user with pagination support
    */
-  async getMessages(userId: string, limit: number = 50): Promise<Message[]> {
-    return await this.messageRepo.findByUserId(userId, limit);
+  async getMessages(userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
+    return await this.messageRepo.findByUserId(userId, limit, offset);
   }
 
   /**

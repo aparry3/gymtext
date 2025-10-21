@@ -21,19 +21,16 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirst();
   }
 
-  async findByUserId(userId: string, limit: number = 50): Promise<Message[]> {
-    // Get most recent messages, but return them in chronological order (oldest first)
-    // This is more intuitive for chat displays
-    const messages = await this.db
+  async findByUserId(userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
+    // Return messages in DESC order (latest first) with pagination support
+    return await this.db
       .selectFrom('messages')
       .selectAll()
       .where('userId', '=', userId)
       .orderBy('createdAt', 'desc')
       .limit(limit)
+      .offset(offset)
       .execute();
-
-    // Reverse to get oldest-to-newest order
-    return messages.reverse();
   }
 
   /**

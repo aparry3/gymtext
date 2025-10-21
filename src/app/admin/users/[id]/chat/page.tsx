@@ -33,8 +33,13 @@ export default function AdminChatPage() {
   const [userName, setUserName] = useState<string>('')
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>('')
   const [sseConnected, setSseConnected] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [offset, setOffset] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
+  const MESSAGES_PER_PAGE = 20
 
   const scrollToBottom = useCallback(() => {
     // Use setTimeout to ensure DOM has updated before scrolling
@@ -52,7 +57,7 @@ export default function AdminChatPage() {
       setIsInitialLoading(true)
     }
     try {
-      const response = await fetch(`/api/admin/users/${id}/chat`)
+      const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=0`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -62,6 +67,8 @@ export default function AdminChatPage() {
       // Get messages from the API (already sorted oldest-to-newest)
       const messages = result.data.messages ?? []
       setMessages(messages)
+      setHasMore(result.data.pagination?.hasMore ?? false)
+      setOffset(MESSAGES_PER_PAGE)
 
       // Fetch user name and phone number on initial load
       if (isInitialLoad) {
@@ -79,13 +86,65 @@ export default function AdminChatPage() {
         setIsInitialLoading(false)
       }
     }
-  }, [id])
+  }, [id, MESSAGES_PER_PAGE])
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!hasMore || isLoadingMore) return
+
+    setIsLoadingMore(true)
+    try {
+      const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=${offset}`)
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to fetch more messages')
+      }
+
+      const olderMessages = result.data.messages ?? []
+
+      // Prepend older messages to the existing list
+      setMessages(prev => [...olderMessages, ...prev])
+      setHasMore(result.data.pagination?.hasMore ?? false)
+      setOffset(prev => prev + MESSAGES_PER_PAGE)
+    } catch (err) {
+      console.error('Error loading more messages:', err)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [id, offset, hasMore, isLoadingMore, MESSAGES_PER_PAGE])
 
   useEffect(() => {
     if (id) {
       fetchConversations(true)
     }
   }, [id, fetchConversations])
+
+  // Handle scroll to top for loading more messages
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      // Load more when scrolled within 100px of the top
+      if (container.scrollTop < 100 && hasMore && !isLoadingMore) {
+        // Save current scroll position
+        const scrollHeightBefore = container.scrollHeight
+        const scrollTopBefore = container.scrollTop
+
+        loadMoreMessages().then(() => {
+          // Restore scroll position after loading more messages
+          // This prevents the view from jumping to the top
+          requestAnimationFrame(() => {
+            const scrollHeightAfter = container.scrollHeight
+            container.scrollTop = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore)
+          })
+        })
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [hasMore, isLoadingMore, loadMoreMessages])
 
   // Set up SSE connection for real-time messages
   useEffect(() => {
@@ -267,7 +326,21 @@ export default function AdminChatPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+              {/* Loading indicator at the top */}
+              {isLoadingMore && (
+                <div className="flex justify-center py-2">
+                  <Loader className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+              {/* Show "no more messages" when at the end */}
+              {!hasMore && messages.length > 0 && (
+                <div className="flex justify-center py-2">
+                  <p className="text-xs text-muted-foreground">No more messages</p>
+                </div>
+              )}
+
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">

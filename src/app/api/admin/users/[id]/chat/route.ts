@@ -81,13 +81,18 @@ export async function POST(
   }
 }
 
-// GET endpoint to fetch message history
+// GET endpoint to fetch message history with pagination
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: userId } = await params;
+
+    // Parse pagination params from query string
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100 per request
+    const offset = parseInt(searchParams.get('offset') || '0');
 
     const userRepository = new UserRepository();
     const user = await userRepository.findById(userId);
@@ -99,8 +104,8 @@ export async function GET(
       );
     }
 
-    // Get message history (flat list, no conversation grouping)
-    const messages = await messageService.getMessages(userId, 100); // Get last 100 messages
+    // Get message history (returns DESC - latest first)
+    const messages = await messageService.getMessages(userId, limit, offset);
 
     // Transform messages to match frontend interface
     // Frontend expects: { timestamp, from, to, ... }
@@ -114,10 +119,22 @@ export async function GET(
       to: msg.phoneTo || '',
     }));
 
+    // Reverse to oldest-first for chat display
+    const messagesForDisplay = transformedMessages.reverse();
+
+    // Check if there are more messages
+    const hasMore = messages.length === limit;
+
     return NextResponse.json({
       success: true,
       data: {
-        messages: transformedMessages,
+        messages: messagesForDisplay,
+        pagination: {
+          limit,
+          offset,
+          hasMore,
+          count: messages.length,
+        }
       }
     });
   } catch (error) {
