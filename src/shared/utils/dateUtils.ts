@@ -1,13 +1,17 @@
-export function formatDate(date: Date): string {
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  };
-  return date.toLocaleDateString('en-US', options);
-}
+/**
+ * @deprecated This file is deprecated. Use '@/shared/utils/date' instead for all date operations.
+ *
+ * Migration guide:
+ * - formatDate() → import { formatForUI } from '@/shared/utils/date'
+ * - For other date operations, see @/shared/utils/date
+ *
+ * Only getDatesUntilSaturday remains here temporarily. Consider migrating to date utils.
+ */
 
+/**
+ * Get all dates from startDate until the next Saturday (inclusive)
+ * @deprecated Consider migrating to a more generic date utility in @/shared/utils/date
+ */
 export function getDatesUntilSaturday(startDate: Date): Date[] {
   const dates: Date[] = [];
   const currentDate = new Date(startDate); // Create a copy to avoid modifying the original

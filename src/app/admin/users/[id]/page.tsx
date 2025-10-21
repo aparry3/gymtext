@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProgramTab } from '@/components/pages/admin/ProgramTab'
+import { formatRelative } from '@/shared/utils/date'
 import { 
   Breadcrumb, 
   BreadcrumbList, 
@@ -135,17 +136,6 @@ export default function AdminUserDetailPage() {
     return phone
   }
 
-  const formatMemberSince = (date: Date | string) => {
-    const now = new Date()
-    const dateObj = typeof date === 'string' ? new Date(date) : date
-    const diffTime = Math.abs(now.getTime() - dateObj.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-    const months = Math.floor(diffDays / 30)
-    return `${months} month${months !== 1 ? 's' : ''} ago`
-  }
-
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -242,7 +232,7 @@ export default function AdminUserDetailPage() {
           <QuickFactCard
             icon={<Calendar className="h-4 w-4" />}
             label="Member Since"
-            value={formatMemberSince(user.createdAt)}
+            value={formatRelative(user.createdAt)}
           />
         </div>
 

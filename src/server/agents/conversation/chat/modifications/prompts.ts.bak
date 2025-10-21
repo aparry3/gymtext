@@ -1,5 +1,6 @@
 import type { ChatSubagentInput } from '../baseAgent';
-import { formatForAI, getDayOfWeekName, toISODate } from '@/shared/utils/date';
+import { DateTime } from 'luxon';
+import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
 
 /**
  * Static system prompt for the Modifications Agent
@@ -203,7 +204,7 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
 
 ## IMPORTANT NOTES FOR TOOL CALLS
 
-- Use todays date (${toISODate(now, user.timezone)}) as the workoutDate for current workout modifications (in user's timezone: ${user.timezone})
+- Use todays date (${nowInUserTz.toISODate()}) as the workoutDate for current workout modifications (in user's timezone: ${user.timezone})
 - Use the User ID provided above when calling tools
 - For weekly modifications (modify_week), use "${currentDayOfWeek}" as the targetDay (todays day of the week)
   - The targetDay should be the day youre starting the modifications from (typically today)

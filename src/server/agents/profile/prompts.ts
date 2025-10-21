@@ -1,5 +1,5 @@
 import type { FitnessProfile, User } from '@/server/models/user/schemas';
-import { DateTime } from 'luxon';
+import { formatForAI } from '@/shared/utils/date';
 
 /**
  * Build the system prompt for the UserProfileAgent
@@ -21,13 +21,8 @@ export const buildUserProfileSystemPrompt = (
       ? JSON.stringify(currentUser, null, 2)
       : "No user info yet";
 
-  const nowInUserTz = DateTime.now().setZone(timezone);
-  const currentDate = nowInUserTz.toLocaleString({
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const now = new Date();
+  const currentDate = formatForAI(now, timezone);
 
   return `Todays date is ${currentDate} (Timezone: ${timezone}).
 

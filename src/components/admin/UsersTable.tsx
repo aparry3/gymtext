@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatRelative } from '@/shared/utils/date'
 
 interface UsersTableProps {
   users: AdminUser[]
@@ -141,18 +142,6 @@ function UserRow({ user }: UserRowProps) {
     return phone
   }
 
-  const formatDate = (date: Date | string) => {
-    const now = new Date()
-    const dateObj = typeof date === 'string' ? new Date(date) : date
-    const diffTime = Math.abs(now.getTime() - dateObj.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 30) return `${diffDays} days ago`
-    if (diffDays < 60) return '1 month ago'
-    return `${Math.floor(diffDays / 30)} months ago`
-  }
-
   return (
     <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200">
       <td className="p-4">
@@ -170,7 +159,7 @@ function UserRow({ user }: UserRowProps) {
           </div>
         </div>
       </td>
-      
+
       <td className="p-4">
         <div className="space-y-1">
           <div className="text-sm">
@@ -183,7 +172,7 @@ function UserRow({ user }: UserRowProps) {
           </div>
         </div>
       </td>
-      
+
       <td className="p-4">
         <div className="flex flex-wrap gap-2">
           {user.age && (
@@ -203,10 +192,10 @@ function UserRow({ user }: UserRowProps) {
           )}
         </div>
       </td>
-      
+
       <td className="p-4">
         <div className="text-sm text-muted-foreground">
-          {formatDate(user.createdAt)}
+          {formatRelative(user.createdAt)}
         </div>
       </td>
       
