@@ -2,19 +2,13 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
- * Create structured prompt for converting long-form workout to JSON
- * Works for all three agent types (generate, substitute, replace)
+ * Build static system prompt for structured workout conversion
+ * Defines the task, schema requirements, and guidelines
  *
- * @param longFormWorkout - The long-form workout description and reasoning
- * @param user - User context
- * @param fitnessProfile - Formatted fitness profile string
  * @param includeModificationsApplied - Whether to include modificationsApplied field (for substitute/replace)
- * @returns Structured prompt for JSON conversion
+ * @returns System prompt for structured workout conversion
  */
-export function createStructuredPrompt(
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
-  fitnessProfile: string,
+export function buildStructuredWorkoutSystemPrompt(
   includeModificationsApplied: boolean = false
 ): string {
   const modificationsAppliedField = includeModificationsApplied
@@ -48,20 +42,6 @@ Include one entry for each significant modification made.
 
   return `
 You are converting a long-form workout description into structured JSON format.
-
-<Long-Form Workout>
-${longFormWorkout.description}
-</Long-Form Workout>
-
-<User Context>
-Name: ${user.name}
-Fitness Profile: ${fitnessProfile}
-</User Context>
-
-<Task>
-Convert the workout description above into a structured JSON object matching the workout schema.
-Extract all exercises, sets, reps, rest periods, and organize them into blocks.${includeModificationsApplied ? '\nInclude a "modificationsApplied" array listing all substitutions/changes made.' : ''}
-</Task>
 
 <Schema Requirements>
 {
@@ -113,4 +93,52 @@ Extract all exercises, sets, reps, rest periods, and organize them into blocks.$
 
 Return ONLY the JSON object - no additional text.
 `.trim();
+}
+
+/**
+ * Create dynamic user prompt for structured workout conversion
+ * Contains the workout data and user context
+ *
+ * @param longFormWorkout - The long-form workout description and reasoning
+ * @param user - User context
+ * @param fitnessProfile - Formatted fitness profile string
+ * @param includeModificationsApplied - Whether to include modificationsApplied field (for substitute/replace)
+ * @returns User prompt for structured workout conversion
+ */
+export function createStructuredWorkoutUserPrompt(
+  longFormWorkout: LongFormWorkout,
+  user: UserWithProfile,
+  fitnessProfile: string,
+  includeModificationsApplied: boolean = false
+): string {
+  return `
+<Long-Form Workout>
+${longFormWorkout.description}
+</Long-Form Workout>
+
+<User Context>
+Name: ${user.name}
+Fitness Profile: ${fitnessProfile}
+</User Context>
+
+<Task>
+Convert the workout description above into a structured JSON object matching the workout schema.
+Extract all exercises, sets, reps, rest periods, and organize them into blocks.${includeModificationsApplied ? '\nInclude a "modificationsApplied" array listing all substitutions/changes made.' : ''}
+</Task>
+`.trim();
+}
+
+/**
+ * @deprecated Use buildStructuredWorkoutSystemPrompt and createStructuredWorkoutUserPrompt instead
+ * Legacy function for backward compatibility
+ */
+export function createStructuredPrompt(
+  longFormWorkout: LongFormWorkout,
+  user: UserWithProfile,
+  fitnessProfile: string,
+  includeModificationsApplied: boolean = false
+): string {
+  const systemPrompt = buildStructuredWorkoutSystemPrompt(includeModificationsApplied);
+  const userPrompt = createStructuredWorkoutUserPrompt(longFormWorkout, user, fitnessProfile, includeModificationsApplied);
+  return `${systemPrompt}\n\n${userPrompt}`;
 }

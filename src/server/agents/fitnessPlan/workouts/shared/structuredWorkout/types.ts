@@ -3,15 +3,24 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
- * Input for structured workout agent
+ * Configuration for structured workout agent
+ * Static configuration passed at agent creation time
  */
-export interface StructuredWorkoutInput<TSchema extends z.ZodTypeAny = z.ZodTypeAny> {
+export interface StructuredWorkoutConfig<TSchema extends z.ZodTypeAny = z.ZodTypeAny> {
+  schema: TSchema;
+  includeModifications: boolean;
+  operationName: string;
+}
+
+/**
+ * Input for structured workout agent
+ * Runtime context passed through the chain
+ */
+export interface StructuredWorkoutInput {
   longFormWorkout: LongFormWorkout;
   user: UserWithProfile;
   fitnessProfile: string;
-  structuredSchema: TSchema;
   workoutDate: Date;
-  operationName: string;
 }
 
 /**

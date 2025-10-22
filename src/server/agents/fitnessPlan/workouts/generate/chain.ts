@@ -50,6 +50,9 @@ export const createDailyWorkoutAgent = () => {
       // Schema for validation
       structuredSchema: _EnhancedWorkoutInstanceSchema,
 
+      // No modifications tracking for generate
+      includeModifications: false,
+
       // Context extractors
       getUserFromContext: (ctx) => ctx.user,
       getDateFromContext: (ctx) => ctx.date,

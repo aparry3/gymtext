@@ -42,6 +42,9 @@ export const substituteExercises = async (context: SubstituteExercisesContext): 
     // Schema for validation
     structuredSchema: _UpdatedWorkoutInstanceSchema,
 
+    // Track modifications for substitute
+    includeModifications: true,
+
     // Context extractors
     getUserFromContext: (ctx) => ctx.user,
     getDateFromContext: (ctx) => ctx.workout.date as Date,

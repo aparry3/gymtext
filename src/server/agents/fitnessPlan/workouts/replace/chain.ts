@@ -42,6 +42,9 @@ export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<Re
     // Schema for validation
     structuredSchema: _UpdatedWorkoutInstanceSchema,
 
+    // Track modifications for replace
+    includeModifications: true,
+
     // Context extractors
     getUserFromContext: (ctx) => ctx.user,
     getDateFromContext: (ctx) => ctx.workout.date as Date,

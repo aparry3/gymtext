@@ -2,12 +2,21 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
+ * Configuration for workout message agent
+ * Static configuration passed at agent creation time
+ */
+export interface WorkoutMessageConfig {
+  operationName?: string;
+}
+
+/**
  * Input for workout message agent
+ * Runtime context passed through the chain
  */
 export interface WorkoutMessageInput {
   longFormWorkout: LongFormWorkout;
   user: UserWithProfile;
-  operationName?: string;
+  fitnessProfile: string;
 }
 
 /**

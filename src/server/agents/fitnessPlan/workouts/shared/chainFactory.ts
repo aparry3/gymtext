@@ -8,6 +8,17 @@ import { createStructuredWorkoutAgent } from './structuredWorkout/chain';
 import { createWorkoutMessageAgent } from './workoutMessage/chain';
 
 /**
+ * Runtime context that flows through the workout chain
+ * Contains all dynamic data needed by downstream agents
+ */
+export interface WorkoutChainContext {
+  longFormWorkout: LongFormWorkout;
+  user: UserWithProfile;
+  fitnessProfile: string;
+  workoutDate: Date;
+}
+
+/**
  * Configuration for the workout chain factory
  *
  * @template TContext - The context type for the specific workout operation
@@ -20,6 +31,9 @@ export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAn
 
   // Schema for step 2a (structured JSON generation)
   structuredSchema: TWorkoutSchema;
+
+  // Whether to include modificationsApplied field (for substitute/replace)
+  includeModifications?: boolean;
 
   // Context extractors
   getUserFromContext: (context: TContext) => UserWithProfile;
@@ -64,47 +78,42 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
   const user = config.getUserFromContext(context);
   const workoutDate = config.getDateFromContext ? config.getDateFromContext(context) : new Date();
 
-  // Get fitness profile context
+  // Get fitness profile context once
   const fitnessProfileContext = new FitnessProfileContext();
   const fitnessProfile = await fitnessProfileContext.getContext(user);
 
-  // Step 1: Generate long-form workout description and reasoning
-  const longFormRunnable = RunnableLambda.from(async () => {
+  // Step 1: Generate long-form workout and build context object
+  const contextRunnable = RunnableLambda.from(async (): Promise<WorkoutChainContext> => {
     const systemMessage = config.systemPrompt();
     const userMessage = config.userPrompt(context, fitnessProfile);
 
     const model = initializeModel(LongFormWorkoutSchema);
-    const result = await model.invoke([
+    const longFormWorkout = await model.invoke([
       { role: 'system', content: systemMessage },
       { role: 'user', content: userMessage }
     ]);
 
-    console.log(`[${config.operationName}] Generated long-form workout (description: ${result.description.length} chars, reasoning: ${result.reasoning.length} chars)`);
+    console.log(`[${config.operationName}] Generated long-form workout (description: ${longFormWorkout.description.length} chars, reasoning: ${longFormWorkout.reasoning.length} chars)`);
 
-    return result;
-  });
-
-  // Step 2a: Convert long-form to structured JSON
-  const structuredAgent = createStructuredWorkoutAgent<TWorkout>();
-  const structuredRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
-    return structuredAgent.invoke({
-      longFormWorkout: longForm,
+    // Return complete context that flows through the chain
+    return {
+      longFormWorkout,
       user,
       fitnessProfile,
-      structuredSchema: config.structuredSchema,
-      workoutDate,
-      operationName: config.operationName
-    });
+      workoutDate
+    };
   });
 
-  // Step 2b: Convert long-form to SMS message
-  const messageAgent = createWorkoutMessageAgent();
-  const messageRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
-    return messageAgent.invoke({
-      longFormWorkout: longForm,
-      user,
-      operationName: config.operationName
-    });
+  // Step 2a: Create structured agent with config (returns runnable)
+  const structuredAgent = createStructuredWorkoutAgent<TWorkout>({
+    schema: config.structuredSchema,
+    includeModifications: config.includeModifications || false,
+    operationName: config.operationName
+  });
+
+  // Step 2b: Create message agent with config (returns runnable)
+  const messageAgent = createWorkoutMessageAgent({
+    operationName: config.operationName
   });
 
   // Create sequence with retry mechanism
@@ -114,12 +123,12 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
     try {
       console.log(`[${config.operationName}] Attempting operation (attempt ${attempt + 1}/${maxRetries})`);
 
-      // Execute the sequence with parallel step 2
+      // Execute the sequence - agents receive context directly (no wrappers!)
       const sequence = RunnableSequence.from([
-        longFormRunnable,
+        contextRunnable,
         RunnablePassthrough.assign({
-          workout: structuredRunnable,
-          message: messageRunnable,
+          workout: structuredAgent,
+          message: messageAgent,
         })
       ]);
 
