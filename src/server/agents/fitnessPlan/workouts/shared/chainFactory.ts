@@ -4,7 +4,7 @@ import { LongFormWorkout, LongFormWorkoutSchema } from '@/server/models/workout/
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { initializeModel } from '@/server/agents/base';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
-import { createMessagePrompt, type GreetingStyle } from './promptHelpers';
+import { createWorkoutMessagePrompt } from './promptHelpers';
 
 /**
  * Configuration for the workout chain factory
@@ -17,7 +17,6 @@ export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAn
   systemPrompt: () => string;
   userPrompt: (context: TContext, fitnessProfile: string) => string;
   structuredPrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string) => string;
-  messagePrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string, context: TContext) => string;
 
   // Schema for step 2a (structured JSON generation)
   structuredSchema: TWorkoutSchema;
@@ -46,25 +45,22 @@ export interface WorkoutChainResult<TWorkout> {
  * Creates a runnable that converts long-form workout to SMS message
  *
  * Fetches fitness profile internally from user and generates SMS-friendly
- * workout message. Used by workout generation chains and fallback message generation.
+ * workout message containing ONLY the workout structure (no greetings or motivational messages).
+ * Used by workout generation chains and fallback message generation.
  *
  * @param user - User with profile information
- * @param greetingStyle - Style of greeting ('standard' for new workouts, 'acknowledgment' for modifications)
  * @param operationName - Operation name for logging (e.g., 'generate workout', 'fallback message')
- * @param greetingContext - Additional context for acknowledgment-style greetings (e.g., 'substituted exercises')
  * @returns Runnable that converts LongFormWorkout to SMS string
  */
 export function createWorkoutMessageRunnable(
   user: UserWithProfile,
-  greetingStyle?: GreetingStyle,
-  operationName?: string,
-  greetingContext?: string
+  operationName?: string
 ): RunnableLambda<LongFormWorkout, string> {
   return RunnableLambda.from(async (longForm: LongFormWorkout) => {
     const fitnessProfileContext = new FitnessProfileContext();
     const fitnessProfile = await fitnessProfileContext.getContext(user);
 
-    const prompt = createMessagePrompt(longForm, user, fitnessProfile, greetingStyle || 'standard', greetingContext);
+    const prompt = createWorkoutMessagePrompt(longForm, user, fitnessProfile);
     const model = initializeModel(undefined);
     const response = await model.invoke(prompt);
     const message = typeof response.content === 'string' ? response.content : String(response.content);
@@ -145,18 +141,7 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
   });
 
   // Step 2b: Convert long-form to SMS message
-  const messageRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
-    const prompt = config.messagePrompt(longForm, user, fitnessProfile, context);
-    const model = initializeModel(undefined);
-    const response = await model.invoke(prompt);
-    const message = typeof response.content === 'string'
-      ? response.content
-      : String(response.content);
-
-    console.log(`[${config.operationName}] Generated SMS message (${message.length} characters)`);
-
-    return message;
-  });
+  const messageRunnable = createWorkoutMessageRunnable(user, config.operationName);
 
   // Create sequence with retry mechanism
   const maxRetries = 2;

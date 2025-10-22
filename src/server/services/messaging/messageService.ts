@@ -511,7 +511,7 @@ export class MessageService {
       console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
       try {
-        const messageRunnable = createWorkoutMessageRunnable(user, 'standard', 'fallback message');
+        const messageRunnable = createWorkoutMessageRunnable(user, 'fallback message');
         message = await messageRunnable.invoke({
           description: workout.description,
           reasoning: workout.reasoning

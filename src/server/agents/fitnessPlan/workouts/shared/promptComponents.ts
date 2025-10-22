@@ -314,7 +314,8 @@ export const SMS_FORMAT_REQUIREMENTS = `
 - Abbreviate: Barbell → BB, Dumbbell → DB
 - Keep exercise lines under ~35 characters for mobile readability
 - Remove parenthetical details and extra descriptions
-- End with brief motivational message (≤1 sentence)
+- DO NOT include greetings, introductions, or motivational messages
+- ONLY include the workout structure: Warmup, Workout, and Cooldown sections
 - Total: under 900 characters
 
 **Workout Structure Formatting:**
@@ -347,8 +348,6 @@ export const SMS_MESSAGE_EXAMPLES = `
 <Examples>
 
 **EXAMPLE 1: Mixed Structure (Superset + Straight Sets + Circuit)**
-Upper Push day! Let's build that pressing strength.
-
 Warmup:
 - Band Pull-Aparts: 3x15
 - Scapular Wall Slides: 3x12
@@ -371,11 +370,7 @@ Cooldown:
 - Pec Stretch: 2 min
 - Shoulder Stretch: 2 min
 
-Great work today!
-
 **EXAMPLE 2: Straight Sets Only**
-Lower Body strength day! Let's build those legs.
-
 Warmup:
 - Bodyweight Squats: 2x10
 - Glute Bridges: 2x15
@@ -393,11 +388,7 @@ Cooldown:
 - Hamstring Stretch: 2 min
 - Hip Flexor Stretch: 2 min
 
-Focus on form over weight!
-
 **EXAMPLE 3: Straight Sets + Circuit**
-Full body conditioning! Let's get after it.
-
 Warmup:
 - Jumping Jacks: 2x30 sec
 - Arm Circles: 2x30 sec
@@ -417,8 +408,6 @@ Workout:
 Cooldown:
 - Child's Pose: 2 min
 - Deep Breathing: 1 min
-
-Crushing it!
 </Examples>
 
 **Note:** These examples show different structure patterns. Use the structure that matches the long-form workout description. Don't default to any particular pattern - match what's in the description.

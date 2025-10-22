@@ -13,7 +13,6 @@ import {
 import {
   formatRecentWorkouts,
   createStructuredPrompt,
-  createMessagePrompt,
 } from '../shared/promptHelpers';
 
 // System prompt - static instructions and guidelines
@@ -79,10 +78,3 @@ export const structuredPrompt = (
   user: UserWithProfile,
   fitnessProfile: string
 ) => createStructuredPrompt(longFormWorkout, user, fitnessProfile, false);
-
-// Step 2b: Convert long-form description to SMS message
-export const messagePrompt = (
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
-  fitnessProfile: string
-) => createMessagePrompt(longFormWorkout, user, fitnessProfile, 'standard');

@@ -154,33 +154,19 @@ Return ONLY the JSON object - no additional text.
 export type GreetingStyle = 'standard' | 'acknowledgment';
 
 /**
- * Create message prompt for converting long-form workout to SMS
- * Works for all three agent types with different greeting styles
+ * Create workout-only prompt for converting long-form workout to SMS
+ * Generates ONLY the workout content without greetings or motivational messages
  *
  * @param longFormWorkout - The long-form workout description and reasoning
  * @param user - User context
  * @param fitnessProfile - Formatted fitness profile string
- * @param greetingStyle - Style of greeting ('standard' for generate, 'acknowledgment' for substitute/replace)
- * @param greetingContext - Additional context for greeting (e.g., what was modified)
  * @returns Message prompt for SMS conversion
  */
-export function createMessagePrompt(
+export function createWorkoutMessagePrompt(
   longFormWorkout: LongFormWorkout,
   user: UserWithProfile,
-  fitnessProfile: string,
-  greetingStyle: GreetingStyle = 'standard',
-  greetingContext?: string
+  fitnessProfile: string
 ): string {
-  const greetingGuidance = greetingStyle === 'standard'
-    ? `- Start with a brief greeting using ${user.name}'s first name
-- In ≤1 sentence, connect to a key goal from the profile`
-    : `- Start with enthusiastic acknowledgment ("Got it!", "Sure thing!", "On it!")
-- In ≤1 sentence, briefly mention what you ${greetingContext || 'changed'}`;
-
-  const contextInfo = greetingContext
-    ? `\n${greetingContext}`
-    : '';
-
   return `
 You are an elite personal trainer writing an SMS message for workout delivery.
 
@@ -190,16 +176,17 @@ ${longFormWorkout.description}
 
 <User Context>
 Name: ${user.name}
-Fitness Profile: ${fitnessProfile}${contextInfo}
+Fitness Profile: ${fitnessProfile}
 </User Context>
 
 <Task>
-Convert the workout description into a friendly SMS message under 900 characters.
+Convert the workout description into a concise SMS message containing ONLY the workout structure.
+DO NOT include greetings, introductions, or motivational messages.
+ONLY include the workout sections: Warmup, Workout, and Cooldown.
+Keep under 900 characters.
 </Task>
 
 ${SMS_FORMAT_REQUIREMENTS}
-
-${greetingGuidance}
 
 ${SMS_MESSAGE_EXAMPLES}
 

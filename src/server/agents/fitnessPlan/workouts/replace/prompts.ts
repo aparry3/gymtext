@@ -8,7 +8,6 @@ import {
 } from '../shared/promptComponents';
 import {
   createStructuredPrompt,
-  createMessagePrompt,
 } from '../shared/promptHelpers';
 
 export interface ReplaceWorkoutParams {
@@ -121,17 +120,3 @@ export const structuredPrompt = (
   user: UserWithProfile,
   fitnessProfile: string
 ) => createStructuredPrompt(longFormWorkout, user, fitnessProfile, true);
-
-// Step 2b: Convert long-form description to SMS message
-export const messagePrompt = (
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
-  fitnessProfile: string,
-  reason: string
-) => createMessagePrompt(
-  longFormWorkout,
-  user,
-  fitnessProfile,
-  'acknowledgment',
-  `Reason for modification: ${reason}`
-);

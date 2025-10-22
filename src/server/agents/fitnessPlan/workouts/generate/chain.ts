@@ -1,6 +1,6 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { systemPrompt, userPrompt, structuredPrompt, messagePrompt } from './prompts';
+import { systemPrompt, userPrompt, structuredPrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
 
@@ -49,9 +49,6 @@ export const createDailyWorkoutAgent = () => {
 
       // Step 2a: Structured JSON prompt
       structuredPrompt,
-
-      // Step 2b: SMS message prompt
-      messagePrompt,
 
       // Schema for validation
       structuredSchema: _EnhancedWorkoutInstanceSchema,

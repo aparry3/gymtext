@@ -1,7 +1,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { systemPrompt, userPrompt, structuredPrompt, messagePrompt, type ReplaceWorkoutParams } from './prompts';
+import { systemPrompt, userPrompt, structuredPrompt, type ReplaceWorkoutParams } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 
 export type { ReplaceWorkoutParams };
@@ -41,14 +41,6 @@ export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<Re
 
     // Step 2a: Structured JSON prompt
     structuredPrompt,
-
-    // Step 2b: SMS message prompt
-    messagePrompt: (longForm, user, fitnessProfile, ctx) => messagePrompt(
-      longForm,
-      user,
-      fitnessProfile,
-      ctx.params.reason
-    ),
 
     // Schema for validation
     structuredSchema: _UpdatedWorkoutInstanceSchema,
