@@ -14,7 +14,7 @@ export interface ReplaceWorkoutParams {
 }
 
 // System prompt - static instructions and guidelines
-export const systemPrompt = () => `
+export const SYSTEM_PROMPT = `
 You are an expert fitness coach replacing a workout based on new constraints.
 
 <Task>

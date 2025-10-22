@@ -13,7 +13,7 @@ export interface Modification {
 }
 
 // System prompt - static instructions and guidelines
-export const systemPrompt = () => `
+export const SYSTEM_PROMPT = `
 You are an expert fitness coach substituting specific exercises in a workout.
 
 <Task>

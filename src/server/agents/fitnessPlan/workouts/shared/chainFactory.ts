@@ -25,9 +25,9 @@ export interface WorkoutChainContext {
  * @template TWorkoutSchema - The Zod schema type for the structured workout
  */
 export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAny> {
-  // Prompts - functions that generate prompts from context
-  systemPrompt: () => string;
-  userPrompt: (context: TContext, fitnessProfile: string) => string;
+  // Prompts
+  systemPrompt: string;  // Static system prompt
+  userPrompt: (context: TContext, fitnessProfile: string) => string;  // Dynamic user prompt
 
   // Schema for step 2a (structured JSON generation)
   structuredSchema: TWorkoutSchema;
@@ -84,7 +84,7 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
 
   // Step 1: Generate long-form workout and build context object
   const contextRunnable = RunnableLambda.from(async (): Promise<WorkoutChainContext> => {
-    const systemMessage = config.systemPrompt();
+    const systemMessage = config.systemPrompt;
     const userMessage = config.userPrompt(context, fitnessProfile);
 
     const model = initializeModel(LongFormWorkoutSchema);

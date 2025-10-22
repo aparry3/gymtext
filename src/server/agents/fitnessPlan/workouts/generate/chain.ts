@@ -1,6 +1,6 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { systemPrompt, userPrompt } from './prompts';
+import { SYSTEM_PROMPT, userPrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
 
@@ -34,7 +34,7 @@ export const createDailyWorkoutAgent = () => {
   return createRunnableAgent<DailyWorkoutInput, DailyWorkoutOutput>(async (input) => {
     return executeWorkoutChain(input, {
       // Step 1: System prompt (static instructions)
-      systemPrompt,
+      systemPrompt: SYSTEM_PROMPT,
 
       // Step 1: User prompt (dynamic context)
       userPrompt: (ctx, fitnessProfile) => userPrompt(

@@ -1,7 +1,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
-import { systemPrompt, userPrompt, type ReplaceWorkoutParams } from './prompts';
+import { SYSTEM_PROMPT, userPrompt, type ReplaceWorkoutParams } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 
 export type { ReplaceWorkoutParams };
@@ -29,7 +29,7 @@ export interface ReplacedWorkoutResult {
 export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<ReplacedWorkoutResult> => {
   return executeWorkoutChain(context, {
     // Step 1: System prompt (static instructions)
-    systemPrompt,
+    systemPrompt: SYSTEM_PROMPT,
 
     // Step 1: User prompt (dynamic context)
     userPrompt: (ctx, fitnessProfile) => userPrompt(

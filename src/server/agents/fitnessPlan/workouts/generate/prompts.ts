@@ -12,7 +12,7 @@ import {
 import { formatRecentWorkouts } from '../shared/promptHelpers';
 
 // System prompt - static instructions and guidelines
-export const systemPrompt = () => `
+export const SYSTEM_PROMPT = `
 You are an elite personal fitness coach creating today's workout.
 
 <Task>
