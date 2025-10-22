@@ -10,10 +10,8 @@ import {
   buildReasoningGuidelines,
   WORKOUT_EXAMPLES,
 } from '../shared/promptComponents';
-import {
-  formatRecentWorkouts,
-  createStructuredPrompt,
-} from '../shared/promptHelpers';
+import { formatRecentWorkouts } from '../shared/promptHelpers';
+import { createStructuredPrompt } from '../shared/structuredWorkout/prompts';
 
 // System prompt - static instructions and guidelines
 export const systemPrompt = () => `

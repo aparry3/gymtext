@@ -6,9 +6,7 @@ import {
   buildDescriptionGuidelines,
   buildReasoningGuidelines,
 } from '../shared/promptComponents';
-import {
-  createStructuredPrompt,
-} from '../shared/promptHelpers';
+import { createStructuredPrompt } from '../shared/structuredWorkout/prompts';
 
 export interface Modification {
   exercise: string;

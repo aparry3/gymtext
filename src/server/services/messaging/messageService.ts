@@ -4,7 +4,7 @@ import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { replyAgent } from '../../agents/conversation/reply/chain';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageRunnable } from '../../agents/fitnessPlan/workouts/shared/chainFactory';
+import { createWorkoutMessageAgent } from '../../agents/fitnessPlan/workouts/shared/workoutMessage/chain';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -511,10 +511,14 @@ export class MessageService {
       console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
       try {
-        const messageRunnable = createWorkoutMessageRunnable(user, 'fallback message');
-        message = await messageRunnable.invoke({
-          description: workout.description,
-          reasoning: workout.reasoning
+        const messageAgent = createWorkoutMessageAgent();
+        message = await messageAgent.invoke({
+          longFormWorkout: {
+            description: workout.description,
+            reasoning: workout.reasoning
+          },
+          user,
+          operationName: 'fallback message'
         });
 
         // Save generated message for future use

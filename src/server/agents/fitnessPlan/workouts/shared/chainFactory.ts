@@ -4,7 +4,8 @@ import { LongFormWorkout, LongFormWorkoutSchema } from '@/server/models/workout/
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
 import { initializeModel } from '@/server/agents/base';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
-import { WORKOUT_MESSAGE_SYSTEM_PROMPT, createWorkoutMessageUserPrompt } from './promptHelpers';
+import { createStructuredWorkoutAgent } from './structuredWorkout/chain';
+import { createWorkoutMessageAgent } from './workoutMessage/chain';
 
 /**
  * Configuration for the workout chain factory
@@ -41,84 +42,6 @@ export interface WorkoutChainResult<TWorkout> {
   reasoning: string;
 }
 
-/**
- * Creates a runnable that converts long-form workout to structured JSON
- *
- * @param user - User with profile information
- * @param fitnessProfile - Formatted fitness profile string
- * @param structuredPrompt - Function that generates the structured prompt
- * @param structuredSchema - Zod schema for validation
- * @param workoutDate - Date for the workout
- * @param operationName - Operation name for logging
- * @returns Runnable that converts LongFormWorkout to structured workout object with date
- */
-export function createStructuredWorkoutRunnable<TWorkout>(
-  user: UserWithProfile,
-  fitnessProfile: string,
-  structuredPrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string) => string,
-  structuredSchema: z.ZodTypeAny,
-  workoutDate: Date,
-  operationName: string
-): RunnableLambda<LongFormWorkout, TWorkout & { date: Date }> {
-  return RunnableLambda.from(async (longForm: LongFormWorkout) => {
-    const prompt = structuredPrompt(longForm, user, fitnessProfile);
-    const model = initializeModel(structuredSchema);
-    const workout = await model.invoke(prompt) as TWorkout;
-
-    // Validate the workout structure
-    const validatedWorkout = structuredSchema.parse(workout);
-
-    // Basic validation - ensure workout has blocks
-    if ('blocks' in validatedWorkout && (!validatedWorkout.blocks || (validatedWorkout.blocks as unknown[]).length === 0)) {
-      throw new Error('Workout has no blocks');
-    }
-
-    const blockCount = 'blocks' in validatedWorkout ? (validatedWorkout.blocks as unknown[]).length : 'N/A';
-    const modCount = 'modificationsApplied' in validatedWorkout
-      ? (validatedWorkout.modificationsApplied as unknown[] | undefined)?.length || 0
-      : 'N/A';
-
-    console.log(`[${operationName}] Generated structured workout (blocks: ${blockCount}, modifications: ${modCount})`);
-
-    // Add date to workout
-    return {
-      ...validatedWorkout,
-      date: workoutDate
-    } as TWorkout & { date: Date };
-  });
-}
-
-/**
- * Creates a runnable that converts long-form workout to SMS message
- *
- * Fetches fitness profile internally from user and generates SMS-friendly
- * workout message containing ONLY the workout structure (no greetings or motivational messages).
- * Used by workout generation chains and fallback message generation.
- *
- * @param user - User with profile information
- * @param operationName - Operation name for logging (e.g., 'generate workout', 'fallback message')
- * @returns Runnable that converts LongFormWorkout to SMS string
- */
-export function createWorkoutMessageRunnable(
-  user: UserWithProfile,
-  operationName?: string
-): RunnableLambda<LongFormWorkout, string> {
-  return RunnableLambda.from(async (longForm: LongFormWorkout) => {
-    const fitnessProfileContext = new FitnessProfileContext();
-    const fitnessProfile = await fitnessProfileContext.getContext(user);
-
-    const userPrompt = createWorkoutMessageUserPrompt(longForm, user, fitnessProfile);
-    const model = initializeModel(undefined);
-    const response = await model.invoke([
-      { role: 'system', content: WORKOUT_MESSAGE_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt }
-    ]);
-    const message = typeof response.content === 'string' ? response.content : String(response.content);
-
-    console.log(`[${operationName || 'generate message'}] Generated SMS message (${message.length} characters)`);
-    return message;
-  });
-}
 
 /**
  * Shared workout chain factory
@@ -163,17 +86,27 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
   });
 
   // Step 2a: Convert long-form to structured JSON
-  const structuredRunnable = createStructuredWorkoutRunnable<TWorkout>(
-    user,
-    fitnessProfile,
-    config.structuredPrompt,
-    config.structuredSchema,
-    workoutDate,
-    config.operationName
-  );
+  const structuredAgent = createStructuredWorkoutAgent<TWorkout>();
+  const structuredRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    return structuredAgent.invoke({
+      longFormWorkout: longForm,
+      user,
+      fitnessProfile,
+      structuredSchema: config.structuredSchema,
+      workoutDate,
+      operationName: config.operationName
+    });
+  });
 
   // Step 2b: Convert long-form to SMS message
-  const messageRunnable = createWorkoutMessageRunnable(user, config.operationName);
+  const messageAgent = createWorkoutMessageAgent();
+  const messageRunnable = RunnableLambda.from(async (longForm: LongFormWorkout) => {
+    return messageAgent.invoke({
+      longFormWorkout: longForm,
+      user,
+      operationName: config.operationName
+    });
+  });
 
   // Create sequence with retry mechanism
   const maxRetries = 2;
