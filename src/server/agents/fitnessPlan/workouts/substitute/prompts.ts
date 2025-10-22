@@ -1,12 +1,10 @@
 import { WorkoutInstance } from '@/server/models/workout';
-import { LongFormWorkout } from '@/server/models/workout/schema';
 import { UserWithProfile } from '@/server/models/userModel';
 import {
   OUTPUT_FORMAT_SECTION,
   buildDescriptionGuidelines,
   buildReasoningGuidelines,
 } from '../shared/promptComponents';
-import { createStructuredPrompt } from '../shared/structuredWorkout/prompts';
 
 export interface Modification {
   exercise: string;
@@ -106,10 +104,3 @@ ${modificationsText}
 Now create the comprehensive workout with substitutions and reasoning for ${user.name}.
 `.trim();
 };
-
-// Step 2a: Convert long-form description to structured JSON workout
-export const structuredPrompt = (
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
-  fitnessProfile: string
-) => createStructuredPrompt(longFormWorkout, user, fitnessProfile, true);

@@ -2,7 +2,6 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { WorkoutInstance } from '@/server/models/workout';
-import { LongFormWorkout } from '@/server/models/workout/schema';
 import {
   OUTPUT_FORMAT_SECTION,
   STRUCTURE_DECISION_GUIDANCE,
@@ -11,7 +10,6 @@ import {
   WORKOUT_EXAMPLES,
 } from '../shared/promptComponents';
 import { formatRecentWorkouts } from '../shared/promptHelpers';
-import { createStructuredPrompt } from '../shared/structuredWorkout/prompts';
 
 // System prompt - static instructions and guidelines
 export const systemPrompt = () => `
@@ -69,10 +67,3 @@ ${fitnessProfile}
 
 Now create the comprehensive workout and reasoning for ${user.name}.
 `.trim();
-
-// Step 2a: Convert long-form description to structured JSON workout
-export const structuredPrompt = (
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
-  fitnessProfile: string
-) => createStructuredPrompt(longFormWorkout, user, fitnessProfile, false);

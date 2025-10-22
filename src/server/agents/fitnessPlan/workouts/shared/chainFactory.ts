@@ -17,7 +17,6 @@ export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAn
   // Prompts - functions that generate prompts from context
   systemPrompt: () => string;
   userPrompt: (context: TContext, fitnessProfile: string) => string;
-  structuredPrompt: (longForm: LongFormWorkout, user: UserWithProfile, fitnessProfile: string) => string;
 
   // Schema for step 2a (structured JSON generation)
   structuredSchema: TWorkoutSchema;
