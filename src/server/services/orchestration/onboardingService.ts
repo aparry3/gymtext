@@ -72,9 +72,9 @@ export class OnboardingService {
       );
       flow.addMessage(planMessages);
 
-      // Step 4: Send first daily workout (with context from previous messages)
+      // Step 4: Send first daily workout
       console.log(`[Onboarding] Sending first workout to ${user.id}`);
-      await this.dailyMessageService.sendDailyMessage(user, flow.getRecentMessages());
+      await this.dailyMessageService.sendDailyMessage(user);
 
       console.log(`[Onboarding] Successfully completed onboarding for ${user.id}`);
     } catch (error) {

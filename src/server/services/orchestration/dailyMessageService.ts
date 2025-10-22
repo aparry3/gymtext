@@ -7,7 +7,6 @@ import { ProgressService } from '../training/progressService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { Message } from '@/server/models/conversation';
 
 interface MessageResult {
   success: boolean;
@@ -45,8 +44,7 @@ export class DailyMessageService {
    * Sends a daily message to a single user
    */
   public async sendDailyMessage(
-    user: UserWithProfile,
-    previousMessages?: Message[]
+    user: UserWithProfile
   ): Promise<MessageResult> {
     try {
       console.log(`Processing daily message for user ${user.id}`);
@@ -73,7 +71,7 @@ export class DailyMessageService {
       }
 
       // Generate and send message
-      const storedMessage = await this.messageService.sendWorkoutMessage(user, workout, previousMessages);
+      const storedMessage = await this.messageService.sendWorkoutMessage(user, workout);
       console.log(`Successfully sent daily message to user ${user.id}`);
       return {
         success: true,

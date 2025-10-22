@@ -30,14 +30,3 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
     return { message: welcomeMessage };
   });
 };
-
-/**
- * @deprecated Legacy export for backward compatibility - use createWelcomeMessageAgent instead
- */
-export const welcomeMessageAgent = {
-  invoke: async ({ user }: { user: any }): Promise<{ user: any, value: string }> => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const agent = createWelcomeMessageAgent();
-    const result = await agent.invoke({ user });
-    return { user, value: result.message };
-  }
-};

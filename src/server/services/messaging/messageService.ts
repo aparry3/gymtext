@@ -3,9 +3,8 @@ import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { replyAgent } from '../../agents/conversation/reply/chain';
-import { welcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageAgent } from '../../agents/messaging/workoutMessage/chain';
-import { FitnessProfileContext } from '../context/fitnessProfileContext';
+import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
+import { createWorkoutMessageRunnable } from '../../agents/fitnessPlan/workouts/shared/chainFactory';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -113,7 +112,6 @@ export class MessageService {
   private progressService: ProgressService;
   private workoutInstanceService: WorkoutInstanceService;
   private circuitBreaker: CircuitBreaker;
-  private contextService: FitnessProfileContext;
 
   private constructor() {
     this.messageRepo = new MessageRepository(postgresDb);
@@ -121,7 +119,6 @@ export class MessageService {
     this.fitnessPlanService = FitnessPlanService.getInstance();
     this.progressService = ProgressService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
-    this.contextService = new FitnessProfileContext();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000, // 1 minute
@@ -449,8 +446,9 @@ export class MessageService {
    * @returns The stored Message object
    */
   public async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {
+    const welcomeMessageAgent = createWelcomeMessageAgent();
     const agentResponse = await welcomeMessageAgent.invoke({ user });
-    const welcomeMessage = String(agentResponse.value);
+    const welcomeMessage = agentResponse.message;
     return await this.sendMessage(user, welcomeMessage);
   }
 
@@ -489,44 +487,51 @@ export class MessageService {
 
   /**
    * Send workout message to a user
-   * Wraps generateDailyWorkoutMessage agent and sends the generated message
+   * Generates SMS from workout data and sends it
    * @param user - The user to send to
-   * @param workout - The workout instance
-   * @param previousMessages - Optional previous messages for context
+   * @param workout - The workout instance (should have pre-generated message or description/reasoning)
    * @returns The stored Message object
    */
   public async sendWorkoutMessage(
     user: UserWithProfile,
-    workout: WorkoutInstance | EnhancedWorkoutInstance,
-    previousMessages?: Message[]
+    workout: WorkoutInstance | EnhancedWorkoutInstance
   ): Promise<Message> {
-    // Check if workout already has a message stored
     let message: string;
     const workoutId = 'id' in workout ? workout.id : 'unknown';
+
+    // Fast path: Use pre-generated message if available
     if ('message' in workout && workout.message) {
       console.log(`[MessageService] Using pre-generated message from workout ${workoutId}`);
       message = workout.message;
-    } else {
-      console.log(`[MessageService] Generating new message for workout ${workoutId}`);
+      return await this.sendMessage(user, message);
+    }
+
+    // Fallback: Generate from description/reasoning (shouldn't happen in production)
+    if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
+      console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
+
       try {
-        // Create workout message agent with injected context service (DI pattern)
-        const workoutMessageAgent = createWorkoutMessageAgent({
-          contextService: this.contextService
+        const messageRunnable = createWorkoutMessageRunnable(user, 'standard', 'fallback message');
+        message = await messageRunnable.invoke({
+          description: workout.description,
+          reasoning: workout.reasoning
         });
 
-        message = await workoutMessageAgent.generateDailyMessage(user, workout, previousMessages);
-
-        // Save the generated message to the workout instance for future use
+        // Save generated message for future use
         if ('id' in workout && workout.id) {
           await this.workoutInstanceService.updateWorkoutMessage(workout.id, message);
-          console.log(`[MessageService] Saved generated message to workout ${workout.id}`);
+          console.log(`[MessageService] Saved fallback message to workout ${workout.id}`);
         }
+
+        return await this.sendMessage(user, message);
       } catch (error) {
-        console.error(`[MessageService] Failed to generate workout message for workout ${workoutId}:`, error);
+        console.error(`[MessageService] Failed to generate fallback message for workout ${workoutId}:`, error);
         throw new Error('Failed to generate workout message');
       }
     }
-    return await this.sendMessage(user, message);
+
+    // Should never reach here in production
+    throw new Error(`Workout ${workoutId} missing required fields (description/reasoning or message) for SMS generation`);
   }
 }
 

@@ -10,9 +10,6 @@ export type { Agent, AgentDeps, AgentConfig } from './base';
 // Fitness Plan Agents
 export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './fitnessPlan/chain';
 
-// Messaging Agents
-export { createWorkoutMessageAgent, type WorkoutMessageAgentDeps } from './messaging/workoutMessage/chain';
-
 // Conversation Agents
 export { type ChatAgentDeps } from './conversation/chat/chain';
 
@@ -30,7 +27,6 @@ export { createModificationTools, type WorkoutModificationService, type Microcyc
 // Please migrate to the factory functions above
 
 export * from './fitnessPlan/chain';
-export * from './messaging/workoutMessage/chain';
 export * from './messaging/welcomeMessage/chain';
 export * from './messaging/planSummary/chain';
 export * from './conversation/chat/chain';
