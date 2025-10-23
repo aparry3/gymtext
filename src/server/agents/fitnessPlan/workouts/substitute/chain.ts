@@ -28,27 +28,18 @@ export type SubstitutedWorkoutResult = WorkoutChainResult<z.infer<typeof GeminiU
  * 2. In parallel: convert to JSON structure + SMS message
  */
 export const substituteExercises = async (context: SubstituteExercisesContext): Promise<SubstitutedWorkoutResult> => {
-  return executeWorkoutChain(context, {
+  return executeWorkoutChain({...context, date: context.workout.date as Date}, {
     // Step 1: System prompt (static instructions)
     systemPrompt: SYSTEM_PROMPT,
 
     // Step 1: User prompt (dynamic context)
-    userPrompt: (ctx, fitnessProfile) => userPrompt(
-      fitnessProfile,
-      ctx.modifications,
-      ctx.workout,
-      ctx.user
-    ),
+    userPrompt: userPrompt(context),
 
     // Schema for validation (Gemini-compatible)
     structuredSchema: GeminiUpdatedWorkoutInstanceSchema,
 
     // Track modifications for substitute
     includeModifications: true,
-
-    // Context extractors
-    getUserFromContext: (ctx) => ctx.user,
-    getDateFromContext: (ctx) => ctx.workout.date as Date,
 
     // Logging identifier
     operationName: 'substitute exercises'

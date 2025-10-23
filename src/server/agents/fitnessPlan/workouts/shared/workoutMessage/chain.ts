@@ -18,14 +18,12 @@ export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
     model: 'gemini-2.5-flash-lite',
     maxTokens: 4096
   };
+  const model = initializeModel(undefined, agentConfig);
   return createRunnableAgent<WorkoutMessageInput, WorkoutMessageOutput>(async (input) => {
     const { longFormWorkout } = input;
 
     // Create the user prompt with workout and context
     const userPrompt = createWorkoutMessageUserPrompt(longFormWorkout);
-
-    // Initialize model without schema (for text generation)
-    const model = initializeModel(undefined, agentConfig);
 
     // Invoke model with system and user prompts
     const response = await model.invoke([

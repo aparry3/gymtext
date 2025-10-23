@@ -37,25 +37,13 @@ export const createDailyWorkoutAgent = () => {
       systemPrompt: SYSTEM_PROMPT,
 
       // Step 1: User prompt (dynamic context)
-      userPrompt: (ctx, fitnessProfile) => userPrompt(
-        ctx.user,
-        fitnessProfile,
-        ctx.dayPlan,
-        ctx.microcycle.pattern,
-        ctx.mesocycle,
-        ctx.fitnessPlan.programType,
-        ctx.recentWorkouts
-      ),
+      userPrompt: userPrompt(input),
 
       // Schema for validation (Gemini-compatible)
       structuredSchema: GeminiEnhancedWorkoutInstanceSchema,
 
       // No modifications tracking for generate
       includeModifications: false,
-
-      // Context extractors
-      getUserFromContext: (ctx) => ctx.user,
-      getDateFromContext: (ctx) => ctx.date,
 
       // Logging identifier
       operationName: 'generate workout'

@@ -1,21 +1,25 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
-import { LongFormWorkout, LongFormWorkoutSchema } from '@/server/models/workout/schema';
+import { LongFormWorkout } from '@/server/models/workout/schema';
 import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
-import { initializeModel } from '@/server/agents/base';
-import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createStructuredWorkoutAgent } from './structuredWorkout/chain';
 import { createWorkoutMessageAgent } from './workoutMessage/chain';
+import { createLongFormatWorkoutRunnable } from './longFormWorkout/chain';
+
+
+export interface BaseWorkoutChainInput {
+  user: UserWithProfile;
+  date: Date;
+}
 
 /**
  * Runtime context that flows through the workout chain
  * Contains all dynamic data needed by downstream agents
  */
-export interface WorkoutChainContext {
+export interface WorkoutChainContext extends BaseWorkoutChainInput {
   longFormWorkout: LongFormWorkout;
-  user: UserWithProfile;
   fitnessProfile: string;
-  workoutDate: Date;
 }
 
 /**
@@ -24,20 +28,16 @@ export interface WorkoutChainContext {
  * @template TContext - The context type for the specific workout operation
  * @template TWorkoutSchema - The Zod schema type for the structured workout
  */
-export interface WorkoutChainConfig<TContext, TWorkoutSchema extends z.ZodTypeAny> {
+export interface WorkoutChainConfig<TWorkoutSchema extends z.ZodTypeAny> {
   // Prompts
   systemPrompt: string;  // Static system prompt
-  userPrompt: (context: TContext, fitnessProfile: string) => string;  // Dynamic user prompt
+  userPrompt: (fitnessProfile: string) => string;  // Dynamic user prompt
 
   // Schema for step 2a (structured JSON generation)
   structuredSchema: TWorkoutSchema;
 
   // Whether to include modificationsApplied field (for substitute/replace)
   includeModifications?: boolean;
-
-  // Context extractors
-  getUserFromContext: (context: TContext) => UserWithProfile;
-  getDateFromContext?: (context: TContext) => Date;
 
   // Operation name for logging
   operationName: string;
@@ -55,7 +55,6 @@ export interface WorkoutChainResult<TWorkout> {
   reasoning: string;
 }
 
-
 /**
  * Shared workout chain factory
  *
@@ -69,44 +68,21 @@ export interface WorkoutChainResult<TWorkout> {
  * @param config - Configuration for prompts, schemas, and extractors
  * @returns Workout result with structured workout, message, description, and reasoning
  */
-export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.ZodTypeAny>(
+export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput, TWorkoutSchema extends z.ZodTypeAny>(
   context: TContext,
-  config: WorkoutChainConfig<TContext, TWorkoutSchema>
+  config: WorkoutChainConfig<TWorkoutSchema>
 ): Promise<WorkoutChainResult<z.infer<TWorkoutSchema>>> {
   type TWorkout = z.infer<TWorkoutSchema>;
 
-  const user = config.getUserFromContext(context);
-  const workoutDate = config.getDateFromContext ? config.getDateFromContext(context) : new Date();
-
   // Get fitness profile context once
   const fitnessProfileContext = new FitnessProfileContext();
-  const fitnessProfile = await fitnessProfileContext.getContext(user);
+  const fitnessProfile = await fitnessProfileContext.getContext(context.user);
+
+  const systemMessage = config.systemPrompt;
+  const userMessage = config.userPrompt(fitnessProfile);
 
   // Step 1: Generate long-form workout and build context object
-  const contextRunnable = RunnableLambda.from(async (): Promise<WorkoutChainContext> => {
-    const systemMessage = config.systemPrompt;
-    const userMessage = config.userPrompt(context, fitnessProfile);
-
-    // Use gpt-5-nano for long-form generation - reasoning model good for complex workout planning
-    // High token limit accounts for ~96% reasoning token overhead
-    const model = initializeModel(LongFormWorkoutSchema, {
-      model: 'gpt-5-nano',
-    });
-    const longFormWorkout = await model.invoke([
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: userMessage }
-    ]);
-
-    console.log(`[${config.operationName}] Generated long-form workout (description: ${longFormWorkout.description.length} chars, reasoning: ${longFormWorkout.reasoning.length} chars)`);
-
-    // Return complete context that flows through the chain
-    return {
-      longFormWorkout,
-      user,
-      fitnessProfile,
-      workoutDate
-    };
-  });
+  const contextRunnable = createLongFormatWorkoutRunnable({systemPrompt: systemMessage});
 
   // Step 2a: Create structured agent with config (returns runnable)
   const structuredAgent = createStructuredWorkoutAgent<TWorkout>({
@@ -136,10 +112,9 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
         })
       ]);
 
-      const result = await sequence.invoke({});
+      const result = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
       console.log(`[${config.operationName}] Successfully completed with description, reasoning, JSON, and message`);
-
       // Flatten the result to match WorkoutChainResult type
       return {
         workout: result.workout,

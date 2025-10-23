@@ -1,15 +1,15 @@
 import { z } from 'zod';
-import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
 import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
 import { SYSTEM_PROMPT, userPrompt, type ReplaceWorkoutParams } from './prompts';
 import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
+import { UserWithProfile } from '@/server/models';
 
 export type { ReplaceWorkoutParams };
 
 export interface ReplaceWorkoutContext {
-  workout: WorkoutInstance;
   user: UserWithProfile;
+  workout: WorkoutInstance;
   params: ReplaceWorkoutParams;
 }
 
@@ -28,27 +28,18 @@ export type ReplacedWorkoutResult = WorkoutChainResult<z.infer<typeof GeminiUpda
  * 2. In parallel: convert to JSON structure + SMS message
  */
 export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<ReplacedWorkoutResult> => {
-  return executeWorkoutChain(context, {
+  return executeWorkoutChain({...context, date: context.workout.date as Date}, {
     // Step 1: System prompt (static instructions)
     systemPrompt: SYSTEM_PROMPT,
 
     // Step 1: User prompt (dynamic context)
-    userPrompt: (ctx, fitnessProfile) => userPrompt(
-      fitnessProfile,
-      ctx.params,
-      ctx.workout,
-      ctx.user
-    ),
+    userPrompt: userPrompt(context),
 
     // Schema for validation (Gemini-compatible)
     structuredSchema: GeminiUpdatedWorkoutInstanceSchema,
 
     // Track modifications for replace
     includeModifications: true,
-
-    // Context extractors
-    getUserFromContext: (ctx) => ctx.user,
-    getDateFromContext: (ctx) => ctx.workout.date as Date,
 
     // Logging identifier
     operationName: 'replace workout'

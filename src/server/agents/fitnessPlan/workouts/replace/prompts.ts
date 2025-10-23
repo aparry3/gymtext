@@ -1,10 +1,10 @@
 import { WorkoutInstance } from '@/server/models/workout';
-import { UserWithProfile } from '@/server/models/userModel';
 import {
   OUTPUT_FORMAT_SECTION,
   buildDescriptionGuidelines,
   buildReasoningGuidelines,
 } from '../shared/promptComponents';
+import { ReplaceWorkoutContext } from './chain';
 
 export interface ReplaceWorkoutParams {
   reason: string;
@@ -12,6 +12,7 @@ export interface ReplaceWorkoutParams {
   preferredEquipment?: string[];
   focusAreas?: string[];
 }
+
 
 // System prompt - static instructions and guidelines
 export const SYSTEM_PROMPT = `
@@ -64,32 +65,29 @@ ${buildReasoningGuidelines("500-800", true)}
 
 // User prompt - dynamic context and user-specific data
 export const userPrompt = (
-  fitnessProfile: string,
-  params: ReplaceWorkoutParams,
-  workout: WorkoutInstance,
-  user: UserWithProfile
-) => {
-  const workoutDetails = typeof workout.details === 'string'
-    ? JSON.parse(workout.details)
-    : workout.details;
+ input: ReplaceWorkoutContext
+) => (fitnessProfile: string) => {
+  const workoutDetails = typeof input.workout.details === 'string'
+    ? JSON.parse(input.workout.details)
+    : input.workout.details;
 
-  const constraintsText = params.constraints.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
-  const equipmentText = params.preferredEquipment?.length
-    ? `Available equipment: ${params.preferredEquipment.join(', ')}`
+  const constraintsText = input.params.constraints.map((c, idx) => `${idx + 1}. ${c}`).join('\n');
+  const equipmentText = input.params.preferredEquipment?.length
+    ? `Available equipment: ${input.params.preferredEquipment.join(', ')}`
     : 'No specific equipment preferences provided';
-  const focusText = params.focusAreas?.length
-    ? `Focus areas: ${params.focusAreas.join(', ')}`
+  const focusText = input.params.focusAreas?.length
+    ? `Focus areas: ${input.params.focusAreas.join(', ')}`
     : 'No specific focus areas';
 
   return `
-User: ${user.name}
+User: ${input.user.name}
 
 Current Workout:
 **Original Workout Description:**
-${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
+${(input.workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
 
 **Original Coaching Reasoning:**
-${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+${(input.workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
 
 **Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}
@@ -98,7 +96,7 @@ Fitness Profile:
 ${fitnessProfile}
 
 Modification Request:
-Reason: ${params.reason}
+Reason: ${input.params.reason}
 
 Constraints:
 ${constraintsText}
@@ -106,6 +104,6 @@ ${constraintsText}
 ${equipmentText}
 ${focusText}
 
-Now create the comprehensive replacement workout and reasoning for ${user.name}.
+Now create the comprehensive replacement workout and reasoning for ${input.user.name}.
 `.trim();
 };

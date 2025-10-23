@@ -1,7 +1,3 @@
-import { UserWithProfile } from '@/server/models/userModel';
-import { MicrocyclePattern } from '@/server/models/microcycle';
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
-import { WorkoutInstance } from '@/server/models/workout';
 import {
   OUTPUT_FORMAT_SECTION,
   STRUCTURE_DECISION_GUIDANCE,
@@ -10,6 +6,7 @@ import {
   WORKOUT_EXAMPLES,
 } from '../shared/promptComponents';
 import { formatRecentWorkouts } from '../shared/promptHelpers';
+import { DailyWorkoutInput } from './types';
 
 // System prompt - static instructions and guidelines
 export const SYSTEM_PROMPT = `
@@ -35,35 +32,24 @@ ${WORKOUT_EXAMPLES}
 
 // User prompt - dynamic context and user-specific data
 export const userPrompt = (
-  user: UserWithProfile,
-  fitnessProfile: string,
-  dayPlan: {
-    day: string;
-    theme: string;
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
-  },
-  microcycle: MicrocyclePattern,
-  mesocycle: MesocycleOverview,
-  programType: string,
-  recentWorkouts?: WorkoutInstance[]
-) => `
-User: ${user.name}
+  input: DailyWorkoutInput
+) => (fitnessProfile: string) => `
+User: ${input.user.name}
 
 Program Details:
-- Program type: ${programType}
-- Current mesocycle: ${mesocycle.name} (week ${microcycle.weekIndex} of ${mesocycle.weeks})
-- Mesocycle focus: ${mesocycle.focus.join(', ')}
-- Today's theme: ${dayPlan.theme}
-- Load level: ${dayPlan.load || 'moderate'}
-${dayPlan.notes ? `- Special notes: ${dayPlan.notes}` : ''}
-${mesocycle.deload && microcycle.weekIndex === mesocycle.weeks ? '- This is a DELOAD week - reduce volume and intensity' : ''}
+- Program type: ${input.fitnessPlan.programType}
+- Current mesocycle: ${input.mesocycle.name} (week ${input.microcycle.pattern.weekIndex} of ${input.mesocycle.weeks})
+- Mesocycle focus: ${input.mesocycle.focus.join(', ')}
+- Today's theme: ${input.dayPlan.theme}
+- Load level: ${input.dayPlan.load || 'moderate'}
+${input.dayPlan.notes ? `- Special notes: ${input.dayPlan.notes}` : ''}
+${input.mesocycle.deload && input.microcycle.pattern.weekIndex === input.mesocycle.weeks ? '- This is a DELOAD week - reduce volume and intensity' : ''}
 
 Recent Training History:
-${recentWorkouts && recentWorkouts.length > 0 ? formatRecentWorkouts(recentWorkouts, user.timezone) : 'No recent workouts available'}
+${input.recentWorkouts && input.recentWorkouts.length > 0 ? formatRecentWorkouts(input.recentWorkouts, input.user.timezone) : 'No recent workouts available'}
 
 Fitness Profile:
 ${fitnessProfile}
 
-Now create the comprehensive workout and reasoning for ${user.name}.
+Now create the comprehensive workout and reasoning for ${input.user.name}.
 `.trim();

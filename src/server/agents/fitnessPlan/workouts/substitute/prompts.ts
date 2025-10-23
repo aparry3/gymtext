@@ -1,10 +1,10 @@
 import { WorkoutInstance } from '@/server/models/workout';
-import { UserWithProfile } from '@/server/models/userModel';
 import {
   OUTPUT_FORMAT_SECTION,
   buildDescriptionGuidelines,
   buildReasoningGuidelines,
 } from '../shared/promptComponents';
+import { SubstituteExercisesContext } from './chain';
 
 export interface Modification {
   exercise: string;
@@ -67,30 +67,27 @@ ${buildReasoningGuidelines("500-800", true)}
 
 // User prompt - dynamic context and user-specific data
 export const userPrompt = (
-  fitnessProfile: string,
-  modifications: Modification[],
-  workout: WorkoutInstance,
-  user: UserWithProfile
-) => {
-  const workoutDetails = typeof workout.details === 'string'
-    ? JSON.parse(workout.details)
-    : workout.details;
+  input: SubstituteExercisesContext
+) => (fitnessProfile: string) => {
+  const workoutDetails = typeof input.workout.details === 'string'
+    ? JSON.parse(input.workout.details)
+    : input.workout.details;
 
-  const modificationsText = modifications.map((mod, idx) => `
+  const modificationsText = input.modifications.map((mod, idx) => `
 ${idx + 1}. Exercise to replace: "${mod.exercise}"
    Reason: ${mod.reason}
    ${mod.constraints && mod.constraints.length > 0 ? `Constraints: ${mod.constraints.join(', ')}` : ''}
   `.trim()).join('\n\n');
 
   return `
-User: ${user.name}
+User: ${input.user.name}
 
 Current Workout:
 **Original Workout Description:**
-${(workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
+${(input.workout as WorkoutInstance & { description?: string }).description || 'No description available - see JSON below'}
 
 **Original Coaching Reasoning:**
-${(workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
+${(input.workout as WorkoutInstance & { reasoning?: string }).reasoning || 'No reasoning available - this workout was generated before we tracked reasoning'}
 
 **Structured Workout JSON:**
 ${JSON.stringify(workoutDetails, null, 2)}
@@ -101,6 +98,6 @@ ${fitnessProfile}
 Modifications Required:
 ${modificationsText}
 
-Now create the comprehensive workout with substitutions and reasoning for ${user.name}.
+Now create the comprehensive workout with substitutions and reasoning for ${input.user.name}.
 `.trim();
 };

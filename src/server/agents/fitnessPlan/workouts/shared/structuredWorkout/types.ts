@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { LongFormWorkout } from '@/server/models/workout/schema';
 import type { AgentConfig } from '@/server/agents/base';
 
 /**
@@ -12,17 +10,6 @@ export interface StructuredWorkoutConfig<TSchema extends z.ZodTypeAny = z.ZodTyp
   includeModifications: boolean;
   operationName: string;
   agentConfig?: AgentConfig;
-}
-
-/**
- * Input for structured workout agent
- * Runtime context passed through the chain
- */
-export interface StructuredWorkoutInput {
-  longFormWorkout: LongFormWorkout;
-  user: UserWithProfile;
-  fitnessProfile: string;
-  workoutDate: Date;
 }
 
 /**

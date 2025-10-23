@@ -1,7 +1,8 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildStructuredWorkoutSystemPrompt, createStructuredWorkoutUserPrompt } from './prompts';
-import type { StructuredWorkoutConfig, StructuredWorkoutInput, StructuredWorkoutOutput } from './types';
+import type { StructuredWorkoutConfig, StructuredWorkoutOutput } from './types';
 import { convertGeminiToStandard } from '@/server/models/workout/geminiSchema';
+import { WorkoutChainContext } from '../chainFactory';
 
 /**
  * Structured Workout Agent Factory
@@ -19,15 +20,14 @@ export const createStructuredWorkoutAgent = <TWorkout = unknown>(
     model: 'gemini-2.5-flash-lite',
     maxTokens: 16384
   };
-  return createRunnableAgent<StructuredWorkoutInput, StructuredWorkoutOutput<TWorkout>>(async (input) => {
-    const { longFormWorkout, user, fitnessProfile, workoutDate } = input;
+  // Initialize model with schema from config
+  const model = initializeModel(config.schema, agentConfig);
+  return createRunnableAgent<WorkoutChainContext, StructuredWorkoutOutput<TWorkout>>(async (input) => {
+    const { longFormWorkout, user, fitnessProfile, date } = input;
 
     // Build system and user prompts using config
     const systemPrompt = buildStructuredWorkoutSystemPrompt(config.includeModifications);
     const userPrompt = createStructuredWorkoutUserPrompt(longFormWorkout, user, fitnessProfile, config.includeModifications);
-
-    // Initialize model with schema from config
-    const model = initializeModel(config.schema, agentConfig);
 
     // Invoke model with system and user prompts
     const workout = await model.invoke([
@@ -57,7 +57,7 @@ export const createStructuredWorkoutAgent = <TWorkout = unknown>(
     // Add date to workout
     return {
       ...processedWorkout,
-      date: workoutDate
+      date
     } as StructuredWorkoutOutput<TWorkout>;
   });
 };
