@@ -2,7 +2,7 @@ import { UserWithProfile } from '../../models/userModel';
 import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
-import { replyAgent } from '../../agents/conversation/reply/chain';
+import { createReplyAgent } from '../../agents/conversation/reply/chain';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
 import { createWorkoutMessageAgent } from '../../agents/fitnessPlan/workouts/shared/workoutMessage/chain';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
@@ -170,7 +170,8 @@ export class MessageService {
     messageContent: string,
     from: string = process.env.TWILIO_NUMBER || '',
     provider: 'twilio' | 'local' | 'websocket' = 'twilio',
-    providerMessageId?: string
+    providerMessageId?: string,
+    metadata?: Record<string, unknown>
   ): Promise<Message | null> {
     // TODO: Implement periodic message summarization
     return await this.circuitBreaker.execute(async () => {
@@ -190,7 +191,7 @@ export class MessageService {
         phoneTo: to,
         provider,
         providerMessageId: providerMessageId || null,
-        metadata: {} as Json,
+        metadata: (metadata || {}) as Json,
         deliveryStatus: 'queued',
         deliveryAttempts: 1,
         lastDeliveryAttemptAt: new Date(),
@@ -320,21 +321,22 @@ export class MessageService {
       }
 
       workoutContext = {
-        description: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).description || null,
-        reasoning: (todayWorkout as WorkoutInstance & { description?: string | null, reasoning?: string | null }).reasoning || null,
+        description: (todayWorkout as WorkoutInstance).description || null,
+        reasoning: (todayWorkout as WorkoutInstance).reasoning || null,
         blocks,
       };
     }
 
     // Generate reply using the reply agent (with routing decision and context)
-    const replyResponse = await replyAgent(
+    const agent = createReplyAgent();
+    const replyResponse = await agent.invoke({
       user,
-      content,
+      message: content,
       previousMessages,
-      workoutContext,
-      microcycleContext,
-      planContext
-    );
+      currentWorkout: workoutContext,
+      currentMicrocycle: microcycleContext,
+      fitnessPlan: planContext
+    });
 
     console.log('[MessageService] Reply agent decision:', {
       needsFullPipeline: replyResponse.needsFullPipeline,
@@ -348,7 +350,10 @@ export class MessageService {
         user.id,
         from, // User's phone number
         replyResponse.reply,
-        to // Our Twilio number
+        to, // Our Twilio number
+        'twilio', // provider
+        undefined, // providerMessageId
+        { reasoning: replyResponse.reasoning } // metadata with reasoning
       );
     } catch (error) {
       console.error('[MessageService] Failed to store outbound reply:', error);

@@ -19,8 +19,6 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
   return createRunnableAgent<ReplyInput, ReplyOutput>(async (input) => {
     const { user, message, previousMessages, currentWorkout, currentMicrocycle, fitnessPlan } = input;
 
-    console.log('[REPLY AGENT] Current workout:', JSON.stringify(currentWorkout, null, 2));
-    console.log('[REPLY AGENT] Current microcycle:', JSON.stringify(previousMessages, null, 2));
     console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
       previousMessagesCount: previousMessages?.length || 0
     });

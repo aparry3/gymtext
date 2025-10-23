@@ -9,7 +9,11 @@ import type { MicrocycleModificationService } from './modifications/tools';
 /**
  * Intent types that the triage agent can identify
  */
-export const MessageIntentSchema = z.enum(['updates', 'questions', 'modifications']);
+export const MessageIntentSchema = z.enum([
+  'updates', 
+  // 'questions', 
+  'modifications'
+]);
 export type MessageIntent = z.infer<typeof MessageIntentSchema>;
 
 /**

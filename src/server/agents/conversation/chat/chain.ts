@@ -7,7 +7,7 @@ import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from 
 import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatOutput, ChatAgentDeps } from './types';
 import { ProfilePatchResult } from '@/server/services';
 import { updatesAgentRunnable } from './updates/chain';
-import { questionsAgentRunnable } from './questions/chain';
+// import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
 
@@ -43,7 +43,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
   // Create triage action map with injected dependencies
   const TriageActionMap: Record<MessageIntent, Runnable> = {
     'updates': updatesAgentRunnable(),
-    'questions': questionsAgentRunnable(),
+    // 'questions': questionsAgentRunnable(),
     'modifications': createModificationsAgent({ tools: modificationTools }),
   };
 
