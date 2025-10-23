@@ -106,9 +106,15 @@ export const createModificationTools = (deps: ModificationToolDeps): StructuredT
     },
     {
       name: 'substitute_exercise',
-      description: `Substitute a specific exercise or block in the user's current workout.
-Use this when the user wants to swap one exercise for another due to equipment limitations,
-preferences, or other constraints. This modifies the existing workout in place.`,
+      description: `Swap specific exercises or blocks WITHIN the user's current workout.
+
+Use ONLY for in-workout modifications where the user wants to replace specific exercises:
+- Equipment unavailable (e.g., "fly machine is taken, got a replacement?")
+- Exercise preference changes (e.g., "can we switch the abs at the end to be a circuit")
+- Specific movement substitutions (e.g., "replace squats with leg press")
+
+This modifies the existing workout in place WITHOUT changing the muscle group focus or workout type.
+DO NOT use for workout type changes - use modify_week instead.`,
       schema: SubstituteExerciseSchema,
     }
   );
@@ -127,15 +133,16 @@ preferences, or other constraints. This modifies the existing workout in place.`
     },
     {
       name: 'modify_workout',
-      description: `Regenerate a SINGLE workout without changing the weekly pattern.
+      description: `Regenerate today's workout keeping the SAME muscle group/focus but with different constraints.
 
-  Use ONLY when the change is isolated to ONE day and doesn't require updating the rest of the week:
-  - One-day equipment changes (e.g., "can't go to gym today, need home workout")
-  - One-day time constraints (e.g., "only 30 min today")
-  - One-day injury accommodations (e.g., "avoid shoulder exercises today")
+Use ONLY when the user explicitly wants to keep the same muscle group/workout type but change HOW they do it:
+- Same muscle group, different equipment (e.g., "Today is chest - can't make it to my gym, need a chest workout with just dumbbells")
+- Same focus, different time (e.g., "Today is leg day but only have 30 min, can you adjust my leg workout?")
+- Same workout, different constraints (e.g., "Today's shoulder workout but my shoulder hurts, can you modify it to be gentler?")
 
-  DO NOT use for muscle group swaps - use modify_week instead to maintain weekly balance.
-  This tool does NOT update the weekly pattern, only regenerates the single workout.`,
+IMPORTANT: User must indicate they want to keep the SAME muscle group/workout type.
+DO NOT use if user requests a DIFFERENT muscle group or doesn't specify - use modify_week instead.
+This is the LEAST commonly used tool - default to modify_week when uncertain.`,
       schema: ModifyWorkoutSchema,
     }
   );
@@ -152,24 +159,28 @@ preferences, or other constraints. This modifies the existing workout in place.`
     },
     {
       name: 'modify_week',
-      description: `Modify the weekly training pattern for remaining days AND regenerate the target day's workout.
+      description: `Modify the weekly training pattern and regenerate workouts as needed. **This is the PRIMARY and MOST COMMON tool.**
 
-  Use this when changes affect training BALANCE or MULTIPLE days:
-  - Muscle group swaps (e.g., "give me back instead of chest") - MUST reshuffle remaining days to avoid conflicts
-  - Multi-day equipment/travel changes (e.g., "traveling with hotel gym access this week")
-  - Multi-day time constraints (e.g., "only 30 min per day rest of week")
-  - Changes requiring pattern updates for coherence
+Use this for ANY request for a different workout type or muscle group:
+- ANY different muscle group request (e.g., "can I have a leg workout", "chest workout please", "give me back instead")
+- ANY different workout type (e.g., "I actually want to run today instead", "cardio today?", "full body workout")
+- Rearranging the weekly schedule (e.g., "can we swap my rest days?", "move leg day to Friday")
+- Multi-day constraints (e.g., "traveling this week with hotel gym", "only 30 min per day rest of week")
 
-  Do NOT use for isolated one-day changes - use modify_workout instead.
+**DEFAULT TO THIS TOOL when user requests a workout change.** Even if they don't explicitly say "instead of" or mention multiple days.
 
-  Parameters:
-  - targetDay: Which day to modify (e.g., "Monday", "Tuesday", or "today")
-  - changes: Array of all modifications and constraints (e.g., ["Change chest to back", "Use dumbbells only", "Hotel gym for rest of week"])
-  - reason: Why the changes are needed
+Examples that should use modify_week:
+- "Can I do legs today?" → YES (different muscle group)
+- "Chest workout please" → YES (potentially different from scheduled)
+- "I want to run instead" → YES (different workout type)
+- "Can't make it to gym this week" → YES (multi-day change)
 
-  This updates the microcycle pattern for all remaining days to maintain training balance and muscle group spacing.
-  Intelligently regenerates today's workout ONLY if today's pattern changed as a result of the modification
-  (e.g., modifying Thursday to cardio might cause Monday to shift from cardio to strength for balance).`,
+Parameters:
+- targetDay: Which day to start modifications (typically "today" or current weekday)
+- changes: Array of all modifications (e.g., ["Change to leg workout", "Use dumbbells only for rest of week"])
+- reason: Why the changes are needed
+
+This intelligently updates the weekly pattern to maintain training balance and muscle group spacing.`,
       schema: ModifyWeekSchema,
     }
   );

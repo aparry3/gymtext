@@ -132,11 +132,3 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     };
   });
 };
-
-/**
- * Legacy wrapper for backward compatibility
- * @deprecated Use createModificationsAgent with dependency injection instead
- */
-export const modificationsAgentRunnable = () => {
-  throw new Error('modificationsAgentRunnable is deprecated. Use createModificationsAgent with dependencies injection instead.');
-};
