@@ -121,7 +121,11 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
 
   // Step 2b: Create message agent with config (returns runnable)
   const messageAgent = createWorkoutMessageAgent({
-    operationName: config.operationName
+    operationName: config.operationName,
+    agentConfig: {
+      model: 'gemini-2.5-flash-lite',  // Fast, no reasoning token overhead, compatible with Gemini schemas
+      maxTokens: 4096  // Increased from default 4096 to handle complex workouts with many blocks
+    }
   });
 
   // Create sequence with retry mechanism

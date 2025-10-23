@@ -1,3 +1,4 @@
+import { AgentConfig } from '@/server/agents/base';
 import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
@@ -6,6 +7,7 @@ import type { LongFormWorkout } from '@/server/models/workout/schema';
  */
 export interface WorkoutMessageConfig {
   operationName?: string;
+  agentConfig?: AgentConfig;
 }
 
 /**
