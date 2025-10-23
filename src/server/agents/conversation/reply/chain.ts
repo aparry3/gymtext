@@ -29,7 +29,6 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
     // Build the context message
     const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
 
-    console.log('[REPLY AGENT] User message:', userMessage);
     // Create the messages array with proper role structure
     const messages = [
       {
