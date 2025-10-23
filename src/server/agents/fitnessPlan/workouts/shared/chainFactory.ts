@@ -87,7 +87,11 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
     const systemMessage = config.systemPrompt;
     const userMessage = config.userPrompt(context, fitnessProfile);
 
-    const model = initializeModel(LongFormWorkoutSchema);
+    // Use gpt-5-nano for long-form generation - reasoning model good for complex workout planning
+    // High token limit accounts for ~96% reasoning token overhead
+    const model = initializeModel(LongFormWorkoutSchema, {
+      model: 'gpt-5-nano',
+    });
     const longFormWorkout = await model.invoke([
       { role: 'system', content: systemMessage },
       { role: 'user', content: userMessage }
@@ -108,7 +112,11 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
   const structuredAgent = createStructuredWorkoutAgent<TWorkout>({
     schema: config.structuredSchema,
     includeModifications: config.includeModifications || false,
-    operationName: config.operationName
+    operationName: config.operationName,
+    agentConfig: {
+      model: 'gemini-2.5-flash-lite',  // Fast, no reasoning token overhead, compatible with Gemini schemas
+      maxTokens: 16384  // Increased from default 4096 to handle complex workouts with many blocks
+    }
   });
 
   // Step 2b: Create message agent with config (returns runnable)

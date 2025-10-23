@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
-import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
 import { SYSTEM_PROMPT, userPrompt, type Modification } from './prompts';
 import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 
@@ -18,7 +18,7 @@ export interface SubstituteExercisesContext {
  * Uses shared WorkoutChainResult type for consistency
  * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
  */
-export type SubstitutedWorkoutResult = WorkoutChainResult<z.infer<typeof _UpdatedWorkoutInstanceSchema>>;
+export type SubstitutedWorkoutResult = WorkoutChainResult<z.infer<typeof GeminiUpdatedWorkoutInstanceSchema>>;
 
 /**
  * Substitute exercises using the shared workout chain factory
@@ -40,8 +40,8 @@ export const substituteExercises = async (context: SubstituteExercisesContext): 
       ctx.user
     ),
 
-    // Schema for validation
-    structuredSchema: _UpdatedWorkoutInstanceSchema,
+    // Schema for validation (Gemini-compatible)
+    structuredSchema: GeminiUpdatedWorkoutInstanceSchema,
 
     // Track modifications for substitute
     includeModifications: true,

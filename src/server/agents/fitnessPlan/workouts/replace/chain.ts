@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
-import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
 import { SYSTEM_PROMPT, userPrompt, type ReplaceWorkoutParams } from './prompts';
 import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 
@@ -18,7 +18,7 @@ export interface ReplaceWorkoutContext {
  * Uses shared WorkoutChainResult type for consistency
  * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
  */
-export type ReplacedWorkoutResult = WorkoutChainResult<z.infer<typeof _UpdatedWorkoutInstanceSchema>>;
+export type ReplacedWorkoutResult = WorkoutChainResult<z.infer<typeof GeminiUpdatedWorkoutInstanceSchema>>;
 
 /**
  * Replace workout using the shared workout chain factory
@@ -40,8 +40,8 @@ export const replaceWorkout = async (context: ReplaceWorkoutContext): Promise<Re
       ctx.user
     ),
 
-    // Schema for validation
-    structuredSchema: _UpdatedWorkoutInstanceSchema,
+    // Schema for validation (Gemini-compatible)
+    structuredSchema: GeminiUpdatedWorkoutInstanceSchema,
 
     // Track modifications for replace
     includeModifications: true,

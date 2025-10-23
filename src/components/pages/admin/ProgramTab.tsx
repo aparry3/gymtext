@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 
@@ -46,45 +47,45 @@ export function ProgramTab({ userId }: ProgramTabProps) {
   // Analytics tracking
   usePageView('program_viewed', { userId, fitnessPlanId: fitnessPlan?.id })
 
-  useEffect(() => {
-    const fetchProgramData = async () => {
-      setIsLoading(true)
-      setError(null)
+  const fetchProgramData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
 
-      try {
-        const [planResponse, workoutsResponse] = await Promise.all([
-          fetch(`/api/admin/users/${userId}/fitness-plan`),
-          fetch(`/api/admin/users/${userId}/workouts?limit=5`)
-        ])
+    try {
+      const [planResponse, workoutsResponse] = await Promise.all([
+        fetch(`/api/admin/users/${userId}/fitness-plan`),
+        fetch(`/api/admin/users/${userId}/workouts?limit=5`)
+      ])
 
-        if (!planResponse.ok && planResponse.status !== 404) {
-          throw new Error('Failed to fetch fitness plan')
-        }
-
-        if (!workoutsResponse.ok) {
-          throw new Error('Failed to fetch workouts')
-        }
-
-        const planResult = planResponse.ok ? await planResponse.json() : { success: false }
-        const workoutsResult = await workoutsResponse.json()
-
-        if (planResult.success) {
-          setFitnessPlan(planResult.data)
-        }
-
-        if (workoutsResult.success) {
-          setRecentWorkouts(workoutsResult.data)
-        }
-      } catch (err) {
-        setError('Failed to load program data')
-        console.error('Error fetching program data:', err)
-      } finally {
-        setIsLoading(false)
+      if (!planResponse.ok && planResponse.status !== 404) {
+        throw new Error('Failed to fetch fitness plan')
       }
-    }
 
-    fetchProgramData()
+      if (!workoutsResponse.ok) {
+        throw new Error('Failed to fetch workouts')
+      }
+
+      const planResult = planResponse.ok ? await planResponse.json() : { success: false }
+      const workoutsResult = await workoutsResponse.json()
+
+      if (planResult.success) {
+        setFitnessPlan(planResult.data)
+      }
+
+      if (workoutsResult.success) {
+        setRecentWorkouts(workoutsResult.data)
+      }
+    } catch (err) {
+      setError('Failed to load program data')
+      console.error('Error fetching program data:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }, [userId])
+
+  useEffect(() => {
+    fetchProgramData()
+  }, [fetchProgramData])
 
   if (isLoading) {
     return <ProgramTabSkeleton />
@@ -137,7 +138,7 @@ export function ProgramTab({ userId }: ProgramTabProps) {
       {/* Recent Workouts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Recent Workouts</h3>
-        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} />
+        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} onWorkoutDeleted={fetchProgramData} />
       </div>
     </div>
   )
@@ -262,10 +263,13 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
 interface RecentWorkoutsTableProps {
   workouts: WorkoutInstance[]
   userId: string
+  onWorkoutDeleted: () => void
 }
 
-function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
+function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorkoutsTableProps) {
   const router = useRouter()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
   if (workouts.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -294,6 +298,34 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
     )
   }
 
+  const handleDelete = async (e: React.MouseEvent, workoutId: string) => {
+    e.stopPropagation()
+
+    if (!confirm('Are you sure you want to delete this workout? This action cannot be undone.')) {
+      return
+    }
+
+    setDeletingId(workoutId)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/workouts/${workoutId}`, {
+        method: 'DELETE',
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        onWorkoutDeleted()
+      } else {
+        alert(result.message || 'Failed to delete workout')
+      }
+    } catch (err) {
+      console.error('Error deleting workout:', err)
+      alert('Failed to delete workout')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -304,6 +336,7 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
               <th className="px-4 py-3 text-left text-sm font-medium">Session Type</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Week</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -312,28 +345,50 @@ function RecentWorkoutsTable({ workouts, userId }: RecentWorkoutsTableProps) {
               return (
                 <tr
                   key={workout.id}
-                  className={`hover:bg-muted/30 cursor-pointer ${isTodayWorkout ? 'bg-primary/5 ring-2 ring-primary ring-inset' : ''}`}
-                  onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                  className={`hover:bg-muted/30 ${isTodayWorkout ? 'bg-primary/5 ring-2 ring-primary ring-inset' : ''}`}
                 >
-                  <td className={`px-4 py-3 text-sm ${isTodayWorkout ? 'font-semibold' : ''}`}>
+                  <td
+                    className={`px-4 py-3 text-sm cursor-pointer ${isTodayWorkout ? 'font-semibold' : ''}`}
+                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                  >
                     {new Date(workout.date).toLocaleDateString()}
                     {isTodayWorkout && <span className="ml-2 text-xs text-primary">(Today)</span>}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td
+                    className="px-4 py-3 text-sm cursor-pointer"
+                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                  >
                     <Badge variant={isTodayWorkout ? "default" : "outline"}>
                       {sessionTypeLabels[workout.sessionType] || workout.sessionType}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td
+                    className="px-4 py-3 text-sm text-muted-foreground cursor-pointer"
+                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                  >
                     {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
                       ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
                       : '-'
                     }
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td
+                    className="px-4 py-3 text-sm cursor-pointer"
+                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                  >
                     <Badge variant={workout.completedAt ? "default" : "secondary"}>
                       {workout.completedAt ? 'Completed' : 'Planned'}
                     </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDelete(e, workout.id)}
+                      disabled={deletingId === workout.id}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {deletingId === workout.id ? 'Deleting...' : 'Delete'}
+                    </Button>
                   </td>
                 </tr>
               )

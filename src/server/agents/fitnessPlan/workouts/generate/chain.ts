@@ -1,5 +1,5 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
 import { SYSTEM_PROMPT, userPrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
@@ -47,8 +47,8 @@ export const createDailyWorkoutAgent = () => {
         ctx.recentWorkouts
       ),
 
-      // Schema for validation
-      structuredSchema: _EnhancedWorkoutInstanceSchema,
+      // Schema for validation (Gemini-compatible)
+      structuredSchema: GeminiEnhancedWorkoutInstanceSchema,
 
       // No modifications tracking for generate
       includeModifications: false,

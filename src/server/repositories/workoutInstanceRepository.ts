@@ -265,4 +265,17 @@ export class WorkoutInstanceRepository extends BaseRepository {
 
     return results as unknown as WorkoutInstance[];
   }
+
+  /**
+   * Delete a workout instance by ID
+   * @param workoutId The workout's ID
+   */
+  async delete(workoutId: string): Promise<boolean> {
+    const result = await this.db
+      .deleteFrom('workoutInstances')
+      .where('id', '=', workoutId)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
+  }
 }

@@ -257,6 +257,21 @@ export class WorkoutInstanceService {
       };
     }
   }
+
+  /**
+   * Delete a workout instance
+   */
+  public async deleteWorkout(workoutId: string, userId: string): Promise<boolean> {
+    // First verify the workout belongs to the user
+    const workout = await this.workoutRepo.getWorkoutById(workoutId);
+
+    if (!workout || workout.clientId !== userId) {
+      return false;
+    }
+
+    // Delete the workout
+    return await this.workoutRepo.delete(workoutId);
+  }
 }
 
 // Export singleton instance

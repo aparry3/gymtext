@@ -1,6 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildStructuredWorkoutSystemPrompt, createStructuredWorkoutUserPrompt } from './prompts';
 import type { StructuredWorkoutConfig, StructuredWorkoutInput, StructuredWorkoutOutput } from './types';
+import { convertGeminiToStandard } from '@/server/models/workout/geminiSchema';
 
 /**
  * Structured Workout Agent Factory
@@ -22,7 +23,7 @@ export const createStructuredWorkoutAgent = <TWorkout = unknown>(
     const userPrompt = createStructuredWorkoutUserPrompt(longFormWorkout, user, fitnessProfile, config.includeModifications);
 
     // Initialize model with schema from config
-    const model = initializeModel(config.schema);
+    const model = initializeModel(config.schema, config.agentConfig);
 
     // Invoke model with system and user prompts
     const workout = await model.invoke([
@@ -33,21 +34,25 @@ export const createStructuredWorkoutAgent = <TWorkout = unknown>(
     // Validate the workout structure
     const validatedWorkout = config.schema.parse(workout);
 
+    // Convert Gemini sentinel values (0, "") to null if using Gemini model
+    const isGemini = config.agentConfig?.model?.startsWith('gemini');
+    const processedWorkout = isGemini ? convertGeminiToStandard(validatedWorkout) : validatedWorkout;
+
     // Basic validation - ensure workout has blocks
-    if ('blocks' in validatedWorkout && (!validatedWorkout.blocks || (validatedWorkout.blocks as unknown[]).length === 0)) {
+    if ('blocks' in processedWorkout && (!processedWorkout.blocks || (processedWorkout.blocks as unknown[]).length === 0)) {
       throw new Error('Workout has no blocks');
     }
 
-    const blockCount = 'blocks' in validatedWorkout ? (validatedWorkout.blocks as unknown[]).length : 'N/A';
-    const modCount = 'modificationsApplied' in validatedWorkout
-      ? (validatedWorkout.modificationsApplied as unknown[] | undefined)?.length || 0
+    const blockCount = 'blocks' in processedWorkout ? (processedWorkout.blocks as unknown[]).length : 'N/A';
+    const modCount = 'modificationsApplied' in processedWorkout
+      ? (processedWorkout.modificationsApplied as unknown[] | undefined)?.length || 0
       : 'N/A';
 
     console.log(`[${config.operationName}] Generated structured workout (blocks: ${blockCount}, modifications: ${modCount})`);
 
     // Add date to workout
     return {
-      ...validatedWorkout,
+      ...processedWorkout,
       date: workoutDate
     } as StructuredWorkoutOutput<TWorkout>;
   });

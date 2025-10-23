@@ -7,14 +7,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
-import { 
-  Breadcrumb, 
-  BreadcrumbList, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbSeparator, 
-  BreadcrumbPage 
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
 } from '@/components/ui/breadcrumb'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 
 interface WorkoutBlockItem {
   type: 'prep' | 'compound' | 'secondary' | 'accessory' | 'core' | 'cardio' | 'cooldown'
@@ -45,6 +46,9 @@ interface WorkoutInstance {
   }
   mesocycleIndex?: number
   microcycleWeek?: number
+  description?: string | null
+  reasoning?: string | null
+  message?: string | null
 }
 
 export default function WorkoutDetailPage() {
@@ -53,10 +57,11 @@ export default function WorkoutDetailPage() {
   const [workout, setWorkout] = useState<WorkoutInstance | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Analytics tracking
-  usePageView('workout_viewed', { 
-    userId: id as string, 
+  usePageView('workout_viewed', {
+    userId: id as string,
     workoutId: workoutId as string,
     sessionType: workout?.sessionType,
     completedAt: workout?.completedAt
@@ -71,10 +76,10 @@ export default function WorkoutDetailPage() {
         const apiUrl = `/api/admin/users/${id}/workouts/${workoutId}`
         console.log('Fetching workout from:', apiUrl)
         console.log('User ID:', id, 'Workout ID:', workoutId)
-        
+
         const response = await fetch(apiUrl)
         console.log('Response status:', response.status)
-        
+
         if (!response.ok) {
           const errorText = await response.text()
           console.error('API Error Response:', errorText)
@@ -83,7 +88,7 @@ export default function WorkoutDetailPage() {
 
         const result = await response.json()
         console.log('API Result:', result)
-        
+
         if (result.success) {
           setWorkout(result.data)
         } else {
@@ -101,6 +106,32 @@ export default function WorkoutDetailPage() {
       fetchWorkout()
     }
   }, [id, workoutId])
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this workout? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/users/${id}/workouts/${workoutId}`, {
+        method: 'DELETE',
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        router.push(`/admin/users/${id}`)
+      } else {
+        alert(result.message || 'Failed to delete workout')
+      }
+    } catch (err) {
+      console.error('Error deleting workout:', err)
+      alert('Failed to delete workout')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   if (isLoading) {
     return <WorkoutDetailSkeleton />
@@ -154,7 +185,7 @@ export default function WorkoutDetailPage() {
           </Breadcrumb>
 
           {/* Workout Header */}
-          <WorkoutHeader workout={workout} />
+          <WorkoutHeader workout={workout} onDelete={handleDelete} isDeleting={isDeleting} />
 
           {/* Goal & Notes */}
           {workout.goal && (
@@ -164,24 +195,73 @@ export default function WorkoutDetailPage() {
             </Card>
           )}
 
-          {/* Blocks Viewer */}
-          {workout.details?.blocks && workout.details.blocks.length > 0 ? (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Workout Details</h3>
-              <BlocksViewer blocks={workout.details.blocks} />
-            </div>
-          ) : (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No detailed workout information available</p>
-            </Card>
-          )}
+          {/* Tabbed Content */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Workout Details</h3>
+            <Tabs defaultValue="blocks" className="w-full">
+              <TabsList>
+                <TabsTrigger value="blocks">Blocks</TabsTrigger>
+                <TabsTrigger value="description">Description</TabsTrigger>
+                <TabsTrigger value="reasoning">Reasoning</TabsTrigger>
+                <TabsTrigger value="message">Message</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="blocks">
+                {workout.details?.blocks && workout.details.blocks.length > 0 ? (
+                  <BlocksViewer blocks={workout.details.blocks} />
+                ) : (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground">No workout blocks available</p>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="description">
+                <Card className="p-6">
+                  {workout.description ? (
+                    <p className="text-muted-foreground whitespace-pre-wrap">{workout.description}</p>
+                  ) : (
+                    <p className="text-muted-foreground text-center">No description available</p>
+                  )}
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="reasoning">
+                <Card className="p-6">
+                  {workout.reasoning ? (
+                    <p className="text-muted-foreground whitespace-pre-wrap">{workout.reasoning}</p>
+                  ) : (
+                    <p className="text-muted-foreground text-center">No reasoning available</p>
+                  )}
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="message">
+                <Card className="p-6">
+                  {workout.message ? (
+                    <p className="text-muted-foreground whitespace-pre-wrap">{workout.message}</p>
+                  ) : (
+                    <p className="text-muted-foreground text-center">No message available</p>
+                  )}
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function WorkoutHeader({ workout }: { workout: WorkoutInstance }) {
+function WorkoutHeader({
+  workout,
+  onDelete,
+  isDeleting
+}: {
+  workout: WorkoutInstance
+  onDelete: () => void
+  isDeleting: boolean
+}) {
   const sessionTypeLabels = {
     run: 'Run',
     lift: 'Lift',
@@ -212,8 +292,8 @@ function WorkoutHeader({ workout }: { workout: WorkoutInstance }) {
             </p>
           )}
         </div>
-        
-        <div className="flex flex-col gap-2">
+
+        <div className="flex flex-col gap-2 items-end">
           <Badge variant={workout.completedAt ? "default" : "secondary"}>
             {workout.completedAt ? 'Completed' : 'Planned'}
           </Badge>
@@ -222,6 +302,15 @@ function WorkoutHeader({ workout }: { workout: WorkoutInstance }) {
               Completed {new Date(workout.completedAt).toLocaleDateString()}
             </p>
           )}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="mt-2"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Workout'}
+          </Button>
         </div>
       </div>
     </Card>

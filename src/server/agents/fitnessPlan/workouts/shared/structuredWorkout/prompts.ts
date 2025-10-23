@@ -84,6 +84,8 @@ You are converting a long-form workout description into structured JSON format.
 </Schema Requirements>${modificationsAppliedFormat}
 
 <Guidelines>
+CRITICAL: Convert the ENTIRE workout from start to finish. Include ALL blocks and ALL exercises. Do not truncate, skip, or omit any sections regardless of length.
+
 - Preserve exact exercise names from the description
 - Extract all sets, reps, rest periods accurately
 - Categorize exercises appropriately (prep, compound, secondary, accessory, core, cardio, cooldown)
@@ -122,8 +124,10 @@ Fitness Profile: ${fitnessProfile}
 </User Context>
 
 <Task>
-Convert the workout description above into a structured JSON object matching the workout schema.
-Extract all exercises, sets, reps, rest periods, and organize them into blocks.${includeModificationsApplied ? '\nInclude a "modificationsApplied" array listing all substitutions/changes made.' : ''}
+Convert the COMPLETE workout description above into a structured JSON object matching the workout schema.
+Include ALL blocks from the beginning to the end of the workout (Warm-up, Main, Accessory, Core, Cool-down, etc.).
+Extract all exercises, sets, reps, rest periods, and organize them into blocks.
+Do not stop early or truncate any sections - the entire workout must be converted.${includeModificationsApplied ? '\nInclude a "modificationsApplied" array listing all substitutions/changes made.' : ''}
 </Task>
 `.trim();
 }
