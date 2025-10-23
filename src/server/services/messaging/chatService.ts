@@ -5,6 +5,7 @@ import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { MicrocycleService } from '../training/microcycleService';
+import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -84,7 +85,7 @@ export class ChatService {
       const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
 
       // Fetch current workout
-      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, new Date());
+      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
       
       // Create chat agent with injected dependencies using DI pattern
       const agent = createChatAgent({
