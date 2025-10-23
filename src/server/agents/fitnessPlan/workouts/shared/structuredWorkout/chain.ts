@@ -15,6 +15,10 @@ import { convertGeminiToStandard } from '@/server/models/workout/geminiSchema';
 export const createStructuredWorkoutAgent = <TWorkout = unknown>(
   config: StructuredWorkoutConfig
 ) => {
+  const agentConfig = config.agentConfig || {
+    model: 'gemini-2.5-flash-lite',
+    maxTokens: 16384
+  };
   return createRunnableAgent<StructuredWorkoutInput, StructuredWorkoutOutput<TWorkout>>(async (input) => {
     const { longFormWorkout, user, fitnessProfile, workoutDate } = input;
 
@@ -23,7 +27,7 @@ export const createStructuredWorkoutAgent = <TWorkout = unknown>(
     const userPrompt = createStructuredWorkoutUserPrompt(longFormWorkout, user, fitnessProfile, config.includeModifications);
 
     // Initialize model with schema from config
-    const model = initializeModel(config.schema, config.agentConfig);
+    const model = initializeModel(config.schema, agentConfig);
 
     // Invoke model with system and user prompts
     const workout = await model.invoke([

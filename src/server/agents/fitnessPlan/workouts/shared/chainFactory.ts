@@ -113,19 +113,11 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
     schema: config.structuredSchema,
     includeModifications: config.includeModifications || false,
     operationName: config.operationName,
-    agentConfig: {
-      model: 'gemini-2.5-flash-lite',  // Fast, no reasoning token overhead, compatible with Gemini schemas
-      maxTokens: 16384  // Increased from default 4096 to handle complex workouts with many blocks
-    }
   });
 
   // Step 2b: Create message agent with config (returns runnable)
   const messageAgent = createWorkoutMessageAgent({
-    operationName: config.operationName,
-    agentConfig: {
-      model: 'gemini-2.5-flash-lite',  // Fast, no reasoning token overhead, compatible with Gemini schemas
-      maxTokens: 4096  // Increased from default 4096 to handle complex workouts with many blocks
-    }
+    operationName: config.operationName
   });
 
   // Create sequence with retry mechanism
