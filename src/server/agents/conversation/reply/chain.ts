@@ -39,7 +39,7 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
         content: REPLY_AGENT_SYSTEM_PROMPT,
       },
       // // Add previous messages as structured message objects (last 3 for speed)
-      // ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
+      ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
       // // Current user message
       {
         role: 'user',

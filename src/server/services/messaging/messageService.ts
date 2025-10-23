@@ -511,10 +511,6 @@ export class MessageService {
       console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
       try {
-        // Fetch fitness profile for context
-        const fitnessProfileContext = new (await import('../../services/context/fitnessProfileContext')).FitnessProfileContext();
-        const fitnessProfile = await fitnessProfileContext.getContext(user);
-
         // Create message agent with config
         const messageAgent = createWorkoutMessageAgent({
           operationName: 'fallback message'
@@ -525,9 +521,7 @@ export class MessageService {
           longFormWorkout: {
             description: workout.description,
             reasoning: workout.reasoning
-          },
-          user,
-          fitnessProfile
+          }
         });
 
         // Save generated message for future use

@@ -15,10 +15,10 @@ import type { WorkoutMessageConfig, WorkoutMessageInput, WorkoutMessageOutput } 
  */
 export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
   return createRunnableAgent<WorkoutMessageInput, WorkoutMessageOutput>(async (input) => {
-    const { longFormWorkout, user, fitnessProfile } = input;
+    const { longFormWorkout } = input;
 
     // Create the user prompt with workout and context
-    const userPrompt = createWorkoutMessageUserPrompt(longFormWorkout, user, fitnessProfile);
+    const userPrompt = createWorkoutMessageUserPrompt(longFormWorkout);
 
     // Initialize model without schema (for text generation)
     const model = initializeModel(undefined);

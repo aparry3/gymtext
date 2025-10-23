@@ -1,4 +1,3 @@
-import type { UserWithProfile } from '@/server/models/userModel';
 import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
@@ -15,8 +14,6 @@ export interface WorkoutMessageConfig {
  */
 export interface WorkoutMessageInput {
   longFormWorkout: LongFormWorkout;
-  user: UserWithProfile;
-  fitnessProfile: string;
 }
 
 /**
