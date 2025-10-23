@@ -83,6 +83,9 @@ export class ChatService {
       // - If last message is outbound (reply agent), keep it (needed for context)
       const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
 
+      // Fetch current workout
+      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, new Date());
+      
       // Create chat agent with injected dependencies using DI pattern
       const agent = createChatAgent({
         patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
@@ -100,6 +103,7 @@ export class ChatService {
         user,
         message,
         previousMessages: contextMessages,
+        currentWorkout: currentWorkout,
       });
 
       // Validate response exists
