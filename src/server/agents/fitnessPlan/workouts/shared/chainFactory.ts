@@ -136,7 +136,13 @@ export async function executeWorkoutChain<TContext, TWorkoutSchema extends z.Zod
 
       console.log(`[${config.operationName}] Successfully completed with description, reasoning, JSON, and message`);
 
-      return result as WorkoutChainResult<TWorkout>;
+      // Flatten the result to match WorkoutChainResult type
+      return {
+        workout: result.workout,
+        message: result.message,
+        description: result.longFormWorkout.description,
+        reasoning: result.longFormWorkout.reasoning
+      };
     } catch (error) {
       console.error(`[${config.operationName}] Error on attempt ${attempt + 1}:`, error);
 

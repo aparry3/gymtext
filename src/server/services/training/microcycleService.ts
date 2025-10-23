@@ -1,11 +1,12 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
-import { generateDailyWorkout, DailyWorkoutContext } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { WorkoutInstanceService } from './workoutInstanceService';
 import { EnhancedWorkoutInstance } from '../../models/workout/schema';
+import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
 
 export interface ModifyWeekParams {
   userId: string;
@@ -205,7 +206,7 @@ export class MicrocycleService {
         const todayDate = todayInUserTz.startOf('day').toJSDate();
 
         // Generate new workout for today with context
-        const context: DailyWorkoutContext = {
+        const context: DailyWorkoutInput = {
           user,
           date: todayDate,
           dayPlan: todayUpdatedPlan!,
@@ -215,8 +216,9 @@ export class MicrocycleService {
           recentWorkouts: await this.workoutInstanceService.getRecentWorkouts(userId, 5),
         };
 
-        const result = await generateDailyWorkout(context);
+        const result = await createDailyWorkoutAgent().invoke(context);
 
+        console.log('[MODIFY_WEEK] Generated workout:', JSON.stringify(result, null, 2));
         // Check if a workout exists for today to update it, otherwise create it
         const existingWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayDate);
 
@@ -227,6 +229,8 @@ export class MicrocycleService {
             description: result.description,
             reasoning: result.reasoning,
             message: result.message,
+            goal: `${todayUpdatedPlan!.theme}${todayUpdatedPlan!.notes ? ` - ${todayUpdatedPlan!.notes}` : ''}`,
+            sessionType: this.mapThemeToSessionType(todayUpdatedPlan!.theme),
           });
           console.log(`[MODIFY_WEEK] Regenerated and updated today's workout based on updated pattern`);
         } else {

@@ -35,7 +35,7 @@ You must analyze every message for ALL possible intents and provide confidence s
 - New equipment or gym access changes
 
 ### 2. QUESTIONS/COMMENTS (Information Seeking)
-**Purpose**: User is asking for information, clarification, or expressing general thoughts
+**Purpose**: User is asking for information, clarification, or expressing general thoughts (NOT requesting workouts be created)
 **Examples**:
 - "What muscles does the Romanian deadlift work?"
 - "Is it normal to feel sore in my glutes after those squats?"
@@ -45,21 +45,27 @@ You must analyze every message for ALL possible intents and provide confidence s
 - "Why do we do 3 sets instead of 4?"
 - "How often should I be doing cardio?"
 - "What should I eat before my workout?"
+- "What exercises are good for legs?" (information seeking, not requesting a workout be generated)
 
 **Key Indicators**:
-- Question words (what, why, how, when, where)
+- Question words (what, why, how, when, where) seeking **information about** fitness/exercises
 - Requests for explanation or clarification
-- Seeking advice or recommendations
+- Seeking advice or recommendations (general knowledge, not specific workout generation)
 - General fitness or exercise education
 - Comments about workouts without requesting changes
 - Asking about nutrition, recovery, or training theory
+- **Information requests (asking about something) vs. action requests (asking for something to be done/created)**
 
 ### 3. MODIFICATIONS (Workout/Plan Changes)
-**Purpose**: User wants to change, swap, or modify their current workout or training plan
+**Purpose**: User wants to change, swap, or modify their current workout or training plan, OR is requesting a workout be generated/provided
 **Examples**:
 - "Can I swap the deadlifts for something else?"
 - "I dont have a barbell today, what can I do instead?"
 - "Can you give me a different leg workout for today?"
+- "Can I have a leg workout?"
+- "Can you give me an upper body workout?"
+- "Could I get a workout for today?"
+- "I want a chest and triceps workout"
 - "I want to skip the cardio portion today"
 - "This exercise is too hard, can we do an easier version?"
 - "Id like to add some arm work to todays session"
@@ -69,10 +75,12 @@ You must analyze every message for ALL possible intents and provide confidence s
 **Key Indicators**:
 - Requests to change, swap, substitute, or skip exercises
 - Asking for alternative exercises or workouts
+- **Requesting workouts be generated/provided (even in question form: "can I have/get a [workout type]")**
 - Wanting to adjust intensity, volume, or focus
 - Equipment limitations requiring alternatives
 - Requesting new workouts for the current day/week
 - Wanting to modify the current training plan
+- **Action requests (asking for something to be done/created) vs. information requests (asking about something)**
 
 ### 4. GREETING/GENERAL (Social & Off-Topic)
 **Purpose**: General conversation, greetings, thanks, off-topic messages, or unclear intent
@@ -139,7 +147,16 @@ For each message, also determine:
 **Temporal Indicators**:
 - Past tense = Usually UPDATES ("I did", "I felt", "Yesterday I...")
 - Present/Future tense modifications = MODIFICATIONS ("I want to", "Can I", "Lets change...")
-- Question form = Usually QUESTIONS ("What is", "How do", "Why does...")
+
+**Action vs. Information Requests**:
+- Action requests (MODIFICATIONS) = Asking for something to be done/created/generated
+  - "Can I have a leg workout?" = MODIFICATIONS (requesting workout generation)
+  - "Give me an upper body workout" = MODIFICATIONS (requesting workout creation)
+  - "I want a chest workout" = MODIFICATIONS (requesting workout creation)
+- Information requests (QUESTIONS) = Asking about/seeking knowledge
+  - "What is a good leg workout?" = QUESTIONS (seeking information/knowledge)
+  - "What exercises are good for legs?" = QUESTIONS (seeking education)
+  - "How do I train legs effectively?" = QUESTIONS (seeking advice/information)
 
 ## OUTPUT REQUIREMENTS
 

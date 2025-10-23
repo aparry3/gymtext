@@ -282,7 +282,7 @@ export class MessageService {
     }
 
     // Get recent conversation history for context (last 10 messages)
-    const previousMessages = await this.getRecentMessages(user.id, 10);
+    const previousMessages = await this.getRecentMessages(user.id, 5);
 
     // Fetch current context for the reply agent
     // 1. Fetch fitness plan

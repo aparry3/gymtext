@@ -1,8 +1,9 @@
+import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
-import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
+import { WorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt, type ReplaceWorkoutParams } from './prompts';
-import { executeWorkoutChain } from '../shared/chainFactory';
+import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 
 export type { ReplaceWorkoutParams };
 
@@ -12,12 +13,12 @@ export interface ReplaceWorkoutContext {
   params: ReplaceWorkoutParams;
 }
 
-export interface ReplacedWorkoutResult {
-  workout: UpdatedWorkoutInstance & { date: Date };
-  message: string;
-  description: string;
-  reasoning: string;
-}
+/**
+ * Output from replace workout operation
+ * Uses shared WorkoutChainResult type for consistency
+ * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
+ */
+export type ReplacedWorkoutResult = WorkoutChainResult<z.infer<typeof _UpdatedWorkoutInstanceSchema>>;
 
 /**
  * Replace workout using the shared workout chain factory

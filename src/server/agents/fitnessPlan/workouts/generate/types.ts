@@ -1,8 +1,11 @@
+import type { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
-import type { WorkoutInstance, EnhancedWorkoutInstance } from '@/server/models/workout';
+import type { WorkoutInstance } from '@/server/models/workout';
+import type { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import type { AgentDeps } from '@/server/agents/base';
+import type { WorkoutChainResult } from '../shared/chainFactory';
 
 /**
  * Input for daily workout generator
@@ -24,13 +27,10 @@ export interface DailyWorkoutInput {
 
 /**
  * Output from daily workout generator
+ * Uses shared WorkoutChainResult type for consistency
+ * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
  */
-export interface DailyWorkoutOutput {
-  workout: EnhancedWorkoutInstance & { date: Date };
-  message: string;
-  description: string;
-  reasoning: string;
-}
+export type DailyWorkoutOutput = WorkoutChainResult<z.infer<typeof _EnhancedWorkoutInstanceSchema>>;
 
 /**
  * Dependencies for daily workout agent

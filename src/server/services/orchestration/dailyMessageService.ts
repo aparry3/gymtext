@@ -6,7 +6,7 @@ import { DateTime } from 'luxon';
 import { ProgressService } from '../training/progressService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { generateDailyWorkout } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 
 interface MessageResult {
   success: boolean;
@@ -141,7 +141,7 @@ export class DailyMessageService {
       const recentWorkouts = await this.workoutInstanceService.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate sophisticated workout (now returns message too!)
-      const { workout: enhancedWorkout, message, description, reasoning } = await generateDailyWorkout({
+      const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayPlan: dayPattern,

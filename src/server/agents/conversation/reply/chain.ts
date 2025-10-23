@@ -19,6 +19,8 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
   return createRunnableAgent<ReplyInput, ReplyOutput>(async (input) => {
     const { user, message, previousMessages, currentWorkout, currentMicrocycle, fitnessPlan } = input;
 
+    console.log('[REPLY AGENT] Current workout:', JSON.stringify(currentWorkout, null, 2));
+    console.log('[REPLY AGENT] Current microcycle:', JSON.stringify(previousMessages, null, 2));
     console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
       previousMessagesCount: previousMessages?.length || 0
     });
@@ -29,15 +31,16 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
     // Build the context message
     const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
 
+    console.log('[REPLY AGENT] User message:', userMessage);
     // Create the messages array with proper role structure
     const messages = [
       {
         role: 'system',
         content: REPLY_AGENT_SYSTEM_PROMPT,
       },
-      // Add previous messages as structured message objects (last 3 for speed)
-      ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
-      // Current user message
+      // // Add previous messages as structured message objects (last 3 for speed)
+      // ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
+      // // Current user message
       {
         role: 'user',
         content: userMessage,

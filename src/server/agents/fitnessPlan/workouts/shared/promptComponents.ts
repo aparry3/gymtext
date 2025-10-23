@@ -308,36 +308,67 @@ Program Integration: This Full Body session repeats 3x per week (Monday/Wednesda
  */
 export const SMS_FORMAT_REQUIREMENTS = `
 <SMS Format Requirements>
-- Use clear sections: "Warmup:", "Workout:", "Cooldown:"
+**CRITICAL: Maximum Conciseness Required**
+
+**Sections:**
+- Use ONLY three sections: "Warmup:", "Workout:", "Cooldown:"
+- Everything that is NOT warmup or cooldown goes in "Workout:"
+- Total message: under 900 characters
+
+**Exercise Format:**
 - List exercises with bullets (-)
 - Use SxR format: "3x10" = 3 sets of 10 reps, "3x6-8" = 3 sets of 6-8 reps
-- Abbreviate: Barbell → BB, Dumbbell → DB
-- Keep exercise lines under ~35 characters for mobile readability
-- Remove parenthetical details and extra descriptions
-- DO NOT include greetings, introductions, or motivational messages
-- ONLY include the workout structure: Warmup, Workout, and Cooldown sections
-- Total: under 900 characters
+- Keep each line under ~30 characters for mobile readability
 
-**Workout Structure Formatting:**
+**MANDATORY Abbreviations:**
+- Barbell → BB
+- Dumbbell → DB
+- Kettlebell → KB
+- Exercise → Ex
+- Romanian → Rom
+- Bulgarian → Bulg
+- Use common abbreviations wherever possible
 
-STRAIGHT SETS - Use standard format:
+**FORBIDDEN Elements (DO NOT INCLUDE):**
+- ❌ RPE values (no "at RPE 7")
+- ❌ Tempo (no "tempo 2-0-1")
+- ❌ Rest periods (no "Rest: 2:30")
+- ❌ ALL CAPS exercise names (use Title Case)
+- ❌ Parenthetical details or extra descriptions
+- ❌ Greetings, introductions, or motivational messages
+
+**Structure Formatting:**
+
+STRAIGHT SETS:
 - Exercise: SxR
+Example: "BB Bench Press: 3x6-8"
 
-SUPERSETS (2 exercises) - Format as:
-- SUPERSET - <SETS>x:
-  - Exercise 1: <REPS>
-  - Exercise 2: <REPS>
+SUPERSETS (2 exercises):
+- If ONLY ONE superset in workout:
+  - SS Exercise1: SxR
+  - SS Exercise2: SxR
+- If MULTIPLE supersets in workout:
+  - SS1 Exercise1: SxR
+  - SS1 Exercise2: SxR
+  - Regular Exercise: SxR
+  - SS2 Exercise1: SxR
+  - SS2 Exercise2: SxR
 
-CIRCUITS (3+ exercises) - Format as:
-- CIRCUIT - <SETS>x:
-  - Exercise 1: <REPS/TIME>
-  - Exercise 2: <REPS/TIME>
-  - Exercise 3: <REPS/TIME>
+CIRCUITS (3+ exercises):
+- If ONLY ONE circuit in workout:
+  - C Exercise1: SxR
+  - C Exercise2: SxR
+  - C Exercise3: SxR
+- If MULTIPLE circuits in workout:
+  - C1 Exercise1: SxR
+  - C1 Exercise2: SxR
+  - C2 Exercise1: SxR
+  - C2 Exercise2: SxR
 
-Structure Formatting Notes:
-- Use 2-space indentation for exercises within supersets/circuits
-- Omit "rounds" from superset/circuit labels - just use set count
+**Important Notes:**
+- Sets are ALWAYS the same for all exercises in a superset/circuit
 - Match the structure from the long-form description
+- Prioritize brevity while maintaining clarity
 </SMS Format Requirements>
 `.trim();
 
@@ -347,68 +378,92 @@ Structure Formatting Notes:
 export const SMS_MESSAGE_EXAMPLES = `
 <Examples>
 
-**EXAMPLE 1: Mixed Structure (Superset + Straight Sets + Circuit)**
+**EXAMPLE 1: Single Superset + Straight Sets + Single Circuit**
 Warmup:
 - Band Pull-Aparts: 3x15
-- Scapular Wall Slides: 3x12
-- Arm Circles: 2x30 sec
+- Wall Slides: 3x12
+- Arm Circles: 2x30s
 
 Workout:
-- SUPERSET - 4x:
-  - BB Bench Press: 6-8
-  - Chest-Supported Row: 10-12
-
-- DB Overhead Press: 3x8-10
+- SS BB Bench: 4x6-8
+- SS DB Row: 4x10-12
+- DB OH Press: 3x8-10
 - Lateral Raises: 3x12-15
-
-- CIRCUIT - 3x:
-  - Push-ups: 12-15
-  - Face Pulls: 15-20
-  - Tricep Pushdowns: 15-20
+- C Push-ups: 3x12-15
+- C Face Pulls: 3x15-20
+- C Tricep Pushdowns: 3x15-20
 
 Cooldown:
-- Pec Stretch: 2 min
-- Shoulder Stretch: 2 min
+- Pec Stretch: 2min
+- Shoulder Stretch: 2min
 
 **EXAMPLE 2: Straight Sets Only**
 Warmup:
-- Bodyweight Squats: 2x10
+- BW Squats: 2x10
 - Glute Bridges: 2x15
-- Leg Swings: 2x10 each
+- Leg Swings: 2x10
 
 Workout:
 - Goblet Squats: 4x8-10
-- Romanian Deadlifts: 3x10-12
-- Bulgarian Split Squats: 3x8 each
+- DB Rom Deadlifts: 3x10-12
+- Bulg Split Squats: 3x8
 - Leg Press: 3x12-15
-- Lying Leg Curls: 3x12-15
+- Leg Curls: 3x12-15
 - Calf Raises: 3x15-20
 
 Cooldown:
-- Hamstring Stretch: 2 min
-- Hip Flexor Stretch: 2 min
+- Hamstring Stretch: 2min
+- Hip Stretch: 2min
 
-**EXAMPLE 3: Straight Sets + Circuit**
+**EXAMPLE 3: Multiple Supersets and Circuits**
 Warmup:
-- Jumping Jacks: 2x30 sec
-- Arm Circles: 2x30 sec
-- Bodyweight Squats: 2x15
+- Jumping Jacks: 2x30s
+- Arm Circles: 2x30s
+- BW Squats: 2x15
 
 Workout:
-- Back Squat: 5x5
-- Bench Press: 4x6
-- Deadlifts: 3x5
-
-- CIRCUIT - 3x:
-  - KB Swings: 15
-  - Push-ups: 12-15
-  - Box Jumps: 10
-  - Farmer's Carries: 40 yards
+- SS1 BB Squat: 5x5
+- SS1 Pull-ups: 5x8
+- BB Bench: 4x6
+- SS2 DB RDL: 3x10
+- SS2 DB Rows: 3x10
+- C1 KB Swings: 3x15
+- C1 Push-ups: 3x12
+- C1 Box Jumps: 3x10
+- C2 Plank: 3x30s
+- C2 Situps: 3x25
+- C2 Hollow Holds: 3x30s
 
 Cooldown:
-- Child's Pose: 2 min
-- Deep Breathing: 1 min
+- Child's Pose: 2min
+- Deep Breathing: 1min
+
+**EXAMPLE 4: Leg Day with Time-Based Work**
+Warmup:
+- Leg Swings: 2x10
+- Hip Circles: 2x10
+- Lunges: 2x8
+
+Workout:
+- BB Back Squat: 4x6-8
+- SS Rom Deadlifts: 3x10
+- SS Leg Curls: 3x12
+- Bulg Split Squats: 3x8
+- Leg Press: 3x15
+- C Calf Raises: 3x20
+- C Plank: 3x45s
+- C Bird Dogs: 3x10
+
+Cooldown:
+- Quad Stretch: 2min
+- Hip Flexor Stretch: 2min
 </Examples>
 
-**Note:** These examples show different structure patterns. Use the structure that matches the long-form workout description. Don't default to any particular pattern - match what's in the description.
+**Key Points:**
+- Use "SS" prefix for supersets (single) or "SS1"/"SS2" (multiple)
+- Use "C" prefix for circuits (single) or "C1"/"C2" (multiple)
+- Abbreviate aggressively: BB, DB, KB, Rom, Bulg, BW, OH, Ex
+- NO RPE, tempo, or rest periods
+- Keep exercise names short and readable
+- Match the structure from the long-form description
 `.trim();

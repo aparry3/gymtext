@@ -1,8 +1,9 @@
+import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
-import { WorkoutInstance, UpdatedWorkoutInstance } from '@/server/models/workout';
+import { WorkoutInstance } from '@/server/models/workout';
 import { _UpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt, type Modification } from './prompts';
-import { executeWorkoutChain } from '../shared/chainFactory';
+import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 
 export type { Modification };
 
@@ -12,12 +13,12 @@ export interface SubstituteExercisesContext {
   modifications: Modification[];
 }
 
-export interface SubstitutedWorkoutResult {
-  workout: UpdatedWorkoutInstance & { date: Date };
-  message: string;
-  description: string;
-  reasoning: string;
-}
+/**
+ * Output from substitute exercises operation
+ * Uses shared WorkoutChainResult type for consistency
+ * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
+ */
+export type SubstitutedWorkoutResult = WorkoutChainResult<z.infer<typeof _UpdatedWorkoutInstanceSchema>>;
 
 /**
  * Substitute exercises using the shared workout chain factory

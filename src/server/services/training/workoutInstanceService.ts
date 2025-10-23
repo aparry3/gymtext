@@ -2,7 +2,7 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
-import type { EnhancedWorkoutInstance } from '@/server/models/workout';
+import type { EnhancedWorkoutInstance, WorkoutInstanceUpdate } from '@/server/models/workout';
 import { UserService } from '../user/userService';
 import { DateTime } from 'luxon';
 
@@ -106,7 +106,7 @@ export class WorkoutInstanceService {
   /**
    * Update a workout with new details, description, reasoning, and message
    */
-  public async updateWorkout(workoutId: string, updates: { details?: import('@/server/models/_types').JsonValue; description?: string; reasoning?: string; message?: string }) {
+  public async updateWorkout(workoutId: string, updates: WorkoutInstanceUpdate) {
     return await this.workoutRepo.update(workoutId, updates);
   }
 
