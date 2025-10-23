@@ -5,15 +5,13 @@ import type { AgentDeps } from '@/server/agents/base';
 import type { PatchProfileCallback } from '@/server/agents/profile/chain';
 import type { WorkoutModificationService } from './modifications/tools';
 import type { MicrocycleModificationService } from './modifications/tools';
+import { WorkoutInstance } from '@/server/models';
+import type { ProfilePatchResult } from '@/server/services';
 
 /**
  * Intent types that the triage agent can identify
  */
-export const MessageIntentSchema = z.enum([
-  'updates', 
-  // 'questions', 
-  'modifications'
-]);
+export const MessageIntentSchema = z.enum(['updates', 'modifications']);
 export type MessageIntent = z.infer<typeof MessageIntentSchema>;
 
 /**
@@ -36,13 +34,30 @@ export const TriageResultSchema = z.object({
 export type TriageResult = z.infer<typeof TriageResultSchema>;
 
 /**
- * Input for chat agent
+ * Input for chat agent (initial input to the chain)
  */
 export interface ChatInput {
   user: UserWithProfile;
   message: string;
   previousMessages?: Message[];
+  currentWorkout?: WorkoutInstance;
 }
+
+/**
+ * Input after parallel phase (profile + triage completed)
+ * This type represents the complete context available to subagents.
+ * All fields from ChatInput flow through, plus profile and triage results.
+ */
+export interface ChatAfterParallelInput extends ChatInput {
+  profile: ProfilePatchResult;
+  triage: TriageResult;
+}
+
+/**
+ * Input for chat subagent runnables
+ * Alias for ChatAfterParallelInput for clarity in subagent code
+ */
+export type ChatSubagentInput = ChatAfterParallelInput;
 
 /**
  * Output from chat agent

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RunnableLambda } from '@langchain/core/runnables';
 import { initializeModel } from '@/server/agents/base';
-import type { ChatSubagentInput } from '../baseAgent';
+import type { ChatSubagentInput } from '../types';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services';

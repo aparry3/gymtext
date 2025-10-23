@@ -4,8 +4,7 @@ import type { Message } from '@/server/models/messageModel';
 import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileAgent, type PatchProfileCallback } from '../../profile/chain';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
-import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatOutput, ChatAgentDeps } from './types';
-import { ProfilePatchResult } from '@/server/services';
+import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterParallelInput, ChatOutput, ChatAgentDeps, IntentAnalysis } from './types';
 import { updatesAgentRunnable } from './updates/chain';
 // import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
@@ -31,7 +30,7 @@ export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationS
  */
 export const createChatAgent = (deps: ChatAgentDeps) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, previousMessages } = input;
+    const { user, message, previousMessages, currentWorkout } = input;
   console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
   // Create modification tools with injected services (DI pattern)
@@ -43,19 +42,20 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
   // Create triage action map with injected dependencies
   const TriageActionMap: Record<MessageIntent, Runnable> = {
     'updates': updatesAgentRunnable(),
-    // 'questions': questionsAgentRunnable(),
     'modifications': createModificationsAgent({ tools: modificationTools }),
   };
 
-  // Sequence 1
-  // 1. Create model
-  // 2. Create Profile Runnable with injected patchProfile callback
+  // Profile Runnable - extracts and updates user profile
+  // Input: ChatInput (initial chain input)
+  // Output: ProfilePatchResult
   const profileRunnable = createProfileAgent({
     patchProfile: deps.patchProfile,
   });
 
-  const routingRunnable = RunnableLambda.from(async (input: { message: string, user: UserWithProfile }) => {
-    // 3. Create Triage Runnable
+  // Triage Runnable - analyzes message intent
+  // Input: ChatInput (initial chain input)
+  // Output: TriageResult
+  const routingRunnable = RunnableLambda.from(async (input: ChatInput): Promise<TriageResult> => {
     const userMessage = buildTriageUserMessage(input.message, input.user.timezone);
     const messages = [
       {
@@ -71,16 +71,20 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     return await model.invoke(messages) as TriageResult;
   });
 
-  // 4. Run Profile and Triage Runnables in parallel
-
+  // Parallel Step - runs profile and triage in parallel
+  // Input: ChatInput
+  // Output: ChatAfterParallelInput (ChatInput + { profile, triage })
   const parallel = RunnablePassthrough.assign({
     profile: profileRunnable,
-    triage: routingRunnable,
-  });
+    triage: routingRunnable as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  }) as unknown as RunnableSequence<ChatInput, ChatAfterParallelInput>;
 
-  const actionRunnable = RunnableLambda.from(async (input: { profile: ProfilePatchResult, triage: TriageResult, message: string, user: UserWithProfile, previousMessages?: Message[] }) => {
+  // Action Runnable - routes to appropriate subagent based on triage
+  // Input: ChatAfterParallelInput (ChatInput + profile + triage)
+  // Output: ChatOutput
+  const actionRunnable = RunnableLambda.from(async (input: ChatAfterParallelInput): Promise<ChatOutput> => {
     // Find the intent with the highest confidence
-    const primaryIntent = input.triage.intents.reduce((max, current) =>
+    const primaryIntent = input.triage.intents.reduce((max: IntentAnalysis, current: IntentAnalysis) =>
       current.confidence > max.confidence ? current : max
     );
 
@@ -95,7 +99,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     });
 
     // Get the appropriate agent for this intent
-    const agent = TriageActionMap[primaryIntent.intent];
+    const agent = TriageActionMap[primaryIntent.intent as MessageIntent];
 
     // Log which sub-agent is being invoked
     console.log(`[CHAT AGENT] Invoking ${primaryIntent.intent} sub-agent with confidence ${primaryIntent.confidence}`);
@@ -107,6 +111,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
       profile: input.profile,
       triage: input.triage,
       previousMessages: input.previousMessages,
+      currentWorkout: input.currentWorkout,
     };
 
     // Invoke the appropriate subagent
@@ -128,7 +133,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     actionRunnable,
   ]);
 
-    const result = await sequence.invoke({ message, user, previousMessages });
+    const result = await sequence.invoke({ message, user, previousMessages, currentWorkout });
 
     return result;
   });

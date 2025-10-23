@@ -1,22 +1,8 @@
 import { initializeModel, AgentConfig } from '@/server/agents/base';
 import { RunnableLambda } from '@langchain/core/runnables';
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
-import type { ProfilePatchResult } from '@/server/services';
-import type { TriageResult } from './types';
+import type { ChatSubagentInput } from './types';
 import { z } from 'zod';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-
-/**
- * Input type for chat subagent runnables
- */
-export interface ChatSubagentInput {
-  message: string;
-  user: UserWithProfile;
-  profile: ProfilePatchResult;
-  triage: TriageResult;
-  previousMessages?: Message[];
-}
 
 /**
  * Creates a base runnable for chat subagents

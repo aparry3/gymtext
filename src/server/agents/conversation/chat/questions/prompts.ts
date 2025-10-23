@@ -1,4 +1,4 @@
-import type { ChatSubagentInput } from '../baseAgent';
+import type { ChatSubagentInput } from '../types';
 import { formatForAI } from '@/shared/utils/date';
 
 /**
