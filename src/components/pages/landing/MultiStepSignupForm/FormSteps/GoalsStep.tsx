@@ -96,7 +96,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
                 </div>
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-                    isSelected ? 'bg-primary border-2 border-primary' : 'bg-white border-2 border-gray-300'
+                    isSelected ? 'bg-blue-600 border-2 border-blue-600' : 'bg-white border-2 border-gray-300'
                   }`}
                 >
                   {isSelected && <Check className="h-4 w-4 text-white" />}

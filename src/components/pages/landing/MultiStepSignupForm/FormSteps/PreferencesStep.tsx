@@ -90,7 +90,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
             >
               <div
                 className={`mx-auto w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-                  isSelected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                  isSelected ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'
                 }`}
               >
                 <Icon className="h-6 w-6" />
