@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     await fitnessProfileService.createFitnessProfile(user, {
       fitnessGoals: formData.fitnessGoals,
       currentExercise: formData.currentExercise,
+      environment: formData.environment,
       injuries: formData.injuries,
     });
 

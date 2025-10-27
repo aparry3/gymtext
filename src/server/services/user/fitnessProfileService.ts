@@ -10,6 +10,7 @@ import { ProfileExtractionResults } from '../../agents/profile/types';
 export interface CreateFitnessProfileRequest {
   fitnessGoals?: string;
   currentExercise?: string;
+  environment?: string;
   injuries?: string;
 }
 
@@ -211,6 +212,10 @@ export class FitnessProfileService {
 
       if (request.currentExercise?.trim()) {
         messageParts.push(`***Current Activity***:\n${request.currentExercise.trim()}`);
+      }
+
+      if (request.environment?.trim()) {
+        messageParts.push(`***Training Environment***:\n${request.environment.trim()}`);
       }
 
       if (request.injuries?.trim()) {
