@@ -5,6 +5,7 @@ import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'rea
 import { FormData } from '../index';
 import { TimeSelector } from '@/components/ui/TimeSelector';
 import { TimezoneDisplay } from '@/components/ui/TimezoneDisplay';
+import { Check } from 'lucide-react';
 
 interface BioStepProps {
   register: UseFormRegister<FormData>;
@@ -13,10 +14,17 @@ interface BioStepProps {
   watch: UseFormWatch<FormData>;
 }
 
+const genderOptions = [
+  { value: 'male' as const, label: 'Male' },
+  { value: 'female' as const, label: 'Female' },
+  { value: 'prefer_not_to_say' as const, label: 'Prefer not to say' },
+];
+
 export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
   const [detectedTimezone, setDetectedTimezone] = useState<string>('America/New_York');
   const preferredSendHour = watch('preferredSendHour');
   const timezone = watch('timezone');
+  const selectedGender = watch('gender');
 
   // Detect user's timezone on mount
   useEffect(() => {
@@ -76,6 +84,48 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
         <p className="mt-1 text-xs text-muted-foreground">
           Where we&apos;ll send your daily workouts
         </p>
+      </div>
+
+      {/* Gender */}
+      <div>
+        <label className="block text-sm font-medium mb-3 text-foreground">
+          Gender
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {genderOptions.map((option) => {
+            const isSelected = selectedGender === option.value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setValue('gender', option.value)}
+                className={`
+                  p-4 rounded-xl border transition-all text-left cursor-pointer
+                  ${
+                    isSelected
+                      ? 'border-primary bg-primary/5'
+                      : 'border-input bg-white hover:border-primary/50'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{option.label}</span>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                      isSelected ? 'bg-blue-600 border-2 border-blue-600' : 'bg-white border-2 border-gray-300'
+                    }`}
+                  >
+                    {isSelected && <Check className="h-4 w-4 text-white" />}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {errors.gender && (
+          <p className="mt-2 text-sm text-destructive">{errors.gender.message}</p>
+        )}
       </div>
 
       {/* Preferred Send Hour */}
