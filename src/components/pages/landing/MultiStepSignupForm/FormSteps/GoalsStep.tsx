@@ -76,7 +76,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
               type="button"
               onClick={() => toggleGoal(goal.value)}
               className={`
-                p-6 rounded-xl border-2 transition-all text-left
+                p-6 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'

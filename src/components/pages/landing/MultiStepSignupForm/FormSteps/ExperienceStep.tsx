@@ -58,7 +58,7 @@ export function ExperienceStep({ setValue, watch, errors }: ExperienceStepProps)
               type="button"
               onClick={() => setValue('experienceLevel', level.value)}
               className={`
-                w-full p-6 rounded-xl border-2 transition-all text-left
+                w-full p-6 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'

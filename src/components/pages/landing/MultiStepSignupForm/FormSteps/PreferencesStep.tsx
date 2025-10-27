@@ -2,7 +2,7 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { FormData } from '../index';
-import { Home, Building2, User } from 'lucide-react';
+import { Home, Building2, User, Check } from 'lucide-react';
 
 interface PreferencesStepProps {
   register: UseFormRegister<FormData>;
@@ -80,7 +80,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
               type="button"
               onClick={() => setValue('trainingLocation', location.value)}
               className={`
-                p-4 rounded-xl border-2 transition-all text-center
+                p-4 rounded-xl border-2 transition-all text-center cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
@@ -113,7 +113,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
         <label className="block text-sm font-medium mb-3 text-foreground">
           What equipment do you have access to?
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {equipmentOptions.map((equipment) => {
             const isSelected = selectedEquipment.includes(equipment.value);
 
@@ -123,15 +123,24 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
                 type="button"
                 onClick={() => toggleEquipment(equipment.value)}
                 className={`
-                  p-3 rounded-xl border-2 transition-all text-sm font-medium
+                  p-4 rounded-xl border-2 transition-all text-left cursor-pointer
                   ${
                     isSelected
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border bg-white text-foreground hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 shadow-lg'
+                      : 'border-border bg-white hover:border-primary/50 hover:shadow-md'
                   }
                 `}
               >
-                {equipment.label}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{equipment.label}</span>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                      isSelected ? 'bg-blue-600 border-2 border-blue-600' : 'bg-white border-2 border-gray-300'
+                    }`}
+                  >
+                    {isSelected && <Check className="h-4 w-4 text-white" />}
+                  </div>
+                </div>
               </button>
             );
           })}

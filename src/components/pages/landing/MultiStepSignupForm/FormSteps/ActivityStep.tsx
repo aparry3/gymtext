@@ -59,7 +59,7 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
               type="button"
               onClick={() => setValue('currentActivity', level.value)}
               className={`
-                w-full p-4 rounded-xl border-2 transition-all text-left
+                w-full p-4 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
