@@ -1,0 +1,109 @@
+'use client';
+
+import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { FormData } from '../index';
+
+interface ActivityStepProps {
+  register: UseFormRegister<FormData>;
+  errors: FieldErrors<FormData>;
+  setValue: UseFormSetValue<FormData>;
+  watch: UseFormWatch<FormData>;
+}
+
+const activityLevels = [
+  {
+    value: 'not_active' as const,
+    label: 'Not Active',
+    description: 'Less than 1x/week',
+  },
+  {
+    value: 'once_per_week' as const,
+    label: 'Once Per Week',
+    description: 'Working out about 1x/week',
+  },
+  {
+    value: '2_3_per_week' as const,
+    label: '2-3 Times Per Week',
+    description: 'Regular activity 2-3x/week',
+  },
+  {
+    value: '4_plus_per_week' as const,
+    label: '4+ Times Per Week',
+    description: 'Very active, 4+ sessions/week',
+  },
+];
+
+export function ActivityStep({ register, setValue, watch, errors }: ActivityStepProps) {
+  const selectedActivity = watch('currentActivity');
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2 text-foreground">
+          How active are you currently?
+        </h2>
+        <p className="text-muted-foreground">
+          This helps us understand your starting point and set realistic goals.
+        </p>
+      </div>
+
+      {/* Activity Level Options */}
+      <div className="space-y-3">
+        {activityLevels.map((level) => {
+          const isSelected = selectedActivity === level.value;
+
+          return (
+            <button
+              key={level.value}
+              type="button"
+              onClick={() => setValue('currentActivity', level.value)}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all text-left
+                ${
+                  isSelected
+                    ? 'border-primary bg-primary/5 shadow-lg'
+                    : 'border-border bg-white hover:border-primary/50 hover:shadow-md'
+                }
+              `}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">{level.label}</h3>
+                  <p className="text-sm text-muted-foreground">{level.description}</p>
+                </div>
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-primary' : 'border-gray-300'
+                  }`}
+                >
+                  {isSelected && <div className="w-3 h-3 rounded-full bg-primary"></div>}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {errors.currentActivity && (
+        <p className="text-sm text-destructive">{errors.currentActivity.message}</p>
+      )}
+
+      {/* Injuries Section */}
+      <div className="pt-4">
+        <label className="block text-sm font-medium mb-2 text-foreground">
+          Any injuries or limitations we should know about?{' '}
+          <span className="text-muted-foreground font-normal">(Optional)</span>
+        </label>
+        <textarea
+          {...register('injuries')}
+          placeholder="e.g., Bad knee, shoulder issues, etc."
+          rows={3}
+          className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+        />
+        {errors.injuries && (
+          <p className="mt-1 text-sm text-destructive">{errors.injuries.message}</p>
+        )}
+      </div>
+    </div>
+  );
+}
