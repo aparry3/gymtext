@@ -132,24 +132,15 @@ export function MultiStepSignupForm() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative lg:flex lg:gap-8 lg:items-start">
       {errorMessage && (
-        <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6 max-w-3xl mx-auto">
+        <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6 lg:max-w-3xl">
           <p className="text-red-600">{errorMessage}</p>
         </div>
       )}
 
-      {/* Desktop fixed progress indicator */}
-      <div className="hidden lg:block fixed right-8 top-32 z-10">
-        <FormProgressIndicator
-          currentStep={currentStep}
-          totalSteps={6}
-          stepLabels={STEP_LABELS}
-        />
-      </div>
-
       {/* Form Content */}
-      <div className="max-w-3xl mx-auto">
+      <div className="flex-1 lg:max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Mobile progress indicator */}
           <div className="lg:hidden">
@@ -238,6 +229,15 @@ export function MultiStepSignupForm() {
             </div>
           </div>
         </form>
+      </div>
+
+      {/* Desktop sticky progress indicator */}
+      <div className="hidden lg:block lg:w-64 lg:sticky lg:top-32 lg:self-start">
+        <FormProgressIndicator
+          currentStep={currentStep}
+          totalSteps={6}
+          stepLabels={STEP_LABELS}
+        />
       </div>
     </div>
   );

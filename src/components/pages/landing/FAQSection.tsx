@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { ChevronDown } from 'lucide-react';
 
 const faqs = [
@@ -55,7 +55,7 @@ export function FAQSection() {
                   className="w-full text-left"
                   aria-expanded={openIndex === index}
                 >
-                  <CardContent className="p-6">
+                  <div className="p-6">
                     <div className="flex items-center justify-between gap-4">
                       <h3 className="text-lg font-semibold text-foreground">
                         {faq.question}
@@ -79,7 +79,7 @@ export function FAQSection() {
                         {faq.answer}
                       </p>
                     </div>
-                  </CardContent>
+                  </div>
                 </button>
               </Card>
             ))}
