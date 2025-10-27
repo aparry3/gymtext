@@ -62,7 +62,7 @@ const STEP_LABELS = [
 
 export function MultiStepSignupForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]));
+  const [furthestStep, setFurthestStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -92,7 +92,7 @@ export function MultiStepSignupForm() {
     if (isValid) {
       const nextStep = Math.min(currentStep + 1, 6);
       setCurrentStep(nextStep);
-      setVisitedSteps((prev) => new Set([...prev, nextStep]));
+      setFurthestStep((prev) => Math.max(prev, nextStep));
     }
   };
 
@@ -101,8 +101,8 @@ export function MultiStepSignupForm() {
   };
 
   const handleStepClick = (step: number) => {
-    // Only allow navigation to visited steps that are before the current step
-    if (visitedSteps.has(step) && step < currentStep) {
+    // Allow navigation to any step up to the furthest step reached
+    if (step <= furthestStep && step !== currentStep) {
       setCurrentStep(step);
     }
   };
@@ -159,7 +159,7 @@ export function MultiStepSignupForm() {
               currentStep={currentStep}
               totalSteps={6}
               stepLabels={STEP_LABELS}
-              visitedSteps={visitedSteps}
+              furthestStep={furthestStep}
               onStepClick={handleStepClick}
             />
           </div>
@@ -250,7 +250,7 @@ export function MultiStepSignupForm() {
           currentStep={currentStep}
           totalSteps={6}
           stepLabels={STEP_LABELS}
-          visitedSteps={visitedSteps}
+          furthestStep={furthestStep}
           onStepClick={handleStepClick}
         />
       </div>

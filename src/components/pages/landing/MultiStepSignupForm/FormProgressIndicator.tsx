@@ -6,7 +6,7 @@ interface FormProgressIndicatorProps {
   currentStep: number;
   totalSteps: number;
   stepLabels: string[];
-  visitedSteps: Set<number>;
+  furthestStep: number;
   onStepClick: (step: number) => void;
 }
 
@@ -14,7 +14,7 @@ export function FormProgressIndicator({
   currentStep,
   totalSteps,
   stepLabels,
-  visitedSteps,
+  furthestStep,
   onStepClick,
 }: FormProgressIndicatorProps) {
   return (
@@ -45,7 +45,9 @@ export function FormProgressIndicator({
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
             const isCurrent = stepNumber === currentStep;
-            const isClickable = visitedSteps.has(stepNumber) && stepNumber < currentStep;
+            const isBetween = stepNumber > currentStep && stepNumber < furthestStep;
+            const isFurthest = stepNumber === furthestStep && stepNumber > currentStep;
+            const isClickable = stepNumber <= furthestStep && stepNumber !== currentStep;
 
             return (
               <div key={index} className="relative">
@@ -62,6 +64,10 @@ export function FormProgressIndicator({
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : isCurrent
                           ? 'bg-orange-500 border-orange-500 text-white'
+                          : isBetween
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : isFurthest
+                          ? 'bg-blue-600/50 border-blue-600/50 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }
                     `}
@@ -79,7 +85,9 @@ export function FormProgressIndicator({
                       className={`text-sm font-medium ${
                         isCurrent
                           ? 'text-foreground'
-                          : isCompleted
+                          : isCompleted || isBetween
+                          ? 'text-muted-foreground'
+                          : isFurthest
                           ? 'text-muted-foreground'
                           : 'text-gray-400'
                       }`}
@@ -94,7 +102,7 @@ export function FormProgressIndicator({
                   <div
                     className={`
                       absolute left-5 w-0.5 h-8 top-10 -z-10 transition-all
-                      ${isCompleted ? 'bg-blue-600' : 'bg-gray-300'}
+                      ${isCompleted || isBetween ? 'bg-blue-600' : 'bg-gray-300'}
                     `}
                   ></div>
                 )}
