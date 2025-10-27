@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Quote } from 'lucide-react';
 
@@ -43,7 +43,7 @@ export function TestimonialsSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="transition-all hover:shadow-xl">
-                <CardContent className="p-6 space-y-4">
+                <div className="p-6 space-y-4">
                   {/* Quote Icon */}
                   <div className="flex justify-start">
                     <Quote className="h-8 w-8 text-primary/20" />
@@ -68,7 +68,7 @@ export function TestimonialsSection() {
                       </div>
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>

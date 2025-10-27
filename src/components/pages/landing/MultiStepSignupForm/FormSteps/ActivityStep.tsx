@@ -2,6 +2,7 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { FormData } from '../index';
+import { Check } from 'lucide-react';
 
 interface ActivityStepProps {
   register: UseFormRegister<FormData>;
@@ -72,11 +73,11 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
                   <p className="text-sm text-muted-foreground">{level.description}</p>
                 </div>
                 <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-primary' : 'border-gray-300'
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                    isSelected ? 'bg-primary border-2 border-primary' : 'bg-white border-2 border-gray-300'
                   }`}
                 >
-                  {isSelected && <div className="w-3 h-3 rounded-full bg-primary"></div>}
+                  {isSelected && <Check className="h-4 w-4 text-white" />}
                 </div>
               </div>
             </button>
@@ -88,20 +89,20 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
         <p className="text-sm text-destructive">{errors.currentActivity.message}</p>
       )}
 
-      {/* Injuries Section */}
+      {/* Activity Elaboration */}
       <div className="pt-4">
         <label className="block text-sm font-medium mb-2 text-foreground">
-          Any injuries or limitations we should know about?{' '}
+          Tell us more about your current activity{' '}
           <span className="text-muted-foreground font-normal">(Optional)</span>
         </label>
         <textarea
-          {...register('injuries')}
-          placeholder="e.g., Bad knee, shoulder issues, etc."
+          {...register('activityElaboration')}
+          placeholder="e.g., I run 3 miles on weekdays, lift weights on weekends..."
           rows={3}
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
-        {errors.injuries && (
-          <p className="mt-1 text-sm text-destructive">{errors.injuries.message}</p>
+        {errors.activityElaboration && (
+          <p className="mt-1 text-sm text-destructive">{errors.activityElaboration.message}</p>
         )}
       </div>
     </div>

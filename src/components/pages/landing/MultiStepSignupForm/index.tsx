@@ -22,9 +22,8 @@ const formSchema = z.object({
   timezone: z.string().min(1, 'Timezone is required'),
 
   // Goals
-  primaryGoal: z.enum(['strength', 'endurance', 'weight_loss', 'general_fitness'], {
-    required_error: 'Please select your primary goal',
-  }),
+  primaryGoals: z.array(z.enum(['strength', 'endurance', 'weight_loss', 'general_fitness'])).min(1, 'Please select at least one goal'),
+  goalsElaboration: z.string().optional(),
 
   // Experience
   experienceLevel: z.enum(['beginner', 'intermediate', 'advanced'], {
@@ -35,13 +34,14 @@ const formSchema = z.object({
   currentActivity: z.enum(['not_active', 'once_per_week', '2_3_per_week', '4_plus_per_week'], {
     required_error: 'Please select your current activity level',
   }),
-  injuries: z.string().optional(),
+  activityElaboration: z.string().optional(),
 
   // Preferences
   trainingLocation: z.enum(['home', 'commercial_gym', 'bodyweight'], {
     required_error: 'Please select your training location',
   }),
   equipment: z.array(z.string()).min(1, 'Please select at least one equipment option'),
+  injuries: z.string().optional(),
 
   // Submit
   acceptRisks: z.boolean().refine((val) => val === true, {
@@ -62,6 +62,7 @@ const STEP_LABELS = [
 
 export function MultiStepSignupForm() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]));
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -77,6 +78,7 @@ export function MultiStepSignupForm() {
     defaultValues: {
       preferredSendHour: 8,
       timezone: 'America/New_York',
+      primaryGoals: [],
       equipment: [],
     },
     mode: 'onBlur',
@@ -88,14 +90,21 @@ export function MultiStepSignupForm() {
     const isValid = await trigger(fieldsToValidate as (keyof FormData)[]);
 
     if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const nextStep = Math.min(currentStep + 1, 6);
+      setCurrentStep(nextStep);
+      setVisitedSteps((prev) => new Set([...prev, nextStep]));
     }
   };
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleStepClick = (step: number) => {
+    // Only allow navigation to visited steps that are before the current step
+    if (visitedSteps.has(step) && step < currentStep) {
+      setCurrentStep(step);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -110,8 +119,10 @@ export function MultiStepSignupForm() {
           ? data.phoneNumber
           : `+1${data.phoneNumber}`,
         // Map form data to existing signup format
-        fitnessGoals: getGoalDescription(data.primaryGoal),
+        fitnessGoals: data.primaryGoals.map(getGoalDescription).join(', '),
+        goalsElaboration: data.goalsElaboration,
         currentExercise: getActivityDescription(data.currentActivity),
+        activityElaboration: data.activityElaboration,
         gender: 'prefer_not_to_say', // Can be added to form if needed
         age: '30', // Can be added to form if needed
       };
@@ -148,6 +159,8 @@ export function MultiStepSignupForm() {
               currentStep={currentStep}
               totalSteps={6}
               stepLabels={STEP_LABELS}
+              visitedSteps={visitedSteps}
+              onStepClick={handleStepClick}
             />
           </div>
 
@@ -237,6 +250,8 @@ export function MultiStepSignupForm() {
           currentStep={currentStep}
           totalSteps={6}
           stepLabels={STEP_LABELS}
+          visitedSteps={visitedSteps}
+          onStepClick={handleStepClick}
         />
       </div>
     </div>
@@ -249,7 +264,7 @@ function getFieldsForStep(step: number): (keyof FormData)[] {
     case 1:
       return ['name', 'phoneNumber', 'preferredSendHour', 'timezone'];
     case 2:
-      return ['primaryGoal'];
+      return ['primaryGoals'];
     case 3:
       return ['experienceLevel'];
     case 4:

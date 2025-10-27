@@ -41,7 +41,7 @@ const equipmentOptions = [
   { value: 'full_gym', label: 'Full Gym Access' },
 ];
 
-export function PreferencesStep({ setValue, watch, errors }: PreferencesStepProps) {
+export function PreferencesStep({ register, setValue, watch, errors }: PreferencesStepProps) {
   const selectedLocation = watch('trainingLocation');
   const selectedEquipment = watch('equipment') || [];
 
@@ -138,6 +138,23 @@ export function PreferencesStep({ setValue, watch, errors }: PreferencesStepProp
         </div>
         {errors.equipment && (
           <p className="mt-2 text-sm text-destructive">{errors.equipment.message}</p>
+        )}
+      </div>
+
+      {/* Injuries Section */}
+      <div className="pt-4">
+        <label className="block text-sm font-medium mb-2 text-foreground">
+          Any injuries or limitations we should know about?{' '}
+          <span className="text-muted-foreground font-normal">(Optional)</span>
+        </label>
+        <textarea
+          {...register('injuries')}
+          placeholder="e.g., Bad knee, shoulder issues, etc."
+          rows={3}
+          className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+        />
+        {errors.injuries && (
+          <p className="mt-1 text-sm text-destructive">{errors.injuries.message}</p>
         )}
       </div>
     </div>

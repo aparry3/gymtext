@@ -2,7 +2,7 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { FormData } from '../index';
-import { Sprout, BookOpen, Trophy } from 'lucide-react';
+import { Sprout, BookOpen, Trophy, Check } from 'lucide-react';
 
 interface ExperienceStepProps {
   register: UseFormRegister<FormData>;
@@ -66,17 +66,22 @@ export function ExperienceStep({ setValue, watch, errors }: ExperienceStepProps)
                 }
               `}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="p-3 rounded-xl bg-muted text-muted-foreground">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground mb-1">{level.label}</h3>
+                    <p className="text-sm text-muted-foreground">{level.description}</p>
+                  </div>
+                </div>
                 <div
-                  className={`p-3 rounded-xl ${
-                    isSelected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                    isSelected ? 'bg-primary border-2 border-primary' : 'bg-white border-2 border-gray-300'
                   }`}
                 >
-                  <Icon className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">{level.label}</h3>
-                  <p className="text-sm text-muted-foreground">{level.description}</p>
+                  {isSelected && <Check className="h-4 w-4 text-white" />}
                 </div>
               </div>
             </button>

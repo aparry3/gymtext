@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   ClipboardList,
   MessageCircle,
@@ -66,19 +66,21 @@ export function BenefitsSection() {
               const Icon = benefit.icon;
               return (
                 <Card key={index} className="transition-all hover:shadow-xl">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col items-start space-y-4">
-                      <div className="p-3 bg-primary/10 rounded-xl">
-                        <Icon className="h-6 w-6 text-primary" />
+                  <div className="p-6 h-full">
+                    <div className="flex flex-col space-y-4 h-full">
+                      <div className="flex flex-row items-center gap-3">
+                        <div className="p-3.5 bg-primary/10 rounded-xl flex-shrink-0">
+                          <Icon className="h-7 w-7 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground flex-1">
+                          {benefit.title}
+                        </h3>
                       </div>
-                      <h3 className="text-xl font-semibold text-foreground">
-                        {benefit.title}
-                      </h3>
                       <p className="text-muted-foreground leading-relaxed">
                         {benefit.description}
                       </p>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               );
             })}

@@ -6,12 +6,16 @@ interface FormProgressIndicatorProps {
   currentStep: number;
   totalSteps: number;
   stepLabels: string[];
+  visitedSteps: Set<number>;
+  onStepClick: (step: number) => void;
 }
 
 export function FormProgressIndicator({
   currentStep,
   totalSteps,
   stepLabels,
+  visitedSteps,
+  onStepClick,
 }: FormProgressIndicatorProps) {
   return (
     <>
@@ -41,50 +45,56 @@ export function FormProgressIndicator({
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
             const isCurrent = stepNumber === currentStep;
+            const isClickable = visitedSteps.has(stepNumber) && stepNumber < currentStep;
 
             return (
-              <div key={index} className="flex items-start gap-3 relative">
-                {/* Circle indicator */}
+              <div key={index} className="relative">
                 <div
-                  className={`
-                    flex items-center justify-center w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all
-                    ${
-                      isCompleted
-                        ? 'bg-primary border-primary text-white'
-                        : isCurrent
-                        ? 'bg-white border-primary text-primary animate-pulse'
-                        : 'bg-white border-gray-300 text-gray-400'
-                    }
-                  `}
+                  onClick={() => isClickable && onStepClick(stepNumber)}
+                  className={`flex items-start gap-3 -mx-2 px-2 py-1 rounded-lg ${isClickable ? 'cursor-pointer hover:bg-primary/10' : 'cursor-default'} transition-all`}
                 >
-                  {isCompleted ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    <span className="font-semibold">{stepNumber}</span>
-                  )}
-                </div>
-
-                {/* Label */}
-                <div className="pt-2">
-                  <p
-                    className={`text-sm font-medium ${
-                      isCurrent
-                        ? 'text-foreground'
-                        : isCompleted
-                        ? 'text-muted-foreground'
-                        : 'text-gray-400'
-                    }`}
+                  {/* Circle indicator */}
+                  <div
+                    className={`
+                      flex items-center justify-center w-10 h-10 rounded-full border-2 flex-shrink-0 transition-all
+                      ${
+                        isCompleted
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : isCurrent
+                          ? 'bg-orange-500 border-orange-500 text-white'
+                          : 'bg-white border-gray-300 text-gray-400'
+                      }
+                    `}
                   >
-                    {label}
-                  </p>
+                    {isCompleted ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      <span className="font-semibold">{stepNumber}</span>
+                    )}
+                  </div>
+
+                  {/* Label */}
+                  <div className="pt-2">
+                    <p
+                      className={`text-sm font-medium ${
+                        isCurrent
+                          ? 'text-foreground'
+                          : isCompleted
+                          ? 'text-muted-foreground'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {label}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Connecting line */}
                 {index < stepLabels.length - 1 && (
                   <div
                     className={`
-                      absolute left-5 w-0.5 h-8 top-10 transition-all
-                      ${isCompleted ? 'bg-primary' : 'bg-gray-300'}
+                      absolute left-5 w-0.5 h-8 top-10 -z-10 transition-all
+                      ${isCompleted ? 'bg-blue-600' : 'bg-gray-300'}
                     `}
                   ></div>
                 )}
