@@ -56,7 +56,7 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
         <input
           type="text"
           {...register('name')}
-          placeholder="John Doe"
+          placeholder="Clark Kent"
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
         {errors.name && (
