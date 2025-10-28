@@ -17,13 +17,13 @@ export function HeroSection() {
         {/* Content */}
         <div className="space-y-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-foreground">
-            Your Personal Trainer is Now{' '}
-            <span className="text-primary">Always in Your Pocket</span>
+            Your <span className="text-primary-color">Personal Trainer</span> is Now{' '}
+            <span className="text-primary">Always in Your <span className="text-primary-color">Pocket</span></span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-            Get <strong className="text-primary">personalized workouts</strong>, <strong className="text-primary">24/7 coaching</strong>,
-            and <strong className="text-primary">real results</strong> - all through simple text messages.
+            Get <strong className="text-primary-color">personalized workouts</strong>, <strong className="text-primary-color">24/7 coaching</strong>,
+            and <strong className="text-primary-color">real results</strong> - all through simple text messages.
             No app downloads, no gym required.
           </p>
 

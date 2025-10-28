@@ -164,6 +164,19 @@ body {
   transition: transform 300ms ease-out;
 }
 
+/* Color utilities */
+.text-primary-color {
+  color: hsl(var(--primary));
+}
+
+.text-success-color {
+  color: hsl(var(--success));
+}
+
+.text-destructive-color {
+  color: hsl(var(--destructive));
+}
+
 /* Word Carousel Animation */
 .carousel-word {
   opacity: 0;
