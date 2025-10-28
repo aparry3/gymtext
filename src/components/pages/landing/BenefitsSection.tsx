@@ -70,7 +70,7 @@ export function BenefitsSection() {
                     <div className="flex flex-col space-y-4 h-full">
                       <div className="flex flex-row items-center gap-3">
                         <div className="p-3.5 bg-primary/10 rounded-xl flex-shrink-0">
-                          <Icon className="h-7 w-7 text-primary" />
+                          <Icon className="h-7 w-7" style={{ color: 'hsl(var(--primary))' }} />
                         </div>
                         <h3 className="text-xl font-semibold text-foreground flex-1">
                           {benefit.title}

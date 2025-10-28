@@ -22,8 +22,8 @@ export function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-            Get <strong>personalized workouts</strong>, <strong>24/7 coaching</strong>,
-            and <strong>real results</strong> - all through simple text messages.
+            Get <strong className="text-primary">personalized workouts</strong>, <strong className="text-primary">24/7 coaching</strong>,
+            and <strong className="text-primary">real results</strong> - all through simple text messages.
             No app downloads, no gym required.
           </p>
 

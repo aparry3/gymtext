@@ -63,11 +63,11 @@ export function ComparisonTable() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                         Feature
                       </th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-muted-foreground">
-                        Traditional Trainer
-                      </th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-primary">
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-primary">
                         GymText
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                        Traditional Trainer
                       </th>
                     </tr>
                   </thead>
@@ -80,21 +80,21 @@ export function ComparisonTable() {
                         <td className="px-6 py-4 font-medium text-foreground">
                           {comparison.feature}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {comparison.traditional_bad && (
-                              <X className="h-4 w-4 text-destructive flex-shrink-0" />
-                            )}
-                            <span className="text-muted-foreground">
-                              {comparison.traditional}
+                        <td className="px-6 py-4 text-left">
+                          <div className="flex items-center justify-start gap-2">
+                            <Check className="h-4 w-4 flex-shrink-0" style={{ color: 'hsl(var(--success))' }} />
+                            <span className="font-semibold text-foreground">
+                              {comparison.gymtext}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Check className="h-4 w-4 text-success flex-shrink-0" />
-                            <span className="font-semibold text-foreground">
-                              {comparison.gymtext}
+                        <td className="px-6 py-4 text-left">
+                          <div className="flex items-center justify-start gap-2">
+                            {comparison.traditional_bad && (
+                              <X className="h-4 w-4 flex-shrink-0" style={{ color: 'hsl(var(--destructive))' }} />
+                            )}
+                            <span className="text-muted-foreground">
+                              {comparison.traditional}
                             </span>
                           </div>
                         </td>
