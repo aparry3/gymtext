@@ -193,7 +193,7 @@ export function MultiStepSignupForm() {
           </div>
 
           {/* Step content */}
-          <div className="p-3 md:p-6">
+          <div className="px-5 pb-6 pt-6 md:px-10 md:pb-10 md:pt-8">
             {currentStep === 1 && (
               <BioStep
                 register={register}
@@ -239,7 +239,7 @@ export function MultiStepSignupForm() {
             )}
 
             {/* Navigation buttons */}
-            <div className="flex justify-between gap-4 mt-8">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="outline"

@@ -84,7 +84,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-5xl">
-            <div className="rounded-2xl border border-border bg-white shadow-2xl">
+            <div className="rounded-3xl border border-border/60 bg-white shadow-2xl">
               <MultiStepSignupForm />
             </div>
           </div>
