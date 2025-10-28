@@ -69,7 +69,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
       </div>
 
       {/* Training Location */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {trainingLocations.map((location) => {
           const Icon = location.icon;
           const isSelected = selectedLocation === location.value;
@@ -80,7 +80,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
               type="button"
               onClick={() => setValue('trainingLocation', location.value)}
               className={`
-                p-4 rounded-xl border-2 transition-all text-center cursor-pointer
+                p-3 md:p-4 rounded-xl border-2 transition-all text-center cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
@@ -89,11 +89,11 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
               `}
             >
               <div
-                className={`mx-auto w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+                className={`mx-auto w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center mb-2 md:mb-3 ${
                   isSelected ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'
                 }`}
               >
-                <Icon className="h-6 w-6" />
+                <Icon className="h-5 w-5 md:h-6 md:w-6" />
               </div>
               <h3 className="font-semibold text-foreground text-sm mb-1">
                 {location.label}
@@ -123,7 +123,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
                 type="button"
                 onClick={() => toggleEquipment(equipment.value)}
                 className={`
-                  p-4 rounded-xl border-2 transition-all text-left cursor-pointer
+                  p-3 md:p-4 rounded-xl border-2 transition-all text-left cursor-pointer
                   ${
                     isSelected
                       ? 'border-primary bg-primary/5 shadow-lg'

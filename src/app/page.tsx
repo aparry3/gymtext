@@ -90,7 +90,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-10 border border-border">
+              <div className="bg-white rounded-2xl shadow-2xl p-3 md:p-10 border border-border">
                 <MultiStepSignupForm />
               </div>
             </div>

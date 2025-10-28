@@ -65,7 +65,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
       </div>
 
       {/* Goal Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         {goals.map((goal) => {
           const Icon = goal.icon;
           const isSelected = selectedGoals.includes(goal.value);
@@ -76,7 +76,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
               type="button"
               onClick={() => toggleGoal(goal.value)}
               className={`
-                p-6 rounded-xl border-2 transition-all text-left cursor-pointer
+                p-4 md:p-6 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
@@ -86,12 +86,12 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="p-3 rounded-xl bg-muted text-muted-foreground">
-                    <Icon className="h-6 w-6" />
+                  <div className="p-2 md:p-3 rounded-xl bg-muted text-muted-foreground">
+                    <Icon className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">{goal.label}</h3>
-                    <p className="text-sm text-muted-foreground">{goal.description}</p>
+                    <h3 className="text-sm font-semibold md:text-base text-foreground mb-1">{goal.label}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">{goal.description}</p>
                   </div>
                 </div>
                 <div

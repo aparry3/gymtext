@@ -59,7 +59,7 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
               type="button"
               onClick={() => setValue('currentActivity', level.value)}
               className={`
-                w-full p-4 rounded-xl border-2 transition-all text-left cursor-pointer
+                w-full p-3 md:p-4 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
@@ -69,8 +69,8 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-foreground">{level.label}</h3>
-                  <p className="text-sm text-muted-foreground">{level.description}</p>
+                  <h3 className="text-sm font-semibold md:text-base text-foreground">{level.label}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">{level.description}</p>
                 </div>
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${

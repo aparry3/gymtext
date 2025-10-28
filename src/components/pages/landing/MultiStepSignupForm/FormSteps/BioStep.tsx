@@ -101,7 +101,7 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
                 type="button"
                 onClick={() => setValue('gender', option.value)}
                 className={`
-                  p-4 rounded-xl border transition-all text-left cursor-pointer
+                  p-3 md:p-4 rounded-xl border transition-all text-left cursor-pointer
                   ${
                     isSelected
                       ? 'border-primary bg-primary/5'

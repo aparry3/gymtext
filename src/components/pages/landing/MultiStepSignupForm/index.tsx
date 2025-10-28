@@ -193,7 +193,7 @@ export function MultiStepSignupForm() {
           </div>
 
           {/* Step content */}
-          <div className="p-6">
+          <div className="p-3 md:p-6">
             {currentStep === 1 && (
               <BioStep
                 register={register}

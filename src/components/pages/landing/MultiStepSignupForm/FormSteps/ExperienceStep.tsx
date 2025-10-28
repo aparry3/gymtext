@@ -58,7 +58,7 @@ export function ExperienceStep({ setValue, watch, errors }: ExperienceStepProps)
               type="button"
               onClick={() => setValue('experienceLevel', level.value)}
               className={`
-                w-full p-6 rounded-xl border-2 transition-all text-left cursor-pointer
+                w-full p-4 md:p-6 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
                   isSelected
                     ? 'border-primary bg-primary/5 shadow-lg'
@@ -68,12 +68,12 @@ export function ExperienceStep({ setValue, watch, errors }: ExperienceStepProps)
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="p-3 rounded-xl bg-muted text-muted-foreground">
-                    <Icon className="h-6 w-6" />
+                  <div className="p-2 md:p-3 rounded-xl bg-muted text-muted-foreground">
+                    <Icon className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">{level.label}</h3>
-                    <p className="text-sm text-muted-foreground">{level.description}</p>
+                    <h3 className="text-sm font-semibold md:text-base text-foreground mb-1">{level.label}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">{level.description}</p>
                   </div>
                 </div>
                 <div
