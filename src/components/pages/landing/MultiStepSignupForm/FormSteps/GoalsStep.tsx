@@ -108,7 +108,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
       </div>
 
       {errors.primaryGoals && (
-        <p className="text-sm text-destructive">{errors.primaryGoals.message}</p>
+        <p className="text-sm font-medium text-red-600">{errors.primaryGoals.message}</p>
       )}
 
       {/* Goals Elaboration */}
@@ -124,7 +124,7 @@ export function GoalsStep({ register, setValue, watch, errors }: GoalsStepProps)
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
         {errors.goalsElaboration && (
-          <p className="mt-1 text-sm text-destructive">{errors.goalsElaboration.message}</p>
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.goalsElaboration.message}</p>
         )}
       </div>
     </div>

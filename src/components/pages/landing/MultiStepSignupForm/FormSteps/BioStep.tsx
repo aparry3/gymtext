@@ -60,7 +60,7 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.name.message}</p>
         )}
         <p className="mt-1 text-xs text-muted-foreground">
           What should we call you?
@@ -79,7 +79,7 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
         {errors.phoneNumber && (
-          <p className="mt-1 text-sm text-destructive">{errors.phoneNumber.message}</p>
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.phoneNumber.message}</p>
         )}
         <p className="mt-1 text-xs text-muted-foreground">
           Where we&apos;ll send your daily workouts
@@ -124,7 +124,7 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
           })}
         </div>
         {errors.gender && (
-          <p className="mt-2 text-sm text-destructive">{errors.gender.message}</p>
+          <p className="mt-2 text-sm font-medium text-red-600">{errors.gender.message}</p>
         )}
       </div>
 

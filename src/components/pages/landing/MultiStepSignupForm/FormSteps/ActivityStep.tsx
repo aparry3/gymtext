@@ -86,7 +86,7 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
       </div>
 
       {errors.currentActivity && (
-        <p className="text-sm text-destructive">{errors.currentActivity.message}</p>
+        <p className="text-sm font-medium text-red-600">{errors.currentActivity.message}</p>
       )}
 
       {/* Activity Elaboration */}
@@ -102,7 +102,7 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
         {errors.activityElaboration && (
-          <p className="mt-1 text-sm text-destructive">{errors.activityElaboration.message}</p>
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.activityElaboration.message}</p>
         )}
       </div>
     </div>

@@ -94,7 +94,7 @@ export function SubmitStep({ register, errors }: SubmitStepProps) {
               exercise program.
             </label>
             {errors.acceptRisks && (
-              <p className="mt-2 text-sm text-destructive flex items-center gap-2">
+              <p className="mt-2 flex items-center gap-2 text-sm font-medium text-red-600">
                 <XCircle className="h-4 w-4" />
                 {errors.acceptRisks.message}
               </p>

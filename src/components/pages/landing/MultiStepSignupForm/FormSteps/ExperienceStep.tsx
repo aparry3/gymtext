@@ -88,9 +88,8 @@ export function ExperienceStep({ setValue, watch, errors }: ExperienceStepProps)
           );
         })}
       </div>
-
       {errors.experienceLevel && (
-        <p className="text-sm text-destructive">{errors.experienceLevel.message}</p>
+        <p className="text-sm font-medium text-red-600">{errors.experienceLevel.message}</p>
       )}
     </div>
   );

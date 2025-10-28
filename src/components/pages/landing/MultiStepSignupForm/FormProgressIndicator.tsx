@@ -26,7 +26,7 @@ export function FormProgressIndicator({
     <>
       {/* Mobile: Horizontal progress bar at top */}
       {showMobile && (
-        <div className="sticky top-0 z-[60] rounded-t-3xl bg-white/95 p-4 shadow-sm backdrop-blur-sm md:hidden">
+        <div className="sticky top-0 z-[60] rounded-t-3xl bg-white/95 p-4 shadow-sm backdrop-blur-sm lg:hidden">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-medium text-foreground">
               Step {currentStep} of {totalSteps}

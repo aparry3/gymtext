@@ -105,7 +105,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
       </div>
 
       {errors.trainingLocation && (
-        <p className="text-sm text-destructive">{errors.trainingLocation.message}</p>
+        <p className="text-sm font-medium text-red-600">{errors.trainingLocation.message}</p>
       )}
 
       {/* Equipment Selection */}
@@ -146,7 +146,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
           })}
         </div>
         {errors.equipment && (
-          <p className="mt-2 text-sm text-destructive">{errors.equipment.message}</p>
+          <p className="mt-2 text-sm font-medium text-red-600">{errors.equipment.message}</p>
         )}
       </div>
 
@@ -163,7 +163,7 @@ export function PreferencesStep({ register, setValue, watch, errors }: Preferenc
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
         {errors.injuries && (
-          <p className="mt-1 text-sm text-destructive">{errors.injuries.message}</p>
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.injuries.message}</p>
         )}
       </div>
     </div>
