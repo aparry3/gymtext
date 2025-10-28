@@ -28,7 +28,7 @@ export function HeroSection() {
           </p>
 
           {/* Key Benefits */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+          <div className="flex flex-wrap justify-center gap-4 pt-4">
             <div className="flex items-center gap-3">
               <MessageSquare className="h-6 w-6 text-primary flex-shrink-0" />
               <div>

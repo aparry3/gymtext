@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -68,6 +68,7 @@ export function MultiStepSignupForm() {
   const [furthestStep, setFurthestStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -97,17 +98,26 @@ export function MultiStepSignupForm() {
       const nextStep = Math.min(currentStep + 1, 6);
       setCurrentStep(nextStep);
       setFurthestStep((prev) => Math.max(prev, nextStep));
+
+      // Scroll to top of form
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
+
+    // Scroll to top of form
+    formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleStepClick = (step: number) => {
     // Allow navigation to any step up to the furthest step reached
     if (step <= furthestStep && step !== currentStep) {
       setCurrentStep(step);
+
+      // Scroll to top of form
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -171,7 +181,7 @@ export function MultiStepSignupForm() {
   };
 
   return (
-    <div className="relative lg:flex lg:gap-8 lg:items-start">
+    <div ref={formContainerRef} className="relative lg:flex lg:gap-8 lg:items-start">
       {errorMessage && (
         <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6 lg:max-w-3xl">
           <p className="text-red-600">{errorMessage}</p>
