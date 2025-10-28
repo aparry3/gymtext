@@ -27,108 +27,100 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
-      {/* Sticky Header */}
-      <header className="bg-white py-4 border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/IconInverse.png"
-                alt="GymText Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
-              <h2
-                className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}
-              >
-                GYMTEXT
-              </h2>
-            </div>
-
-            {/* CTA in header on desktop */}
-            <div className="hidden md:block">
-              <a
-                href="#signup"
-                className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-              >
-                Get Started
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="min-h-screen bg-white">
-        {/* Hero Section */}
-        <HeroSection />
-
-        {/* Benefits Section */}
-        <BenefitsSection />
-
-        {/* Testimonials Section */}
-        <TestimonialsSection />
-
-        {/* Comparison Table */}
-        <ComparisonTable />
-
-        {/* FAQ Section */}
-        <FAQSection />
-
-        {/* Signup Form Section */}
-        <section id="signup" className="py-16 md:py-24 bg-white">
+    <main className="min-h-screen bg-white">
+      <div className="relative">
+        <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 py-4 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-foreground">
-                  Start Your Transformation Today
-                </h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Answer a few questions so we can build your perfect program.
-                  Takes less than 2 minutes.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-2xl p-3 md:p-10 border border-border">
-                <MultiStepSignupForm />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-muted py-12 border-t border-border">
-          <div className="container mx-auto px-4">
-            <div className="max-w-7xl mx-auto text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <Image
                   src="/IconInverse.png"
                   alt="GymText Logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10"
                 />
-                <h3
-                  className={`text-2xl font-bold italic text-[#2d3748] ${bn.className}`}
+                <h2
+                  className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}
                 >
                   GYMTEXT
-                </h3>
+                </h2>
               </div>
-              <p className="text-muted-foreground mb-4">
-                Your personal trainer, always in your pocket.
-              </p>
-              <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-                <span>© 2025 GymText</span>
-                <span>•</span>
-                <span>No contracts</span>
-                <span>•</span>
-                <span>Cancel anytime</span>
+
+              <div className="hidden md:block">
+                <a
+                  href="#signup"
+                  className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                >
+                  Get Started
+                </a>
               </div>
             </div>
           </div>
-        </footer>
-      </main>
-    </>
+        </header>
+
+        <HeroSection />
+        <BenefitsSection />
+        <TestimonialsSection />
+        <ComparisonTable />
+        <FAQSection />
+        <section className="bg-white py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-5xl text-center">
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl md:text-5xl">
+                Start Your Transformation Today
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+                Answer a few questions so we can build your perfect program. Takes less than 2 minutes.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section
+        id="signup"
+        className="bg-white pb-16 md:pb-24 scroll-mt-24 md:scroll-mt-32"
+      >
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-5xl">
+            <div className="rounded-2xl border border-border bg-white shadow-2xl">
+              <MultiStepSignupForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border bg-muted py-12">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-7xl text-center">
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <Image
+                src="/IconInverse.png"
+                alt="GymText Logo"
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
+              <h3
+                className={`text-2xl font-bold italic text-[#2d3748] ${bn.className}`}
+              >
+                GYMTEXT
+              </h3>
+            </div>
+            <p className="mb-4 text-muted-foreground">
+              Your personal trainer, always in your pocket.
+            </p>
+            <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
+              <span>© 2025 GymText</span>
+              <span>•</span>
+              <span>No contracts</span>
+              <span>•</span>
+              <span>Cancel anytime</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
