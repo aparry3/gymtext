@@ -182,13 +182,14 @@ export function MultiStepSignupForm() {
       <div className="flex-1 lg:max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Mobile progress indicator */}
-          <div className="sticky top-0 z-30 lg:hidden">
+          <div className="sticky top-0 z-30 md:hidden">
             <FormProgressIndicator
               currentStep={currentStep}
               totalSteps={6}
               stepLabels={STEP_LABELS}
               furthestStep={furthestStep}
               onStepClick={handleStepClick}
+              variant="mobile"
             />
           </div>
 
@@ -280,6 +281,7 @@ export function MultiStepSignupForm() {
           stepLabels={STEP_LABELS}
           furthestStep={furthestStep}
           onStepClick={handleStepClick}
+          variant="desktop"
         />
       </div>
     </div>
