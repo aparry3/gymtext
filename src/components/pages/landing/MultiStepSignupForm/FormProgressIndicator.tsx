@@ -21,7 +21,7 @@ export function FormProgressIndicator({
     <>
       {/* Mobile: Horizontal progress bar at top */}
       <div className="lg:hidden sticky top-0 z-[60] rounded-t-3xl bg-white/95 p-4 shadow-sm backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-foreground">
             Step {currentStep} of {totalSteps}
           </span>
@@ -29,11 +29,18 @@ export function FormProgressIndicator({
             {stepLabels[currentStep - 1]}
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-primary h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-          ></div>
+        <div className="flex h-2 w-full gap-1">
+          {Array.from({ length: totalSteps }, (_, index) => {
+            const isFilled = index < currentStep;
+            return (
+              <div
+                key={index}
+                className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                  isFilled ? 'bg-blue-500' : 'bg-gray-200'
+                }`}
+              />
+            );
+          })}
         </div>
       </div>
 
