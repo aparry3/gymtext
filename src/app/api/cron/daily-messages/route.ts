@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { UserService } from '@/server/services/user/userService';
-import { inngest } from '@/server/connections/inngest/client';
-import { DateTime } from 'luxon';
+import { DailyMessageService } from '@/server/services/orchestration/dailyMessageService';
 
 /**
  * Vercel Cron endpoint for scheduling daily workout messages
@@ -38,52 +36,9 @@ export async function GET(request: Request) {
       utcHour: currentUtcHour
     });
 
-    // Get all users who should receive messages this hour
-    const userService = UserService.getInstance();
-    const users = await userService.getUsersForHour(currentUtcHour);
-
-    console.log(`[CRON] Found ${users.length} users to schedule`);
-
-    // Schedule an Inngest job for each user
-    const events = users.map(user => {
-      // Get target date in user's timezone (today at start of day)
-      const targetDate = DateTime.now()
-        .setZone(user.timezone)
-        .startOf('day')
-        .toISO();
-
-      return {
-        name: 'workout/scheduled' as const,
-        data: {
-          userId: user.id,
-          targetDate,
-        },
-      };
-    });
-
-    // Send all events to Inngest in batch
-    let scheduled = 0;
-    let failed = 0;
-    const errors: Array<{ userId: string; error: string }> = [];
-
-    if (events.length > 0) {
-      try {
-        const { ids } = await inngest.send(events);
-        scheduled = ids.length;
-        console.log(`[CRON] Scheduled ${scheduled} Inngest jobs`, {
-          jobIds: ids.slice(0, 5), // Log first 5 for debugging
-        });
-      } catch (error) {
-        console.error('[CRON] Failed to schedule Inngest jobs:', error);
-        failed = events.length;
-        errors.push({
-          userId: 'batch',
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
-    }
-
-    const duration = Date.now() - executionTime.getTime();
+    // Delegate scheduling to service
+    const dailyMessageService = DailyMessageService.getInstance();
+    const { scheduled, failed, duration, errors } = await dailyMessageService.scheduleMessagesForHour(currentUtcHour);
 
     console.log('[CRON] Daily message scheduling completed:', {
       scheduled,

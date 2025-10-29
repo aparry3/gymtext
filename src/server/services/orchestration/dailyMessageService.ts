@@ -7,12 +7,20 @@ import { ProgressService } from '../training/progressService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { inngest } from '@/server/connections/inngest/client';
 
 interface MessageResult {
   success: boolean;
   userId: string;
   error?: string;
   messageId?: string;
+}
+
+interface SchedulingResult {
+  scheduled: number;
+  failed: number;
+  duration: number;
+  errors: Array<{ userId: string; error: string }>;
 }
 
 export class DailyMessageService {
@@ -38,6 +46,73 @@ export class DailyMessageService {
       DailyMessageService.instance = new DailyMessageService(batchSize);
     }
     return DailyMessageService.instance;
+  }
+
+  /**
+   * Schedules daily messages for all users in a given UTC hour
+   * Returns metrics about the scheduling operation
+   */
+  public async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
+    const startTime = Date.now();
+    const errors: Array<{ userId: string; error: string }> = [];
+    let scheduled = 0;
+    let failed = 0;
+
+    try {
+      // Get all users who should receive messages this hour
+      const users = await this.userService.getUsersForHour(utcHour);
+      console.log(`[DailyMessageService] Found ${users.length} users to schedule for hour ${utcHour}`);
+
+      if (users.length === 0) {
+        return {
+          scheduled: 0,
+          failed: 0,
+          duration: Date.now() - startTime,
+          errors: []
+        };
+      }
+
+      // Map users to Inngest events
+      const events = users.map(user => {
+        // Get target date in user's timezone (today at start of day)
+        const targetDate = DateTime.now()
+          .setZone(user.timezone)
+          .startOf('day')
+          .toISO();
+
+        return {
+          name: 'workout/scheduled' as const,
+          data: {
+            userId: user.id,
+            targetDate,
+          },
+        };
+      });
+
+      // Send all events to Inngest in batch
+      try {
+        const { ids } = await inngest.send(events);
+        scheduled = ids.length;
+        console.log(`[DailyMessageService] Scheduled ${scheduled} Inngest jobs`);
+      } catch (error) {
+        console.error('[DailyMessageService] Failed to schedule Inngest jobs:', error);
+        failed = events.length;
+        errors.push({
+          userId: 'batch',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+
+      return {
+        scheduled,
+        failed,
+        duration: Date.now() - startTime,
+        errors
+      };
+    } catch (error) {
+      console.error('[DailyMessageService] Error scheduling messages:', error);
+      throw error;
+    }
   }
 
   /**
