@@ -481,6 +481,121 @@ export function getDayOfWeek(date: Date | string, timezone?: string): number {
 }
 
 /**
+ * Get day of week in Luxon format (1 = Monday, 7 = Sunday)
+ * @param date - Date to check
+ * @param timezone - Timezone to convert to
+ * @returns Weekday number (1-7)
+ */
+export function getWeekday(date: Date | string, timezone?: string): number {
+  const parsed = parseDate(date);
+  if (!parsed) {
+    throw new Error('Invalid date provided to getWeekday');
+  }
+
+  let dt = DateTime.fromJSDate(parsed);
+  if (timezone && isValidTimezone(timezone)) {
+    dt = dt.setZone(timezone);
+  }
+
+  return dt.weekday; // 1=Monday, 7=Sunday
+}
+
+/**
+ * Check if a UTC date is a specific weekday in a user's timezone
+ * @param utcDate - UTC date to check
+ * @param timezone - User's timezone
+ * @param weekday - Weekday to check (1=Monday, 7=Sunday)
+ * @returns true if the date is the specified weekday in the user's timezone
+ */
+export function isWeekdayInTimezone(
+  utcDate: Date | string,
+  timezone: string,
+  weekday: number
+): boolean {
+  if (!isValidTimezone(timezone)) {
+    throw new Error(`Invalid timezone: ${timezone}`);
+  }
+
+  if (weekday < 1 || weekday > 7) {
+    throw new Error(`Invalid weekday: ${weekday}. Must be 1-7 (1=Monday, 7=Sunday)`);
+  }
+
+  const parsed = parseDate(utcDate);
+  if (!parsed) {
+    throw new Error('Invalid date provided to isWeekdayInTimezone');
+  }
+
+  const dt = DateTime.fromJSDate(parsed, { zone: 'utc' }).setZone(timezone);
+  return dt.weekday === weekday;
+}
+
+/**
+ * Get all IANA timezones that are currently at a specific local time
+ *
+ * Filters the complete list of IANA timezones (~600) to find which ones
+ * are currently at the target local hour and optional weekday.
+ *
+ * @param utcDate - Current UTC date/time
+ * @param targetLocalHour - Target local hour (0-23)
+ * @param weekday - Optional weekday filter (1=Monday, 7=Sunday)
+ * @returns Array of timezone strings that match the criteria
+ *
+ * @example
+ * // Find timezones where it's 5pm (17:00) on a Sunday
+ * const utcNow = new Date();
+ * const timezones = getTimezonesAtLocalTime(utcNow, 17, 7);
+ * // Returns: ['America/New_York', 'America/Toronto', ...] if it's Sunday 5pm there
+ */
+export function getTimezonesAtLocalTime(
+  utcDate: Date | string,
+  targetLocalHour: number,
+  weekday?: number
+): string[] {
+  const parsed = parseDate(utcDate);
+  if (!parsed) {
+    throw new Error('Invalid date provided to getTimezonesAtLocalTime');
+  }
+
+  if (targetLocalHour < 0 || targetLocalHour > 23) {
+    throw new Error(`Invalid target hour: ${targetLocalHour}. Must be 0-23`);
+  }
+
+  if (weekday !== undefined && (weekday < 1 || weekday > 7)) {
+    throw new Error(`Invalid weekday: ${weekday}. Must be 1-7 (1=Monday, 7=Sunday)`);
+  }
+
+  const matchingTimezones: string[] = [];
+
+  // Get all IANA timezones (browser/Node.js built-in)
+  const allTimezones = Intl.supportedValuesOf('timeZone');
+
+  for (const timezone of allTimezones) {
+    try {
+      // Check if this timezone is at the target local hour
+      const localHour = getLocalHour(parsed, timezone);
+      if (localHour !== targetLocalHour) {
+        continue;
+      }
+
+      // If weekday is specified, check if it matches
+      if (weekday !== undefined) {
+        const isMatchingWeekday = isWeekdayInTimezone(parsed, timezone, weekday);
+        if (!isMatchingWeekday) {
+          continue;
+        }
+      }
+
+      matchingTimezones.push(timezone);
+    } catch {
+      // Skip invalid timezones
+      continue;
+    }
+  }
+
+  return matchingTimezones;
+}
+
+/**
  * Get day of week name (e.g., "Monday", "Tuesday")
  */
 export function getDayOfWeekName(date: Date | string, timezone?: string): string {
