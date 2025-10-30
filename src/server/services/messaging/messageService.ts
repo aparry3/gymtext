@@ -328,7 +328,13 @@ export class MessageService {
     }
 
     // Generate reply using the reply agent (with routing decision and context)
-    const agent = createReplyAgent();
+    // If there's a today's workout, provide a method to resend it
+    const agent = createReplyAgent(todayWorkout ? {
+      sendWorkoutMessage: async () => {
+        // Use the todayWorkout we already fetched
+        return await this.sendWorkoutMessage(user, todayWorkout);
+      }
+    } : undefined);
     const replyResponse = await agent.invoke({
       user,
       message: content,

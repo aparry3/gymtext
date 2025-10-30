@@ -20,11 +20,10 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
     const { user, message, previousMessages, currentWorkout, currentMicrocycle, fitnessPlan } = input;
 
     console.log('[REPLY AGENT] Generating quick reply for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''), {
-      previousMessagesCount: previousMessages?.length || 0
+      previousMessagesCount: previousMessages?.length || 0,
+      hasCurrentWorkout: !!currentWorkout,
+      hasSendWorkoutService: !!deps?.sendWorkoutMessage
     });
-
-    // Initialize model with structured output schema
-    const model = initializeModel(ReplyAgentResponseSchema, deps?.config);
 
     // Build the context message
     const userMessage = buildReplyMessage(message, user, currentWorkout, currentMicrocycle, fitnessPlan);
@@ -35,14 +34,17 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
         role: 'system',
         content: REPLY_AGENT_SYSTEM_PROMPT,
       },
-      // // Add previous messages as structured message objects (last 3 for speed)
+      // Add previous messages as structured message objects (last 3 for speed)
       ...ConversationFlowBuilder.toMessageArray(previousMessages?.slice(-3) || []),
-      // // Current user message
+      // Current user message
       {
         role: 'user',
         content: userMessage,
       }
     ];
+
+    // Initialize model with structured output schema
+    const model = initializeModel(ReplyAgentResponseSchema, deps?.config);
 
     // Invoke the model and get structured response
     const response = await model.invoke(messages) as ReplyAgentResponse;
@@ -50,32 +52,23 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
     console.log('[REPLY AGENT] Generated reply:', {
       reply: response.reply.substring(0, 100) + (response.reply.length > 100 ? '...' : ''),
       needsFullPipeline: response.needsFullPipeline,
+      resendWorkout: response.resendWorkout,
       reasoning: response.reasoning
     });
 
-    return response;
-  });
-};
+    // If agent wants to resend workout and service is available, execute it
+    if (response.resendWorkout && deps?.sendWorkoutMessage && currentWorkout) {
+      try {
+        console.log('[REPLY AGENT] Resending current workout for user:', user.id);
+        await deps.sendWorkoutMessage();
+        console.log('[REPLY AGENT] Workout resent successfully');
+      } catch (error) {
+        console.error('[REPLY AGENT] Error resending workout:', error);
+        // Continue anyway - we already have a response for the user
+      }
+    }
 
-/**
- * @deprecated Legacy export for backward compatibility - use createReplyAgent instead
- */
-export const replyAgent = async (
-  user: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  message: string,
-  previousMessages?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
-  currentWorkout?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  currentMicrocycle?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  fitnessPlan?: any // eslint-disable-line @typescript-eslint/no-explicit-any
-): Promise<ReplyAgentResponse> => {
-  const agent = createReplyAgent();
-  return agent.invoke({
-    user,
-    message,
-    previousMessages,
-    currentWorkout,
-    currentMicrocycle,
-    fitnessPlan
+    return response;
   });
 };
 

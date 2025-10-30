@@ -11,6 +11,7 @@ import { z } from 'zod';
 export const ReplyAgentResponseSchema = z.object({
   reply: z.string().describe('The reply message to send to the user'),
   needsFullPipeline: z.boolean().describe('Whether this message needs the full chat pipeline (profile extraction, triage, subagents)'),
+  resendWorkout: z.boolean().describe('Whether to resend today\'s workout to the user via SMS'),
   reasoning: z.string().describe('Explanation of why this does or does not need the full pipeline')
 });
 
@@ -45,7 +46,10 @@ export type ReplyOutput = ReplyAgentResponse;
  * Dependencies for reply agent
  * Currently extends only base AgentDeps (config), but allows for future extension
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ReplyAgentDeps extends AgentDeps {
-  // Future: Could add context services or other dependencies here
+  /**
+   * Optional service method to send workout message to user
+   * Used by the resend_workout tool to send current workout via SMS
+   */
+  sendWorkoutMessage?: () => Promise<Message>;
 }
