@@ -110,6 +110,13 @@ export class UserService {
     return result || [];
   }
 
+  async getUsersForWeeklyMessage(currentUtcHour: number): Promise<UserWithProfile[]> {
+    const result = await this.circuitBreaker.execute(async () => {
+      return await this.userRepository.findUsersForWeeklyMessage(currentUtcHour);
+    });
+    return result || [];
+  }
+
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
     const result = await this.circuitBreaker.execute(async () => {
       // Validate updates using domain model

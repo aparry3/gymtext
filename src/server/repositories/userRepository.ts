@@ -273,6 +273,43 @@ export class UserRepository extends BaseRepository {
     return matchingUsers;
   }
 
+  async findUsersForWeeklyMessage(currentUtcHour: number): Promise<UserWithProfile[]> {
+    // This query finds all users whose local time is their preferred hour on Sunday
+    const users = await this.db
+      .selectFrom('users')
+      .selectAll('users')
+      .execute();
+
+    // Filter users whose local hour matches preference AND it's Sunday in their timezone
+    const matchingUsers: UserWithProfile[] = [];
+    const currentUtcDate = new Date();
+    currentUtcDate.setUTCHours(currentUtcHour, 0, 0, 0);
+
+    for (const user of users) {
+      try {
+        // Import DateTime inline to avoid circular dependencies
+        const { DateTime } = await import('luxon');
+
+        // Convert UTC time to user's timezone
+        const userLocalTime = DateTime.fromJSDate(currentUtcDate, { zone: 'utc' })
+          .setZone(user.timezone);
+
+        const localHour = userLocalTime.hour;
+        const localWeekday = userLocalTime.weekday; // 1=Monday, 7=Sunday
+
+        // Check if it's Sunday (weekday === 7) and matches preferred hour
+        if (localWeekday === 7 && localHour === user.preferredSendHour) {
+          matchingUsers.push(UserModel.fromDb(user)!);
+        }
+      } catch (error) {
+        console.error(`Error processing user ${user.id} timezone for weekly message:`, error);
+        // Skip users with invalid timezone data
+      }
+    }
+
+    return matchingUsers;
+  }
+
   async findActiveUsersWithPreferences(): Promise<User[]> {
     return await this.db
       .selectFrom('users')
