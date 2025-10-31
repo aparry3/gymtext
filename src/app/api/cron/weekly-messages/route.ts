@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { DailyMessageService } from '@/server/services/orchestration/dailyMessageService';
+import { WeeklyMessageService } from '@/server/services/orchestration/weeklyMessageService';
 
 /**
- * Vercel Cron endpoint for scheduling daily workout messages
- * Runs hourly and schedules Inngest jobs for all users whose local time matches their preferred hour
+ * Vercel Cron endpoint for scheduling weekly check-in messages
+ * Runs hourly on Sundays and schedules Inngest jobs for all users whose local time matches their preferred hour
  *
- * Pattern: Similar to SMS webhook - cron schedules work, Inngest handles execution
+ * Pattern: Similar to daily-messages - cron schedules work, Inngest handles execution
  */
 export async function GET(request: Request) {
   try {
@@ -31,16 +31,17 @@ export async function GET(request: Request) {
     const executionTime = new Date();
     const currentUtcHour = executionTime.getUTCHours();
 
-    console.log('[CRON] Daily messages cron triggered', {
+    console.log('[CRON] Weekly messages cron triggered', {
       timestamp: executionTime.toISOString(),
-      utcHour: currentUtcHour
+      utcHour: currentUtcHour,
+      dayOfWeek: executionTime.toLocaleDateString('en-US', { weekday: 'long' })
     });
 
     // Delegate scheduling to service
-    const dailyMessageService = DailyMessageService.getInstance();
-    const { scheduled, failed, duration, errors } = await dailyMessageService.scheduleMessagesForHour(currentUtcHour);
+    const weeklyMessageService = WeeklyMessageService.getInstance();
+    const { scheduled, failed, duration, errors } = await weeklyMessageService.scheduleMessagesForHour(currentUtcHour);
 
-    console.log('[CRON] Daily message scheduling completed:', {
+    console.log('[CRON] Weekly message scheduling completed:', {
       scheduled,
       failed,
       duration: `${duration}ms`,
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
 
     // Log any errors for monitoring
     if (errors.length > 0) {
-      console.error('[CRON] Daily message scheduling errors:', errors);
+      console.error('[CRON] Weekly message scheduling errors:', errors);
     }
 
     // Return success response with metrics
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('[CRON] Fatal error in daily messages cron:', error);
+    console.error('[CRON] Fatal error in weekly messages cron:', error);
 
     return NextResponse.json(
       {

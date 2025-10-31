@@ -1,11 +1,11 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import { sql } from 'kysely';
-import { 
-  type User, 
-  type FitnessProfile, 
-  type UserWithProfile, 
-  type CreateUserData, 
-  type CreateFitnessProfileData, 
+import {
+  type User,
+  type FitnessProfile,
+  type UserWithProfile,
+  type CreateUserData,
+  type CreateFitnessProfileData,
   UserModel
 } from '@/server/models/userModel';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
@@ -271,6 +271,22 @@ export class UserRepository extends BaseRepository {
     }
 
     return matchingUsers;
+  }
+
+  async findUsersByTimezones(timezones: string[]): Promise<UserWithProfile[]> {
+    // Return empty array if no timezones provided
+    if (timezones.length === 0) {
+      return [];
+    }
+
+    // Query users in the specified timezones
+    const users = await this.db
+      .selectFrom('users')
+      .where('timezone', 'in', timezones)
+      .selectAll('users')
+      .execute();
+
+    return users.map(u => UserModel.fromDb(u)).filter(u => u !== undefined) as UserWithProfile[];
   }
 
   async findActiveUsersWithPreferences(): Promise<User[]> {

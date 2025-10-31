@@ -49,13 +49,13 @@ export interface IngestMessageParams {
  * Result of ingesting an inbound message
  */
 export interface IngestMessageResult {
-  /** Inngest job ID for tracking (undefined if full pipeline not needed) */
+  /** Inngest job ID for tracking (undefined if no async processing needed) */
   jobId?: string;
   /** Quick acknowledgment or full answer message */
   ackMessage: string;
-  /** Whether this message needs the full chat pipeline */
-  needsFullPipeline: boolean;
-  /** Reasoning for pipeline decision (for debugging) */
+  /** Action taken: resendWorkout, fullChatAgent, or null */
+  action: 'resendWorkout' | 'fullChatAgent' | null;
+  /** Reasoning for the decision (for debugging) */
   reasoning: string;
 }
 
@@ -254,17 +254,18 @@ export class MessageService {
   /**
    * Ingest an inbound message (async path)
    *
-   * Fast path for webhook acknowledgment with intelligent routing:
+   * Fast path for webhook acknowledgment with intelligent action-based routing:
    * 1. Store inbound message
-   * 2. Generate reply using reply agent (may be full answer or quick ack)
-   * 3. Conditionally queue async processing job via Inngest (only if needed)
+   * 2. Generate reply using reply agent (chooses one of three actions)
+   * 3. Execute action: resend workout, queue full chat agent, or provide full answer
    * 4. Return immediate response
    *
-   * The reply agent determines if the message needs full pipeline processing.
-   * For general questions, full answer is provided immediately with no async job.
-   * For updates/modifications, quick ack is sent and full processing happens async.
+   * The reply agent chooses exactly one action:
+   * - 'resendWorkout': User wants today's workout sent
+   * - 'fullChatAgent': Pass to full conversation agent (queues Inngest job)
+   * - null: Full answer provided, no further action needed
    *
-   * @returns IngestMessageResult with conversationId, optional jobId, and response
+   * @returns IngestMessageResult with optional jobId, action, and response
    */
   public async ingestMessage(params: IngestMessageParams): Promise<IngestMessageResult> {
     const { user, content, from, to, twilioData } = params;
@@ -328,7 +329,13 @@ export class MessageService {
     }
 
     // Generate reply using the reply agent (with routing decision and context)
-    const agent = createReplyAgent();
+    // If there's a today's workout, provide a method to resend it
+    const agent = createReplyAgent(todayWorkout ? {
+      sendWorkoutMessage: async () => {
+        // Use the todayWorkout we already fetched
+        return await this.sendWorkoutMessage(user, todayWorkout);
+      }
+    } : undefined);
     const replyResponse = await agent.invoke({
       user,
       message: content,
@@ -339,7 +346,7 @@ export class MessageService {
     });
 
     console.log('[MessageService] Reply agent decision:', {
-      needsFullPipeline: replyResponse.needsFullPipeline,
+      action: replyResponse.action,
       reasoning: replyResponse.reasoning,
       replyLength: replyResponse.reply.length
     });
@@ -362,7 +369,7 @@ export class MessageService {
 
     // Conditionally queue the message processing job via Inngest
     let jobId: string | undefined;
-    if (replyResponse.needsFullPipeline) {
+    if (replyResponse.action === 'fullChatAgent') {
       const { ids } = await inngest.send({
         name: 'message/received',
         data: {
@@ -374,21 +381,25 @@ export class MessageService {
       });
       jobId = ids[0];
 
-      console.log('[MessageService] Message ingested and queued for full pipeline:', {
+      console.log('[MessageService] Message queued for full chat agent:', {
         userId: user.id,
         jobId,
       });
+    } else if (replyResponse.action === 'resendWorkout') {
+      console.log('[MessageService] Workout resent, no further processing needed:', {
+        userId: user.id,
+      });
     } else {
-      console.log('[MessageService] Message fully handled by reply agent, no pipeline needed:', {
+      console.log('[MessageService] Full answer provided by reply agent, no further action needed:', {
         userId: user.id,
       });
     }
 
-    // Return response with routing information
+    // Return response with action information
     return {
       jobId,
       ackMessage: replyResponse.reply,
-      needsFullPipeline: replyResponse.needsFullPipeline,
+      action: replyResponse.action,
       reasoning: replyResponse.reasoning,
     };
   }

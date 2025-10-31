@@ -6,12 +6,21 @@ import type { AgentDeps } from '@/server/agents/base';
 import { z } from 'zod';
 
 /**
+ * Action types for reply agent
+ */
+export const ReplyAgentActionSchema = z.enum(['resendWorkout', 'fullChatAgent']).nullable().describe(
+  'The action to take: resendWorkout (resend today\'s workout), fullChatAgent (pass to full conversation agent), or null (full answer provided, no action needed)'
+);
+
+export type ReplyAgentAction = z.infer<typeof ReplyAgentActionSchema>;
+
+/**
  * Schema for reply agent structured output
  */
 export const ReplyAgentResponseSchema = z.object({
+  action: ReplyAgentActionSchema,
   reply: z.string().describe('The reply message to send to the user'),
-  needsFullPipeline: z.boolean().describe('Whether this message needs the full chat pipeline (profile extraction, triage, subagents)'),
-  reasoning: z.string().describe('Explanation of why this does or does not need the full pipeline')
+  reasoning: z.string().describe('Explanation of the decision and action taken')
 });
 
 export type ReplyAgentResponse = z.infer<typeof ReplyAgentResponseSchema>;
@@ -45,7 +54,10 @@ export type ReplyOutput = ReplyAgentResponse;
  * Dependencies for reply agent
  * Currently extends only base AgentDeps (config), but allows for future extension
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ReplyAgentDeps extends AgentDeps {
-  // Future: Could add context services or other dependencies here
+  /**
+   * Optional service method to send workout message to user
+   * Used by the resend_workout tool to send current workout via SMS
+   */
+  sendWorkoutMessage?: () => Promise<Message>;
 }

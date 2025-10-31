@@ -23,7 +23,7 @@
 
 import { serve } from 'inngest/next';
 import { inngest } from '@/server/connections/inngest/client';
-import { processMessageFunction, sendDailyWorkoutFunction } from '@/server/inngest/functions';
+import { processMessageFunction, sendDailyWorkoutFunction, sendWeeklyMessageFunction } from '@/server/inngest/functions';
 import { retryMessageFunction } from '@/server/inngest/functions/retryMessage';
 
 export const { GET, POST, PUT } = serve({
@@ -32,6 +32,7 @@ export const { GET, POST, PUT } = serve({
     processMessageFunction,
     retryMessageFunction,
     sendDailyWorkoutFunction,
+    sendWeeklyMessageFunction,
     // Add more functions here as needed:
     // processComplexMessageFunction,
     // processBatchMessagesFunction,

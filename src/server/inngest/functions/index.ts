@@ -6,3 +6,4 @@
 
 export { processMessageFunction } from './processMessage';
 export { sendDailyWorkoutFunction } from './sendDailyWorkout';
+export { sendWeeklyMessageFunction } from './sendWeeklyMessage';

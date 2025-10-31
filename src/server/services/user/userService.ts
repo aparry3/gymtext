@@ -3,6 +3,7 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/types/admin';
+import { getTimezonesAtLocalTime } from '@/shared/utils/date';
 
 export interface CreateUserRequest {
   name: string;
@@ -106,6 +107,29 @@ export class UserService {
   async getUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
     const result = await this.circuitBreaker.execute(async () => {
       return await this.userRepository.findUsersForHour(currentUtcHour);
+    });
+    return result || [];
+  }
+
+  async getUsersForWeeklyMessage(currentUtcHour: number): Promise<UserWithProfile[]> {
+    const result = await this.circuitBreaker.execute(async () => {
+      // Business logic: Weekly messages are sent at 5pm on Sundays
+      const targetLocalHour = 17; // 5pm
+      const sunday = 7; // Luxon weekday (7 = Sunday)
+
+      // Calculate current UTC date
+      const currentUtcDate = new Date();
+      currentUtcDate.setUTCHours(currentUtcHour, 0, 0, 0);
+
+      // Get all timezones that are currently at 5pm on Sunday
+      const matchingTimezones = getTimezonesAtLocalTime(
+        currentUtcDate,
+        targetLocalHour,
+        sunday
+      );
+
+      // Query users in those timezones
+      return await this.userRepository.findUsersByTimezones(matchingTimezones);
     });
     return result || [];
   }
