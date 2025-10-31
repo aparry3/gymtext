@@ -8,12 +8,13 @@ import { ReplyAgentResponseSchema } from './types';
  * Reply Agent Factory
  *
  * Generates immediate, natural replies that sound like a real trainer,
- * allowing for fast webhook responses. It can either:
- * 1. Provide full answers to general fitness questions (no full pipeline needed)
- * 2. Provide quick acknowledgments for updates/modifications (full pipeline needed)
+ * allowing for fast webhook responses. It chooses one of three actions:
+ * 1. Resend today's workout (action: 'resendWorkout')
+ * 2. Pass to full conversation agent (action: 'fullChatAgent')
+ * 3. Provide full answer with no further action (action: null)
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that generates replies with pipeline routing decisions
+ * @returns Agent that generates replies with action-based routing
  */
 export const createReplyAgent = (deps?: ReplyAgentDeps) => {
   return createRunnableAgent<ReplyInput, ReplyOutput>(async (input) => {
@@ -51,13 +52,12 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
 
     console.log('[REPLY AGENT] Generated reply:', {
       reply: response.reply.substring(0, 100) + (response.reply.length > 100 ? '...' : ''),
-      needsFullPipeline: response.needsFullPipeline,
-      resendWorkout: response.resendWorkout,
+      action: response.action,
       reasoning: response.reasoning
     });
 
     // If agent wants to resend workout and service is available, execute it
-    if (response.resendWorkout && deps?.sendWorkoutMessage && currentWorkout) {
+    if (response.action === 'resendWorkout' && deps?.sendWorkoutMessage && currentWorkout) {
       try {
         console.log('[REPLY AGENT] Resending current workout for user:', user.id);
         await deps.sendWorkoutMessage();
