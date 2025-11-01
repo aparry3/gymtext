@@ -1,9 +1,16 @@
+import { z } from 'zod';
 import { MesocycleOverview } from '@/server/models/fitnessPlan';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
-import { microcyclePatternPrompt } from './prompts';
+import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, microcycleStructuredPrompt } from './prompts';
 import { initializeModel, createRunnableAgent } from '@/server/agents/base';
 import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
+
+// Schema for step 1: long-form microcycle description and reasoning
+const LongFormMicrocycleSchema = z.object({
+  description: z.string().describe("Long-form narrative description of the weekly microcycle"),
+  reasoning: z.string().describe("Explanation of how and why the week is structured")
+});
 
 /**
  * @deprecated Legacy interface - use MicrocyclePatternInput instead
@@ -19,7 +26,9 @@ export interface MicrocyclePatternContext {
  * Microcycle Pattern Agent Factory
  *
  * Generates weekly training patterns with progressive overload.
- * Each pattern specifies daily themes, loads, and training focus.
+ * Uses a two-step process:
+ * 1. Generate long-form description and reasoning
+ * 2. Convert description to structured MicrocyclePattern
  *
  * @param deps - Optional dependencies (config)
  * @returns Agent that generates microcycle patterns
@@ -28,18 +37,20 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
     const { mesocycle, weekNumber, programType, notes } = input;
 
-    const prompt = microcyclePatternPrompt(
-      mesocycle,
-      weekNumber,
-      programType,
-      notes
-    );
-
-    const structuredModel = initializeModel(_MicrocyclePatternSchema, deps?.config);
-
     try {
-      const result = await structuredModel.invoke(prompt);
-      return result as MicrocyclePattern;
+      // Step 1: Generate long-form description and reasoning
+      const longFormModel = initializeModel(LongFormMicrocycleSchema, deps?.config);
+      const longFormResult = await longFormModel.invoke([
+        { role: 'system', content: MICROCYCLE_SYSTEM_PROMPT },
+        { role: 'user', content: microcycleUserPrompt(mesocycle, weekNumber, programType, notes) }
+      ]);
+
+      // Step 2: Convert to structured JSON
+      const structuredModel = initializeModel(_MicrocyclePatternSchema, deps?.config);
+      const step2Prompt = microcycleStructuredPrompt(longFormResult.description, weekNumber);
+      const structuredResult = await structuredModel.invoke(step2Prompt);
+
+      return structuredResult as MicrocyclePattern;
     } catch (error) {
       console.error('Error generating microcycle pattern:', error);
       // Return a basic fallback pattern if generation fails

@@ -50,11 +50,3 @@ export const createDailyWorkoutAgent = () => {
     });
   });
 };
-
-/**
- * @deprecated Legacy export for backward compatibility - use createDailyWorkoutAgent instead
- */
-export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<DailyWorkoutOutput> => {
-  const agent = createDailyWorkoutAgent();
-  return agent.invoke(context);
-};

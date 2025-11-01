@@ -184,7 +184,7 @@ export function createWorkoutMessageUserPrompt(
 ): string {
   return `
 <Long-Form Workout>
-${longFormWorkout.description}
+${longFormWorkout.workout}
 </Long-Form Workout>
 
 Convert this workout into an SMS message following the format requirements and examples provided.

@@ -114,12 +114,12 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
 
       const result = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
-      console.log(`[${config.operationName}] Successfully completed with description, reasoning, JSON, and message`);
+      console.log(`[${config.operationName}] Successfully completed with workout, reasoning, JSON, and message`);
       // Flatten the result to match WorkoutChainResult type
       return {
         workout: result.workout,
         message: result.message,
-        description: result.longFormWorkout.description,
+        description: result.longFormWorkout.workout,
         reasoning: result.longFormWorkout.reasoning
       };
     } catch (error) {
