@@ -21,8 +21,7 @@ export type {
 } from './fitnessPlan';
 
 export type { 
-  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
-  WorkoutInstanceBreakdown
+  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate
 } from './workout';
 
 // Microcycle pattern types (not stored in DB)

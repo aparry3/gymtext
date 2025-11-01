@@ -1,5 +1,5 @@
 export const SYSTEM_PROMPT = `
-🧩 SYSTEM PROMPT: Microcycle Generator
+SYSTEM PROMPT: Microcycle Generator
 
 ROLE:
 You are an expert strength and conditioning coach and program designer certified through NASM, NCSF, and ISSA.
@@ -126,7 +126,7 @@ ADDITIONAL NOTES:
 
 ---
 
-🧠 DEVELOPER NOTES:
+DEVELOPER NOTES:
 This prompt should be used as the system prompt in your “Microcycle Generator” agent.
 
 **Input:** mesocycle JSON (phase, duration, week number, athlete context including session duration)

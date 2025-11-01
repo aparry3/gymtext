@@ -1,8 +1,5 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { 
-  LLMWorkoutInstance
-} from './schema';
 
 
 export type WorkoutInstance = Selectable<WorkoutInstances>;
@@ -12,10 +9,6 @@ export type WorkoutInstanceUpdate = Updateable<WorkoutInstances>;
 // Re-export session type utilities
 export { mapSessionType, isValidDBSessionType, SESSION_TYPE_MAP, DB_SESSION_TYPES, LLM_SESSION_TYPES } from './sessionTypeMapping';
 export type { DBSessionType, LLMSessionType } from './sessionTypeMapping';
-
-export type WorkoutInstanceBreakdown = LLMWorkoutInstance & {
-  date: Date;
-}
 
 // Export new enhanced types
 export type {
