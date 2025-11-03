@@ -181,5 +181,5 @@ ${fitnessProfile}
     : '\n\n## Recent Training History\nNo recent workouts completed yet - this may be an early session in the program.';
 
   // Assemble the complete prompt in logical order
-  return `${dayDescription}${deloadNotice}\n\n${programContext}\n\n${clientProfile}${trainingHistory}`;
+  return `${dayDescription}${deloadNotice}\n\n${programContext}\n\n${clientProfile}${trainingHistory}\n\n---\n\nGenerate a complete, personalized workout for this day that adapts to the client's constraints while fulfilling the training intent described above.`;
 };
