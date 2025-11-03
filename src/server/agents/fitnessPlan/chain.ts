@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanModel, FitnessPlanOverview } from '@/server/models/fitnessPlan';
-import { FITNESS_PLAN_SYSTEM_PROMPT, fitnessPlanUserPrompt, structuredPrompt } from '@/server/agents/fitnessPlan/prompts';
+import { FITNESS_PLAN_SYSTEM_PROMPT, fitnessPlanUserPrompt, STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT, structuredFitnessPlanUserPrompt } from '@/server/agents/fitnessPlan/prompts';
 import { initializeModel } from '@/server/agents/base';
 
 /**
@@ -43,8 +43,10 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
     // Step 2: Convert to structured JSON with mesocycles
     const structuredModel = initializeModel(FitnessPlanModel.schema);
-    const step2Prompt = structuredPrompt(longFormResult.description, user, fitnessProfile);
-    const structuredResult = await structuredModel.invoke(step2Prompt);
+    const structuredResult = await structuredModel.invoke([
+      { role: 'system', content: STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT },
+      { role: 'user', content: structuredFitnessPlanUserPrompt(longFormResult.description, user, fitnessProfile) }
+    ]);
 
     // Combine structured result with plan description and reasoning
     const finalResult: FitnessPlanOverview = {
@@ -55,12 +57,4 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
     return finalResult as FitnessPlanOverview;
   };
-};
-
-/**
- * Legacy export for backward compatibility
- * @deprecated Use createFitnessPlanAgent with dependency injection instead
- */
-export const generateFitnessPlan = async (): Promise<FitnessPlanOverview> => {
-  throw new Error('generateFitnessPlan is deprecated. Use createFitnessPlanAgent with dependencies injection instead.');
 };

@@ -1,13 +1,12 @@
-import type { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
+import type { Mesocycle } from '@/server/models/fitnessPlan';
 import type { MicrocyclePattern } from '@/server/models/microcycle';
 import type { AgentDeps } from '@/server/agents/base';
 
 /**
  * Input for microcycle pattern agent
- * Supports both legacy MesocycleOverview and new comprehensive Mesocycle formats
  */
 export interface MicrocyclePatternInput {
-  mesocycle: MesocycleOverview | Mesocycle;
+  mesocycle: Mesocycle;
   weekNumber: number;
   programType: string;
   notes?: string | null;

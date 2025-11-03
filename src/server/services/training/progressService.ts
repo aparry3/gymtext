@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { Microcycle, MicrocyclePattern } from '../../models/microcycle';
-import { FitnessPlan, MesocycleOverview, Mesocycle } from '../../models/fitnessPlan';
+import { FitnessPlan, Mesocycle } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
 import { generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
@@ -10,7 +10,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 export interface ProgressInfo {
   mesocycleIndex: number;
   microcycleWeek: number;
-  mesocycle: MesocycleOverview | Mesocycle;
+  mesocycle: Mesocycle;
   dayOfWeek: number;
   cycleStartDate: Date | null;
 }
@@ -46,7 +46,7 @@ export class ProgressService {
       return null;
     }
 
-    const mesocycle = plan.mesocycles[mesocycleIndex];
+    const mesocycle = plan.mesocycles[mesocycleIndex] as Mesocycle;
     const dayOfWeek = this.calculateDayOfWeek(plan.cycleStartDate as Date | null);
 
     return {
@@ -180,10 +180,7 @@ export class ProgressService {
 
 
     const currentMesocycle = progress.mesocycle;
-
-    // Handle both old and new mesocycle formats
-    const isNewFormat = 'durationWeeks' in currentMesocycle;
-    const weeks = isNewFormat ? (currentMesocycle as Mesocycle).durationWeeks : (currentMesocycle as MesocycleOverview).weeks;
+    const weeks = currentMesocycle.durationWeeks;
 
     if (progress.microcycleWeek >= weeks - 1) {
       // Move to next mesocycle (microcycleWeek is 0-based, so last week is weeks - 1)
@@ -288,7 +285,7 @@ export class ProgressService {
   }
 
   private async generateMicrocyclePattern(
-    mesocycle: MesocycleOverview | Mesocycle,
+    mesocycle: Mesocycle,
     weekNumber: number,
     programType: string,
     notes?: string | null
@@ -308,22 +305,14 @@ export class ProgressService {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);
 
       // Fallback to basic pattern if AI fails
-      return this.generateFallbackPattern(mesocycle, weekNumber);
+      return this.generateFallbackPattern(weekNumber);
     }
   }
 
   private generateFallbackPattern(
-    mesocycle: MesocycleOverview | Mesocycle,
     weekNumber: number
   ): MicrocyclePattern {
-    // Handle both old and new mesocycle formats
-    const isNewFormat = 'durationWeeks' in mesocycle;
-    const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
-    const isDeload = !isNewFormat && (mesocycle as MesocycleOverview).deload;
-
-    // weekNumber is now 0-based (0, 1, 2, 3 for a 4-week mesocycle)
-    const isDeloadWeek = isDeload && weekNumber === weeks - 1;
-    const load = isDeloadWeek ? 'light' : 'moderate';
+    const load = 'moderate';
 
     // Simple fallback pattern
     return {

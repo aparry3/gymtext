@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
+import { Mesocycle } from '@/server/models/fitnessPlan';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
 import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, microcycleStructuredPrompt } from './prompts';
@@ -11,16 +11,6 @@ const LongFormMicrocycleSchema = z.object({
   description: z.string().describe("Long-form narrative description of the weekly microcycle"),
   reasoning: z.string().describe("Explanation of how and why the week is structured")
 });
-
-/**
- * @deprecated Legacy interface - use MicrocyclePatternInput instead
- */
-export interface MicrocyclePatternContext {
-  mesocycle: MesocycleOverview;
-  weekNumber: number;
-  programType: string;
-  notes?: string | null;
-}
 
 /**
  * Microcycle Pattern Agent Factory
@@ -42,7 +32,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       const longFormModel = initializeModel(LongFormMicrocycleSchema, deps?.config);
       const longFormResult = await longFormModel.invoke([
         { role: 'system', content: MICROCYCLE_SYSTEM_PROMPT },
-        { role: 'user', content: microcycleUserPrompt(mesocycle, weekNumber, programType, notes) }
+        { role: 'user', content: microcycleUserPrompt({ mesocycle, weekNumber, programType, notes }) }
       ]);
 
       // Step 2: Convert to structured JSON
@@ -54,7 +44,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
     } catch (error) {
       console.error('Error generating microcycle pattern:', error);
       // Return a basic fallback pattern if generation fails
-      return generateFallbackPattern(weekNumber, programType, mesocycle);
+      return generateFallbackPattern(weekNumber, programType);
     }
   });
 };
@@ -62,22 +52,17 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
 /**
  * @deprecated Legacy export for backward compatibility - use createMicrocyclePatternAgent instead
  */
-export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview | Mesocycle, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
+export const generateMicrocyclePattern = async (context: {mesocycle: Mesocycle, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
   const agent = createMicrocyclePatternAgent();
   return agent.invoke(context);
 };
 
 function generateFallbackPattern(
   weekNumber: number,
-  programType: string,
-  mesocycle: MesocycleOverview | Mesocycle
+  programType: string
 ): MicrocyclePattern {
-  // Handle both old and new mesocycle formats
-  const isNewFormat = 'durationWeeks' in mesocycle;
-  const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
-  const isDeloadWeek = !isNewFormat && (mesocycle as MesocycleOverview).deload && weekNumber === weeks;
-  const load = isDeloadWeek ? 'light' : 'moderate';
   const weekIndex = weekNumber - 1; // Convert 1-based weekNumber to 0-based weekIndex
+  const load = 'moderate';
 
   const patterns: Record<string, MicrocyclePattern> = {
     strength: {

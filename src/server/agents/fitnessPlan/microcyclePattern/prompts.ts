@@ -1,5 +1,5 @@
 // Import for type checking
-import type { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
+import type { Mesocycle } from '@/server/models/fitnessPlan';
 
 // Step 1: System prompt for generating long-form microcycle description
 export const MICROCYCLE_SYSTEM_PROMPT = `
@@ -139,42 +139,49 @@ This prompt should be used as the system prompt in your "Microcycle Generator" a
 The resulting microcycle object can then be passed directly to your "Workout Generator" model to produce day-level training sessions scaled to the available workout time.
 `;
 
+interface MicrocycleUserPromptParams {
+  mesocycle: Mesocycle;
+  weekNumber: number;
+  programType: string;
+  notes?: string | null;
+}
 // Step 1: User prompt with context
-export const microcycleUserPrompt = (
-  mesocycle: MesocycleOverview | Mesocycle,
-  weekNumber: number,
-  programType: string,
-  notes?: string | null
-) => {
-  // Handle both old MesocycleOverview and new Mesocycle formats
-  const isNewFormat = 'durationWeeks' in mesocycle;
-  const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
-  const isDeload = isNewFormat ? false : (mesocycle as MesocycleOverview).deload;
-  const weekFocus = isDeload && weekNumber === weeks ? 'Deload - reduce volume and intensity' : weekNumber === 1 ? 'Introduction' : weekNumber < weeks - 1 ? 'Volume Progression' : 'Peak Volume';
-
-  // For new format, use the microcycle description for this week
-  const mesocycleDescription = isNewFormat && (mesocycle as Mesocycle).microcycles
-    ? (mesocycle as Mesocycle).microcycles[weekNumber - 1] || (mesocycle as Mesocycle).longFormDescription
-    : JSON.stringify(mesocycle, null, 2);
+export const microcycleUserPrompt = ({
+  mesocycle,
+  weekNumber,
+  programType,
+  notes
+}: MicrocycleUserPromptParams) => {
+  // Get the specific week's microcycle description from the mesocycle
+  // weekNumber is 1-based, array is 0-based
+  const weekIndex = weekNumber - 1;
+  const microcycleDescription = mesocycle.microcycles[weekIndex] || mesocycle.longFormDescription;
 
   return `
 Generate a microcycle breakdown for the following context:
 
-<Mesocycle Description>
-${mesocycleDescription}
-</Mesocycle Description>
-
-<Week Context>
-Week Number: ${weekNumber} of ${weeks}
+<Mesocycle Context>
 Phase Name: ${mesocycle.name}
-Week Focus: ${weekFocus}
-Program Type: ${programType}
-</Week Context>
+Total Duration: ${mesocycle.durationWeeks} weeks
+Objective: ${mesocycle.objective}
+Focus Areas: ${mesocycle.focus.join(', ')}
+Volume Trend: ${mesocycle.volumeTrend}
+Intensity Trend: ${mesocycle.intensityTrend}
+${mesocycle.conditioningFocus ? `Conditioning: ${mesocycle.conditioningFocus}` : ''}
 
-${notes ? `
-<Notes>
-${notes}
-</Notes>` : ''}
+Full Mesocycle Description:
+${mesocycle.longFormDescription}
+</Mesocycle Context>
+
+<Week ${weekNumber} Microcycle Description>
+${microcycleDescription}
+</Week ${weekNumber} Microcycle Description>
+
+<Program Context>
+Program Type: ${programType}
+Week ${weekNumber} of ${mesocycle.durationWeeks}
+${notes ? `\nNotes: ${notes}` : ''}
+</Program Context>
 
 Generate the complete microcycle description and reasoning as specified in your instructions.
 `.trim();

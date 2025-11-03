@@ -184,31 +184,19 @@ ${fitnessProfile}
 Generate the plan description and reasoning as specified in your instructions.
 `.trim();
 
-// Step 2: Convert long-form plan to structured JSON
-export const structuredPrompt = (
-  planDescription: string,
-  user: UserWithProfile,
-  fitnessProfile: string
-) => `
+// Step 2: System prompt for converting long-form plan to structured JSON
+export const STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT = `
 You are converting a long-form fitness plan into a structured JSON format.
 
-<Long-Form Plan>
-${planDescription}
-</Long-Form Plan>
-
-<User Context>
-Name: ${user.name}
-Fitness Profile: ${fitnessProfile}
-</User Context>
-
 <Task>
-Convert the long-form plan above into a structured JSON object with the following schema:
+Convert the long-form plan provided by the user into a structured JSON object with the following schema:
 {
   "programType": one of ["endurance", "strength", "shred", "hybrid", "rehab", "other"],
   "lengthWeeks": total number of weeks,
   "mesocycles": array of comprehensive mesocycle objects (see below),
   "overview": short motivational summary (120 words max),
   "notes": special considerations (injuries, travel, equipment),
+  "reasoning": detailed explanation of design decisions (optional)
 }
 
 Each mesocycle object must include:
@@ -239,7 +227,7 @@ Each mesocycle object must include:
   - Provide weeklyVolumeTargets for major muscle groups
   - Create a longFormDescription summarizing the mesocycle's purpose and progression
   - Break down each week within the mesocycle into microcycle descriptions (one string per week)
-- Create an upbeat, encouraging overview (<=120 words) for ${user.name}
+- Create an upbeat, encouraging overview (<=120 words) personalized for the user
 - Include any special considerations (injuries, equipment, travel) in notes
 - Ensure focus areas and trends match the plan description
 - Each microcycle string should describe:
@@ -250,4 +238,28 @@ Each mesocycle object must include:
   - Any special notes (deload, technique focus, etc.)
 
 Output only the JSON object - no additional text.
-`;  
+`;
+
+// Step 2: User prompt with plan description and context
+export const structuredFitnessPlanUserPrompt = (
+  planDescription: string,
+  user: UserWithProfile,
+  fitnessProfile: string
+) => `
+Convert the following long-form fitness plan into the structured JSON format.
+
+<Long-Form Plan>
+${planDescription}
+</Long-Form Plan>
+
+<User Context>
+Name: ${user.name}
+Fitness Profile: ${fitnessProfile}
+</User Context>
+
+<Instructions>
+- Create an upbeat, encouraging overview (<=120 words) for ${user.name}
+- Ensure all mesocycles and microcycles are extracted from the plan above
+- Output only the JSON object - no additional text
+</Instructions>
+`.trim();
