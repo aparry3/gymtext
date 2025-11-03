@@ -152,29 +152,34 @@ export const userPrompt = (
   const weeks = input.mesocycle.durationWeeks;
 
   // Build the day description using the formatter utility
-  const dayDescription = formatMicrocycleDay(input.dayPlan) +
-    (isDeloadWeek ? '\n\nThis is a DELOAD day - reduce volume and intensity while maintaining movement patterns' : '');
+  const dayDescription = formatMicrocycleDay(input.dayPlan);
 
-  // Build additional context
-  const additionalContext = `
-<Current Mesocycle/Microcycle Context>
-- Program Type: ${input.fitnessPlan.programType}
-- Mesocycle: ${input.mesocycle.name} (week ${input.microcycle.pattern.weekIndex} of ${weeks})
-- Mesocycle Focus: ${input.mesocycle.focus.join(', ')}
-- Phase: ${isDeloadWeek ? 'Deload Week' : 'Progressive Training Week'}
-</Current Mesocycle/Microcycle Context>
+  // Build deload notification if applicable
+  const deloadNotice = isDeloadWeek
+    ? '\n\n⚠️ DELOAD WEEK: Reduce volume by ~40-50% and intensity to RPE 6-7. Maintain movement patterns and technique focus.\n'
+    : '';
 
-<Client Details>
-Name: ${input.user.name}
-Timezone: ${input.user.timezone}
-
-Recent Training History:
-${input.recentWorkouts && input.recentWorkouts.length > 0 ? formatRecentWorkouts(input.recentWorkouts, input.user.timezone) : 'No recent workouts completed yet'}
-
-Fitness Profile:
-${fitnessProfile}
-</Client Details>
+  // Build program context
+  const programContext = `
+## Program Context
+Program Type: ${input.fitnessPlan.programType}
+Current Mesocycle: ${input.mesocycle.name}
+Training Phase: ${isDeloadWeek ? 'Deload Week' : 'Progressive Training Week'}
+Week ${input.microcycle.pattern.weekIndex} of ${weeks}
+Mesocycle Focus Areas: ${input.mesocycle.focus.join(', ')}
   `.trim();
 
-  return `${dayDescription}\n\n${additionalContext}`;
+  // Build client profile section
+  const clientProfile = `
+## Client Profile
+${fitnessProfile}
+  `.trim();
+
+  // Build recent training history
+  const trainingHistory = input.recentWorkouts && input.recentWorkouts.length > 0
+    ? `\n\n## Recent Training History\n${formatRecentWorkouts(input.recentWorkouts, input.user.timezone)}`
+    : '\n\n## Recent Training History\nNo recent workouts completed yet - this may be an early session in the program.';
+
+  // Assemble the complete prompt in logical order
+  return `${dayDescription}${deloadNotice}\n\n${programContext}\n\n${clientProfile}${trainingHistory}`;
 };
