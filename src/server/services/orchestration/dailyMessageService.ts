@@ -182,24 +182,24 @@ export class DailyMessageService {
     targetDate: DateTime
   ): Promise<WorkoutInstance | null> {
     try {
-      // Get or create the current microcycle pattern
-      const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user);
-      
-      if (!microcycle) {
-        console.log(`Could not get/create microcycle for user ${user.id}`);
-        return null;
-      }
-
-      // Get fitness plan and progress
+      // Get fitness plan
       const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
       if (!plan) {
         console.log(`No fitness plan found for user ${user.id}`);
         return null;
       }
 
-      const progress = await this.progressService.getCurrentProgress(plan);
+      // Ensure progress is up-to-date and get current microcycle (single call!)
+      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
       if (!progress) {
         console.log(`No progress found for user ${user.id}`);
+        return null;
+      }
+
+      // Extract what we need from progress
+      const { microcycle, mesocycle } = progress;
+      if (!microcycle) {
+        console.log(`Could not get/create microcycle for user ${user.id}`);
         return null;
       }
 
@@ -221,7 +221,7 @@ export class DailyMessageService {
         date: targetDate.toJSDate(),
         dayPlan: dayPattern,
         microcycle,
-        mesocycle: progress.mesocycle,
+        mesocycle,
         fitnessPlan: plan,
         recentWorkouts
       });
