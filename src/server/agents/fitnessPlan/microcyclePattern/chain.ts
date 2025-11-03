@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
+import { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
 import { MicrocyclePattern } from '@/server/models/microcycle';
 import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
 import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, microcycleStructuredPrompt } from './prompts';
@@ -62,7 +62,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
 /**
  * @deprecated Legacy export for backward compatibility - use createMicrocyclePatternAgent instead
  */
-export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
+export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview | Mesocycle, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
   const agent = createMicrocyclePatternAgent();
   return agent.invoke(context);
 };
@@ -70,9 +70,12 @@ export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOv
 function generateFallbackPattern(
   weekNumber: number,
   programType: string,
-  mesocycle: MesocycleOverview
+  mesocycle: MesocycleOverview | Mesocycle
 ): MicrocyclePattern {
-  const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
+  // Handle both old and new mesocycle formats
+  const isNewFormat = 'durationWeeks' in mesocycle;
+  const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
+  const isDeloadWeek = !isNewFormat && (mesocycle as MesocycleOverview).deload && weekNumber === weeks;
   const load = isDeloadWeek ? 'light' : 'moderate';
   const weekIndex = weekNumber - 1; // Convert 1-based weekNumber to 0-based weekIndex
 

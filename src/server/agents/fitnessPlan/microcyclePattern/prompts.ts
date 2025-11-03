@@ -1,4 +1,5 @@
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
+// Import for type checking
+import type { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
 
 // Step 1: System prompt for generating long-form microcycle description
 export const MICROCYCLE_SYSTEM_PROMPT = `
@@ -140,35 +141,44 @@ The resulting microcycle object can then be passed directly to your "Workout Gen
 
 // Step 1: User prompt with context
 export const microcycleUserPrompt = (
-  mesocycle: MesocycleOverview,
+  mesocycle: MesocycleOverview | Mesocycle,
   weekNumber: number,
   programType: string,
   notes?: string | null
-) => `
+) => {
+  // Handle both old MesocycleOverview and new Mesocycle formats
+  const isNewFormat = 'durationWeeks' in mesocycle;
+  const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
+  const isDeload = isNewFormat ? false : (mesocycle as MesocycleOverview).deload;
+  const weekFocus = isDeload && weekNumber === weeks ? 'Deload - reduce volume and intensity' : weekNumber === 1 ? 'Introduction' : weekNumber < weeks - 1 ? 'Volume Progression' : 'Peak Volume';
+
+  // For new format, use the microcycle description for this week
+  const mesocycleDescription = isNewFormat && (mesocycle as Mesocycle).microcycles
+    ? (mesocycle as Mesocycle).microcycles[weekNumber - 1] || (mesocycle as Mesocycle).longFormDescription
+    : JSON.stringify(mesocycle, null, 2);
+
+  return `
 Generate a microcycle breakdown for the following context:
 
 <Mesocycle Description>
-Name: ${mesocycle.name}
-Duration: ${mesocycle.weeks} weeks
-Focus areas: ${mesocycle.focus.join(', ')}
-Deload week: ${mesocycle.deload ? 'Yes (final week)' : 'No'}
+${mesocycleDescription}
 </Mesocycle Description>
 
 <Week Context>
-Week Number: ${weekNumber} of ${mesocycle.weeks}
+Week Number: ${weekNumber} of ${weeks}
 Phase Name: ${mesocycle.name}
-Week Focus: ${mesocycle.deload && weekNumber === mesocycle.weeks ? 'Deload - reduce volume and intensity' : weekNumber === 1 ? 'Introduction' : weekNumber < mesocycle.weeks - 1 ? 'Volume Progression' : 'Peak Volume'}
+Week Focus: ${weekFocus}
+Program Type: ${programType}
 </Week Context>
 
-<Athlete Profile>
-Program Type: ${programType}
-${notes ? `Special Considerations: ${notes}` : ''}
-Sessions Per Week: ${programType === 'endurance' ? '5-6' : programType === 'strength' ? '4-5' : programType === 'hybrid' ? '4-5' : programType === 'shred' ? '5-6' : '3-4'}
-Preferred Session Length: 60 minutes
-</Athlete Profile>
+${notes ? `
+<Notes>
+${notes}
+</Notes>` : ''}
 
 Generate the complete microcycle description and reasoning as specified in your instructions.
 `.trim();
+};
 
 // Step 2: Convert long-form description to structured JSON
 export const microcycleStructuredPrompt = (

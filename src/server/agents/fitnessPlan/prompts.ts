@@ -206,98 +206,48 @@ Convert the long-form plan above into a structured JSON object with the followin
 {
   "programType": one of ["endurance", "strength", "shred", "hybrid", "rehab", "other"],
   "lengthWeeks": total number of weeks,
-  "mesocycles": array of mesocycle objects,
+  "mesocycles": array of comprehensive mesocycle objects (see below),
   "overview": short motivational summary (120 words max),
-  "notes": special considerations (injuries, travel, equipment)
+  "notes": special considerations (injuries, travel, equipment),
 }
 
-Each mesocycle object should have:
+Each mesocycle object must include:
 {
-  "name": string (e.g., "Base Building"),
-  "weeks": number,
-  "focus": array of strings (e.g., ["volume", "technique"]),
-  "deload": boolean (true if last week is deload)
+  "name": string (e.g., "Accumulation", "Intensification"),
+  "objective": string (main objective for this phase),
+  "focus": array of strings (e.g., ["hypertrophy", "volume tolerance"]),
+  "durationWeeks": number (duration of this mesocycle),
+  "startWeek": number (starting week number relative to full plan, 1-based),
+  "endWeek": number (ending week number relative to full plan, 1-based),
+  "volumeTrend": one of ["increasing", "stable", "decreasing"],
+  "intensityTrend": one of ["increasing", "stable", "taper"],
+  "conditioningFocus": string (optional, e.g., "Zone 2 cardio 2x/week"),
+  "weeklyVolumeTargets": object mapping muscle groups to sets (e.g., {"chest": 14, "back": 16, "quads": 12}),
+  "avgRIRRange": optional array of two numbers (e.g., [1, 2] for 1-2 RIR),
+  "keyThemes": optional array of strings,
+  "longFormDescription": string (full natural-language explanation of this mesocycle),
+  "microcycles": array of strings (one per week, each describing that week's training in natural language)
 }
 </Task>
 
 <Guidelines>
 - Extract mesocycles directly from the long-form plan
-- Calculate lengthWeeks as sum of all mesocycle weeks
+- Calculate lengthWeeks as sum of all mesocycle durationWeeks
+- For each mesocycle:
+  - Extract or infer all required fields from the long-form description
+  - Calculate startWeek and endWeek based on mesocycle sequence (1-based indexing)
+  - Provide weeklyVolumeTargets for major muscle groups
+  - Create a longFormDescription summarizing the mesocycle's purpose and progression
+  - Break down each week within the mesocycle into microcycle descriptions (one string per week)
 - Create an upbeat, encouraging overview (<=120 words) for ${user.name}
 - Include any special considerations (injuries, equipment, travel) in notes
-- Ensure focus areas match the plan description
-- Mark deload appropriately based on the plan
+- Ensure focus areas and trends match the plan description
+- Each microcycle string should describe:
+  - Week's focus and progression within the mesocycle
+  - Intensity targets (RIR or %1RM)
+  - Volume guidance
+  - Conditioning if applicable
+  - Any special notes (deload, technique focus, etc.)
 
 Output only the JSON object - no additional text.
-`;
-
-// Legacy prompt - kept for reference, will be removed after migration
-export const outlinePrompt = (
-  user: UserWithProfile,
-  fitnessProfile: string
-) => `
-You are an elite personal fitness coach and periodisation expert.
-
-<Goal>
-Return **exactly one JSON object** that conforms to the simplified FitnessProgram schema
-with a direct mesocycles array (no macrocycle wrapper).
-</Goal>
-
-<Schema highlights>
-* Top-level fields: "programType", "lengthWeeks", "mesocycles", "overview", "notes"
-* Each mesocycle has: "name", "weeks", "focus" (array), "deload" (boolean)
-* No nested macrocycles - mesocycles are direct children
-* Keep it simple and focused on the training phases
-</Schema highlights>
-
-<Content guidelines>
-- Use ${user.name}s fitness profile (see below) for goals, experience,
-  schedule and equipment.
-- Program type should be based on the users fitness profile, and should be one of the following: "endurance", "strength", "shred", "hybrid", "rehab", or "other".
-- Create **mesocycles** of 3-6 weeks that span the requested timeframe.
-  * Each mesocycle should have a clear training focus (e.g., volume, intensity, peaking)
-  * Mark the last week as deload if appropriate (deload: true)
-- Add any special considerations to the "notes" field (injuries, travel, equipment limitations)
-- The \`overview\` (plain English) should be upbeat, <= 120 words.
-- Calculate total \`lengthWeeks\` from sum of all mesocycle weeks
-- Output **only** the JSON object wrapped in a single \`\`\`json ... \`\`\` block.
-</Content guidelines>
-
-<Example output>
-\`\`\`json
-{
-  "programType": "hybrid",
-  "lengthWeeks": 12,
-  "mesocycles": [
-    {
-      "name": "Base Building",
-      "weeks": 4,
-      "focus": ["volume", "technique", "aerobic base"],
-      "deload": false
-    },
-    {
-      "name": "Strength Development",
-      "weeks": 4,
-      "focus": ["intensity", "progressive overload"],
-      "deload": true
-    },
-    {
-      "name": "Power & Speed",
-      "weeks": 4,
-      "focus": ["explosive power", "speed work"],
-      "deload": false
-    }
-  ],
-  "overview": "Welcome, ${user.name}! Over the next 12 weeks, well build a solid foundation of strength and endurance. Starting with base building to establish movement patterns, then ramping up intensity for strength gains, and finishing with power work to maximize performance. Each phase builds on the last, creating a complete transformation!",
-  "notes": "Focus on lower back prehab throughout. Week 6 has reduced volume for travel."
-}
-\`\`\`
-</Example output>
-
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
-
-**Now reply with the single JSON object only - no additional text.**
-`;
-  
+`;  

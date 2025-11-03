@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { Microcycle, MicrocyclePattern } from '../../models/microcycle';
-import { FitnessPlan, MesocycleOverview } from '../../models/fitnessPlan';
+import { FitnessPlan, MesocycleOverview, Mesocycle } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
 import { generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
@@ -10,7 +10,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 export interface ProgressInfo {
   mesocycleIndex: number;
   microcycleWeek: number;
-  mesocycle: MesocycleOverview;
+  mesocycle: MesocycleOverview | Mesocycle;
   dayOfWeek: number;
   cycleStartDate: Date | null;
 }
@@ -181,7 +181,11 @@ export class ProgressService {
 
     const currentMesocycle = progress.mesocycle;
 
-    if (progress.microcycleWeek >= currentMesocycle.weeks - 1) {
+    // Handle both old and new mesocycle formats
+    const isNewFormat = 'durationWeeks' in currentMesocycle;
+    const weeks = isNewFormat ? (currentMesocycle as Mesocycle).durationWeeks : (currentMesocycle as MesocycleOverview).weeks;
+
+    if (progress.microcycleWeek >= weeks - 1) {
       // Move to next mesocycle (microcycleWeek is 0-based, so last week is weeks - 1)
       const nextMesocycleIndex = progress.mesocycleIndex + 1;
 
@@ -284,7 +288,7 @@ export class ProgressService {
   }
 
   private async generateMicrocyclePattern(
-    mesocycle: MesocycleOverview,
+    mesocycle: MesocycleOverview | Mesocycle,
     weekNumber: number,
     programType: string,
     notes?: string | null
@@ -309,11 +313,16 @@ export class ProgressService {
   }
 
   private generateFallbackPattern(
-    mesocycle: MesocycleOverview,
+    mesocycle: MesocycleOverview | Mesocycle,
     weekNumber: number
   ): MicrocyclePattern {
+    // Handle both old and new mesocycle formats
+    const isNewFormat = 'durationWeeks' in mesocycle;
+    const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
+    const isDeload = !isNewFormat && (mesocycle as MesocycleOverview).deload;
+
     // weekNumber is now 0-based (0, 1, 2, 3 for a 4-week mesocycle)
-    const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks - 1;
+    const isDeloadWeek = isDeload && weekNumber === weeks - 1;
     const load = isDeloadWeek ? 'light' : 'moderate';
 
     // Simple fallback pattern

@@ -8,18 +8,35 @@ export type NewFitnessPlan = Insertable<FitnessPlans>;
 export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 
 export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
-  mesocycles: MesocycleOverview[];
+  mesocycles: Mesocycle[] | MesocycleOverview[]; // Support both new and legacy formats
   id?: string;
 };
 
 export interface FitnessPlanOverview {
   programType: string;
   lengthWeeks: number; // Total weeks
-  mesocycles: MesocycleOverview[];
+  mesocycles: Mesocycle[];
   overview: string;
   planDescription: string; // Long-form explanation of plan structure
   reasoning: string; // Detailed decision-making rationale
   notes?: string; // Travel, injuries, etc.
+}
+
+export interface Mesocycle {
+  name: string; // e.g., "Accumulation", "Intensification"
+  objective: string; // Main objective for this phase
+  focus: string[]; // Key focus areas, e.g., ["hypertrophy", "volume tolerance"]
+  durationWeeks: number; // Total duration of the mesocycle in weeks
+  startWeek: number; // Starting week number relative to full plan
+  endWeek: number; // Ending week number relative to full plan
+  volumeTrend: "increasing" | "stable" | "decreasing"; // How volume changes
+  intensityTrend: "increasing" | "stable" | "taper"; // How intensity changes
+  conditioningFocus?: string; // Optional conditioning focus
+  weeklyVolumeTargets: Record<string, number>; // Sets per muscle group, e.g., { chest: 14, back: 16 }
+  avgRIRRange?: [number, number]; // Optional RIR range
+  keyThemes?: string[]; // Optional key themes
+  longFormDescription: string; // Full natural-language explanation
+  microcycles: string[]; // Long-form description of each week
 }
 
 export interface MesocycleOverview {
@@ -31,7 +48,7 @@ export interface MesocycleOverview {
 
 export class FitnessPlanModel implements FitnessPlan {
   programType: string;
-  mesocycles: MesocycleOverview[];
+  mesocycles: Mesocycle[] | MesocycleOverview[];
   lengthWeeks: number | null;
   notes: string | null;
   currentMesocycleIndex: number | null;
@@ -49,7 +66,7 @@ export class FitnessPlanModel implements FitnessPlan {
 
   constructor(
     programType: string,
-    mesocycles: MesocycleOverview[],
+    mesocycles: Mesocycle[] | MesocycleOverview[],
     lengthWeeks: number | null,
     notes: string | null,
     currentMesocycleIndex: number | null,
@@ -86,7 +103,7 @@ export class FitnessPlanModel implements FitnessPlan {
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
     return {
       ...fitnessPlan,
-      mesocycles: (fitnessPlan.mesocycles || []) as unknown as MesocycleOverview[],
+      mesocycles: (fitnessPlan.mesocycles || []) as unknown as Mesocycle[] | MesocycleOverview[],
     };
   }
 

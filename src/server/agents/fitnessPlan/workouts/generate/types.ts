@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
+import type { MesocycleOverview, Mesocycle, FitnessPlan } from '@/server/models/fitnessPlan';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import type { AgentDeps } from '@/server/agents/base';
@@ -8,6 +8,7 @@ import type { BaseWorkoutChainInput, WorkoutChainResult } from '../shared/chainF
 
 /**
  * Input for daily workout generator
+ * Supports both legacy MesocycleOverview and new comprehensive Mesocycle formats
  */
 export interface DailyWorkoutInput extends BaseWorkoutChainInput {
   dayPlan: {
@@ -17,7 +18,7 @@ export interface DailyWorkoutInput extends BaseWorkoutChainInput {
     notes?: string;
   };
   microcycle: Microcycle;
-  mesocycle: MesocycleOverview;
+  mesocycle: MesocycleOverview | Mesocycle;
   fitnessPlan: FitnessPlan;
   recentWorkouts?: WorkoutInstance[];
 }
