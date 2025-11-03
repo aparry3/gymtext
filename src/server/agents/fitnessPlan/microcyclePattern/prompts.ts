@@ -191,14 +191,13 @@ Generate the complete microcycle description and reasoning as specified in your 
 
 // Step 2: System prompt for converting long-form microcycle to structured JSON
 export const MICROCYCLE_STRUCTURED_SYSTEM_PROMPT = `
-You are converting a long-form microcycle description into a structured JSON format using the _StructuredMicrocycleSchema.
+You are converting a long-form microcycle description into a structured JSON format.
 
 ## Output Schema
 
-You must produce a JSON object matching this structure:
+You must produce a JSON object matching this structure (note: weekIndex will be set programmatically and should NOT be included in your output):
 
 {
-  "weekIndex": number,              // 0-based week index within the mesocycle
   "weekFocus": string (optional),   // Theme or focus of the week (e.g., "Volume Progression", "Deload", "Peak Intensity")
   "objectives": string (optional),  // Overall goals or adaptations being targeted this week
   "averageSessionDuration": string (optional), // e.g., "60 min"
@@ -263,18 +262,13 @@ Each day object in the "days" array must follow this structure:
 
 // Step 2: User prompt for structured conversion
 export const microcycleStructuredUserPrompt = (
-  description: string,
-  weekNumber: number
+  description: string
 ) => `
 Convert the following long-form microcycle description into the structured JSON format.
 
 <Long-Form Microcycle Description>
 ${description}
 </Long-Form Microcycle Description>
-
-<Week Context>
-Week Index: ${weekNumber} (0-based)
-</Week Context>
 
 Output only the JSON object as specified in your instructions.
 `.trim();

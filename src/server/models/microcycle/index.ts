@@ -1,6 +1,8 @@
 import { Microcycles } from '@/server/models/_types';
 import { MicrocyclePattern } from './schema';
 
+// Re-export types
+export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
 
 export interface Microcycle {
   id: string;

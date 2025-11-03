@@ -5,7 +5,7 @@ import { Microcycle } from '../../models/microcycle';
 import { MicrocyclePattern } from '../../models/microcycle/schema';
 import { FitnessPlan, Mesocycle } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
-import { createMicrocyclePatternAgent, generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
+import { createMicrocyclePatternAgent } from '../../agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export interface ProgressInfo {

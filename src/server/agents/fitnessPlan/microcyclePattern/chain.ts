@@ -33,14 +33,21 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
         { role: 'user', content: microcycleUserPrompt({ mesocycle, weekNumber, programType, notes }) }
       ]);
 
-      // Step 2: Convert to structured JSON
-      const structuredModel = initializeModel(_StructuredMicrocycleSchema, deps?.config);
+      // Step 2: Convert to structured JSON (without weekIndex - we'll set it deterministically)
+      const StructuredMicrocycleSchemaWithoutWeekIndex = _StructuredMicrocycleSchema.omit({ weekIndex: true });
+      const structuredModel = initializeModel(StructuredMicrocycleSchemaWithoutWeekIndex, deps?.config);
       const structuredResult = await structuredModel.invoke([
         { role: 'system', content: MICROCYCLE_STRUCTURED_SYSTEM_PROMPT },
-        { role: 'user', content: microcycleStructuredUserPrompt(longFormResult.description, weekNumber) }
+        { role: 'user', content: microcycleStructuredUserPrompt(longFormResult.description) }
       ]);
 
-      return structuredResult as MicrocyclePattern;
+      // Deterministically set weekIndex from input (agent doesn't generate this)
+      const finalResult: MicrocyclePattern = {
+        ...structuredResult,
+        weekIndex: weekNumber // 0-based index
+      };
+
+      return finalResult;
     } catch (error) {
       console.error('Error generating microcycle pattern:', error);    
       throw error;

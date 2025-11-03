@@ -99,3 +99,5 @@ export type MicrocyclePattern = z.infer<typeof _StructuredMicrocycleSchema>;
 export const _UpdatedMicrocyclePatternSchema = _StructuredMicrocycleSchema.extend({
   modificationsApplied: z.array(z.string()).describe('List of specific changes made to the weekly pattern (e.g., "Changed Monday from Upper Push to Home Upper - no gym access")')
 });
+
+export type UpdatedMicrocyclePattern = z.infer<typeof _UpdatedMicrocyclePatternSchema>;

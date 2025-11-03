@@ -25,7 +25,7 @@ export type {
 } from './workout';
 
 // Microcycle pattern types (not stored in DB)
-export type { MicrocyclePattern } from './microcyclePattern';
+export type { MicrocyclePattern } from './microcycle';
 
 // Re-export database types from _types
 export * from './_types';
