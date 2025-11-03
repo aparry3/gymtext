@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { Microcycle, MicrocyclePattern } from '../../models/microcycle';
+import { Microcycle } from '../../models/microcycle';
+import { MicrocyclePattern } from '../../models/microcycle/schema';
 import { FitnessPlan, Mesocycle } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
-import { generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
+import { createMicrocyclePatternAgent, generateMicrocyclePattern } from '../../agents/fitnessPlan/microcyclePattern/chain';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export interface ProgressInfo {
@@ -292,7 +293,8 @@ export class ProgressService {
   ): Promise<MicrocyclePattern> {
     try {
       // Use AI agent to generate pattern (weekNumber is now 0-based)
-      const pattern = await generateMicrocyclePattern({
+      const agent = createMicrocyclePatternAgent();
+      const pattern = await agent.invoke({
         mesocycle,
         weekNumber, // Agent expects 1-based week number
         programType,
@@ -303,30 +305,8 @@ export class ProgressService {
       return pattern;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);
-
-      // Fallback to basic pattern if AI fails
-      return this.generateFallbackPattern(weekNumber);
+      throw error;
     }
-  }
-
-  private generateFallbackPattern(
-    weekNumber: number
-  ): MicrocyclePattern {
-    const load = 'moderate';
-
-    // Simple fallback pattern
-    return {
-      weekIndex: weekNumber, // weekNumber is already 0-based, same as weekIndex
-      days: [
-        { day: 'MONDAY', theme: 'Training Day 1', load },
-        { day: 'TUESDAY', theme: 'Training Day 2', load },
-        { day: 'WEDNESDAY', theme: 'Rest' },
-        { day: 'THURSDAY', theme: 'Training Day 3', load },
-        { day: 'FRIDAY', theme: 'Training Day 4', load },
-        { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
-        { day: 'SUNDAY', theme: 'Rest' },
-      ],
-    };
   }
 }
 

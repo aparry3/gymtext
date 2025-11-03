@@ -1,8 +1,6 @@
 import { z } from 'zod';
-import { Mesocycle } from '@/server/models/fitnessPlan';
-import { MicrocyclePattern } from '@/server/models/microcycle';
-import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
-import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, microcycleStructuredPrompt } from './prompts';
+import { _StructuredMicrocycleSchema, MicrocyclePattern } from '@/server/models/microcycle/schema';
+import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, MICROCYCLE_STRUCTURED_SYSTEM_PROMPT, microcycleStructuredUserPrompt } from './prompts';
 import { initializeModel, createRunnableAgent } from '@/server/agents/base';
 import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
 
@@ -36,87 +34,16 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       ]);
 
       // Step 2: Convert to structured JSON
-      const structuredModel = initializeModel(_MicrocyclePatternSchema, deps?.config);
-      const step2Prompt = microcycleStructuredPrompt(longFormResult.description, weekNumber);
-      const structuredResult = await structuredModel.invoke(step2Prompt);
+      const structuredModel = initializeModel(_StructuredMicrocycleSchema, deps?.config);
+      const structuredResult = await structuredModel.invoke([
+        { role: 'system', content: MICROCYCLE_STRUCTURED_SYSTEM_PROMPT },
+        { role: 'user', content: microcycleStructuredUserPrompt(longFormResult.description, weekNumber) }
+      ]);
 
       return structuredResult as MicrocyclePattern;
     } catch (error) {
-      console.error('Error generating microcycle pattern:', error);
-      // Return a basic fallback pattern if generation fails
-      return generateFallbackPattern(weekNumber, programType);
+      console.error('Error generating microcycle pattern:', error);    
+      throw error;
     }
   });
 };
-
-/**
- * @deprecated Legacy export for backward compatibility - use createMicrocyclePatternAgent instead
- */
-export const generateMicrocyclePattern = async (context: {mesocycle: Mesocycle, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
-  const agent = createMicrocyclePatternAgent();
-  return agent.invoke(context);
-};
-
-function generateFallbackPattern(
-  weekNumber: number,
-  programType: string
-): MicrocyclePattern {
-  // weekNumber is already 0-based, same as weekIndex
-  const weekIndex = weekNumber;
-  const load = 'moderate';
-
-  const patterns: Record<string, MicrocyclePattern> = {
-    strength: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Lower Body', load },
-        { day: 'TUESDAY', theme: 'Upper Push', load },
-        { day: 'WEDNESDAY', theme: 'Rest' },
-        { day: 'THURSDAY', theme: 'Lower Body', load },
-        { day: 'FRIDAY', theme: 'Upper Pull', load },
-        { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
-        { day: 'SUNDAY', theme: 'Rest' },
-      ],
-    },
-    endurance: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Easy Run', load: 'light' },
-        { day: 'TUESDAY', theme: 'Interval Training', load },
-        { day: 'WEDNESDAY', theme: 'Recovery', load: 'light' },
-        { day: 'THURSDAY', theme: 'Tempo Run', load },
-        { day: 'FRIDAY', theme: 'Rest' },
-        { day: 'SATURDAY', theme: 'Long Run', load },
-        { day: 'SUNDAY', theme: 'Recovery', load: 'light' },
-      ],
-    },
-    hybrid: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Strength Training', load },
-        { day: 'TUESDAY', theme: 'Cardio', load },
-        { day: 'WEDNESDAY', theme: 'Active Recovery', load: 'light' },
-        { day: 'THURSDAY', theme: 'Strength Training', load },
-        { day: 'FRIDAY', theme: 'HIIT', load },
-        { day: 'SATURDAY', theme: 'Long Cardio', load: 'light' },
-        { day: 'SUNDAY', theme: 'Rest' },
-      ],
-    },
-  };
-
-  // Default pattern if program type not found
-  const defaultPattern: MicrocyclePattern = {
-    weekIndex,
-    days: [
-      { day: 'MONDAY', theme: 'Training Day 1', load },
-      { day: 'TUESDAY', theme: 'Training Day 2', load },
-      { day: 'WEDNESDAY', theme: 'Rest' },
-      { day: 'THURSDAY', theme: 'Training Day 3', load },
-      { day: 'FRIDAY', theme: 'Training Day 4', load },
-      { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
-      { day: 'SUNDAY', theme: 'Rest' },
-    ],
-  };
-
-  return patterns[programType] || defaultPattern;
-}

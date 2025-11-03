@@ -1,18 +1,6 @@
 import { Microcycles } from '@/server/models/_types';
+import { MicrocyclePattern } from './schema';
 
-export interface MicrocyclePattern {
-  weekIndex: number;  // Week within mesocycle
-  days: Array<{
-    day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
-    theme: string;  // e.g., "Lower", "Upper Push"
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
-  }>;
-}
-
-export interface UpdatedMicrocyclePattern extends MicrocyclePattern {
-  modificationsApplied: string[];
-}
 
 export interface Microcycle {
   id: string;
