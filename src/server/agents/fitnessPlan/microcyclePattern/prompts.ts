@@ -153,9 +153,11 @@ export const microcycleUserPrompt = ({
   notes
 }: MicrocycleUserPromptParams) => {
   // Get the specific week's microcycle description from the mesocycle
-  // weekNumber is 1-based, array is 0-based
-  const weekIndex = weekNumber - 1;
-  const microcycleDescription = mesocycle.microcycles[weekIndex] || mesocycle.longFormDescription;
+  // weekNumber is 0-based, matching array index
+  const microcycleDescription = mesocycle.microcycles[weekNumber] || mesocycle.longFormDescription;
+
+  // Display as 1-based for human readability
+  const displayWeekNumber = weekNumber + 1;
 
   return `
 Generate a microcycle breakdown for the following context:
@@ -173,13 +175,13 @@ Full Mesocycle Description:
 ${mesocycle.longFormDescription}
 </Mesocycle Context>
 
-<Week ${weekNumber} Microcycle Description>
+<Week ${displayWeekNumber} Microcycle Description>
 ${microcycleDescription}
-</Week ${weekNumber} Microcycle Description>
+</Week ${displayWeekNumber} Microcycle Description>
 
 <Program Context>
 Program Type: ${programType}
-Week ${weekNumber} of ${mesocycle.durationWeeks}
+Week ${displayWeekNumber} of ${mesocycle.durationWeeks}
 ${notes ? `\nNotes: ${notes}` : ''}
 </Program Context>
 

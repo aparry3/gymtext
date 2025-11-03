@@ -61,7 +61,8 @@ function generateFallbackPattern(
   weekNumber: number,
   programType: string
 ): MicrocyclePattern {
-  const weekIndex = weekNumber - 1; // Convert 1-based weekNumber to 0-based weekIndex
+  // weekNumber is already 0-based, same as weekIndex
+  const weekIndex = weekNumber;
   const load = 'moderate';
 
   const patterns: Record<string, MicrocyclePattern> = {
