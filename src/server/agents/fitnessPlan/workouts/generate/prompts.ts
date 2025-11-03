@@ -1,4 +1,5 @@
 import { formatRecentWorkouts } from '../shared/promptHelpers';
+import { formatMicrocycleDay } from '@/server/utils/formatters';
 import { DailyWorkoutInput } from './types';
 
 // System prompt - static instructions and guidelines
@@ -152,14 +153,9 @@ export const userPrompt = (
   const isDeload = !isNewFormat && (input.mesocycle as import('@/server/models/fitnessPlan').MesocycleOverview).deload;
   const isDeloadWeek = isDeload && input.microcycle.pattern.weekIndex === weeks;
 
-  // Build the day description as expected by the new system prompt
-  const dayDescription = `
-Day: ${input.dayPlan.day}
-Theme: ${input.dayPlan.theme}
-Load Level: ${input.dayPlan.load || 'moderate'}
-${input.dayPlan.notes ? `Notes: ${input.dayPlan.notes}` : ''}
-${isDeloadWeek ? 'This is a DELOAD day - reduce volume and intensity while maintaining movement patterns' : ''}
-  `.trim();
+  // Build the day description using the formatter utility
+  const dayDescription = formatMicrocycleDay(input.dayPlan) +
+    (isDeloadWeek ? '\n\nThis is a DELOAD day - reduce volume and intensity while maintaining movement patterns' : '');
 
   // Build additional context
   const additionalContext = `

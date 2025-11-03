@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { LongFormWorkout } from '@/server/models/workout/schema';
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
+import { formatFitnessProfile } from '@/server/utils/formatters';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createStructuredWorkoutAgent } from './structuredWorkout/chain';
 import { createWorkoutMessageAgent } from './workoutMessage/chain';
@@ -75,8 +75,7 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
   type TWorkout = z.infer<TWorkoutSchema>;
 
   // Get fitness profile context once
-  const fitnessProfileContext = new FitnessProfileContext();
-  const fitnessProfile = await fitnessProfileContext.getContext(context.user);
+  const fitnessProfile = formatFitnessProfile(context.user);
 
   const systemMessage = config.systemPrompt;
   const userMessage = config.userPrompt(fitnessProfile);
