@@ -115,8 +115,8 @@ export class MicrocycleService {
 
       console.log(`[MODIFY_WEEK] Using active microcycle ${relevantMicrocycle.id} (${new Date(relevantMicrocycle.startDate).toLocaleDateString()} - ${new Date(relevantMicrocycle.endDate).toLocaleDateString()})`);
 
-      // Get the mesocycle
-      const mesocycle = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex];
+      // Get the mesocycle (cast to Mesocycle as we no longer use MesocycleOverview)
+      const mesocycle = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex] as import('@/server/models/fitnessPlan').Mesocycle;
       if (!mesocycle) {
         return {
           success: false,

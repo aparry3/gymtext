@@ -39,6 +39,11 @@ export interface Mesocycle {
   microcycles: string[]; // Long-form description of each week
 }
 
+/**
+ * @deprecated Legacy mesocycle format - no longer used in new fitness plans.
+ * Kept for backward compatibility with old data only.
+ * Use the comprehensive Mesocycle interface instead.
+ */
 export interface MesocycleOverview {
   name: string; // e.g., "Accumulation"
   weeks: number;

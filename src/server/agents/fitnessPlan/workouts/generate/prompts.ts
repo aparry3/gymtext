@@ -147,11 +147,9 @@ This agent should generate adaptive, evidence-based workouts that reflect both t
 export const userPrompt = (
   input: DailyWorkoutInput
 ) => (fitnessProfile: string) => {
-  // Handle both old and new mesocycle formats
-  const isNewFormat = 'durationWeeks' in input.mesocycle;
-  const weeks = isNewFormat ? (input.mesocycle as import('@/server/models/fitnessPlan').Mesocycle).durationWeeks : (input.mesocycle as import('@/server/models/fitnessPlan').MesocycleOverview).weeks;
-  const isDeload = !isNewFormat && (input.mesocycle as import('@/server/models/fitnessPlan').MesocycleOverview).deload;
-  const isDeloadWeek = isDeload && input.microcycle.pattern.weekIndex === weeks;
+  // Get deload status from microcycle pattern (source of truth)
+  const isDeloadWeek = input.microcycle.pattern.isDeload ?? false;
+  const weeks = input.mesocycle.durationWeeks;
 
   // Build the day description using the formatter utility
   const dayDescription = formatMicrocycleDay(input.dayPlan) +

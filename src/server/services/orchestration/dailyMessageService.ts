@@ -205,9 +205,9 @@ export class DailyMessageService {
 
       // Get the day's pattern from the microcycle
       const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-      const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
 
-      if (!dayPattern) {
+      if (!dayPlan) {
         console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
         return null;
       }
@@ -219,7 +219,7 @@ export class DailyMessageService {
       const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
-        dayPlan: dayPattern,
+        dayPlan,
         microcycle,
         mesocycle,
         fitnessPlan: plan,
@@ -234,8 +234,8 @@ export class DailyMessageService {
         mesocycleId: null, // No longer using mesocycles table
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
-        sessionType: this.mapThemeToSessionType(dayPattern.theme),
-        goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
+        sessionType: this.mapThemeToSessionType(dayPlan.theme),
+        goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
         details: JSON.parse(JSON.stringify(enhancedWorkout)),
         description,
         reasoning,
