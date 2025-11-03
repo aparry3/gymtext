@@ -23,14 +23,14 @@ const LongFormMicrocycleSchema = z.object({
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
-    const { mesocycle, weekNumber, programType, notes } = input;
+    const { mesocycle, weekIndex, programType, notes } = input;
 
     try {
       // Step 1: Generate long-form description and reasoning
       const longFormModel = initializeModel(LongFormMicrocycleSchema, deps?.config);
       const longFormResult = await longFormModel.invoke([
         { role: 'system', content: MICROCYCLE_SYSTEM_PROMPT },
-        { role: 'user', content: microcycleUserPrompt({ mesocycle, weekNumber, programType, notes }) }
+        { role: 'user', content: microcycleUserPrompt({ mesocycle, weekIndex, programType, notes }) }
       ]);
 
       // Step 2: Convert to structured JSON (without weekIndex - we'll set it deterministically)
@@ -44,7 +44,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       // Deterministically set weekIndex from input (agent doesn't generate this)
       const finalResult: MicrocyclePattern = {
         ...structuredResult,
-        weekIndex: weekNumber // 0-based index
+        weekIndex // 0-based index
       };
 
       return finalResult;

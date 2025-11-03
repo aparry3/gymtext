@@ -141,23 +141,23 @@ The resulting microcycle object can then be passed directly to your "Workout Gen
 
 interface MicrocycleUserPromptParams {
   mesocycle: Mesocycle;
-  weekNumber: number;
+  weekIndex: number; // 0-based index
   programType: string;
   notes?: string | null;
 }
 // Step 1: User prompt with context
 export const microcycleUserPrompt = ({
   mesocycle,
-  weekNumber,
+  weekIndex,
   programType,
   notes
 }: MicrocycleUserPromptParams) => {
   // Get the specific week's microcycle description from the mesocycle
-  // weekNumber is 0-based, matching array index
-  const microcycleDescription = mesocycle.microcycles[weekNumber] || mesocycle.longFormDescription;
+  // weekIndex is 0-based, matching array index
+  const microcycleDescription = mesocycle.microcycles[weekIndex] || mesocycle.longFormDescription;
 
   // Display as 1-based for human readability
-  const displayWeekNumber = weekNumber + 1;
+  const displayWeekNumber = weekIndex + 1;
 
   return `
 Generate a microcycle breakdown for the following context:

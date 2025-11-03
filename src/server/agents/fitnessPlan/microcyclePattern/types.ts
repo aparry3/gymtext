@@ -7,7 +7,7 @@ import type { AgentDeps } from '@/server/agents/base';
  */
 export interface MicrocyclePatternInput {
   mesocycle: Mesocycle;
-  weekNumber: number;
+  weekIndex: number; // 0-based index within mesocycle
   programType: string;
   notes?: string | null;
 }

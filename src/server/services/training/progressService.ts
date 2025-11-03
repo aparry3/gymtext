@@ -287,21 +287,21 @@ export class ProgressService {
 
   private async generateMicrocyclePattern(
     mesocycle: Mesocycle,
-    weekNumber: number,
+    weekIndex: number, // 0-based index
     programType: string,
     notes?: string | null
   ): Promise<MicrocyclePattern> {
     try {
-      // Use AI agent to generate pattern (weekNumber is now 0-based)
+      // Use AI agent to generate pattern (weekIndex is 0-based)
       const agent = createMicrocyclePatternAgent();
       const pattern = await agent.invoke({
         mesocycle,
-        weekNumber, // Agent expects 1-based week number
+        weekIndex,
         programType,
         notes
       });
 
-      console.log(`Generated AI pattern for week ${weekNumber} of ${mesocycle.name}`);
+      console.log(`Generated AI pattern for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
       return pattern;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);
