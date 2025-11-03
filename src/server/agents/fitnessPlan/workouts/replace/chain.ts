@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { WorkoutInstance } from '@/server/models/workout';
-import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
+import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt, type ReplaceWorkoutParams } from './prompts';
 import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 import { UserWithProfile } from '@/server/models';

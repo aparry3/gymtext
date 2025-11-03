@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
-import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
+import { GeminiUpdatedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt, type Modification } from './prompts';
 import { executeWorkoutChain, type WorkoutChainResult } from '../shared/chainFactory';
 

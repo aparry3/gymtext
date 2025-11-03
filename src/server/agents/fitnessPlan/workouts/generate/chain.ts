@@ -1,5 +1,5 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
+import { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';

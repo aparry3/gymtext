@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
 import type { WorkoutInstance } from '@/server/models/workout';
-import type { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
+import type { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import type { AgentDeps } from '@/server/agents/base';
 import type { BaseWorkoutChainInput, WorkoutChainResult } from '../shared/chainFactory';
 
