@@ -32,7 +32,7 @@ export interface Mesocycle {
   volumeTrend: "increasing" | "stable" | "decreasing"; // How volume changes
   intensityTrend: "increasing" | "stable" | "taper"; // How intensity changes
   conditioningFocus?: string; // Optional conditioning focus
-  weeklyVolumeTargets: Record<string, number>; // Sets per muscle group, e.g., { chest: 14, back: 16 }
+  weeklyVolumeTargets?: Record<string, number>; // Sets per muscle group, e.g., { chest: 14, back: 16 }
   avgRIRRange?: [number, number]; // Optional RIR range
   keyThemes?: string[]; // Optional key themes
   longFormDescription: string; // Full natural-language explanation
