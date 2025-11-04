@@ -51,9 +51,11 @@ interface WorkoutInstance {
 
 interface ProgramTabProps {
   userId: string
+  basePath?: string
+  showAdminActions?: boolean
 }
 
-export function ProgramTab({ userId }: ProgramTabProps) {
+export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions = true }: ProgramTabProps) {
   const [fitnessPlan, setFitnessPlan] = useState<FitnessPlan | null>(null)
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -68,8 +70,8 @@ export function ProgramTab({ userId }: ProgramTabProps) {
 
     try {
       const [planResponse, workoutsResponse] = await Promise.all([
-        fetch(`/api/admin/users/${userId}/fitness-plan`),
-        fetch(`/api/admin/users/${userId}/workouts?limit=5`)
+        fetch(`/api/users/${userId}/fitness-plan`),
+        fetch(`/api/users/${userId}/workouts?limit=5`)
       ])
 
       if (!planResponse.ok && planResponse.status !== 404) {
@@ -139,12 +141,13 @@ export function ProgramTab({ userId }: ProgramTabProps) {
         <h3 className="text-lg font-semibold">Mesocycles</h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {fitnessPlan.mesocycles.map((mesocycle, index) => (
-            <MesocycleCard 
-              key={index} 
-              mesocycle={mesocycle} 
+            <MesocycleCard
+              key={index}
+              mesocycle={mesocycle}
               index={index}
               isCurrent={index === fitnessPlan.currentMesocycleIndex}
               userId={userId}
+              basePath={basePath}
             />
           ))}
         </div>
@@ -153,7 +156,7 @@ export function ProgramTab({ userId }: ProgramTabProps) {
       {/* Recent Workouts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Recent Workouts</h3>
-        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} onWorkoutDeleted={fetchProgramData} />
+        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} basePath={basePath} showAdminActions={showAdminActions} onWorkoutDeleted={fetchProgramData} />
       </div>
     </div>
   )
@@ -289,12 +292,15 @@ interface MesocycleCardProps {
   userId: string
 }
 
-function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardProps) {
+function MesocycleCard({ mesocycle, index, isCurrent, userId, basePath }: MesocycleCardProps & { basePath: string }) {
   const router = useRouter()
   const [expanded, setExpanded] = useState(false)
 
   const handleClick = () => {
-    router.push(`/admin/users/${userId}/program/mesocycles/${index}`)
+    const path = basePath === '/me'
+      ? `/me/program/mesocycles/${index}`
+      : `${basePath}/${userId}/program/mesocycles/${index}`
+    router.push(path)
   }
 
   const getTrendIcon = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
@@ -412,10 +418,12 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
 interface RecentWorkoutsTableProps {
   workouts: WorkoutInstance[]
   userId: string
+  basePath: string
+  showAdminActions: boolean
   onWorkoutDeleted: () => void
 }
 
-function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorkoutsTableProps) {
+function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onWorkoutDeleted }: RecentWorkoutsTableProps) {
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -456,7 +464,7 @@ function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorko
 
     setDeletingId(workoutId)
     try {
-      const response = await fetch(`/api/admin/users/${userId}/workouts/${workoutId}`, {
+      const response = await fetch(`/api/users/${userId}/workouts/${workoutId}`, {
         method: 'DELETE',
       })
 
@@ -485,7 +493,9 @@ function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorko
               <th className="px-4 py-3 text-left text-sm font-medium">Session Type</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Week</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+              {showAdminActions && (
+                <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -498,14 +508,24 @@ function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorko
                 >
                   <td
                     className={`px-4 py-3 text-sm cursor-pointer ${isTodayWorkout ? 'font-semibold' : ''}`}
-                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                    onClick={() => {
+                      const path = basePath === '/me'
+                        ? `/me/program/workouts/${workout.id}`
+                        : `${basePath}/${userId}/program/workouts/${workout.id}`
+                      router.push(path)
+                    }}
                   >
                     {new Date(workout.date).toLocaleDateString()}
                     {isTodayWorkout && <span className="ml-2 text-xs text-primary">(Today)</span>}
                   </td>
                   <td
                     className="px-4 py-3 text-sm cursor-pointer"
-                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                    onClick={() => {
+                      const path = basePath === '/me'
+                        ? `/me/program/workouts/${workout.id}`
+                        : `${basePath}/${userId}/program/workouts/${workout.id}`
+                      router.push(path)
+                    }}
                   >
                     <Badge variant={isTodayWorkout ? "default" : "outline"}>
                       {sessionTypeLabels[workout.sessionType] || workout.sessionType}
@@ -513,7 +533,12 @@ function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorko
                   </td>
                   <td
                     className="px-4 py-3 text-sm text-muted-foreground cursor-pointer"
-                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                    onClick={() => {
+                      const path = basePath === '/me'
+                        ? `/me/program/workouts/${workout.id}`
+                        : `${basePath}/${userId}/program/workouts/${workout.id}`
+                      router.push(path)
+                    }}
                   >
                     {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
                       ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
@@ -522,23 +547,30 @@ function RecentWorkoutsTable({ workouts, userId, onWorkoutDeleted }: RecentWorko
                   </td>
                   <td
                     className="px-4 py-3 text-sm cursor-pointer"
-                    onClick={() => router.push(`/admin/users/${userId}/program/workouts/${workout.id}`)}
+                    onClick={() => {
+                      const path = basePath === '/me'
+                        ? `/me/program/workouts/${workout.id}`
+                        : `${basePath}/${userId}/program/workouts/${workout.id}`
+                      router.push(path)
+                    }}
                   >
                     <Badge variant={workout.completedAt ? "default" : "secondary"}>
                       {workout.completedAt ? 'Completed' : 'Planned'}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleDelete(e, workout.id)}
-                      disabled={deletingId === workout.id}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      {deletingId === workout.id ? 'Deleting...' : 'Delete'}
-                    </Button>
-                  </td>
+                  {showAdminActions && (
+                    <td className="px-4 py-3 text-sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDelete(e, workout.id)}
+                        disabled={deletingId === workout.id}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        {deletingId === workout.id ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               )
             })}

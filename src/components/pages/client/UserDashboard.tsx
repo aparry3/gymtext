@@ -196,7 +196,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             </TabsList>
 
             <TabsContent value="program">
-              <ProgramTab userId={userId} />
+              <ProgramTab userId={userId} basePath="/me" showAdminActions={false} />
             </TabsContent>
 
             <TabsContent value="profile">
