@@ -15,9 +15,9 @@ export type {
   Message, NewMessage, MessageUpdate, RecentMessage
 } from './conversation';
 
-export type { 
+export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
-  FitnessPlanDB, FitnessPlanOverview, MesocycleOverview
+  FitnessPlanDB, FitnessPlanOverview, Mesocycle
 } from './fitnessPlan';
 
 export type { 

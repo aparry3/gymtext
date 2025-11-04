@@ -51,24 +51,6 @@ export const _MesocycleSchema = z.object({
 });
 
 /* -----------------------------
-   LEGACY MESOCYCLE SCHEMA (for backward compatibility)
------------------------------ */
-export const _MesocycleOverviewSchema = z.object({
-  name: z.string({
-    description: "The name of the mesocycle phase, e.g., 'Accumulation', 'Intensification'"
-  }),
-  weeks: z.number({
-    description: "The duration of this mesocycle in weeks"
-  }),
-  focus: z.array(z.string(), {
-    description: "Focus areas for this mesocycle, e.g., ['volume', 'technique']"
-  }),
-  deload: z.boolean({
-    description: "Whether the last week is a deload week"
-  })
-});
-
-/* -----------------------------
    FITNESS PLAN SCHEMA
 ----------------------------- */
 export const _FitnessPlanSchema = z.object({

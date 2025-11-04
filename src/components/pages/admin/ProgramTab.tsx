@@ -25,18 +25,11 @@ interface Mesocycle {
   microcycles: string[]
 }
 
-interface LegacyMesocycle {
-  name: string
-  weeks: number
-  focus: string[]
-  deload: boolean
-}
-
 interface FitnessPlan {
   id: string
   programType: 'endurance' | 'strength' | 'shred' | 'hybrid' | 'rehab' | 'other'
   lengthWeeks: number
-  mesocycles: Array<Mesocycle | LegacyMesocycle>
+  mesocycles: Mesocycle[]
   overview: string
   planDescription?: string | null
   reasoning?: string | null
@@ -58,11 +51,6 @@ interface WorkoutInstance {
 
 interface ProgramTabProps {
   userId: string
-}
-
-// Type guard to check if mesocycle is new format
-function isNewMesocycle(mesocycle: Mesocycle | LegacyMesocycle): mesocycle is Mesocycle {
-  return 'objective' in mesocycle && 'volumeTrend' in mesocycle
 }
 
 export function ProgramTab({ userId }: ProgramTabProps) {
@@ -195,7 +183,7 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
   let completedWeeks = 0
   for (let i = 0; i < fitnessPlan.currentMesocycleIndex; i++) {
     const meso = fitnessPlan.mesocycles[i]
-    completedWeeks += isNewMesocycle(meso) ? meso.durationWeeks : meso.weeks
+    completedWeeks += meso.durationWeeks
   }
   completedWeeks += fitnessPlan.currentMicrocycleWeek
   const progressPercentage = Math.round((completedWeeks / totalWeeks) * 100)
@@ -309,8 +297,6 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
     router.push(`/admin/users/${userId}/program/mesocycles/${index}`)
   }
 
-  const isNew = isNewMesocycle(mesocycle)
-
   const getTrendIcon = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
     switch (trend) {
       case 'increasing': return '↑'
@@ -331,19 +317,14 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
           <div>
             <h4 className={`font-medium ${isCurrent ? 'text-primary' : ''}`}>{mesocycle.name}</h4>
             <p className="text-sm text-muted-foreground">Mesocycle {index + 1}</p>
-            {isNew && mesocycle.objective && (
+            {mesocycle.objective && (
               <p className="text-xs text-muted-foreground mt-1">{mesocycle.objective}</p>
             )}
           </div>
           <div className="flex flex-col items-end gap-1">
             <Badge variant="outline" className="text-xs">
-              {isNew ? mesocycle.durationWeeks : mesocycle.weeks} weeks
+              {mesocycle.durationWeeks} weeks
             </Badge>
-            {!isNew && mesocycle.deload && (
-              <Badge variant="secondary" className="text-xs">
-                Deload
-              </Badge>
-            )}
             {isCurrent && (
               <Badge variant="default" className="text-xs">
                 Current
@@ -352,41 +333,39 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
           </div>
         </div>
 
-        {isNew && (
-          <div className="space-y-2 mb-3">
-            <div className="flex gap-2 text-xs">
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <span className="font-medium">Vol:</span> {getTrendIcon(mesocycle.volumeTrend)}
+        <div className="space-y-2 mb-3">
+          <div className="flex gap-2 text-xs">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="font-medium">Vol:</span> {getTrendIcon(mesocycle.volumeTrend)}
+            </span>
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="font-medium">Int:</span> {getTrendIcon(mesocycle.intensityTrend)}
+            </span>
+            {mesocycle.avgRIRRange && (
+              <span className="text-muted-foreground">
+                <span className="font-medium">RIR:</span> {mesocycle.avgRIRRange[0]}-{mesocycle.avgRIRRange[1]}
               </span>
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <span className="font-medium">Int:</span> {getTrendIcon(mesocycle.intensityTrend)}
-              </span>
-              {mesocycle.avgRIRRange && (
-                <span className="text-muted-foreground">
-                  <span className="font-medium">RIR:</span> {mesocycle.avgRIRRange[0]}-{mesocycle.avgRIRRange[1]}
-                </span>
-              )}
-            </div>
-
-            {mesocycle.weeklyVolumeTargets && Object.keys(mesocycle.weeklyVolumeTargets).length > 0 && (
-              <div className="text-xs space-y-1">
-                <div className="font-medium text-muted-foreground">Volume Targets:</div>
-                <div className="flex flex-wrap gap-1">
-                  {Object.entries(mesocycle.weeklyVolumeTargets).slice(0, 3).map(([muscle, sets]) => (
-                    <Badge key={muscle} variant="outline" className="text-xs">
-                      {muscle}: {sets}
-                    </Badge>
-                  ))}
-                  {Object.keys(mesocycle.weeklyVolumeTargets).length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{Object.keys(mesocycle.weeklyVolumeTargets).length - 3} more
-                    </Badge>
-                  )}
-                </div>
-              </div>
             )}
           </div>
-        )}
+
+          {mesocycle.weeklyVolumeTargets && Object.keys(mesocycle.weeklyVolumeTargets).length > 0 && (
+            <div className="text-xs space-y-1">
+              <div className="font-medium text-muted-foreground">Volume Targets:</div>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(mesocycle.weeklyVolumeTargets).slice(0, 3).map(([muscle, sets]) => (
+                  <Badge key={muscle} variant="outline" className="text-xs">
+                    {muscle}: {sets}
+                  </Badge>
+                ))}
+                {Object.keys(mesocycle.weeklyVolumeTargets).length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{Object.keys(mesocycle.weeklyVolumeTargets).length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap gap-1">
           {mesocycle.focus.map((focus, focusIndex) => (
@@ -396,7 +375,7 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
           ))}
         </div>
 
-        {isNew && mesocycle.keyThemes && mesocycle.keyThemes.length > 0 && (
+        {mesocycle.keyThemes && mesocycle.keyThemes.length > 0 && (
           <div className="mt-2">
             <div className="flex flex-wrap gap-1">
               {mesocycle.keyThemes.slice(0, 2).map((theme, idx) => (
@@ -409,7 +388,7 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId }: MesocycleCardPro
         )}
       </div>
 
-      {isNew && mesocycle.longFormDescription && (
+      {mesocycle.longFormDescription && (
         <div className="mt-3 pt-3 border-t">
           <button
             onClick={(e) => {

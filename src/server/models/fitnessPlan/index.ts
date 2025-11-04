@@ -8,7 +8,7 @@ export type NewFitnessPlan = Insertable<FitnessPlans>;
 export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 
 export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
-  mesocycles: Mesocycle[] | MesocycleOverview[]; // Support both new and legacy formats
+  mesocycles: Mesocycle[];
   id?: string;
 };
 
@@ -39,21 +39,9 @@ export interface Mesocycle {
   microcycles: string[]; // Long-form description of each week
 }
 
-/**
- * @deprecated Legacy mesocycle format - no longer used in new fitness plans.
- * Kept for backward compatibility with old data only.
- * Use the comprehensive Mesocycle interface instead.
- */
-export interface MesocycleOverview {
-  name: string; // e.g., "Accumulation"
-  weeks: number;
-  focus: string[]; // e.g., ["volume", "technique"]
-  deload: boolean; // Is last week a deload?
-}
-
 export class FitnessPlanModel implements FitnessPlan {
   programType: string;
-  mesocycles: Mesocycle[] | MesocycleOverview[];
+  mesocycles: Mesocycle[];
   lengthWeeks: number | null;
   notes: string | null;
   currentMesocycleIndex: number | null;
@@ -71,7 +59,7 @@ export class FitnessPlanModel implements FitnessPlan {
 
   constructor(
     programType: string,
-    mesocycles: Mesocycle[] | MesocycleOverview[],
+    mesocycles: Mesocycle[],
     lengthWeeks: number | null,
     notes: string | null,
     currentMesocycleIndex: number | null,
@@ -108,7 +96,7 @@ export class FitnessPlanModel implements FitnessPlan {
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
     return {
       ...fitnessPlan,
-      mesocycles: (fitnessPlan.mesocycles || []) as unknown as Mesocycle[] | MesocycleOverview[],
+      mesocycles: (fitnessPlan.mesocycles || []) as unknown as Mesocycle[],
     };
   }
 

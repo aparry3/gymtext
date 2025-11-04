@@ -1,5 +1,5 @@
 import { MicrocyclePattern } from '@/server/models/microcycle';
-import { MesocycleOverview, Mesocycle } from '@/server/models/fitnessPlan';
+import { Mesocycle } from '@/server/models/fitnessPlan';
 
 export interface MicrocycleUpdateParams {
   targetDay: string; // The specific day being modified (e.g., "Monday", typically "today")
@@ -108,13 +108,11 @@ IMPORTANT DISTINCTION:
 export const updateMicrocyclePatternPrompt = (
   currentPattern: MicrocyclePattern,
   params: MicrocycleUpdateParams,
-  mesocycle: MesocycleOverview | Mesocycle,
+  mesocycle: Mesocycle,
   programType: string
 ): string => {
-  // Handle both old and new mesocycle formats
-  const isNewFormat = 'durationWeeks' in mesocycle;
-  const weeks = isNewFormat ? (mesocycle as Mesocycle).durationWeeks : (mesocycle as MesocycleOverview).weeks;
-  const isDeload = isNewFormat ? false : (mesocycle as MesocycleOverview).deload;
+  const weeks = mesocycle.durationWeeks;
+  const isDeload = false; // Deload concept removed from new schema
 
   // Identify remaining days vs completed days
   const remainingDays = params.remainingDays || [];
