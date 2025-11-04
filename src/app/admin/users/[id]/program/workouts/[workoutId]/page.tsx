@@ -187,6 +187,11 @@ export default function WorkoutDetailPage() {
           {/* Workout Header */}
           <WorkoutHeader workout={workout} onDelete={handleDelete} isDeleting={isDeleting} />
 
+          {/* Workout Summary Statistics */}
+          {workout.details?.blocks && workout.details.blocks.length > 0 && (
+            <WorkoutSummaryCard workout={workout} />
+          )}
+
           {/* Goal & Notes */}
           {workout.goal && (
             <Card className="p-6">
@@ -250,6 +255,83 @@ export default function WorkoutDetailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function WorkoutSummaryCard({ workout }: { workout: WorkoutInstance }) {
+  const blocks = workout.details?.blocks || []
+
+  // Calculate statistics
+  const totalExercises = blocks.reduce((sum, block) => sum + block.items.length, 0)
+  const totalSets = blocks.reduce(
+    (sum, block) =>
+      sum + block.items.reduce((itemSum, item) => itemSum + (item.sets || 0), 0),
+    0
+  )
+
+  // Count exercises by type
+  const exercisesByType = blocks.reduce((acc, block) => {
+    block.items.forEach((item) => {
+      acc[item.type] = (acc[item.type] || 0) + 1
+    })
+    return acc
+  }, {} as Record<string, number>)
+
+  // Estimate total duration (rough)
+  const estimatedDuration = blocks.reduce((sum, block) => {
+    return (
+      sum +
+      block.items.reduce((itemSum, item) => {
+        if (item.durationMin) return itemSum + item.durationMin
+        if (item.durationSec) return itemSum + item.durationSec / 60
+        // Rough estimate: sets * (work + rest) in minutes
+        if (item.sets) {
+          const restMin = item.rest ? parseFloat(item.rest) / 60 : 1.5 // default 90sec rest
+          return itemSum + item.sets * (0.5 + restMin) // assume 30sec work time
+        }
+        return itemSum
+      }, 0)
+    )
+  }, 0)
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">Workout Summary</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-3 bg-blue-50 rounded-lg">
+          <div className="text-sm text-blue-700 mb-1">Total Blocks</div>
+          <div className="text-2xl font-bold text-blue-900">{blocks.length}</div>
+        </div>
+
+        <div className="p-3 bg-green-50 rounded-lg">
+          <div className="text-sm text-green-700 mb-1">Total Exercises</div>
+          <div className="text-2xl font-bold text-green-900">{totalExercises}</div>
+        </div>
+
+        <div className="p-3 bg-purple-50 rounded-lg">
+          <div className="text-sm text-purple-700 mb-1">Total Sets</div>
+          <div className="text-2xl font-bold text-purple-900">{totalSets}</div>
+        </div>
+
+        <div className="p-3 bg-orange-50 rounded-lg">
+          <div className="text-sm text-orange-700 mb-1">Est. Duration</div>
+          <div className="text-2xl font-bold text-orange-900">{Math.round(estimatedDuration)}m</div>
+        </div>
+      </div>
+
+      {Object.keys(exercisesByType).length > 0 && (
+        <div className="mt-4">
+          <div className="text-sm font-medium mb-2">Exercise Breakdown</div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(exercisesByType).map(([type, count]) => (
+              <Badge key={type} variant="outline" className="text-xs">
+                {type}: {count}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
   )
 }
 

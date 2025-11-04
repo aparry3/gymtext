@@ -42,11 +42,22 @@ interface WorkoutInstance {
   completedAt: Date | null
 }
 
+interface FitnessPlan {
+  mesocycles: Array<{
+    name: string
+    microcycles?: string[]
+    weeks?: number
+    durationWeeks?: number
+    objective?: string
+  }>
+}
+
 export default function MicrocycleWeekPage() {
   const { id, idx, week } = useParams()
   const router = useRouter()
   const [microcycle, setMicrocycle] = useState<Microcycle | null>(null)
   const [workouts, setWorkouts] = useState<WorkoutInstance[]>([])
+  const [fitnessPlan, setFitnessPlan] = useState<FitnessPlan | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -67,15 +78,25 @@ export default function MicrocycleWeekPage() {
       setError(null)
 
       try {
-        const microcycleResponse = await fetch(
-          `/api/admin/users/${id}/microcycle?mesocycleIndex=${mesocycleIndex}&weekNumber=${weekNumber}`
-        )
+        const [microcycleResponse, planResponse] = await Promise.all([
+          fetch(`/api/admin/users/${id}/microcycle?mesocycleIndex=${mesocycleIndex}&weekNumber=${weekNumber}`),
+          fetch(`/api/admin/users/${id}/fitness-plan`)
+        ])
 
+        // Handle plan response
+        if (planResponse.ok) {
+          const planResult = await planResponse.json()
+          if (planResult.success) {
+            setFitnessPlan(planResult.data)
+          }
+        }
+
+        // Handle microcycle response
         if (microcycleResponse.ok) {
           const microcycleResult = await microcycleResponse.json()
           if (microcycleResult.success) {
             setMicrocycle(microcycleResult.data)
-            
+
             // Now fetch workouts using the microcycle date range
             const startDate = microcycleResult.data.startDate
             const endDate = microcycleResult.data.endDate
@@ -128,6 +149,10 @@ export default function MicrocycleWeekPage() {
 
   const weekDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
+  // Get the microcycle description for this week from the mesocycle
+  const mesocycle = fitnessPlan?.mesocycles[mesocycleIndex]
+  const microcycleDescription = mesocycle?.microcycles?.[weekNumber]
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -157,6 +182,14 @@ export default function MicrocycleWeekPage() {
 
           {/* Microcycle Header */}
           <MicrocycleHeader microcycle={microcycle} />
+
+          {/* Microcycle Description */}
+          {microcycleDescription && (
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-3">Week Overview</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{microcycleDescription}</p>
+            </Card>
+          )}
 
           {/* Day Cards */}
           <div className="space-y-4">

@@ -16,11 +16,34 @@ import {
   BreadcrumbPage 
 } from '@/components/ui/breadcrumb'
 
-interface Mesocycle {
+interface NewMesocycle {
+  name: string
+  objective: string
+  focus: string[]
+  durationWeeks: number
+  startWeek: number
+  endWeek: number
+  volumeTrend: 'increasing' | 'stable' | 'decreasing'
+  intensityTrend: 'increasing' | 'stable' | 'taper'
+  conditioningFocus?: string | null
+  weeklyVolumeTargets?: Record<string, number> | null
+  avgRIRRange?: [number, number] | null
+  keyThemes?: string[] | null
+  longFormDescription: string
+  microcycles: string[]
+}
+
+interface LegacyMesocycle {
   name: string
   weeks: number
   focus: string[]
   deload: boolean
+}
+
+type Mesocycle = NewMesocycle | LegacyMesocycle
+
+function isNewMesocycle(mesocycle: Mesocycle): mesocycle is NewMesocycle {
+  return 'objective' in mesocycle && 'volumeTrend' in mesocycle
 }
 
 interface Microcycle {
@@ -185,31 +208,140 @@ interface MesocycleHeaderProps {
 }
 
 function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeaderProps) {
+  const [expandedDescription, setExpandedDescription] = useState(false)
+  const isNew = isNewMesocycle(mesocycle)
+
+  const getTrendIcon = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+    switch (trend) {
+      case 'increasing': return '↑'
+      case 'decreasing': return '↓'
+      case 'taper': return '↘'
+      case 'stable': return '→'
+    }
+  }
+
+  const getTrendColor = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+    switch (trend) {
+      case 'increasing': return 'text-green-600'
+      case 'decreasing': return 'text-red-600'
+      case 'taper': return 'text-orange-600'
+      case 'stable': return 'text-blue-600'
+    }
+  }
+
+  const weeks = isNew ? mesocycle.durationWeeks : mesocycle.weeks
+
   return (
     <Card className="p-6">
-      <div className="flex items-start justify-between">
-        <div className="space-y-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{mesocycle.name}</h1>
-            <p className="text-muted-foreground">
-              Mesocycle {index} of {total} • {mesocycle.weeks} weeks
-            </p>
+      <div className="space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div>
+              <h1 className="text-2xl font-semibold">{mesocycle.name}</h1>
+              <p className="text-muted-foreground">
+                Mesocycle {index + 1} of {total} • {weeks} weeks
+                {isNew && ` (Weeks ${mesocycle.startWeek + 1}-${mesocycle.endWeek + 1})`}
+              </p>
+              {isNew && mesocycle.objective && (
+                <p className="text-sm text-muted-foreground mt-2">{mesocycle.objective}</p>
+              )}
+            </div>
           </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {mesocycle.focus.map((focus, idx) => (
-              <Badge key={idx} variant="outline">
-                {focus}
-              </Badge>
-            ))}
-            {mesocycle.deload && (
-              <Badge variant="secondary">Deload</Badge>
-            )}
+
+          <div className="flex flex-col items-end gap-2">
             {isCurrent && (
               <Badge variant="default">Current</Badge>
             )}
+            {!isNew && mesocycle.deload && (
+              <Badge variant="secondary">Deload</Badge>
+            )}
           </div>
         </div>
+
+        {isNew && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">Volume Trend</div>
+              <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.volumeTrend)}`}>
+                {getTrendIcon(mesocycle.volumeTrend)} {mesocycle.volumeTrend}
+              </div>
+            </div>
+
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">Intensity Trend</div>
+              <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.intensityTrend)}`}>
+                {getTrendIcon(mesocycle.intensityTrend)} {mesocycle.intensityTrend}
+              </div>
+            </div>
+
+            {mesocycle.avgRIRRange && (
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Average RIR Range</div>
+                <div className="text-xl font-semibold">
+                  {mesocycle.avgRIRRange[0]} - {mesocycle.avgRIRRange[1]}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {mesocycle.focus.map((focus, idx) => (
+            <Badge key={idx} variant="outline">
+              {focus}
+            </Badge>
+          ))}
+        </div>
+
+        {isNew && mesocycle.keyThemes && mesocycle.keyThemes.length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-2">Key Themes</div>
+            <div className="flex flex-wrap gap-2">
+              {mesocycle.keyThemes.map((theme, idx) => (
+                <Badge key={idx} variant="secondary">
+                  {theme}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isNew && mesocycle.conditioningFocus && (
+          <div>
+            <div className="text-sm font-medium">Conditioning Focus</div>
+            <p className="text-sm text-muted-foreground mt-1">{mesocycle.conditioningFocus}</p>
+          </div>
+        )}
+
+        {isNew && mesocycle.weeklyVolumeTargets && Object.keys(mesocycle.weeklyVolumeTargets).length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-2">Weekly Volume Targets (sets per muscle)</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              {Object.entries(mesocycle.weeklyVolumeTargets).map(([muscle, sets]) => (
+                <div key={muscle} className="p-2 bg-muted/30 rounded text-sm">
+                  <span className="font-medium capitalize">{muscle}:</span> {sets} sets
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isNew && mesocycle.longFormDescription && (
+          <div className="border-t pt-4">
+            <button
+              onClick={() => setExpandedDescription(!expandedDescription)}
+              className="flex items-center justify-between w-full text-left mb-2 hover:opacity-70"
+            >
+              <h3 className="text-sm font-medium">Full Description</h3>
+              <span className="text-sm text-muted-foreground">
+                {expandedDescription ? '▼' : '▶'}
+              </span>
+            </button>
+            {expandedDescription && (
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{mesocycle.longFormDescription}</p>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   )
@@ -248,9 +380,12 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek 
       .join(', ')
   }
 
+  const isNew = isNewMesocycle(mesocycle)
+  const totalWeeks = isNew ? mesocycle.durationWeeks : mesocycle.weeks
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {Array.from({ length: mesocycle.weeks }).map((_, weekIndex) => {
+      {Array.from({ length: totalWeeks }).map((_, weekIndex) => {
         const microcycle = microcycles.find(m => m.pattern.weekIndex === weekIndex)
         const status = getWeekStatus(weekIndex)
 

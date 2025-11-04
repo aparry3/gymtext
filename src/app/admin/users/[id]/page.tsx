@@ -252,10 +252,25 @@ export default function AdminUserDetailPage() {
                   title="Goals"
                   icon={<Target className="h-5 w-5" />}
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    {profile.goals.summary && (
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm italic">{profile.goals.summary}</p>
+                      </div>
+                    )}
                     <div><strong>Primary Goal:</strong> {profile.goals.primary}</div>
-                    <div><strong>Summary:</strong> {profile.goals.summary}</div>
-                    <div><strong>Timeline:</strong> {profile.goals.timeline} weeks</div>
+                    {profile.goals.timeline && (
+                      <div><strong>Timeline:</strong> {profile.goals.timeline} weeks</div>
+                    )}
+                    {profile.goals.specific && (
+                      <div><strong>Specific Goals:</strong> {profile.goals.specific}</div>
+                    )}
+                    {profile.goals.motivation && (
+                      <div>
+                        <strong>Motivation:</strong>
+                        <p className="mt-1 text-muted-foreground">{profile.goals.motivation}</p>
+                      </div>
+                    )}
                   </div>
                 </ProfileSection>
 
@@ -266,9 +281,26 @@ export default function AdminUserDetailPage() {
                     icon={<Calendar className="h-5 w-5" />}
                   >
                     <div className="space-y-2">
-                      <div><strong>Frequency:</strong> {profile.availability?.daysPerWeek} days/week</div>
-                      <div><strong>Session Length:</strong> {profile.availability?.minutesPerSession} minutes</div>
-                      <div><strong>Preferred Times:</strong> {profile.availability?.preferredTimes?.join(', ') || 'Not specified'}</div>
+                      {profile.availability?.summary && (
+                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
+                          {profile.availability.summary}
+                        </div>
+                      )}
+                      {profile.availability?.daysPerWeek && (
+                        <div><strong>Frequency:</strong> {profile.availability.daysPerWeek} days/week</div>
+                      )}
+                      {profile.availability?.minutesPerSession && (
+                        <div><strong>Session Length:</strong> {profile.availability.minutesPerSession} minutes</div>
+                      )}
+                      {profile.availability?.preferredTimes && profile.availability.preferredTimes.length > 0 && (
+                        <div><strong>Preferred Times:</strong> {profile.availability.preferredTimes.join(', ')}</div>
+                      )}
+                      {profile.availability?.schedule && (
+                        <div>
+                          <strong>Schedule:</strong>
+                          <p className="mt-1 text-sm text-muted-foreground">{profile.availability.schedule}</p>
+                        </div>
+                      )}
                     </div>
                   </ProfileSection>
 
@@ -277,6 +309,11 @@ export default function AdminUserDetailPage() {
                     icon={<Dumbbell className="h-5 w-5" />}
                   >
                     <div className="space-y-2">
+                      {profile.equipmentAccess?.summary && (
+                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
+                          {profile.equipmentAccess.summary}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <strong>Gym Access:</strong>
                         {profile.equipmentAccess?.gymAccess ? (
@@ -288,9 +325,30 @@ export default function AdminUserDetailPage() {
                           {profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
                         </Badge>
                       </div>
-                      <div><strong>Gym Type:</strong> {profile.equipmentAccess?.gymType || 'Not specified'}</div>
+                      {profile.equipmentAccess?.gymType && (
+                        <div><strong>Gym Type:</strong> {profile.equipmentAccess.gymType}</div>
+                      )}
                       {profile.equipmentAccess?.homeEquipment && profile.equipmentAccess.homeEquipment.length > 0 && (
                         <div><strong>Home Equipment:</strong> {profile.equipmentAccess.homeEquipment.join(', ')}</div>
+                      )}
+                      {profile.equipmentAccess?.limitations && profile.equipmentAccess.limitations.length > 0 && (
+                        <div><strong>Limitations:</strong> {profile.equipmentAccess.limitations.join(', ')}</div>
+                      )}
+                      {profile.equipmentAccess?.temporaryChanges && profile.equipmentAccess.temporaryChanges.length > 0 && (
+                        <div>
+                          <strong>Temporary Changes:</strong>
+                          <div className="mt-1 space-y-1">
+                            {profile.equipmentAccess.temporaryChanges.map((change, idx) => (
+                              <div key={idx} className="text-sm p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                <div className="font-medium">{change.description}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {new Date(change.startDate).toLocaleDateString()} - {change.endDate ? new Date(change.endDate).toLocaleDateString() : 'Ongoing'}
+                                  {change.location && ` • ${change.location}`}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </ProfileSection>
@@ -317,6 +375,11 @@ export default function AdminUserDetailPage() {
                     icon={<TrendingUp className="h-5 w-5" />}
                   >
                     <div className="space-y-2">
+                      {profile.metrics?.summary && (
+                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
+                          {profile.metrics.summary}
+                        </div>
+                      )}
                       {profile.metrics?.height && (
                         <div className="flex items-center gap-2">
                           <Ruler className="h-4 w-4 text-muted-foreground" />
@@ -327,54 +390,43 @@ export default function AdminUserDetailPage() {
                         <div className="flex items-center gap-2">
                           <Weight className="h-4 w-4 text-muted-foreground" />
                           <span><strong>Weight:</strong> {profile.metrics.weight.value} {profile.metrics.weight.unit}</span>
+                          {profile.metrics.weight.date && (
+                            <span className="text-xs text-muted-foreground">({new Date(profile.metrics.weight.date).toLocaleDateString()})</span>
+                          )}
+                        </div>
+                      )}
+                      {profile.metrics?.bodyComposition && (
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-muted-foreground" />
+                          <span><strong>Body Fat:</strong> {profile.metrics.bodyComposition}%</span>
                         </div>
                       )}
                       {profile.metrics?.fitnessLevel && (
                         <div className="flex items-center gap-2">
                           <Activity className="h-4 w-4 text-muted-foreground" />
-                          <span><strong>Fitness Level:</strong> {profile.metrics.fitnessLevel.replace('_', ' ')}</span>
+                          <Badge variant="outline">
+                            {profile.metrics.fitnessLevel.replace('_', ' ')}
+                          </Badge>
                         </div>
                       )}
                     </div>
                   </ProfileSection>
 
+                </div>
+
+                {/* Activities Section */}
+                {profile.activities && profile.activities.length > 0 && (
                   <ProfileSection
-                    title="Activity Data"
+                    title="Activities"
                     icon={<Activity className="h-5 w-5" />}
                   >
-                    <div className="space-y-3">
-                      {profile.activities?.map((activity, index) => (
-                        <div key={index} className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>
-                              {activity.type}
-                            </Badge>
-                            <Badge variant="outline">
-                              {activity.experience}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            <strong>Frequency:</strong> {activity.type === 'strength' ? activity.trainingFrequency : activity.frequency}x/week
-                          </div>
-                          {activity.type === 'strength' && activity.keyLifts && Object.keys(activity.keyLifts).length > 0 && (
-                            <div className="text-sm">
-                              <strong>Key lifts:</strong>{' '}
-                              {Object.entries(activity.keyLifts)
-                                .filter(([, weight]) => weight)
-                                .map(([lift, weight]) => `${lift}: ${weight}lbs`)
-                                .join(', ')}
-                            </div>
-                          )}
-                          {activity.type === 'cardio' && (
-                            <div className="text-sm text-muted-foreground">
-                              <strong>Activities:</strong> {activity.primaryActivities.join(', ')}
-                            </div>
-                          )}
-                        </div>
+                    <div className="space-y-4">
+                      {profile.activities.map((activity, index) => (
+                        <ActivityCard key={index} activity={activity} />
                       ))}
                     </div>
                   </ProfileSection>
-                </div>
+                )}
               </div>
             ) : (
               <EmptyProfileState />
@@ -442,6 +494,9 @@ interface ConstraintCardProps {
     severity?: 'mild' | 'moderate' | 'severe' | null
     affectedMovements?: string[] | null
     status: 'active' | 'resolved'
+    startDate?: string | null
+    endDate?: string | null
+    isTemporary?: boolean
   }
 }
 
@@ -461,16 +516,174 @@ function ConstraintCard({ constraint }: ConstraintCardProps) {
     <div className={`rounded-xl border p-4 ring-1 ${constraint.severity ? severityColors[constraint.severity] : 'bg-gray-50 border-gray-100 ring-gray-100'}`}>
       <div className="mb-2 flex items-start justify-between">
         <h4 className="font-medium">{constraint.description}</h4>
-        <Badge className={statusColors[constraint.status]} variant="secondary">
-          {constraint.status}
-        </Badge>
+        <div className="flex flex-col gap-1 items-end">
+          <Badge className={statusColors[constraint.status]} variant="secondary">
+            {constraint.status}
+          </Badge>
+          {constraint.isTemporary && (
+            <Badge variant="outline" className="text-xs">
+              Temporary
+            </Badge>
+          )}
+        </div>
       </div>
       <div className="space-y-1 text-sm">
         <div><strong>Type:</strong> {constraint.type} • <strong>Severity:</strong> {constraint.severity || 'Not specified'}</div>
+        {(constraint.startDate || constraint.endDate) && (
+          <div className="text-xs text-muted-foreground">
+            {constraint.startDate && `Started: ${new Date(constraint.startDate).toLocaleDateString()}`}
+            {constraint.startDate && constraint.endDate && ' • '}
+            {constraint.endDate && `Ends: ${new Date(constraint.endDate).toLocaleDateString()}`}
+          </div>
+        )}
         {constraint.affectedMovements && constraint.affectedMovements.length > 0 && (
           <div><strong>Affected movements:</strong> {constraint.affectedMovements.join(', ')}</div>
         )}
       </div>
+    </div>
+  )
+}
+
+interface ActivityCardProps {
+  activity: {
+    type: 'strength' | 'cardio'
+    summary?: string | null
+    experience: 'beginner' | 'intermediate' | 'advanced'
+  } & (
+    | {
+        type: 'strength'
+        trainingFrequency: number
+        currentProgram?: string | null
+        keyLifts?: Record<string, number> | null
+        preferences?: {
+          workoutStyle?: string | null
+          likedExercises?: string[] | null
+          dislikedExercises?: string[] | null
+        } | null
+      }
+    | {
+        type: 'cardio'
+        primaryActivities: string[]
+        frequency?: number | null
+        keyMetrics?: {
+          weeklyDistance?: number | null
+          longestSession?: number | null
+          averagePace?: string | null
+          preferredIntensity?: 'low' | 'moderate' | 'high' | null
+        } | null
+        preferences?: {
+          indoor?: boolean | null
+          outdoor?: boolean | null
+          groupVsIndividual?: 'group' | 'individual' | 'both' | null
+          timeOfDay?: string[] | null
+        } | null
+      }
+  )
+}
+
+function ActivityCard({ activity }: ActivityCardProps) {
+  return (
+    <div className="border rounded-lg p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>
+          {activity.type}
+        </Badge>
+        <Badge variant="outline">
+          {activity.experience}
+        </Badge>
+      </div>
+
+      {activity.summary && (
+        <div className="p-2 bg-muted/30 rounded text-sm italic">
+          {activity.summary}
+        </div>
+      )}
+
+      {activity.type === 'strength' && (
+        <div className="space-y-2">
+          <div className="text-sm">
+            <strong>Training Frequency:</strong> {activity.trainingFrequency}x/week
+          </div>
+          {activity.currentProgram && (
+            <div className="text-sm">
+              <strong>Current Program:</strong> {activity.currentProgram}
+            </div>
+          )}
+          {activity.keyLifts && Object.keys(activity.keyLifts).length > 0 && (
+            <div className="text-sm">
+              <strong>Key Lifts:</strong>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {Object.entries(activity.keyLifts).map(([lift, weight]) => (
+                  <Badge key={lift} variant="outline" className="text-xs">
+                    {lift}: {weight}lbs
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {activity.preferences && (
+            <div className="text-sm">
+              {activity.preferences.workoutStyle && (
+                <div><strong>Workout Style:</strong> {activity.preferences.workoutStyle}</div>
+              )}
+              {activity.preferences.likedExercises && activity.preferences.likedExercises.length > 0 && (
+                <div><strong>Liked:</strong> {activity.preferences.likedExercises.join(', ')}</div>
+              )}
+              {activity.preferences.dislikedExercises && activity.preferences.dislikedExercises.length > 0 && (
+                <div><strong>Disliked:</strong> {activity.preferences.dislikedExercises.join(', ')}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activity.type === 'cardio' && (
+        <div className="space-y-2">
+          <div className="text-sm">
+            <strong>Primary Activities:</strong> {activity.primaryActivities.join(', ')}
+          </div>
+          {activity.frequency && (
+            <div className="text-sm">
+              <strong>Frequency:</strong> {activity.frequency}x/week
+            </div>
+          )}
+          {activity.keyMetrics && (
+            <div className="text-sm space-y-1">
+              <div><strong>Key Metrics:</strong></div>
+              {activity.keyMetrics.weeklyDistance && (
+                <div className="ml-4">• Weekly Distance: {activity.keyMetrics.weeklyDistance} miles</div>
+              )}
+              {activity.keyMetrics.longestSession && (
+                <div className="ml-4">• Longest Session: {activity.keyMetrics.longestSession} min</div>
+              )}
+              {activity.keyMetrics.averagePace && (
+                <div className="ml-4">• Average Pace: {activity.keyMetrics.averagePace}</div>
+              )}
+              {activity.keyMetrics.preferredIntensity && (
+                <div className="ml-4">• Preferred Intensity: {activity.keyMetrics.preferredIntensity}</div>
+              )}
+            </div>
+          )}
+          {activity.preferences && (
+            <div className="text-sm">
+              <div><strong>Preferences:</strong></div>
+              <div className="ml-4 space-y-0.5">
+                {activity.preferences.indoor !== undefined && activity.preferences.outdoor !== undefined && (
+                  <div>
+                    • Location: {activity.preferences.indoor && activity.preferences.outdoor ? 'Indoor & Outdoor' : activity.preferences.indoor ? 'Indoor' : 'Outdoor'}
+                  </div>
+                )}
+                {activity.preferences.groupVsIndividual && (
+                  <div>• Style: {activity.preferences.groupVsIndividual}</div>
+                )}
+                {activity.preferences.timeOfDay && activity.preferences.timeOfDay.length > 0 && (
+                  <div>• Time: {activity.preferences.timeOfDay.join(', ')}</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
