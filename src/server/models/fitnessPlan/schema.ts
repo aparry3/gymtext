@@ -32,7 +32,7 @@ export const _MesocycleSchema = z.object({
   weeklyVolumeTargets: z.record(z.number(), {
     description: "Average weekly hard sets per muscle group, e.g., { chest: 14, back: 16 }."
   }),
-  avgRIRRange: z.tuple([z.number(), z.number()]).nullish(),
+  avgRIRRange: z.array(z.number()).length(2).nullish(),
   keyThemes: z.array(z.string()).nullish(),
   longFormDescription: z.string({
     description:
