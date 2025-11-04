@@ -20,46 +20,45 @@ export const _StructuredDaySchema = z.object({
   }),
   load: z
     .enum(["light", "moderate", "heavy"])
-    .optional()
+    .nullish()
     .describe("Relative training load intensity for the day."),
   primaryMuscleGroups: z
     .array(z.string())
-    .optional()
+    .nullish()
     .describe("Primary muscle groups targeted in this session."),
   secondaryMuscleGroups: z
     .array(z.string())
-    .optional()
+    .nullish()
     .describe("Secondary muscle groups worked."),
   sessionFocus: z
     .string()
-    .optional()
+    .nullish()
     .describe("High-level goal or adaptation focus for this day (e.g., hypertrophy, power, endurance)."),
   intensity: z
     .object({
-      percent1RM: z.string().optional(),
-      rir: z.string().optional(),
+      percent1RM: z.string().nullish(),
+      rir: z.string().nullish(),
     })
-    .optional()
+    .nullish()
     .describe("Load/intensity prescription cues for compound lifts."),
   volumeTarget: z
     .object({
-      setsPerMuscle: z.string().optional(),
-      totalSetsEstimate: z.number().optional(),
+      setsPerMuscle: z.string().nullish(),
+      totalSetsEstimate: z.number().nullish(),
     })
-    .optional()
+    .nullish()
     .describe("Target training volume for the day."),
   conditioning: z
     .string()
-    .nullable()
-    .optional()
+    .nullish()
     .describe("Conditioning or cardio details (e.g., 'Zone 2 – 25–30 min @ RPE 5–6')."),
   sessionDuration: z
     .string()
-    .optional()
+    .nullish()
     .describe("Approximate training duration, e.g. '60 min'."),
   notes: z
     .string()
-    .optional()
+    .nullish()
     .describe("Coaching notes, recovery reminders, or specific cues."),
 });
 
@@ -69,15 +68,15 @@ export const _StructuredMicrocycleSchema = z.object({
   }),
   weekFocus: z
     .string()
-    .optional()
+    .nullish()
     .describe("The theme or focus of the week (e.g., Volume Progression, Deload)."),
   objectives: z
     .string()
-    .optional()
+    .nullish()
     .describe("Overall goals or adaptations being targeted this week."),
   averageSessionDuration: z
     .string()
-    .optional()
+    .nullish()
     .describe("Average planned duration for each session."),
   isDeload: z
     .boolean()
@@ -88,7 +87,7 @@ export const _StructuredMicrocycleSchema = z.object({
   }),
   weeklyNotes: z
     .string()
-    .optional()
+    .nullish()
     .describe("Summary notes for coaches or athletes reviewing this week."),
 });
 

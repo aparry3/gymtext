@@ -15,8 +15,6 @@ export const createUserAgent = () => createSubAgent({
   userMessageBuilder: buildUserUserMessage,
   agentName: 'UserAgent',
   outputSchema: UserExtractionSchema,
-  model: 'gemini-2.5-flash',
-  temperature: 0.2  // Low temperature for consistent demographic extraction
 });
 
 /**

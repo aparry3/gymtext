@@ -15,8 +15,6 @@ export const createConstraintsAgent = () => createSubAgent({
   userMessageBuilder: buildConstraintsUserMessage,
   agentName: 'ConstraintsAgent',
   outputSchema: ConstraintsExtractionSchema,
-  // model: 'gemini-2.5-flash',
-  // temperature: 0.1  // Very low temperature for safety-critical constraint extraction
 });
 
 /**

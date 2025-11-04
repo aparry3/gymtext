@@ -14,8 +14,8 @@ export interface DailyWorkoutInput extends BaseWorkoutChainInput {
   dayPlan: {
     day: string;
     theme: string;
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
+    load?: 'light' | 'moderate' | 'heavy' | null;
+    notes?: string | null;
   };
   microcycle: Microcycle;
   mesocycle: Mesocycle;

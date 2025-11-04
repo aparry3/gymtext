@@ -4,16 +4,16 @@ import { z } from 'zod';
  * Schema for user extraction data - flattened structure matching Partial<Omit<User, 'profile'>>
  */
 export const UserDataSchema = z.object({
-  name: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
-  phoneNumber: z.string().optional().nullable(),
-  age: z.number().int().min(1).max(120).optional().nullable(),
-  gender: z.string().optional().nullable(),
-  stripeCustomerId: z.string().optional().nullable(),
-  preferredSendHour: z.number().int().min(0).max(23).optional().nullable(),
-  timezone: z.string().optional().nullable(),
-  isActive: z.boolean().optional().nullable(),
-  isAdmin: z.boolean().optional().nullable(),
+  name: z.string().nullish(),
+  email: z.string().email().nullish(),
+  phoneNumber: z.string().nullish(),
+  age: z.number().int().min(1).max(120).nullish(),
+  gender: z.string().nullish(),
+  stripeCustomerId: z.string().nullish(),
+  preferredSendHour: z.number().int().min(0).max(23).nullish(),
+  timezone: z.string().nullish(),
+  isActive: z.boolean().nullish(),
+  isAdmin: z.boolean().nullish(),
 }).describe('Flat user data structure');
 
 /**

@@ -28,12 +28,12 @@ export const _MesocycleSchema = z.object({
   intensityTrend: z.enum(["increasing", "stable", "taper"], {
     description: "How intensity changes across this mesocycle."
   }),
-  conditioningFocus: z.string().optional(),
+  conditioningFocus: z.string().nullish(),
   weeklyVolumeTargets: z.record(z.number(), {
     description: "Average weekly hard sets per muscle group, e.g., { chest: 14, back: 16 }."
   }),
-  avgRIRRange: z.tuple([z.number(), z.number()]).optional(),
-  keyThemes: z.array(z.string()).optional(),
+  avgRIRRange: z.tuple([z.number(), z.number()]).nullish(),
+  keyThemes: z.array(z.string()).nullish(),
   longFormDescription: z.string({
     description:
       "Full natural-language explanation of this mesocycle's purpose, trends, and expected adaptations (from LLM output)."
@@ -86,5 +86,5 @@ export const _FitnessPlanSchema = z.object({
   }),
   notes: z.string({
     description: "Special considerations like travel plans, injuries, or schedule constraints"
-  }).nullable().optional()
+  }).nullish()
 });

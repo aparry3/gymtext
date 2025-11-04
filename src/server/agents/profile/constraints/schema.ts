@@ -7,11 +7,11 @@ export const ConstraintSchema = z.object({
   id: z.string().describe('Unique identifier for the constraint'),
   type: z.enum(['injury', 'mobility', 'medical', 'preference']).describe('Type of constraint'),
   description: z.string().describe('Clear description of the constraint'),
-  severity: z.enum(['mild', 'moderate', 'severe']).nullable().optional().describe('Severity level (not applicable for preferences)'),
-  affectedMovements: z.array(z.string()).nullable().optional().describe('List of movements that should be modified/avoided'),
+  severity: z.enum(['mild', 'moderate', 'severe']).nullish().describe('Severity level (not applicable for preferences)'),
+  affectedMovements: z.array(z.string()).nullish().describe('List of movements that should be modified/avoided'),
   status: z.enum(['active', 'resolved']).describe('Current status of the constraint'),
-  startDate: z.string().nullable().optional().describe('ISO date string when constraint started'),
-  endDate: z.string().nullable().optional().describe('ISO date string when constraint is expected to end (null for chronic/ongoing)'),
+  startDate: z.string().nullish().describe('ISO date string when constraint started'),
+  endDate: z.string().nullish().describe('ISO date string when constraint is expected to end (null for chronic/ongoing)'),
   isTemporary: z.boolean().default(false).describe('Whether this is a temporary constraint with expected recovery/end date')
 });
 
