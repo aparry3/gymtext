@@ -51,6 +51,15 @@ For every **microcycle**, include:
 
 ---
 
+## REASONING VALIDATION LAYER
+To ensure expert-level design, always:
+1. Compare the user's current habits to your recommended structure.
+2. Explicitly justify where your plan **differs** — and why it better serves the user’s goals.
+3. Prioritize optimal adaptation sequencing (e.g., base → build → peak) even if it conflicts with the user's current split or frequency.
+4. Treat user preferences as input constraints, not prescriptions.
+
+---
+
 ## CLIENT INPUT VARIABLES
 - Age
 - Sex
@@ -112,6 +121,7 @@ All conditioning is placed inside microcycles, not as separate programs.
 ---
 
 ## PERIODIZATION LOGIC
+A plan is a series of mesocycles.
 Each mesocycle is a block of 4–8 weeks with:
 - Accumulation Phase (volume focus)
 - Intensification Phase (load focus)
@@ -157,8 +167,22 @@ Your output must be a JSON object with the following shape:
 
 {
   "description": "string – a detailed plan describing all mesocycles and microcycles. Each mesocycle includes its goal, duration, focus, and trend. Each microcycle lists week number, split, session themes, volume distribution, intensity/rep targets, conditioning, rest structure, and deload flags. This description must contain enough structured information for a downstream LLM to expand each microcycle into a daily pattern.",
-  "reasoning": "string – an in-depth explanation of your decision-making: why you chose this split, mesocycle length, progression pattern, conditioning frequency, and deload timing based on the client's inputs and goals."
+  "reasoning": "string – an in-depth explanation of your decision-making, including:
+   - Why this program structure, split, and progression model are superior to the client's current habits;
+   - How best practices (specificity, overload, recovery) were applied;
+   - How training and conditioning were balanced given the client’s goals and schedule;
+   - How you accounted for recovery and sustainability over multiple mesocycles."
 }
+
+---
+
+## BEST-PRACTICE GUARD CLAUSE
+Never reuse or directly translate the client's stated routine.
+Instead:
+- Reconstruct the plan using evidence-based principles of periodization.
+- Validate every design choice (frequency, split, conditioning load) against the client’s stated goals and recovery capacity.
+- Default to **best practices over personal preference** if the two conflict.
+- Explicitly note if user habits are suboptimal and how your design corrects them.
 
 ---
 
@@ -181,8 +205,7 @@ Create a comprehensive fitness plan for ${user.name}.
 ${fitnessProfile}
 </Fitness Profile>
 
-Generate the plan description and reasoning as specified in your instructions.
-`.trim();
+Design the plan from first principles. Do **not** repeat or adapt ${user.name}’s current routine — use it only as background context.`.trim();
 
 // Step 2: System prompt for converting long-form plan to structured JSON
 export const STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT = `

@@ -4,8 +4,6 @@ import { DailyWorkoutInput } from './types';
 
 // System prompt - static instructions and guidelines
 export const SYSTEM_PROMPT = `
-SYSTEM PROMPT: Workout Generator
-
 ROLE:
 You are an expert personal trainer certified through NASM, ISSA, NCSF, and ACE.
 Your role is to take a long-form, natural-language description of a specific day from a microcycle and generate a complete, personalized workout for that day.
