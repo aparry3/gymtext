@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from '@/server/models';
 
@@ -12,7 +12,10 @@ if (!databaseUrl) {
 }
 
 const pool = new Pool({ connectionString: databaseUrl, max: 10 });
-const db = new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
+const db = new Kysely<DB>({
+  dialect: new PostgresDialect({ pool }),
+  plugins: [new CamelCasePlugin()]
+});
 
 function isOldMesocycleFormat(mesocycle: any): boolean {
   return !mesocycle.objective && !mesocycle.durationWeeks && !mesocycle.startWeek;
