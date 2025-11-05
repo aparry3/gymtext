@@ -138,6 +138,7 @@ Required environment variables (see .env.example):
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`
 - AI: `OPENAI_API_KEY`, `GOOGLE_API_KEY`
 - Pinecone: `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME`
+- Admin Auth: `ADMIN_PHONE_NUMBERS` (comma-separated list of E.164 phone numbers authorized for admin access)
 
 ### Chat Architecture
 
@@ -162,6 +163,40 @@ This separation ensures:
 - Clean separation of concerns between data extraction and conversation
 
 **Onboarding Chat**: A specialized flow for new users that focuses on profile building through conversation to prepare for SMS-based coaching (see `_claude_docs/chat/CHAT_FEATURE_PRD.md`)
+
+### Admin Authentication
+
+The admin panel uses phone-based SMS verification with a whitelist system:
+
+**Authentication Flow**:
+1. Admin navigates to `/admin/*` without a session → redirected to `/admin/login`
+2. Admin enters phone number
+3. System checks `ADMIN_PHONE_NUMBERS` whitelist (environment variable)
+4. If whitelisted, sends 6-digit SMS verification code
+5. Admin enters code
+6. System validates code and sets `gt_admin=ok` cookie
+7. Admin redirected to original destination
+
+**Key Components**:
+- **Whitelist**: `ADMIN_PHONE_NUMBERS` env var (comma-separated E.164 phone numbers)
+- **Service**: `AdminAuthService` (`src/server/services/auth/adminAuthService.ts`)
+  - `isPhoneWhitelisted()` - Checks if phone is authorized
+  - `requestCode()` - Sends verification SMS to whitelisted phones
+  - `verifyCode()` - Validates code and authorizes admin
+- **API Routes**:
+  - `POST /api/auth/admin/request-code` - Request verification code
+  - `POST /api/auth/admin/verify-code` - Verify code and set cookie
+  - `POST /api/auth/admin/logout` - Clear admin session
+- **UI**: `/admin/login` - Two-step login flow (phone → code)
+- **Middleware**: `middleware.ts` protects all `/admin/*` and `/api/admin/*` routes
+- **Cookie**: `gt_admin=ok` (httpOnly, secure in prod, 30-day expiry)
+
+**Important Notes**:
+- Admin users don't need user accounts - just whitelisted phone numbers
+- Rate limiting: max 3 code requests per 15 minutes per phone
+- Codes expire after 10 minutes
+- Reuses `userAuthCodes` table for code storage
+- To manage admins: update `ADMIN_PHONE_NUMBERS` environment variable
 
 ## Development Guidelines
 

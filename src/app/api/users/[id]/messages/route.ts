@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { dailyMessageService } from '@/server/services';
+import { checkAuthorization } from '@/server/utils/authMiddleware';
 
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: userId } = await params;
 
@@ -10,6 +11,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Check authorization - admin can send messages for any user
+    const auth = checkAuthorization(request, userId);
+    if (!auth.isAuthorized) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized' },
+        { status: 403 }
       );
     }
 
