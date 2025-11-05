@@ -15,18 +15,17 @@ export type {
   Message, NewMessage, MessageUpdate, RecentMessage
 } from './conversation';
 
-export type { 
+export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
-  FitnessPlanDB, FitnessPlanOverview, MesocycleOverview
+  FitnessPlanDB, FitnessPlanOverview, Mesocycle
 } from './fitnessPlan';
 
 export type { 
-  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
-  WorkoutInstanceBreakdown
+  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate
 } from './workout';
 
 // Microcycle pattern types (not stored in DB)
-export type { MicrocyclePattern } from './microcyclePattern';
+export type { MicrocyclePattern } from './microcycle';
 
 // Re-export database types from _types
 export * from './_types';

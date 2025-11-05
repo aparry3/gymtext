@@ -182,32 +182,32 @@ export class DailyMessageService {
     targetDate: DateTime
   ): Promise<WorkoutInstance | null> {
     try {
-      // Get or create the current microcycle pattern
-      const microcycle = await this.progressService.getCurrentOrCreateMicrocycle(user);
-      
-      if (!microcycle) {
-        console.log(`Could not get/create microcycle for user ${user.id}`);
-        return null;
-      }
-
-      // Get fitness plan and progress
+      // Get fitness plan
       const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
       if (!plan) {
         console.log(`No fitness plan found for user ${user.id}`);
         return null;
       }
 
-      const progress = await this.progressService.getCurrentProgress(plan);
+      // Ensure progress is up-to-date and get current microcycle (single call!)
+      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
       if (!progress) {
         console.log(`No progress found for user ${user.id}`);
         return null;
       }
 
+      // Extract what we need from progress
+      const { microcycle, mesocycle } = progress;
+      if (!microcycle) {
+        console.log(`Could not get/create microcycle for user ${user.id}`);
+        return null;
+      }
+
       // Get the day's pattern from the microcycle
       const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-      const dayPattern = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
 
-      if (!dayPattern) {
+      if (!dayPlan) {
         console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
         return null;
       }
@@ -219,9 +219,9 @@ export class DailyMessageService {
       const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
-        dayPlan: dayPattern,
+        dayPlan,
         microcycle,
-        mesocycle: progress.mesocycle,
+        mesocycle,
         fitnessPlan: plan,
         recentWorkouts
       });
@@ -234,8 +234,8 @@ export class DailyMessageService {
         mesocycleId: null, // No longer using mesocycles table
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
-        sessionType: this.mapThemeToSessionType(dayPattern.theme),
-        goal: `${dayPattern.theme}${dayPattern.notes ? ` - ${dayPattern.notes}` : ''}`,
+        sessionType: this.mapThemeToSessionType(dayPlan.theme),
+        goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
         details: JSON.parse(JSON.stringify(enhancedWorkout)),
         description,
         reasoning,

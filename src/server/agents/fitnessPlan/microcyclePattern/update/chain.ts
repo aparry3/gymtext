@@ -1,6 +1,6 @@
 import { MicrocyclePattern, UpdatedMicrocyclePattern } from '@/server/models/microcycle';
 import { _UpdatedMicrocyclePatternSchema } from '@/server/models/microcycle/schema';
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
+import { Mesocycle } from '@/server/models/fitnessPlan';
 import { updateMicrocyclePatternPrompt, type MicrocycleUpdateParams, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './prompts';
 import { initializeModel } from '@/server/agents/base';
 
@@ -9,7 +9,7 @@ export type { MicrocycleUpdateParams };
 export interface MicrocycleUpdateContext {
   currentPattern: MicrocyclePattern;
   params: MicrocycleUpdateParams;
-  mesocycle: MesocycleOverview;
+  mesocycle: Mesocycle;
   programType: string;
 }
 

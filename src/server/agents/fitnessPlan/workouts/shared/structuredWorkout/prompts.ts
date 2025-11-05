@@ -115,7 +115,7 @@ export function createStructuredWorkoutUserPrompt(
 ): string {
   return `
 <Long-Form Workout>
-${longFormWorkout.description}
+${longFormWorkout.workout}
 </Long-Form Workout>
 
 <User Context>

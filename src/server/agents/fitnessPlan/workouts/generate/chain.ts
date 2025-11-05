@@ -1,5 +1,5 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/geminiSchema';
+import { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt } from './prompts';
 import { executeWorkoutChain } from '../shared/chainFactory';
 import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
@@ -49,12 +49,4 @@ export const createDailyWorkoutAgent = () => {
       operationName: 'generate workout'
     });
   });
-};
-
-/**
- * @deprecated Legacy export for backward compatibility - use createDailyWorkoutAgent instead
- */
-export const generateDailyWorkout = async (context: DailyWorkoutContext): Promise<DailyWorkoutOutput> => {
-  const agent = createDailyWorkoutAgent();
-  return agent.invoke(context);
 };

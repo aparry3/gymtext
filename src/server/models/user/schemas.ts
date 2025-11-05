@@ -25,11 +25,11 @@ export const UserSchema = z.object({
 
 // NEW - Simplified Availability Schema
 export const AvailabilitySchema = z.object({
-  summary: z.string().optional().nullable(), // Brief overview of schedule and availability
+  summary: z.string().nullish(), // Brief overview of schedule and availability
   daysPerWeek: z.number().int().min(1).max(7),
   minutesPerSession: z.number().int().min(15).max(240),
-  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().nullable(),
-  schedule: z.string().optional().nullable(),
+  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).nullish(),
+  schedule: z.string().nullish(),
 });
 
 // NEW - Temporary Environment Change Schema
@@ -37,20 +37,20 @@ export const TemporaryEnvironmentChangeSchema = z.object({
   id: z.string(),
   description: z.string(),
   startDate: z.string(), // ISO date string
-  endDate: z.string().optional().nullable(), // ISO date string or null for indefinite
-  location: z.string().optional().nullable(), // "beach", "hotel", "home", etc.
-  equipmentAvailable: z.array(z.string()).optional().nullable(),
-  equipmentUnavailable: z.array(z.string()).optional().nullable(),
+  endDate: z.string().nullish(), // ISO date string or null for indefinite
+  location: z.string().nullish(), // "beach", "hotel", "home", etc.
+  equipmentAvailable: z.array(z.string()).nullish(),
+  equipmentUnavailable: z.array(z.string()).nullish(),
 });
 
 // NEW - Equipment Access Schema
 export const EquipmentAccessSchema = z.object({
-  summary: z.string().optional().nullable(), // Brief overview of equipment situation
+  summary: z.string().nullish(), // Brief overview of equipment situation
   gymAccess: z.boolean(),
-  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable(),
-  homeEquipment: z.array(z.string()).optional().nullable(),
-  limitations: z.array(z.string()).optional().nullable(),
-  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).optional().nullable(),
+  gymType: z.enum(['commercial', 'home', 'community', 'none']).nullish(),
+  homeEquipment: z.array(z.string()).nullish(),
+  limitations: z.array(z.string()).nullish(),
+  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).nullish(),
 });
 
 // DELETED - PreferencesSchema moved to activity-specific data
@@ -59,18 +59,18 @@ export const EquipmentAccessSchema = z.object({
 export const WeightSchema = z.object({
   value: z.number().positive(),
   unit: z.enum(['lbs', 'kg']),
-  date: z.string().optional().nullable(),
+  date: z.string().nullish(),
 });
 
 // DELETED - PRLiftSchema replaced with flexible keyLifts record
 
 // NEW - Simplified User Metrics Schema
 export const UserMetricsSchema = z.object({
-  summary: z.string().optional().nullable(), // Brief overview of physical stats and fitness level
-  height: z.number().positive().optional().nullable(),
-  weight: WeightSchema.optional().nullable(),
-  bodyComposition: z.number().min(1).max(50).optional().nullable(),
-  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).optional().nullable(),
+  summary: z.string().nullish(), // Brief overview of physical stats and fitness level
+  height: z.number().positive().nullish(),
+  weight: WeightSchema.nullish(),
+  bodyComposition: z.number().min(1).max(50).nullish(),
+  fitnessLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active']).nullish(),
 });
 
 // NEW - Simplified Constraint Schema
@@ -78,11 +78,11 @@ export const ConstraintSchema = z.object({
   id: z.string(),
   type: z.enum(['injury', 'mobility', 'medical', 'preference']),
   description: z.string(),
-  severity: z.enum(['mild', 'moderate', 'severe']).optional().nullable(),
-  affectedMovements: z.array(z.string()).optional().nullable(),
+  severity: z.enum(['mild', 'moderate', 'severe']).nullish(),
+  affectedMovements: z.array(z.string()).nullish(),
   status: z.enum(['active', 'resolved']),
-  startDate: z.string().optional().nullable(), // ISO date string
-  endDate: z.string().optional().nullable(), // ISO date string or null for chronic
+  startDate: z.string().nullish(), // ISO date string
+  endDate: z.string().nullish(), // ISO date string or null for chronic
   isTemporary: z.boolean().default(false),
 });
 
@@ -92,15 +92,15 @@ export const ConstraintSchema = z.object({
 // NEW - Simplified Strength Data Schema
 export const StrengthDataSchema = z.object({
   type: z.literal('strength'),
-  summary: z.string().optional().nullable(), // Brief overview of strength training background
+  summary: z.string().nullish(), // Brief overview of strength training background
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
-  currentProgram: z.string().optional().nullable(),
-  keyLifts: z.record(z.string(), z.number()).optional().nullable(),
+  currentProgram: z.string().nullish(),
+  keyLifts: z.record(z.string(), z.number()).nullish(),
   preferences: z.object({
-    workoutStyle: z.string().optional().nullable(),
-    likedExercises: z.array(z.string()).optional().nullable(),
-    dislikedExercises: z.array(z.string()).optional().nullable(),
-  }).optional().nullable(),
+    workoutStyle: z.string().nullish(),
+    likedExercises: z.array(z.string()).nullish(),
+    dislikedExercises: z.array(z.string()).nullish(),
+  }).nullish(),
   trainingFrequency: z.number().int().min(1).max(7),
 });
 
@@ -109,22 +109,22 @@ export const StrengthDataSchema = z.object({
 // NEW - Simplified Cardio Data Schema (replaces running, cycling, general)
 export const CardioDataSchema = z.object({
   type: z.literal('cardio'),
-  summary: z.string().optional().nullable(), // Brief overview of cardio activities and background
+  summary: z.string().nullish(), // Brief overview of cardio activities and background
   experience: z.enum(['beginner', 'intermediate', 'advanced']),
   primaryActivities: z.array(z.string()),
   keyMetrics: z.object({
-    weeklyDistance: z.number().positive().optional().nullable(),
-    longestSession: z.number().positive().optional().nullable(),
-    averagePace: z.string().optional().nullable(),
-    preferredIntensity: z.enum(['low', 'moderate', 'high']).optional().nullable(),
-  }).optional().nullable(),
+    weeklyDistance: z.number().positive().nullish(),
+    longestSession: z.number().positive().nullish(),
+    averagePace: z.string().nullish(),
+    preferredIntensity: z.enum(['low', 'moderate', 'high']).nullish(),
+  }).nullish(),
   preferences: z.object({
-    indoor: z.boolean().optional().nullable(),
-    outdoor: z.boolean().optional().nullable(),
-    groupVsIndividual: z.enum(['group', 'individual', 'both']).optional().nullable(),
-    timeOfDay: z.array(z.string()).optional().nullable(),
-  }).optional().nullable(),
-  frequency: z.number().int().min(1).max(7).optional().nullable(),
+    indoor: z.boolean().nullish(),
+    outdoor: z.boolean().nullish(),
+    groupVsIndividual: z.enum(['group', 'individual', 'both']).nullish(),
+    timeOfDay: z.array(z.string()).nullish(),
+  }).nullish(),
+  frequency: z.number().int().min(1).max(7).nullish(),
 });
 
 // NEW - Simplified Activity Data Schema (only strength + cardio)
@@ -136,40 +136,40 @@ export const ActivityDataSchema = z.array(z.union([
 
 // NEW - Simplified Goals Schema
 export const GoalsSchema = z.object({
-  summary: z.string().optional().nullable(), // Brief overview of fitness goals and motivation
+  summary: z.string().nullish(), // Brief overview of fitness goals and motivation
   primary: z.string(),
-  timeline: z.number().int().min(1).max(104).optional().nullable(), // 1-104 weeks
-  specific: z.string().optional().nullable(),
-  motivation: z.string().optional().nullable(),
+  timeline: z.number().int().min(1).max(104).nullish(), // 1-104 weeks
+  specific: z.string().nullish(),
+  motivation: z.string().nullish(),
 });
 
 // THE ONLY FITNESS PROFILE SCHEMA - COMPLETE REPLACEMENT
 export const FitnessProfileSchema = z.object({
   goals: GoalsSchema,
 
-  equipmentAccess: EquipmentAccessSchema.optional().nullable(),
-  availability: AvailabilitySchema.optional().nullable(),
-  constraints: z.array(ConstraintSchema).optional().nullable(),
-  metrics: UserMetricsSchema.optional().nullable(),
-  
-  activities: ActivityDataSchema.optional().nullable(),
+  equipmentAccess: EquipmentAccessSchema.nullish(),
+  availability: AvailabilitySchema.nullish(),
+  constraints: z.array(ConstraintSchema).nullish(),
+  metrics: UserMetricsSchema.nullish(),
+
+  activities: ActivityDataSchema.nullish(),
 });
 
 // Schema for creating a new user
 export const CreateUserSchema = z.object({
-  name: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
+  name: z.string().nullish(),
+  email: z.string().email().nullish(),
   phoneNumber: z.string()
     .transform(normalizeUSPhoneNumber)
     .refine(validateUSPhoneNumber, { message: 'Must be a valid US phone number' }),
-  age: z.number().int().min(1).max(120).optional().nullable(),
-  gender: z.string().optional().nullable(),
-  profile: z.unknown().optional().nullable(),
-  isActive: z.boolean().optional().nullable().default(true),
-  isAdmin: z.boolean().optional().nullable().default(false),
-  stripeCustomerId: z.string().optional().nullable(),
-  preferredSendHour: z.number().int().min(0).max(23).optional().nullable(),
-  timezone: z.string().optional().nullable(),
+  age: z.number().int().min(1).max(120).nullish(),
+  gender: z.string().nullish(),
+  profile: z.unknown().nullish(),
+  isActive: z.boolean().nullish().default(true),
+  isAdmin: z.boolean().nullish().default(false),
+  stripeCustomerId: z.string().nullish(),
+  preferredSendHour: z.number().int().min(0).max(23).nullish(),
+  timezone: z.string().nullish(),
 });
 
 // Schema for updating a user

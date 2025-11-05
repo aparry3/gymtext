@@ -128,6 +128,27 @@ export function BioStep({ register, errors, setValue, watch }: BioStepProps) {
         )}
       </div>
 
+      {/* Age */}
+      <div>
+        <label className="block text-sm font-medium mb-2 text-foreground">
+          Age
+        </label>
+        <input
+          type="number"
+          {...register('age', { valueAsNumber: true })}
+          placeholder="25"
+          min="13"
+          max="120"
+          className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+        />
+        {errors.age && (
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.age.message}</p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          This helps us personalize your workout plan
+        </p>
+      </div>
+
       {/* Preferred Send Hour */}
       <div>
         <label className="block text-sm font-medium mb-2 text-foreground">

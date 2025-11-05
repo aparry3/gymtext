@@ -44,3 +44,5 @@ next-env.d.ts
 
 # generated types
 /src/server/models/_types/
+
+backup-*

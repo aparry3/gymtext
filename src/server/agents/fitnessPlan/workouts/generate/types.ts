@@ -1,23 +1,24 @@
 import type { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { MesocycleOverview, FitnessPlan } from '@/server/models/fitnessPlan';
+import type { Mesocycle, FitnessPlan } from '@/server/models/fitnessPlan';
 import type { WorkoutInstance } from '@/server/models/workout';
-import type { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
+import type { GeminiEnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import type { AgentDeps } from '@/server/agents/base';
 import type { BaseWorkoutChainInput, WorkoutChainResult } from '../shared/chainFactory';
 
 /**
  * Input for daily workout generator
+ * Uses the new comprehensive Mesocycle format with full metadata
  */
 export interface DailyWorkoutInput extends BaseWorkoutChainInput {
   dayPlan: {
     day: string;
     theme: string;
-    load?: 'light' | 'moderate' | 'heavy';
-    notes?: string;
+    load?: 'light' | 'moderate' | 'heavy' | null;
+    notes?: string | null;
   };
   microcycle: Microcycle;
-  mesocycle: MesocycleOverview;
+  mesocycle: Mesocycle;
   fitnessPlan: FitnessPlan;
   recentWorkouts?: WorkoutInstance[];
 }
@@ -27,7 +28,7 @@ export interface DailyWorkoutInput extends BaseWorkoutChainInput {
  * Uses shared WorkoutChainResult type for consistency
  * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
  */
-export type DailyWorkoutOutput = WorkoutChainResult<z.infer<typeof _EnhancedWorkoutInstanceSchema>>;
+export type DailyWorkoutOutput = WorkoutChainResult<z.infer<typeof GeminiEnhancedWorkoutInstanceSchema>>;
 
 /**
  * Dependencies for daily workout agent

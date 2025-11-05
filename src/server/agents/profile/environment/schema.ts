@@ -7,41 +7,41 @@ export const TemporaryEnvironmentChangeSchema = z.object({
   id: z.string().describe('Unique identifier for the temporary change'),
   description: z.string().describe('Description of the temporary change'),
   startDate: z.string().describe('ISO date string when change starts'),
-  endDate: z.string().optional().nullable().describe('ISO date string when change ends, null for indefinite'),
-  location: z.string().optional().nullable().describe('Temporary location (beach, hotel, home, etc.)'),
-  equipmentAvailable: z.array(z.string()).optional().nullable().describe('Equipment available during this period'),
-  equipmentUnavailable: z.array(z.string()).optional().nullable().describe('Equipment unavailable during this period')
+  endDate: z.string().nullish().describe('ISO date string when change ends, null for indefinite'),
+  location: z.string().nullish().describe('Temporary location (beach, hotel, home, etc.)'),
+  equipmentAvailable: z.array(z.string()).nullish().describe('Equipment available during this period'),
+  equipmentUnavailable: z.array(z.string()).nullish().describe('Equipment unavailable during this period')
 });
 
 /**
  * Schema for equipment access information
  */
 export const EquipmentAccessSchema = z.object({
-  summary: z.string().optional().nullable().describe('Brief overview of equipment situation'),
+  summary: z.string().nullish().describe('Brief overview of equipment situation'),
   gymAccess: z.boolean().describe('Whether user has gym access'),
-  gymType: z.enum(['commercial', 'home', 'community', 'none']).optional().nullable().describe('Type of gym access'),
-  homeEquipment: z.array(z.string()).optional().nullable().describe('Equipment available at home'),
-  limitations: z.array(z.string()).optional().nullable().describe('Equipment restrictions or limitations'),
-  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).optional().nullable().describe('Temporary environment changes (travel, temporary location, etc.)')
+  gymType: z.enum(['commercial', 'home', 'community', 'none']).nullish().describe('Type of gym access'),
+  homeEquipment: z.array(z.string()).nullish().describe('Equipment available at home'),
+  limitations: z.array(z.string()).nullish().describe('Equipment restrictions or limitations'),
+  temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).nullish().describe('Temporary environment changes (travel, temporary location, etc.)')
 });
 
 /**
  * Schema for training availability
  */
 export const AvailabilitySchema = z.object({
-  summary: z.string().optional().nullable().describe('Brief overview of schedule and availability'),
+  summary: z.string().nullish().describe('Brief overview of schedule and availability'),
   daysPerWeek: z.number().int().min(1).max(7).describe('Training days per week'),
   minutesPerSession: z.number().int().min(15).max(240).describe('Typical session duration in minutes'),
-  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).optional().nullable().describe('Preferred workout times'),
-  schedule: z.string().optional().nullable().describe('Additional schedule information or constraints')
+  preferredTimes: z.array(z.enum(['morning', 'afternoon', 'evening'])).nullish().describe('Preferred workout times'),
+  schedule: z.string().nullish().describe('Additional schedule information or constraints')
 });
 
 /**
  * Schema for environment extraction data
  */
 export const EnvironmentDataSchema = z.object({
-  equipmentAccess: EquipmentAccessSchema.optional().nullable().describe('Equipment and facility access information'),
-  availability: AvailabilitySchema.optional().nullable().describe('Training schedule and availability information')
+  equipmentAccess: EquipmentAccessSchema.nullish().describe('Equipment and facility access information'),
+  availability: AvailabilitySchema.nullish().describe('Training schedule and availability information')
 });
 
 /**

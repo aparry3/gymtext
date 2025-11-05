@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
 import { LongFormWorkout } from '@/server/models/workout/schema';
-import { FitnessProfileContext } from '@/server/services/context/fitnessProfileContext';
+import { formatFitnessProfile } from '@/server/utils/formatters';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createStructuredWorkoutAgent } from './structuredWorkout/chain';
 import { createWorkoutMessageAgent } from './workoutMessage/chain';
@@ -75,8 +75,7 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
   type TWorkout = z.infer<TWorkoutSchema>;
 
   // Get fitness profile context once
-  const fitnessProfileContext = new FitnessProfileContext();
-  const fitnessProfile = await fitnessProfileContext.getContext(context.user);
+  const fitnessProfile = formatFitnessProfile(context.user);
 
   const systemMessage = config.systemPrompt;
   const userMessage = config.userPrompt(fitnessProfile);
@@ -114,12 +113,12 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
 
       const result = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
-      console.log(`[${config.operationName}] Successfully completed with description, reasoning, JSON, and message`);
+      console.log(`[${config.operationName}] Successfully completed with workout, reasoning, JSON, and message`);
       // Flatten the result to match WorkoutChainResult type
       return {
         workout: result.workout,
         message: result.message,
-        description: result.longFormWorkout.description,
+        description: result.longFormWorkout.workout,
         reasoning: result.longFormWorkout.reasoning
       };
     } catch (error) {

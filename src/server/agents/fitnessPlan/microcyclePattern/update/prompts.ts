@@ -1,5 +1,5 @@
 import { MicrocyclePattern } from '@/server/models/microcycle';
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
+import { Mesocycle } from '@/server/models/fitnessPlan';
 
 export interface MicrocycleUpdateParams {
   targetDay: string; // The specific day being modified (e.g., "Monday", typically "today")
@@ -108,9 +108,12 @@ IMPORTANT DISTINCTION:
 export const updateMicrocyclePatternPrompt = (
   currentPattern: MicrocyclePattern,
   params: MicrocycleUpdateParams,
-  mesocycle: MesocycleOverview,
+  mesocycle: Mesocycle,
   programType: string
 ): string => {
+  const weeks = mesocycle.durationWeeks;
+  const isDeload = false; // Deload concept removed from new schema
+
   // Identify remaining days vs completed days
   const remainingDays = params.remainingDays || [];
   const remainingDaysSet = new Set(remainingDays.map(d => d.toUpperCase()));
@@ -140,8 +143,8 @@ ${currentDaysText}${remainingDaysInfo}
 Name: ${mesocycle.name}
 Focus: ${mesocycle.focus.join(', ')}
 Program Type: ${programType}
-Week ${currentPattern.weekIndex + 1} of ${mesocycle.weeks}
-Deload Week: ${mesocycle.deload && currentPattern.weekIndex + 1 === mesocycle.weeks ? 'Yes' : 'No'}
+Week ${currentPattern.weekIndex + 1} of ${weeks}
+Deload Week: ${isDeload && currentPattern.weekIndex + 1 === weeks ? 'Yes' : 'No'}
 </Mesocycle Context>
 
 <Modification Request>

@@ -15,8 +15,6 @@ export const createEnvironmentAgent = () => createSubAgent({
   userMessageBuilder: buildEnvironmentUserMessage,
   agentName: 'EnvironmentAgent',
   outputSchema: EnvironmentExtractionSchema,
-  model: 'gemini-2.5-flash',
-  temperature: 0.2  // Low temperature for consistent environment extraction
 });
 
 /**

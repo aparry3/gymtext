@@ -1,7 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildStructuredWorkoutSystemPrompt, createStructuredWorkoutUserPrompt } from './prompts';
 import type { StructuredWorkoutConfig, StructuredWorkoutOutput } from './types';
-import { convertGeminiToStandard } from '@/server/models/workout/geminiSchema';
+import { convertGeminiToStandard } from '@/server/models/workout/schema';
 import { WorkoutChainContext } from '../chainFactory';
 
 /**

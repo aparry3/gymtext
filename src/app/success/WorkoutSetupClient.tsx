@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-type Status = 'initial' | 'creating_user' | 'creating_plan' | 'completed' | 'error';
+type Status = 'initial' | 'creating_user' | 'creating_plan' | 'completed' | 'redirecting' | 'error';
 
 export default function WorkoutSetupClient() {
   const [status, setStatus] = useState<Status>('initial');
@@ -25,9 +25,9 @@ export default function WorkoutSetupClient() {
         const signupData = JSON.parse(signupDataStr);
         setUserName(signupData.name);
 
-        // Step 1: Create user (this will wait for profile extraction)
+        // Step 1: Create user and set session (this will wait for profile extraction)
         setStatus('creating_user');
-        const userResponse = await fetch('/api/users', {
+        const userResponse = await fetch('/api/users/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -62,6 +62,12 @@ export default function WorkoutSetupClient() {
         sessionStorage.removeItem('gymtext_signup_data');
 
         setStatus('completed');
+
+        // Redirect to user dashboard after a short delay
+        setStatus('redirecting');
+        setTimeout(() => {
+          window.location.href = '/me';
+        }, 2000);
       } catch (err) {
         console.error('Error setting up user:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -126,11 +132,17 @@ export default function WorkoutSetupClient() {
         </div>
       )}
 
-      {status === 'completed' && (
-        <p className="text-lg text-[#7a8599] mb-8">
-          Your workout plan is ready! You&apos;ll receive your first workout via text message soon.
-          Get ready to start your fitness journey!
-        </p>
+      {(status === 'completed' || status === 'redirecting') && (
+        <div className="my-6">
+          <p className="text-lg text-[#7a8599] mb-8">
+            Your workout plan is ready! You&apos;ll receive your first workout via text message soon.
+          </p>
+          {status === 'redirecting' && (
+            <div className="animate-pulse text-lg text-[#4338ca] font-medium">
+              Redirecting to your dashboard...
+            </div>
+          )}
+        </div>
       )}
 
       {status === 'error' && (
@@ -141,14 +153,16 @@ export default function WorkoutSetupClient() {
         </div>
       )}
 
-      <div className="mt-8">
-        <Link
-          href="/"
-          className="inline-block bg-[#4338ca] text-white py-3 px-8 rounded-md hover:bg-[#3730a3] focus:outline-none focus:ring-2 focus:ring-[#4338ca] focus:ring-offset-2 text-lg font-medium tracking-wide"
-        >
-          Return to Home
-        </Link>
-      </div>
+      {status === 'error' && (
+        <div className="mt-8">
+          <Link
+            href="/"
+            className="inline-block bg-[#4338ca] text-white py-3 px-8 rounded-md hover:bg-[#3730a3] focus:outline-none focus:ring-2 focus:ring-[#4338ca] focus:ring-offset-2 text-lg font-medium tracking-wide"
+          >
+            Return to Home
+          </Link>
+        </div>
+      )}
     </div>
   );
 } 

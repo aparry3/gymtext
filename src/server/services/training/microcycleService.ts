@@ -5,7 +5,6 @@ import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/ge
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { WorkoutInstanceService } from './workoutInstanceService';
-import { EnhancedWorkoutInstance } from '../../models/workout/schema';
 import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
 
 export interface ModifyWeekParams {
@@ -17,7 +16,7 @@ export interface ModifyWeekParams {
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: EnhancedWorkoutInstance;
+  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -116,8 +115,8 @@ export class MicrocycleService {
 
       console.log(`[MODIFY_WEEK] Using active microcycle ${relevantMicrocycle.id} (${new Date(relevantMicrocycle.startDate).toLocaleDateString()} - ${new Date(relevantMicrocycle.endDate).toLocaleDateString()})`);
 
-      // Get the mesocycle
-      const mesocycle = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex];
+      // Get the mesocycle (cast to Mesocycle as we no longer use MesocycleOverview)
+      const mesocycle = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex] as import('@/server/models/fitnessPlan').Mesocycle;
       if (!mesocycle) {
         return {
           success: false,
@@ -187,7 +186,7 @@ export class MicrocycleService {
       // Check if today's pattern changed - if so, regenerate today's workout
       // This handles cases where modifying a future day causes today's workout to be reshuffled
       let workoutRegenerated = false;
-      let regeneratedWorkout: import('@/server/models/workout').EnhancedWorkoutInstance | undefined;
+      let regeneratedWorkout: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'] | undefined;
       let workoutMessage: string | undefined;
 
       const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);

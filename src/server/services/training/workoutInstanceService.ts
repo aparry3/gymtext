@@ -2,7 +2,7 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
-import type { EnhancedWorkoutInstance, WorkoutInstanceUpdate } from '@/server/models/workout';
+import type { WorkoutInstanceUpdate } from '@/server/models/workout';
 import { UserService } from '../user/userService';
 import { DateTime } from 'luxon';
 
@@ -15,7 +15,7 @@ export interface SubstituteExerciseParams {
 
 export interface SubstituteExerciseResult {
   success: boolean;
-  workout?: EnhancedWorkoutInstance;
+  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -32,7 +32,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: EnhancedWorkoutInstance;
+  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;

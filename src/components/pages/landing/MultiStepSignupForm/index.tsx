@@ -23,6 +23,7 @@ const formSchema = z.object({
   gender: z.enum(['male', 'female', 'prefer_not_to_say'], {
     required_error: 'Please select your gender',
   }),
+  age: z.number().int().min(13, 'Must be at least 13 years old').max(120, 'Please enter a valid age'),
 
   // Goals
   primaryGoals: z.array(z.enum(['strength', 'endurance', 'weight_loss', 'general_fitness'])).min(1, 'Please select at least one goal'),
@@ -156,7 +157,7 @@ export function MultiStepSignupForm() {
         name: data.name,
         phoneNumber,
         gender: data.gender,
-        age: '30', // Can be added to form if needed
+        age: data.age.toString(),
         timezone: data.timezone,
         preferredSendHour: data.preferredSendHour,
         fitnessGoals,
@@ -302,7 +303,7 @@ export function MultiStepSignupForm() {
 function getFieldsForStep(step: number): (keyof FormData)[] {
   switch (step) {
     case 1:
-      return ['name', 'phoneNumber', 'preferredSendHour', 'timezone', 'gender'];
+      return ['name', 'phoneNumber', 'preferredSendHour', 'timezone', 'gender', 'age'];
     case 2:
       return ['primaryGoals'];
     case 3:

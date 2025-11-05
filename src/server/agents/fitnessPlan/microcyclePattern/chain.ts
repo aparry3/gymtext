@@ -1,122 +1,56 @@
-import { MesocycleOverview } from '@/server/models/fitnessPlan';
-import { MicrocyclePattern } from '@/server/models/microcycle';
-import { _MicrocyclePatternSchema } from '@/server/models/microcycle/schema';
-import { microcyclePatternPrompt } from './prompts';
+import { z } from 'zod';
+import { _StructuredMicrocycleSchema, MicrocyclePattern } from '@/server/models/microcycle/schema';
+import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, MICROCYCLE_STRUCTURED_SYSTEM_PROMPT, microcycleStructuredUserPrompt } from './prompts';
 import { initializeModel, createRunnableAgent } from '@/server/agents/base';
 import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
 
-/**
- * @deprecated Legacy interface - use MicrocyclePatternInput instead
- */
-export interface MicrocyclePatternContext {
-  mesocycle: MesocycleOverview;
-  weekNumber: number;
-  programType: string;
-  notes?: string | null;
-}
+// Schema for step 1: long-form microcycle description and reasoning
+const LongFormMicrocycleSchema = z.object({
+  description: z.string().describe("Long-form narrative description of the weekly microcycle"),
+  reasoning: z.string().describe("Explanation of how and why the week is structured")
+});
 
 /**
  * Microcycle Pattern Agent Factory
  *
  * Generates weekly training patterns with progressive overload.
- * Each pattern specifies daily themes, loads, and training focus.
+ * Uses a two-step process:
+ * 1. Generate long-form description and reasoning
+ * 2. Convert description to structured MicrocyclePattern
  *
  * @param deps - Optional dependencies (config)
  * @returns Agent that generates microcycle patterns
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
-    const { mesocycle, weekNumber, programType, notes } = input;
-
-    const prompt = microcyclePatternPrompt(
-      mesocycle,
-      weekNumber,
-      programType,
-      notes
-    );
-
-    const structuredModel = initializeModel(_MicrocyclePatternSchema, deps?.config);
+    const { mesocycle, weekIndex, programType, notes } = input;
 
     try {
-      const result = await structuredModel.invoke(prompt);
-      return result as MicrocyclePattern;
+      // Step 1: Generate long-form description and reasoning
+      const longFormModel = initializeModel(LongFormMicrocycleSchema, deps?.config);
+      const longFormResult = await longFormModel.invoke([
+        { role: 'system', content: MICROCYCLE_SYSTEM_PROMPT },
+        { role: 'user', content: microcycleUserPrompt({ mesocycle, weekIndex, programType, notes }) }
+      ]);
+
+      // Step 2: Convert to structured JSON (without weekIndex - we'll set it deterministically)
+      const StructuredMicrocycleSchemaWithoutWeekIndex = _StructuredMicrocycleSchema.omit({ weekIndex: true });
+      const structuredModel = initializeModel(StructuredMicrocycleSchemaWithoutWeekIndex, deps?.config);
+      const structuredResult = await structuredModel.invoke([
+        { role: 'system', content: MICROCYCLE_STRUCTURED_SYSTEM_PROMPT },
+        { role: 'user', content: microcycleStructuredUserPrompt(longFormResult.description) }
+      ]);
+
+      // Deterministically set weekIndex from input (agent doesn't generate this)
+      const finalResult: MicrocyclePattern = {
+        ...structuredResult,
+        weekIndex // 0-based index
+      };
+
+      return finalResult;
     } catch (error) {
-      console.error('Error generating microcycle pattern:', error);
-      // Return a basic fallback pattern if generation fails
-      return generateFallbackPattern(weekNumber, programType, mesocycle);
+      console.error('Error generating microcycle pattern:', error);    
+      throw error;
     }
   });
 };
-
-/**
- * @deprecated Legacy export for backward compatibility - use createMicrocyclePatternAgent instead
- */
-export const generateMicrocyclePattern = async (context: {mesocycle: MesocycleOverview, weekNumber: number, programType: string, notes?: string | null}): Promise<MicrocyclePattern> => {
-  const agent = createMicrocyclePatternAgent();
-  return agent.invoke(context);
-};
-
-function generateFallbackPattern(
-  weekNumber: number,
-  programType: string,
-  mesocycle: MesocycleOverview
-): MicrocyclePattern {
-  const isDeloadWeek = mesocycle.deload && weekNumber === mesocycle.weeks;
-  const load = isDeloadWeek ? 'light' : 'moderate';
-  const weekIndex = weekNumber - 1; // Convert 1-based weekNumber to 0-based weekIndex
-
-  const patterns: Record<string, MicrocyclePattern> = {
-    strength: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Lower Body', load },
-        { day: 'TUESDAY', theme: 'Upper Push', load },
-        { day: 'WEDNESDAY', theme: 'Rest' },
-        { day: 'THURSDAY', theme: 'Lower Body', load },
-        { day: 'FRIDAY', theme: 'Upper Pull', load },
-        { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
-        { day: 'SUNDAY', theme: 'Rest' },
-      ],
-    },
-    endurance: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Easy Run', load: 'light' },
-        { day: 'TUESDAY', theme: 'Interval Training', load },
-        { day: 'WEDNESDAY', theme: 'Recovery', load: 'light' },
-        { day: 'THURSDAY', theme: 'Tempo Run', load },
-        { day: 'FRIDAY', theme: 'Rest' },
-        { day: 'SATURDAY', theme: 'Long Run', load },
-        { day: 'SUNDAY', theme: 'Recovery', load: 'light' },
-      ],
-    },
-    hybrid: {
-      weekIndex,
-      days: [
-        { day: 'MONDAY', theme: 'Strength Training', load },
-        { day: 'TUESDAY', theme: 'Cardio', load },
-        { day: 'WEDNESDAY', theme: 'Active Recovery', load: 'light' },
-        { day: 'THURSDAY', theme: 'Strength Training', load },
-        { day: 'FRIDAY', theme: 'HIIT', load },
-        { day: 'SATURDAY', theme: 'Long Cardio', load: 'light' },
-        { day: 'SUNDAY', theme: 'Rest' },
-      ],
-    },
-  };
-
-  // Default pattern if program type not found
-  const defaultPattern: MicrocyclePattern = {
-    weekIndex,
-    days: [
-      { day: 'MONDAY', theme: 'Training Day 1', load },
-      { day: 'TUESDAY', theme: 'Training Day 2', load },
-      { day: 'WEDNESDAY', theme: 'Rest' },
-      { day: 'THURSDAY', theme: 'Training Day 3', load },
-      { day: 'FRIDAY', theme: 'Training Day 4', load },
-      { day: 'SATURDAY', theme: 'Active Recovery', load: 'light' },
-      { day: 'SUNDAY', theme: 'Rest' },
-    ],
-  };
-
-  return patterns[programType] || defaultPattern;
-}

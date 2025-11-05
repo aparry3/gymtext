@@ -1,4 +1,4 @@
-import type { MesocycleOverview } from '@/server/models/fitnessPlan';
+import type { Mesocycle } from '@/server/models/fitnessPlan';
 import type { MicrocyclePattern } from '@/server/models/microcycle';
 import type { AgentDeps } from '@/server/agents/base';
 
@@ -6,8 +6,8 @@ import type { AgentDeps } from '@/server/agents/base';
  * Input for microcycle pattern agent
  */
 export interface MicrocyclePatternInput {
-  mesocycle: MesocycleOverview;
-  weekNumber: number;
+  mesocycle: Mesocycle;
+  weekIndex: number; // 0-based index within mesocycle
   programType: string;
   notes?: string | null;
 }
