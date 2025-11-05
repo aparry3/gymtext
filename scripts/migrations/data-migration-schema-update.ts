@@ -239,7 +239,7 @@ async function migrateFitnessPlans() {
   console.log('\nMigrating Fitness Plans...');
 
   const plans = await db
-    .selectFrom('fitness_plans')
+    .selectFrom('fitnessPlans')
     .selectAll()
     .execute();
 
@@ -285,7 +285,7 @@ async function migrateFitnessPlans() {
     // Update database
     if (!isDryRun) {
       await db
-        .updateTable('fitness_plans')
+        .updateTable('fitnessPlans')
         .set({ mesocycles: JSON.stringify(transformedMesocycles) as any })
         .where('id', '=', plan.id)
         .execute();
@@ -348,7 +348,7 @@ async function migrateWorkoutInstances() {
   console.log('\nMigrating Workout Instances...');
 
   const workouts = await db
-    .selectFrom('workout_instances')
+    .selectFrom('workoutInstances')
     .selectAll()
     .execute();
 
@@ -377,7 +377,7 @@ async function migrateWorkoutInstances() {
 
     if (!isDryRun) {
       await db
-        .updateTable('workout_instances')
+        .updateTable('workoutInstances')
         .set({ details: JSON.stringify(transformedDetails) as any })
         .where('id', '=', workout.id)
         .execute();
@@ -405,9 +405,9 @@ async function createBackup() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
   const filename = `backup-${timestamp}.json`;
 
-  const plans = await db.selectFrom('fitness_plans').selectAll().execute();
+  const plans = await db.selectFrom('fitnessPlans').selectAll().execute();
   const microcycles = await db.selectFrom('microcycles').selectAll().execute();
-  const workouts = await db.selectFrom('workout_instances').selectAll().execute();
+  const workouts = await db.selectFrom('workoutInstances').selectAll().execute();
 
   const backup = {
     timestamp: new Date().toISOString(),

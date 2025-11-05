@@ -98,7 +98,8 @@ async function regenerateFitnessPlans() {
       if (!isDryRun) {
         // Generate new fitness plan
         const newPlan = await fitnessPlanService.createFitnessPlan(user);
-        console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${newPlan.id.substring(0, 8)})`);
+        const planId = newPlan.id ? newPlan.id.substring(0, 8) : 'unknown';
+        console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${planId})`);
       } else {
         console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan (dry-run)`);
       }

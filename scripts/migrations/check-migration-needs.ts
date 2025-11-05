@@ -67,7 +67,7 @@ async function main() {
   console.log('Checking migration needs...\n');
 
   // Check fitness plans
-  const plans = await db.selectFrom('fitness_plans').selectAll().execute();
+  const plans = await db.selectFrom('fitnessPlans').selectAll().execute();
   let plansMigrationNeeded = 0;
   for (const plan of plans) {
     const mesocycles = plan.mesocycles as any;
@@ -87,7 +87,7 @@ async function main() {
   }
 
   // Check workouts
-  const workouts = await db.selectFrom('workout_instances').selectAll().execute();
+  const workouts = await db.selectFrom('workoutInstances').selectAll().execute();
   let workoutsMigrationNeeded = 0;
   for (const wo of workouts) {
     if (isOldWorkoutFormat(wo.details as any)) {
