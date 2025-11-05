@@ -44,22 +44,73 @@ function isOldMesocycleFormat(mesocycle: any): boolean {
 }
 
 function isOldMicrocycleFormat(pattern: any): boolean {
-  // Old format: varied, but missing key new fields
-  // New format: { weekIndex, weekFocus, objectives, days: [...], ... }
-  if (!pattern.days || !Array.isArray(pattern.days)) return true;
+  // Old format: missing key fields or incomplete day structure
+  // New format: { weekIndex, weekFocus, objectives, averageSessionDuration, isDeload, days: [...], weeklyNotes }
 
-  // Check if days have new structured format
+  // Check for required top-level fields
+  if (!pattern.weekFocus || !pattern.objectives || !pattern.averageSessionDuration) {
+    return true;
+  }
+
+  if (pattern.isDeload === undefined) {
+    return true;
+  }
+
+  if (!pattern.days || !Array.isArray(pattern.days) || pattern.days.length === 0) {
+    return true;
+  }
+
+  // Check if days have complete structure
   const firstDay = pattern.days[0];
-  if (!firstDay) return false;
+  if (!firstDay) return true;
 
-  // New format has specific day structure with theme, load, primaryMuscleGroups, etc.
-  return !firstDay.theme || !firstDay.day;
+  // New format requires: day, theme, load, primaryMuscleGroups, sessionFocus, intensity, volumeTarget, conditioning, sessionDuration, notes
+  const hasCompleteDay = firstDay.day &&
+                         firstDay.theme &&
+                         firstDay.primaryMuscleGroups !== undefined &&
+                         firstDay.sessionFocus !== undefined &&
+                         firstDay.intensity !== undefined &&
+                         firstDay.volumeTarget !== undefined &&
+                         firstDay.conditioning !== undefined &&
+                         firstDay.sessionDuration !== undefined;
+
+  return !hasCompleteDay;
 }
 
 function isOldWorkoutFormat(details: any): boolean {
-  // Old format: { sessionType, details: [{ label, activities }], targets }
-  // New format: { theme, blocks, sessionContext, targetMetrics, summary }
-  return details.sessionType && !details.theme && !details.blocks;
+  // Old format variations:
+  // 1. { sessionType, details: [{ label, activities }], targets }
+  // 2. { theme, blocks: [{ name, items }] } - missing work structure and metadata
+
+  // Check for completely old format with sessionType
+  if (details.sessionType && !details.theme) {
+    return true;
+  }
+
+  // Check for incomplete new format (has theme and blocks, but missing required structure)
+  if (details.blocks && Array.isArray(details.blocks) && details.blocks.length > 0) {
+    const firstBlock = details.blocks[0];
+
+    // Old/incomplete format uses "items", new format uses "work"
+    if (firstBlock.items && !firstBlock.work) {
+      return true;
+    }
+  }
+
+  // Check for missing required new format fields
+  if (!details.sessionContext || !details.targetMetrics || !details.summary) {
+    return true;
+  }
+
+  // If blocks exist, verify they have the work structure
+  if (details.blocks && Array.isArray(details.blocks) && details.blocks.length > 0) {
+    const firstBlock = details.blocks[0];
+    if (!firstBlock.work || !Array.isArray(firstBlock.work)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // ============================================================================
@@ -154,8 +205,8 @@ async function transformMesocycle(oldMesocycle: any, index: number): Promise<any
   return result;
 }
 
-async function transformMicrocycle(oldPattern: any): Promise<any> {
-  console.log(`    Transforming microcycle pattern...`);
+async function transformMicrocycle(oldPattern: any, index: number, total: number): Promise<any> {
+  console.log(`    [${index}/${total}] Transforming microcycle pattern...`);
 
   const model = initializeModel(_StructuredMicrocycleSchema);
 
@@ -167,8 +218,8 @@ async function transformMicrocycle(oldPattern: any): Promise<any> {
   return result;
 }
 
-async function transformWorkout(oldDetails: any): Promise<any> {
-  console.log(`    Transforming workout instance...`);
+async function transformWorkout(oldDetails: any, index: number, total: number): Promise<any> {
+  console.log(`    [${index}/${total}] Transforming workout instance...`);
 
   const model = initializeModel(_EnhancedWorkoutInstanceSchema);
 
@@ -255,24 +306,28 @@ async function migrateMicrocycles() {
     .selectAll()
     .execute();
 
+  const total = microcycles.length;
+  console.log(`Found ${total} microcycle(s) to check\n`);
+
   let transformedCount = 0;
   let skippedCount = 0;
 
-  for (const microcycle of microcycles) {
+  for (let i = 0; i < microcycles.length; i++) {
+    const microcycle = microcycles[i];
     const microcycleId = microcycle.id.substring(0, 8);
     const pattern = microcycle.pattern as any;
 
     const needsMigration = isForce || isOldMicrocycleFormat(pattern);
 
     if (!needsMigration) {
-      console.log(`  Microcycle ${microcycleId}: [NEW FORMAT] → Skipped`);
+      console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: [NEW FORMAT] → Skipped`);
       skippedCount++;
       continue;
     }
 
-    console.log(`  Microcycle ${microcycleId}: [OLD FORMAT] → Transforming...`);
+    console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: [OLD FORMAT] → Transforming...`);
 
-    const transformedPattern = await transformMicrocycle(pattern);
+    const transformedPattern = await transformMicrocycle(pattern, i + 1, total);
 
     if (!isDryRun) {
       await db
@@ -282,7 +337,7 @@ async function migrateMicrocycles() {
         .execute();
     }
 
-    console.log(`  Microcycle ${microcycleId}: ✓`);
+    console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: ✓`);
     transformedCount++;
   }
 
@@ -297,24 +352,28 @@ async function migrateWorkoutInstances() {
     .selectAll()
     .execute();
 
+  const total = workouts.length;
+  console.log(`Found ${total} workout(s) to check\n`);
+
   let transformedCount = 0;
   let skippedCount = 0;
 
-  for (const workout of workouts) {
+  for (let i = 0; i < workouts.length; i++) {
+    const workout = workouts[i];
     const workoutId = workout.id.substring(0, 8);
     const details = workout.details as any;
 
     const needsMigration = isForce || isOldWorkoutFormat(details);
 
     if (!needsMigration) {
-      console.log(`  Workout ${workoutId}: [NEW FORMAT] → Skipped`);
+      console.log(`  [${i + 1}/${total}] Workout ${workoutId}: [NEW FORMAT] → Skipped`);
       skippedCount++;
       continue;
     }
 
-    console.log(`  Workout ${workoutId}: [OLD FORMAT] → Transforming...`);
+    console.log(`  [${i + 1}/${total}] Workout ${workoutId}: [OLD FORMAT] → Transforming...`);
 
-    const transformedDetails = await transformWorkout(details);
+    const transformedDetails = await transformWorkout(details, i + 1, total);
 
     if (!isDryRun) {
       await db
@@ -324,7 +383,7 @@ async function migrateWorkoutInstances() {
         .execute();
     }
 
-    console.log(`  Workout ${workoutId}: ✓`);
+    console.log(`  [${i + 1}/${total}] Workout ${workoutId}: ✓`);
     transformedCount++;
   }
 
