@@ -8,6 +8,7 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { inngest } from '@/server/connections/inngest/client';
+import { shortLinkService } from '../links/shortLinkService';
 
 interface MessageResult {
   success: boolean;
@@ -248,6 +249,23 @@ export class DailyMessageService {
       // Save the workout to the database
       const savedWorkout = await this.workoutInstanceService.createWorkout(workout);
       console.log(`Generated and saved AI workout for user ${user.id} on ${targetDate.toISODate()}`);
+
+      // Generate short link for the workout
+      try {
+        const shortLink = await shortLinkService.createWorkoutLink(user.id, savedWorkout.id);
+        const fullUrl = shortLinkService.getFullUrl(shortLink.code);
+        console.log(`[DailyMessageService] Created short link for workout ${savedWorkout.id}: ${fullUrl}`);
+
+        // Append short link to message if message was pre-generated
+        if (savedWorkout.message) {
+          savedWorkout.message = `${savedWorkout.message}\n\nMore details: ${fullUrl}`;
+          // Update workout with new message including link
+          await this.workoutInstanceService.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
+        }
+      } catch (error) {
+        console.error(`[DailyMessageService] Failed to create short link for workout ${savedWorkout.id}:`, error);
+        // Continue without link - not critical
+      }
 
       return savedWorkout;
     } catch (error) {
