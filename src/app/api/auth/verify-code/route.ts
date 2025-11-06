@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userAuthService } from '@/server/services/auth/userAuthService';
+import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 /**
  * POST /api/auth/verify-code
@@ -43,8 +44,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize phone number
+    const normalizedPhone = normalizeUSPhoneNumber(phoneNumber);
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Invalid phone number format. Please enter a valid US phone number.',
+        },
+        { status: 400 }
+      );
+    }
+
     // Verify the code
-    const result = await userAuthService.verifyCode(phoneNumber, code);
+    const result = await userAuthService.verifyCode(normalizedPhone, code);
 
     if (!result.success || !result.userId) {
       return NextResponse.json(

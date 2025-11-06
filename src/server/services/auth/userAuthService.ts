@@ -2,6 +2,7 @@ import { UserAuthRepository } from '@/server/repositories/userAuthRepository';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { twilioClient } from '@/server/connections/twilio/twilio';
 import { encryptUserId } from '@/server/utils/sessionCrypto';
+import { adminAuthService } from './adminAuthService';
 
 /**
  * Service for handling user authentication via SMS verification codes
@@ -15,6 +16,10 @@ export class UserAuthService {
   private readonly RATE_LIMIT_WINDOW_MINUTES = 15;
   private readonly CODE_EXPIRY_MINUTES = 10;
   private readonly CODE_LENGTH = 6;
+
+  // Dev mode detection
+  private readonly isDev = process.env.NODE_ENV !== 'production';
+  private readonly devBypassCode = process.env.DEV_BYPASS_CODE || '000000';
 
   constructor() {
     this.authRepository = new UserAuthRepository();
@@ -32,21 +37,28 @@ export class UserAuthService {
 
   /**
    * Request a verification code to be sent to a phone number
+   * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    * Returns success status and optional error message
    */
   async requestVerificationCode(
     phoneNumber: string
   ): Promise<{ success: boolean; message?: string; userId?: string }> {
     try {
-      // Normalize phone number (ensure it has +1 prefix)
-      const normalizedPhone = phoneNumber.startsWith('+1')
-        ? phoneNumber
-        : `+1${phoneNumber}`;
+      // Phone number should already be normalized by API route
+      // Defensive check: ensure it's in E.164 format
+      if (!phoneNumber.startsWith('+1')) {
+        console.error('[UserAuth] Phone number not properly normalized:', phoneNumber);
+        return {
+          success: false,
+          message: 'Internal error: phone number format invalid',
+        };
+      }
 
-      // Check if user exists with this phone number
-      const user = await this.userRepository.findByPhoneNumber(normalizedPhone);
+      // Check if user exists with this phone number OR if it's an admin phone
+      const user = await this.userRepository.findByPhoneNumber(phoneNumber);
+      const isAdmin = adminAuthService.isPhoneWhitelisted(phoneNumber);
 
-      if (!user) {
+      if (!user && !isAdmin) {
         return {
           success: false,
           message: 'Phone number not registered. Please sign up first.',
@@ -58,7 +70,7 @@ export class UserAuthService {
         Date.now() - this.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000
       );
       const recentRequests = await this.authRepository.countRecentRequests(
-        normalizedPhone,
+        phoneNumber,
         rateLimitWindow
       );
 
@@ -74,15 +86,21 @@ export class UserAuthService {
       const expiresAt = new Date(Date.now() + this.CODE_EXPIRY_MINUTES * 60 * 1000);
 
       // Store code in database
-      await this.authRepository.createAuthCode(normalizedPhone, code, expiresAt);
+      await this.authRepository.createAuthCode(phoneNumber, code, expiresAt);
 
       // Send SMS with code
       const message = `Your GymText verification code is: ${code}\n\nThis code expires in ${this.CODE_EXPIRY_MINUTES} minutes.`;
-      await twilioClient.sendSMS(normalizedPhone, message);
+      await twilioClient.sendSMS(phoneNumber, message);
+
+      // In dev mode, log the code to console for easy testing
+      if (this.isDev) {
+        console.log(`[UserAuth:Dev] 🔑 Verification code for ${phoneNumber}: ${code}`);
+        console.log(`[UserAuth:Dev] 💡 Tip: You can also use magic code "${this.devBypassCode}" in dev mode`);
+      }
 
       return {
         success: true,
-        userId: user.id,
+        userId: user?.id, // May be undefined for admin-only phones
       };
     } catch (error) {
       console.error('Error requesting verification code:', error);
@@ -95,16 +113,22 @@ export class UserAuthService {
 
   /**
    * Verify a code and return the user ID if valid
+   * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    */
   async verifyCode(
     phoneNumber: string,
     code: string
   ): Promise<{ success: boolean; message?: string; userId?: string }> {
     try {
-      // Normalize phone number
-      const normalizedPhone = phoneNumber.startsWith('+1')
-        ? phoneNumber
-        : `+1${phoneNumber}`;
+      // Phone number should already be normalized by API route
+      // Defensive check: ensure it's in E.164 format
+      if (!phoneNumber.startsWith('+1')) {
+        console.error('[UserAuth] Phone number not properly normalized:', phoneNumber);
+        return {
+          success: false,
+          message: 'Internal error: phone number format invalid',
+        };
+      }
 
       // Validate code format
       if (code.length !== this.CODE_LENGTH || !/^\d+$/.test(code)) {
@@ -114,9 +138,25 @@ export class UserAuthService {
         };
       }
 
-      // Find valid code in database
+      // DEV MODE: Accept magic bypass code
+      if (this.isDev && code === this.devBypassCode) {
+        console.log(`[UserAuth:Dev] ✅ Magic bypass code accepted for ${phoneNumber}`);
+
+        // Get user by phone number (or return success for admin phones)
+        const user = await this.userRepository.findByPhoneNumber(phoneNumber);
+
+        // Clean up any existing codes for this phone
+        await this.authRepository.deleteCodesForPhone(phoneNumber);
+
+        return {
+          success: true,
+          userId: user?.id, // May be undefined for admin-only phones
+        };
+      }
+
+      // NORMAL FLOW: Find valid code in database
       const authCode = await this.authRepository.findValidCode(
-        normalizedPhone,
+        phoneNumber,
         code
       );
 
@@ -128,7 +168,7 @@ export class UserAuthService {
       }
 
       // Get user by phone number
-      const user = await this.userRepository.findByPhoneNumber(normalizedPhone);
+      const user = await this.userRepository.findByPhoneNumber(phoneNumber);
 
       if (!user) {
         return {
@@ -138,7 +178,7 @@ export class UserAuthService {
       }
 
       // Delete all codes for this phone number (cleanup)
-      await this.authRepository.deleteCodesForPhone(normalizedPhone);
+      await this.authRepository.deleteCodesForPhone(phoneNumber);
 
       return {
         success: true,

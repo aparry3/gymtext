@@ -14,12 +14,17 @@ export class AdminAuthService {
   private readonly CODE_EXPIRY_MINUTES = 10;
   private readonly CODE_LENGTH = 6;
 
+  // Dev mode detection
+  private readonly isDev = process.env.NODE_ENV !== 'production';
+  private readonly devBypassCode = process.env.DEV_BYPASS_CODE || '000000';
+
   constructor() {
     this.authRepository = new UserAuthRepository();
   }
 
   /**
    * Check if a phone number is in the admin whitelist
+   * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    */
   isPhoneWhitelisted(phoneNumber: string): boolean {
     const whitelist = process.env.ADMIN_PHONE_NUMBERS;
@@ -29,18 +34,14 @@ export class AdminAuthService {
       return false;
     }
 
-    // Parse comma-separated list and normalize phone numbers
+    // Parse comma-separated list and trim whitespace
     const allowedNumbers = whitelist
       .split(',')
       .map(num => num.trim())
       .filter(num => num.length > 0);
 
-    // Normalize the input phone number (ensure +1 prefix)
-    const normalizedPhone = phoneNumber.startsWith('+1')
-      ? phoneNumber
-      : `+1${phoneNumber}`;
-
-    return allowedNumbers.includes(normalizedPhone);
+    // Phone number should already be normalized - just check whitelist
+    return allowedNumbers.includes(phoneNumber);
   }
 
   /**
@@ -55,19 +56,25 @@ export class AdminAuthService {
   /**
    * Request a verification code for admin login
    * Only sends codes to whitelisted phone numbers
+   * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    */
   async requestCode(
     phoneNumber: string
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      // Normalize phone number (ensure it has +1 prefix)
-      const normalizedPhone = phoneNumber.startsWith('+1')
-        ? phoneNumber
-        : `+1${phoneNumber}`;
+      // Phone number should already be normalized by API route
+      // Defensive check: ensure it's in E.164 format
+      if (!phoneNumber.startsWith('+1')) {
+        console.error('[AdminAuth] Phone number not properly normalized:', phoneNumber);
+        return {
+          success: false,
+          message: 'Internal error: phone number format invalid',
+        };
+      }
 
       // Check whitelist FIRST - reject if not authorized
-      if (!this.isPhoneWhitelisted(normalizedPhone)) {
-        console.warn(`[AdminAuth] Unauthorized admin login attempt: ${normalizedPhone}`);
+      if (!this.isPhoneWhitelisted(phoneNumber)) {
+        console.warn(`[AdminAuth] Unauthorized admin login attempt: ${phoneNumber}`);
         return {
           success: false,
           message: 'Phone number not authorized for admin access.',
@@ -79,7 +86,7 @@ export class AdminAuthService {
         Date.now() - this.RATE_LIMIT_WINDOW_MINUTES * 60 * 1000
       );
       const recentRequests = await this.authRepository.countRecentRequests(
-        normalizedPhone,
+        phoneNumber,
         rateLimitWindow
       );
 
@@ -95,13 +102,19 @@ export class AdminAuthService {
       const expiresAt = new Date(Date.now() + this.CODE_EXPIRY_MINUTES * 60 * 1000);
 
       // Store code in database
-      await this.authRepository.createAuthCode(normalizedPhone, code, expiresAt);
+      await this.authRepository.createAuthCode(phoneNumber, code, expiresAt);
 
       // Send SMS with code
       const message = `Your GymText admin verification code is: ${code}\n\nThis code expires in ${this.CODE_EXPIRY_MINUTES} minutes.`;
-      await twilioClient.sendSMS(normalizedPhone, message);
+      await twilioClient.sendSMS(phoneNumber, message);
 
-      console.log(`[AdminAuth] Verification code sent to ${normalizedPhone}`);
+      console.log(`[AdminAuth] Verification code sent to ${phoneNumber}`);
+
+      // In dev mode, log the code to console for easy testing
+      if (this.isDev) {
+        console.log(`[AdminAuth:Dev] 🔑 Verification code for ${phoneNumber}: ${code}`);
+        console.log(`[AdminAuth:Dev] 💡 Tip: You can also use magic code "${this.devBypassCode}" in dev mode`);
+      }
 
       return {
         success: true,
@@ -118,20 +131,26 @@ export class AdminAuthService {
   /**
    * Verify a code for admin login
    * Does not require or create a user account
+   * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    */
   async verifyCode(
     phoneNumber: string,
     code: string
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      // Normalize phone number
-      const normalizedPhone = phoneNumber.startsWith('+1')
-        ? phoneNumber
-        : `+1${phoneNumber}`;
+      // Phone number should already be normalized by API route
+      // Defensive check: ensure it's in E.164 format
+      if (!phoneNumber.startsWith('+1')) {
+        console.error('[AdminAuth] Phone number not properly normalized:', phoneNumber);
+        return {
+          success: false,
+          message: 'Internal error: phone number format invalid',
+        };
+      }
 
       // Double-check whitelist (belt and suspenders)
-      if (!this.isPhoneWhitelisted(normalizedPhone)) {
-        console.warn(`[AdminAuth] Unauthorized verification attempt: ${normalizedPhone}`);
+      if (!this.isPhoneWhitelisted(phoneNumber)) {
+        console.warn(`[AdminAuth] Unauthorized verification attempt: ${phoneNumber}`);
         return {
           success: false,
           message: 'Phone number not authorized for admin access.',
@@ -146,9 +165,21 @@ export class AdminAuthService {
         };
       }
 
-      // Find valid code in database
+      // DEV MODE: Accept magic bypass code
+      if (this.isDev && code === this.devBypassCode) {
+        console.log(`[AdminAuth:Dev] ✅ Magic bypass code accepted for ${phoneNumber}`);
+
+        // Clean up any existing codes for this phone
+        await this.authRepository.deleteCodesForPhone(phoneNumber);
+
+        return {
+          success: true,
+        };
+      }
+
+      // NORMAL FLOW: Find valid code in database
       const authCode = await this.authRepository.findValidCode(
-        normalizedPhone,
+        phoneNumber,
         code
       );
 
@@ -160,9 +191,9 @@ export class AdminAuthService {
       }
 
       // Delete all codes for this phone number (cleanup)
-      await this.authRepository.deleteCodesForPhone(normalizedPhone);
+      await this.authRepository.deleteCodesForPhone(phoneNumber);
 
-      console.log(`[AdminAuth] Admin verified: ${normalizedPhone}`);
+      console.log(`[AdminAuth] Admin verified: ${phoneNumber}`);
 
       return {
         success: true,
