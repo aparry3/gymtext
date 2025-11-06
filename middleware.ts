@@ -54,5 +54,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/me/:path*'],
+  // Explicitly include all admin and user routes
+  // Note: /admin/:path* catches /admin/users, /admin/users/123, etc.
+  // But we explicitly include /admin for clarity
+  matcher: [
+    '/admin',
+    '/admin/:path*',
+    '/api/admin/:path*',
+    '/me',
+    '/me/:path*',
+  ],
 };

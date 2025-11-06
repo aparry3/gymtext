@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthService } from '@/server/services/auth/adminAuthService';
+import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 /**
  * POST /api/auth/admin/request-code
@@ -30,20 +31,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Basic phone number validation (10 digits or E.164 format)
-    const cleaned = phoneNumber.replace(/\D/g, '');
-    if (cleaned.length < 10 || cleaned.length > 11) {
+    // Normalize and validate phone number
+    const normalizedPhone = normalizeUSPhoneNumber(phoneNumber);
+    if (!normalizedPhone) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Invalid phone number format',
+          message: 'Invalid phone number format. Please enter a valid US phone number.',
         },
         { status: 400 }
       );
     }
 
     // Request verification code (checks whitelist internally)
-    const result = await adminAuthService.requestCode(phoneNumber);
+    const result = await adminAuthService.requestCode(normalizedPhone);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });

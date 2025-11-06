@@ -91,3 +91,12 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
 
   return decryptUserId(userSession);
 }
+
+/**
+ * Check if the request has admin authentication
+ * Returns true if gt_admin cookie is set to 'ok'
+ */
+export function isAdminAuthenticated(request: NextRequest): boolean {
+  const adminCookie = request.cookies.get('gt_admin')?.value;
+  return adminCookie === 'ok';
+}
