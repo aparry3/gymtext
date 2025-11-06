@@ -16,7 +16,7 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
+import { parseDate, formatDate } from '@/shared/utils/date'
 
 // New schema types
 interface WorkoutBlockItem {

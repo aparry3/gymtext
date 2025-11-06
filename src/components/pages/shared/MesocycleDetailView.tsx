@@ -15,7 +15,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
-import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
+import { parseDate, formatDate } from '@/shared/utils/date'
 
 interface Mesocycle {
   name: string

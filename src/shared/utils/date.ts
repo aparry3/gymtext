@@ -39,7 +39,12 @@ export type DateFormatType =
 
 /**
  * Safely parse a date value into a Date object
- * Handles Date objects, ISO strings, timestamps, and invalid values
+ * Handles Date objects, ISO strings, SQL dates, timestamps, and invalid values
+ *
+ * PostgreSQL stores dates as 'date' type (e.g., '2025-11-06') without timezone info.
+ * When JavaScript parses these as `new Date('2025-11-06')`, it interprets them as
+ * UTC midnight and then converts to local timezone, causing off-by-one-day bugs.
+ * This function ensures SQL dates are always interpreted as UTC to avoid timezone shifts.
  */
 export function parseDate(value: Date | string | number | null | undefined): Date | null {
   if (!value) return null;
@@ -48,7 +53,19 @@ export function parseDate(value: Date | string | number | null | undefined): Dat
     return isNaN(value.getTime()) ? null : value;
   }
 
-  if (typeof value === 'string' || typeof value === 'number') {
+  if (typeof value === 'string') {
+    // If it already has time component (ISO 8601), parse directly
+    if (value.includes('T')) {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // SQL date format (YYYY-MM-DD) - add UTC midnight to prevent timezone shifts
+    const date = new Date(value + 'T00:00:00Z');
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'number') {
     const date = new Date(value);
     return isNaN(date.getTime()) ? null : date;
   }
@@ -628,4 +645,31 @@ export function toISODate(date: Date | string, timezone?: string): string {
   }
 
   return dt.toISODate() || '';
+}
+
+/**
+ * Simple date formatter for display purposes
+ *
+ * Use this to display dates in a consistent format across the UI.
+ * Defaults to UTC timezone to prevent display shifts for SQL dates.
+ *
+ * @param date - Date to format
+ * @param options - Intl.DateTimeFormat options (timeZone defaults to UTC)
+ * @returns Formatted date string
+ *
+ * @example
+ * formatDate(workout.date)  // "11/6/2025"
+ * formatDate(workout.date, { weekday: 'long', month: 'long', day: 'numeric' })  // "Wednesday, November 6"
+ */
+export function formatDate(
+  date: Date | string | null | undefined,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  const parsed = parseDate(date);
+  if (!parsed) return 'Invalid date';
+
+  return parsed.toLocaleDateString('en-US', {
+    timeZone: 'UTC',
+    ...options
+  });
 }

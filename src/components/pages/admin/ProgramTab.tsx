@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
-import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
+import { parseDate, formatDate } from '@/shared/utils/date'
 
 interface Mesocycle {
   name: string
