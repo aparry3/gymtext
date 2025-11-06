@@ -15,6 +15,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
+import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
 
 interface Mesocycle {
   name: string
@@ -102,7 +103,13 @@ export function MesocycleDetailView({ userId, mesocycleIndex, basePath }: Mesocy
         if (microcyclesResponse.ok) {
           const microcyclesResult = await microcyclesResponse.json()
           if (microcyclesResult.success) {
-            setMicrocycles(microcyclesResult.data)
+            // Parse microcycle dates
+            const microcycles = microcyclesResult.data.map((m: Microcycle) => ({
+              ...m,
+              startDate: parseDate(m.startDate),
+              endDate: parseDate(m.endDate)
+            }))
+            setMicrocycles(microcycles)
           }
         }
       } catch (err) {
@@ -416,7 +423,7 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
                     {getLoadSummary(microcycle) || 'Mixed loads'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(microcycle.startDate).toLocaleDateString()} - {new Date(microcycle.endDate).toLocaleDateString()}
+                    {formatDate(microcycle.startDate)} - {formatDate(microcycle.endDate)}
                   </p>
                 </div>
               ) : (

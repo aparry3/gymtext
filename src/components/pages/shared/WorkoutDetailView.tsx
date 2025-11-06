@@ -16,6 +16,7 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
 
 // New schema types
 interface WorkoutBlockItem {
@@ -150,7 +151,13 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
         console.log('API Result:', result)
 
         if (result.success) {
-          setWorkout(result.data)
+          // Parse dates when loading
+          const workout = {
+            ...result.data,
+            date: parseDate(result.data.date),
+            completedAt: result.data.completedAt ? new Date(result.data.completedAt) : null
+          }
+          setWorkout(workout)
         } else {
           setError(result.message || 'Failed to load workout')
         }
@@ -243,7 +250,7 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
               )}
               <BreadcrumbItem>
                 <BreadcrumbPage>
-                  {sessionTypeLabels[workout.sessionType]} - {new Date(workout.date).toLocaleDateString()}
+                  {sessionTypeLabels[workout.sessionType]} - {formatDate(workout.date)}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
@@ -432,7 +439,7 @@ function WorkoutHeader({
             {sessionTypeLabels[workout.sessionType]} Workout
           </h1>
           <p className="text-muted-foreground">
-            {new Date(workout.date).toLocaleDateString('en-US', {
+            {formatDate(workout.date, {
               weekday: 'long',
               year: 'numeric',
               month: 'long',

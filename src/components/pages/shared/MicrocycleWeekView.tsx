@@ -7,14 +7,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
-import { 
-  Breadcrumb, 
-  BreadcrumbList, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbSeparator, 
-  BreadcrumbPage 
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
 } from '@/components/ui/breadcrumb'
+import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
 
 interface DayPattern {
   day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
@@ -98,7 +99,13 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
         if (microcycleResponse.ok) {
           const microcycleResult = await microcycleResponse.json()
           if (microcycleResult.success) {
-            setMicrocycle(microcycleResult.data)
+            // Parse microcycle dates
+            const microcycle = {
+              ...microcycleResult.data,
+              startDate: parseDate(microcycleResult.data.startDate),
+              endDate: parseDate(microcycleResult.data.endDate)
+            }
+            setMicrocycle(microcycle)
 
             // Now fetch workouts using the microcycle date range
             const startDate = microcycleResult.data.startDate
@@ -110,7 +117,13 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
             if (workoutsResponse.ok) {
               const workoutsResult = await workoutsResponse.json()
               if (workoutsResult.success) {
-                setWorkouts(workoutsResult.data)
+                // Parse workout dates
+                const workouts = workoutsResult.data.map((w: WorkoutInstance) => ({
+                  ...w,
+                  date: parseDate(w.date),
+                  completedAt: w.completedAt ? new Date(w.completedAt) : null
+                }))
+                setWorkouts(workouts)
               }
             }
           }
@@ -231,8 +244,8 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
 }
 
 function MicrocycleHeader({ microcycle }: { microcycle: Microcycle }) {
-  const startDate = new Date(microcycle.startDate).toLocaleDateString()
-  const endDate = new Date(microcycle.endDate).toLocaleDateString()
+  const startDate = formatDate(microcycle.startDate)
+  const endDate = formatDate(microcycle.endDate)
 
   return (
     <Card className="p-6">
@@ -340,15 +353,21 @@ function DayCard({ dayName, dayPattern, workouts, userId, basePath }: DayCardPro
 }
 
 function getWorkoutsForDay(workouts: WorkoutInstance[], microcycle: Microcycle, dayName: string): WorkoutInstance[] {
-  const startDate = new Date(microcycle.startDate)
+  // microcycle.startDate is already a Date object (parsed on load)
+  const startDate = microcycle.startDate
   const dayIndex = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].indexOf(dayName)
-  
+
+  // Calculate target date using UTC methods
   const targetDate = new Date(startDate)
-  targetDate.setDate(startDate.getDate() + dayIndex)
-  
+  targetDate.setUTCDate(startDate.getUTCDate() + dayIndex)
+
+  // Filter workouts by comparing UTC date components
   return workouts.filter(workout => {
-    const workoutDate = new Date(workout.date)
-    return workoutDate.toDateString() === targetDate.toDateString()
+    return (
+      workout.date.getUTCFullYear() === targetDate.getUTCFullYear() &&
+      workout.date.getUTCMonth() === targetDate.getUTCMonth() &&
+      workout.date.getUTCDate() === targetDate.getUTCDate()
+    )
   })
 }
 

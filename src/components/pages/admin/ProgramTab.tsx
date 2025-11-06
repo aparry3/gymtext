@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
+import { parseDate, formatDate } from '@/shared/utils/dateFormatting'
 
 interface Mesocycle {
   name: string
@@ -90,7 +91,13 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
       }
 
       if (workoutsResult.success) {
-        setRecentWorkouts(workoutsResult.data)
+        // Parse date strings to Date objects when loading
+        const workouts = workoutsResult.data.map((w: WorkoutInstance) => ({
+          ...w,
+          date: parseDate(w.date),
+          completedAt: w.completedAt ? new Date(w.completedAt) : null
+        }))
+        setRecentWorkouts(workouts)
       }
     } catch (err) {
       setError('Failed to load program data')
@@ -446,12 +453,12 @@ function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onW
 
   // Helper to check if workout date is today
   const isToday = (date: Date) => {
+    // Compare UTC dates (workout dates are parsed as UTC)
     const today = new Date()
-    const workoutDate = new Date(date)
     return (
-      workoutDate.getDate() === today.getDate() &&
-      workoutDate.getMonth() === today.getMonth() &&
-      workoutDate.getFullYear() === today.getFullYear()
+      date.getUTCFullYear() === today.getUTCFullYear() &&
+      date.getUTCMonth() === today.getUTCMonth() &&
+      date.getUTCDate() === today.getUTCDate()
     )
   }
 
@@ -515,7 +522,7 @@ function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onW
                       router.push(path)
                     }}
                   >
-                    {new Date(workout.date).toLocaleDateString()}
+                    {formatDate(workout.date)}
                     {isTodayWorkout && <span className="ml-2 text-xs text-primary">(Today)</span>}
                   </td>
                   <td
