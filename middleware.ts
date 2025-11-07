@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { shortLinkService } from '@/server/services/links/shortLinkService';
-import { encryptUserId } from '@/server/utils/sessionCrypto';
+import { encryptUserId } from '@/server/utils/sessionCryptoEdge';
 
 // Protect /admin UI and /api/admin endpoints with a simple cookie-based gate
 // Protect /me UI with user session cookie
@@ -38,14 +38,14 @@ export async function middleware(request: NextRequest) {
 
         // Create session token for the user
         if (link.userId) {
-          const sessionToken = encryptUserId(link.userId);
+          const sessionToken = await encryptUserId(link.userId);
 
-          // Redirect to target with session cookie
-          const url = request.nextUrl.clone();
-          url.pathname = link.targetPath;
-          url.search = ''; // Clear search params
+          // Redirect to target with session cookie using full app URL
+          // Use BASE_URL if set (production), otherwise fallback to current origin
+          const baseUrl = process.env.BASE_URL || request.nextUrl.origin;
+          const fullUrl = new URL(link.targetPath, baseUrl);
 
-          const response = NextResponse.redirect(url);
+          const response = NextResponse.redirect(fullUrl);
           response.cookies.set('gt_user_session', sessionToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -56,11 +56,10 @@ export async function middleware(request: NextRequest) {
 
           return response;
         } else {
-          // Link has no associated user - just redirect
-          const url = request.nextUrl.clone();
-          url.pathname = link.targetPath;
-          url.search = '';
-          return NextResponse.redirect(url);
+          // Link has no associated user - just redirect using full app URL
+          const baseUrl = process.env.BASE_URL || request.nextUrl.origin;
+          const fullUrl = new URL(link.targetPath, baseUrl);
+          return NextResponse.redirect(fullUrl);
         }
       } catch (error) {
         console.error('[Middleware] Error resolving short link:', error);
