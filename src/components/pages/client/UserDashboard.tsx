@@ -172,7 +172,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     );
   }
 
-  if (error || !user) {
+  if (!isLoading && (error || !user)) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="text-center py-12">
