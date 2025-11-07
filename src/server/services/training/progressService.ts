@@ -346,50 +346,6 @@ export class ProgressService {
     return { weeksAdvanced, isNewMesocycle: enteredNewMesocycle };
   }
 
-  /**
-   * Checks if the current microcycle needs to be advanced based on calendar dates
-   * Returns information about what advancement is needed
-   */
-  private async checkForAutoAdvancement(
-    userId: string,
-    timezone: string
-  ): Promise<{ shouldAdvance: boolean; weeksToAdvance: number; isNewMesocycle: boolean }> {
-    const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(userId);
-
-    if (!currentMicrocycle) {
-      return { shouldAdvance: false, weeksToAdvance: 0, isNewMesocycle: false };
-    }
-
-    const { startDate: currentWeekStart } = this.calculateWeekDates(timezone);
-    const normalizedCurrentWeekStart = new Date(currentWeekStart);
-    normalizedCurrentWeekStart.setHours(0, 0, 0, 0);
-
-    let weeksToAdvance = 0;
-
-    const currentMicrocycleEnd = new Date(currentMicrocycle.endDate);
-    currentMicrocycleEnd.setHours(0, 0, 0, 0);
-
-    if (normalizedCurrentWeekStart > currentMicrocycleEnd) {
-      weeksToAdvance = 1; // We'll let performAutoAdvancement handle multiple weeks iteratively
-    }
-
-    // Check if advancement would cause mesocycle transition
-    if (weeksToAdvance > 0) {
-      const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
-      if (plan) {
-        const progress = await this.getCurrentProgress(plan);
-        if (progress) {
-          const currentMesocycle = progress.mesocycle;
-          const weeks = currentMesocycle.durationWeeks;
-          const isNewMesocycle = progress.microcycleWeek >= weeks - 1;
-          return { shouldAdvance: true, weeksToAdvance, isNewMesocycle };
-        }
-      }
-    }
-
-    return { shouldAdvance: false, weeksToAdvance: 0, isNewMesocycle: false };
-  }
-
   private calculateDayOfWeek(cycleStartDate: Date | null): number {
     if (!cycleStartDate) {
       // If no cycle start date, assume we're on day 1

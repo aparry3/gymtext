@@ -6,16 +6,20 @@
  *
  * Flow:
  * 1. Mark onboarding as 'in_progress'
- * 2. Extract fitness profile from signup data using LLM (slow!)
- * 3. Create fitness plan
- * 4. Mark onboarding as 'completed'
- * 5. Check if payment is complete, send messages if ready
- * 6. Clean up signup data
+ * 2. Load signup data
+ * 3. Extract fitness profile from signup data using LLM (slow!)
+ * 4. Create fitness plan with message
+ * 5. Create first microcycle with message
+ * 6. Create first workout with message
+ * 7. Mark onboarding as 'completed'
+ * 8. Check if payment is complete, send messages if ready
+ * 9. Clean up signup data
  *
  * Benefits:
  * - Runs async (doesn't block signup)
- * - Automatic retries on failure
+ * - Automatic retries on failure per step
  * - Parallel with checkout (race optimization)
+ * - Pre-generates all messages for fast delivery
  */
 
 import { inngest } from '@/server/connections/inngest/client';
@@ -81,9 +85,9 @@ export const onboardUserFunction = inngest.createFunction(
       }
     });
 
-    // Step 4: Create fitness plan and workout
-    await step.run('create-program', async () => {
-      console.log(`[Inngest] Creating fitness program for ${userId}`);
+    // Step 4: Create fitness plan
+    await step.run('create-fitness-plan', async () => {
+      console.log(`[Inngest] Creating fitness plan for ${userId}`);
 
       // Reload user with updated profile
       const userRepo = new UserRepository();
@@ -93,21 +97,61 @@ export const onboardUserFunction = inngest.createFunction(
       }
 
       try {
-        await onboardingService.createProgramAndWorkout(userWithProfile);
-        console.log(`[Inngest] Fitness program created for ${userId}`);
+        await onboardingService.createFitnessPlan(userWithProfile);
+        console.log(`[Inngest] Fitness plan created for ${userId}`);
       } catch (error) {
-        console.error(`[Inngest] Failed to create program for ${userId}:`, error);
+        console.error(`[Inngest] Failed to create fitness plan for ${userId}:`, error);
         throw error;
       }
     });
 
-    // Step 5: Mark as completed
+    // Step 5: Create first microcycle
+    await step.run('create-first-microcycle', async () => {
+      console.log(`[Inngest] Creating first microcycle for ${userId}`);
+
+      // Reload user (ensure fresh data)
+      const userRepo = new UserRepository();
+      const userWithProfile = await userRepo.findWithProfile(userId);
+      if (!userWithProfile) {
+        throw new Error(`User ${userId} not found`);
+      }
+
+      try {
+        await onboardingService.createFirstMicrocycle(userWithProfile);
+        console.log(`[Inngest] First microcycle created for ${userId}`);
+      } catch (error) {
+        console.error(`[Inngest] Failed to create first microcycle for ${userId}:`, error);
+        throw error;
+      }
+    });
+
+    // Step 6: Create first workout
+    await step.run('create-first-workout', async () => {
+      console.log(`[Inngest] Creating first workout for ${userId}`);
+
+      // Reload user (ensure fresh data)
+      const userRepo = new UserRepository();
+      const userWithProfile = await userRepo.findWithProfile(userId);
+      if (!userWithProfile) {
+        throw new Error(`User ${userId} not found`);
+      }
+
+      try {
+        await onboardingService.createFirstWorkout(userWithProfile);
+        console.log(`[Inngest] First workout created for ${userId}`);
+      } catch (error) {
+        console.error(`[Inngest] Failed to create first workout for ${userId}:`, error);
+        throw error;
+      }
+    });
+
+    // Step 7: Mark as completed
     await step.run('mark-completed', async () => {
       console.log(`[Inngest] Marking onboarding as completed for ${userId}`);
       await onboardingDataService.markCompleted(userId);
     });
 
-    // Step 6: Check if ready to send onboarding messages
+    // Step 8: Check if ready to send onboarding messages
     await step.run('check-send-messages', async () => {
       console.log(`[Inngest] Checking if ready to send messages for ${userId}`);
 
@@ -125,7 +169,7 @@ export const onboardUserFunction = inngest.createFunction(
       }
     });
 
-    // Step 7: Clean up signup data
+    // Step 9: Clean up signup data
     await step.run('cleanup-signup-data', async () => {
       console.log(`[Inngest] Cleaning up signup data for ${userId}`);
       await onboardingDataService.clearSignupData(userId);

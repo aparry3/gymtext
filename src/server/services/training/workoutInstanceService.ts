@@ -2,8 +2,13 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
-import type { WorkoutInstanceUpdate } from '@/server/models/workout';
+import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
+import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from '../user/userService';
+import { FitnessPlanService } from './fitnessPlanService';
+import { ProgressService } from './progressService';
+import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
 
 export interface SubstituteExerciseParams {
@@ -42,10 +47,14 @@ export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
   private workoutRepo: WorkoutInstanceRepository;
   private userService: UserService;
+  private fitnessPlanService: FitnessPlanService;
+  private progressService: ProgressService;
 
   private constructor() {
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
     this.userService = UserService.getInstance();
+    this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.progressService = ProgressService.getInstance();
   }
 
   public static getInstance(): WorkoutInstanceService {
@@ -99,7 +108,7 @@ export class WorkoutInstanceService {
   /**
    * Create a new workout instance
    */
-  public async createWorkout(workout: import('@/server/models/workout').NewWorkoutInstance) {
+  public async createWorkout(workout: NewWorkoutInstance) {
     return await this.workoutRepo.create(workout);
   }
 
@@ -108,6 +117,135 @@ export class WorkoutInstanceService {
    */
   public async updateWorkout(workoutId: string, updates: WorkoutInstanceUpdate) {
     return await this.workoutRepo.update(workoutId, updates);
+  }
+
+  /**
+   * Generate a workout for a specific date using AI
+   *
+   * This is the core business logic for workout generation:
+   * 1. Gets user's fitness plan and current progress
+   * 2. Determines day pattern from microcycle
+   * 3. Generates workout using AI agent
+   * 4. Saves workout with pre-generated message
+   * 5. Creates short link and appends to message
+   *
+   * @param user - User with profile
+   * @param targetDate - Date to generate workout for
+   * @returns Generated and saved workout instance
+   */
+  public async generateWorkoutForDate(
+    user: UserWithProfile,
+    targetDate: DateTime
+  ): Promise<WorkoutInstance | null> {
+    try {
+      // Get fitness plan
+      const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
+      if (!plan) {
+        console.log(`No fitness plan found for user ${user.id}`);
+        return null;
+      }
+
+      // Ensure progress is up-to-date and get current microcycle
+      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
+      if (!progress) {
+        console.log(`No progress found for user ${user.id}`);
+        return null;
+      }
+
+      // Extract what we need from progress
+      const { microcycle, mesocycle } = progress;
+      if (!microcycle) {
+        console.log(`Could not get/create microcycle for user ${user.id}`);
+        return null;
+      }
+
+      // Get the day's pattern from the microcycle
+      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
+      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+
+      if (!dayPlan) {
+        console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
+        return null;
+      }
+
+      // Get recent workouts for context (last 7 days)
+      const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
+
+      // Use AI agent to generate workout with message
+      const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
+        user,
+        date: targetDate.toJSDate(),
+        dayPlan,
+        microcycle,
+        mesocycle,
+        fitnessPlan: plan,
+        recentWorkouts
+      });
+
+      // Convert enhanced workout to database format
+      const workout: NewWorkoutInstance = {
+        clientId: user.id,
+        fitnessPlanId: microcycle.fitnessPlanId,
+        mesocycleId: null,
+        microcycleId: microcycle.id,
+        date: targetDate.toJSDate(),
+        sessionType: this.mapThemeToSessionType(dayPlan.theme),
+        goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
+        details: JSON.parse(JSON.stringify(enhancedWorkout)),
+        description,
+        reasoning,
+        message,
+        completedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Save the workout to the database
+      const savedWorkout = await this.createWorkout(workout);
+      console.log(`Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
+
+      // Generate short link for the workout
+      try {
+        const shortLink = await shortLinkService.createWorkoutLink(user.id, savedWorkout.id);
+        const fullUrl = shortLinkService.getFullUrl(shortLink.code);
+        console.log(`Created short link for workout ${savedWorkout.id}: ${fullUrl}`);
+
+        // Append short link to message
+        if (savedWorkout.message) {
+          savedWorkout.message = `${savedWorkout.message}\n\nMore details: ${fullUrl}`;
+          await this.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
+        }
+      } catch (error) {
+        console.error(`Failed to create short link for workout ${savedWorkout.id}:`, error);
+        // Continue without link - not critical
+      }
+
+      return savedWorkout;
+    } catch (error) {
+      console.error(`Error generating workout for user ${user.id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Maps theme to session type for database storage
+   * Valid frontend types: run, lift, metcon, mobility, rest, other
+   */
+  private mapThemeToSessionType(theme: string): string {
+    const themeLower = theme.toLowerCase();
+
+    if (themeLower.includes('run') || themeLower.includes('running')) return 'run';
+    if (themeLower.includes('metcon') || themeLower.includes('hiit') ||
+        themeLower.includes('conditioning') || themeLower.includes('cardio')) return 'metcon';
+    if (themeLower.includes('lift') || themeLower.includes('strength') ||
+        themeLower.includes('upper') || themeLower.includes('lower') ||
+        themeLower.includes('push') || themeLower.includes('pull')) return 'lift';
+    if (themeLower.includes('mobility') || themeLower.includes('flexibility') ||
+        themeLower.includes('stretch')) return 'mobility';
+    if (themeLower.includes('rest') || themeLower.includes('recovery') ||
+        themeLower.includes('deload')) return 'rest';
+
+    return 'other';
   }
 
   /**
