@@ -31,18 +31,19 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.json();
 
+    console.log('[Signup] Form data:', formData);
     // Step 1: Create user (basic info only)
     console.log('[Signup] Creating user with basic info');
     const user = await userService.createUser({
       name: formData.name,
       phoneNumber: formData.phoneNumber,
-      age: formData.age,
+      age: formData.age ? parseInt(formData.age, 10) : undefined,
       gender: formData.gender,
       timezone: formData.timezone,
       preferredSendHour: formData.preferredSendHour,
     });
 
-    console.log(`[Signup] User created: ${user.id}`);
+    console.log(`[Signup] User created: ${user}`);
 
     // Step 2: Create Stripe customer
     console.log('[Signup] Creating Stripe customer');
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/me`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?canceled=true`,
       metadata: {
         userId: user.id,
