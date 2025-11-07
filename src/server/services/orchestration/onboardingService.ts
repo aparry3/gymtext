@@ -42,10 +42,73 @@ export class OnboardingService {
   }
 
   /**
-   * Complete onboarding flow for a new user
+   * Create fitness plan and workout (without sending messages)
+   * Used during async onboarding process
+   *
+   * @param user - The user to create plan for
+   * @throws Error if any step fails
+   */
+  public async createProgramAndWorkout(user: UserWithProfile): Promise<void> {
+    console.log(`[Onboarding] Creating fitness plan for ${user.id}`);
+
+    try {
+      // Create fitness plan
+      await this.fitnessPlanService.createFitnessPlan(user);
+
+      console.log(`[Onboarding] Successfully created program for ${user.id}`);
+    } catch (error) {
+      console.error(`[Onboarding] Failed to create program for ${user.id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send onboarding messages (plan summary + first workout)
+   * Called after both onboarding and payment are complete
+   *
+   * @param user - The user to send messages to
+   * @throws Error if any step fails
+   */
+  public async sendOnboardingMessages(user: UserWithProfile): Promise<void> {
+    console.log(`[Onboarding] Sending onboarding messages to ${user.id}`);
+
+    try {
+      // Create conversation flow to track context
+      const flow = new ConversationFlowBuilder();
+
+      // Get the fitness plan
+      const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
+      if (!fitnessPlan) {
+        throw new Error(`No fitness plan found for user ${user.id}`);
+      }
+
+      // Send plan summary
+      console.log(`[Onboarding] Sending plan summary to ${user.id}`);
+      const planMessages = await this.messageService.sendPlanSummary(
+        user,
+        fitnessPlan,
+        flow.getRecentMessages()
+      );
+      flow.addMessage(planMessages);
+
+      // Send first daily workout
+      console.log(`[Onboarding] Sending first workout to ${user.id}`);
+      await this.dailyMessageService.sendDailyMessage(user);
+
+      console.log(`[Onboarding] Successfully sent onboarding messages to ${user.id}`);
+    } catch (error) {
+      console.error(`[Onboarding] Failed to send onboarding messages to ${user.id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Complete onboarding flow for a new user (LEGACY)
+   * This method is kept for backward compatibility but will be deprecated
    *
    * @param user - The user to onboard
    * @throws Error if any step fails
+   * @deprecated Use createProgramAndWorkout() and sendOnboardingMessages() separately
    */
   public async onboardUser(user: UserWithProfile): Promise<void> {
     console.log(`Starting onboarding for user ${user.id}`);
@@ -60,21 +123,10 @@ export class OnboardingService {
       flow.addMessage(welcomeMessage);
 
       // Step 2: Create fitness plan
-      console.log(`[Onboarding] Creating fitness plan for ${user.id}`);
-      const fitnessPlan = await this.fitnessPlanService.createFitnessPlan(user);
+      await this.createProgramAndWorkout(user);
 
-      // Step 3: Send plan summary (with context from welcome message)
-      console.log(`[Onboarding] Sending plan summary to ${user.id}`);
-      const planMessages = await this.messageService.sendPlanSummary(
-        user,
-        fitnessPlan,
-        flow.getRecentMessages()
-      );
-      flow.addMessage(planMessages);
-
-      // Step 4: Send first daily workout
-      console.log(`[Onboarding] Sending first workout to ${user.id}`);
-      await this.dailyMessageService.sendDailyMessage(user);
+      // Step 3 & 4: Send onboarding messages
+      await this.sendOnboardingMessages(user);
 
       console.log(`[Onboarding] Successfully completed onboarding for ${user.id}`);
     } catch (error) {

@@ -1,62 +1,136 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { userAuthService } from '@/server/services/auth/userAuthService';
+import { userService } from '@/server/services';
+import { onboardingDataService } from '@/server/services/user/onboardingDataService';
+import { UserRepository } from '@/server/repositories/userRepository';
+import { messageService } from '@/server/services';
+import { inngest } from '@/server/connections/inngest/client';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+});
 
 /**
  * POST /api/users/signup
  *
- * Create a new user and return a session token
- * This is used by the signup flow to automatically log in users
- *
- * Request body: same as /api/users POST
+ * New optimized signup flow:
+ * 1. Create user (basic info only, no LLM)
+ * 2. Create Stripe customer
+ * 3. Create onboarding record with signup data
+ * 4. Send welcome SMS
+ * 5. Trigger async Inngest onboarding job (don't wait!)
+ * 6. Create Stripe checkout session
+ * 7. Return checkout URL
  *
  * Response:
  * - success: boolean
- * - userId: string
- * - sessionToken: string (for setting cookie client-side)
+ * - checkoutUrl: string
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const formData = await request.json();
 
-    // Create user via existing API
-    const userResponse = await fetch(
-      new URL('/api/users', request.url).toString(),
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    // Step 1: Create user (basic info only)
+    console.log('[Signup] Creating user with basic info');
+    const user = await userService.createUser({
+      name: formData.name,
+      phoneNumber: formData.phoneNumber,
+      age: formData.age,
+      gender: formData.gender,
+      timezone: formData.timezone,
+      preferredSendHour: formData.preferredSendHour,
+    });
 
-    if (!userResponse.ok) {
-      const errorData = await userResponse.json();
-      return NextResponse.json(errorData, { status: userResponse.status });
-    }
+    console.log(`[Signup] User created: ${user.id}`);
 
-    const userData = await userResponse.json();
+    // Step 2: Create Stripe customer
+    console.log('[Signup] Creating Stripe customer');
+    const customer = await stripe.customers.create({
+      name: user.name,
+      phone: user.phoneNumber,
+      metadata: {
+        userId: user.id,
+      },
+    });
 
-    if (!userData.userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'User created but ID not returned',
-        },
-        { status: 500 }
+    // Update user with Stripe customer ID
+    const userRepo = new UserRepository();
+    await userRepo.update(user.id, {
+      stripeCustomerId: customer.id,
+    });
+
+    console.log(`[Signup] Stripe customer created: ${customer.id}`);
+
+    // Step 3: Create onboarding record with signup data
+    console.log('[Signup] Creating onboarding record');
+    await onboardingDataService.createOnboardingRecord(user.id, {
+      // Formatted text for LLM
+      fitnessGoals: formData.fitnessGoals,
+      currentExercise: formData.currentExercise,
+      injuries: formData.injuries,
+      environment: formData.environment,
+
+      // Structured data for analytics/reporting
+      primaryGoals: formData.primaryGoals,
+      goalsElaboration: formData.goalsElaboration,
+      experienceLevel: formData.experienceLevel,
+      currentActivity: formData.currentActivity,
+      activityElaboration: formData.activityElaboration,
+      trainingLocation: formData.trainingLocation,
+      equipment: formData.equipment,
+      acceptedRisks: formData.acceptedRisks,
+    });
+
+    // Step 4: Send welcome SMS
+    console.log('[Signup] Sending welcome SMS');
+    const userWithProfile = await userRepo.findWithProfile(user.id);
+    if (userWithProfile) {
+      await messageService.sendMessage(
+        userWithProfile,
+        'Welcome to GymText! Complete checkout to begin your personalized fitness journey 💪'
       );
     }
 
-    // Create session token
-    const sessionToken = userAuthService.createSessionToken(userData.userId);
-
-    // Return response with session cookie
-    const response = NextResponse.json({
-      success: true,
-      userId: userData.userId,
+    // Step 5: Trigger async Inngest onboarding job (fire and forget!)
+    console.log('[Signup] Triggering async onboarding job');
+    await inngest.send({
+      name: 'user/onboarding.requested',
+      data: {
+        userId: user.id,
+      },
     });
 
-    // Set session cookie
+    // Step 6: Create Stripe checkout session
+    console.log('[Signup] Creating Stripe checkout session');
+    const session = await stripe.checkout.sessions.create({
+      customer: customer.id,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: process.env.STRIPE_PRICE_ID,
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/me`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?canceled=true`,
+      metadata: {
+        userId: user.id,
+      },
+      client_reference_id: user.id,
+    });
+
+    console.log(`[Signup] Checkout session created: ${session.id}`);
+
+    // Step 7: Set session cookie and return checkout URL
+    const sessionToken = userAuthService.createSessionToken(user.id);
+
+    const response = NextResponse.json({
+      success: true,
+      checkoutUrl: session.url,
+    });
+
     response.cookies.set('gt_user_session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -67,11 +141,11 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Error in signup API:', error);
+    console.error('[Signup] Error in signup API:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Internal server error',
       },
       { status: 500 }
     );

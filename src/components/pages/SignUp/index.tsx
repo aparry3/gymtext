@@ -71,15 +71,27 @@ export default function SignupForm() {
         phoneNumber: data.phoneNumber.startsWith('+1') ? data.phoneNumber : `+1${data.phoneNumber}`
       };
 
-      // Store form data in sessionStorage for the success page to use
-      sessionStorage.setItem('gymtext_signup_data', JSON.stringify(formattedData));
+      // Call signup API
+      const response = await fetch('/api/users/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
 
-      // Redirect to success/loading page
-      window.location.href = '/success';
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create account');
+      }
+
+      const { checkoutUrl } = await response.json();
+
+      // Redirect to Stripe checkout
+      window.location.href = checkoutUrl;
     } catch (error) {
-      console.error('Error preparing signup:', error);
+      console.error('Error during signup:', error);
       setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
-    } finally {
       setIsLoading(false);
     }
   };

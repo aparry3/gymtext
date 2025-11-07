@@ -154,23 +154,49 @@ export function MultiStepSignupForm() {
 
       // Format all data for the API
       const formattedData = {
+        // User info
         name: data.name,
         phoneNumber,
         gender: data.gender,
         age: data.age.toString(),
         timezone: data.timezone,
         preferredSendHour: data.preferredSendHour,
+
+        // Formatted text for LLM (existing logic)
         fitnessGoals,
         currentExercise,
         environment,
         injuries: data.injuries || undefined,
+
+        // Structured data for analytics/reporting
+        primaryGoals: data.primaryGoals,
+        goalsElaboration: data.goalsElaboration,
+        experienceLevel: data.experienceLevel,
+        currentActivity: data.currentActivity,
+        activityElaboration: data.activityElaboration,
+        trainingLocation: data.trainingLocation,
+        equipment: data.equipment,
+        acceptedRisks: data.acceptRisks,
       };
 
-      // Store form data in sessionStorage for the success page to use
-      sessionStorage.setItem('gymtext_signup_data', JSON.stringify(formattedData));
+      // Call signup API
+      const response = await fetch('/api/users/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
 
-      // Redirect to success/loading page
-      window.location.href = '/success';
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create account');
+      }
+
+      const { checkoutUrl } = await response.json();
+
+      // Redirect to Stripe checkout
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Error preparing signup:', error);
       setErrorMessage(

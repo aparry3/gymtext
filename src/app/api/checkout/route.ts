@@ -59,11 +59,11 @@ export async function POST(request: Request) {
           });
           
           // Create a response with the user cookie and subscription info
-          const response = NextResponse.json({ 
+          const response = NextResponse.json({
             subscription,
             status: 'success',
             userId: user.id,
-            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/success`
+            redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/me`
           });
           
           return setUserCookie(response, {
