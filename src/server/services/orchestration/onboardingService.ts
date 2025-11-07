@@ -66,6 +66,8 @@ export class OnboardingService {
    * Send onboarding messages (plan summary + first workout)
    * Called after both onboarding and payment are complete
    *
+   * Uses pre-generated messages stored on the fitness plan and workout entities.
+   *
    * @param user - The user to send messages to
    * @throws Error if any step fails
    */
@@ -73,25 +75,29 @@ export class OnboardingService {
     console.log(`[Onboarding] Sending onboarding messages to ${user.id}`);
 
     try {
-      // Create conversation flow to track context
-      const flow = new ConversationFlowBuilder();
-
-      // Get the fitness plan
+      // Get the fitness plan with pre-generated message
       const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
       if (!fitnessPlan) {
         throw new Error(`No fitness plan found for user ${user.id}`);
       }
 
-      // Send plan summary
+      // Send plan summary using stored message
       console.log(`[Onboarding] Sending plan summary to ${user.id}`);
-      const planMessages = await this.messageService.sendPlanSummary(
-        user,
-        fitnessPlan,
-        flow.getRecentMessages()
-      );
-      flow.addMessage(planMessages);
+      if (fitnessPlan.message) {
+        // Use pre-generated message (may contain multiple messages separated by \n\n)
+        const messages = fitnessPlan.message.split('\n\n').filter(msg => msg.trim());
+        for (const message of messages) {
+          await this.messageService.sendMessage(user, message.trim());
+          // Small delay between messages to ensure proper ordering
+          if (messages.length > 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      } else {
+        console.warn(`[Onboarding] No pre-generated message found for fitness plan ${fitnessPlan.id}, skipping plan summary`);
+      }
 
-      // Send first daily workout
+      // Send first daily workout (uses pre-generated message on workout instance)
       console.log(`[Onboarding] Sending first workout to ${user.id}`);
       await this.dailyMessageService.sendDailyMessage(user);
 

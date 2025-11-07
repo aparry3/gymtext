@@ -263,8 +263,8 @@ export class ProgressService {
       return { microcycle, wasCreated: false };
     }
 
-    // Generate new pattern for the week using AI agent
-    const pattern = await this.generateMicrocyclePattern(
+    // Generate new pattern and message for the week using AI agent
+    const { pattern, message } = await this.generateMicrocyclePattern(
       progress.mesocycle,
       progress.microcycleWeek,
       plan.programType,
@@ -277,13 +277,14 @@ export class ProgressService {
     // Deactivate previous microcycles
     await this.microcycleRepo.deactivatePreviousMicrocycles(user.id);
 
-    // Create new microcycle
+    // Create new microcycle with pre-generated message
     microcycle = await this.microcycleRepo.createMicrocycle({
       userId: user.id,
       fitnessPlanId: plan.id!,
       mesocycleIndex: progress.mesocycleIndex,
       weekNumber: progress.microcycleWeek,
       pattern,
+      message,
       startDate,
       endDate,
       isActive: true,
@@ -419,19 +420,19 @@ export class ProgressService {
     weekIndex: number, // 0-based index
     programType: string,
     notes?: string | null
-  ): Promise<MicrocyclePattern> {
+  ): Promise<{ pattern: MicrocyclePattern; message: string }> {
     try {
-      // Use AI agent to generate pattern (weekIndex is 0-based)
+      // Use AI agent to generate pattern and message (weekIndex is 0-based)
       const agent = createMicrocyclePatternAgent();
-      const pattern = await agent.invoke({
+      const result = await agent.invoke({
         mesocycle,
         weekIndex,
         programType,
         notes
       });
 
-      console.log(`Generated AI pattern for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
-      return pattern;
+      console.log(`Generated AI pattern and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
+      return result;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);
       throw error;

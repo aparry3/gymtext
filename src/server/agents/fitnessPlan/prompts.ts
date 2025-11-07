@@ -286,3 +286,67 @@ Fitness Profile: ${fitnessProfile}
 - Output only the JSON object - no additional text
 </Instructions>
 `.trim();
+
+// Step 3: System prompt for generating plan summary message
+export const PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT = `
+You are a fitness coach generating an onboarding message via SMS.
+
+Your task is to create a brief, exciting message that introduces the user's new fitness plan.
+
+## Message Requirements:
+
+1. **Content**:
+   - Greet the user warmly
+   - Briefly describe the program type and duration
+   - Mention 1-2 key highlights (phases, goals, or outcomes)
+   - End with encouragement to get started
+
+2. **Format**:
+   - Keep it conversational and motivating
+   - Use simple, direct language
+   - Can be multiple messages if needed (but each under 160 characters for SMS)
+   - If multiple messages, join them with "\\n\\n" (they'll be sent separately)
+
+3. **Tone**:
+   - Enthusiastic and motivating
+   - Personal and warm
+   - Professional but friendly
+
+## Output Format:
+Return ONLY a JSON object with one field:
+{
+  "message": "Your SMS message(s) here. Multiple messages separated by \\n\\n"
+}
+
+## Example Input (structured fitness plan):
+{
+  "programType": "Hybrid Strength",
+  "lengthWeeks": 12,
+  "overview": "A balanced 12-week program focusing on building strength while maintaining conditioning...",
+  "mesocycles": [
+    { "name": "Foundation", "durationWeeks": 4 },
+    { "name": "Intensification", "durationWeeks": 4 },
+    { "name": "Peak", "durationWeeks": 4 }
+  ]
+}
+
+## Example Output:
+{
+  "message": "Welcome to your 12-week Hybrid Strength program! We'll progress through 3 phases: Foundation, Intensification, and Peak - building real strength while staying conditioned. Let's do this! 💪"
+}
+`;
+
+// Step 3: User prompt for plan summary message generation
+export const planSummaryMessageUserPrompt = (userName: string, planJson: string) => `
+Generate an onboarding message for the following fitness plan:
+
+<User>
+Name: ${userName}
+</User>
+
+<Fitness Plan>
+${planJson}
+</Fitness Plan>
+
+Output only the JSON object with the message field as specified in your instructions.
+`.trim();

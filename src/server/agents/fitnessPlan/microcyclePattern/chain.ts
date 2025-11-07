@@ -1,55 +1,73 @@
-import { z } from 'zod';
 import { _StructuredMicrocycleSchema, MicrocyclePattern } from '@/server/models/microcycle/schema';
-import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt, MICROCYCLE_STRUCTURED_SYSTEM_PROMPT, microcycleStructuredUserPrompt } from './prompts';
-import { initializeModel, createRunnableAgent } from '@/server/agents/base';
+import { MICROCYCLE_SYSTEM_PROMPT, microcycleUserPrompt } from './prompts';
+import { createRunnableAgent } from '@/server/agents/base';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { createLongFormMicrocycleRunnable } from './longFormMicrocycle/chain';
+import { createStructuredMicrocycleAgent } from './structuredMicrocycle/chain';
+import { createMicrocycleMessageAgent } from './microcycleMessage/chain';
 import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
-
-// Schema for step 1: long-form microcycle description and reasoning
-const LongFormMicrocycleSchema = z.object({
-  description: z.string().describe("Long-form narrative description of the weekly microcycle"),
-  reasoning: z.string().describe("Explanation of how and why the week is structured")
-});
 
 /**
  * Microcycle Pattern Agent Factory
  *
- * Generates weekly training patterns with progressive overload.
- * Uses a two-step process:
+ * Generates weekly training patterns with progressive overload using a composable chain:
  * 1. Generate long-form description and reasoning
- * 2. Convert description to structured MicrocyclePattern
+ * 2. Convert to structured MicrocyclePattern (parallel with step 3)
+ * 3. Generate SMS-formatted weekly message (parallel with step 2)
+ *
+ * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that generates microcycle patterns
+ * @returns Agent that generates microcycle patterns and messages
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
     const { mesocycle, weekIndex, programType, notes } = input;
 
     try {
-      // Step 1: Generate long-form description and reasoning
-      const longFormModel = initializeModel(LongFormMicrocycleSchema, deps?.config);
-      const longFormResult = await longFormModel.invoke([
-        { role: 'system', content: MICROCYCLE_SYSTEM_PROMPT },
-        { role: 'user', content: microcycleUserPrompt({ mesocycle, weekIndex, programType, notes }) }
-      ]);
+      // Build user prompt for step 1
+      const userPrompt = microcycleUserPrompt({ mesocycle, weekIndex, programType, notes });
 
-      // Step 2: Convert to structured JSON (without weekIndex - we'll set it deterministically)
+      // Step 1: Create long-form runnable
+      const longFormRunnable = createLongFormMicrocycleRunnable({
+        systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
+        agentConfig: deps?.config
+      });
+
+      // Step 2: Create structured microcycle agent (without weekIndex - we'll set it deterministically)
       const StructuredMicrocycleSchemaWithoutWeekIndex = _StructuredMicrocycleSchema.omit({ weekIndex: true });
-      const structuredModel = initializeModel(StructuredMicrocycleSchemaWithoutWeekIndex, deps?.config);
-      const structuredResult = await structuredModel.invoke([
-        { role: 'system', content: MICROCYCLE_STRUCTURED_SYSTEM_PROMPT },
-        { role: 'user', content: microcycleStructuredUserPrompt(longFormResult.description) }
+      const structuredAgent = createStructuredMicrocycleAgent<Omit<MicrocyclePattern, 'weekIndex'>>({
+        schema: StructuredMicrocycleSchemaWithoutWeekIndex,
+        agentConfig: deps?.config,
+        operationName: 'generate microcycle pattern'
+      });
+
+      // Step 3: Create message agent
+      const messageAgent = createMicrocycleMessageAgent({
+        agentConfig: deps?.config,
+        operationName: 'generate microcycle message'
+      });
+
+      // Compose the chain: long-form → parallel (structured + message)
+      const sequence = RunnableSequence.from([
+        longFormRunnable,
+        RunnablePassthrough.assign({
+          pattern: structuredAgent,
+          message: messageAgent
+        })
       ]);
 
-      // Deterministically set weekIndex from input (agent doesn't generate this)
-      const finalResult: MicrocyclePattern = {
-        ...structuredResult,
-        weekIndex // 0-based index
-      };
+      // Execute the chain
+      const result = await sequence.invoke({ ...input, prompt: userPrompt });
 
-      return finalResult;
+      console.log(`[Microcycle] Generated pattern and message for week ${weekIndex + 1}`);
+
+      return {
+        pattern: result.pattern,
+        message: result.message
+      };
     } catch (error) {
-      console.error('Error generating microcycle pattern:', error);    
+      console.error('Error generating microcycle pattern:', error);
       throw error;
     }
   });

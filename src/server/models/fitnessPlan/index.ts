@@ -10,6 +10,7 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
   mesocycles: Mesocycle[];
   id?: string;
+  message?: string | null; // SMS-formatted plan summary
 };
 
 export interface FitnessPlanOverview {
@@ -20,6 +21,7 @@ export interface FitnessPlanOverview {
   planDescription: string; // Long-form explanation of plan structure
   reasoning: string; // Detailed decision-making rationale
   notes?: string; // Travel, injuries, etc.
+  message?: string; // SMS-formatted plan summary
 }
 
 export interface Mesocycle {
@@ -115,6 +117,7 @@ export class FitnessPlanModel implements FitnessPlan {
       overview: fitnessPlanOverview.overview,
       planDescription: fitnessPlanOverview.planDescription,
       reasoning: fitnessPlanOverview.reasoning,
+      message: fitnessPlanOverview.message || null,
       clientId: user.id,
       startDate: new Date(),
     };
