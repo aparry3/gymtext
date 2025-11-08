@@ -6,6 +6,10 @@ import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { WorkoutInstanceService } from './workoutInstanceService';
 import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
+import { DateTime } from 'luxon';
+import { UserWithProfile, FitnessPlan } from '@/server/models';
+import { ProgressInfo } from './progressService';
+import { Microcycle } from '@/server/models/microcycle';
 
 export interface ModifyWeekParams {
   userId: string;
@@ -42,6 +46,36 @@ export class MicrocycleService {
       MicrocycleService.instance = new MicrocycleService();
     }
     return MicrocycleService.instance;
+  }
+
+  /**
+   * Get the active microcycle for a user (the one flagged as active in DB)
+   */
+  public async getActiveMicrocycle(userId: string) {
+    return await this.microcycleRepo.getActiveMicrocycle(userId);
+  }
+
+  /**
+   * Check if the active microcycle encompasses the current week in the user's timezone
+   */
+  public async isActiveMicrocycleCurrent(userId: string, timezone: string = 'America/New_York'): Promise<boolean> {
+    const activeMicrocycle = await this.microcycleRepo.getActiveMicrocycle(userId);
+    if (!activeMicrocycle) {
+      return false;
+    }
+
+    const { startDate: currentWeekStart } = this.calculateWeekDates(timezone);
+    const normalizedCurrentWeekStart = new Date(currentWeekStart);
+    normalizedCurrentWeekStart.setHours(0, 0, 0, 0);
+
+    const activeMicrocycleStart = new Date(activeMicrocycle.startDate);
+    activeMicrocycleStart.setHours(0, 0, 0, 0);
+
+    const activeMicrocycleEnd = new Date(activeMicrocycle.endDate);
+    activeMicrocycleEnd.setHours(0, 0, 0, 0);
+
+    // Check if current week falls within active microcycle's date range
+    return normalizedCurrentWeekStart >= activeMicrocycleStart && normalizedCurrentWeekStart <= activeMicrocycleEnd;
   }
 
   /**
@@ -103,7 +137,7 @@ export class MicrocycleService {
       }
 
       // Get the current active microcycle (the one for this week)
-      const relevantMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(userId);
+      const relevantMicrocycle = await this.microcycleRepo.getActiveMicrocycle(userId);
 
       if (!relevantMicrocycle) {
         console.error(`[MODIFY_WEEK] No active microcycle found for user ${userId}`);
@@ -276,6 +310,100 @@ export class MicrocycleService {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
+  }
+
+  /**
+   * Get or create the active microcycle for a user
+   * This is the main entry point for ensuring a user has a microcycle for the current week
+   */
+  public async getOrCreateActiveMicrocycle(
+    user: UserWithProfile,
+    progress: ProgressInfo,
+    plan: FitnessPlan
+  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
+    // Check if microcycle exists for current week
+    let microcycle = await this.microcycleRepo.getMicrocycleByWeek(
+      user.id,
+      plan.id!,
+      progress.mesocycleIndex,
+      progress.microcycleWeek
+    );
+
+    if (microcycle) {
+      return { microcycle, wasCreated: false };
+    }
+
+    // Generate new pattern and message for the week using AI agent
+    const { pattern, message } = await this.generateMicrocyclePattern(
+      progress.mesocycle,
+      progress.microcycleWeek,
+      plan.programType,
+      plan.notes
+    );
+
+    // Calculate week start and end dates
+    const { startDate, endDate } = this.calculateWeekDates(user.timezone);
+
+    // Deactivate previous microcycles
+    await this.microcycleRepo.deactivatePreviousMicrocycles(user.id);
+
+    // Create new microcycle with pre-generated message
+    microcycle = await this.microcycleRepo.createMicrocycle({
+      userId: user.id,
+      fitnessPlanId: plan.id!,
+      mesocycleIndex: progress.mesocycleIndex,
+      weekNumber: progress.microcycleWeek,
+      pattern,
+      message,
+      startDate,
+      endDate,
+      isActive: true,
+    });
+
+    console.log(`Created new microcycle for user ${user.id}, week ${progress.microcycleWeek}`);
+    return { microcycle, wasCreated: true };
+  }
+
+  /**
+   * Generate a microcycle pattern and message using AI agent
+   */
+  private async generateMicrocyclePattern(
+    mesocycle: import('@/server/models/fitnessPlan').Mesocycle,
+    weekIndex: number, // 0-based index
+    programType: string,
+    notes?: string | null
+  ): Promise<{ pattern: import('@/server/models/microcycle/schema').MicrocyclePattern; message: string }> {
+    try {
+      // Use AI agent to generate pattern and message (weekIndex is 0-based)
+      const { createMicrocyclePatternAgent } = await import('@/server/agents/fitnessPlan/microcyclePattern/chain');
+      const agent = createMicrocyclePatternAgent();
+      const result = await agent.invoke({
+        mesocycle,
+        weekIndex,
+        programType,
+        notes
+      });
+
+      console.log(`Generated AI pattern and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
+      return result;
+    } catch (error) {
+      console.error('Failed to generate pattern with AI agent, using fallback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate week dates in a specific timezone
+   */
+  private calculateWeekDates(timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } {
+    const now = DateTime.now().setZone(timezone);
+    const startOfWeek = now.startOf('week');
+    const endOfWeek = now.endOf('week');
+
+    return {
+      startDate: startOfWeek.toJSDate(),
+      endDate: endOfWeek.toJSDate(),
+    };
   }
 
   /**

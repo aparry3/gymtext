@@ -27,7 +27,7 @@ export class MicrocycleRepository {
     return MicrocycleModel.fromDB(result as any);
   }
 
-  async getCurrentMicrocycle(userId: string): Promise<Microcycle | null> {
+  async getActiveMicrocycle(userId: string): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()

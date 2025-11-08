@@ -187,7 +187,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     );
   }
 
-  const initials = user.name
+  const initials = user?.name
     ?.split(' ')
     .map((n) => n[0])
     .join('')
@@ -218,15 +218,15 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
                 <div className="space-y-3">
                   <div>
-                    <h1 className="text-2xl font-semibold">{user.name || 'Unnamed User'}</h1>
+                    <h1 className="text-2xl font-semibold">{user?.name || 'Unnamed User'}</h1>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      {user.age && (
+                      {user?.age && (
                         <Badge variant="outline">{user.age} years old</Badge>
                       )}
-                      {user.gender && (
+                      {user?.gender && (
                         <Badge variant="outline">{user.gender}</Badge>
                       )}
-                      {user.timezone && (
+                      {user?.timezone && (
                         <Badge variant="outline" className="gap-1">
                           <MapPin className="h-3 w-3" />
                           {user.timezone.split('/')[1]?.replace('_', ' ') || user.timezone}
@@ -256,23 +256,23 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             <QuickFactCard
               icon={<Mail className="h-4 w-4" />}
               label="Email"
-              value={user.email || 'No email'}
-              muted={!user.email}
+              value={user?.email || 'No email'}
+              muted={!user?.email}
             />
             <QuickFactCard
               icon={<Phone className="h-4 w-4" />}
               label="Phone"
-              value={formatPhone(user.phoneNumber)}
+              value={formatPhone(user?.phoneNumber || '')}
             />
             <QuickFactCard
               icon={<Clock className="h-4 w-4" />}
               label="Preferred Send Hour"
-              value={`${user.preferredSendHour}:00`}
+              value={`${user?.preferredSendHour || 0}:00`}
             />
             <QuickFactCard
               icon={<Calendar className="h-4 w-4" />}
               label="Member Since"
-              value={formatRelative(user.createdAt)}
+              value={formatRelative(user?.createdAt || new Date())}
             />
           </div>
 

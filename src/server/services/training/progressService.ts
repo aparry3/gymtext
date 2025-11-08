@@ -2,10 +2,9 @@ import { DateTime } from 'luxon';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { Microcycle } from '../../models/microcycle';
-import { MicrocyclePattern } from '../../models/microcycle/schema';
 import { FitnessPlan, Mesocycle } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
-import { createMicrocyclePatternAgent } from '../../agents/fitnessPlan/microcyclePattern/chain';
+import { MicrocycleService } from './microcycleService';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export interface ProgressInfo {
@@ -25,10 +24,18 @@ export class ProgressService {
   private static instance: ProgressService;
   private fitnessPlanRepo: FitnessPlanRepository;
   private microcycleRepo: MicrocycleRepository;
+  private _microcycleService?: MicrocycleService;
 
   private constructor() {
     this.fitnessPlanRepo = new FitnessPlanRepository();
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
+  }
+
+  private get microcycleService(): MicrocycleService {
+    if (!this._microcycleService) {
+      this._microcycleService = MicrocycleService.getInstance();
+    }
+    return this._microcycleService;
   }
 
   public static getInstance(): ProgressService {
@@ -84,7 +91,7 @@ export class ProgressService {
     }
 
     // Check if we need to auto-advance weeks
-    const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(user.id);
+    const currentMicrocycle = await this.microcycleService.getActiveMicrocycle(user.id);
     let weeksAdvanced = 0;
     let enteredNewMesocycle = false;
 
@@ -115,7 +122,7 @@ export class ProgressService {
     }
 
     // Get or create current microcycle
-    const { microcycle, wasCreated } = await this.getOrCreateCurrentMicrocycle(user, progress, plan);
+    const { microcycle, wasCreated } = await this.microcycleService.getOrCreateActiveMicrocycle(user, progress, plan);
 
     // Return enriched progress info
     return {
@@ -128,27 +135,6 @@ export class ProgressService {
     };
   }
 
-  /**
-   * Get the current active microcycle for a user without creating one
-   */
-  async getCurrentMicrocycle(userId: string): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getCurrentMicrocycle(userId);
-  }
-
-  /**
-   * @deprecated Use ensureUpToDateProgress() instead for better control and richer return data
-   * Wrapper around ensureUpToDateProgress() for backward compatibility
-   */
-  async getCurrentOrCreateMicrocycle(user: UserWithProfile): Promise<Microcycle | null> {
-    const plan = await this.fitnessPlanRepo.getCurrentPlan(user.id);
-    if (!plan) {
-      console.log(`No fitness plan found for user ${user.id}`);
-      return null;
-    }
-
-    const progress = await this.ensureUpToDateProgress(plan, user);
-    return progress?.microcycle || null;
-  }
 
   async advanceWeek(userId: string): Promise<void> {
     const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
@@ -242,57 +228,6 @@ export class ProgressService {
     console.log(`Reset progress for user ${userId}`);
   }
 
-  /**
-   * Gets the current microcycle or creates it if it doesn't exist
-   * Returns the microcycle and whether it was newly created
-   */
-  private async getOrCreateCurrentMicrocycle(
-    user: UserWithProfile,
-    progress: ProgressInfo,
-    plan: FitnessPlan
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    // Check if microcycle exists for current week
-    let microcycle = await this.microcycleRepo.getMicrocycleByWeek(
-      user.id,
-      plan.id!,
-      progress.mesocycleIndex,
-      progress.microcycleWeek
-    );
-
-    if (microcycle) {
-      return { microcycle, wasCreated: false };
-    }
-
-    // Generate new pattern and message for the week using AI agent
-    const { pattern, message } = await this.generateMicrocyclePattern(
-      progress.mesocycle,
-      progress.microcycleWeek,
-      plan.programType,
-      plan.notes
-    );
-
-    // Calculate week start and end dates
-    const { startDate, endDate } = this.calculateWeekDates(user.timezone);
-
-    // Deactivate previous microcycles
-    await this.microcycleRepo.deactivatePreviousMicrocycles(user.id);
-
-    // Create new microcycle with pre-generated message
-    microcycle = await this.microcycleRepo.createMicrocycle({
-      userId: user.id,
-      fitnessPlanId: plan.id!,
-      mesocycleIndex: progress.mesocycleIndex,
-      weekNumber: progress.microcycleWeek,
-      pattern,
-      message,
-      startDate,
-      endDate,
-      isActive: true,
-    });
-
-    console.log(`Created new microcycle for user ${user.id}, week ${progress.microcycleWeek}`);
-    return { microcycle, wasCreated: true };
-  }
 
   /**
    * Performs automatic week advancement, handling multiple weeks if needed
@@ -311,7 +246,7 @@ export class ProgressService {
     const maxWeeksToAdvance = 12; // Safety limit
 
     while (weeksAdvanced < maxWeeksToAdvance) {
-      const currentMicrocycle = await this.microcycleRepo.getCurrentMicrocycle(userId);
+      const currentMicrocycle = await this.microcycleService.getActiveMicrocycle(userId);
       if (!currentMicrocycle) break;
 
       const currentMicrocycleEnd = new Date(currentMicrocycle.endDate);
@@ -369,30 +304,6 @@ export class ProgressService {
       startDate: startOfWeek.toJSDate(),
       endDate: endOfWeek.toJSDate(),
     };
-  }
-
-  private async generateMicrocyclePattern(
-    mesocycle: Mesocycle,
-    weekIndex: number, // 0-based index
-    programType: string,
-    notes?: string | null
-  ): Promise<{ pattern: MicrocyclePattern; message: string }> {
-    try {
-      // Use AI agent to generate pattern and message (weekIndex is 0-based)
-      const agent = createMicrocyclePatternAgent();
-      const result = await agent.invoke({
-        mesocycle,
-        weekIndex,
-        programType,
-        notes
-      });
-
-      console.log(`Generated AI pattern and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
-      return result;
-    } catch (error) {
-      console.error('Failed to generate pattern with AI agent, using fallback:', error);
-      throw error;
-    }
   }
 }
 
