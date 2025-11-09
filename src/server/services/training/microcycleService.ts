@@ -32,15 +32,21 @@ export class MicrocycleService {
   private microcycleRepo: MicrocycleRepository;
   private fitnessPlanService: FitnessPlanService;
   private progressService: ProgressService;
-  private workoutInstanceService: WorkoutInstanceService;
+  private _workoutInstanceService?: WorkoutInstanceService;
   private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.fitnessPlanService = FitnessPlanService.getInstance();
     this.progressService = ProgressService.getInstance();
-    this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.userService = UserService.getInstance();
+  }
+
+  private get workoutInstanceService(): WorkoutInstanceService {
+    if (!this._workoutInstanceService) {
+      this._workoutInstanceService = WorkoutInstanceService.getInstance();
+    }
+    return this._workoutInstanceService;
   }
 
   public static getInstance(): MicrocycleService {
