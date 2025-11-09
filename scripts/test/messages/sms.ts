@@ -76,7 +76,8 @@ class SmsConversationTester {
 
     const userWithProfile = await this.db.getUserWithProfile(user.id);
     const fitnessPlan = await this.db.getFitnessPlan(user.id);
-    const progress = await this.db.getCurrentProgress(user.id);
+    // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+    // const progress = await this.db.getCurrentProgress(user.id);
 
     // Get message history (no longer using conversations)
     const messages = await this.db.db
@@ -120,10 +121,10 @@ class SmsConversationTester {
           ? (userWithProfile.profile.exerciseFrequency as string)
           : '3x/week',
       } : undefined,
-      currentPlan: fitnessPlan && progress ? {
+      currentPlan: fitnessPlan ? {
         id: fitnessPlan.id,
-        currentWeek: progress.microcycleWeek,
-        currentMesocycle: progress.mesocycleIndex,
+        currentWeek: 0, // Progress no longer available from DB
+        currentMesocycle: 0, // Progress no longer available from DB
       } : undefined,
     };
   }

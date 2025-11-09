@@ -11,6 +11,7 @@ export interface Microcycle {
   mesocycleIndex: number;
   weekNumber: number;
   pattern: MicrocyclePattern;
+  message?: string | null; // SMS-formatted weekly check-in/breakdown message
   startDate: Date;
   endDate: Date;
   isActive: boolean;
@@ -26,9 +27,10 @@ export class MicrocycleModel {
       fitnessPlanId: row.fitnessPlanId as unknown as string,
       mesocycleIndex: row.mesocycleIndex,
       weekNumber: row.weekNumber,
-      pattern: typeof row.pattern === 'string' 
-        ? JSON.parse(row.pattern) 
+      pattern: typeof row.pattern === 'string'
+        ? JSON.parse(row.pattern)
         : row.pattern as unknown as MicrocyclePattern,
+      message: (row.message as unknown as string | null) ?? null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       endDate: new Date(row.endDate as unknown as string | number | Date),
       isActive: (row.isActive as unknown as boolean) ?? true,
@@ -44,6 +46,8 @@ export class MicrocycleModel {
       mesocycleIndex: microcycle.mesocycleIndex,
       weekNumber: microcycle.weekNumber,
       pattern: JSON.stringify(microcycle.pattern),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      message: microcycle.message as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       startDate: microcycle.startDate as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

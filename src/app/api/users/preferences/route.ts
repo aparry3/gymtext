@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { isValidIANATimezone, formatTimezoneForDisplay } from '@/server/utils/timezone';
-import { DateTime } from 'luxon';
+import { now } from '@/shared/utils/date';
 
 // Mock auth for now - replace with your actual auth implementation
 async function getUserIdFromRequest(request: Request): Promise<string | null> {
@@ -37,26 +37,25 @@ export async function GET(request: Request) {
     }
     
     // Calculate the next message delivery time
-    const now = DateTime.now().setZone(user.timezone);
-    let nextDelivery = now.set({ 
-      hour: user.preferredSendHour, 
-      minute: 0, 
-      second: 0, 
-      millisecond: 0 
+    const nowDt = now(user.timezone);
+    let nextDelivery = nowDt.set({
+      hour: user.preferredSendHour,
+      minute: 0,
+      second: 0,
+      millisecond: 0
     });
-    
+
     // If the time has already passed today, set it for tomorrow
-    if (nextDelivery <= now) {
+    if (nextDelivery <= nowDt) {
       nextDelivery = nextDelivery.plus({ days: 1 });
     }
-    
+
     return NextResponse.json({
       preferredSendHour: user.preferredSendHour,
       timezone: user.timezone,
       timezoneDisplay: formatTimezoneForDisplay(user.timezone),
       localTime: `${user.preferredSendHour}:00`,
-      localTime12h: DateTime.now()
-        .setZone(user.timezone)
+      localTime12h: now(user.timezone)
         .set({ hour: user.preferredSendHour })
         .toFormat('h:mm a'),
       nextDelivery: nextDelivery.toISO(),
@@ -136,19 +135,19 @@ export async function PUT(request: Request) {
     }
     
     // Calculate the next message delivery time
-    const now = DateTime.now().setZone(updatedUser.timezone);
-    let nextDelivery = now.set({ 
-      hour: updatedUser.preferredSendHour, 
-      minute: 0, 
-      second: 0, 
-      millisecond: 0 
+    const nowDt = now(updatedUser.timezone);
+    let nextDelivery = nowDt.set({
+      hour: updatedUser.preferredSendHour,
+      minute: 0,
+      second: 0,
+      millisecond: 0
     });
-    
+
     // If the time has already passed today, set it for tomorrow
-    if (nextDelivery <= now) {
+    if (nextDelivery <= nowDt) {
       nextDelivery = nextDelivery.plus({ days: 1 });
     }
-    
+
     return NextResponse.json({
       success: true,
       preferences: {
@@ -156,8 +155,7 @@ export async function PUT(request: Request) {
         timezone: updatedUser.timezone,
         timezoneDisplay: formatTimezoneForDisplay(updatedUser.timezone),
         localTime: `${updatedUser.preferredSendHour}:00`,
-        localTime12h: DateTime.now()
-          .setZone(updatedUser.timezone)
+        localTime12h: now(updatedUser.timezone)
           .set({ hour: updatedUser.preferredSendHour })
           .toFormat('h:mm a'),
         nextDelivery: nextDelivery.toISO(),

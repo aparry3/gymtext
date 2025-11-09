@@ -7,9 +7,10 @@ export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;
 export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 
-export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
+export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles' | 'currentMesocycleIndex' | 'currentMicrocycleWeek' | 'cycleStartDate'> & {
   mesocycles: Mesocycle[];
   id?: string;
+  message?: string | null; // SMS-formatted plan summary
 };
 
 export interface FitnessPlanOverview {
@@ -20,6 +21,7 @@ export interface FitnessPlanOverview {
   planDescription: string; // Long-form explanation of plan structure
   reasoning: string; // Detailed decision-making rationale
   notes?: string; // Travel, injuries, etc.
+  message?: string; // SMS-formatted plan summary
 }
 
 export interface Mesocycle {
@@ -44,9 +46,6 @@ export class FitnessPlanModel implements FitnessPlan {
   mesocycles: Mesocycle[];
   lengthWeeks: number | null;
   notes: string | null;
-  currentMesocycleIndex: number | null;
-  currentMicrocycleWeek: number | null;
-  cycleStartDate: Date | null;
   overview: string | null;
   planDescription: string | null;
   reasoning: string | null;
@@ -62,9 +61,6 @@ export class FitnessPlanModel implements FitnessPlan {
     mesocycles: Mesocycle[],
     lengthWeeks: number | null,
     notes: string | null,
-    currentMesocycleIndex: number | null,
-    currentMicrocycleWeek: number | null,
-    cycleStartDate: Date | null,
     overview: string,
     planDescription: string | null,
     reasoning: string | null,
@@ -79,9 +75,6 @@ export class FitnessPlanModel implements FitnessPlan {
     this.mesocycles = mesocycles;
     this.lengthWeeks = lengthWeeks;
     this.notes = notes;
-    this.currentMesocycleIndex = currentMesocycleIndex;
-    this.currentMicrocycleWeek = currentMicrocycleWeek;
-    this.cycleStartDate = cycleStartDate;
     this.overview = overview;
     this.planDescription = planDescription;
     this.reasoning = reasoning;
@@ -109,12 +102,10 @@ export class FitnessPlanModel implements FitnessPlan {
       mesocycles: fitnessPlanOverview.mesocycles,
       lengthWeeks: fitnessPlanOverview.lengthWeeks,
       notes: fitnessPlanOverview.notes || null,
-      currentMesocycleIndex: 0,
-      currentMicrocycleWeek: 0,
-      cycleStartDate: new Date(),
       overview: fitnessPlanOverview.overview,
       planDescription: fitnessPlanOverview.planDescription,
       reasoning: fitnessPlanOverview.reasoning,
+      message: fitnessPlanOverview.message || null,
       clientId: user.id,
       startDate: new Date(),
     };

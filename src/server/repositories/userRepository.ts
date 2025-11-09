@@ -111,6 +111,8 @@ export class UserRepository extends BaseRepository {
     .values({
       name: userData.name,
       phoneNumber: userData.phoneNumber,
+      age: userData.age || null,
+      gender: userData.gender || null,
       email: userData.email || null,
       stripeCustomerId: userData.stripeCustomerId || null,
       timezone: userData.timezone,

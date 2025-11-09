@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import SignUpForm from '@/components/pages/SignUp'
+// import SignUpForm from '@/components/pages/SignUp'
 import { Bebas_Neue } from 'next/font/google'
 import Image from 'next/image'
 
@@ -72,7 +72,8 @@ export default function Home() {
         <section id="signup" className="container mx-auto px-4 py-24">
           <div className="max-w-2xl mx-auto bg-white rounded-xl p-10 shadow-lg border border-gray-100">
             <h2 className="text-4xl font-bold mb-10 text-center text-[#2d3748] tracking-wide">Start Your Fitness Journey</h2>
-            <SignUpForm />
+            {/* <SignUpForm /> */}
+            <p className="text-center text-gray-500">Old signup form - see new page</p>
           </div>
         </section>
       </main>

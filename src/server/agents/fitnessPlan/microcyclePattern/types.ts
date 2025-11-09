@@ -15,7 +15,10 @@ export interface MicrocyclePatternInput {
 /**
  * Output from microcycle pattern agent
  */
-export type MicrocyclePatternOutput = MicrocyclePattern;
+export interface MicrocyclePatternOutput {
+  pattern: MicrocyclePattern;
+  message: string; // SMS-formatted weekly check-in/breakdown message
+}
 
 /**
  * Dependencies for microcycle pattern agent

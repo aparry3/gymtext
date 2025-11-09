@@ -107,22 +107,12 @@ export class TestDatabase {
 
   /**
    * Get current progress for user
+   * NOTE: Progress is now calculated from dates, not stored in DB
+   * Use ProgressService.getCurrentProgress() instead
    */
   async getCurrentProgress(userId: string) {
-    try {
-      const plan = await this.getFitnessPlan(userId);
-      if (!plan) return null;
-
-      return {
-        mesocycleIndex: plan.currentMesocycleIndex || 0,
-        microcycleWeek: plan.currentMicrocycleWeek || 1,
-        cycleStartDate: plan.cycleStartDate,
-        planId: plan.id,
-      };
-    } catch (error) {
-      console.error(chalk.red('Error fetching progress:'), error);
-      return null;
-    }
+    console.warn('getCurrentProgress is deprecated - use ProgressService.getCurrentProgress() instead');
+    return null;
   }
 
   /**

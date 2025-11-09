@@ -9,13 +9,13 @@ import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../mo
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
 import { postgresDb } from '../../connections/postgres/postgres';
-import { DateTime } from 'luxon';
+import { now } from '@/shared/utils/date';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../../models/_types';
 import { summaryAgent } from '../../agents/conversation/summary/chain';
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
-import { ProgressService } from '../training/progressService';
+import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 
 /**
@@ -109,7 +109,7 @@ export class MessageService {
   private messageRepo: MessageRepository;
   private userService: UserService;
   private fitnessPlanService: FitnessPlanService;
-  private progressService: ProgressService;
+  private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
   private circuitBreaker: CircuitBreaker;
 
@@ -117,7 +117,7 @@ export class MessageService {
     this.messageRepo = new MessageRepository(postgresDb);
     this.userService = UserService.getInstance();
     this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.progressService = ProgressService.getInstance();
+    this.microcycleService = MicrocycleService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
@@ -296,11 +296,11 @@ export class MessageService {
     } : undefined;
 
     // 2. Fetch current microcycle
-    const currentMicrocycle = await this.progressService.getCurrentMicrocycle(user.id);
+    const currentMicrocycle = await this.microcycleService.getActiveMicrocycle(user.id);
     const microcycleContext = currentMicrocycle?.pattern;
 
     // 3. Fetch today's workout
-    const nowInUserTz = DateTime.now().setZone(user.timezone);
+    const nowInUserTz = now(user.timezone);
     const todayDate = nowInUserTz.startOf('day').toJSDate();
     const todayWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
 

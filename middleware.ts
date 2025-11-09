@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Protect /admin UI and /api/admin endpoints with a simple cookie-based gate
 // Protect /me UI with user session cookie
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Admin path protection
@@ -56,7 +56,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   // Explicitly include all admin and user routes
   // Note: /admin/:path* catches /admin/users, /admin/users/123, etc.
-  // But we explicitly include /admin for clarity
+  // Note: Short links (/l/:code) are now handled by app/l/[code]/page.tsx
   matcher: [
     '/admin',
     '/admin/:path*',

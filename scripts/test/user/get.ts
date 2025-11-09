@@ -190,20 +190,14 @@ async function displayUser(options: GetUserOptions): Promise<void> {
         }
       }
 
-      // Progress
-      if (options.progress !== false && progress) {
+      // Progress - NOTE: Progress tracking via DB is deprecated
+      if (options.progress !== false && details.plan && microcycle) {
         console.log('');
-        console.log(chalk.bold('Current Progress'));
+        console.log(chalk.bold('Current Progress (from microcycle)'));
         separator();
-        console.log(chalk.white('Mesocycle:'), progress.mesocycleIndex + 1);
-        console.log(chalk.white('Week:'), progress.microcycleWeek);
-        
-        if (progress.cycleStartDate) {
-          const daysInCycle = Math.floor(
-            (Date.now() - new Date(progress.cycleStartDate).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          console.log(chalk.white('Days in Cycle:'), daysInCycle);
-        }
+        console.log(chalk.white('Mesocycle:'), microcycle.mesocycleIndex + 1);
+        console.log(chalk.white('Week:'), microcycle.weekNumber);
+        console.log(chalk.gray('(Progress is now calculated from dates, not stored in DB)'));
       }
 
       // Current microcycle

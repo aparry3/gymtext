@@ -1,81 +1,109 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { UserRepository } from '@/server/repositories/userRepository';
-import { UserCookieData } from '@/shared/utils/cookies';
+import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
+import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
 
-// Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
+/**
+ * GET /api/checkout/session
+ *
+ * Handles the redirect from Stripe checkout after successful payment.
+ * This ensures a subscription record exists before redirecting to /me.
+ *
+ * Flow:
+ * 1. Get session_id from query params
+ * 2. Retrieve checkout session from Stripe
+ * 3. Check if subscription exists in DB
+ * 4. If not, create it (webhook backup)
+ * 5. Try to send onboarding messages
+ * 6. Redirect to /me
+ */
 export async function GET(req: NextRequest) {
+  console.log('[Checkout Session] Processing redirect from Stripe');
+
   try {
-    // Get the session_id and user_id from the URL
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('session_id');
-    const userId = searchParams.get('user_id');
 
-    if (!sessionId || !userId) {
-      return NextResponse.json(
-        { error: 'Missing session_id or user_id' },
-        { status: 400 }
-      );
+    if (!sessionId) {
+      console.error('[Checkout Session] Missing session_id parameter');
+      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
     }
 
-    // Verify the session with Stripe
+    // Retrieve the checkout session from Stripe
+    console.log(`[Checkout Session] Retrieving session: ${sessionId}`);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (!session || session.status !== 'complete') {
-      return NextResponse.json(
-        { error: 'Invalid or incomplete session' },
-        { status: 400 }
-      );
+    // Get userId from metadata
+    const userId = session.metadata?.userId || session.client_reference_id;
+    if (!userId) {
+      console.error('[Checkout Session] No userId in session metadata');
+      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
     }
 
-    // Get the user from the database
-    const userRepository = new UserRepository();
-    const user = await userRepository.findById(userId);
+    console.log(`[Checkout Session] Processing for user: ${userId}`);
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+    // Check if subscription exists in Stripe session
+    if (!session.subscription) {
+      console.error('[Checkout Session] No subscription in session');
+      return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
     }
 
-    // Create a cookie with user information
-    const userInfo: UserCookieData = {
-      id: user.id,
-      name: user.name,
-      isCustomer: true,
-      checkoutCompleted: true,
-      timestamp: new Date().toISOString(),
-    };
+    const subscriptionRepo = new SubscriptionRepository();
 
-    // Create the base URL for redirect
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
-    
-    // Create response with redirect to success page
-    const redirectUrl = new URL('/success', baseUrl);
-    const response = NextResponse.redirect(redirectUrl);
-
-    // Set the cookie and ensure proper options
-    response.cookies.set({
-      name: 'gymtext_user',
-      value: JSON.stringify(userInfo),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cookies in redirects
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Error setting session cookie:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    // Check if subscription already exists in DB
+    const existingSubscription = await subscriptionRepo.findByStripeId(
+      session.subscription as string
     );
+
+    if (existingSubscription) {
+      console.log(
+        `[Checkout Session] Subscription already exists: ${existingSubscription.id}`
+      );
+    } else {
+      // Subscription doesn't exist - create it (webhook backup)
+      console.log('[Checkout Session] Creating subscription record (webhook backup)');
+
+      const subscription = await stripe.subscriptions.retrieve(
+        session.subscription as string
+      );
+
+      await subscriptionRepo.create({
+        userId,
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status,
+        planType: 'monthly', // TODO: Get from subscription price
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      });
+
+      console.log(`[Checkout Session] Subscription created for user ${userId}`);
+    }
+
+    // Try to send onboarding messages (if onboarding is complete)
+    try {
+      const sent = await onboardingCoordinator.sendOnboardingMessages(userId);
+      if (sent) {
+        console.log(`[Checkout Session] Onboarding messages sent to user ${userId}`);
+      } else {
+        console.log(
+          `[Checkout Session] Waiting for onboarding to complete for user ${userId}`
+        );
+      }
+    } catch (error) {
+      // Don't fail the redirect if message sending fails
+      console.error(`[Checkout Session] Failed to send messages for user ${userId}:`, error);
+    }
+
+    // Redirect to /me
+    console.log('[Checkout Session] Redirecting to /me');
+    return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
+  } catch (error) {
+    console.error('[Checkout Session] Error processing session:', error);
+    // Still redirect to /me even on error - user can retry or contact support
+    return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
   }
-} 
+}

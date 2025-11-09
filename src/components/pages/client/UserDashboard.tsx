@@ -41,6 +41,28 @@ export function UserDashboard({ userId }: UserDashboardProps) {
   const [profile, setProfile] = useState<FitnessProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [onboardingStatus, setOnboardingStatus] = useState<'pending' | 'in_progress' | 'completed' | 'failed' | null>(null);
+
+  // Fetch onboarding status
+  const fetchOnboardingStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/users/${userId}/onboarding-status`);
+      const result = await response.json();
+
+      if (response.ok) {
+        setOnboardingStatus(result.onboardingStatus);
+
+        // If completed, return true to signal we should fetch full user data
+        if (result.onboardingStatus === 'completed' && result.hasProgram) {
+          return true;
+        }
+      }
+      return false;
+    } catch (err) {
+      console.error('Error fetching onboarding status:', err);
+      return false;
+    }
+  }, [userId]);
 
   // Fetch user data
   const fetchUser = useCallback(async () => {
@@ -67,9 +89,50 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     }
   }, [userId]);
 
+  // Initial load and polling for onboarding status
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const checkAndLoad = async () => {
+      const shouldFetchUser = await fetchOnboardingStatus();
+
+      if (shouldFetchUser) {
+        // Onboarding complete, fetch user data
+        await fetchUser();
+
+        // Stop polling
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      } else if (onboardingStatus === 'pending' || onboardingStatus === 'in_progress') {
+        // Still processing, show loading state
+        setIsLoading(false);
+      } else if (onboardingStatus === 'failed') {
+        // Failed, show error
+        setError('There was an error setting up your program. Please contact support.');
+        setIsLoading(false);
+
+        // Stop polling
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      }
+    };
+
+    // Initial check
+    checkAndLoad();
+
+    // Poll every 3 seconds if not completed
+    pollInterval = setInterval(checkAndLoad, 3000);
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [fetchOnboardingStatus, fetchUser, onboardingStatus]);
 
   const handleLogout = async () => {
     try {
@@ -80,11 +143,36 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !onboardingStatus) {
     return <UserDetailSkeleton />;
   }
 
-  if (error || !user) {
+  // Show onboarding in progress state
+  if (onboardingStatus === 'pending' || onboardingStatus === 'in_progress') {
+    return (
+      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-primary/10 p-6 animate-pulse">
+              <Dumbbell className="h-12 w-12 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-semibold mb-2">Building Your Program</h1>
+          <p className="text-muted-foreground mb-4">
+            We&apos;re creating your personalized fitness plan based on your goals and profile. This usually takes 30-60 seconds.
+          </p>
+          <div className="mt-6 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '66%' }}></div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Hang tight! Your program will be ready shortly...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoading && (error || !user)) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="text-center py-12">
@@ -99,7 +187,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     );
   }
 
-  const initials = user.name
+  const initials = user?.name
     ?.split(' ')
     .map((n) => n[0])
     .join('')
@@ -130,15 +218,15 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
                 <div className="space-y-3">
                   <div>
-                    <h1 className="text-2xl font-semibold">{user.name || 'Unnamed User'}</h1>
+                    <h1 className="text-2xl font-semibold">{user?.name || 'Unnamed User'}</h1>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      {user.age && (
+                      {user?.age && (
                         <Badge variant="outline">{user.age} years old</Badge>
                       )}
-                      {user.gender && (
+                      {user?.gender && (
                         <Badge variant="outline">{user.gender}</Badge>
                       )}
-                      {user.timezone && (
+                      {user?.timezone && (
                         <Badge variant="outline" className="gap-1">
                           <MapPin className="h-3 w-3" />
                           {user.timezone.split('/')[1]?.replace('_', ' ') || user.timezone}
@@ -168,23 +256,23 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             <QuickFactCard
               icon={<Mail className="h-4 w-4" />}
               label="Email"
-              value={user.email || 'No email'}
-              muted={!user.email}
+              value={user?.email || 'No email'}
+              muted={!user?.email}
             />
             <QuickFactCard
               icon={<Phone className="h-4 w-4" />}
               label="Phone"
-              value={formatPhone(user.phoneNumber)}
+              value={formatPhone(user?.phoneNumber || '')}
             />
             <QuickFactCard
               icon={<Clock className="h-4 w-4" />}
               label="Preferred Send Hour"
-              value={`${user.preferredSendHour}:00`}
+              value={`${user?.preferredSendHour || 0}:00`}
             />
             <QuickFactCard
               icon={<Calendar className="h-4 w-4" />}
               label="Member Since"
-              value={formatRelative(user.createdAt)}
+              value={formatRelative(user?.createdAt || new Date())}
             />
           </div>
 

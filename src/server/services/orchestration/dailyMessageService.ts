@@ -1,12 +1,10 @@
 import { MessageService } from '../messaging/messageService';
 import { UserService } from '../user/userService';
 import { UserWithProfile } from '@/server/models/userModel';
-import { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
+import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
-import { ProgressService } from '../training/progressService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
+import { now } from '@/shared/utils/date';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { inngest } from '@/server/connections/inngest/client';
 
 interface MessageResult {
@@ -28,16 +26,12 @@ export class DailyMessageService {
   private userService: UserService;
   private workoutInstanceService: WorkoutInstanceService;
   private messageService: MessageService;
-  private progressService: ProgressService;
-  private fitnessPlanService: FitnessPlanService;
   private batchSize: number;
 
   private constructor(batchSize: number = 10) {
     this.userService = UserService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.messageService = MessageService.getInstance();
-    this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.progressService = ProgressService.getInstance();
     this.batchSize = batchSize;
   }
 
@@ -75,8 +69,7 @@ export class DailyMessageService {
       // Map users to Inngest events
       const events = users.map(user => {
         // Get target date in user's timezone (today at start of day)
-        const targetDate = DateTime.now()
-          .setZone(user.timezone)
+        const targetDate = now(user.timezone)
           .startOf('day')
           .toISO();
 
@@ -125,7 +118,7 @@ export class DailyMessageService {
       console.log(`Processing daily message for user ${user.id}`);
 
       // Get today's date in the user's timezone
-      const targetDate = DateTime.now().setZone(user.timezone).startOf('day');
+      const targetDate = now(user.timezone).startOf('day');
 
       // First try to get existing workout
       let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
@@ -133,7 +126,7 @@ export class DailyMessageService {
       // If no workout exists, generate it on-demand
       if (!workout) {
         console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
-        workout = await this.generateTodaysWorkout(user, targetDate);
+        workout = await this.workoutInstanceService.generateWorkoutForDate(user, targetDate);
 
         if (!workout) {
           console.log(`Failed to generate workout for user ${user.id} on ${targetDate.toISODate()}`);
@@ -166,7 +159,7 @@ export class DailyMessageService {
   /**
    * Gets today's workout for a user
    */
-  private async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
+  public async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
     // The date passed in is already the correct date at midnight in the user's timezone
     // We can use it directly for the query
     const workout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
@@ -175,108 +168,14 @@ export class DailyMessageService {
   }
 
   /**
-   * Generates today's workout on-demand using AI
+   * Generates a workout for a specific date (wrapper for onboarding)
+   * Delegates to WorkoutInstanceService for business logic
    */
-  private async generateTodaysWorkout(
+  public async generateWorkout(
     user: UserWithProfile,
     targetDate: DateTime
   ): Promise<WorkoutInstance | null> {
-    try {
-      // Get fitness plan
-      const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
-      if (!plan) {
-        console.log(`No fitness plan found for user ${user.id}`);
-        return null;
-      }
-
-      // Ensure progress is up-to-date and get current microcycle (single call!)
-      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
-      if (!progress) {
-        console.log(`No progress found for user ${user.id}`);
-        return null;
-      }
-
-      // Extract what we need from progress
-      const { microcycle, mesocycle } = progress;
-      if (!microcycle) {
-        console.log(`Could not get/create microcycle for user ${user.id}`);
-        return null;
-      }
-
-      // Get the day's pattern from the microcycle
-      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
-
-      if (!dayPlan) {
-        console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
-        return null;
-      }
-
-      // Get recent workouts for context (last 7 days)
-      const recentWorkouts = await this.workoutInstanceService.getRecentWorkouts(user.id, 7);
-
-      // Use AI agent to generate sophisticated workout (now returns message too!)
-      const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
-        user,
-        date: targetDate.toJSDate(),
-        dayPlan,
-        microcycle,
-        mesocycle,
-        fitnessPlan: plan,
-        recentWorkouts
-      });
-
-      // Convert enhanced workout to database format
-      const workout: NewWorkoutInstance = {
-        // Let database generate UUID automatically
-        clientId: user.id,
-        fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleId: null, // No longer using mesocycles table
-        microcycleId: microcycle.id,
-        date: targetDate.toJSDate(),
-        sessionType: this.mapThemeToSessionType(dayPlan.theme),
-        goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
-        details: JSON.parse(JSON.stringify(enhancedWorkout)),
-        description,
-        reasoning,
-        message, // Save the pre-generated message
-        completedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      // Save the workout to the database
-      const savedWorkout = await this.workoutInstanceService.createWorkout(workout);
-      console.log(`Generated and saved AI workout for user ${user.id} on ${targetDate.toISODate()}`);
-
-      return savedWorkout;
-    } catch (error) {
-      console.error(`Error generating workout for user ${user.id}:`, error);
-      throw error; // Propagate error to be handled upstream
-    }
-  }
-
-  /**
-   * Maps theme to session type for database storage
-   * Valid frontend types: run, lift, metcon, mobility, rest, other
-   */
-  private mapThemeToSessionType(theme: string): string {
-    const themeLower = theme.toLowerCase();
-
-    // Map to frontend-compatible session types
-    if (themeLower.includes('run') || themeLower.includes('running')) return 'run';
-    if (themeLower.includes('metcon') || themeLower.includes('hiit') ||
-        themeLower.includes('conditioning') || themeLower.includes('cardio')) return 'metcon';
-    if (themeLower.includes('lift') || themeLower.includes('strength') ||
-        themeLower.includes('upper') || themeLower.includes('lower') ||
-        themeLower.includes('push') || themeLower.includes('pull')) return 'lift';
-    if (themeLower.includes('mobility') || themeLower.includes('flexibility') ||
-        themeLower.includes('stretch')) return 'mobility';
-    if (themeLower.includes('rest') || themeLower.includes('recovery') ||
-        themeLower.includes('deload')) return 'rest';
-
-    // Default to other for assessment/hybrid/unknown workouts
-    return 'other';
+    return this.workoutInstanceService.generateWorkoutForDate(user, targetDate);
   }
 }
 

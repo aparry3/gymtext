@@ -7,9 +7,11 @@ export { weeklyMessageService } from '@/server/services/orchestration/weeklyMess
 export { userService } from '@/server/services/user/userService';
 export { messageService } from '@/server/services/messaging/messageService';
 export { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
+export { onboardingDataService } from '@/server/services/user/onboardingDataService';
 export { workoutInstanceService } from '@/server/services/training/workoutInstanceService';
 export { microcycleService } from '@/server/services/training/microcycleService';
 export { onboardingService } from '@/server/services/orchestration/onboardingService';
+export { workoutModificationService } from '@/server/services/orchestration/workoutModificationService';
 
 // Also export classes for type definitions when needed
 export type { ChatService } from '@/server/services/messaging/chatService';
@@ -20,6 +22,8 @@ export type { WeeklyMessageService } from '@/server/services/orchestration/weekl
 export type { UserService, CreateUserRequest } from '@/server/services/user/userService';
 export type { MessageService } from '@/server/services/messaging/messageService';
 export type { FitnessProfileService, CreateFitnessProfileRequest, ProfilePatchResult } from '@/server/services/user/fitnessProfileService';
-export type { WorkoutInstanceService, SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/training/workoutInstanceService';
-export type { MicrocycleService, ModifyWeekResult } from '@/server/services/training/microcycleService';
+export type { OnboardingDataService } from '@/server/services/user/onboardingDataService';
+export type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
+export type { MicrocycleService } from '@/server/services/training/microcycleService';
 export type { OnboardingService } from '@/server/services/orchestration/onboardingService';
+export type { WorkoutModificationService, SubstituteExerciseResult, ModifyWorkoutResult, ModifyWeekResult } from '@/server/services/orchestration/workoutModificationService';
