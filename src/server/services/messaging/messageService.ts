@@ -9,7 +9,7 @@ import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../mo
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
 import { postgresDb } from '../../connections/postgres/postgres';
-import { DateTime } from 'luxon';
+import { now } from '@/shared/utils/date';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../../models/_types';
 import { summaryAgent } from '../../agents/conversation/summary/chain';
@@ -300,7 +300,7 @@ export class MessageService {
     const microcycleContext = currentMicrocycle?.pattern;
 
     // 3. Fetch today's workout
-    const nowInUserTz = DateTime.now().setZone(user.timezone);
+    const nowInUserTz = now(user.timezone);
     const todayDate = nowInUserTz.startOf('day').toJSDate();
     const todayWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
 

@@ -3,6 +3,7 @@ import { UserService } from '../user/userService';
 import { UserWithProfile } from '@/server/models/userModel';
 import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
+import { now } from '@/shared/utils/date';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { inngest } from '@/server/connections/inngest/client';
 
@@ -68,8 +69,7 @@ export class DailyMessageService {
       // Map users to Inngest events
       const events = users.map(user => {
         // Get target date in user's timezone (today at start of day)
-        const targetDate = DateTime.now()
-          .setZone(user.timezone)
+        const targetDate = now(user.timezone)
           .startOf('day')
           .toISO();
 
@@ -118,7 +118,7 @@ export class DailyMessageService {
       console.log(`Processing daily message for user ${user.id}`);
 
       // Get today's date in the user's timezone
-      const targetDate = DateTime.now().setZone(user.timezone).startOf('day');
+      const targetDate = now(user.timezone).startOf('day');
 
       // First try to get existing workout
       let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());

@@ -5,7 +5,6 @@ import { DailyMessageService } from './dailyMessageService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
-import { DateTime } from 'luxon';
 import { now, startOfDay } from '@/shared/utils/date';
 
 /**
@@ -110,7 +109,7 @@ export class OnboardingService {
     console.log(`[Onboarding] Creating first workout for ${user.id}`);
 
     try {
-      const targetDate = DateTime.now().setZone(user.timezone).startOf('day');
+      const targetDate = now(user.timezone).startOf('day');
       const workout = await this.workoutInstanceService.generateWorkoutForDate(user, targetDate);
 
       if (!workout) {
