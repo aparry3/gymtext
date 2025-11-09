@@ -6,6 +6,7 @@ import { MicrocycleService } from '../training/microcycleService';
 import { UserWithProfile } from '@/server/models/userModel';
 import { inngest } from '@/server/connections/inngest/client';
 import { createWeeklyMessageAgent } from '@/server/agents/messaging/weeklyMessage/chain';
+import { now, getNextWeekStart } from '@/shared/utils/date';
 
 interface MessageResult {
   success: boolean;
@@ -106,21 +107,18 @@ export class WeeklyMessageService {
    * Sends weekly check-in messages to a single user
    *
    * Flow:
-   * 1. Advance user's progress to next week
-   * 2. Get/create next week's microcycle (now current after advancing)
-   * 3. Check if it's the first week of a new mesocycle
-   * 4. Generate messages using AI agent
-   * 5. Send both messages with delay
+   * 1. Calculate next Sunday's date in user's timezone
+   * 2. Get progress for next week using date-based calculation
+   * 3. Get/create next week's microcycle
+   * 4. Check if it's the first week of a new mesocycle
+   * 5. Generate messages using AI agent
+   * 6. Send both messages with delay
    */
   public async sendWeeklyMessage(user: UserWithProfile): Promise<MessageResult> {
     try {
       console.log(`[WeeklyMessageService] Processing weekly message for user ${user.id}`);
 
-      // Step 1: Advance to next week (this is the natural weekly checkpoint)
-      await this.progressService.advanceWeek(user.id);
-      console.log(`[WeeklyMessageService] Advanced week for user ${user.id}`);
-
-      // Step 2: Get the fitness plan and progress
+      // Step 1: Get the fitness plan
       const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
       if (!plan) {
         console.error(`[WeeklyMessageService] No fitness plan found for user ${user.id}`);
@@ -131,18 +129,30 @@ export class WeeklyMessageService {
         };
       }
 
-      const progress = await this.progressService.getCurrentProgress(plan);
-      if (!progress) {
-        console.error(`[WeeklyMessageService] No progress found for user ${user.id}`);
+      // Step 2: Calculate next Sunday's date in user's timezone (start of next week)
+      const currentDate = now(user.timezone).toJSDate();
+      const nextSundayDate = getNextWeekStart(currentDate, user.timezone);
+
+      console.log(`[WeeklyMessageService] Getting next week's plan for ${nextSundayDate.toISOString()} for user ${user.id}`);
+
+      // Step 3: Get progress for next week using date-based calculation
+      const nextWeekProgress = this.progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
+      if (!nextWeekProgress) {
+        console.error(`[WeeklyMessageService] Could not calculate progress for next week for user ${user.id}`);
         return {
           success: false,
           userId: user.id,
-          error: 'Could not determine training progress'
+          error: 'Could not determine next week\'s training progress'
         };
       }
 
-      // Step 3: Get or create the next week's microcycle (now current after advancing)
-      const { microcycle: nextWeekMicrocycle } = await this.microcycleService.getOrCreateActiveMicrocycle(user, progress, plan);
+      // Step 4: Get or create next week's microcycle
+      const { microcycle: nextWeekMicrocycle } = await this.microcycleService.getOrCreateMicrocycleForDate(
+        user.id,
+        plan,
+        nextSundayDate,
+        user.timezone
+      );
 
       if (!nextWeekMicrocycle) {
         console.error(`[WeeklyMessageService] Failed to get/create next week's microcycle for user ${user.id}`);
@@ -153,7 +163,7 @@ export class WeeklyMessageService {
         };
       }
 
-      // Step 4: Check if it's the first week of a new mesocycle
+      // Step 5: Check if it's the first week of a new mesocycle
       const isNewMesocycle = nextWeekMicrocycle.weekNumber === 0;
 
       const mesocycleName = isNewMesocycle
@@ -164,7 +174,7 @@ export class WeeklyMessageService {
         console.log(`[WeeklyMessageService] User ${user.id} is starting new mesocycle: ${mesocycleName}`);
       }
 
-      // Step 5: Generate messages using AI agent
+      // Step 6: Generate messages using AI agent
       const weeklyMessageAgent = createWeeklyMessageAgent();
       const { feedbackMessage, breakdownMessage } = await weeklyMessageAgent.invoke({
         user,
@@ -173,7 +183,7 @@ export class WeeklyMessageService {
         mesocycleName
       });
 
-      // Step 6: Send both messages with delay
+      // Step 7: Send both messages with delay
       const messageIds: string[] = [];
 
       // Send feedback message first

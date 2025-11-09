@@ -171,7 +171,9 @@ export class TestUsers {
       // Get additional details
       const profile = await testDb.getUserWithProfile(user.id);
       const plan = await testDb.getFitnessPlan(user.id);
-      const progress = await testDb.getCurrentProgress(user.id);
+      // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+      // const progress = await testDb.getCurrentProgress(user.id);
+      const progress = null;
       const microcycle = await testDb.getMicrocycle(user.id);
 
       return {

@@ -2,10 +2,11 @@ import { UserWithProfile } from '../../models/userModel';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
-import { ProgressService } from '../training/progressService';
+import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { DateTime } from 'luxon';
+import { now, startOfDay } from '@/shared/utils/date';
 
 /**
  * OnboardingService
@@ -30,14 +31,14 @@ export class OnboardingService {
   private fitnessPlanService: FitnessPlanService;
   private messageService: MessageService;
   private dailyMessageService: DailyMessageService;
-  private progressService: ProgressService;
+  private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
 
   private constructor() {
     this.fitnessPlanService = FitnessPlanService.getInstance();
     this.messageService = MessageService.getInstance();
     this.dailyMessageService = DailyMessageService.getInstance();
-    this.progressService = ProgressService.getInstance();
+    this.microcycleService = MicrocycleService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
   }
 
@@ -84,8 +85,9 @@ export class OnboardingService {
         throw new Error(`No fitness plan found for user ${user.id}`);
       }
 
-      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
-      if (!progress?.microcycle) {
+      // Create first microcycle using date-based approach (for current week)
+      const { microcycle } = await this.microcycleService.getOrCreateActiveMicrocycle(user, plan);
+      if (!microcycle) {
         throw new Error('Failed to create first microcycle');
       }
 
@@ -181,8 +183,8 @@ export class OnboardingService {
       throw new Error(`No fitness plan found for user ${user.id}`);
     }
 
-    const progress = await this.progressService.ensureUpToDateProgress(plan, user);
-    const microcycle = progress?.microcycle;
+    // Get current microcycle using date-based approach
+    const { microcycle } = await this.microcycleService.getOrCreateActiveMicrocycle(user, plan);
 
     if (!microcycle) {
       throw new Error(`No microcycle found for user ${user.id}`);
@@ -200,11 +202,11 @@ export class OnboardingService {
    * Send pre-generated workout message
    */
   private async sendWorkoutMessage(user: UserWithProfile): Promise<void> {
-    const targetDate = DateTime.now().setZone(user.timezone).startOf('day');
-    const workout = await this.dailyMessageService.getTodaysWorkout(user.id, targetDate.toJSDate());
+    const targetDate = startOfDay(now(user.timezone).toJSDate(), user.timezone);
+    const workout = await this.dailyMessageService.getTodaysWorkout(user.id, targetDate);
 
     if (!workout) {
-      throw new Error(`No workout found for user ${user.id} on ${targetDate.toISODate()}`);
+      throw new Error(`No workout found for user ${user.id} on ${targetDate.toISOString()}`);
     }
 
     if (workout.message) {

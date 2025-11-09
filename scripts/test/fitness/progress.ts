@@ -195,10 +195,14 @@ async function manageProgress(options: ProgressOptions): Promise<void> {
       process.exit(1);
     }
 
-    // Get current progress
-    const progress = await testDb.getCurrentProgress(user.id);
+    // Convert plan to FitnessPlan model and get current progress using ProgressService
+    const { FitnessPlanModel } = await import('@/server/models/fitnessPlan');
+    const { ProgressService } = await import('@/server/services/training/progressService');
+    const fitnessPlan = FitnessPlanModel.fromDB(plan as any);
+    const progressService = ProgressService.getInstance();
+    const progress = progressService.getCurrentProgress(fitnessPlan, user.timezone || 'America/New_York');
     if (!progress) {
-      warning('No progress tracking found');
+      warning('Could not calculate progress for current date');
       process.exit(1);
     }
 

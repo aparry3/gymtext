@@ -8,6 +8,7 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
+import { MicrocycleService } from './microcycleService';
 import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
 
@@ -49,12 +50,14 @@ export class WorkoutInstanceService {
   private userService: UserService;
   private fitnessPlanService: FitnessPlanService;
   private progressService: ProgressService;
+  private microcycleService: MicrocycleService;
 
   private constructor() {
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
     this.userService = UserService.getInstance();
     this.fitnessPlanService = FitnessPlanService.getInstance();
     this.progressService = ProgressService.getInstance();
+    this.microcycleService = MicrocycleService.getInstance();
   }
 
   public static getInstance(): WorkoutInstanceService {
@@ -145,23 +148,30 @@ export class WorkoutInstanceService {
         return null;
       }
 
-      // Ensure progress is up-to-date and get current microcycle
-      const progress = await this.progressService.ensureUpToDateProgress(plan, user);
+      // Get current progress for the target date
+      const progress = this.progressService.getProgressForDate(plan, targetDate.toJSDate(), user.timezone);
       if (!progress) {
-        console.log(`No progress found for user ${user.id}`);
+        console.log(`No progress found for user ${user.id} on ${targetDate.toISODate()}`);
         return null;
       }
 
-      // Extract what we need from progress
-      const { microcycle, mesocycle } = progress;
+      // Get or create microcycle for the target date
+      const { microcycle } = await this.microcycleService.getOrCreateMicrocycleForDate(
+        user.id,
+        plan,
+        targetDate.toJSDate(),
+        user.timezone
+      );
       if (!microcycle) {
         console.log(`Could not get/create microcycle for user ${user.id}`);
         return null;
       }
 
+      const mesocycle = progress.mesocycle;
+
       // Get the day's pattern from the microcycle
       const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-      const dayPlan = microcycle.pattern.days.find(d => d.day === dayOfWeek);
+      const dayPlan = microcycle.pattern.days.find((d: { day: string }) => d.day === dayOfWeek);
 
       if (!dayPlan) {
         console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);

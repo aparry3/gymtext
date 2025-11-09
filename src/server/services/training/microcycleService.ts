@@ -4,11 +4,11 @@ import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/a
 import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
+import { ProgressService } from './progressService';
 import { WorkoutInstanceService } from './workoutInstanceService';
 import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
-import { DateTime } from 'luxon';
+import { now, startOfWeek, endOfWeek, getWeekday } from '@/shared/utils/date';
 import { UserWithProfile, FitnessPlan } from '@/server/models';
-import { ProgressInfo } from './progressService';
 import { Microcycle } from '@/server/models/microcycle';
 
 export interface ModifyWeekParams {
@@ -31,12 +31,14 @@ export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
   private fitnessPlanService: FitnessPlanService;
+  private progressService: ProgressService;
   private workoutInstanceService: WorkoutInstanceService;
   private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.progressService = ProgressService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.userService = UserService.getInstance();
   }
@@ -159,13 +161,12 @@ export class MicrocycleService {
       }
 
       // Calculate remaining days (today and future days only) in user's timezone
-      const { DateTime } = await import('luxon');
-      const todayInUserTz = DateTime.now().setZone(user.timezone);
+      const today = now(user.timezone).toJSDate();
 
       const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-      // Luxon weekday is 1-7 (Mon-Sun), JS getDay() is 0-6 (Sun-Sat)
-      // Convert Luxon weekday to JS day: Sunday = 7 -> 0, Monday = 1 -> 1, etc.
-      const todayDayIndex = todayInUserTz.weekday === 7 ? 0 : todayInUserTz.weekday;
+      // getWeekday returns 1-7 (Mon-Sun), convert to 0-6 (Sun-Sat) for array indexing
+      const weekday = getWeekday(today, user.timezone);
+      const todayDayIndex = weekday === 7 ? 0 : weekday;
       const todayDayOfWeek = daysOfWeek[todayDayIndex];
 
       // Find today's index
@@ -236,7 +237,7 @@ export class MicrocycleService {
         console.log(`[MODIFY_WEEK] Today's pattern changed from "${todayOriginalPlan?.theme}" to "${todayUpdatedPlan?.theme}" - regenerating workout`);
 
         // Use today's date in user's timezone (start of day)
-        const todayDate = todayInUserTz.startOf('day').toJSDate();
+        const todayDate = today;
 
         // Generate new workout for today with context
         const context: DailyWorkoutInput = {
@@ -313,20 +314,26 @@ export class MicrocycleService {
   }
 
   /**
-   * Get or create the active microcycle for a user
-   * This is the main entry point for ensuring a user has a microcycle for the current week
+   * Get or create microcycle for a specific date (date-based approach)
+   * This is the main entry point for ensuring a user has a microcycle for any given week
    */
-  public async getOrCreateActiveMicrocycle(
-    user: UserWithProfile,
-    progress: ProgressInfo,
-    plan: FitnessPlan
+  public async getOrCreateMicrocycleForDate(
+    userId: string,
+    plan: FitnessPlan,
+    targetDate: Date,
+    timezone: string = 'America/New_York'
   ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    // Check if microcycle exists for current week
-    let microcycle = await this.microcycleRepo.getMicrocycleByWeek(
-      user.id,
+    // Calculate progress for the target date
+    const progress = this.progressService.getProgressForDate(plan, targetDate, timezone);
+    if (!progress) {
+      throw new Error(`Could not calculate progress for date ${targetDate}`);
+    }
+
+    // Check if microcycle exists for this date
+    let microcycle = await this.microcycleRepo.getMicrocycleByDate(
+      userId,
       plan.id!,
-      progress.mesocycleIndex,
-      progress.microcycleWeek
+      targetDate
     );
 
     if (microcycle) {
@@ -341,27 +348,33 @@ export class MicrocycleService {
       plan.notes
     );
 
-    // Calculate week start and end dates
-    const { startDate, endDate } = this.calculateWeekDates(user.timezone);
-
-    // Deactivate previous microcycles
-    await this.microcycleRepo.deactivatePreviousMicrocycles(user.id);
-
     // Create new microcycle with pre-generated message
     microcycle = await this.microcycleRepo.createMicrocycle({
-      userId: user.id,
+      userId,
       fitnessPlanId: plan.id!,
       mesocycleIndex: progress.mesocycleIndex,
       weekNumber: progress.microcycleWeek,
       pattern,
       message,
-      startDate,
-      endDate,
-      isActive: true,
+      startDate: progress.weekStartDate,
+      endDate: progress.weekEndDate,
+      isActive: false, // No longer using isActive flag - we query by dates instead
     });
 
-    console.log(`Created new microcycle for user ${user.id}, week ${progress.microcycleWeek}`);
+    console.log(`Created new microcycle for user ${userId}, week ${progress.microcycleWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
     return { microcycle, wasCreated: true };
+  }
+
+  /**
+   * Get or create the active microcycle for a user (current week)
+   * This is a convenience wrapper around getOrCreateMicrocycleForDate
+   */
+  public async getOrCreateActiveMicrocycle(
+    user: UserWithProfile,
+    plan: FitnessPlan
+  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
+    const currentDate = now(user.timezone).toJSDate();
+    return this.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
   }
 
   /**
@@ -396,13 +409,11 @@ export class MicrocycleService {
    * Calculate week dates in a specific timezone
    */
   private calculateWeekDates(timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } {
-    const now = DateTime.now().setZone(timezone);
-    const startOfWeek = now.startOf('week');
-    const endOfWeek = now.endOf('week');
+    const currentDate = now(timezone).toJSDate();
 
     return {
-      startDate: startOfWeek.toJSDate(),
-      endDate: endOfWeek.toJSDate(),
+      startDate: startOfWeek(currentDate, timezone),
+      endDate: endOfWeek(currentDate, timezone),
     };
   }
 

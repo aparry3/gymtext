@@ -88,10 +88,11 @@ class BatchMessageTester {
         throw new Error('Simulated error for testing');
       }
 
-      // Get current fitness plan and progress
+      // Get current fitness plan
       const fitnessPlan = await this.db.getFitnessPlan(userId);
-      const progress = await this.db.getCurrentProgress(userId);
-      
+      // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+      // const progress = await this.db.getCurrentProgress(userId);
+
       if (!fitnessPlan) {
         throw new Error('No fitness plan found');
       }
@@ -128,14 +129,10 @@ class BatchMessageTester {
       // Check if workout was generated
       const todaysWorkout = await this.db.getTodaysWorkout(userId, testDate);
       result.workoutGenerated = !!todaysWorkout;
-      
-      // Check if progress was updated
-      const newProgress = await this.db.getCurrentProgress(userId);
-      if (newProgress && progress) {
-        result.progressUpdated = 
-          newProgress.microcycleWeek !== progress.microcycleWeek ||
-          newProgress.mesocycleIndex !== progress.mesocycleIndex;
-      }
+
+      // NOTE: Progress updates no longer tracked via DB
+      // const newProgress = await this.db.getCurrentProgress(userId);
+      result.progressUpdated = false;
 
       result.success = apiResult.success;
       

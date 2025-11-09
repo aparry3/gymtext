@@ -189,12 +189,11 @@ class WeekCycleFlow {
     };
 
     try {
-      // Get current progress
-      const progressBefore = await this.db.getCurrentProgress(userId);
-      if (progressBefore) {
-        weekResult.microcycleWeek = progressBefore.microcycleWeek;
-        weekResult.mesocycleIndex = progressBefore.mesocycleIndex;
-      }
+      // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+      // const progressBefore = await this.db.getCurrentProgress(userId);
+      // Use default values since progress is no longer stored in DB
+      weekResult.microcycleWeek = weekNumber;
+      weekResult.mesocycleIndex = 0;
 
       // Step 1: Generate microcycle pattern if it's the start of a new microcycle
       if (!this.options.skipWorkouts && weekResult.microcycleWeek % 4 === 1) {
@@ -264,30 +263,14 @@ class WeekCycleFlow {
           });
 
           if (response.ok) {
-            const progressAfter = await this.db.getCurrentProgress(userId);
-            if (progressAfter) {
-              weekResult.progress.workoutsCompleted = weekResult.workouts.generated;
-              
-              // Check for transitions
-              if (!this.options.skipTransitions) {
-                if (progressBefore && progressAfter.mesocycleIndex !== progressBefore.mesocycleIndex) {
-                  weekResult.transition = {
-                    type: 'mesocycle',
-                    from: progressBefore.mesocycleIndex,
-                    to: progressAfter.mesocycleIndex,
-                  };
-                  this.result.summary.mesocycleTransitions++;
-                } else if (progressBefore && progressAfter.microcycleWeek !== progressBefore.microcycleWeek) {
-                  weekResult.transition = {
-                    type: 'microcycle',
-                    from: progressBefore.microcycleWeek,
-                    to: progressAfter.microcycleWeek,
-                  };
-                  this.result.summary.microcycleTransitions++;
-                } else {
-                  weekResult.transition = { type: 'none' };
-                }
-              }
+            // NOTE: Progress tracking via DB is deprecated
+            // const progressAfter = await this.db.getCurrentProgress(userId);
+            weekResult.progress.workoutsCompleted = weekResult.workouts.generated;
+
+            // Transition tracking no longer supported without DB-based progress
+            if (!this.options.skipTransitions) {
+              // Transitions are no longer tracked this way
+              weekResult.transition = { type: 'none' };
             }
           }
         } catch (err) {

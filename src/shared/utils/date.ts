@@ -613,6 +613,103 @@ export function getTimezonesAtLocalTime(
 }
 
 /**
+ * Get start of week for a date in a specific timezone
+ * Week starts on Monday (ISO week)
+ */
+export function startOfWeek(date: Date | string, timezone?: string): Date {
+  const parsed = parseDate(date);
+  if (!parsed) {
+    throw new Error('Invalid date provided to startOfWeek');
+  }
+
+  let dt = DateTime.fromJSDate(parsed);
+  if (timezone && isValidTimezone(timezone)) {
+    dt = dt.setZone(timezone);
+  }
+
+  return dt.startOf('week').toJSDate();
+}
+
+/**
+ * Get end of week for a date in a specific timezone
+ * Week ends on Sunday (ISO week)
+ */
+export function endOfWeek(date: Date | string, timezone?: string): Date {
+  const parsed = parseDate(date);
+  if (!parsed) {
+    throw new Error('Invalid date provided to endOfWeek');
+  }
+
+  let dt = DateTime.fromJSDate(parsed);
+  if (timezone && isValidTimezone(timezone)) {
+    dt = dt.setZone(timezone);
+  }
+
+  return dt.endOf('week').toJSDate();
+}
+
+/**
+ * Add weeks to a date
+ */
+export function addWeeks(date: Date | string, weeks: number, timezone?: string): Date {
+  const parsed = parseDate(date);
+  if (!parsed) {
+    throw new Error('Invalid date provided to addWeeks');
+  }
+
+  let dt = DateTime.fromJSDate(parsed);
+  if (timezone && isValidTimezone(timezone)) {
+    dt = dt.setZone(timezone);
+  }
+
+  return dt.plus({ weeks }).toJSDate();
+}
+
+/**
+ * Subtract weeks from a date
+ */
+export function subtractWeeks(date: Date | string, weeks: number, timezone?: string): Date {
+  return addWeeks(date, -weeks, timezone);
+}
+
+/**
+ * Get the start of the next week (next Monday)
+ */
+export function getNextWeekStart(date: Date | string, timezone?: string): Date {
+  const parsed = parseDate(date);
+  if (!parsed) {
+    throw new Error('Invalid date provided to getNextWeekStart');
+  }
+
+  let dt = DateTime.fromJSDate(parsed);
+  if (timezone && isValidTimezone(timezone)) {
+    dt = dt.setZone(timezone);
+  }
+
+  return dt.plus({ weeks: 1 }).startOf('week').toJSDate();
+}
+
+/**
+ * Get difference between two dates in weeks
+ */
+export function diffInWeeks(date1: Date | string, date2: Date | string, timezone?: string): number {
+  const parsed1 = parseDate(date1);
+  const parsed2 = parseDate(date2);
+
+  if (!parsed1 || !parsed2) return 0;
+
+  let dt1 = DateTime.fromJSDate(parsed1);
+  let dt2 = DateTime.fromJSDate(parsed2);
+
+  if (timezone && isValidTimezone(timezone)) {
+    dt1 = dt1.setZone(timezone);
+    dt2 = dt2.setZone(timezone);
+  }
+
+  return Math.floor(dt1.diff(dt2, 'weeks').weeks);
+}
+
+/**
  * Get day of week name (e.g., "Monday", "Tuesday")
  */
 export function getDayOfWeekName(date: Date | string, timezone?: string): string {

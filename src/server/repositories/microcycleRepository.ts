@@ -161,4 +161,26 @@ export class MicrocycleRepository {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return results.map((r) => MicrocycleModel.fromDB(r as any));
   }
+
+  /**
+   * Get microcycle for a specific date
+   * Used for date-based progress tracking - finds the microcycle that contains the target date
+   */
+  async getMicrocycleByDate(
+    userId: string,
+    fitnessPlanId: string,
+    targetDate: Date
+  ): Promise<Microcycle | null> {
+    const result = await this.db
+      .selectFrom('microcycles')
+      .selectAll()
+      .where('userId', '=', userId)
+      .where('fitnessPlanId', '=', fitnessPlanId)
+      .where('startDate', '<=', targetDate)
+      .where('endDate', '>=', targetDate)
+      .executeTakeFirst();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result ? MicrocycleModel.fromDB(result as any) : null;
+  }
 }

@@ -137,8 +137,9 @@ class DailyCycleFlow {
     };
 
     try {
-      // Get current progress
-      const progressBefore = await this.db.getCurrentProgress(userId);
+      // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+      // const progressBefore = await this.db.getCurrentProgress(userId);
+      const progressBefore = null;
 
       // Step 1: Generate workout for the day
       if (!this.options.skipWorkouts) {
@@ -214,22 +215,21 @@ class DailyCycleFlow {
           });
 
           if (response.ok) {
-            const progressAfter = await this.db.getCurrentProgress(userId);
-            if (progressAfter && progressBefore) {
-              dayResult.progressUpdated = 
-                progressAfter.microcycleWeek !== progressBefore.microcycleWeek ||
-                progressAfter.mesocycleIndex !== progressBefore.mesocycleIndex;
-              
-              if (dayResult.progressUpdated) {
-                this.result.summary.progressUpdates++;
-              }
+            // NOTE: Progress tracking via DB is deprecated - now calculated from dates
+            // const progressAfter = await this.db.getCurrentProgress(userId);
+            // Progress updates are no longer tracked this way
+            dayResult.progressUpdated = false;
 
-              dayResult.progress = {
-                week: progressAfter.microcycleWeek,
-                mesocycle: progressAfter.mesocycleIndex,
-                workoutsCompleted: this.result.summary.workoutsGenerated,
-              };
+            if (dayResult.progressUpdated) {
+              this.result.summary.progressUpdates++;
             }
+
+            // Progress details no longer available from DB
+            dayResult.progress = {
+              week: 0,
+              mesocycle: 0,
+              workoutsCompleted: this.result.summary.workoutsGenerated,
+            };
           }
         } catch (err) {
           if (this.options.verbose) {
