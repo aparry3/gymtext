@@ -16,6 +16,7 @@ export class MicrocycleRepository {
         mesocycleIndex: microcycle.mesocycleIndex,
         weekNumber: microcycle.weekNumber,
         pattern: JSON.stringify(microcycle.pattern),
+        message: microcycle.message,
         startDate: microcycle.startDate,
         endDate: microcycle.endDate,
         isActive: microcycle.isActive,
