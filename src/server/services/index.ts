@@ -11,6 +11,7 @@ export { onboardingDataService } from '@/server/services/user/onboardingDataServ
 export { workoutInstanceService } from '@/server/services/training/workoutInstanceService';
 export { microcycleService } from '@/server/services/training/microcycleService';
 export { onboardingService } from '@/server/services/orchestration/onboardingService';
+export { workoutModificationService } from '@/server/services/orchestration/workoutModificationService';
 
 // Also export classes for type definitions when needed
 export type { ChatService } from '@/server/services/messaging/chatService';
@@ -22,6 +23,7 @@ export type { UserService, CreateUserRequest } from '@/server/services/user/user
 export type { MessageService } from '@/server/services/messaging/messageService';
 export type { FitnessProfileService, CreateFitnessProfileRequest, ProfilePatchResult } from '@/server/services/user/fitnessProfileService';
 export type { OnboardingDataService } from '@/server/services/user/onboardingDataService';
-export type { WorkoutInstanceService, SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services/training/workoutInstanceService';
-export type { MicrocycleService, ModifyWeekResult } from '@/server/services/training/microcycleService';
+export type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
+export type { MicrocycleService } from '@/server/services/training/microcycleService';
 export type { OnboardingService } from '@/server/services/orchestration/onboardingService';
+export type { WorkoutModificationService, SubstituteExerciseResult, ModifyWorkoutResult, ModifyWeekResult } from '@/server/services/orchestration/workoutModificationService';

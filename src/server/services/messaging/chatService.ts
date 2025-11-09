@@ -4,7 +4,7 @@ import { MessageService } from './messageService';
 import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { MicrocycleService } from '../training/microcycleService';
+import { WorkoutModificationService } from '../orchestration/workoutModificationService';
 import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
@@ -28,13 +28,13 @@ export class ChatService {
   private messageService: MessageService;
   private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
-  private microcycleService: MicrocycleService;
+  private workoutModificationService: WorkoutModificationService;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
     this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
-    this.microcycleService = MicrocycleService.getInstance();
+    this.workoutModificationService = WorkoutModificationService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -91,11 +91,11 @@ export class ChatService {
       const agent = createChatAgent({
         patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
         workoutService: {
-          substituteExercise: this.workoutInstanceService.substituteExercise.bind(this.workoutInstanceService),
-          modifyWorkout: this.workoutInstanceService.modifyWorkout.bind(this.workoutInstanceService),
+          substituteExercise: this.workoutModificationService.substituteExercise.bind(this.workoutModificationService),
+          modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
         },
         microcycleService: {
-          modifyWeek: this.microcycleService.modifyWeek.bind(this.microcycleService),
+          modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
         },
       });
 
