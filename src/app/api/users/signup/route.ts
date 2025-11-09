@@ -17,11 +17,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  * New optimized signup flow:
  * 1. Create user (basic info only, no LLM)
  * 2. Create Stripe customer
- * 3. Create onboarding record with signup data
+ * 3. Create onboarding record with raw signup data
  * 4. Send welcome SMS
  * 5. Trigger async Inngest onboarding job (don't wait!)
  * 6. Create Stripe checkout session
  * 7. Return checkout URL
+ *
+ * Note: All form data is stored raw. Formatting for LLM happens
+ * in the backend during async onboarding (signupDataFormatter service).
  *
  * Response:
  * - success: boolean
@@ -63,16 +66,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Signup] Stripe customer created: ${customer.id}`);
 
-    // Step 3: Create onboarding record with signup data
+    // Step 3: Create onboarding record with ALL raw signup data
     console.log('[Signup] Creating onboarding record');
     await onboardingDataService.createOnboardingRecord(user.id, {
-      // Formatted text for LLM
-      fitnessGoals: formData.fitnessGoals,
-      currentExercise: formData.currentExercise,
-      injuries: formData.injuries,
-      environment: formData.environment,
-
-      // Structured data for analytics/reporting
+      // Store ALL raw form data - formatting happens later in the backend
       primaryGoals: formData.primaryGoals,
       goalsElaboration: formData.goalsElaboration,
       experienceLevel: formData.experienceLevel,
@@ -80,6 +77,7 @@ export async function POST(request: NextRequest) {
       activityElaboration: formData.activityElaboration,
       trainingLocation: formData.trainingLocation,
       equipment: formData.equipment,
+      injuries: formData.injuries,
       acceptedRisks: formData.acceptedRisks,
     });
 

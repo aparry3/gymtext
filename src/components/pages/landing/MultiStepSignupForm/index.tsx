@@ -132,27 +132,7 @@ export function MultiStepSignupForm() {
         ? data.phoneNumber
         : `+1${data.phoneNumber}`;
 
-      // Build fitness goals text
-      const goalsList = data.primaryGoals.map(getGoalDescription).join(', ');
-      const fitnessGoals = data.goalsElaboration?.trim()
-        ? `${goalsList}. Additional details: ${data.goalsElaboration.trim()}`
-        : goalsList;
-
-      // Build current exercise text
-      const activityLevel = getActivityDescription(data.currentActivity);
-      const experienceLevel = `Experience level: ${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}`;
-      const currentExercise = data.activityElaboration?.trim()
-        ? `${experienceLevel}. ${activityLevel}. Additional details: ${data.activityElaboration.trim()}`
-        : `${experienceLevel}. ${activityLevel}`;
-
-      // Build environment text
-      const locationText = `Training location: ${getLocationDescription(data.trainingLocation)}`;
-      const equipmentText = data.equipment.length > 0
-        ? `Available equipment: ${data.equipment.map(e => getEquipmentDescription(e)).join(', ')}`
-        : 'No specific equipment';
-      const environment = `${locationText}. ${equipmentText}`;
-
-      // Format all data for the API
+      // Send ALL raw form data to backend - formatting happens server-side
       const formattedData = {
         // User info
         name: data.name,
@@ -162,13 +142,7 @@ export function MultiStepSignupForm() {
         timezone: data.timezone,
         preferredSendHour: data.preferredSendHour,
 
-        // Formatted text for LLM (existing logic)
-        fitnessGoals,
-        currentExercise,
-        environment,
-        injuries: data.injuries || undefined,
-
-        // Structured data for analytics/reporting
+        // All raw form data (backend will format for LLM)
         primaryGoals: data.primaryGoals,
         goalsElaboration: data.goalsElaboration,
         experienceLevel: data.experienceLevel,
@@ -176,6 +150,7 @@ export function MultiStepSignupForm() {
         activityElaboration: data.activityElaboration,
         trainingLocation: data.trainingLocation,
         equipment: data.equipment,
+        injuries: data.injuries,
         acceptedRisks: data.acceptRisks,
       };
 
@@ -345,43 +320,3 @@ function getFieldsForStep(step: number): (keyof FormData)[] {
   }
 }
 
-function getGoalDescription(goal: string): string {
-  const goalMap: Record<string, string> = {
-    strength: 'Build strength and muscle',
-    endurance: 'Improve endurance and stamina',
-    weight_loss: 'Lose weight and improve body composition',
-    general_fitness: 'Improve overall fitness and health',
-  };
-  return goalMap[goal] || goal;
-}
-
-function getActivityDescription(activity: string): string {
-  const activityMap: Record<string, string> = {
-    not_active: 'Currently not active (less than 1x/week)',
-    once_per_week: 'Active once per week',
-    '2_3_per_week': 'Active 2-3 times per week',
-    '4_plus_per_week': 'Active 4+ times per week',
-  };
-  return activityMap[activity] || activity;
-}
-
-function getLocationDescription(location: string): string {
-  const locationMap: Record<string, string> = {
-    home: 'Home gym',
-    commercial_gym: 'Commercial gym',
-    bodyweight: 'Bodyweight/minimal equipment',
-  };
-  return locationMap[location] || location;
-}
-
-function getEquipmentDescription(equipment: string): string {
-  const equipmentMap: Record<string, string> = {
-    dumbbells: 'Dumbbells',
-    barbell: 'Barbell',
-    resistance_bands: 'Resistance bands',
-    pull_up_bar: 'Pull-up bar',
-    cardio_equipment: 'Cardio equipment',
-    full_gym: 'Full gym access',
-  };
-  return equipmentMap[equipment] || equipment;
-}

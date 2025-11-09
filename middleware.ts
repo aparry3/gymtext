@@ -1,76 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { shortLinkService } from '@/server/services/links/shortLinkService';
-import { encryptUserId } from '@/server/utils/sessionCryptoEdge';
 
 // Protect /admin UI and /api/admin endpoints with a simple cookie-based gate
 // Protect /me UI with user session cookie
-// Handle short link resolution with automatic authentication
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Short link resolution: /l/:code
-  // Must be checked BEFORE other route protection
-  if (pathname.startsWith('/l/')) {
-    const code = pathname.slice(3); // Remove '/l/' prefix
-
-    // Only process if code looks valid (5 alphanumeric chars)
-    if (code.length === 5 && /^[A-Za-z0-9]{5}$/.test(code)) {
-      try {
-        const resolved = await shortLinkService.resolveShortLink(code);
-
-        if (!resolved) {
-          // Link not found - redirect to login with error
-          const url = request.nextUrl.clone();
-          url.pathname = '/me/login';
-          url.searchParams.set('error', 'invalid-link');
-          return NextResponse.redirect(url);
-        }
-
-        if (resolved.isExpired) {
-          // Link expired - redirect to login with error
-          const url = request.nextUrl.clone();
-          url.pathname = '/me/login';
-          url.searchParams.set('error', 'expired-link');
-          return NextResponse.redirect(url);
-        }
-
-        const { link } = resolved;
-
-        // Create session token for the user
-        if (link.userId) {
-          const sessionToken = await encryptUserId(link.userId);
-
-          // Redirect to target with session cookie using full app URL
-          // Use BASE_URL if set (production), otherwise fallback to current origin
-          const baseUrl = process.env.BASE_URL || request.nextUrl.origin;
-          const fullUrl = new URL(link.targetPath, baseUrl);
-
-          const response = NextResponse.redirect(fullUrl);
-          response.cookies.set('gt_user_session', sessionToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60, // 30 days
-            path: '/',
-          });
-
-          return response;
-        } else {
-          // Link has no associated user - just redirect using full app URL
-          const baseUrl = process.env.BASE_URL || request.nextUrl.origin;
-          const fullUrl = new URL(link.targetPath, baseUrl);
-          return NextResponse.redirect(fullUrl);
-        }
-      } catch (error) {
-        console.error('[Middleware] Error resolving short link:', error);
-        // On error, redirect to login
-        const url = request.nextUrl.clone();
-        url.pathname = '/me/login';
-        url.searchParams.set('error', 'link-error');
-        return NextResponse.redirect(url);
-      }
-    }
-  }
 
   // Admin path protection
   const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
@@ -121,15 +54,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Explicitly include all admin, user, and short link routes
+  // Explicitly include all admin and user routes
   // Note: /admin/:path* catches /admin/users, /admin/users/123, etc.
-  // Note: /l/:path* catches all short link codes
+  // Note: Short links (/l/:code) are now handled by app/l/[code]/page.tsx
   matcher: [
     '/admin',
     '/admin/:path*',
     '/api/admin/:path*',
     '/me',
     '/me/:path*',
-    '/l/:path*',
   ],
 };

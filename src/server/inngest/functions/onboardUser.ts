@@ -6,20 +6,22 @@
  *
  * Flow:
  * 1. Mark onboarding as 'in_progress'
- * 2. Load signup data
- * 3. Extract fitness profile from signup data using LLM (slow!)
- * 4. Create fitness plan with message
- * 5. Create first microcycle with message
- * 6. Create first workout with message
- * 7. Mark onboarding as 'completed'
- * 8. Check if payment is complete, send messages if ready
- * 9. Clean up signup data
+ * 2. Load raw signup data
+ * 3. Format signup data for LLM using signupDataFormatter
+ * 4. Extract fitness profile from formatted data using LLM (slow!)
+ * 5. Create fitness plan with message
+ * 6. Create first microcycle with message
+ * 7. Create first workout with message
+ * 8. Mark onboarding as 'completed'
+ * 9. Check if payment is complete, send messages if ready
+ * 10. Clean up signup data (optional)
  *
  * Benefits:
  * - Runs async (doesn't block signup)
  * - Automatic retries on failure per step
  * - Parallel with checkout (race optimization)
  * - Pre-generates all messages for fast delivery
+ * - All raw signup data preserved for debugging/analytics
  */
 
 import { inngest } from '@/server/connections/inngest/client';
@@ -28,6 +30,7 @@ import { onboardingDataService } from '@/server/services/user/onboardingDataServ
 import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
 import { onboardingService } from '@/server/services/orchestration/onboardingService';
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
+import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 
 export const onboardUserFunction = inngest.createFunction(
   {
@@ -72,11 +75,14 @@ export const onboardUserFunction = inngest.createFunction(
       }
 
       try {
+        // Format raw signup data for LLM consumption
+        const formattedData = formatSignupDataForLLM(signupData);
+
         await fitnessProfileService.createFitnessProfile(user, {
-          fitnessGoals: signupData.fitnessGoals,
-          currentExercise: signupData.currentExercise,
-          injuries: signupData.injuries,
-          environment: signupData.environment,
+          fitnessGoals: formattedData.fitnessGoals,
+          currentExercise: formattedData.currentExercise,
+          injuries: formattedData.injuries,
+          environment: formattedData.environment,
         });
         console.log(`[Inngest] Fitness profile extracted for ${userId}`);
       } catch (error) {
@@ -170,10 +176,11 @@ export const onboardUserFunction = inngest.createFunction(
     });
 
     // Step 9: Clean up signup data
-    await step.run('cleanup-signup-data', async () => {
-      console.log(`[Inngest] Cleaning up signup data for ${userId}`);
-      await onboardingDataService.clearSignupData(userId);
-    });
+    // TEMP: Commented out for debugging - keeping signup data for inspection
+    // await step.run('cleanup-signup-data', async () => {
+    //   console.log(`[Inngest] Cleaning up signup data for ${userId}`);
+    //   await onboardingDataService.clearSignupData(userId);
+    // });
 
       console.log(`[Inngest] Onboarding complete for user ${userId}`);
 
