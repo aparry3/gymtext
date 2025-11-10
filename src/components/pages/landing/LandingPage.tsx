@@ -10,6 +10,7 @@ import { TestimonialsSection } from '@/components/pages/landing/TestimonialsSect
 import { ComparisonTable } from '@/components/pages/landing/ComparisonTable';
 import { FAQSection } from '@/components/pages/landing/FAQSection';
 import { MultiStepSignupForm } from '@/components/pages/landing/MultiStepSignupForm';
+import { FixedCTA } from '@/components/pages/landing/FixedCTA';
 
 const bn = Bebas_Neue({ weight: '400', subsets: ['latin'] });
 
@@ -22,6 +23,7 @@ export function LandingPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      <FixedCTA />
       <div className="relative">
         <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 py-4 backdrop-blur-sm">
           <div className="container mx-auto px-4">

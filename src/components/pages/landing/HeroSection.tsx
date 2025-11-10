@@ -61,7 +61,7 @@ export function HeroSection() {
               size="lg"
               className="w-full sm:w-auto text-base px-8 py-6 h-auto"
             >
-              Get Started - It Takes 2 Minutes
+              Start Working Out Today
             </Button>
           </div>
         </div>
