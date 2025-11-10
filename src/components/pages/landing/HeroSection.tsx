@@ -48,7 +48,7 @@ export function HeroSection() {
             <div className="flex items-center gap-3">
               <DollarSign className="h-6 w-6 text-primary flex-shrink-0" />
               <div>
-                <div className="font-semibold text-sm">$29/month</div>
+                <div className="font-semibold text-sm">$9.99/month</div>
                 <div className="text-xs text-muted-foreground">vs $200+ for trainers</div>
               </div>
             </div>
