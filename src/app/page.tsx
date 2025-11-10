@@ -32,19 +32,66 @@ export default function Home() {
         <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 py-4 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Image
-                  src="/IconInverse.png"
-                  alt="GymText Logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
-                />
-                <h2
-                  className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}
-                >
-                  GYMTEXT
-                </h2>
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src="/IconInverse.png"
+                    alt="GymText Logo"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10"
+                  />
+                  <h2
+                    className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}
+                  >
+                    GYMTEXT
+                  </h2>
+                </div>
+
+                <nav className="hidden md:block">
+                  <ul className="flex items-center gap-8">
+                    <li>
+                      <a
+                        href="#home"
+                        className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
+                      >
+                        Home
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#details"
+                        className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
+                      >
+                        Details
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#testimonials"
+                        className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
+                      >
+                        Testimonials
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#features"
+                        className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
+                      >
+                        Features
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#faqs"
+                        className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
+                      >
+                        FAQs
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
 
               <div className="hidden md:block">
@@ -52,18 +99,28 @@ export default function Home() {
                   href="#signup"
                   className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
-                  Get Started
+                  Sign up
                 </a>
               </div>
             </div>
           </div>
         </header>
 
-        <HeroSection />
-        <BenefitsSection />
-        <TestimonialsSection />
-        <ComparisonTable />
-        <FAQSection />
+        <section id="home">
+          <HeroSection />
+        </section>
+        <section id="details">
+          <BenefitsSection />
+        </section>
+        <section id="testimonials">
+          <TestimonialsSection />
+        </section>
+        <section id="features">
+          <ComparisonTable />
+        </section>
+        <section id="faqs">
+          <FAQSection />
+        </section>
         <section className="bg-white py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-5xl text-center">
