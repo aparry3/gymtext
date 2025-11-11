@@ -5,6 +5,8 @@ import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createProfileAgent } from '../../agents/profile/chain';
 import { ProfileExtractionResults } from '../../agents/profile/types';
+import { formatSignupDataForLLM } from './signupDataFormatter';
+import type { SignupData } from '@/server/repositories/onboardingRepository';
 
 
 export interface CreateFitnessProfileRequest {
@@ -144,6 +146,12 @@ export class FitnessProfileService {
         allFieldsUpdated.push('activities');
         reasons.push(results.activities.reason);
         maxConfidence = Math.max(maxConfidence, results.activities.confidence);
+
+        // Extract overall experience level from activities agent
+        if (results.activities.overallExperience) {
+          profileUpdates.experienceLevel = results.activities.overallExperience;
+          allFieldsUpdated.push('experienceLevel');
+        }
       }
 
       // Process constraints
@@ -194,43 +202,98 @@ export class FitnessProfileService {
       };
   }
 
-  async createFitnessProfile(user: UserWithProfile, request: CreateFitnessProfileRequest): Promise<FitnessProfile | null> {
+  /**
+   * Build baseline profile from structured signup data
+   * Maps direct fields that don't require LLM extraction
+   *
+   * @param signupData - Raw signup data from onboarding form
+   * @returns Partial profile with baseline fields populated
+   */
+  private buildBaselineProfile(signupData: SignupData): Partial<FitnessProfile> {
+    const baselineProfile: Partial<FitnessProfile> = {};
+
+    // Direct mapping: experience level
+    if (signupData.experienceLevel) {
+      baselineProfile.experienceLevel = signupData.experienceLevel;
+      console.log(`[FitnessProfileService] Setting baseline experienceLevel: ${signupData.experienceLevel}`);
+    }
+
+    // Direct mapping: primary goal (from first item in array)
+    if (signupData.primaryGoals && signupData.primaryGoals.length > 0) {
+      baselineProfile.goals = {
+        primary: signupData.primaryGoals[0],
+        summary: signupData.goalsElaboration || null,
+        timeline: null,
+        specific: null,
+        motivation: null
+      };
+      console.log(`[FitnessProfileService] Setting baseline goal: ${signupData.primaryGoals[0]}`);
+    }
+
+    return baselineProfile;
+  }
+
+  async createFitnessProfile(user: UserWithProfile, signupData: SignupData): Promise<FitnessProfile | null> {
     return this.circuitBreaker.execute<FitnessProfile | null>(async (): Promise<FitnessProfile | null> => {
+      // STEP 1: Build and apply baseline profile from structured signup data
+      const baselineProfile = this.buildBaselineProfile(signupData);
+
+      // Apply baseline profile immediately if we have any data
+      if (Object.keys(baselineProfile).length > 0) {
+        await this.userRepository.patchProfile(user.id, baselineProfile);
+        console.log('[FitnessProfileService] Applied baseline profile from signup data');
+      }
+
+      // STEP 2: Format ALL signup data for LLM using existing formatter
+      const formattedData = formatSignupDataForLLM(signupData);
+
       // Check if we have any fitness profile data to process
-      const hasFitnessData = Object.values(request).some(value => value && value.trim());
+      const hasFitnessData = Object.values(formattedData).some(value => value && value.trim());
 
       if (!hasFitnessData) {
-        return null;
+        console.log('[FitnessProfileService] No additional fitness data to extract');
+        // Return the baseline profile we just created
+        const userWithBaseline = await this.userRepository.findWithProfile(user.id);
+        return userWithBaseline?.profile || null;
       }
 
-      // Build a formatted message from all the request fields
+      // STEP 3: Build formatted message for agent (existing logic)
       const messageParts: string[] = [];
 
-      if (request.fitnessGoals?.trim()) {
-        messageParts.push(`***Goals***:\n${request.fitnessGoals.trim()}`);
+      if (formattedData.fitnessGoals?.trim()) {
+        messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
       }
 
-      if (request.currentExercise?.trim()) {
-        messageParts.push(`***Current Activity***:\n${request.currentExercise.trim()}`);
+      if (formattedData.currentExercise?.trim()) {
+        messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
       }
 
-      if (request.environment?.trim()) {
-        messageParts.push(`***Training Environment***:\n${request.environment.trim()}`);
+      if (formattedData.environment?.trim()) {
+        messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
       }
 
-      if (request.injuries?.trim()) {
-        messageParts.push(`***Injuries or Limitations***:\n${request.injuries.trim()}`);
+      if (formattedData.injuries?.trim()) {
+        messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
       }
 
       const message = messageParts.join('\n\n');
 
-      // Create profile agent with injected patchProfile callback (DI pattern)
+      // STEP 4: Reload user with baseline profile
+      const userWithBaseline = await this.userRepository.findWithProfile(user.id);
+      if (!userWithBaseline) {
+        throw new Error('Failed to reload user after baseline profile creation');
+      }
+
+      // STEP 5: Run profile agent to enhance/merge with baseline
       const profileAgent = createProfileAgent({
         patchProfile: this.patchProfile.bind(this),
       });
 
-      // Use the unified profile agent to extract and update the profile
-      const result = await profileAgent.invoke({ message, user });
+      console.log('[FitnessProfileService] Running profile agent to enhance baseline');
+      const result = await profileAgent.invoke({
+        message,
+        user: userWithBaseline  // Agent now sees baseline + formatted text
+      });
 
       return result.user.profile;
     });

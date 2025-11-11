@@ -5,7 +5,7 @@ import type { WelcomeMessageInput, WelcomeMessageOutput } from './types';
  * Welcome Message Agent Factory
  *
  * Creates personalized welcome messages for new users.
- * Uses static template with user's first name.
+ * Uses static template with user's first name and trainer name "Gymmy".
  *
  * @param deps - Optional dependencies (config)
  * @returns Agent that generates welcome messages
@@ -13,19 +13,13 @@ import type { WelcomeMessageInput, WelcomeMessageOutput } from './types';
 export const createWelcomeMessageAgent = () => {
   return createRunnableAgent<WelcomeMessageInput, WelcomeMessageOutput>(async (input) => {
     const { user } = input;
-    const userName = user.name?.split(' ')[0] || 'there';
+    const firstName = user.name?.split(' ')[0] || 'there';
 
-    const welcomeMessage = `Hey ${userName}!
+    const welcomeMessage = `Hey ${firstName}! Welcome to GymText 👋
 
-After you hit "Sign Up," millions of documents were scanned—each with one goal: to build the best plan for your fitness journey.
+I'm Gymmy, and I'm putting together your personalized plan now — built around your goals, schedule, and training experience.
 
-Then came the planning stage—millions of AI bots mapping, testing, and re-testing until your plan was dialed in. Working to the studs to perfect the product.
-
-Now, as your first workout sends, the bots cheer…then back to work…and we at the GymText family smile as another perfect plan leaves the factory.
-
-Welcome to GymText.
-
-Text me anytime with questions about your workouts, your plan, or if you just need a little extra help!`;
+I'll send over your plan shortly, along with a breakdown of how everything's structured and what your first week looks like. Pumped to get started 💪`;
 
     return { message: welcomeMessage };
   });

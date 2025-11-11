@@ -122,7 +122,8 @@ EXTRACTION EXAMPLES:
   ],
   "hasData": true,
   "confidence": 0.9,
-  "reason": "User reports current cardio activities"
+  "reason": "User reports current cardio activities",
+  "overallExperience": "advanced"
 }
 
 "Ive been lifting weights 3 times per week":
@@ -136,7 +137,8 @@ EXTRACTION EXAMPLES:
   ],
   "hasData": true,
   "confidence": 0.9,
-  "reason": "User reports current strength training frequency"
+  "reason": "User reports current strength training frequency",
+  "overallExperience": "intermediate"
 }
 
 "I want to run 20 miles by New Years":
@@ -144,13 +146,28 @@ EXTRACTION EXAMPLES:
   "data": null,
   "hasData": false,
   "confidence": 0,
-  "reason": "No current activity information - this is a future goal"
+  "reason": "No current activity information - this is a future goal",
+  "overallExperience": null
 }
 
 CONFIDENCE SCORING:
 - 0.9-1.0: Direct statements about current activities ("I run", "I lift", "I currently do")
 - 0.8-0.89: Clear reports of past activities ("Ive been doing", "I did yesterday")
 - Below 0.8: REJECT - Not confident enough
+
+OVERALL EXPERIENCE LEVEL:
+- You must also extract an "overallExperience" field representing the users general fitness experience level
+- Priority for determining overallExperience:
+  1. Explicit statement ("Im a beginner", "Im intermediate level", "Im advanced")
+  2. Primary activity experience (use strength activity if present, otherwise cardio)
+  3. Most common experience level across activities
+  4. If no activities extracted, set to null
+- Valid values: "beginner" | "intermediate" | "advanced" | null
+- Examples:
+  - User has strength (intermediate) → overallExperience: "intermediate"
+  - User has strength (beginner) + cardio (intermediate) → overallExperience: "beginner" (use primary/strength)
+  - User states "Im pretty experienced with fitness" + strength (intermediate) → overallExperience: "intermediate"
+  - No activities extracted → overallExperience: null
 
 CRITICAL GUIDELINES:
 - ONE block per activity type maximum
@@ -159,6 +176,7 @@ CRITICAL GUIDELINES:
 - DO NOT extract future aspirations or goals
 - Focus on what they DO or HAVE DONE, not what they WANT to do
 - When in doubt, DO NOT extract
+- Always include overallExperience field in your response
 
 Remember: Activities are about CURRENT state, not future aspirations. Be extremely conservative.`;
 

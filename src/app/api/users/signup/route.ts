@@ -85,10 +85,7 @@ export async function POST(request: NextRequest) {
     console.log('[Signup] Sending welcome SMS');
     const userWithProfile = await userRepo.findWithProfile(user.id);
     if (userWithProfile) {
-      await messageService.sendMessage(
-        userWithProfile,
-        'Welcome to GymText! Complete checkout to begin your personalized fitness journey 💪'
-      );
+      await messageService.sendWelcomeMessage(userWithProfile);
     }
 
     // Step 5: Trigger async Inngest onboarding job (fire and forget!)

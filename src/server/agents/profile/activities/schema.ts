@@ -60,7 +60,8 @@ export const ActivitiesExtractionSchema = z.object({
   data: ActivitiesDataSchema.nullable().describe('Extracted activities data as array, null if none found'),
   hasData: z.boolean().describe('Whether any relevant activities data was extracted'),
   confidence: z.number().min(0).max(1).describe('Confidence score for the extraction'),
-  reason: z.string().describe('Brief explanation of what activities were extracted and why')
+  reason: z.string().describe('Brief explanation of what activities were extracted and why'),
+  overallExperience: z.enum(['beginner', 'intermediate', 'advanced']).nullish().describe('Overall fitness experience level derived from activities or explicit statement')
 });
 
 // Export the inferred types

@@ -30,7 +30,6 @@ import { onboardingDataService } from '@/server/services/user/onboardingDataServ
 import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
 import { onboardingService } from '@/server/services/orchestration/onboardingService';
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
-import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 
 export const onboardUserFunction = inngest.createFunction(
   {
@@ -75,15 +74,8 @@ export const onboardUserFunction = inngest.createFunction(
       }
 
       try {
-        // Format raw signup data for LLM consumption
-        const formattedData = formatSignupDataForLLM(signupData);
-
-        await fitnessProfileService.createFitnessProfile(user, {
-          fitnessGoals: formattedData.fitnessGoals,
-          currentExercise: formattedData.currentExercise,
-          injuries: formattedData.injuries,
-          environment: formattedData.environment,
-        });
+        // Pass raw signup data - service handles formatting and baseline creation
+        await fitnessProfileService.createFitnessProfile(user, signupData);
         console.log(`[Inngest] Fitness profile extracted for ${userId}`);
       } catch (error) {
         console.error(`[Inngest] Failed to extract profile for ${userId}:`, error);
