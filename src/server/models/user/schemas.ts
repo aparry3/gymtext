@@ -147,6 +147,10 @@ export const GoalsSchema = z.object({
 export const FitnessProfileSchema = z.object({
   goals: GoalsSchema,
 
+  // Overall experience level - single source of truth for fitness experience
+  // Can be derived from primary activity or set explicitly
+  experienceLevel: z.enum(['beginner', 'intermediate', 'advanced']).nullish(),
+
   equipmentAccess: EquipmentAccessSchema.nullish(),
   availability: AvailabilitySchema.nullish(),
   constraints: z.array(ConstraintSchema).nullish(),
