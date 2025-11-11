@@ -17,9 +17,11 @@ export const createWelcomeMessageAgent = () => {
 
     const welcomeMessage = `Hey ${firstName}! Welcome to GymText 👋
 
-I'm Gymmy, and I'm putting together your personalized plan now — built around your goals, schedule, and training experience.
+I'm Gymmy, and I'm putting together your personalized plan now built around your goals, schedule, and training experience.
 
-I'll send over your plan shortly, along with a breakdown of how everything's structured and what your first week looks like. Pumped to get started 💪`;
+I'll send over your plan shortly, along with a breakdown of how everything's structured and what your first week looks like. Pumped to get started 💪
+
+Dont forget to finish checking out if you haven't already so we can get in working out ASAP!`;
 
     return { message: welcomeMessage };
   });
