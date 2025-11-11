@@ -111,8 +111,9 @@ export class WeeklyMessageService {
    * 2. Get progress for next week using date-based calculation
    * 3. Get/create next week's microcycle
    * 4. Check if it's the first week of a new mesocycle
-   * 5. Generate messages using AI agent
-   * 6. Send both messages with delay
+   * 5. Generate personalized feedback message using AI agent
+   * 6. Retrieve breakdown message from stored microcycle.message
+   * 7. Send both messages with delay
    */
   public async sendWeeklyMessage(user: UserWithProfile): Promise<MessageResult> {
     try {
@@ -174,16 +175,27 @@ export class WeeklyMessageService {
         console.log(`[WeeklyMessageService] User ${user.id} is starting new mesocycle: ${mesocycleName}`);
       }
 
-      // Step 6: Generate messages using AI agent
+      // Step 6: Generate feedback message using AI agent
       const weeklyMessageAgent = createWeeklyMessageAgent();
-      const { feedbackMessage, breakdownMessage } = await weeklyMessageAgent.invoke({
+      const { feedbackMessage } = await weeklyMessageAgent.invoke({
         user,
-        nextWeekMicrocycle: nextWeekMicrocycle.pattern,
         isNewMesocycle,
         mesocycleName
       });
 
-      // Step 7: Send both messages with delay
+      // Step 7: Get breakdown message from stored microcycle
+      const breakdownMessage = nextWeekMicrocycle.message;
+
+      if (!breakdownMessage) {
+        console.error(`[WeeklyMessageService] No breakdown message stored for microcycle ${nextWeekMicrocycle.id}`);
+        return {
+          success: false,
+          userId: user.id,
+          error: 'No breakdown message found for next week\'s microcycle'
+        };
+      }
+
+      // Step 8: Send both messages with delay
       const messageIds: string[] = [];
 
       // Send feedback message first
@@ -194,7 +206,7 @@ export class WeeklyMessageService {
       // Small delay before sending breakdown
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Send breakdown message
+      // Send breakdown message (from stored microcycle.message)
       const breakdownMsg = await this.messageService.sendMessage(user, breakdownMessage);
       messageIds.push(breakdownMsg.id);
       console.log(`[WeeklyMessageService] Sent breakdown message to user ${user.id}`);

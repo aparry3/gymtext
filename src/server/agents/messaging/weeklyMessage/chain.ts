@@ -5,20 +5,18 @@ import type { WeeklyMessageInput, WeeklyMessageOutput } from './types';
 
 // Schema for the output
 const WeeklyMessageSchema = z.object({
-  feedbackMessage: z.string().describe("Message asking for feedback on the past week"),
-  breakdownMessage: z.string().describe("Message with next week's training breakdown")
+  feedbackMessage: z.string().describe("Message asking for feedback on the past week")
 });
 
 /**
  * Weekly Message Agent Factory
  *
- * Generates weekly check-in messages with:
- * 1. Feedback request for the past week
- * 2. Breakdown of next week's training pattern
+ * Generates weekly check-in feedback message asking about the user's past week.
+ * The breakdown message is retrieved from the stored microcycle.message field.
  *
  * Handles mesocycle transitions with special messaging.
  *
- * @returns Agent that generates weekly check-in messages
+ * @returns Agent that generates weekly feedback messages
  */
 export const createWeeklyMessageAgent = () => {
   return createRunnableAgent<WeeklyMessageInput, WeeklyMessageOutput>(async (input) => {
@@ -37,8 +35,7 @@ export const createWeeklyMessageAgent = () => {
     const result = await model.invoke(prompt);
 
     return {
-      feedbackMessage: result.feedbackMessage,
-      breakdownMessage: result.breakdownMessage
+      feedbackMessage: result.feedbackMessage
     };
   });
 };

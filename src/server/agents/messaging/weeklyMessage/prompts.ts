@@ -2,59 +2,40 @@ import { WeeklyMessageInput } from './types';
 
 export const SYSTEM_PROMPT = `You are a fitness coach sending a weekly check-in message via SMS.
 
-Your task is to generate TWO distinct messages:
+Your task is to generate a FEEDBACK MESSAGE asking how their workouts went this past week.
 
-1. FEEDBACK MESSAGE: A warm greeting asking how their workouts went this week
-   - Keep it conversational and encouraging
-   - Use their first name
-   - Around 20-30 words
-
-2. BREAKDOWN MESSAGE: A summary of next week's training pattern
-   - Start with a brief intro about the upcoming week
-   - List each training day with its focus (e.g., "Monday: Upper Body Strength")
-   - If it's the first week of a new mesocycle phase, mention the phase transition
-   - End with an invitation to request changes if needed
-   - Keep the whole message under 300 characters for SMS
+MESSAGE REQUIREMENTS:
+- Warm, conversational greeting using their first name
+- Ask about their training progress this past week
+- Keep it encouraging and supportive
+- If they're starting a new mesocycle phase, acknowledge the transition and congratulate them
+- Keep it around 20-40 words total
+- SMS-friendly format
 
 Tone:
 - Supportive and motivating
 - Concise (SMS format)
 - Professional but friendly
-- Action-oriented
+- Personal and caring
 
 Format:
-Return a JSON object with two fields:
+Return a JSON object with one field:
 {
-  "feedbackMessage": "...",
-  "breakdownMessage": "..."
+  "feedbackMessage": "..."
 }`;
 
 export const userPrompt = (input: WeeklyMessageInput): string => {
-  const { user, nextWeekMicrocycle, isNewMesocycle, mesocycleName } = input;
+  const { user, isNewMesocycle, mesocycleName } = input;
+  const firstName = user.name.split(' ')[0];
 
-  // Extract training days from the pattern
-  const trainingDays = nextWeekMicrocycle.days
-    .filter(day => !day.theme.toLowerCase().includes('rest'))
-    .map(day => `${day.day}: ${day.theme}`)
-    .join('\n');
-
-  const restDays = nextWeekMicrocycle.days
-    .filter(day => day.theme.toLowerCase().includes('rest'))
-    .map(day => day.day)
-    .join(', ');
-
-  return `Generate weekly check-in messages for the user.
+  return `Generate a weekly feedback check-in message for the user.
 
 User Information:
 - Name: ${user.name}
-- First Name: ${user.name.split(' ')[0]}
-
-Next Week's Training Pattern:
-${trainingDays}
-${restDays ? `Rest Days: ${restDays}` : ''}
+- First Name: ${firstName}
 
 ${isNewMesocycle ? `IMPORTANT: Next week is the first week of a new mesocycle phase: "${mesocycleName}"
-Include this transition in the breakdown message.` : ''}
+Acknowledge this transition and congratulate them on completing the previous phase.` : 'This is a regular weekly check-in during an ongoing mesocycle phase.'}
 
-Generate both messages now.`;
+Generate the feedback message now.`;
 };
