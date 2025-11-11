@@ -21,9 +21,9 @@ export const GeminiWorkoutBlockItemSchema = z.object({
   reps: z.string().describe("Number of reps (can be range like '6-8' or number like '10', use empty string if not applicable)"),
   durationSec: z.number().describe("Duration in seconds (use -1 if not applicable)"),
   durationMin: z.number().describe("Duration in minutes (use -1 if not applicable)"),
-  RPE: z.number().min(1).max(10).describe("Rate of Perceived Exertion (1-10, use -1 if not applicable)"),
-  rir: z.number().describe("Reps in Reserve (use -1 if not applicable)"),
-  percentageRM: z.number().min(0).max(100).describe("Percentage of 1 Rep Max (use -1 if not applicable)"),
+  RPE: z.number().describe("Rate of Perceived Exertion (1-10 scale, use -1 if not applicable)"),
+  rir: z.number().describe("Reps in Reserve (typically 0-5, use -1 if not applicable)"),
+  percentageRM: z.number().describe("Percentage of 1 Rep Max (0-100 scale, use -1 if not applicable)"),
   restSec: z.number().describe("Rest between sets in seconds (use -1 if not applicable)"),
   restText: z.string().describe("Readable rest instruction (e.g., '90s between supersets', use empty string if not applicable)"),
   equipment: z.string().describe("Equipment used (barbell, DB, band, etc., use empty string if not applicable)"),
@@ -137,6 +137,7 @@ export type GeminiUpdatedWorkoutInstance = z.infer<typeof GeminiUpdatedWorkoutIn
  * - -1 values → null (for optional numeric fields)
  * - Empty arrays → null (for optional array fields)
  * - Empty replace objects → null
+ * - Invalid numeric ranges → null (e.g., RPE > 10, percentageRM > 100)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertGeminiToStandard<T extends Record<string, any>>(geminiOutput: T): any {
@@ -156,6 +157,34 @@ export function convertGeminiToStandard<T extends Record<string, any>>(geminiOut
       // Handle numeric sentinel value (-1 for optional fields)
       else if (value === -1) {
         result[key] = null;
+      }
+      // Validate RPE range (1-10)
+      else if (key === 'RPE' && typeof value === 'number') {
+        result[key] = (value >= 1 && value <= 10) ? value : null;
+      }
+      // Validate percentageRM range (0-100)
+      else if (key === 'percentageRM' && typeof value === 'number') {
+        result[key] = (value >= 0 && value <= 100) ? value : null;
+      }
+      // Validate rir (typically 0-5, but allow up to 10 for flexibility)
+      else if (key === 'rir' && typeof value === 'number') {
+        result[key] = (value >= 0 && value <= 10) ? value : null;
+      }
+      // Validate sets (should be positive)
+      else if (key === 'sets' && typeof value === 'number') {
+        result[key] = (value > 0) ? value : null;
+      }
+      // Validate duration fields (should be positive)
+      else if ((key === 'durationSec' || key === 'durationMin') && typeof value === 'number') {
+        result[key] = (value > 0) ? value : null;
+      }
+      // Validate rest fields (should be positive)
+      else if ((key === 'restSec' || key === 'restAfterSetSec' || key === 'restBetweenExercisesSec') && typeof value === 'number') {
+        result[key] = (value > 0) ? value : null;
+      }
+      // Validate rounds (should be positive)
+      else if (key === 'rounds' && typeof value === 'number') {
+        result[key] = (value > 0) ? value : null;
       }
       // Handle empty arrays (for optional array fields)
       else if (Array.isArray(value) && value.length === 0 &&

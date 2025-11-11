@@ -356,12 +356,13 @@ function WorkoutSummaryCard({ workout }: { workout: WorkoutInstance }) {
     return (
       sum +
       exercises.reduce((itemSum, item) => {
-        if (item.durationMin) return itemSum + item.durationMin
-        if (item.durationSec) return itemSum + item.durationSec / 60
+        // Filter out sentinel value -1
+        if (item.durationMin && item.durationMin > 0) return itemSum + item.durationMin
+        if (item.durationSec && item.durationSec > 0) return itemSum + item.durationSec / 60
         // Rough estimate: sets * (work + rest) in minutes
-        if (item.sets) {
-          // Use restSec or restText if available
-          const restMin = item.restSec ? item.restSec / 60 :
+        if (item.sets && item.sets > 0) {
+          // Use restSec or restText if available (filter sentinel -1)
+          const restMin = (item.restSec && item.restSec > 0) ? item.restSec / 60 :
                           item.restText ? parseFloat(item.restText) / 60 : 1.5 // default 90sec rest
           return itemSum + item.sets * (0.5 + restMin) // assume 30sec work time
         }
@@ -569,40 +570,40 @@ function ExerciseItem({ item }: { item: WorkoutBlockItem }) {
         </div>
 
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-          {item.sets && (
+          {item.sets && item.sets > 0 && (
             <span>{item.sets} sets</span>
           )}
-          {item.reps && (
+          {item.reps && item.reps !== "" && (
             <span>{item.reps} reps</span>
           )}
-          {item.durationMin && (
+          {item.durationMin && item.durationMin > 0 && (
             <span>{item.durationMin} min</span>
           )}
-          {item.durationSec && (
+          {item.durationSec && item.durationSec > 0 && (
             <span>{item.durationSec}s</span>
           )}
-          {item.RPE && (
+          {item.RPE && item.RPE > 0 && item.RPE <= 10 && (
             <Badge variant="outline" className="text-xs">
               RPE {item.RPE}
             </Badge>
           )}
-          {item.rir !== undefined && item.rir !== null && (
+          {item.rir !== undefined && item.rir !== null && item.rir >= 0 && (
             <Badge variant="outline" className="text-xs">
               RIR {item.rir}
             </Badge>
           )}
-          {item.percentageRM && (
+          {item.percentageRM && item.percentageRM > 0 && item.percentageRM <= 100 && (
             <Badge variant="outline" className="text-xs">
               {item.percentageRM}% RM
             </Badge>
           )}
-          {item.tempo && (
+          {item.tempo && item.tempo !== "" && (
             <span>Tempo: {item.tempo}</span>
           )}
-          {item.restSec && (
+          {item.restSec && item.restSec > 0 && (
             <span>Rest: {item.restSec}s</span>
           )}
-          {item.restText && (
+          {item.restText && item.restText !== "" && (
             <span>Rest: {item.restText}</span>
           )}
         </div>

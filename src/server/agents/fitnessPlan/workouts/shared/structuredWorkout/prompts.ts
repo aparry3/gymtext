@@ -43,55 +43,107 @@ Include one entry for each significant modification made.
   return `
 You are converting a long-form workout description into structured JSON format.
 
-<Schema Requirements>
+IMPORTANT: Use sentinel values for unset/not-applicable fields:
+- Use -1 for numeric fields that don't apply (sets, reps, duration, RPE, rir, percentageRM, restSec, rounds, etc.)
+- Use empty string "" for text fields that don't apply (restText, equipment, pattern, tempo, notes, etc.)
+- Use empty array [] for array fields with no data (cues, tags, adaptations, etc.)
+
+<Complete Schema Structure>
 {
-  "theme": "workout theme from description",
+  "theme": "Overall workout theme (e.g., 'Upper Push', 'Lower Strength')",
+  "sessionContext": {
+    "phaseName": "Training phase name or empty string",
+    "weekNumber": number or -1,
+    "dayIndex": number or -1,
+    "goal": "Session goal or empty string",
+    "durationEstimateMin": number or -1,
+    "environment": "gym|home or empty string",
+    "clientConstraints": {
+      "timeAvailable": number or -1,
+      "equipmentAvailable": ["equipment1", "equipment2"] or [],
+      "injuries": ["injury1"] or [],
+      "preferences": ["pref1"] or []
+    }
+  },
   "blocks": [
     {
-      "name": "Block name (e.g., Warm-up, Main, Accessory, Cool-down)",
-      "items": [
+      "name": "Block name (e.g., Warm-up & Preparation, Main Lift Block, Accessory / Density Block, Cooldown / Recovery)",
+      "goal": "Purpose of this block or empty string",
+      "durationMin": estimated minutes or -1,
+      "notes": "Block notes or empty string",
+      "work": [
         {
-          "type": "exercise type: prep|compound|secondary|accessory|core|cardio|cooldown",
-          "exercise": "Exact exercise name from description",
-          "sets": number or null,
-          "reps": "number or range (e.g., '6-8', '10')" or null,
-          "durationSec": number or null,
-          "durationMin": number or null,
-          "RPE": number (1-10) or null,
-          "rest": "rest period string" or null,
-          "notes": "any exercise-specific notes" or null
+          "structureType": "straight|superset|circuit",
+          "exercises": [
+            {
+              "type": "prep|compound|secondary|accessory|core|cardio|cooldown",
+              "exercise": "Specific exercise name (e.g., 'Barbell Back Squat', 'Treadmill incline walk')",
+              "sets": number or -1,
+              "reps": "range like '6-8' or '10' or empty string",
+              "durationSec": number or -1,
+              "durationMin": number or -1,
+              "RPE": number (1-10 scale) or -1,
+              "rir": number (Reps in Reserve, typically 0-5) or -1,
+              "percentageRM": number (0-100 scale) or -1,
+              "restSec": rest in seconds or -1,
+              "restText": "human-readable rest like '90s' or '2-3 minutes' or empty string",
+              "equipment": "barbell|dumbbell|machine|bodyweight|band|etc or empty string",
+              "pattern": "movement pattern like 'squat', 'horizontal_press', 'hip_hinge' or empty string",
+              "tempo": "tempo like '3-1-1' or '2-0-1-0' or empty string",
+              "cues": ["cue1", "cue2"] or [],
+              "tags": ["tag1", "tag2"] or [],
+              "notes": "exercise-specific notes or empty string"
+            }
+          ],
+          "restBetweenExercisesSec": number or -1,
+          "restAfterSetSec": number or -1,
+          "rounds": number or -1,
+          "notes": "work item notes or empty string"
         }
       ]
     }
   ],
   "modifications": [
     {
-      "condition": "condition triggering modification",
-      "replace": {
-        "exercise": "exercise to replace",
-        "with": "replacement exercise"
-      },
+      "condition": "condition description",
+      "replace": {"exercise": "exercise name", "with": "replacement name"},
+      "adjustment": "adjustment description or empty string",
       "note": "explanation"
     }
-  ],
+  ] or [],
   "targetMetrics": {
-    "totalVolume": estimated total volume,
-    "totalDuration": estimated duration in minutes,
-    "averageIntensity": average RPE across workout
+    "totalVolume": estimated kg or -1,
+    "totalReps": number or -1,
+    "totalSets": number or -1,
+    "totalDistance": km or -1,
+    "totalDuration": minutes or -1,
+    "averageRPE": number or -1,
+    "averageIntensity": number or -1
   },
-  "notes": "overall workout notes"${modificationsAppliedField}
+  "summary": {
+    "adaptations": ["adaptation1", "adaptation2"] or [],
+    "coachingNotes": "notes or empty string",
+    "progressionNotes": "notes or empty string",
+    "recoveryFocus": "focus or empty string"
+  },
+  "notes": "overall workout notes or empty string"${modificationsAppliedField}
 }
-</Schema Requirements>${modificationsAppliedFormat}
+</Complete Schema Structure>${modificationsAppliedFormat}
 
 <Guidelines>
 CRITICAL: Convert the ENTIRE workout from start to finish. Include ALL blocks and ALL exercises. Do not truncate, skip, or omit any sections regardless of length.
 
 - Preserve exact exercise names from the description
-- Extract all sets, reps, rest periods accurately
-- Categorize exercises appropriately (prep, compound, secondary, accessory, core, cardio, cooldown)
-- Include all modifications mentioned in the description
-- Calculate or estimate target metrics based on the workout
-- Capture any overall notes about the workout${includeModificationsApplied ? '\n- Be specific about which exercises were substituted/changed and why' : ''}
+- Extract ALL details: sets, reps, duration, RPE, RIR, percentageRM, rest, equipment, tempo, cues
+- Use hierarchical structure: blocks contain work items, work items contain exercises
+- Set structureType based on exercise grouping:
+  - "straight": single exercise performed for sets
+  - "superset": 2 exercises alternated (e.g., push/pull pairing)
+  - "circuit": 3+ exercises in sequence
+- Categorize exercise types appropriately (prep, compound, secondary, accessory, core, cardio, cooldown)
+- For fields without data, use sentinel values: -1 for numbers, "" for strings, [] for arrays
+- Calculate or estimate target metrics realistically based on the workout content
+- Extract sessionContext details from workout header and context${includeModificationsApplied ? '\n- Be specific about which exercises were substituted/changed and why' : ''}
 
 Return ONLY the JSON object - no additional text.
 `.trim();
