@@ -25,10 +25,12 @@ export const createWeeklyMessageAgent = () => {
     // Initialize model with structured output
     const model = initializeModel(WeeklyMessageSchema);
 
+    const up = userPrompt(input);
+    console.log(`[WeeklyMessageAgent] User prompt: ${up}`);
     // Generate prompt
     const prompt = [
       { role: 'system' as const, content: SYSTEM_PROMPT },
-      { role: 'user' as const, content: userPrompt(input) }
+      { role: 'user' as const, content: up }
     ];
 
     // Invoke model

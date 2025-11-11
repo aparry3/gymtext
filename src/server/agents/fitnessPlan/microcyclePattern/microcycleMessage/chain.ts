@@ -26,7 +26,7 @@ export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) =>
 
     // Build user prompt from long-form description
     const userPrompt = microcycleMessageUserPrompt(longFormMicrocycle.description);
-
+    console.log(`[MicrocycleMessageAgent] User prompt: ${userPrompt}`);
     // Invoke model
     const result = await model.invoke([
       { role: 'system', content: MICROCYCLE_MESSAGE_SYSTEM_PROMPT },
