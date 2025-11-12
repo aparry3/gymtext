@@ -3,11 +3,11 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { ProgressService } from '../training/progressService';
-import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
-import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
-import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
-import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
+import { substituteExercises, type Modification } from '@/server/agents/training/workouts/operations/substitute';
+import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/training/workouts/operations/replace';
+import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/training/microcycles/operations/update/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
+import { DailyWorkoutInput } from '@/server/agents/training/workouts/operations/generate';
 import { now, getWeekday } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 
@@ -35,7 +35,7 @@ export interface SubstituteExerciseParams {
 
 export interface SubstituteExerciseResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -52,7 +52,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -67,7 +67,7 @@ export interface ModifyWeekParams {
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -351,7 +351,7 @@ export class WorkoutModificationService {
       // Check if today's pattern changed - if so, regenerate today's workout
       // This handles cases where modifying a future day causes today's workout to be reshuffled
       let workoutRegenerated = false;
-      let regeneratedWorkout: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'] | undefined;
+      let regeneratedWorkout: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'] | undefined;
       let workoutMessage: string | undefined;
 
       const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);

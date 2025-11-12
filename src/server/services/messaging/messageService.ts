@@ -4,7 +4,7 @@ import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { createReplyAgent } from '../../agents/conversation/reply/chain';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageAgent } from '../../agents/fitnessPlan/workouts/shared/workoutMessage/chain';
+import { createWorkoutMessageAgent } from '../../agents/training/workouts/shared/steps/message/chain';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';

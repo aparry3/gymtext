@@ -1,6 +1,6 @@
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanService } from './fitnessPlanService';
