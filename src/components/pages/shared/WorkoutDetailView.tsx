@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { parseDate, formatDate } from '@/shared/utils/date'
-import { WorkoutMarkdownRenderer } from './WorkoutMarkdownRenderer'
+import { WorkoutStructuredRenderer } from './WorkoutStructuredRenderer'
 
 // New schema types
 interface WorkoutBlockItem {
@@ -298,9 +298,7 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
               {/* New Format: Formatted Markdown */}
               {hasFormattedText(workout) && (
                 <TabsContent value="workout">
-                  <Card className="p-6">
-                    <WorkoutMarkdownRenderer content={getFormattedText(workout)!} />
-                  </Card>
+                  <WorkoutStructuredRenderer content={getFormattedText(workout)!} />
                 </TabsContent>
               )}
 
