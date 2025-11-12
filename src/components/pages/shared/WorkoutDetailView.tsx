@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import { WorkoutMarkdownRenderer } from './WorkoutMarkdownRenderer'
 
 // New schema types
 interface WorkoutBlockItem {
@@ -72,7 +73,17 @@ interface WorkoutInstance {
   message?: string | null
 }
 
-// Helper to extract blocks from either format
+// Helper to check if workout has formatted text (new format)
+function hasFormattedText(workout: WorkoutInstance): boolean {
+  return !!(workout.details?.formatted && typeof workout.details.formatted === 'string')
+}
+
+// Helper to get formatted text
+function getFormattedText(workout: WorkoutInstance): string | null {
+  return workout.details?.formatted || null
+}
+
+// Helper to extract blocks from either format (for legacy workouts)
 function getWorkoutBlocks(workout: WorkoutInstance): WorkoutBlock[] {
   // Try new format first (blocks at root)
   if (workout.blocks && Array.isArray(workout.blocks)) {
@@ -259,8 +270,8 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
           {/* Workout Header */}
           <WorkoutHeader workout={workout} onDelete={handleDelete} isDeleting={isDeleting} showAdminActions={showAdminActions} />
 
-          {/* Workout Summary Statistics */}
-          {getWorkoutBlocks(workout).length > 0 && (
+          {/* Workout Summary Statistics - only show for legacy format */}
+          {!hasFormattedText(workout) && getWorkoutBlocks(workout).length > 0 && (
             <WorkoutSummaryCard workout={workout} />
           )}
 
@@ -275,23 +286,36 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
           {/* Tabbed Content */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">Workout Details</h3>
-            <Tabs defaultValue="blocks" className="w-full">
+            <Tabs defaultValue={hasFormattedText(workout) ? "workout" : "blocks"} className="w-full">
               <TabsList>
-                <TabsTrigger value="blocks">Blocks</TabsTrigger>
+                {hasFormattedText(workout) && <TabsTrigger value="workout">Workout</TabsTrigger>}
+                {!hasFormattedText(workout) && <TabsTrigger value="blocks">Blocks</TabsTrigger>}
                 <TabsTrigger value="description">Description</TabsTrigger>
                 <TabsTrigger value="reasoning">Reasoning</TabsTrigger>
                 <TabsTrigger value="message">Message</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="blocks">
-                {getWorkoutBlocks(workout).length > 0 ? (
-                  <BlocksViewer blocks={getWorkoutBlocks(workout)} />
-                ) : (
-                  <Card className="p-8 text-center">
-                    <p className="text-muted-foreground">No workout blocks available</p>
+              {/* New Format: Formatted Markdown */}
+              {hasFormattedText(workout) && (
+                <TabsContent value="workout">
+                  <Card className="p-6">
+                    <WorkoutMarkdownRenderer content={getFormattedText(workout)!} />
                   </Card>
-                )}
-              </TabsContent>
+                </TabsContent>
+              )}
+
+              {/* Legacy Format: JSON Blocks */}
+              {!hasFormattedText(workout) && (
+                <TabsContent value="blocks">
+                  {getWorkoutBlocks(workout).length > 0 ? (
+                    <BlocksViewer blocks={getWorkoutBlocks(workout)} />
+                  ) : (
+                    <Card className="p-8 text-center">
+                      <p className="text-muted-foreground">No workout blocks available</p>
+                    </Card>
+                  )}
+                </TabsContent>
+              )}
 
               <TabsContent value="description">
                 <Card className="p-6">

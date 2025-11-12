@@ -3,7 +3,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { LongFormWorkout } from '@/server/models/workout/schema';
 import { formatFitnessProfile } from '@/server/utils/formatters';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
-import { createStructuredWorkoutAgent } from './steps/structure/chain';
+import { createFormattedWorkoutAgent } from './steps/formatted/chain';
 import { createWorkoutMessageAgent } from './steps/message/chain';
 import { createLongFormatWorkoutRunnable } from './steps/longForm/chain';
 
@@ -26,15 +26,15 @@ export interface WorkoutChainContext extends BaseWorkoutChainInput {
  * Configuration for the workout chain factory
  *
  * @template TContext - The context type for the specific workout operation
- * @template TWorkoutSchema - The Zod schema type for the structured workout
+ * @template TWorkoutSchema - The Zod schema type for the formatted workout
  */
 export interface WorkoutChainConfig<TWorkoutSchema extends z.ZodTypeAny> {
   // Prompts
   systemPrompt: string;  // Static system prompt
   userPrompt: (fitnessProfile: string) => string;  // Dynamic user prompt
 
-  // Schema for step 2a (structured JSON generation)
-  structuredSchema: TWorkoutSchema;
+  // Schema for step 2a (formatted text generation)
+  formattedSchema: TWorkoutSchema;
 
   // Whether to include modificationsApplied field (for substitute/replace)
   includeModifications?: boolean;
@@ -60,13 +60,13 @@ export interface WorkoutChainResult<TWorkout> {
  *
  * Executes the standard 2-step workout generation pattern:
  * 1. Generate long-form workout description + reasoning
- * 2. In parallel: convert to JSON + generate SMS message
+ * 2. In parallel: convert to formatted markdown + generate SMS message
  *
  * This eliminates code duplication across generate/replace/substitute agents.
  *
  * @param context - The operation-specific context
  * @param config - Configuration for prompts, schemas, and extractors
- * @returns Workout result with structured workout, message, description, and reasoning
+ * @returns Workout result with formatted workout, message, description, and reasoning
  */
 export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput, TWorkoutSchema extends z.ZodTypeAny>(
   context: TContext,
@@ -83,9 +83,9 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
   // Step 1: Generate long-form workout and build context object
   const contextRunnable = createLongFormatWorkoutRunnable({systemPrompt: systemMessage});
 
-  // Step 2a: Create structured agent with config (returns runnable)
-  const structuredAgent = createStructuredWorkoutAgent<TWorkout>({
-    schema: config.structuredSchema,
+  // Step 2a: Create formatted workout agent with config (returns runnable)
+  const formattedAgent = createFormattedWorkoutAgent<TWorkout>({
+    schema: config.formattedSchema,
     includeModifications: config.includeModifications || false,
     operationName: config.operationName,
   });
@@ -106,14 +106,14 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
       const sequence = RunnableSequence.from([
         contextRunnable,
         RunnablePassthrough.assign({
-          workout: structuredAgent,
+          workout: formattedAgent,
           message: messageAgent,
         })
       ]);
 
       const result = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
-      console.log(`[${config.operationName}] Successfully completed with workout, reasoning, JSON, and message`);
+      console.log(`[${config.operationName}] Successfully completed with workout, reasoning, formatted text, and message`);
       // Flatten the result to match WorkoutChainResult type
       return {
         workout: result.workout,

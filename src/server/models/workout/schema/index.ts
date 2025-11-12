@@ -54,6 +54,18 @@ export {
 } from './openAISchema';
 
 // ============================================================================
+// Formatted Text Schema Exports (NEW: replaces complex JSON)
+// ============================================================================
+export {
+  FormattedWorkoutSchema,
+  EnhancedFormattedWorkoutSchema,
+  UpdatedFormattedWorkoutSchema,
+  type FormattedWorkout,
+  type EnhancedFormattedWorkout,
+  type UpdatedFormattedWorkout,
+} from './formattedSchema';
+
+// ============================================================================
 // Schema Selection Utilities
 // ============================================================================
 
