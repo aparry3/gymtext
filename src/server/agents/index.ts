@@ -8,7 +8,7 @@ export { createAgentFromFunction, createRunnableAgent } from './base';
 export type { Agent, AgentDeps, AgentConfig } from './base';
 
 // Fitness Plan Agents
-export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './fitnessPlan/chain';
+export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './training/plans';
 
 // Conversation Agents
 export { type ChatAgentDeps } from './conversation/chat/chain';
@@ -26,11 +26,11 @@ export { createModificationTools, type WorkoutModificationService, type Microcyc
 // These will be removed in a future version
 // Please migrate to the factory functions above
 
-export * from './fitnessPlan/chain';
+export * from './training/plans';
 export * from './messaging/welcomeMessage/chain';
 export * from './messaging/planSummary/chain';
 export * from './conversation/chat/chain';
 export * from './conversation/reply/chain';
 export * from './conversation/summary/chain';
-export * from './fitnessPlan/microcyclePattern/chain';
-export * from './fitnessPlan/workouts/generate/chain';
+export * from './training/microcycles';
+export * from './training/workouts/operations/generate';

@@ -3,11 +3,11 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { ProgressService } from '../training/progressService';
-import { substituteExercises, type Modification } from '@/server/agents/fitnessPlan/workouts/substitute/chain';
-import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/fitnessPlan/workouts/replace/chain';
-import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/fitnessPlan/microcyclePattern/update/chain';
-import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
-import { DailyWorkoutInput } from '@/server/agents/fitnessPlan/workouts/generate/types';
+import { substituteExercises, type Modification } from '@/server/agents/training/workouts/operations/substitute';
+import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/training/workouts/operations/replace';
+import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/training/microcycles/operations/update/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
+import { DailyWorkoutInput } from '@/server/agents/training/workouts/operations/generate';
 import { now, getWeekday } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 
@@ -35,7 +35,7 @@ export interface SubstituteExerciseParams {
 
 export interface SubstituteExerciseResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -52,7 +52,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -67,7 +67,7 @@ export interface ModifyWeekParams {
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'];
+  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -143,13 +143,19 @@ export class WorkoutModificationService {
         modifications,
       });
 
-      // Extract the modifications applied (remove the date field before saving)
+      // Extract formatted text and theme for storage
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, ...workoutToSave } = result.workout;
+      const { modificationsApplied, date, formatted, theme } = result.workout;
+
+      // Store formatted text in details.formatted for backward compatibility
+      const details = {
+        formatted,  // New: formatted markdown text
+        theme,      // Keep theme for quick access
+      };
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(workout.id, {
-        details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
         reasoning: result.reasoning,
         message: result.message,
@@ -218,13 +224,19 @@ export class WorkoutModificationService {
         params: replaceParams,
       });
 
-      // Extract the modifications applied (remove the date field before saving)
+      // Extract formatted text and theme for storage
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, ...workoutToSave } = result.workout;
+      const { modificationsApplied, date, formatted, theme } = result.workout;
+
+      // Store formatted text in details.formatted for backward compatibility
+      const details = {
+        formatted,  // New: formatted markdown text
+        theme,      // Keep theme for quick access
+      };
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
-        details: workoutToSave as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
         reasoning: result.reasoning,
         message: result.message,
@@ -351,7 +363,7 @@ export class WorkoutModificationService {
       // Check if today's pattern changed - if so, regenerate today's workout
       // This handles cases where modifying a future day causes today's workout to be reshuffled
       let workoutRegenerated = false;
-      let regeneratedWorkout: import('@/server/agents/fitnessPlan/workouts/generate/types').DailyWorkoutOutput['workout'] | undefined;
+      let regeneratedWorkout: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'] | undefined;
       let workoutMessage: string | undefined;
 
       const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);
@@ -382,14 +394,21 @@ export class WorkoutModificationService {
 
         const result = await createDailyWorkoutAgent().invoke(context);
 
-        console.log('[MODIFY_WEEK] Generated workout:', JSON.stringify(result, null, 2));
+        // Extract formatted text and theme for storage
+        const { formatted, theme } = result.workout;
+        const details = {
+          formatted,  // New: formatted markdown text
+          theme,      // Keep theme for quick access
+        };
+
+        console.log('[MODIFY_WEEK] Generated workout with formatted text');
         // Check if a workout exists for today to update it, otherwise create it
         const existingWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayDate);
 
         if (existingWorkout) {
           // Update existing workout
           await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
-            details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
             description: result.description,
             reasoning: result.reasoning,
             message: result.message,
@@ -407,7 +426,7 @@ export class WorkoutModificationService {
             date: todayDate,
             sessionType: this.mapThemeToSessionType(todayUpdatedPlan!.theme),
             goal: `${todayUpdatedPlan!.theme}${todayUpdatedPlan!.notes ? ` - ${todayUpdatedPlan!.notes}` : ''}`,
-            details: result.workout as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
             description: result.description,
             reasoning: result.reasoning,
             message: result.message,

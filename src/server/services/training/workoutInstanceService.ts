@@ -1,6 +1,6 @@
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { createDailyWorkoutAgent } from '@/server/agents/fitnessPlan/workouts/generate/chain';
+import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanService } from './fitnessPlanService';
@@ -145,7 +145,7 @@ export class WorkoutInstanceService {
       const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { workout: enhancedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
+      const { workout: formattedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayPlan,
@@ -155,7 +155,14 @@ export class WorkoutInstanceService {
         recentWorkouts
       });
 
-      // Convert enhanced workout to database format
+      // Extract formatted text and theme for storage
+      const { formatted, theme } = formattedWorkout;
+      const details = {
+        formatted,  // New: formatted markdown text
+        theme,      // Keep theme for quick access
+      };
+
+      // Convert to database format
       const workout: NewWorkoutInstance = {
         clientId: user.id,
         fitnessPlanId: microcycle.fitnessPlanId,
@@ -164,7 +171,7 @@ export class WorkoutInstanceService {
         date: targetDate.toJSDate(),
         sessionType: this.mapThemeToSessionType(dayPlan.theme),
         goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
-        details: JSON.parse(JSON.stringify(enhancedWorkout)),
+        details: JSON.parse(JSON.stringify(details)),
         description,
         reasoning,
         message,

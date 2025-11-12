@@ -177,7 +177,7 @@ export class MicrocycleService {
   ): Promise<{ pattern: import('@/server/models/microcycle/schema').MicrocyclePattern; message: string }> {
     try {
       // Use AI agent to generate pattern and message (weekIndex is 0-based)
-      const { createMicrocyclePatternAgent } = await import('@/server/agents/fitnessPlan/microcyclePattern/chain');
+      const { createMicrocyclePatternAgent } = await import('@/server/agents/training/microcycles');
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
         mesocycle,

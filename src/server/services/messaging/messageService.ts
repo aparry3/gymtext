@@ -4,7 +4,7 @@ import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { createReplyAgent } from '../../agents/conversation/reply/chain';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageAgent } from '../../agents/fitnessPlan/workouts/shared/workoutMessage/chain';
+import { createWorkoutMessageAgent } from '../../agents/training/workouts/shared/steps/message/chain';
 import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -304,18 +304,26 @@ export class MessageService {
     const todayDate = nowInUserTz.startOf('day').toJSDate();
     const todayWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
 
-    let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[] } | undefined;
+    let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[]; formatted?: string } | undefined;
     if (todayWorkout) {
-      // Parse the workout details to extract blocks
+      // Parse the workout details
       let blocks: WorkoutBlock[] = [];
+      let formatted: string | undefined;
+
       try {
         const details = typeof todayWorkout.details === 'string'
           ? JSON.parse(todayWorkout.details as string)
           : todayWorkout.details;
 
-        // Check if details has the new enhanced structure with blocks
-        if (details && typeof details === 'object' && 'blocks' in details) {
+        // Check for new formatted text (preferred)
+        if (details && typeof details === 'object' && details.formatted && typeof details.formatted === 'string') {
+          formatted = details.formatted;
+          console.log('[MessageService] Using formatted workout text for context');
+        }
+        // Fallback to legacy blocks structure
+        else if (details && typeof details === 'object' && 'blocks' in details) {
           blocks = details.blocks as WorkoutBlock[];
+          console.log('[MessageService] Using legacy blocks structure for context');
         }
       } catch (error) {
         console.error('[MessageService] Error parsing workout details:', error);
@@ -325,6 +333,7 @@ export class MessageService {
         description: (todayWorkout as WorkoutInstance).description || null,
         reasoning: (todayWorkout as WorkoutInstance).reasoning || null,
         blocks,
+        formatted,
       };
     }
 
