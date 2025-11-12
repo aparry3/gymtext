@@ -192,7 +192,7 @@ export class WorkoutInstanceService {
 
         // Append short link to message
         if (savedWorkout.message) {
-          savedWorkout.message = `${savedWorkout.message}\n\nMore details: ${fullUrl}`;
+          savedWorkout.message = `${savedWorkout.message}\n\nSee ${fullUrl} for more details`;
           await this.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
         }
       } catch (error) {

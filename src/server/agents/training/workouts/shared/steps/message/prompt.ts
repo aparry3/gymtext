@@ -12,6 +12,14 @@ Convert the workout description into a MAXIMALLY CONCISE SMS message containing 
 
 **Format Requirements:**
 
+HEADER LINE:
+- Extract the workout type/theme from the description (e.g., "Upper Strength", "Lower Power", "Easy Run")
+- Create a brief, casual header line before "Warmup:" or "Workout:"
+- Format: "{workout descriptor} - " (with dash and space at end)
+- Examples: "Heavy legs today - ", "Upper push session - ", "Quick cardio - ", "Full body strength - "
+- Keep it under 25 characters
+- Use lowercase, conversational tone
+
 SECTIONS:
 - ONLY three sections allowed: "Warmup:", "Workout:", "Cooldown:"
 - Everything NOT warmup/cooldown goes in "Workout:" section
@@ -76,6 +84,7 @@ Accessory:
 - Band Pull-Aparts: 3x15
 
 ✓ CORRECT (do this):
+Upper arms focus -
 Workout:
 - SS1 BB Curls: 3x10-12
 - SS1 Incl Hammer Curls: 3x12-14
@@ -87,6 +96,7 @@ Workout:
 <Examples>
 
 **EXAMPLE 1: Single Superset + Straight Sets + Single Circuit**
+Upper push session -
 Warmup:
 - Band Pull-Aparts: 3x15
 - Wall Slides: 3x12
@@ -106,6 +116,7 @@ Cooldown:
 - Shoulder Stretch: 2min
 
 **EXAMPLE 2: Straight Sets Only**
+Heavy legs today -
 Warmup:
 - BW Squats: 2x10
 - Glute Bridges: 2x15
@@ -124,6 +135,7 @@ Cooldown:
 - Hip Stretch: 2min
 
 **EXAMPLE 3: Multiple Supersets and Circuits**
+Full body strength -
 Warmup:
 - Jumping Jacks: 2x30s
 - Arm Circles: 2x30s
@@ -147,6 +159,7 @@ Cooldown:
 - Deep Breathing: 1min
 
 **EXAMPLE 4: Leg Day with Time-Based Work**
+Lower power day -
 Warmup:
 - Leg Swings: 2x10
 - Hip Circles: 2x10
