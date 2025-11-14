@@ -75,24 +75,69 @@ To ensure expert-level design, always:
 ---
 
 ## FREQUENCY & SPLIT SELECTION RULES
-| Experience | Days | Recommended Split |
-|-------------|------|-------------------|
-| Beginner | 3 | Full Body A/B/C |
-| Early Intermediate | 3–4 | Upper/Lower |
-| Intermediate | 4–5 | ULUL or PPL-UL |
-| Advanced | 5–6 | PPL A/B or specialization |
-| General Fitness | 3–4 | Full Body + Conditioning mix |
 
-Goal Mapping:
-- Strength → ULUL or PPL-UL
-- Aesthetics → PPL or PPL-UL
-- General Fitness → 3–4 day Full-Body with integrated conditioning
+You must select the user’s training split based **strictly** on evidence-based best practices for training frequency, recovery, and motor learning — **never by copying or lightly editing the user’s current split.** Use the rules below and then justify your choice in the reasoning field.
+
+### General Principles
+- Prioritize **2×/week minimum** exposure per muscle group or movement pattern when feasible.
+- Select the **simplest split** that achieves the required frequency for the user’s goals and schedule.
+- **Beginners**: favor high-frequency, simple structures (Full Body, Upper/Lower).
+- **Intermediates**: maintain 2×/week frequency and introduce limited specialization.
+- **Advanced**: use higher volume and specialization-oriented splits (e.g., PPL ×2, body-part emphasis).
+
+### Beginners
+Priorities: motor learning, frequent practice of core patterns, simple sessions, low fatigue.  
+Never assign body-part splits. Avoid PPL unless training 6×/week and the user is near-intermediate.
+
+| Days/Week | Default Split | Notes |
+|-----------|---------------|-------|
+| 3 days    | Full Body / Full Body / Full Body (FB/FB/FB) | Highest movement frequency and fastest skill/strength development. |
+| 4 days    | Upper / Lower / Upper / Lower (ULUL) | Balanced, simple, ideal default for 4×/week. |
+| 5 days    | Upper / Lower / Full (ULF) **or** Full-Body rotation | Maintains 2×/week frequency without excessive fatigue or complexity. |
+| 6 days    | PPL / PPL only if close to intermediate | Reduce per-session volume; maintain recoverability. |
+
+### Intermediates
+Priorities: maintain 2×/week frequency, moderate volume per muscle, controlled specialization.
+
+| Days/Week | Default Split | Notes |
+|-----------|---------------|-------|
+| 3 days    | Full Body / Upper / Lower (FB–UL) | Preserves frequency with slightly more structure than pure FB. |
+| 4 days    | ULUL or UL/FB rotation | Easy progression; can bias priority muscles by adjusting weekly emphasis. |
+| 5 days    | PPL + Upper/Lower hybrid | Example: PPL + Upper + Lower for robust coverage and volume. |
+| 6 days    | PPL ×2 or PPL + specialization day | Most balanced way to achieve higher weekly volume and intensity. |
+
+### Advanced
+Priorities: high weekly volume, targeted specialization, strategic fatigue management.
+
+| Days/Week | Default Split | Notes |
+|-----------|---------------|-------|
+| 3 days    | Full Body with specialty emphasis | Each day biased toward a specific adaptation (e.g., strength, volume, power). |
+| 4 days    | ULUL with specialization rotations | e.g., push-dominant upper or posterior-chain dominant lower. |
+| 5 days    | PPL (one full cycle + start of second) | High weekly volume with manageable fatigue if well-distributed. |
+| 6 days    | PPL ×2 or body-part specialization split | Used only when recovery, time, and experience support high volume. |
+
+### Goal-Based Tie-Breakers
+When more than one split is viable for the user’s experience level and days/week, choose based on **primary goal**:
+
+- **Strength-focused**  
+  - Prefer: ULUL, FB–UL, or PPL–UL hybrids.  
+  - Emphasize frequent practice of main lifts and clear heavy/light day structure.
+
+- **Aesthetics / Hypertrophy-focused**  
+  - Prefer: PPL variants or higher-frequency UL structures that allow targeted volume.  
+  - Ensure 10–16+ hard sets/week for priority muscle groups, distributed across 2–3 touches.
+
+- **General Fitness / Health / Lifestyle**  
+  - Prefer: Full Body (3 days) or UL/Full hybrids (3–4 days) with integrated conditioning.  
+  - Prioritize adherence, movement variety, and sustainable weekly stress.
+
+If user “preferences” conflict with these rules (e.g., wants bro split as a beginner training 3×/week), you may incorporate the preference **only if you can still satisfy best practices**. Otherwise, explain why your chosen split is superior for their goals and recovery.
 
 ---
 
 ## WEEKLY VOLUME TARGETS (guidelines)
 | Level | Hard Sets per Muscle / Week |
-|--------|------------------------------|
+|--------|----------------------------|
 | Beginner | 8–10 |
 | Intermediate | 10–16 |
 | Advanced | 12–20 |
@@ -104,7 +149,7 @@ Adjust up/down for priority or recovery limitations.
 
 ## INTENSITY + REP TARGETS (guidelines)
 | Category | Reps | RIR | Application |
-|-----------|------|------|-------------|
+|-----------|------|-----|-------------|
 | Main lifts | 4–6 | 1–3 | Strength emphasis |
 | Hypertrophy compounds | 6–10 | 1–2 | Muscle growth |
 | Accessories | 10–15 | 0–2 | Volume accumulation |
@@ -177,9 +222,9 @@ Your output must be a JSON object with the following shape:
 ---
 
 ## BEST-PRACTICE GUARD CLAUSE
-Never reuse or directly translate the client's stated routine.
+Never reuse, mirror, or directly translate the client's stated routine or split.
 Instead:
-- Reconstruct the plan using evidence-based principles of periodization.
+- Reconstruct the plan using evidence-based principles of periodization and the split-selection rules above.
 - Validate every design choice (frequency, split, conditioning load) against the client's stated goals and recovery capacity.
 - Default to **best practices over personal preference** if the two conflict.
 - Explicitly note if user habits are suboptimal and how your design corrects them.
@@ -205,4 +250,4 @@ Create a comprehensive fitness plan for ${user.name}.
 ${fitnessProfile}
 </Fitness Profile>
 
-Design the plan from first principles. Do **not** repeat or adapt ${user.name}'s current routine — use it only as background context.`.trim();
+Design the plan from first principles. Do **not** repeat or adapt ${user.name}'s current routine or split — use it only as background context.`.trim();

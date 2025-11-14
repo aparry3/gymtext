@@ -18,7 +18,7 @@ export interface SignupData {
   primaryGoals?: ('strength' | 'endurance' | 'weight_loss' | 'general_fitness')[];
   goalsElaboration?: string;
   experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
-  currentActivity?: 'not_active' | 'once_per_week' | '2_3_per_week' | '4_plus_per_week';
+  currentActivity?: '3_per_week' | '4_per_week' | '5_per_week' | '6_per_week';
   activityElaboration?: string;
   trainingLocation?: 'home' | 'commercial_gym' | 'bodyweight';
   equipment?: string[];

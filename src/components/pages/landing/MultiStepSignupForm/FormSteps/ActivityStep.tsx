@@ -13,24 +13,24 @@ interface ActivityStepProps {
 
 const activityLevels = [
   {
-    value: 'not_active' as const,
-    label: 'Not Active',
-    description: 'Less than 1x/week',
+    value: '3_per_week' as const,
+    label: '3 Days Per Week',
+    description: 'Training 3x/week',
   },
   {
-    value: 'once_per_week' as const,
-    label: 'Once Per Week',
-    description: 'Working out about 1x/week',
+    value: '4_per_week' as const,
+    label: '4 Days Per Week',
+    description: 'Training 4x/week',
   },
   {
-    value: '2_3_per_week' as const,
-    label: '2-3 Times Per Week',
-    description: 'Regular activity 2-3x/week',
+    value: '5_per_week' as const,
+    label: '5 Days Per Week',
+    description: 'Training 5x/week',
   },
   {
-    value: '4_plus_per_week' as const,
-    label: '4+ Times Per Week',
-    description: 'Very active, 4+ sessions/week',
+    value: '6_per_week' as const,
+    label: '6 Days Per Week',
+    description: 'Training 6x/week',
   },
 ];
 

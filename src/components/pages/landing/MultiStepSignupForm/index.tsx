@@ -35,7 +35,7 @@ const formSchema = z.object({
   }),
 
   // Activity
-  currentActivity: z.enum(['not_active', 'once_per_week', '2_3_per_week', '4_plus_per_week'], {
+  currentActivity: z.enum(['3_per_week', '4_per_week', '5_per_week', '6_per_week'], {
     required_error: 'Please select your current activity level',
   }),
   activityElaboration: z.string().optional(),
