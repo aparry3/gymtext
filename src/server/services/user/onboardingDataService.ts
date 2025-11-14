@@ -48,6 +48,14 @@ export class OnboardingDataService {
   }
 
   /**
+   * Update current step for progress tracking
+   */
+  async updateCurrentStep(userId: string, stepNumber: number): Promise<OnboardingRecord> {
+    console.log(`[OnboardingDataService] Updating step to ${stepNumber} for user ${userId}`);
+    return await this.repository.updateCurrentStep(userId, stepNumber);
+  }
+
+  /**
    * Mark onboarding as completed (status: in_progress → completed)
    */
   async markCompleted(userId: string): Promise<OnboardingRecord> {

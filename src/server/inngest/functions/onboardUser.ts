@@ -48,11 +48,13 @@ export const onboardUserFunction = inngest.createFunction(
       await step.run('mark-started', async () => {
         console.log(`[Inngest] Marking onboarding as started for ${userId}`);
         await onboardingDataService.markStarted(userId);
+        await onboardingDataService.updateCurrentStep(userId, 1);
       });
 
     // Step 2: Load signup data
     const signupData = await step.run('load-signup-data', async () => {
       console.log(`[Inngest] Loading signup data for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 1);
 
       const signupData = await onboardingDataService.getSignupData(userId);
       if (!signupData) {
@@ -65,6 +67,7 @@ export const onboardUserFunction = inngest.createFunction(
     // Step 3: Extract fitness profile using LLM (SLOW!)
     await step.run('extract-fitness-profile', async () => {
       console.log(`[Inngest] Extracting fitness profile for ${userId} (LLM)`);
+      await onboardingDataService.updateCurrentStep(userId, 2);
 
       // Load user fresh to avoid serialization issues
       const userRepo = new UserRepository();
@@ -86,6 +89,7 @@ export const onboardUserFunction = inngest.createFunction(
     // Step 4: Create fitness plan
     await step.run('create-fitness-plan', async () => {
       console.log(`[Inngest] Creating fitness plan for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 3);
 
       // Reload user with updated profile
       const userRepo = new UserRepository();
@@ -106,6 +110,7 @@ export const onboardUserFunction = inngest.createFunction(
     // Step 5: Create first microcycle
     await step.run('create-first-microcycle', async () => {
       console.log(`[Inngest] Creating first microcycle for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 4);
 
       // Reload user (ensure fresh data)
       const userRepo = new UserRepository();
@@ -126,6 +131,7 @@ export const onboardUserFunction = inngest.createFunction(
     // Step 6: Create first workout
     await step.run('create-first-workout', async () => {
       console.log(`[Inngest] Creating first workout for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 5);
 
       // Reload user (ensure fresh data)
       const userRepo = new UserRepository();
@@ -146,12 +152,14 @@ export const onboardUserFunction = inngest.createFunction(
     // Step 7: Mark as completed
     await step.run('mark-completed', async () => {
       console.log(`[Inngest] Marking onboarding as completed for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 6);
       await onboardingDataService.markCompleted(userId);
     });
 
     // Step 8: Check if ready to send onboarding messages
     await step.run('check-send-messages', async () => {
       console.log(`[Inngest] Checking if ready to send messages for ${userId}`);
+      await onboardingDataService.updateCurrentStep(userId, 7);
 
       try {
         const sent = await onboardingCoordinator.sendOnboardingMessages(userId);

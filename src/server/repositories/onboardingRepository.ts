@@ -99,6 +99,18 @@ export class OnboardingRepository extends BaseRepository {
   }
 
   /**
+   * Update current step (for progress tracking)
+   */
+  async updateCurrentStep(userId: string, stepNumber: number): Promise<OnboardingRecord> {
+    return await this.db
+      .updateTable('userOnboarding')
+      .set({ currentStep: stepNumber })
+      .where('userId', '=', userId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
    * Mark onboarding as completed
    */
   async markCompleted(userId: string): Promise<OnboardingRecord> {

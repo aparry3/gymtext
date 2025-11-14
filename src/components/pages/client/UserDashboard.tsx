@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProgramTab } from '@/components/pages/admin/ProgramTab';
 import { formatRelative } from '@/shared/utils/date';
+import { getStepName, getProgressPercentage, TOTAL_STEPS } from '@/shared/constants/onboarding';
 import {
   Mail,
   Phone,
@@ -42,6 +43,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [onboardingStatus, setOnboardingStatus] = useState<'pending' | 'in_progress' | 'completed' | 'failed' | null>(null);
+  const [currentStep, setCurrentStep] = useState<number | null>(null);
 
   // Fetch onboarding status
   const fetchOnboardingStatus = useCallback(async () => {
@@ -51,6 +53,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
       if (response.ok) {
         setOnboardingStatus(result.onboardingStatus);
+        setCurrentStep(result.currentStep || null);
 
         // If completed, return true to signal we should fetch full user data
         if (result.onboardingStatus === 'completed' && result.hasProgram) {
@@ -149,11 +152,14 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
   // Show onboarding in progress state
   if (onboardingStatus === 'pending' || onboardingStatus === 'in_progress') {
+    const stepName = currentStep ? getStepName(currentStep) : 'Getting started...';
+    const progress = currentStep ? getProgressPercentage(currentStep) : 0;
+
     return (
       <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 text-center">
           <div className="mb-6 flex justify-center">
-            <div className="rounded-full bg-primary/10 p-6 animate-pulse">
+            <div className="rounded-full bg-primary/10 p-6">
               <Dumbbell className="h-12 w-12 text-primary" />
             </div>
           </div>
@@ -161,12 +167,24 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           <p className="text-muted-foreground mb-4">
             We&apos;re creating your personalized fitness plan based on your goals and profile. This usually takes 30-60 seconds.
           </p>
+
+          {/* Progress bar with smooth animation */}
           <div className="mt-6 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '66%' }}></div>
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
-            Hang tight! Your program will be ready shortly...
-          </p>
+
+          {/* Step indicator */}
+          <div className="mt-4 space-y-1">
+            <p className="text-sm font-medium text-primary">
+              {currentStep ? `Step ${currentStep} of ${TOTAL_STEPS}` : 'Starting...'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {stepName}
+            </p>
+          </div>
         </div>
       </div>
     );

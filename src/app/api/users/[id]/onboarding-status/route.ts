@@ -13,6 +13,7 @@ import { checkAuthorization } from '@/server/utils/authMiddleware';
  * Response:
  * {
  *   onboardingStatus: 'pending' | 'in_progress' | 'completed' | 'failed',
+ *   currentStep?: number,
  *   hasProgram: boolean,
  *   hasActiveSubscription: boolean,
  *   completedAt?: string,
@@ -56,6 +57,7 @@ export async function GET(
 
     return NextResponse.json({
       onboardingStatus: onboarding.status,
+      currentStep: onboarding.currentStep,
       hasProgram: !!fitnessPlan,
       hasActiveSubscription,
       completedAt: onboarding.completedAt?.toISOString(),
