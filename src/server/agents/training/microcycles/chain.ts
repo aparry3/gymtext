@@ -3,7 +3,6 @@ import { createRunnableAgent } from '@/server/agents/base';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
-  microcycleUserPrompt,
   createLongFormMicrocycleRunnable,
   createStructuredMicrocycleAgent,
   createMicrocycleMessageAgent,
@@ -25,13 +24,10 @@ import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePattern
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
-    const { fitnessPlan, weekNumber } = input;
+    const { weekNumber } = input;
 
     try {
-      // Build user prompt for step 1
-      const userPrompt = microcycleUserPrompt({ fitnessPlan, weekNumber });
-
-      // Step 1: Create long-form runnable
+      // Step 1: Create long-form runnable (generates its own prompt internally)
       const longFormRunnable = createLongFormMicrocycleRunnable({
         systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
         agentConfig: deps?.config
@@ -61,7 +57,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       ]);
 
       // Execute the chain
-      const result = await sequence.invoke({ ...input, prompt: userPrompt });
+      const result = await sequence.invoke(input);
 
       console.log(`[Microcycle] Generated pattern and message for week ${weekNumber}`);
 

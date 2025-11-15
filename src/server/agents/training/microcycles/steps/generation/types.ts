@@ -6,9 +6,8 @@ export interface LongFormMicrocycleConfig {
   agentConfig?: AgentConfig;
 }
 
-export interface LongFormMicrocycleInput extends MicrocyclePatternInput {
-  prompt: string;
-}
+// Input is just MicrocyclePatternInput - prompt is generated internally
+export type LongFormMicrocycleInput = MicrocyclePatternInput;
 
 export interface LongFormMicrocycleOutput {
   description: string;

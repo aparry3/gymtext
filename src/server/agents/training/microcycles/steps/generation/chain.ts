@@ -1,5 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
+import { microcycleUserPrompt } from './prompt';
 import type { LongFormMicrocycleConfig, LongFormMicrocycleInput, LongFormMicrocycleOutput } from './types';
 import type { MicrocyclePatternInput } from '../../types';
 
@@ -33,9 +34,16 @@ export const createLongFormMicrocycleRunnable = (config: LongFormMicrocycleConfi
 
   return createRunnableAgent(async (input: LongFormMicrocycleInput): Promise<MicrocycleChainContext> => {
     const systemMessage = config.systemPrompt;
+
+    // Generate user prompt from input
+    const userPrompt = microcycleUserPrompt({
+      fitnessPlan: input.fitnessPlan,
+      weekNumber: input.weekNumber
+    });
+
     const longFormMicrocycle = await model.invoke([
       { role: 'system', content: systemMessage },
-      { role: 'user', content: input.prompt }
+      { role: 'user', content: userPrompt }
     ]);
 
     return {
