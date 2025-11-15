@@ -29,6 +29,7 @@ export { createModificationTools, type WorkoutModificationService, type Microcyc
 export * from './training/plans';
 export * from './messaging/welcomeMessage/chain';
 export * from './messaging/planSummary/chain';
+export * from './messaging/planMicrocycleCombined/chain';
 export * from './conversation/chat/chain';
 export * from './conversation/reply/chain';
 export * from './conversation/summary/chain';

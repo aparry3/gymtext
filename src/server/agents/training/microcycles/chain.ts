@@ -25,11 +25,11 @@ import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePattern
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
-    const { mesocycle, weekIndex, programType, notes } = input;
+    const { fitnessPlan, weekNumber } = input;
 
     try {
       // Build user prompt for step 1
-      const userPrompt = microcycleUserPrompt({ mesocycle, weekIndex, programType, notes });
+      const userPrompt = microcycleUserPrompt({ fitnessPlan, weekNumber });
 
       // Step 1: Create long-form runnable
       const longFormRunnable = createLongFormMicrocycleRunnable({
@@ -63,7 +63,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       // Execute the chain
       const result = await sequence.invoke({ ...input, prompt: userPrompt });
 
-      console.log(`[Microcycle] Generated pattern and message for week ${weekIndex + 1}`);
+      console.log(`[Microcycle] Generated pattern and message for week ${weekNumber}`);
 
       return {
         pattern: result.pattern,

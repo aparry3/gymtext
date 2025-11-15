@@ -40,10 +40,8 @@ export const createLongFormMicrocycleRunnable = (config: LongFormMicrocycleConfi
 
     return {
       longFormMicrocycle,
-      mesocycle: input.mesocycle,
-      weekIndex: input.weekIndex,
-      programType: input.programType,
-      notes: input.notes
+      fitnessPlan: input.fitnessPlan,
+      weekNumber: input.weekNumber
     };
   });
 };

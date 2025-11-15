@@ -15,13 +15,17 @@ export const createWelcomeMessageAgent = () => {
     const { user } = input;
     const firstName = user.name?.split(' ')[0] || 'there';
 
-    const welcomeMessage = `Hey ${firstName}! Welcome to GymText 👋
+    const welcomeMessage = `Hey ${firstName}!
 
-I'm Gymmy, and I'm putting together your personalized plan now built around your goals, schedule, and training experience.
+After you hit "Sign Up," millions of documents were scanned—each with one goal: to build the best plan for your fitness journey.
 
-I'll send over your plan shortly, along with a breakdown of how everything's structured and what your first week looks like. Pumped to get started 💪
+Then came the planning stage—millions of AI bots mapping, testing, and re-testing until your plan was dialed in. Working to the studs to perfect the product.
 
-Dont forget to finish checking out if you haven't already so we can get in working out ASAP!`;
+Now, as your first workout sends, the bots cheer…then back to work…and we at the GymText family smile as another perfect plan leaves the factory.
+
+Welcome to GymText.
+
+Text me anytime with questions about your workouts, your plan, or if you just need a little extra help!`;
 
     return { message: welcomeMessage };
   });

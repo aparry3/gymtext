@@ -4,7 +4,7 @@ import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
-import { UserWithProfile, FitnessPlan, Mesocycle } from '@/server/models';
+import { UserWithProfile, FitnessPlan } from '@/server/models';
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
 
 export class MicrocycleService {
@@ -131,10 +131,8 @@ export class MicrocycleService {
 
     // Generate new pattern, description, reasoning, and message for the week using AI agent
     const { pattern, description, reasoning, message } = await this.generateMicrocyclePattern(
-      progress.mesocycle,
-      progress.microcycleWeek,
-      plan.programType,
-      plan.notes
+      plan,
+      progress.absoluteWeek
     );
 
     // Create new microcycle with pre-generated long-form content and message
@@ -172,10 +170,8 @@ export class MicrocycleService {
    * Generate a microcycle pattern, description, reasoning, and message using AI agent
    */
   private async generateMicrocyclePattern(
-    mesocycle: Mesocycle,
-    weekIndex: number, // 0-based index
-    programType: string,
-    notes?: string | null
+    fitnessPlan: FitnessPlan,
+    weekNumber: number
   ): Promise<{
     pattern: import('@/server/models/microcycle/schema').MicrocyclePattern;
     description: string;
@@ -183,17 +179,15 @@ export class MicrocycleService {
     message: string
   }> {
     try {
-      // Use AI agent to generate pattern, long-form description/reasoning, and message (weekIndex is 0-based)
+      // Use AI agent to generate pattern, long-form description/reasoning, and message
       const { createMicrocyclePatternAgent } = await import('@/server/agents/training/microcycles');
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        mesocycle,
-        weekIndex,
-        programType,
-        notes
+        fitnessPlan: JSON.stringify(fitnessPlan, null, 2),
+        weekNumber
       });
 
-      console.log(`Generated AI pattern, description, reasoning, and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
+      console.log(`Generated AI pattern, description, reasoning, and message for week ${weekNumber}`);
       return result;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);

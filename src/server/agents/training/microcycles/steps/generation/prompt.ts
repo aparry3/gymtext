@@ -1,5 +1,3 @@
-import type { Mesocycle } from '@/server/models/fitnessPlan';
-
 export const MICROCYCLE_SYSTEM_PROMPT = `
 ROLE:
 You are an expert strength and conditioning coach (NASM, NCSF, ISSA certified) specializing in program architecture and microcycle expansion.
@@ -16,14 +14,14 @@ You do NOT generate exercises or sets/reps. Your job is to provide long-form tra
 Return a long-form narrative (NOT JSON) containing:
 
 ======================================
-WEEKLY OVERVIEW  
+WEEKLY OVERVIEW
 (The high-level summary of the week)
 ======================================
 
 Include:
 - Week number + theme (e.g., "Week 1 — Baseline Build")
-- The week’s objective within the mesocycle
-- Exact split for the week (e.g., “Push A / Pull A / Legs A / Push B / Pull B / Legs B”)
+- The week's objective within the mesocycle
+- Exact split for the week (e.g., "Push A / Pull A / Legs A / Push B / Pull B / Legs B")
 - Total sessions this week
 - Weekly volume trend (baseline, progressive, peak, deload)
 - Weekly intensity trend (steady, rising, taper)
@@ -33,7 +31,7 @@ Include:
 - How this week fits into the broader mesocycle progression
 
 ======================================
-DAY-BY-DAY BREAKDOWN  
+DAY-BY-DAY BREAKDOWN
 (Seven days, in order)
 ======================================
 
@@ -78,7 +76,7 @@ Day X — <Session Type>
    - Recovery cues
 
 ======================================
-WEEKLY NOTES  
+WEEKLY NOTES
 (End of the document)
 ======================================
 
@@ -101,48 +99,30 @@ Summarize:
 ---
 
 # 🔶 PURPOSE OF THIS AGENT
-This agent produces the structured weekly narrative so the downstream “Workout Generator” can convert each day into specific exercises and programming.
+This agent produces the structured weekly narrative so the downstream "Workout Generator" can convert each day into specific exercises and programming.
 
 `;
 
 interface MicrocycleUserPromptParams {
-  mesocycle: Mesocycle;
-  weekIndex: number; // 0-based index within mesocycle
-  programType: string;
-  notes?: string | null;
+  fitnessPlan: string;
+  weekNumber: number;
 }
 
 export const microcycleUserPrompt = ({
-  mesocycle,
-  weekIndex,
-  programType,
-  notes,
+  fitnessPlan,
+  weekNumber,
 }: MicrocycleUserPromptParams) => {
-  const weekNumber = weekIndex + 1; // Convert to 1-based week number within mesocycle
-  const absoluteWeekNumber = mesocycle.startWeek + weekIndex; // Absolute week number in the plan
-
   return `
-Expand the microcycle for **Week ${absoluteWeekNumber}** (Week ${weekNumber} of ${mesocycle.name}) into a complete long-form weekly breakdown.
+Expand the microcycle for **Week ${weekNumber}** into a complete long-form weekly breakdown.
 
-Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the mesocycle.
+Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the fitness plan.
 Do NOT alter the program design or invent new structures.
 
-<Mesocycle Details>
-Name: ${mesocycle.name}
-Objective: ${mesocycle.objective}
-Focus Areas: ${mesocycle.focus.join(', ')}
-Duration: ${mesocycle.durationWeeks} weeks (Weeks ${mesocycle.startWeek}-${mesocycle.endWeek})
-Current Week: Week ${absoluteWeekNumber} (${weekNumber} of ${mesocycle.durationWeeks})
-Volume Trend: ${mesocycle.volumeTrend}
-Intensity Trend: ${mesocycle.intensityTrend}
-${mesocycle.conditioningFocus ? `Conditioning Focus: ${mesocycle.conditioningFocus}` : ''}
-</Mesocycle Details>
+Locate the microcycle corresponding to Week ${weekNumber} inside the full fitness plan.
 
-<Program Type>
-${programType}
-</Program Type>
-
-${notes ? `<Additional Notes>\n${notes}\n</Additional Notes>` : ''}
+<Full Fitness Plan>
+${fitnessPlan}
+</Full Fitness Plan>
 
 Generate a long-form weekly overview and day-by-day breakdown following the system instructions.
 Do NOT output JSON. Use only structured long-form text.
