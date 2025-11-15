@@ -67,6 +67,8 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
 
       return {
         pattern: result.pattern,
+        description: result.longFormMicrocycle.description,
+        reasoning: result.longFormMicrocycle.reasoning,
         message: result.message
       };
     } catch (error) {

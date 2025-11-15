@@ -129,21 +129,23 @@ export class MicrocycleService {
       return { microcycle, wasCreated: false };
     }
 
-    // Generate new pattern and message for the week using AI agent
-    const { pattern, message } = await this.generateMicrocyclePattern(
+    // Generate new pattern, description, reasoning, and message for the week using AI agent
+    const { pattern, description, reasoning, message } = await this.generateMicrocyclePattern(
       progress.mesocycle,
       progress.microcycleWeek,
       plan.programType,
       plan.notes
     );
 
-    // Create new microcycle with pre-generated message
+    // Create new microcycle with pre-generated long-form content and message
     microcycle = await this.microcycleRepo.createMicrocycle({
       userId,
       fitnessPlanId: plan.id!,
       mesocycleIndex: progress.mesocycleIndex,
       weekNumber: progress.microcycleWeek,
       pattern,
+      description,
+      reasoning,
       message,
       startDate: progress.weekStartDate,
       endDate: progress.weekEndDate,
@@ -167,16 +169,21 @@ export class MicrocycleService {
   }
 
   /**
-   * Generate a microcycle pattern and message using AI agent
+   * Generate a microcycle pattern, description, reasoning, and message using AI agent
    */
   private async generateMicrocyclePattern(
     mesocycle: Mesocycle,
     weekIndex: number, // 0-based index
     programType: string,
     notes?: string | null
-  ): Promise<{ pattern: import('@/server/models/microcycle/schema').MicrocyclePattern; message: string }> {
+  ): Promise<{
+    pattern: import('@/server/models/microcycle/schema').MicrocyclePattern;
+    description: string;
+    reasoning: string;
+    message: string
+  }> {
     try {
-      // Use AI agent to generate pattern and message (weekIndex is 0-based)
+      // Use AI agent to generate pattern, long-form description/reasoning, and message (weekIndex is 0-based)
       const { createMicrocyclePatternAgent } = await import('@/server/agents/training/microcycles');
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
@@ -186,7 +193,7 @@ export class MicrocycleService {
         notes
       });
 
-      console.log(`Generated AI pattern and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
+      console.log(`Generated AI pattern, description, reasoning, and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
       return result;
     } catch (error) {
       console.error('Failed to generate pattern with AI agent, using fallback:', error);

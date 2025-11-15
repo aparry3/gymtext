@@ -11,6 +11,8 @@ export interface Microcycle {
   mesocycleIndex: number;
   weekNumber: number;
   pattern: MicrocyclePattern;
+  description?: string | null; // Long-form narrative description of the weekly microcycle
+  reasoning?: string | null; // Explanation of how and why the week is structured
   message?: string | null; // SMS-formatted weekly check-in/breakdown message
   startDate: Date;
   endDate: Date;
@@ -30,6 +32,8 @@ export class MicrocycleModel {
       pattern: typeof row.pattern === 'string'
         ? JSON.parse(row.pattern)
         : row.pattern as unknown as MicrocyclePattern,
+      description: (row.description as unknown as string | null) ?? null,
+      reasoning: (row.reasoning as unknown as string | null) ?? null,
       message: (row.message as unknown as string | null) ?? null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       endDate: new Date(row.endDate as unknown as string | number | Date),
@@ -46,6 +50,10 @@ export class MicrocycleModel {
       mesocycleIndex: microcycle.mesocycleIndex,
       weekNumber: microcycle.weekNumber,
       pattern: JSON.stringify(microcycle.pattern),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      description: microcycle.description as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reasoning: microcycle.reasoning as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       message: microcycle.message as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

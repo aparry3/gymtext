@@ -171,7 +171,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           {/* Progress bar with smooth animation */}
           <div className="mt-6 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
           </div>

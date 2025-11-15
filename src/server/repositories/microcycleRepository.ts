@@ -16,6 +16,8 @@ export class MicrocycleRepository {
         mesocycleIndex: microcycle.mesocycleIndex,
         weekNumber: microcycle.weekNumber,
         pattern: JSON.stringify(microcycle.pattern),
+        description: microcycle.description,
+        reasoning: microcycle.reasoning,
         message: microcycle.message,
         startDate: microcycle.startDate,
         endDate: microcycle.endDate,
@@ -71,9 +73,18 @@ export class MicrocycleRepository {
 
   async updateMicrocycle(id: string, updates: Partial<Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Microcycle | null> {
     const updateData: Record<string, unknown> = {};
-    
+
     if (updates.pattern !== undefined) {
       updateData.pattern = JSON.stringify(updates.pattern);
+    }
+    if (updates.description !== undefined) {
+      updateData.description = updates.description;
+    }
+    if (updates.reasoning !== undefined) {
+      updateData.reasoning = updates.reasoning;
+    }
+    if (updates.message !== undefined) {
+      updateData.message = updates.message;
     }
     if (updates.isActive !== undefined) {
       updateData.isActive = updates.isActive;
@@ -84,12 +95,12 @@ export class MicrocycleRepository {
     if (updates.endDate !== undefined) {
       updateData.endDate = updates.endDate;
     }
-    
+
     if (Object.keys(updateData).length === 0) {
       // No updates to perform
       return this.getMicrocycleById(id);
     }
-    
+
     const result = await this.db
       .updateTable('microcycles')
       .set({
