@@ -1,11 +1,11 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { FitnessPlanModel, FitnessPlanOverview } from '@/server/models/fitnessPlan';
+import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
   createLongFormPlanRunnable,
-  createStructuredPlanAgent,
+  createMesocycleExtractor,
   createPlanMessageAgent,
 } from './steps';
 
@@ -27,8 +27,8 @@ export interface FitnessPlanAgentDeps {
  * Creates a fitness plan agent with injected dependencies
  *
  * Uses a composable chain for generating fitness plans:
- * 1. Generate long-form plan description and reasoning
- * 2. Convert to structured JSON (parallel with step 3)
+ * 1. Generate long-form plan description with mesocycle delimiters
+ * 2. Extract mesocycle overviews from description (parallel with step 3)
  * 3. Generate SMS-formatted summary message (parallel with step 2)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
@@ -50,10 +50,9 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
         systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT
       });
 
-      // Step 2: Create structured plan agent
-      const structuredAgent = createStructuredPlanAgent({
-        schema: FitnessPlanModel.schema,
-        operationName: 'generate fitness plan'
+      // Step 2: Create mesocycle extractor
+      const mesocycleExtractor = createMesocycleExtractor({
+        operationName: 'extract mesocycles'
       });
 
       // Step 3: Create message agent
@@ -61,11 +60,11 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
         operationName: 'generate plan message'
       });
 
-      // Compose the chain: long-form → parallel (structured + message)
+      // Compose the chain: long-form → parallel (mesocycles + message)
       const sequence = RunnableSequence.from([
         longFormRunnable,
         RunnablePassthrough.assign({
-          structured: structuredAgent,
+          mesocycles: mesocycleExtractor,
           message: messageAgent
         })
       ]);
@@ -77,17 +76,16 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
         prompt: userPrompt
       });
 
-      // Combine structured result with plan description, reasoning, and message
+      // Combine results into final overview
       const finalResult: FitnessPlanOverview = {
-        ...result.structured,
-        planDescription: result.longFormPlan.description,
-        reasoning: result.longFormPlan.reasoning,
+        description: result.longFormPlan.description,
+        mesocycles: result.mesocycles,
         message: result.message
       };
 
-      console.log(`[FitnessPlan] Generated fitness plan with message for user ${user.id}`);
+      console.log(`[FitnessPlan] Generated fitness plan with ${result.mesocycles.length} mesocycles for user ${user.id}`);
 
-      return finalResult as FitnessPlanOverview;
+      return finalResult;
     } catch (error) {
       console.error('[FitnessPlan] Error generating fitness plan:', error);
       throw error;

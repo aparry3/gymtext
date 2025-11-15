@@ -1,5 +1,5 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import { 
+import {
   FitnessPlanModel,
   type FitnessPlan,
 } from '@/server/models/fitnessPlan';
@@ -8,16 +8,14 @@ import {
 export class FitnessPlanRepository extends BaseRepository {
   async insertFitnessPlan(
     fitnessPlan: FitnessPlan
-  ): Promise<FitnessPlan> {    
+  ): Promise<FitnessPlan> {
+    // Mesocycles are already string[] - no need to JSON.stringify
     const result = await this.db
       .insertInto('fitnessPlans')
-      .values({
-        ...fitnessPlan,
-        mesocycles: JSON.stringify(fitnessPlan.mesocycles),
-      })
+      .values(fitnessPlan)
       .returningAll()
       .executeTakeFirstOrThrow();
-    
+
     return FitnessPlanModel.fromDB(result);
   }
 
@@ -27,7 +25,7 @@ export class FitnessPlanRepository extends BaseRepository {
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
-    
+
     if (!result) return null;
     return FitnessPlanModel.fromDB(result);
   }
@@ -39,7 +37,7 @@ export class FitnessPlanRepository extends BaseRepository {
       .where('clientId', '=', userId)
       .orderBy('createdAt', 'desc')
       .executeTakeFirst();
-    
+
     if (!result) return null;
     return FitnessPlanModel.fromDB(result);
   }

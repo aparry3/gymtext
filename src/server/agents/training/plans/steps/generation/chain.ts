@@ -3,10 +3,9 @@ import { z } from 'zod';
 import type { LongFormPlanConfig, LongFormPlanInput, LongFormPlanOutput } from './types';
 import type { UserWithProfile } from '@/server/models/userModel';
 
-// Schema for long-form plan description and reasoning
+// Schema for long-form plan description
 const LongFormPlanSchema = z.object({
-  description: z.string().describe("Long-form description of the fitness plan"),
-  reasoning: z.string().describe("Detailed explanation of all decisions made")
+  description: z.string().describe("Comprehensive fitness plan description with mesocycle delimiters")
 });
 
 /**

@@ -14,5 +14,4 @@ export interface LongFormPlanInput {
 
 export interface LongFormPlanOutput {
   description: string;
-  reasoning: string;
 }

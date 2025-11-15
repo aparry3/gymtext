@@ -7,89 +7,99 @@ export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;
 export type FitnessPlanUpdate = Updateable<FitnessPlans>;
 
-export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles' | 'currentMesocycleIndex' | 'currentMicrocycleWeek' | 'cycleStartDate'> & {
-  mesocycles: Mesocycle[];
+/**
+ * Simplified FitnessPlan type
+ *
+ * Stores:
+ * - description: Long-form plan with all details and reasoning
+ * - mesocycles: Array of mesocycle overview strings
+ * - summary: Brief summary for SMS (optional, from message field)
+ * - notes: Special considerations (optional)
+ */
+export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
+  mesocycles: string[];
   id?: string;
-  message?: string | null; // SMS-formatted plan summary
 };
 
+/**
+ * Overview returned by fitness plan agent
+ */
 export interface FitnessPlanOverview {
-  programType: string;
-  lengthWeeks: number; // Total weeks
-  mesocycles: Mesocycle[];
-  overview: string;
-  planDescription: string; // Long-form explanation of plan structure
-  reasoning: string; // Detailed decision-making rationale
-  notes?: string; // Travel, injuries, etc.
-  message?: string; // SMS-formatted plan summary
+  description: string; // Long-form plan description with mesocycle delimiters
+  mesocycles: string[]; // Extracted mesocycle overviews
+  summary?: string; // Brief summary for SMS
+  notes?: string; // Special considerations
+  message?: string; // SMS-formatted plan message
 }
 
+/**
+ * DEPRECATED: Legacy Mesocycle interface for backward compatibility
+ * This interface is kept to support legacy code that hasn't been migrated yet.
+ * New code should use mesocycle strings directly from FitnessPlan.mesocycles
+ */
 export interface Mesocycle {
-  name: string; // e.g., "Accumulation", "Intensification"
-  objective: string; // Main objective for this phase
-  focus: string[]; // Key focus areas, e.g., ["hypertrophy", "volume tolerance"]
-  durationWeeks: number; // Total duration of the mesocycle in weeks
-  startWeek: number; // Starting week number relative to full plan
-  endWeek: number; // Ending week number relative to full plan
-  volumeTrend: "increasing" | "stable" | "decreasing"; // How volume changes
-  intensityTrend: "increasing" | "stable" | "taper"; // How intensity changes
-  conditioningFocus?: string; // Optional conditioning focus
-  weeklyVolumeTargets?: Record<string, number>; // Sets per muscle group, e.g., { chest: 14, back: 16 }
-  avgRIRRange?: [number, number]; // Optional RIR range
-  keyThemes?: string[]; // Optional key themes
-  longFormDescription: string; // Full natural-language explanation
-  microcycles: string[]; // Long-form description of each week
+  name: string;
+  objective?: string;
+  focus?: string[];
+  durationWeeks?: number;
+  startWeek?: number;
+  endWeek?: number;
+  volumeTrend?: "increasing" | "stable" | "decreasing";
+  intensityTrend?: "increasing" | "stable" | "taper";
+  conditioningFocus?: string;
+  weeklyVolumeTargets?: Record<string, number>;
+  avgRIRRange?: [number, number];
+  keyThemes?: string[];
+  longFormDescription?: string;
+  microcycles?: string[];
 }
 
 export class FitnessPlanModel implements FitnessPlan {
   programType: string;
-  mesocycles: Mesocycle[];
+  mesocycles: string[];
   lengthWeeks: number | null;
   notes: string | null;
-  overview: string | null;
-  planDescription: string | null;
-  reasoning: string | null;
+  description: string | null;
   startDate: Date;
   clientId: string;
   createdAt: Date;
   goalStatement: string | null;
   id: string;
   updatedAt: Date;
+  message: string | null;
 
   constructor(
     programType: string,
-    mesocycles: Mesocycle[],
+    mesocycles: string[],
     lengthWeeks: number | null,
     notes: string | null,
-    overview: string,
-    planDescription: string | null,
-    reasoning: string | null,
+    description: string | null,
     startDate: Date,
     clientId: string,
     createdAt: Date,
-    goalStatement: string,
+    goalStatement: string | null,
     id: string,
-    updatedAt: Date
+    updatedAt: Date,
+    message: string | null
   ) {
     this.programType = programType;
     this.mesocycles = mesocycles;
     this.lengthWeeks = lengthWeeks;
     this.notes = notes;
-    this.overview = overview;
-    this.planDescription = planDescription;
-    this.reasoning = reasoning;
+    this.description = description;
     this.startDate = startDate;
     this.clientId = clientId;
     this.createdAt = createdAt;
     this.goalStatement = goalStatement;
     this.id = id;
     this.updatedAt = updatedAt;
+    this.message = message;
   }
 
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
     return {
       ...fitnessPlan,
-      mesocycles: (fitnessPlan.mesocycles || []) as unknown as Mesocycle[],
+      mesocycles: fitnessPlan.mesocycles || [],
     };
   }
 
@@ -97,17 +107,21 @@ export class FitnessPlanModel implements FitnessPlan {
     user: UserWithProfile,
     fitnessPlanOverview: FitnessPlanOverview
   ): FitnessPlan {
+    // Calculate lengthWeeks from mesocycles count (estimate)
+    // Each mesocycle is typically 4-8 weeks, but we'll use a default of 4 for now
+    // This can be extracted from the description if needed
+    const estimatedWeeks = fitnessPlanOverview.mesocycles.length * 4;
+
     return {
-      programType: fitnessPlanOverview.programType,
+      programType: 'other', // Default, can be extracted from description if needed
       mesocycles: fitnessPlanOverview.mesocycles,
-      lengthWeeks: fitnessPlanOverview.lengthWeeks,
+      lengthWeeks: estimatedWeeks,
       notes: fitnessPlanOverview.notes || null,
-      overview: fitnessPlanOverview.overview,
-      planDescription: fitnessPlanOverview.planDescription,
-      reasoning: fitnessPlanOverview.reasoning,
-      message: fitnessPlanOverview.message || null,
+      description: fitnessPlanOverview.description,
+      message: fitnessPlanOverview.message || fitnessPlanOverview.summary || null,
       clientId: user.id,
       startDate: new Date(),
+      goalStatement: null,
     };
   }
 

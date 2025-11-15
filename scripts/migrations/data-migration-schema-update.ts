@@ -1,11 +1,21 @@
+/**
+ * DEPRECATED: This migration script is no longer compatible with the simplified fitness plan schema.
+ * The new schema stores mesocycles as simple string arrays instead of complex JSON objects.
+ * This file is kept for historical reference only.
+ */
+
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from '@/server/models';
 import { initializeModel } from '@/server/agents/base';
-import { _MesocycleSchema, _FitnessPlanSchema } from '@/server/models/fitnessPlan/schema';
+// import { _MesocycleSchema, _FitnessPlanSchema } from '@/server/models/fitnessPlan/schema';
 import { _StructuredMicrocycleSchema } from '@/server/models/microcycle/schema';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { writeFileSync } from 'fs';
+
+// Placeholder schemas for deprecated script
+const _MesocycleSchema: any = null;
+const _FitnessPlanSchema: any = null;
 
 /**
  * Data Migration Script: Legacy to New Schema Format

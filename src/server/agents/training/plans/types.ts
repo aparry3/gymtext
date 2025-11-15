@@ -7,7 +7,7 @@ export type {
 } from './steps';
 
 export type {
-  StructuredPlanConfig,
+  MesocycleExtractorConfig,
 } from './steps';
 
 export type {

@@ -111,7 +111,7 @@ export const updateMicrocyclePatternPrompt = (
   mesocycle: Mesocycle,
   programType: string
 ): string => {
-  const weeks = mesocycle.durationWeeks;
+  const weeks = mesocycle.durationWeeks || 4; // Default to 4 weeks if not specified
   const isDeload = false; // Deload concept removed from new schema
 
   // Identify remaining days vs completed days
@@ -141,7 +141,7 @@ ${currentDaysText}${remainingDaysInfo}
 
 <Mesocycle Context>
 Name: ${mesocycle.name}
-Focus: ${mesocycle.focus.join(', ')}
+Focus: ${mesocycle.focus?.join(', ') || 'General training'}
 Program Type: ${programType}
 Week ${currentPattern.weekIndex + 1} of ${weeks}
 Deload Week: ${isDeload && currentPattern.weekIndex + 1 === weeks ? 'Yes' : 'No'}

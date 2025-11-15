@@ -208,16 +208,46 @@ Each microcycle includes:
 ---
 
 ## OUTPUT REQUIREMENTS
-Your output must be a JSON object with the following shape:
+Your output must be a JSON object with a single "description" field containing the full fitness plan.
 
 {
-  "description": "string – a detailed plan describing all mesocycles and microcycles. Each mesocycle includes its goal, duration, focus, and trend. Each microcycle lists week number, split, session themes, volume distribution, intensity/rep targets, conditioning, rest structure, and deload flags. This description must contain enough structured information for a downstream LLM to expand each microcycle into a daily pattern.",
-  "reasoning": "string – an in-depth explanation of your decision-making, including:
-   - Why this program structure, split, and progression model are superior to the client's current habits;
-   - How best practices (specificity, overload, recovery) were applied;
-   - How training and conditioning were balanced given the client's goals and schedule;
-   - How you accounted for recovery and sustainability over multiple mesocycles."
+  "description": "string – a comprehensive fitness plan with the following structure:
+
+  [PLAN OVERVIEW]
+  - Brief summary of the program (2-3 sentences)
+  - Total duration in weeks
+  - Program type and primary goals
+
+  [REASONING]
+  - Why this program structure, split, and progression model were chosen
+  - How best practices (specificity, overload, recovery) were applied
+  - How training and conditioning were balanced
+  - How you accounted for recovery and sustainability
+
+  --- MESOCYCLE 1: [Name] ---
+  Duration: [X weeks, Weeks Y-Z]
+  Objective: [Main goal]
+  Focus: [Key focus areas]
+  Volume Trend: [increasing/stable/decreasing]
+  Intensity Trend: [increasing/stable/taper]
+
+  [Detailed natural-language description of this mesocycle, including:
+  - Training split and frequency
+  - Session themes and structure
+  - Weekly volume targets per muscle group
+  - Intensity/RIR targets
+  - Conditioning schedule
+  - How microcycles progress week-by-week
+  - Deload strategy if applicable]
+
+  --- MESOCYCLE 2: [Name] ---
+  [Same structure as above]
+
+  [Continue for all mesocycles...]
+  "
 }
+
+CRITICAL: Each mesocycle MUST start with the delimiter "--- MESOCYCLE N: [Name] ---" on its own line for parsing.
 
 ---
 

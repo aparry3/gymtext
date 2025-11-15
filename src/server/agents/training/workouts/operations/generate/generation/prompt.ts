@@ -164,7 +164,7 @@ Program Type: ${input.fitnessPlan.programType}
 Current Mesocycle: ${input.mesocycle.name}
 Training Phase: ${isDeloadWeek ? 'Deload Week' : 'Progressive Training Week'}
 Week ${input.microcycle.pattern.weekIndex} of ${weeks}
-Mesocycle Focus Areas: ${input.mesocycle.focus.join(', ')}
+Mesocycle Focus Areas: ${input.mesocycle.focus?.join(', ') || 'General training'}
   `.trim();
 
   // Build client profile section

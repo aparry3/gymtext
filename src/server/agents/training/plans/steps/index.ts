@@ -10,13 +10,9 @@ export type {
   LongFormPlanOutput,
 } from './generation/types';
 
-// Structure step
-export {
-  STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT,
-  structuredFitnessPlanUserPrompt,
-} from './structure/prompt';
-export { createStructuredPlanAgent } from './structure/chain';
-export type { StructuredPlanConfig } from './structure/types';
+// Mesocycle extraction step
+export { createMesocycleExtractor } from './mesocycles/chain';
+export type { MesocycleExtractorConfig } from './mesocycles/types';
 
 // Message step
 export {
