@@ -6,6 +6,7 @@ import { ProgressService } from './progressService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { UserWithProfile, FitnessPlan } from '@/server/models';
 import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
+import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
 
 export class MicrocycleService {
   private static instance: MicrocycleService;
@@ -179,11 +180,14 @@ export class MicrocycleService {
     message: string
   }> {
     try {
+      if (!fitnessPlan.planDescription) {
+        throw new Error('Fitness plan description is required');
+      }
+
       // Use AI agent to generate pattern, long-form description/reasoning, and message
-      const { createMicrocyclePatternAgent } = await import('@/server/agents/training/microcycles');
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        fitnessPlan: JSON.stringify(fitnessPlan, null, 2),
+        fitnessPlan: fitnessPlan.planDescription,
         weekNumber
       });
 

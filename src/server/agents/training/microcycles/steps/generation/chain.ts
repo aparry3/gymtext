@@ -40,11 +40,14 @@ export const createLongFormMicrocycleRunnable = (config: LongFormMicrocycleConfi
       fitnessPlan: input.fitnessPlan,
       weekNumber: input.weekNumber
     });
+    console.log(`[LongFormMicrocycleRunnable] User prompt: ${userPrompt}`);
 
     const longFormMicrocycle = await model.invoke([
       { role: 'system', content: systemMessage },
       { role: 'user', content: userPrompt }
     ]);
+
+    console.log(`[LongFormMicrocycleRunnable] Long-form microcycle: ${JSON.stringify(longFormMicrocycle)}`);
 
     return {
       longFormMicrocycle,

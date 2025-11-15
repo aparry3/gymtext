@@ -113,18 +113,17 @@ export const microcycleUserPrompt = ({
   weekNumber,
 }: MicrocycleUserPromptParams) => {
   return `
-Expand the microcycle for **Week ${weekNumber}** into a complete long-form weekly breakdown.
+Expand the microcycle for **Week ${weekNumber + 8}** into a complete long-form weekly breakdown.
 
 Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the fitness plan.
 Do NOT alter the program design or invent new structures.
 
-Locate the microcycle corresponding to Week ${weekNumber} inside the full fitness plan.
+Locate the microcycle corresponding to Week ${weekNumber + 8} inside the full fitness plan.
 
 <Full Fitness Plan>
 ${fitnessPlan}
 </Full Fitness Plan>
 
 Generate a long-form weekly overview and day-by-day breakdown following the system instructions.
-Do NOT output JSON. Use only structured long-form text.
 `.trim();
 };
