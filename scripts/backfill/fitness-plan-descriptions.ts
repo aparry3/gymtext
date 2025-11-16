@@ -76,8 +76,8 @@ async function backfillFitnessPlans() {
       .selectFrom('fitnessPlans')
       .selectAll()
       .where((eb) => eb.or([
-        eb('planDescription', 'is', null),
-        eb('reasoning', 'is', null)
+        eb('description', 'is', null),
+        eb('message', 'is', null)
       ]))
       .execute();
 
@@ -101,17 +101,17 @@ async function backfillFitnessPlans() {
           programType: plan.programType,
           lengthWeeks: plan.lengthWeeks,
           mesocycles: plan.mesocycles,
-          overview: plan.overview,
+          overview: '', // Field removed in schema simplification
           notes: plan.notes,
           goalStatement: plan.goalStatement,
         });
 
-        // Update the database
+        // Update the database with new schema fields
         await postgresDb
           .updateTable('fitnessPlans')
           .set({
-            planDescription: result.planDescription,
-            reasoning: result.reasoning,
+            description: result.planDescription,
+            message: result.reasoning, // Map reasoning to message field
             updatedAt: new Date(),
           })
           .where('id', '=', plan.id)

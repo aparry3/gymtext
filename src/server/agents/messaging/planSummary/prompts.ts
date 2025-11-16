@@ -35,9 +35,8 @@ Name: ${user.name}
 Program Type: ${plan.programType}
 Duration: ${plan.lengthWeeks} weeks
 Plan Description:
-${plan.planDescription}
+${plan.description || ''}
 
-Overview: ${plan.overview}
 ${plan.notes ? `Notes: ${plan.notes}` : ''}
 </Plan Details>
 

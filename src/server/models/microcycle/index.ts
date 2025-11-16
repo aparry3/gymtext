@@ -1,8 +1,4 @@
 import { Microcycles } from '@/server/models/_types';
-import { MicrocyclePattern } from './schema';
-
-// Re-export types
-export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
 
 export interface Microcycle {
   id: string;
@@ -10,7 +6,13 @@ export interface Microcycle {
   fitnessPlanId: string;
   mesocycleIndex: number;
   weekNumber: number;
-  pattern: MicrocyclePattern;
+  mondayOverview?: string | null;
+  tuesdayOverview?: string | null;
+  wednesdayOverview?: string | null;
+  thursdayOverview?: string | null;
+  fridayOverview?: string | null;
+  saturdayOverview?: string | null;
+  sundayOverview?: string | null;
   description?: string | null; // Long-form narrative description of the weekly microcycle
   reasoning?: string | null; // Explanation of how and why the week is structured
   message?: string | null; // SMS-formatted weekly check-in/breakdown message
@@ -29,9 +31,13 @@ export class MicrocycleModel {
       fitnessPlanId: row.fitnessPlanId as unknown as string,
       mesocycleIndex: row.mesocycleIndex,
       weekNumber: row.weekNumber,
-      pattern: typeof row.pattern === 'string'
-        ? JSON.parse(row.pattern)
-        : row.pattern as unknown as MicrocyclePattern,
+      mondayOverview: (row.mondayOverview as unknown as string | null) ?? null,
+      tuesdayOverview: (row.tuesdayOverview as unknown as string | null) ?? null,
+      wednesdayOverview: (row.wednesdayOverview as unknown as string | null) ?? null,
+      thursdayOverview: (row.thursdayOverview as unknown as string | null) ?? null,
+      fridayOverview: (row.fridayOverview as unknown as string | null) ?? null,
+      saturdayOverview: (row.saturdayOverview as unknown as string | null) ?? null,
+      sundayOverview: (row.sundayOverview as unknown as string | null) ?? null,
       description: (row.description as unknown as string | null) ?? null,
       reasoning: (row.reasoning as unknown as string | null) ?? null,
       message: (row.message as unknown as string | null) ?? null,
@@ -49,7 +55,20 @@ export class MicrocycleModel {
       fitnessPlanId: microcycle.fitnessPlanId,
       mesocycleIndex: microcycle.mesocycleIndex,
       weekNumber: microcycle.weekNumber,
-      pattern: JSON.stringify(microcycle.pattern),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mondayOverview: microcycle.mondayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tuesdayOverview: microcycle.tuesdayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      wednesdayOverview: microcycle.wednesdayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      thursdayOverview: microcycle.thursdayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fridayOverview: microcycle.fridayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      saturdayOverview: microcycle.saturdayOverview as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sundayOverview: microcycle.sundayOverview as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       description: microcycle.description as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -9,5 +9,3 @@ export {
 // Steps (for advanced usage)
 export * from './steps';
 
-// Types
-export * from './types';

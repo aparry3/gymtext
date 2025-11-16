@@ -35,9 +35,14 @@ DAY-BY-DAY BREAKDOWN
 (Seven days, in order)
 ======================================
 
-For EACH DAY (1–7), output:
+For EACH DAY (1–7), output with this exact header format:
 
-Day X — <Session Type>
+*** MONDAY - <Session Type> ***
+*** TUESDAY - <Session Type> ***
+*** WEDNESDAY - <Session Type> ***
+(etc. for all 7 days)
+
+Then for each day provide:
 
 1. **Session Objective**
    - Describe what the day accomplishes and why it exists in this weekly structure.
@@ -113,12 +118,12 @@ export const microcycleUserPrompt = ({
   weekNumber,
 }: MicrocycleUserPromptParams) => {
   return `
-Expand the microcycle for **Week ${weekNumber + 8}** into a complete long-form weekly breakdown.
+Expand the microcycle for **Week ${weekNumber + 1}** into a complete long-form weekly breakdown.
 
 Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the fitness plan.
 Do NOT alter the program design or invent new structures.
 
-Locate the microcycle corresponding to Week ${weekNumber + 8} inside the full fitness plan.
+Locate the microcycle corresponding to Week ${weekNumber + 1} inside the full fitness plan.
 
 <Full Fitness Plan>
 ${fitnessPlan}

@@ -1,7 +1,7 @@
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import type { WorkoutBlock } from '@/server/models/workout';
-import type { MicrocyclePattern } from '@/server/models/microcycle';
+import type { Microcycle } from '@/server/models/microcycle';
 import type { AgentDeps } from '@/server/agents/base';
 import { z } from 'zod';
 
@@ -37,10 +37,9 @@ export interface ReplyInput {
     reasoning: string | null;
     blocks: WorkoutBlock[];
   };
-  currentMicrocycle?: MicrocyclePattern;
+  currentMicrocycle?: Microcycle;
   fitnessPlan?: {
-    overview: string | null;
-    planDescription: string | null;
+    description: string | null;
     reasoning: string | null;
   };
 }

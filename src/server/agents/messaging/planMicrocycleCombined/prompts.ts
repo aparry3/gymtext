@@ -31,15 +31,21 @@ Name: ${user.name}
 <Plan Details>
 Program Type: ${plan.programType}
 Duration: ${plan.lengthWeeks} weeks
-Plan Description: ${plan.planDescription}
-Overview: ${plan.overview}
+Plan Description: ${plan.description || ''}
 ${plan.notes ? `Notes: ${plan.notes}` : ''}
 </Plan Details>
 
 <First Week Details>
 Week Number: ${microcycle.weekNumber}
 ${microcycle.description ? `Description: ${microcycle.description}` : ''}
-Pattern: ${JSON.stringify(microcycle.pattern, null, 2)}
+Day Overviews:
+- Monday: ${microcycle.mondayOverview || 'N/A'}
+- Tuesday: ${microcycle.tuesdayOverview || 'N/A'}
+- Wednesday: ${microcycle.wednesdayOverview || 'N/A'}
+- Thursday: ${microcycle.thursdayOverview || 'N/A'}
+- Friday: ${microcycle.fridayOverview || 'N/A'}
+- Saturday: ${microcycle.saturdayOverview || 'N/A'}
+- Sunday: ${microcycle.sundayOverview || 'N/A'}
 </First Week Details>
 
 <Guidelines>

@@ -212,27 +212,39 @@ async function manageWorkout(options: WorkoutOptions): Promise<void> {
     // Get current microcycle for pattern
     const microcycle = await testDb.getMicrocycle(user.id);
     
-    // If pattern flag is set, show the weekly pattern
+    // If pattern flag is set, show the weekly pattern (now using day overviews)
     if (options.pattern) {
-      if (!microcycle || !microcycle.pattern) {
-        warning('No microcycle pattern found');
+      if (!microcycle) {
+        warning('No microcycle found');
         console.log(chalk.yellow('A microcycle will be generated when daily messages are sent'));
         process.exit(0);
       }
-      
-      const pattern = typeof microcycle.pattern === 'string'
-        ? JSON.parse(microcycle.pattern)
-        : microcycle.pattern;
-      
+
+      // Display day overviews instead of pattern
+      const dayOverviews = {
+        monday: microcycle.mondayOverview,
+        tuesday: microcycle.tuesdayOverview,
+        wednesday: microcycle.wednesdayOverview,
+        thursday: microcycle.thursdayOverview,
+        friday: microcycle.fridayOverview,
+        saturday: microcycle.saturdayOverview,
+        sunday: microcycle.sundayOverview,
+      };
+
       if (options.json) {
-        console.log(JSON.stringify(pattern, null, 2));
+        console.log(JSON.stringify(dayOverviews, null, 2));
       } else {
-        displayPattern(pattern);
+        console.log(chalk.bold('\nWeekly Pattern (Day Overviews):'));
         console.log('');
+        Object.entries(dayOverviews).forEach(([day, overview]) => {
+          console.log(chalk.cyan(day.toUpperCase() + ':'));
+          console.log(overview || chalk.gray('(No overview)'));
+          console.log('');
+        });
         separator();
-        info('This pattern guides daily workout generation');
+        info('These day overviews guide daily workout generation');
       }
-      
+
       return;
     }
 

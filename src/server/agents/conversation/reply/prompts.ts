@@ -1,6 +1,6 @@
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { WorkoutBlock } from '@/server/models/workout';
-import type { MicrocyclePattern } from '@/server/models/microcycle';
+import type { Microcycle } from '@/server/models/microcycle';
 import { formatForAI } from '@/shared/utils/date';
 
 /**
@@ -251,10 +251,9 @@ export const buildReplyMessage = (
     reasoning: string | null;
     blocks: WorkoutBlock[];
   },
-  currentMicrocycle?: MicrocyclePattern,
+  currentMicrocycle?: Microcycle,
   fitnessPlan?: {
-    overview: string | null;
-    planDescription: string | null;
+    description: string | null;
     reasoning: string | null;
   }
 ): string => {
@@ -270,12 +269,8 @@ export const buildReplyMessage = (
   if (fitnessPlan) {
     contextMessage += `\n\n## FITNESS PLAN CONTEXT`;
 
-    if (fitnessPlan.overview) {
-      contextMessage += `\n\n**Plan Overview**: ${fitnessPlan.overview}`;
-    }
-
-    if (fitnessPlan.planDescription) {
-      contextMessage += `\n\n**Plan Description**: ${fitnessPlan.planDescription}`;
+    if (fitnessPlan.description) {
+      contextMessage += `\n\n**Plan Description**: ${fitnessPlan.description}`;
     }
 
     if (fitnessPlan.reasoning) {
@@ -285,10 +280,25 @@ export const buildReplyMessage = (
 
   // Add current week context if available
   if (currentMicrocycle) {
-    contextMessage += `\n\n## THIS WEEK'S SCHEDULE (Week ${currentMicrocycle.weekIndex + 1})`;
+    contextMessage += `\n\n## THIS WEEK'S SCHEDULE`;
     contextMessage += `\n\n**Weekly Pattern**:`;
-    currentMicrocycle.days.forEach(day => {
-      contextMessage += `\n- ${day.day}: ${day.theme}${day.load ? ` (${day.load} load)` : ''}${day.notes ? ` - ${day.notes}` : ''}`;
+
+    const dayOverviews = [
+      { day: 'Monday', overview: currentMicrocycle.mondayOverview },
+      { day: 'Tuesday', overview: currentMicrocycle.tuesdayOverview },
+      { day: 'Wednesday', overview: currentMicrocycle.wednesdayOverview },
+      { day: 'Thursday', overview: currentMicrocycle.thursdayOverview },
+      { day: 'Friday', overview: currentMicrocycle.fridayOverview },
+      { day: 'Saturday', overview: currentMicrocycle.saturdayOverview },
+      { day: 'Sunday', overview: currentMicrocycle.sundayOverview },
+    ];
+
+    dayOverviews.forEach(({ day, overview }) => {
+      if (overview) {
+        // Extract just the header line (first line) from the overview for a summary
+        const headerLine = overview.split('\n')[0].replace(/^\*+\s*/, '').trim();
+        contextMessage += `\n- ${day}: ${headerLine}`;
+      }
     });
   }
 

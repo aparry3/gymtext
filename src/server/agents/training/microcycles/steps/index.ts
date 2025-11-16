@@ -10,13 +10,9 @@ export type {
   LongFormMicrocycleOutput,
 } from './generation/types';
 
-// Structure step
-export {
-  MICROCYCLE_STRUCTURED_SYSTEM_PROMPT,
-  microcycleStructuredUserPrompt,
-} from './structure/prompt';
-export { createStructuredMicrocycleAgent } from './structure/chain';
-export type { StructuredMicrocycleConfig } from './structure/types';
+// Days extraction step
+export { createDaysExtractionAgent } from './days/chain';
+export type { DaysExtractionConfig, DayOverviews } from './days/types';
 
 // Message step
 export {

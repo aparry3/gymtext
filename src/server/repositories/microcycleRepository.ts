@@ -15,7 +15,13 @@ export class MicrocycleRepository {
         fitnessPlanId: microcycle.fitnessPlanId,
         mesocycleIndex: microcycle.mesocycleIndex,
         weekNumber: microcycle.weekNumber,
-        pattern: JSON.stringify(microcycle.pattern),
+        mondayOverview: microcycle.mondayOverview,
+        tuesdayOverview: microcycle.tuesdayOverview,
+        wednesdayOverview: microcycle.wednesdayOverview,
+        thursdayOverview: microcycle.thursdayOverview,
+        fridayOverview: microcycle.fridayOverview,
+        saturdayOverview: microcycle.saturdayOverview,
+        sundayOverview: microcycle.sundayOverview,
         description: microcycle.description,
         reasoning: microcycle.reasoning,
         message: microcycle.message,
@@ -74,8 +80,26 @@ export class MicrocycleRepository {
   async updateMicrocycle(id: string, updates: Partial<Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Microcycle | null> {
     const updateData: Record<string, unknown> = {};
 
-    if (updates.pattern !== undefined) {
-      updateData.pattern = JSON.stringify(updates.pattern);
+    if (updates.mondayOverview !== undefined) {
+      updateData.mondayOverview = updates.mondayOverview;
+    }
+    if (updates.tuesdayOverview !== undefined) {
+      updateData.tuesdayOverview = updates.tuesdayOverview;
+    }
+    if (updates.wednesdayOverview !== undefined) {
+      updateData.wednesdayOverview = updates.wednesdayOverview;
+    }
+    if (updates.thursdayOverview !== undefined) {
+      updateData.thursdayOverview = updates.thursdayOverview;
+    }
+    if (updates.fridayOverview !== undefined) {
+      updateData.fridayOverview = updates.fridayOverview;
+    }
+    if (updates.saturdayOverview !== undefined) {
+      updateData.saturdayOverview = updates.saturdayOverview;
+    }
+    if (updates.sundayOverview !== undefined) {
+      updateData.sundayOverview = updates.sundayOverview;
     }
     if (updates.description !== undefined) {
       updateData.description = updates.description;

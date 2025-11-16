@@ -5,7 +5,7 @@ import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { UserWithProfile, FitnessPlan } from '@/server/models';
-import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
+import { Microcycle } from '@/server/models/microcycle';
 import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
 
 export class MicrocycleService {
@@ -93,13 +93,21 @@ export class MicrocycleService {
   }
 
   /**
-   * Update a microcycle's pattern
+   * Update a microcycle's day overviews
    */
-  public async updateMicrocyclePattern(
+  public async updateMicrocycleDayOverviews(
     microcycleId: string,
-    pattern: MicrocyclePattern
+    dayOverviews: Partial<{
+      mondayOverview: string;
+      tuesdayOverview: string;
+      wednesdayOverview: string;
+      thursdayOverview: string;
+      fridayOverview: string;
+      saturdayOverview: string;
+      sundayOverview: string;
+    }>
   ): Promise<void> {
-    await this.microcycleRepo.updateMicrocycle(microcycleId, { pattern });
+    await this.microcycleRepo.updateMicrocycle(microcycleId, dayOverviews);
   }
 
 
@@ -130,8 +138,8 @@ export class MicrocycleService {
       return { microcycle, wasCreated: false };
     }
 
-    // Generate new pattern, description, reasoning, and message for the week using AI agent
-    const { pattern, description, reasoning, message } = await this.generateMicrocyclePattern(
+    // Generate new day overviews, description, reasoning, and message for the week using AI agent
+    const { dayOverviews, description, reasoning, message } = await this.generateMicrocyclePattern(
       plan,
       progress.absoluteWeek
     );
@@ -142,7 +150,13 @@ export class MicrocycleService {
       fitnessPlanId: plan.id!,
       mesocycleIndex: progress.mesocycleIndex,
       weekNumber: progress.microcycleWeek,
-      pattern,
+      mondayOverview: dayOverviews.mondayOverview,
+      tuesdayOverview: dayOverviews.tuesdayOverview,
+      wednesdayOverview: dayOverviews.wednesdayOverview,
+      thursdayOverview: dayOverviews.thursdayOverview,
+      fridayOverview: dayOverviews.fridayOverview,
+      saturdayOverview: dayOverviews.saturdayOverview,
+      sundayOverview: dayOverviews.sundayOverview,
       description,
       reasoning,
       message,
@@ -168,33 +182,41 @@ export class MicrocycleService {
   }
 
   /**
-   * Generate a microcycle pattern, description, reasoning, and message using AI agent
+   * Generate a microcycle day overviews, description, reasoning, and message using AI agent
    */
   private async generateMicrocyclePattern(
     fitnessPlan: FitnessPlan,
     weekNumber: number
   ): Promise<{
-    pattern: import('@/server/models/microcycle/schema').MicrocyclePattern;
+    dayOverviews: {
+      mondayOverview: string;
+      tuesdayOverview: string;
+      wednesdayOverview: string;
+      thursdayOverview: string;
+      fridayOverview: string;
+      saturdayOverview: string;
+      sundayOverview: string;
+    };
     description: string;
     reasoning: string;
     message: string
   }> {
     try {
-      if (!fitnessPlan.planDescription) {
+      if (!fitnessPlan.description) {
         throw new Error('Fitness plan description is required');
       }
 
-      // Use AI agent to generate pattern, long-form description/reasoning, and message
+      // Use AI agent to generate day overviews, long-form description/reasoning, and message
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        fitnessPlan: fitnessPlan.planDescription,
+        fitnessPlan: fitnessPlan.description,
         weekNumber
       });
 
-      console.log(`Generated AI pattern, description, reasoning, and message for week ${weekNumber}`);
+      console.log(`Generated AI day overviews, description, reasoning, and message for week ${weekNumber}`);
       return result;
     } catch (error) {
-      console.error('Failed to generate pattern with AI agent, using fallback:', error);
+      console.error('Failed to generate day overviews with AI agent:', error);
       throw error;
     }
   }
