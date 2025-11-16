@@ -516,7 +516,7 @@ function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onW
                     }}
                   >
                     {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
-                      ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
+                      ? `M${workout.mesocycleIndex + 1} W${workout.microcycleWeek + 1}`
                       : '-'
                     }
                   </td>

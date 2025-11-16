@@ -8,6 +8,8 @@ export const buildFormattedMicrocycleSystemPrompt = (): string => {
 
 Your task is to convert a detailed long-form microcycle description into a simple markdown document with clear patterns for visual rendering.
 
+**CRITICAL REQUIREMENT: Every output MUST include ALL 7 days of the week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday). Missing even one day is unacceptable.**
+
 REQUIRED FORMAT STRUCTURE:
 
 # Week {X} - {Theme/Focus}
@@ -225,12 +227,12 @@ export const createFormattedMicrocycleUserPrompt = (
 LONG-FORM MICROCYCLE DESCRIPTION:
 ${longFormMicrocycle.description}
 
-WEEK NUMBER: ${weekNumber}
+WEEK NUMBER: ${weekNumber + 1}
 IS DELOAD: ${isDeload ? 'Yes - this is a deload/recovery week' : 'No - regular training week'}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt
-- Include ALL 7 days of the week with appropriate detail
+- **CRITICAL: You MUST include ALL 7 days of the week (Monday through Sunday) - this is non-negotiable**
 - Structure each training day with focus, load, duration, key work, and notes
 - Keep rest/recovery days simple but present
 - Add clear weekly overview and coaching notes sections
@@ -238,5 +240,7 @@ INSTRUCTIONS:
 - Make deload weeks clearly identifiable if applicable
 - Ensure consistent formatting for easy parsing and display
 
-Generate the complete formatted microcycle now.`;
+**REMINDER: Your output must contain sections for Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, AND Sunday. Do not truncate or skip any days.**
+
+Generate the complete formatted microcycle now with all 7 days included.`;
 };

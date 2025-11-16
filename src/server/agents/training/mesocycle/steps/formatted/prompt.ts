@@ -204,7 +204,7 @@ export const createFormattedMesocycleUserPrompt = (
 LONG-FORM MESOCYCLE DESCRIPTION:
 ${longFormMesocycle.description}
 
-MESOCYCLE INDEX: ${mesocycleIndex}
+MESOCYCLE INDEX: ${mesocycleIndex + 1}
 DURATION: ${durationWeeks} weeks
 
 INSTRUCTIONS:

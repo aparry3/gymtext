@@ -200,12 +200,12 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
               )}
               <BreadcrumbItem>
                 <BreadcrumbLink href={basePath === '/me' ? `/me/program/mesocycles/${mesocycleIndex}` : `${basePath}/${userId}/program/mesocycles/${mesocycleIndex}`}>
-                  Mesocycle {mesocycleIndex}
+                  Mesocycle {mesocycleIndex + 1}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Week {weekNumber}</BreadcrumbPage>
+                <BreadcrumbPage>Week {weekNumber + 1}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -265,7 +265,7 @@ function MicrocycleHeader({ microcycle }: { microcycle: Microcycle }) {
     <Card className="p-6">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">Week {microcycle.pattern?.weekIndex ?? microcycle.weekNumber}</h1>
+          <h1 className="text-2xl font-semibold">Week {(microcycle.pattern?.weekIndex ?? microcycle.weekNumber) + 1}</h1>
           <p className="text-muted-foreground">
             {startDate} - {endDate}
           </p>

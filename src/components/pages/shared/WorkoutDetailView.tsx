@@ -471,7 +471,7 @@ function WorkoutHeader({
           </p>
           {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined && (
             <p className="text-sm text-muted-foreground">
-              Mesocycle {workout.mesocycleIndex + 1} • Week {workout.microcycleWeek}
+              Mesocycle {workout.mesocycleIndex + 1} • Week {workout.microcycleWeek + 1}
             </p>
           )}
         </div>

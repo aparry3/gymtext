@@ -16,7 +16,7 @@ export const createFormattedMicrocycleAgent = <TMicrocycle = unknown>(
   config: FormattedMicrocycleConfig
 ) => {
   const agentConfig = config.agentConfig || {
-    model: 'gemini-2.5-flash-lite',
+    model: 'gemini-2.5-flash',
     maxTokens: 16384
   };
 
@@ -51,6 +51,12 @@ export const createFormattedMicrocycleAgent = <TMicrocycle = unknown>(
       // Check for required markdown headers
       if (!formatted.includes('# Week') || !formatted.includes('## ')) {
         throw new Error('Formatted microcycle missing required headers');
+      }
+      // Validate all 7 days are present
+      const requiredDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const missingDays = requiredDays.filter(day => !formatted.includes(`### ${day}`));
+      if (missingDays.length > 0) {
+        throw new Error(`Formatted microcycle missing required days: ${missingDays.join(', ')}`);
       }
     }
 

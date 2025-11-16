@@ -42,15 +42,17 @@ interface Mesocycle {
 interface Microcycle {
   id: string
   weekNumber: number
-  pattern: {
-    weekIndex: number
-    days: Array<{
-      day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
-      theme: string
-      load?: 'light' | 'moderate' | 'heavy'
-      notes?: string
-    }>
-  }
+  mondayOverview?: string | null
+  tuesdayOverview?: string | null
+  wednesdayOverview?: string | null
+  thursdayOverview?: string | null
+  fridayOverview?: string | null
+  saturdayOverview?: string | null
+  sundayOverview?: string | null
+  description?: string | null
+  isDeload: boolean
+  formatted?: string | null
+  message?: string | null
   startDate: Date
   endDate: Date
   isActive: boolean
@@ -171,7 +173,7 @@ export function MesocycleDetailView({ userId, mesocycleIndex, basePath }: Mesocy
                 </>
               )}
               <BreadcrumbItem>
-                <BreadcrumbPage>Mesocycle {mesocycleIndex}</BreadcrumbPage>
+                <BreadcrumbPage>Mesocycle {mesocycleIndex + 1}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -401,24 +403,28 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
   }
 
   const getLoadSummary = (microcycle: Microcycle) => {
-    const loads = microcycle.pattern.days
-      .map(day => day.load)
-      .filter(load => load)
+    if (microcycle.isDeload) {
+      return 'Deload week'
+    }
 
-    const loadCounts = loads.reduce((acc, load) => {
-      if (load) acc[load] = (acc[load] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    // Count how many days have overviews
+    const daysWithWorkouts = [
+      microcycle.mondayOverview,
+      microcycle.tuesdayOverview,
+      microcycle.wednesdayOverview,
+      microcycle.thursdayOverview,
+      microcycle.fridayOverview,
+      microcycle.saturdayOverview,
+      microcycle.sundayOverview
+    ].filter(overview => overview && overview.trim()).length
 
-    return Object.entries(loadCounts)
-      .map(([load, count]) => `${count} ${load}`)
-      .join(', ')
+    return daysWithWorkouts > 0 ? `${daysWithWorkouts} training days` : 'No training days'
   }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: mesocycle.durationWeeks }).map((_, weekIndex) => {
-        const microcycle = microcycles.find(m => m.pattern.weekIndex === weekIndex)
+        const microcycle = microcycles.find(m => m.weekNumber === weekIndex)
         const status = getWeekStatus(weekIndex)
 
         const statusColors = {
@@ -448,7 +454,7 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
           >
             <div className="space-y-3">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">Week {weekIndex}</h4>
+                <h4 className="font-medium">Week {weekIndex + 1}</h4>
                 <Badge
                   variant={status === 'current' ? 'default' : 'outline'}
                   className="text-xs"
