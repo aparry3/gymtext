@@ -1,15 +1,12 @@
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { FitnessPlan } from '@/server/models/fitnessPlan';
-import type { Microcycle } from '@/server/models/microcycle';
 import type { AgentDeps } from '@/server/agents/base';
 
 /**
  * Input for combined plan+microcycle message agent
+ * Uses pre-generated SMS messages from plan and microcycle
  */
 export interface PlanMicrocycleCombinedInput {
-  user: UserWithProfile;
-  plan: FitnessPlan;
-  microcycle: Microcycle;
+  planMessage: string;
+  microcycleMessage: string;
 }
 
 /**

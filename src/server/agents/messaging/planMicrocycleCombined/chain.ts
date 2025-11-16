@@ -11,25 +11,22 @@ const PlanMicrocycleCombinedSchema = z.object({
 /**
  * Plan + Microcycle Combined Message Agent Factory
  *
- * Generates a two-paragraph SMS message combining:
- * 1. Plan completion announcement + brief overview
- * 2. First week training breakdown with:
- *    - "Let's take a look at your first week"
- *    - One-sentence week summary
- *    - Daily breakdown with blank lines between each day
+ * Combines pre-generated plan and microcycle SMS messages into a cohesive onboarding message:
+ * 1. "Just finished putting your plan together" + plan message content
+ * 2. "Let's take a look at your first week" + microcycle message content
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that generates combined plan+microcycle message
+ * @returns Agent that combines pre-generated messages into onboarding message
  */
 export const createPlanMicrocycleCombinedAgent = (deps?: PlanMicrocycleCombinedAgentDeps) => {
   return createRunnableAgent<PlanMicrocycleCombinedInput, PlanMicrocycleCombinedOutput>(async (input) => {
-    const { user, plan, microcycle } = input;
+    const { planMessage, microcycleMessage } = input;
 
     // Initialize model with structured output
     const model = initializeModel(PlanMicrocycleCombinedSchema, deps?.config);
 
-    // Generate prompt
-    const prompt = planMicrocycleCombinedPrompt(user, plan, microcycle);
+    // Generate prompt from pre-written messages
+    const prompt = planMicrocycleCombinedPrompt(planMessage, microcycleMessage);
 
     // Invoke model
     const result = await model.invoke(prompt);

@@ -152,7 +152,7 @@ export class OnboardingService {
 
   /**
    * Send combined plan + first week message
-   * Generates and sends a single message combining plan overview and first week breakdown
+   * Combines pre-generated plan and microcycle messages into a single onboarding message
    */
   private async sendCombinedPlanMicrocycleMessage(user: UserWithProfile): Promise<void> {
     const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
@@ -160,19 +160,26 @@ export class OnboardingService {
       throw new Error(`No fitness plan found for user ${user.id}`);
     }
 
+    if (!plan.message) {
+      throw new Error(`No plan message found for user ${user.id}`);
+    }
+
     // Get current microcycle using date-based approach
     const currentDate = now(user.timezone).toJSDate();
     const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
-  if (!microcycle) {
+    if (!microcycle) {
       throw new Error(`No microcycle found for user ${user.id}`);
     }
 
-    // Generate combined message using agent
+    if (!microcycle.message) {
+      throw new Error(`No microcycle message found for user ${user.id}`);
+    }
+
+    // Generate combined message using agent with pre-generated messages
     const planMicrocycleCombinedAgent = createPlanMicrocycleCombinedAgent();
     const { message } = await planMicrocycleCombinedAgent.invoke({
-      user: user,
-      plan: plan,
-      microcycle: microcycle
+      planMessage: plan.message,
+      microcycleMessage: microcycle.message
     });
 
     // Send the combined message
