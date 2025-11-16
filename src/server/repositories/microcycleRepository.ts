@@ -23,7 +23,7 @@ export class MicrocycleRepository {
         saturdayOverview: microcycle.saturdayOverview,
         sundayOverview: microcycle.sundayOverview,
         description: microcycle.description,
-        reasoning: microcycle.reasoning,
+        isDeload: microcycle.isDeload,
         message: microcycle.message,
         startDate: microcycle.startDate,
         endDate: microcycle.endDate,
@@ -104,8 +104,8 @@ export class MicrocycleRepository {
     if (updates.description !== undefined) {
       updateData.description = updates.description;
     }
-    if (updates.reasoning !== undefined) {
-      updateData.reasoning = updates.reasoning;
+    if (updates.isDeload !== undefined) {
+      updateData.isDeload = updates.isDeload;
     }
     if (updates.message !== undefined) {
       updateData.message = updates.message;

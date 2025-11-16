@@ -14,3 +14,7 @@ export interface DayOverviews {
   saturdayOverview: string;
   sundayOverview: string;
 }
+
+export interface DaysExtractionOutput extends DayOverviews {
+  isDeload: boolean; // Whether this is a deload week (detected from description)
+}

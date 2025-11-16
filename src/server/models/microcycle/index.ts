@@ -14,7 +14,7 @@ export interface Microcycle {
   saturdayOverview?: string | null;
   sundayOverview?: string | null;
   description?: string | null; // Long-form narrative description of the weekly microcycle
-  reasoning?: string | null; // Explanation of how and why the week is structured
+  isDeload: boolean; // Whether this is a deload week (reduced volume and intensity)
   message?: string | null; // SMS-formatted weekly check-in/breakdown message
   startDate: Date;
   endDate: Date;
@@ -39,7 +39,7 @@ export class MicrocycleModel {
       saturdayOverview: (row.saturdayOverview as unknown as string | null) ?? null,
       sundayOverview: (row.sundayOverview as unknown as string | null) ?? null,
       description: (row.description as unknown as string | null) ?? null,
-      reasoning: (row.reasoning as unknown as string | null) ?? null,
+      isDeload: (row.isDeload as unknown as boolean) ?? false,
       message: (row.message as unknown as string | null) ?? null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       endDate: new Date(row.endDate as unknown as string | number | Date),
@@ -72,7 +72,7 @@ export class MicrocycleModel {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       description: microcycle.description as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reasoning: microcycle.reasoning as any,
+      isDeload: microcycle.isDeload as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       message: microcycle.message as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,5 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import type { DaysExtractionConfig, DayOverviews } from './types';
+import type { DaysExtractionConfig, DaysExtractionOutput } from './types';
 import type { MicrocycleChainContext } from '../generation/chain';
 
 /**
@@ -7,13 +7,13 @@ import type { MicrocycleChainContext } from '../generation/chain';
  *
  * Extracts individual day overviews from the long-form microcycle description
  * using regex parsing to find day headers (*** MONDAY - [Focus] ***) and
- * capture the content for each day.
+ * capture the content for each day. Also detects if this is a deload week.
  *
  * @param config - Static configuration for the agent
- * @returns Agent (runnable) that extracts day overviews from long-form description
+ * @returns Agent (runnable) that extracts day overviews and isDeload flag from long-form description
  */
 export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
-  return createRunnableAgent<MicrocycleChainContext, DayOverviews>(async (input) => {
+  return createRunnableAgent<MicrocycleChainContext, DaysExtractionOutput>(async (input) => {
     const { longFormMicrocycle } = input;
     const description = longFormMicrocycle.description;
 
@@ -32,18 +32,22 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
       dayOverviews[fieldName] = content;
     }
 
+    // Detect if this is a deload week by checking for "deload" in the description
+    const isDeload = /deload/i.test(description);
+
     // Ensure all days are present (use empty string if not found)
-    const result: DayOverviews = {
+    const result: DaysExtractionOutput = {
       mondayOverview: dayOverviews.mondayOverview || '',
       tuesdayOverview: dayOverviews.tuesdayOverview || '',
       wednesdayOverview: dayOverviews.wednesdayOverview || '',
       thursdayOverview: dayOverviews.thursdayOverview || '',
       fridayOverview: dayOverviews.fridayOverview || '',
       saturdayOverview: dayOverviews.saturdayOverview || '',
-      sundayOverview: dayOverviews.sundayOverview || ''
+      sundayOverview: dayOverviews.sundayOverview || '',
+      isDeload
     };
 
-    console.log(`[${config.operationName}] Extracted overviews for all 7 days`);
+    console.log(`[${config.operationName}] Extracted overviews for all 7 days, isDeload=${isDeload}`);
 
     return result;
   });

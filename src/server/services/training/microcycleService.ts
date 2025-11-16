@@ -138,8 +138,8 @@ export class MicrocycleService {
       return { microcycle, wasCreated: false };
     }
 
-    // Generate new day overviews, description, reasoning, and message for the week using AI agent
-    const { dayOverviews, description, reasoning, message } = await this.generateMicrocyclePattern(
+    // Generate new day overviews, description, isDeload flag, and message for the week using AI agent
+    const { dayOverviews, description, isDeload, message } = await this.generateMicrocyclePattern(
       plan,
       progress.absoluteWeek
     );
@@ -158,7 +158,7 @@ export class MicrocycleService {
       saturdayOverview: dayOverviews.saturdayOverview,
       sundayOverview: dayOverviews.sundayOverview,
       description,
-      reasoning,
+      isDeload,
       message,
       startDate: progress.weekStartDate,
       endDate: progress.weekEndDate,
@@ -182,7 +182,7 @@ export class MicrocycleService {
   }
 
   /**
-   * Generate a microcycle day overviews, description, reasoning, and message using AI agent
+   * Generate a microcycle day overviews, description, isDeload flag, and message using AI agent
    */
   private async generateMicrocyclePattern(
     fitnessPlan: FitnessPlan,
@@ -198,7 +198,7 @@ export class MicrocycleService {
       sundayOverview: string;
     };
     description: string;
-    reasoning: string;
+    isDeload: boolean;
     message: string
   }> {
     try {
@@ -206,14 +206,14 @@ export class MicrocycleService {
         throw new Error('Fitness plan description is required');
       }
 
-      // Use AI agent to generate day overviews, long-form description/reasoning, and message
+      // Use AI agent to generate day overviews, long-form description, and message
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
         fitnessPlan: fitnessPlan.description,
         weekNumber
       });
 
-      console.log(`Generated AI day overviews, description, reasoning, and message for week ${weekNumber}`);
+      console.log(`Generated AI day overviews, description, isDeload=${result.isDeload}, and message for week ${weekNumber}`);
       return result;
     } catch (error) {
       console.error('Failed to generate day overviews with AI agent:', error);

@@ -11,5 +11,4 @@ export type LongFormMicrocycleInput = MicrocyclePatternInput;
 
 export interface LongFormMicrocycleOutput {
   description: string;
-  reasoning: string;
 }
