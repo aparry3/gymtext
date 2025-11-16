@@ -86,6 +86,23 @@ export class FitnessPlanService {
   public async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
     return await this.fitnessPlanRepo.getCurrentPlan(userId);
   }
+
+  /**
+   * Get the current fitness plan with full mesocycle records
+   */
+  public async getCurrentPlanWithMesocycles(userId: string) {
+    const plan = await this.fitnessPlanRepo.getCurrentPlan(userId);
+    if (!plan || !plan.id) {
+      return null;
+    }
+
+    const mesocycles = await this.mesocycleRepo.getMesocyclesByPlanId(plan.id);
+
+    return {
+      ...plan,
+      mesocycles,
+    };
+  }
 }
 
 // Export singleton instance

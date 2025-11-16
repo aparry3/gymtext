@@ -41,8 +41,8 @@ export async function GET(
       );
     }
 
-    // Fetch fitness plan
-    const fitnessPlan = await fitnessPlanService.getCurrentPlan(requestedUserId);
+    // Fetch fitness plan with mesocycle records
+    const fitnessPlan = await fitnessPlanService.getCurrentPlanWithMesocycles(requestedUserId);
 
     if (!fitnessPlan) {
       return NextResponse.json(
