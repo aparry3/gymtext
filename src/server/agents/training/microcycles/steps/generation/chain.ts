@@ -27,7 +27,7 @@ export const createLongFormMicrocycleRunnable = (config: LongFormMicrocycleConfi
 
     // Generate user prompt from input
     const userPrompt = microcycleUserPrompt({
-      fitnessPlan: input.fitnessPlan,
+      microcycleOverview: input.microcycleOverview,
       weekNumber: input.weekNumber
     });
     console.log(`[LongFormMicrocycleRunnable] User prompt: ${userPrompt}`);
@@ -41,7 +41,7 @@ export const createLongFormMicrocycleRunnable = (config: LongFormMicrocycleConfi
 
     return {
       longFormMicrocycle,
-      fitnessPlan: input.fitnessPlan,
+      microcycleOverview: input.microcycleOverview,
       weekNumber: input.weekNumber
     };
   });

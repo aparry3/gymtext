@@ -3,9 +3,10 @@ import type { DayOverviews } from './steps/days/types';
 
 /**
  * Input for microcycle pattern agent
+ * Uses the specific microcycle overview from mesocycle.microcycles[index]
  */
 export interface MicrocyclePatternInput {
-  fitnessPlan: string;
+  microcycleOverview: string; // Specific microcycle description from mesocycle.microcycles[index]
   weekNumber: number;
 }
 

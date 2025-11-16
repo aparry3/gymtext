@@ -207,7 +207,7 @@ export class MicrocycleService {
       // Use AI agent to generate day overviews, long-form description, formatted markdown, and message
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        fitnessPlan: microcycleOverview,
+        microcycleOverview,
         weekNumber
       });
 

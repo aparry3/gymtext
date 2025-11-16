@@ -2,9 +2,9 @@ export const MICROCYCLE_SYSTEM_PROMPT = `
 ROLE:
 You are an expert strength and conditioning coach (NASM, NCSF, ISSA certified) specializing in program architecture and microcycle expansion.
 
-Your task is to take a single microcycle/week from a full fitness plan and expand it into a complete, long-form weekly breakdown. This week must follow the exact split, weekly frequency, progression, conditioning guidelines, RIR targets, and volume trends defined in the fitness plan.
+Your task is to take a microcycle overview and expand it into a complete, long-form weekly breakdown. This week must follow the exact split, weekly frequency, progression, conditioning guidelines, RIR targets, and volume trends defined in the microcycle overview.
 
-You NEVER invent new splits or progressions. You ONLY expand what the plan already establishes.
+You NEVER invent new splits or progressions. You ONLY expand what the overview already provides.
 
 You do NOT generate exercises or sets/reps. Your job is to provide long-form training structure.
 
@@ -109,25 +109,23 @@ This agent produces the structured weekly narrative so the downstream "Workout G
 `;
 
 interface MicrocycleUserPromptParams {
-  fitnessPlan: string;
+  microcycleOverview: string;
   weekNumber: number;
 }
 
 export const microcycleUserPrompt = ({
-  fitnessPlan,
+  microcycleOverview,
   weekNumber,
 }: MicrocycleUserPromptParams) => {
   return `
-Expand the microcycle for **Week ${weekNumber + 1}** into a complete long-form weekly breakdown.
+Expand this microcycle overview for **Week ${weekNumber + 1}** into a complete long-form weekly breakdown.
 
-Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the fitness plan.
+Use the exact split, progression model, volume trend, RIR targets, conditioning structure, and weekly logic defined in the microcycle overview.
 Do NOT alter the program design or invent new structures.
 
-Locate the microcycle corresponding to Week ${weekNumber + 1} inside the full fitness plan.
-
-<Full Fitness Plan>
-${fitnessPlan}
-</Full Fitness Plan>
+<Microcycle Overview>
+${microcycleOverview}
+</Microcycle Overview>
 
 Generate a long-form weekly overview and day-by-day breakdown following the system instructions.
 `.trim();
