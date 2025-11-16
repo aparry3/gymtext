@@ -104,9 +104,19 @@ export class FitnessPlanModel implements FitnessPlan {
   }
 
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
+    // Parse mesocycles from JSON if needed
+    let mesocycles: string[] = [];
+    if (fitnessPlan.mesocycles) {
+      if (Array.isArray(fitnessPlan.mesocycles)) {
+        mesocycles = fitnessPlan.mesocycles as string[];
+      } else if (typeof fitnessPlan.mesocycles === 'string') {
+        mesocycles = JSON.parse(fitnessPlan.mesocycles);
+      }
+    }
+
     return {
       ...fitnessPlan,
-      mesocycles: Array.isArray(fitnessPlan.mesocycles) ? fitnessPlan.mesocycles as string[] : [],
+      mesocycles,
     };
   }
 

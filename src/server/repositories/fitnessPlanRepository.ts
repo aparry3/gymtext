@@ -3,16 +3,22 @@ import {
   FitnessPlanModel,
   type FitnessPlan,
 } from '@/server/models/fitnessPlan';
+import { Json } from '@/server/models/_types';
 
 
 export class FitnessPlanRepository extends BaseRepository {
   async insertFitnessPlan(
     fitnessPlan: FitnessPlan
   ): Promise<FitnessPlan> {
-    // Mesocycles are already string[] - no need to JSON.stringify
+    // Convert mesocycles to JSON for database storage
+    const dbValues = {
+      ...fitnessPlan,
+      mesocycles: JSON.stringify(fitnessPlan.mesocycles) as unknown as Json,
+    };
+
     const result = await this.db
       .insertInto('fitnessPlans')
-      .values(fitnessPlan)
+      .values(dbValues)
       .returningAll()
       .executeTakeFirstOrThrow();
 
