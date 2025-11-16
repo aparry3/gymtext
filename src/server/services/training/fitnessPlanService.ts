@@ -50,20 +50,17 @@ export class FitnessPlanService {
     for (let i = 0; i < agentResponse.mesocycles.length; i++) {
       const mesocycleOverviewString = agentResponse.mesocycles[i];
 
-      // Estimate duration weeks (default to 4 if not specified)
-      // TODO: Extract actual duration from mesocycle overview
-      const durationWeeks = 4;
 
       console.log(`[FitnessPlan] Generating mesocycle ${i + 1} of ${agentResponse.mesocycles.length}...`);
 
       // Generate full mesocycle with formatted field
+      // The agent will return the actual durationWeeks based on microcycles generated
       const mesocycleOverview = await mesocycleAgent(
         mesocycleOverviewString,
-        durationWeeks,
         user
       );
 
-      // Store mesocycle record
+      // Store mesocycle record with actual durationWeeks from agent
       await this.mesocycleRepo.createMesocycle({
         userId: user.id,
         fitnessPlanId: savedFitnessPlan.id!,
@@ -72,10 +69,10 @@ export class FitnessPlanService {
         microcycles: mesocycleOverview.microcycles,
         formatted: mesocycleOverview.formatted,
         startWeek: currentWeek,
-        durationWeeks: durationWeeks,
+        durationWeeks: mesocycleOverview.durationWeeks,
       });
 
-      currentWeek += durationWeeks;
+      currentWeek += mesocycleOverview.durationWeeks;
     }
 
     console.log(`[FitnessPlan] Created ${agentResponse.mesocycles.length} mesocycle records`);

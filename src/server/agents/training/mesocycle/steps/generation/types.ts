@@ -8,10 +8,8 @@ export interface LongFormMesocycleConfig {
 
 export interface LongFormMesocycleInput {
   mesocycleOverview: string;
-  durationWeeks: number;
   user: UserWithProfile;
   fitnessProfile: string;
-  prompt: string;
 }
 
 export interface LongFormMesocycleOutput {

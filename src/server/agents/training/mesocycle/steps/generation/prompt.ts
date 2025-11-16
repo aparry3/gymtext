@@ -273,7 +273,6 @@ Instead:
 // User prompt with context for mesocycle expansion
 export const mesocycleUserPrompt = (
   mesocycleOverview: string,
-  durationWeeks: number,
   user: UserWithProfile,
   fitnessProfile: string
 ) => `
@@ -283,16 +282,12 @@ Expand this mesocycle into detailed week-by-week (microcycle) breakdowns for ${u
 ${mesocycleOverview}
 </Mesocycle Overview>
 
-<Duration>
-${durationWeeks} weeks
-</Duration>
-
 <Fitness Profile>
 ${fitnessProfile}
 </Fitness Profile>
 
 <Instructions>
-- Create ${durationWeeks} detailed microcycle descriptions (one per week)
+- Create a detailed microcycle descriptions for each week in the mesocycle
 - Show clear weekly progression in volume and intensity
 - Include specific session themes for each training day
 - Specify RIR/RPE targets and volume per muscle group

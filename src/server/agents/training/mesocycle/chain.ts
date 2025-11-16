@@ -30,6 +30,7 @@ export interface MesocycleOverview {
   description: string; // Long-form mesocycle description with microcycle delimiters
   microcycles: string[]; // Extracted microcycle overview strings
   formatted: string; // Markdown-formatted mesocycle for frontend display
+  durationWeeks: number; // Number of weeks in the mesocycle (derived from microcycles.length)
 }
 
 /**
@@ -47,20 +48,12 @@ export interface MesocycleOverview {
 export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
   return async (
     mesocycleOverviewString: string,
-    durationWeeks: number,
     user: UserWithProfile
   ): Promise<MesocycleOverview> => {
     // Get fitness profile context from service
     const fitnessProfile = await deps.contextService.getContext(user);
 
     try {
-      // Build user prompt for step 1
-      const userPrompt = mesocycleUserPrompt(
-        mesocycleOverviewString,
-        durationWeeks,
-        user,
-        fitnessProfile
-      );
 
       // Step 1: Create long-form mesocycle runnable
       const longFormRunnable = createLongFormMesocycleRunnable({
@@ -90,10 +83,8 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
       // Execute the chain
       const result = await sequence.invoke({
         mesocycleOverview: mesocycleOverviewString,
-        durationWeeks,
         user,
         fitnessProfile,
-        prompt: userPrompt
       });
 
       // Combine results into final overview
@@ -101,6 +92,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
         description: result.longFormMesocycle.description,
         microcycles: result.microcycles,
         formatted: result.formatted.formatted,
+        durationWeeks: result.microcycles.length,
       };
 
       console.log(`[Mesocycle] Generated mesocycle with ${result.microcycles.length} microcycles for user ${user.id}`);

@@ -2,6 +2,7 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
 import type { LongFormMesocycleConfig, LongFormMesocycleInput, LongFormMesocycleOutput } from './types';
 import type { UserWithProfile } from '@/server/models/userModel';
+import { mesocycleUserPrompt } from './prompt';
 
 // Schema for long-form mesocycle description
 const LongFormMesocycleSchema = z.object({
@@ -13,7 +14,6 @@ const LongFormMesocycleSchema = z.object({
  */
 export interface MesocycleChainContext {
   mesocycleOverview: string;
-  durationWeeks: number;
   user: UserWithProfile;
   fitnessProfile: string;
   longFormMesocycle: LongFormMesocycleOutput;
@@ -36,15 +36,21 @@ export const createLongFormMesocycleRunnable = (config: LongFormMesocycleConfig)
 
   return createRunnableAgent(async (input: LongFormMesocycleInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;
+    const userPrompt = mesocycleUserPrompt(
+      input.mesocycleOverview,
+      input.user,
+      input.fitnessProfile
+    );
+
+    
     const longFormMesocycle = await model.invoke([
       { role: 'system', content: systemMessage },
-      { role: 'user', content: input.prompt }
+      { role: 'user', content: userPrompt }
     ]);
 
     return {
       longFormMesocycle,
       mesocycleOverview: input.mesocycleOverview,
-      durationWeeks: input.durationWeeks,
       user: input.user,
       fitnessProfile: input.fitnessProfile
     };
