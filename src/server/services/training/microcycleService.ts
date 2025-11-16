@@ -1,9 +1,7 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
-import { UserWithProfile, FitnessPlan } from '@/server/models';
 import { Microcycle } from '@/server/models/microcycle';
 import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
 import type { ProgressInfo } from './progressService';
@@ -12,12 +10,10 @@ export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
   private fitnessPlanService: FitnessPlanService;
-  private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.userService = UserService.getInstance();
   }
 
   public static getInstance(): MicrocycleService {

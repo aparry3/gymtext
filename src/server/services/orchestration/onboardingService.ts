@@ -2,9 +2,7 @@ import { UserWithProfile } from '../../models/userModel';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
-import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { now, startOfDay } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
 import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
@@ -32,7 +30,6 @@ export class OnboardingService {
   private fitnessPlanService: FitnessPlanService;
   private messageService: MessageService;
   private dailyMessageService: DailyMessageService;
-  private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
   private progressService: ProgressService;
 
@@ -41,7 +38,6 @@ export class OnboardingService {
     this.progressService = ProgressService.getInstance();
     this.messageService = MessageService.getInstance();
     this.dailyMessageService = DailyMessageService.getInstance();
-    this.microcycleService = MicrocycleService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
   }
 
