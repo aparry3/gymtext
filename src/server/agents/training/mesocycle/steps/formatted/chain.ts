@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { FormattedMesocycleConfig, FormattedMesocycleOutput } from './types';
-import type { MesocycleChainContext } from '../generation/chain';
+import type { MesocycleChainContext } from '../generation/types';
 import { buildFormattedMesocycleSystemPrompt, createFormattedMesocycleUserPrompt } from './prompt';
 
 /**
@@ -27,7 +27,12 @@ export const createFormattedMesocycleAgent = <TMesocycle = unknown>(
   const model = initializeModel(config.schema, agentConfig);
 
   return createRunnableAgent<MesocycleChainContext, FormattedMesocycleOutput<TMesocycle>>(async (input) => {
-    const { longFormMesocycle, durationWeeks } = input;
+    const { longFormMesocycle } = input;
+
+    // Calculate durationWeeks from the description by counting microcycle delimiters
+    const microcyclePattern = /\*\*\*\*\* MICROCYCLE \d+:.*?\*\*\*\*\*/gi;
+    const matches = [...longFormMesocycle.description.matchAll(microcyclePattern)];
+    const durationWeeks = matches.length || 4; // Default to 4 if no delimiters found
 
     // Extract mesocycle index from overview string if needed
     // Assuming mesocycle overview might contain index info, otherwise default to 0

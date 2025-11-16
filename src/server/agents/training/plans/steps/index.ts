@@ -3,11 +3,12 @@ export {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
 } from './generation/prompt';
-export { createLongFormPlanRunnable, type FitnessPlanChainContext } from './generation/chain';
+export { createLongFormPlanRunnable } from './generation/chain';
 export type {
   LongFormPlanConfig,
   LongFormPlanInput,
   LongFormPlanOutput,
+  FitnessPlanChainContext,
 } from './generation/types';
 
 // Mesocycle extraction step

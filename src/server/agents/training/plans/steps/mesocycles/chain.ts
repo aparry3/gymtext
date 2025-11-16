@@ -1,6 +1,6 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import type { MesocycleExtractorConfig } from './types';
-import type { FitnessPlanChainContext } from '../generation/chain';
+import type { FitnessPlanChainContext } from '../generation/types';
 
 /**
  * Mesocycle Extractor

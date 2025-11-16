@@ -1,6 +1,6 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import type { MicrocycleExtractorConfig } from './types';
-import type { MesocycleChainContext } from '../generation/chain';
+import type { MesocycleChainContext } from '../generation/types';
 
 /**
  * Microcycle Extractor

@@ -1,23 +1,12 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
-import type { LongFormMesocycleConfig, LongFormMesocycleInput, LongFormMesocycleOutput } from './types';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { LongFormMesocycleConfig, LongFormMesocycleInput, MesocycleChainContext } from './types';
 import { mesocycleUserPrompt } from './prompt';
 
 // Schema for long-form mesocycle description
 const LongFormMesocycleSchema = z.object({
   description: z.string().describe("Comprehensive mesocycle description with microcycle delimiters")
 });
-
-/**
- * Context that flows through the mesocycle chain
- */
-export interface MesocycleChainContext {
-  mesocycleOverview: string;
-  user: UserWithProfile;
-  fitnessProfile: string;
-  longFormMesocycle: LongFormMesocycleOutput;
-}
 
 /**
  * Long-Form Mesocycle Agent Factory

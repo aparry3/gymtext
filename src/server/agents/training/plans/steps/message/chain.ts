@@ -2,7 +2,7 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
 import { planSummaryMessageUserPrompt, PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT } from './prompt';
 import type { PlanMessageConfig } from './types';
-import type { FitnessPlanChainContext } from '../generation/chain';
+import type { FitnessPlanChainContext } from '../generation/types';
 
 // Schema for SMS message generation
 const PlanSummaryMessageSchema = z.object({

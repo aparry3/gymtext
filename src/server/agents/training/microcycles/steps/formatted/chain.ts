@@ -1,7 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildFormattedMicrocycleSystemPrompt, createFormattedMicrocycleUserPrompt } from './prompt';
 import type { FormattedMicrocycleConfig, FormattedMicrocycleOutput } from './types';
-import type { MicrocycleChainContext } from '../generation/chain';
+import type { MicrocycleChainContext } from '../generation/types';
 
 /**
  * Formatted Microcycle Agent Factory

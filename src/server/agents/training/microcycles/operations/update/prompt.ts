@@ -1,12 +1,6 @@
-import { Microcycle } from '@/server/models/microcycle';
-import { Mesocycle } from '@/server/models/fitnessPlan';
-
-export interface MicrocycleUpdateParams {
-  targetDay: string; // The specific day being modified (e.g., "Monday", typically "today")
-  changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 minutes", "Apply hotel gym constraints to remaining days"])
-  reason: string; // Why the modification is needed (e.g., "Gym is too crowded", "Traveling for work")
-  remainingDays?: string[]; // Days that are remaining in the week (today and future)
-}
+import type { Microcycle } from '@/server/models/microcycle';
+import type { Mesocycle } from '@/server/models/fitnessPlan';
+import type { MicrocycleUpdateParams } from './types';
 
 export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `You are an expert fitness coach specializing in weekly training modifications. Your task is to update weekly microcycle day overviews when users face schedule changes, travel, equipment limitations, or other factors requiring workout adjustments.
 

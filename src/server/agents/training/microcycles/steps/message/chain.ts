@@ -2,7 +2,7 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
 import { microcycleMessageUserPrompt, MICROCYCLE_MESSAGE_SYSTEM_PROMPT } from './prompt';
 import type { MicrocycleMessageConfig } from './types';
-import type { MicrocycleChainContext } from '../generation/chain';
+import type { MicrocycleChainContext } from '../generation/types';
 
 // Schema for SMS message generation
 const MicrocycleMessageSchema = z.object({

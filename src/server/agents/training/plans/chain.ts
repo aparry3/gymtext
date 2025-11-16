@@ -9,20 +9,9 @@ import {
   createPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
+import type { FitnessPlanAgentDeps } from './types';
 
-/**
- * Interface for fitness profile context service (DI)
- */
-export interface FitnessProfileContextService {
-  getContext: (user: UserWithProfile) => Promise<string>;
-}
-
-/**
- * Dependencies for FitnessPlan Agent (DI)
- */
-export interface FitnessPlanAgentDeps {
-  contextService: FitnessProfileContextService;
-}
+export type { FitnessProfileContextService, FitnessPlanAgentDeps } from './types';
 
 /**
  * Creates a fitness plan agent with injected dependencies

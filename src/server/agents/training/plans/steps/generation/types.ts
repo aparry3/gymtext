@@ -1,5 +1,5 @@
-import { AgentConfig } from "@/server/agents/base";
-import { UserWithProfile } from "@/server/models/userModel";
+import type { AgentConfig } from "@/server/agents/base";
+import type { UserWithProfile } from "@/server/models/userModel";
 
 export interface LongFormPlanConfig {
   systemPrompt: string;
@@ -14,4 +14,13 @@ export interface LongFormPlanInput {
 
 export interface LongFormPlanOutput {
   description: string;
+}
+
+/**
+ * Context that flows through the fitness plan chain
+ */
+export interface FitnessPlanChainContext {
+  user: UserWithProfile;
+  fitnessProfile: string;
+  longFormPlan: LongFormPlanOutput;
 }

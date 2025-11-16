@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { FormattedFitnessPlanConfig, FormattedFitnessPlanOutput } from './types';
-import type { FitnessPlanChainContext } from '../generation/chain';
+import type { FitnessPlanChainContext } from '../generation/types';
 import { buildFormattedFitnessPlanSystemPrompt, createFormattedFitnessPlanUserPrompt } from './prompt';
 
 /**

@@ -1,4 +1,4 @@
-import { AgentConfig } from "@/server/agents/base";
+import type { AgentConfig } from "@/server/agents/base";
 import type { MicrocyclePatternInput } from '../../types';
 
 export interface LongFormMicrocycleConfig {
@@ -11,4 +11,12 @@ export type LongFormMicrocycleInput = MicrocyclePatternInput;
 
 export interface LongFormMicrocycleOutput {
   description: string;
+}
+
+/**
+ * Context that flows through the microcycle chain
+ */
+export interface MicrocycleChainContext extends MicrocyclePatternInput {
+  longFormMicrocycle: LongFormMicrocycleOutput;
+  isDeload?: boolean; // Added by days extraction step, used by formatting step
 }

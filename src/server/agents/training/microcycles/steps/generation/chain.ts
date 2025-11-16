@@ -1,21 +1,12 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
 import { microcycleUserPrompt } from './prompt';
-import type { LongFormMicrocycleConfig, LongFormMicrocycleInput, LongFormMicrocycleOutput } from './types';
-import type { MicrocyclePatternInput } from '../../types';
+import type { LongFormMicrocycleConfig, LongFormMicrocycleInput, MicrocycleChainContext } from './types';
 
 // Schema for long-form microcycle description
 const LongFormMicrocycleSchema = z.object({
   description: z.string().describe("Long-form narrative description of the weekly microcycle")
 });
-
-/**
- * Context that flows through the microcycle chain
- */
-export interface MicrocycleChainContext extends MicrocyclePatternInput {
-  longFormMicrocycle: LongFormMicrocycleOutput;
-  isDeload?: boolean; // Added by days extraction step, used by formatting step
-}
 
 /**
  * Long-Form Microcycle Agent Factory

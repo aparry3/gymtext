@@ -1,17 +1,9 @@
-import { Microcycle } from '@/server/models/microcycle';
-import { Mesocycle } from '@/server/models/fitnessPlan';
-import { updateMicrocyclePrompt, type MicrocycleUpdateParams, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './prompt';
+import { updateMicrocyclePrompt, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './prompt';
 import { initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
+import type { MicrocycleUpdateContext, UpdatedMicrocycleDayOverviews } from './types';
 
-export type { MicrocycleUpdateParams };
-
-export interface MicrocycleUpdateContext {
-  currentMicrocycle: Microcycle;
-  params: MicrocycleUpdateParams;
-  mesocycle: Mesocycle;
-  programType: string;
-}
+export type { MicrocycleUpdateParams, MicrocycleUpdateContext, UpdatedMicrocycleDayOverviews } from './types';
 
 // Schema for updated microcycle with day overviews and modification tracking
 const UpdatedMicrocycleDayOverviewsSchema = z.object({
@@ -24,8 +16,6 @@ const UpdatedMicrocycleDayOverviewsSchema = z.object({
   sundayOverview: z.string().describe('Updated overview for Sunday'),
   modificationsApplied: z.array(z.string()).describe('List of specific changes made to the weekly pattern')
 });
-
-export type UpdatedMicrocycleDayOverviews = z.infer<typeof UpdatedMicrocycleDayOverviewsSchema>;
 
 export const updateMicrocyclePattern = async (context: MicrocycleUpdateContext): Promise<UpdatedMicrocycleDayOverviews> => {
   const {
