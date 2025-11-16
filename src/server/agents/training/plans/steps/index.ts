@@ -21,3 +21,11 @@ export {
 } from './message/prompt';
 export { createPlanMessageAgent } from './message/chain';
 export type { PlanMessageConfig } from './message/types';
+
+// Formatted step
+export {
+  buildFormattedFitnessPlanSystemPrompt,
+  createFormattedFitnessPlanUserPrompt,
+} from './formatted/prompt';
+export { createFormattedFitnessPlanAgent } from './formatted/chain';
+export type { FormattedFitnessPlanConfig } from './formatted/types';

@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
+import { FitnessPlanOverview, FormattedFitnessPlanSchema } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
@@ -7,6 +7,7 @@ import {
   createLongFormPlanRunnable,
   createMesocycleExtractor,
   createPlanMessageAgent,
+  createFormattedFitnessPlanAgent,
 } from './steps';
 
 /**
@@ -28,8 +29,9 @@ export interface FitnessPlanAgentDeps {
  *
  * Uses a composable chain for generating fitness plans:
  * 1. Generate long-form plan description with mesocycle delimiters
- * 2. Extract mesocycle overviews from description (parallel with step 3)
- * 3. Generate SMS-formatted summary message (parallel with step 2)
+ * 2. Extract mesocycle overviews from description (parallel with steps 3-4)
+ * 3. Generate formatted markdown for frontend display (parallel with steps 2 & 4)
+ * 4. Generate SMS-formatted summary message (parallel with steps 2-3)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
@@ -55,16 +57,23 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
         operationName: 'extract mesocycles'
       });
 
-      // Step 3: Create message agent
+      // Step 3: Create formatting agent
+      const formattedAgent = createFormattedFitnessPlanAgent({
+        schema: FormattedFitnessPlanSchema,
+        operationName: 'format fitness plan',
+      });
+
+      // Step 4: Create message agent
       const messageAgent = createPlanMessageAgent({
         operationName: 'generate plan message'
       });
 
-      // Compose the chain: long-form → parallel (mesocycles + message)
+      // Compose the chain: long-form → parallel (mesocycles + formatted + message)
       const sequence = RunnableSequence.from([
         longFormRunnable,
         RunnablePassthrough.assign({
           mesocycles: mesocycleExtractor,
+          formatted: formattedAgent,
           message: messageAgent
         })
       ]);
@@ -80,6 +89,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
       const finalResult: FitnessPlanOverview = {
         description: result.longFormPlan.description,
         mesocycles: result.mesocycles,
+        formatted: result.formatted.formatted,
         message: result.message
       };
 

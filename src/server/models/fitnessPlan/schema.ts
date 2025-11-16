@@ -23,3 +23,14 @@ export const _FitnessPlanSchema = z.object({
     description: "Special considerations like travel plans, injuries, or schedule constraints"
   }).nullish()
 });
+
+/**
+ * Schema for formatted fitness plan output
+ */
+export const FormattedFitnessPlanSchema = z.object({
+  formatted: z.string({
+    description: 'Markdown-formatted fitness plan overview with mesocycle breakdown and coaching notes'
+  })
+});
+
+export type FormattedFitnessPlan = z.infer<typeof FormattedFitnessPlanSchema>;

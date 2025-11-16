@@ -1,7 +1,11 @@
 import type { FitnessPlans } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { _FitnessPlanSchema } from './schema';
+import { _FitnessPlanSchema, FormattedFitnessPlanSchema } from './schema';
 import { UserWithProfile } from '../userModel';
+
+// Re-export schema types
+export type { FormattedFitnessPlan } from './schema';
+export { FormattedFitnessPlanSchema };
 
 export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;
@@ -13,11 +17,13 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
  * Stores:
  * - description: Long-form plan with all details and reasoning
  * - mesocycles: Array of mesocycle overview strings
+ * - formatted: Markdown-formatted plan for frontend display
  * - summary: Brief summary for SMS (optional, from message field)
  * - notes: Special considerations (optional)
  */
 export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
   mesocycles: string[];
+  formatted?: string | null;
   id?: string;
 };
 
@@ -27,6 +33,7 @@ export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
 export interface FitnessPlanOverview {
   description: string; // Long-form plan description with mesocycle delimiters
   mesocycles: string[]; // Extracted mesocycle overviews
+  formatted: string; // Markdown-formatted plan for frontend display
   summary?: string; // Brief summary for SMS
   notes?: string; // Special considerations
   message?: string; // SMS-formatted plan message
@@ -115,6 +122,7 @@ export class FitnessPlanModel implements FitnessPlan {
     return {
       programType: 'other', // Default, can be extracted from description if needed
       mesocycles: fitnessPlanOverview.mesocycles,
+      formatted: fitnessPlanOverview.formatted,
       lengthWeeks: estimatedWeeks,
       notes: fitnessPlanOverview.notes || null,
       description: fitnessPlanOverview.description,

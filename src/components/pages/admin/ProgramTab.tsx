@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
 
 interface Mesocycle {
   name: string
@@ -33,6 +34,8 @@ interface FitnessPlan {
   lengthWeeks: number
   mesocycles: Mesocycle[]
   overview: string
+  description?: string | null
+  formatted?: string | null
   planDescription?: string | null
   reasoning?: string | null
   notes?: string | null
@@ -199,6 +202,54 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
   completedWeeks += fitnessPlan.currentMicrocycleWeek
   const progressPercentage = Math.round((completedWeeks / totalWeeks) * 100)
 
+  // If formatted view is available, use it
+  if (fitnessPlan.formatted) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold mb-2">Program Overview</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="default" className="text-sm">
+                {programTypeLabels[fitnessPlan.programType]}
+              </Badge>
+              <Badge variant="outline">
+                {fitnessPlan.lengthWeeks} weeks
+              </Badge>
+              {fitnessPlan.startDate && (
+                <Badge variant="outline">
+                  Started {new Date(fitnessPlan.startDate).toLocaleDateString()}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">Current Progress</div>
+            <div className="font-medium">
+              Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek + 1}
+            </div>
+            {currentMesocycle && (
+              <div className="text-sm text-muted-foreground">
+                {currentMesocycle.name}
+              </div>
+            )}
+            <div className="mt-2">
+              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">{progressPercentage}% complete</div>
+            </div>
+          </div>
+        </div>
+        <WorkoutMarkdownRenderer content={fitnessPlan.formatted} />
+      </Card>
+    )
+  }
+
+  // Legacy view
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-4">
