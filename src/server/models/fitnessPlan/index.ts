@@ -99,7 +99,7 @@ export class FitnessPlanModel implements FitnessPlan {
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
     return {
       ...fitnessPlan,
-      mesocycles: fitnessPlan.mesocycles || [],
+      mesocycles: Array.isArray(fitnessPlan.mesocycles) ? fitnessPlan.mesocycles as string[] : [],
     };
   }
 

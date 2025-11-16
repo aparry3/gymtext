@@ -14,6 +14,7 @@ const LongFormMicrocycleSchema = z.object({
  */
 export interface MicrocycleChainContext extends MicrocyclePatternInput {
   longFormMicrocycle: LongFormMicrocycleOutput;
+  isDeload?: boolean; // Added by days extraction step, used by formatting step
 }
 
 /**

@@ -40,7 +40,8 @@ export interface ReplyInput {
   currentMicrocycle?: Microcycle;
   fitnessPlan?: {
     description: string | null;
-    reasoning: string | null;
+    goalStatement?: string | null;
+    notes?: string | null;
   };
 }
 

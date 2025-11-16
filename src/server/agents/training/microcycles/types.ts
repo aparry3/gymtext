@@ -16,6 +16,7 @@ export interface MicrocyclePatternOutput {
   dayOverviews: DayOverviews; // Individual day overviews extracted from description
   description: string; // Long-form narrative description of the weekly microcycle
   isDeload: boolean; // Whether this is a deload week (reduced volume and intensity)
+  formatted: string; // Markdown-formatted weekly overview for frontend display
   message: string; // SMS-formatted weekly check-in/breakdown message
 }
 

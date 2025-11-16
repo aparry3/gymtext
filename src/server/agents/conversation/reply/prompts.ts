@@ -254,7 +254,8 @@ export const buildReplyMessage = (
   currentMicrocycle?: Microcycle,
   fitnessPlan?: {
     description: string | null;
-    reasoning: string | null;
+    goalStatement?: string | null;
+    notes?: string | null;
   }
 ): string => {
   const now = new Date();
@@ -273,8 +274,12 @@ export const buildReplyMessage = (
       contextMessage += `\n\n**Plan Description**: ${fitnessPlan.description}`;
     }
 
-    if (fitnessPlan.reasoning) {
-      contextMessage += `\n\n**Plan Reasoning**: ${fitnessPlan.reasoning}`;
+    if (fitnessPlan.goalStatement) {
+      contextMessage += `\n\n**Goal**: ${fitnessPlan.goalStatement}`;
+    }
+
+    if (fitnessPlan.notes) {
+      contextMessage += `\n\n**Notes**: ${fitnessPlan.notes}`;
     }
   }
 

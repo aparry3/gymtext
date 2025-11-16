@@ -6,6 +6,8 @@ import {
   createDaysExtractionAgent,
   createMicrocycleMessageAgent,
 } from './steps';
+import { createFormattedMicrocycleAgent } from './steps/formatted';
+import { FormattedMicrocycleSchema } from '@/server/models/microcycle/schema';
 import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
 
 /**
@@ -13,13 +15,14 @@ import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePattern
  *
  * Generates weekly training patterns with progressive overload using a composable chain:
  * 1. Generate long-form description and reasoning
- * 2. Extract day overviews from description (parallel with step 3)
- * 3. Generate SMS-formatted weekly message (parallel with step 2)
+ * 2. Extract day overviews from description (parallel with steps 3 and 4)
+ * 3. Generate formatted markdown for display (parallel with steps 2 and 4)
+ * 4. Generate SMS-formatted weekly message (parallel with steps 2 and 3)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that generates microcycle day overviews and messages
+ * @returns Agent that generates microcycle day overviews, formatted markdown, and messages
  */
 export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
   return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
@@ -32,23 +35,31 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
         agentConfig: deps?.config
       });
 
-      // Step 2: Create days extraction agent
+      // Step 2a: Create days extraction agent (also detects isDeload)
       const daysAgent = createDaysExtractionAgent({
         agentConfig: deps?.config,
         operationName: 'extract day overviews'
       });
 
-      // Step 3: Create message agent
+      // Step 2b: Create formatted microcycle agent
+      const formattedAgent = createFormattedMicrocycleAgent({
+        schema: FormattedMicrocycleSchema,
+        operationName: 'generate formatted microcycle',
+        agentConfig: deps?.config
+      });
+
+      // Step 2c: Create message agent
       const messageAgent = createMicrocycleMessageAgent({
         agentConfig: deps?.config,
         operationName: 'generate microcycle message'
       });
 
-      // Compose the chain: long-form → parallel (days + message)
+      // Compose the chain: long-form → parallel (days + formatted + message)
       const sequence = RunnableSequence.from([
         longFormRunnable,
         RunnablePassthrough.assign({
-          dayOverviews: daysAgent,
+          daysExtraction: daysAgent,
+          formatted: formattedAgent,
           message: messageAgent
         })
       ]);
@@ -56,12 +67,13 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
       // Execute the chain
       const result = await sequence.invoke(input);
 
-      console.log(`[Microcycle] Generated day overviews and message for week ${weekNumber}`);
+      console.log(`[Microcycle] Generated day overviews, formatted markdown, and message for week ${weekNumber}`);
 
       return {
-        dayOverviews: result.dayOverviews,
+        dayOverviews: result.daysExtraction,
         description: result.longFormMicrocycle.description,
-        isDeload: result.isDeload,
+        isDeload: result.daysExtraction.isDeload,
+        formatted: result.formatted.formatted, // Extract formatted string from schema object
         message: result.message
       };
     } catch (error) {

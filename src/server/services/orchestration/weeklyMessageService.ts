@@ -168,7 +168,7 @@ export class WeeklyMessageService {
       const isNewMesocycle = nextWeekMicrocycle.weekNumber === 0;
 
       const mesocycleName = isNewMesocycle
-        ? plan.mesocycles[nextWeekMicrocycle.mesocycleIndex]?.name
+        ? `Mesocycle ${nextWeekMicrocycle.mesocycleIndex + 1}`
         : null;
 
       if (isNewMesocycle) {

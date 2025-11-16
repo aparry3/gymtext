@@ -1,5 +1,5 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import type { DaysExtractionConfig, DaysExtractionOutput } from './types';
+import type { DaysExtractionConfig, DaysExtractionOutput, DayOverviews } from './types';
 import type { MicrocycleChainContext } from '../generation/chain';
 
 /**

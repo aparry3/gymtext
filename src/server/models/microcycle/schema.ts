@@ -100,3 +100,15 @@ export const _UpdatedMicrocyclePatternSchema = _StructuredMicrocycleSchema.exten
 });
 
 export type UpdatedMicrocyclePattern = z.infer<typeof _UpdatedMicrocyclePatternSchema>;
+
+/**
+ * Schema for formatted microcycle output
+ * Contains markdown-formatted weekly overview for frontend display
+ */
+export const FormattedMicrocycleSchema = z.object({
+  formatted: z.string({
+    description: 'Markdown-formatted weekly training overview with all 7 days structured for display'
+  })
+});
+
+export type FormattedMicrocycle = z.infer<typeof FormattedMicrocycleSchema>;
