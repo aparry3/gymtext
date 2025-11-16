@@ -24,6 +24,7 @@ interface Mesocycle {
   keyThemes?: string[] | null
   longFormDescription: string
   microcycles: string[]
+  formatted?: string | null  // New: markdown formatted mesocycle
 }
 
 interface FitnessPlan {

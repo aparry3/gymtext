@@ -5,7 +5,9 @@ import {
   mesocycleUserPrompt,
   createLongFormMesocycleRunnable,
   createMicrocycleExtractor,
+  createFormattedMesocycleAgent,
 } from './steps';
+import { FormattedMesocycleSchema } from '@/server/models/mesocycle/schema';
 
 /**
  * Interface for fitness profile context service (DI)
@@ -27,6 +29,7 @@ export interface MesocycleAgentDeps {
 export interface MesocycleOverview {
   description: string; // Long-form mesocycle description with microcycle delimiters
   microcycles: string[]; // Extracted microcycle overview strings
+  formatted: string; // Markdown-formatted mesocycle for frontend display
 }
 
 /**
@@ -69,11 +72,18 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
         operationName: 'extract microcycles'
       });
 
-      // Compose the chain: long-form → microcycle extraction
+      // Step 3: Create formatting agent
+      const formattedAgent = createFormattedMesocycleAgent({
+        schema: FormattedMesocycleSchema,
+        operationName: 'format mesocycle',
+      });
+
+      // Compose the chain: long-form → microcycle extraction + formatting (parallel)
       const sequence = RunnableSequence.from([
         longFormRunnable,
         RunnablePassthrough.assign({
-          microcycles: microcycleExtractor
+          microcycles: microcycleExtractor,
+          formatted: formattedAgent,
         })
       ]);
 
@@ -90,6 +100,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
       const finalResult: MesocycleOverview = {
         description: result.longFormMesocycle.description,
         microcycles: result.microcycles,
+        formatted: result.formatted.formatted,
       };
 
       console.log(`[Mesocycle] Generated mesocycle with ${result.microcycles.length} microcycles for user ${user.id}`);

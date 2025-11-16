@@ -13,3 +13,7 @@ export type {
 // Microcycle extraction step
 export { createMicrocycleExtractor } from './microcycles/chain';
 export type { MicrocycleExtractorConfig } from './microcycles/types';
+
+// Formatting step
+export { createFormattedMesocycleAgent } from './formatted/chain';
+export type { FormattedMesocycleConfig } from './formatted/types';
