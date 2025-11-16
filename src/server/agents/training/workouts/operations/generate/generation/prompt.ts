@@ -1,5 +1,4 @@
 import { formatRecentWorkouts } from '../../../shared/promptHelpers';
-import { formatMicrocycleDay } from '@/server/utils/formatters';
 import { DailyWorkoutInput } from '../types';
 
 // System prompt - static instructions and guidelines
@@ -149,22 +148,22 @@ export const userPrompt = (
   const isDeloadWeek = input.microcycle.isDeload;
   const weeks = input.mesocycle.durationWeeks;
 
-  // Build the day description using the formatter utility
-  const dayDescription = formatMicrocycleDay(input.dayPlan);
+  // dayPlan is now a simple string overview from the microcycle
+  const dayDescription = `## Day Overview\n${input.dayPlan}`;
 
   // Build deload notification if applicable
   const deloadNotice = isDeloadWeek
     ? '\n\n⚠️ DELOAD WEEK: Reduce volume by ~40-50% and intensity to RPE 6-7. Maintain movement patterns and technique focus.\n'
     : '';
 
-  // Build program context
+  // Build program context - use mesocycle description instead of deprecated fields
   const programContext = `
 ## Program Context
 Program Type: ${input.fitnessPlan.programType}
-Current Mesocycle: ${input.mesocycle.name}
+Current Mesocycle: Mesocycle ${input.mesocycle.mesocycleIndex + 1}
 Training Phase: ${isDeloadWeek ? 'Deload Week' : 'Progressive Training Week'}
 Week ${input.microcycle.weekNumber + 1} of ${weeks}
-Mesocycle Focus Areas: ${input.mesocycle.focus?.join(', ') || 'General training'}
+${input.mesocycle.description ? `Mesocycle Description: ${input.mesocycle.description}` : ''}
   `.trim();
 
   // Build client profile section

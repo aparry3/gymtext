@@ -112,7 +112,7 @@ export class WorkoutInstanceService {
       }
 
       // Get current progress for the target date
-      const progress = this.progressService.getProgressForDate(plan, targetDate.toJSDate(), user.timezone);
+      const progress = await this.progressService.getProgressForDate(plan, targetDate.toJSDate(), user.timezone);
       if (!progress) {
         console.log(`No progress found for user ${user.id} on ${targetDate.toISODate()}`);
         return null;
@@ -132,12 +132,13 @@ export class WorkoutInstanceService {
 
       const mesocycle = progress.mesocycle;
 
-      // Get the day's pattern from the microcycle
-      const dayOfWeek = targetDate.toFormat('EEEE').toUpperCase(); // MONDAY, TUESDAY, etc.
-      const dayPlan = microcycle.pattern.days.find((d: { day: string }) => d.day === dayOfWeek);
+      // Get the day's overview from the microcycle
+      const dayOfWeekLower = targetDate.toFormat('EEEE').toLowerCase(); // monday, tuesday, etc.
+      const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
+      const dayOverview = microcycle[dayOverviewKey];
 
-      if (!dayPlan) {
-        console.log(`No pattern found for ${dayOfWeek} in microcycle ${microcycle.id}`);
+      if (!dayOverview || typeof dayOverview !== 'string') {
+        console.log(`No overview found for ${dayOfWeekLower} in microcycle ${microcycle.id}`);
         return null;
       }
 
@@ -148,7 +149,7 @@ export class WorkoutInstanceService {
       const { workout: formattedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
-        dayPlan,
+        dayPlan: dayOverview, // Pass the string overview instead of pattern object
         microcycle,
         mesocycle,
         fitnessPlan: plan,
@@ -169,8 +170,8 @@ export class WorkoutInstanceService {
         mesocycleId: null,
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
-        sessionType: this.mapThemeToSessionType(dayPlan.theme),
-        goal: `${dayPlan.theme}${dayPlan.notes ? ` - ${dayPlan.notes}` : ''}`,
+        sessionType: 'workout', // Use generic session type since we don't have theme from day overview
+        goal: dayOverview.substring(0, 100), // Use first 100 chars of overview as goal
         details: JSON.parse(JSON.stringify(details)),
         description,
         reasoning,

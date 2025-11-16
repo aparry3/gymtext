@@ -137,7 +137,7 @@ export class WeeklyMessageService {
       console.log(`[WeeklyMessageService] Getting next week's plan for ${nextSundayDate.toISOString()} for user ${user.id}`);
 
       // Step 3: Get progress for next week using date-based calculation
-      const nextWeekProgress = this.progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
+      const nextWeekProgress = await this.progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
       if (!nextWeekProgress) {
         console.error(`[WeeklyMessageService] Could not calculate progress for next week for user ${user.id}`);
         return {

@@ -147,4 +147,24 @@ export class MesocycleRepository {
       .where('fitnessPlanId', '=', fitnessPlanId)
       .execute();
   }
+
+  /**
+   * Get mesocycle by absolute week number (from plan start)
+   * Uses start_week and duration_weeks for efficient lookup
+   */
+  async getMesocycleByWeek(
+    fitnessPlanId: string,
+    absoluteWeek: number
+  ): Promise<Mesocycle | null> {
+    const result = await this.db
+      .selectFrom('mesocycles')
+      .selectAll()
+      .where('fitnessPlanId', '=', fitnessPlanId)
+      .where('startWeek', '<=', absoluteWeek)
+      .where(sql`start_week + duration_weeks`, '>', absoluteWeek)
+      .executeTakeFirst();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result ? MesocycleModel.fromDB(result as any) : null;
+  }
 }

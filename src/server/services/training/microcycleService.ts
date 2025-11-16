@@ -122,34 +122,33 @@ export class MicrocycleService {
     timezone: string = 'America/New_York'
   ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
     // Calculate progress for the target date
-    const progress = this.progressService.getProgressForDate(plan, targetDate, timezone);
+    const progress = await this.progressService.getProgressForDate(plan, targetDate, timezone);
     if (!progress) {
       throw new Error(`Could not calculate progress for date ${targetDate}`);
     }
 
-    // Check if microcycle exists for this date
-    let microcycle = await this.microcycleRepo.getMicrocycleByDate(
-      userId,
-      plan.id!,
-      targetDate
-    );
+    // If microcycle already exists, return it
+    if (progress.microcycle) {
+      return { microcycle: progress.microcycle, wasCreated: false };
+    }
 
-    if (microcycle) {
-      return { microcycle, wasCreated: false };
+    // Microcycle doesn't exist - generate it using the microcycle overview from mesocycle
+    if (!progress.microcycleOverview) {
+      throw new Error(`No microcycle overview found for mesocycle ${progress.mesocycleIndex}, microcycle ${progress.microcycleIndex}`);
     }
 
     // Generate new day overviews, description, formatted markdown, isDeload flag, and message for the week using AI agent
     const { dayOverviews, description, formatted, isDeload, message } = await this.generateMicrocyclePattern(
-      plan,
+      progress.microcycleOverview,
       progress.absoluteWeek
     );
 
     // Create new microcycle with pre-generated long-form content, formatted markdown, and message
-    microcycle = await this.microcycleRepo.createMicrocycle({
+    const microcycle = await this.microcycleRepo.createMicrocycle({
       userId,
       fitnessPlanId: plan.id!,
       mesocycleIndex: progress.mesocycleIndex,
-      weekNumber: progress.microcycleWeek,
+      weekNumber: progress.microcycleIndex,
       mondayOverview: dayOverviews.mondayOverview,
       tuesdayOverview: dayOverviews.tuesdayOverview,
       wednesdayOverview: dayOverviews.wednesdayOverview,
@@ -166,7 +165,7 @@ export class MicrocycleService {
       isActive: false, // No longer using isActive flag - we query by dates instead
     });
 
-    console.log(`Created new microcycle for user ${userId}, week ${progress.microcycleWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
+    console.log(`Created new microcycle for user ${userId}, mesocycle ${progress.mesocycleIndex}, week ${progress.microcycleIndex} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
     return { microcycle, wasCreated: true };
   }
 
@@ -184,9 +183,10 @@ export class MicrocycleService {
 
   /**
    * Generate a microcycle day overviews, description, formatted markdown, isDeload flag, and message using AI agent
+   * Uses the specific microcycle overview from the mesocycle's microcycles array
    */
   private async generateMicrocyclePattern(
-    fitnessPlan: FitnessPlan,
+    microcycleOverview: string,
     weekNumber: number
   ): Promise<{
     dayOverviews: {
@@ -204,14 +204,10 @@ export class MicrocycleService {
     message: string
   }> {
     try {
-      if (!fitnessPlan.description) {
-        throw new Error('Fitness plan description is required');
-      }
-
       // Use AI agent to generate day overviews, long-form description, formatted markdown, and message
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        fitnessPlan: fitnessPlan.description,
+        fitnessPlan: microcycleOverview,
         weekNumber
       });
 
