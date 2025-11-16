@@ -2,23 +2,21 @@ import { MicrocycleRepository } from '@/server/repositories/microcycleRepository
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
-import { ProgressService } from './progressService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { UserWithProfile, FitnessPlan } from '@/server/models';
 import { Microcycle } from '@/server/models/microcycle';
 import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
+import type { ProgressInfo } from './progressService';
 
 export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
   private fitnessPlanService: FitnessPlanService;
-  private progressService: ProgressService;
   private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.progressService = ProgressService.getInstance();
     this.userService = UserService.getInstance();
   }
 
@@ -93,6 +91,18 @@ export class MicrocycleService {
   }
 
   /**
+   * Get microcycle for a specific date
+   * Used for date-based progress tracking - finds the microcycle that contains the target date
+   */
+  public async getMicrocycleByDate(
+    userId: string,
+    fitnessPlanId: string,
+    targetDate: Date
+  ): Promise<Microcycle | null> {
+    return await this.microcycleRepo.getMicrocycleByDate(userId, fitnessPlanId, targetDate);
+  }
+
+  /**
    * Update a microcycle's day overviews
    */
   public async updateMicrocycleDayOverviews(
@@ -112,27 +122,15 @@ export class MicrocycleService {
 
 
   /**
-   * Get or create microcycle for a specific date (date-based approach)
-   * This is the main entry point for ensuring a user has a microcycle for any given week
+   * Create a new microcycle from progress information
+   * This method takes pre-calculated progress and creates the microcycle in the database
    */
-  public async getOrCreateMicrocycleForDate(
+  public async createMicrocycleFromProgress(
     userId: string,
-    plan: FitnessPlan,
-    targetDate: Date,
-    timezone: string = 'America/New_York'
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    // Calculate progress for the target date
-    const progress = await this.progressService.getProgressForDate(plan, targetDate, timezone);
-    if (!progress) {
-      throw new Error(`Could not calculate progress for date ${targetDate}`);
-    }
-
-    // If microcycle already exists, return it
-    if (progress.microcycle) {
-      return { microcycle: progress.microcycle, wasCreated: false };
-    }
-
-    // Microcycle doesn't exist - generate it using the microcycle overview from mesocycle
+    fitnessPlanId: string,
+    progress: ProgressInfo
+  ): Promise<Microcycle> {
+    // Microcycle overview must exist to create a microcycle
     if (!progress.microcycleOverview) {
       throw new Error(`No microcycle overview found for mesocycle ${progress.mesocycleIndex}, microcycle ${progress.microcycleIndex}`);
     }
@@ -146,7 +144,7 @@ export class MicrocycleService {
     // Create new microcycle with pre-generated long-form content, formatted markdown, and message
     const microcycle = await this.microcycleRepo.createMicrocycle({
       userId,
-      fitnessPlanId: plan.id!,
+      fitnessPlanId,
       mesocycleIndex: progress.mesocycleIndex,
       weekNumber: progress.microcycleIndex,
       mondayOverview: dayOverviews.mondayOverview,
@@ -166,19 +164,7 @@ export class MicrocycleService {
     });
 
     console.log(`Created new microcycle for user ${userId}, mesocycle ${progress.mesocycleIndex}, week ${progress.microcycleIndex} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
-    return { microcycle, wasCreated: true };
-  }
-
-  /**
-   * Get or create the active microcycle for a user (current week)
-   * This is a convenience wrapper around getOrCreateMicrocycleForDate
-   */
-  public async getOrCreateActiveMicrocycle(
-    user: UserWithProfile,
-    plan: FitnessPlan
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    const currentDate = now(user.timezone).toJSDate();
-    return this.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
+    return microcycle;
   }
 
   /**

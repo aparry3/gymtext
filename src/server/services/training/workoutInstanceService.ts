@@ -119,7 +119,7 @@ export class WorkoutInstanceService {
       }
 
       // Get or create microcycle for the target date
-      const { microcycle } = await this.microcycleService.getOrCreateMicrocycleForDate(
+      const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(
         user.id,
         plan,
         targetDate.toJSDate(),

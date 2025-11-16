@@ -6,6 +6,8 @@ import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { now, startOfDay } from '@/shared/utils/date';
+import { ProgressService } from '../training/progressService';
+import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
 
 /**
  * OnboardingService
@@ -32,9 +34,11 @@ export class OnboardingService {
   private dailyMessageService: DailyMessageService;
   private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
+  private progressService: ProgressService;
 
   private constructor() {
     this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.progressService = ProgressService.getInstance();
     this.messageService = MessageService.getInstance();
     this.dailyMessageService = DailyMessageService.getInstance();
     this.microcycleService = MicrocycleService.getInstance();
@@ -85,7 +89,8 @@ export class OnboardingService {
       }
 
       // Create first microcycle using date-based approach (for current week)
-      const { microcycle } = await this.microcycleService.getOrCreateActiveMicrocycle(user, plan);
+      const currentDate = now(user.timezone).toJSDate();
+      const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
       if (!microcycle) {
         throw new Error('Failed to create first microcycle');
       }
@@ -160,17 +165,18 @@ export class OnboardingService {
     }
 
     // Get current microcycle using date-based approach
-    const { microcycle } = await this.microcycleService.getOrCreateActiveMicrocycle(user, plan);
-    if (!microcycle) {
+    const currentDate = now(user.timezone).toJSDate();
+    const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
+  if (!microcycle) {
       throw new Error(`No microcycle found for user ${user.id}`);
     }
 
     // Generate combined message using agent
-    const { planMicrocycleCombinedAgent } = await import('@/server/agents');
-    const { message } = await planMicrocycleCombinedAgent({
-      user,
-      plan,
-      microcycle
+    const planMicrocycleCombinedAgent = createPlanMicrocycleCombinedAgent();
+    const { message } = await planMicrocycleCombinedAgent.invoke({
+      user: user,
+      plan: plan,
+      microcycle: microcycle
     });
 
     // Send the combined message
@@ -194,41 +200,6 @@ export class OnboardingService {
       console.log(`[Onboarding] Sent workout message to ${user.id}`);
     } else {
       console.warn(`[Onboarding] No workout message found for ${workout.id}, skipping`);
-    }
-  }
-
-  /**
-   * Complete onboarding flow for a new user (LEGACY)
-   * This method is kept for backward compatibility but will be deprecated
-   *
-   * @param user - The user to onboard
-   * @throws Error if any step fails
-   * @deprecated Use createFitnessPlan(), createFirstMicrocycle(), createFirstWorkout() and sendOnboardingMessages() separately
-   */
-  public async onboardUser(user: UserWithProfile): Promise<void> {
-    console.log(`Starting onboarding for user ${user.id}`);
-
-    try {
-      // Create conversation flow to track context
-      const flow = new ConversationFlowBuilder();
-
-      // Step 1: Send welcome message
-      console.log(`[Onboarding] Sending welcome message to ${user.id}`);
-      const welcomeMessage = await this.messageService.sendWelcomeMessage(user);
-      flow.addMessage(welcomeMessage);
-
-      // Step 2-4: Create entities (plan, microcycle, workout)
-      await this.createFitnessPlan(user);
-      await this.createFirstMicrocycle(user);
-      await this.createFirstWorkout(user);
-
-      // Step 5-7: Send onboarding messages
-      await this.sendOnboardingMessages(user);
-
-      console.log(`[Onboarding] Successfully completed onboarding for ${user.id}`);
-    } catch (error) {
-      console.error(`[Onboarding] Failed to onboard user ${user.id}:`, error);
-      throw error;
     }
   }
 }

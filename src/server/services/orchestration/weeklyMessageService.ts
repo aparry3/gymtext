@@ -148,7 +148,7 @@ export class WeeklyMessageService {
       }
 
       // Step 4: Get or create next week's microcycle
-      const { microcycle: nextWeekMicrocycle } = await this.microcycleService.getOrCreateMicrocycleForDate(
+      const { microcycle: nextWeekMicrocycle } = await this.progressService.getOrCreateMicrocycleForDate(
         user.id,
         plan,
         nextSundayDate,

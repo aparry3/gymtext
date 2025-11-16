@@ -10,8 +10,7 @@ import {
   getWeekday,
 } from '@/shared/utils/date';
 import { MesocycleService } from './mesocycleService';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { postgresDb } from '@/server/connections/postgres/postgres';
+import { MicrocycleService } from './microcycleService';
 
 export interface ProgressInfo {
   mesocycle: Mesocycle;              // The mesocycle object (from DB)
@@ -28,12 +27,12 @@ export interface ProgressInfo {
 export class ProgressService {
   private static instance: ProgressService;
   private mesocycleService: MesocycleService;
-  private microcycleRepo: MicrocycleRepository;
+  private microcycleService: MicrocycleService;
 
   private constructor() {
     // Singleton - no dependencies needed for pure date calculations
     this.mesocycleService = MesocycleService.getInstance();
-    this.microcycleRepo = new MicrocycleRepository(postgresDb);
+    this.microcycleService = MicrocycleService.getInstance();
   }
   public static getInstance(): ProgressService {
     if (!ProgressService.instance) {
@@ -99,7 +98,7 @@ export class ProgressService {
     const microcycleIndex = absoluteWeek - mesocycle.startWeek;
 
     // Query for existing microcycle by date
-    const microcycle = await this.microcycleRepo.getMicrocycleByDate(
+    const microcycle = await this.microcycleService.getMicrocycleByDate(
       plan.clientId,
       plan.id,
       targetDate
@@ -137,6 +136,37 @@ export class ProgressService {
   ): Promise<ProgressInfo | null> {
     const currentDate = now(timezone).toJSDate();
     return await this.getProgressForDate(plan, currentDate, timezone);
+  }
+
+  /**
+   * Get or create microcycle for a specific date (orchestration method)
+   * This is the main entry point for ensuring a user has a microcycle for any given week
+   */
+  public async getOrCreateMicrocycleForDate(
+    userId: string,
+    plan: FitnessPlan,
+    targetDate: Date,
+    timezone: string = 'America/New_York'
+  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
+    // Calculate progress for the target date
+    const progress = await this.getProgressForDate(plan, targetDate, timezone);
+    if (!progress) {
+      throw new Error(`Could not calculate progress for date ${targetDate}`);
+    }
+
+    // If microcycle already exists, return it
+    if (progress.microcycle) {
+      return { microcycle: progress.microcycle, wasCreated: false };
+    }
+
+    // Microcycle doesn't exist - create it using MicrocycleService
+    const microcycle = await this.microcycleService.createMicrocycleFromProgress(
+      userId,
+      plan.id!,
+      progress
+    );
+
+    return { microcycle, wasCreated: true };
   }
 }
 

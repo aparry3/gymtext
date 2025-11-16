@@ -39,13 +39,3 @@ export const createPlanMicrocycleCombinedAgent = (deps?: PlanMicrocycleCombinedA
     };
   });
 };
-
-/**
- * Legacy export for backward compatibility
- */
-export const planMicrocycleCombinedAgent = async (
-  input: PlanMicrocycleCombinedInput
-): Promise<PlanMicrocycleCombinedOutput> => {
-  const agent = createPlanMicrocycleCombinedAgent();
-  return agent.invoke(input);
-};
