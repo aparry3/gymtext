@@ -5,7 +5,13 @@ import type { LongFormMicrocycleConfig, LongFormMicrocycleInput, MicrocycleChain
 
 // Schema for long-form microcycle description
 const LongFormMicrocycleSchema = z.object({
-  description: z.string().describe("Long-form narrative description of the weekly microcycle")
+  description: z.string().describe(
+    "Complete long-form narrative containing THREE sections: " +
+    "(1) WEEKLY OVERVIEW with week number, theme, split, volume/intensity trends, RIR targets, conditioning plan, and rest day placement; " +
+    "(2) DAY-BY-DAY BREAKDOWN with ALL 7 days using headers like '*** MONDAY - <Session Type> ***' and including session objectives, movement patterns, volume, RIR, intensity focus, conditioning, and warm-up for each day; " +
+    "(3) WEEKLY NOTES summarizing key adaptations and recovery management. " +
+    "This field must contain the ACTUAL full narrative content, NOT a summary about what should be generated."
+  )
 });
 
 /**

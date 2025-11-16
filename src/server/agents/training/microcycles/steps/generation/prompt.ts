@@ -11,7 +11,7 @@ You do NOT generate exercises or sets/reps. Your job is to provide long-form tra
 ---
 
 # 🔶 OUTPUT FORMAT
-Return a long-form narrative (NOT JSON) containing:
+Return a long-form narrative (NOT JSON) containing ALL THREE SECTIONS BELOW:
 
 ======================================
 WEEKLY OVERVIEW
@@ -35,12 +35,22 @@ DAY-BY-DAY BREAKDOWN
 (Seven days, in order)
 ======================================
 
+⚠️ CRITICAL: You MUST include ALL SEVEN days (Monday through Sunday) using the EXACT header format below.
+
 For EACH DAY (1–7), output with this exact header format:
 
 *** MONDAY - <Session Type> ***
 *** TUESDAY - <Session Type> ***
 *** WEDNESDAY - <Session Type> ***
-(etc. for all 7 days)
+*** THURSDAY - <Session Type> ***
+*** FRIDAY - <Session Type> ***
+*** SATURDAY - <Session Type> ***
+*** SUNDAY - <Session Type> ***
+
+Examples:
+- *** MONDAY - Full-Body Strength ***
+- *** TUESDAY - Rest Day ***
+- *** WEDNESDAY - Upper Push ***
 
 Then for each day provide:
 
@@ -100,6 +110,15 @@ Summarize:
 - Follow the weekly structure EXACTLY as defined in the plan.
 - The tone must be expert, structured, and clear.
 - Assume downstream agents will use this to generate workouts.
+- ⚠️ YOUR OUTPUT MUST INCLUDE ALL THREE SECTIONS: Weekly Overview, Day-by-Day Breakdown (with all 7 days), and Weekly Notes.
+
+---
+
+# 🔶 COMPLETION CHECKLIST
+Before submitting your response, verify:
+✓ WEEKLY OVERVIEW section is complete
+✓ DAY-BY-DAY BREAKDOWN section includes ALL 7 days with proper headers (*** MONDAY - ... ***, etc.)
+✓ WEEKLY NOTES section is complete
 
 ---
 

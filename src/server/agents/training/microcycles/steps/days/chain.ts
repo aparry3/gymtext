@@ -21,6 +21,7 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
     const dayPattern = /\*\*\*\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\s*-\s*[^*]+\*\*\*([\s\S]*?)(?=\*\*\*\s*(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)|======================================|$)/gi;
 
     const dayOverviews: Partial<DayOverviews> = {};
+    let matchCount = 0;
 
     let match;
     while ((match = dayPattern.exec(description)) !== null) {
@@ -30,6 +31,23 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
       // Map day name to field name
       const fieldName = `${dayName}Overview` as keyof DayOverviews;
       dayOverviews[fieldName] = content;
+      matchCount++;
+    }
+
+    // Validate that day headers were found
+    if (matchCount === 0) {
+      console.error(`[${config.operationName}] ERROR: No day headers found in microcycle description!`);
+      console.error('Expected format: *** MONDAY - <Session Type> ***');
+      console.error('Description preview:', description.substring(0, 500));
+      throw new Error(
+        `Day extraction failed: No day headers found in microcycle description. ` +
+        `Expected headers like "*** MONDAY - <Session Type> ***" but none were detected. ` +
+        `The LLM may not be following the prompt instructions to generate the DAY-BY-DAY BREAKDOWN section.`
+      );
+    }
+
+    if (matchCount < 7) {
+      console.warn(`[${config.operationName}] WARNING: Only found ${matchCount}/7 day headers in description`);
     }
 
     // Detect if this is a deload week by checking for "deload" in the description
@@ -47,7 +65,7 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
       isDeload
     };
 
-    console.log(`[${config.operationName}] Extracted overviews for all 7 days, isDeload=${isDeload}`);
+    console.log(`[${config.operationName}] Extracted ${matchCount}/7 day overviews, isDeload=${isDeload}`);
 
     return result;
   });
