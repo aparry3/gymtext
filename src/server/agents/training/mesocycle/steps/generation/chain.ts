@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { MesocycleAgentConfig, MesocycleGenerationInput, MesocycleChainContext, MesocycleGenerationOutput } from './types';
-import { LongFormMesocycleOutputSchema } from './types';
+import { MesocycleGenerationOutputSchema } from './types';
 import { mesocycleUserPrompt } from './prompt';
 
 /**
@@ -16,7 +16,7 @@ import { mesocycleUserPrompt } from './prompt';
  * @returns Agent (runnable) that produces structured mesocycle data
  */
 export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) => {
-  const model = initializeModel(LongFormMesocycleOutputSchema, config.agentConfig);
+  const model = initializeModel(MesocycleGenerationOutputSchema, config.agentConfig);
 
   return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;

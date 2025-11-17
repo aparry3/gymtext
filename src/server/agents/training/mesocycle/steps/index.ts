@@ -5,7 +5,7 @@ export {
 } from './generation/prompt';
 export { createMesocycleGenerationRunnable } from './generation/chain';
 export {
-  LongFormMesocycleOutputSchema,
+  MesocycleGenerationOutputSchema,
 } from './generation/types';
 export type {
   MesocycleAgentConfig,

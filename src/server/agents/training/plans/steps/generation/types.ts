@@ -25,6 +25,7 @@ export type FitnessPlanOutput = z.infer<typeof FitnessPlanOutputSchema>;
 export interface FitnessPlanConfig {
   systemPrompt: string;
   agentConfig?: AgentConfig;
+  maxRetries?: number;
 }
 
 export interface FitnessPlanInput {
