@@ -1,22 +1,7 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import { EnhancedFormattedWorkoutSchema } from '@/server/models/workout/schema';
 import { SYSTEM_PROMPT, userPrompt } from './generation/prompt';
-import { executeWorkoutChain } from '../../shared/chainFactory';
-import type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
-
-/**
- * @deprecated Legacy interface - use DailyWorkoutInput instead
- * Kept for backward compatibility only
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface DailyWorkoutContext extends DailyWorkoutInput {}
-
-/**
- * @deprecated Legacy interface - use DailyWorkoutOutput instead
- * Kept for backward compatibility only
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GeneratedWorkoutResult extends DailyWorkoutOutput {}
+import { executeWorkoutChain, WorkoutChainResult } from '../../shared/chainFactory';
+import type { DailyWorkoutInput } from './types';
 
 /**
  * Daily Workout Agent Factory
@@ -31,16 +16,13 @@ export interface GeneratedWorkoutResult extends DailyWorkoutOutput {}
  * @returns Agent that generates daily workouts
  */
 export const createDailyWorkoutAgent = () => {
-  return createRunnableAgent<DailyWorkoutInput, DailyWorkoutOutput>(async (input) => {
+  return createRunnableAgent<DailyWorkoutInput, WorkoutChainResult>(async (input) => {
     return executeWorkoutChain(input, {
       // Step 1: System prompt (static instructions)
       systemPrompt: SYSTEM_PROMPT,
 
       // Step 1: User prompt (dynamic context)
       userPrompt: userPrompt(input),
-
-      // Schema for formatted output
-      formattedSchema: EnhancedFormattedWorkoutSchema,
 
       // No modifications tracking for generate
       includeModifications: false,

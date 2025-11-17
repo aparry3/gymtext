@@ -146,7 +146,7 @@ export class WorkoutInstanceService {
       const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { workout: formattedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
+      const { formatted, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayPlan: dayOverview, // Pass the string overview instead of pattern object
@@ -156,11 +156,13 @@ export class WorkoutInstanceService {
         recentWorkouts
       });
 
-      // Extract formatted text and theme for storage
-      const { formatted, theme } = formattedWorkout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
+
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted,  // Store the formatted markdown text
+        theme,                         // Keep theme for quick access
       };
 
       // Convert to database format

@@ -542,8 +542,8 @@ export class MessageService {
 
         // Invoke with runtime context
         message = await messageAgent.invoke({
-          longFormWorkout: {
-            workout: workout.description,
+          workout: {
+            description: workout.description,
             reasoning: workout.reasoning
           }
         });

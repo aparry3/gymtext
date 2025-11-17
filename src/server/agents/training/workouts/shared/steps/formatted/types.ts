@@ -1,13 +1,9 @@
-import { z } from 'zod';
 import type { AgentConfig } from '@/server/agents/base';
 
 /**
  * Configuration for formatted workout agent
  */
 export interface FormattedWorkoutConfig {
-  // Schema to use for validation
-  schema: z.ZodTypeAny;
-
   // Whether to include modificationsApplied field
   includeModifications?: boolean;
 
@@ -21,4 +17,4 @@ export interface FormattedWorkoutConfig {
 /**
  * Output from formatted workout agent
  */
-export type FormattedWorkoutOutput<TWorkout> = TWorkout & { date: Date };
+export type FormattedWorkoutOutput = string;

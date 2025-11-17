@@ -10,6 +10,7 @@ import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/train
 // import { DailyWorkoutInput } from '@/server/agents/training/workouts/operations/generate';
 import { now, getWeekday } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
+import { WorkoutChainResult } from '@/server/agents/training/workouts/shared/chainFactory';
 
 /**
  * WorkoutModificationService
@@ -35,7 +36,7 @@ export interface SubstituteExerciseParams {
 
 export interface SubstituteExerciseResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -52,7 +53,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -67,7 +68,7 @@ export interface ModifyWeekParams {
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -143,14 +144,20 @@ export class WorkoutModificationService {
         modifications,
       });
 
-      // Extract formatted text and theme for storage
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, formatted, theme } = result.workout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
 
-      // Store formatted text in details.formatted for backward compatibility
+      // Extract modifications applied section from markdown if present
+      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
+      const modificationsApplied = modificationsMatch
+        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
+        : [];
+
+      // Store formatted text in details.formatted
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted: result.formatted,  // Store the formatted markdown text
+        theme,                       // Keep theme for quick access
       };
 
       // Update the workout in the database
@@ -163,7 +170,7 @@ export class WorkoutModificationService {
 
       return {
         success: true,
-        workout: result.workout,
+        workout: result,
         modificationsApplied,
         message: result.message,
       };
@@ -224,14 +231,20 @@ export class WorkoutModificationService {
         params: replaceParams,
       });
 
-      // Extract formatted text and theme for storage
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, formatted, theme } = result.workout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
 
-      // Store formatted text in details.formatted for backward compatibility
+      // Extract modifications applied section from markdown if present
+      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
+      const modificationsApplied = modificationsMatch
+        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
+        : [];
+
+      // Store formatted text in details.formatted
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted: result.formatted,  // Store the formatted markdown text
+        theme,                       // Keep theme for quick access
       };
 
       // Update the workout in the database
@@ -244,7 +257,7 @@ export class WorkoutModificationService {
 
       return {
         success: true,
-        workout: result.workout,
+        workout: result,
         modificationsApplied,
         message: result.message,
       };
@@ -374,7 +387,7 @@ export class WorkoutModificationService {
       // // Check if today's pattern changed - if so, regenerate today's workout
       // // This handles cases where modifying a future day causes today's workout to be reshuffled
       // let workoutRegenerated = false;
-      // let regeneratedWorkout: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'] | undefined;
+      // let regeneratedWorkout: Da | undefined;
       // let workoutMessage: string | undefined;
 
       // const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);

@@ -1,11 +1,10 @@
-import { z } from 'zod';
 import { UserWithProfile } from '@/server/models/userModel';
-import { LongFormWorkout } from '@/server/models/workout/schema';
 import { formatFitnessProfile } from '@/server/utils/formatters';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createFormattedWorkoutAgent } from './steps/formatted/chain';
 import { createWorkoutMessageAgent } from './steps/message/chain';
-import { createLongFormatWorkoutRunnable } from './steps/longForm/chain';
+import { createWorkoutGenerationRunnable } from './steps/generation/chain';
+import { WorkoutGenerationOutput } from '@/server/models/workout/schema/openAISchema';
 
 
 export interface BaseWorkoutChainInput {
@@ -18,23 +17,17 @@ export interface BaseWorkoutChainInput {
  * Contains all dynamic data needed by downstream agents
  */
 export interface WorkoutChainContext extends BaseWorkoutChainInput {
-  longFormWorkout: LongFormWorkout;
+  workout: WorkoutGenerationOutput;
   fitnessProfile: string;
 }
 
 /**
  * Configuration for the workout chain factory
- *
- * @template TContext - The context type for the specific workout operation
- * @template TWorkoutSchema - The Zod schema type for the formatted workout
  */
-export interface WorkoutChainConfig<TWorkoutSchema extends z.ZodTypeAny> {
+export interface WorkoutChainConfig {
   // Prompts
   systemPrompt: string;  // Static system prompt
   userPrompt: (fitnessProfile: string) => string;  // Dynamic user prompt
-
-  // Schema for step 2a (formatted text generation)
-  formattedSchema: TWorkoutSchema;
 
   // Whether to include modificationsApplied field (for substitute/replace)
   includeModifications?: boolean;
@@ -45,11 +38,9 @@ export interface WorkoutChainConfig<TWorkoutSchema extends z.ZodTypeAny> {
 
 /**
  * Result type from the workout chain execution
- *
- * @template TWorkout - The type of the workout (inferred from schema)
  */
-export interface WorkoutChainResult<TWorkout> {
-  workout: TWorkout & { date: Date };
+export interface WorkoutChainResult {
+  formatted: string;
   message: string;
   description: string;
   reasoning: string;
@@ -65,15 +56,13 @@ export interface WorkoutChainResult<TWorkout> {
  * This eliminates code duplication across generate/replace/substitute agents.
  *
  * @param context - The operation-specific context
- * @param config - Configuration for prompts, schemas, and extractors
- * @returns Workout result with formatted workout, message, description, and reasoning
+ * @param config - Configuration for prompts and settings
+ * @returns Workout result with formatted workout string, message, description, and reasoning
  */
-export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput, TWorkoutSchema extends z.ZodTypeAny>(
+export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput>(
   context: TContext,
-  config: WorkoutChainConfig<TWorkoutSchema>
-): Promise<WorkoutChainResult<z.infer<TWorkoutSchema>>> {
-  type TWorkout = z.infer<TWorkoutSchema>;
-
+  config: WorkoutChainConfig
+): Promise<WorkoutChainResult> {
   // Get fitness profile context once
   const fitnessProfile = formatFitnessProfile(context.user);
 
@@ -81,11 +70,10 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
   const userMessage = config.userPrompt(fitnessProfile);
 
   // Step 1: Generate long-form workout and build context object
-  const contextRunnable = createLongFormatWorkoutRunnable({systemPrompt: systemMessage});
+  const contextRunnable = createWorkoutGenerationRunnable({systemPrompt: systemMessage});
 
   // Step 2a: Create formatted workout agent with config (returns runnable)
-  const formattedAgent = createFormattedWorkoutAgent<TWorkout>({
-    schema: config.formattedSchema,
+  const formattedAgent = createFormattedWorkoutAgent({
     includeModifications: config.includeModifications || false,
     operationName: config.operationName,
   });
@@ -106,20 +94,20 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
       const sequence = RunnableSequence.from([
         contextRunnable,
         RunnablePassthrough.assign({
-          workout: formattedAgent,
+          formatted: formattedAgent,
           message: messageAgent,
         })
       ]);
 
-      const result = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
+      const result: WorkoutGenerationOutput & {formatted: string, message: string} = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
       console.log(`[${config.operationName}] Successfully completed with workout, reasoning, formatted text, and message`);
       // Flatten the result to match WorkoutChainResult type
       return {
-        workout: result.workout,
+        formatted: result.formatted,
         message: result.message,
-        description: result.longFormWorkout.workout,
-        reasoning: result.longFormWorkout.reasoning
+        description: result.description,
+        reasoning: result.reasoning
       };
     } catch (error) {
       console.error(`[${config.operationName}] Error on attempt ${attempt + 1}:`, error);

@@ -1,9 +1,7 @@
-import type { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { Mesocycle } from '@/server/models/mesocycle';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { WorkoutInstance } from '@/server/models/workout';
-import type { EnhancedFormattedWorkoutSchema } from '@/server/models/workout/schema';
 import type { AgentDeps } from '@/server/agents/base';
 import type { BaseWorkoutChainInput, WorkoutChainResult } from '../../shared';
 
@@ -23,9 +21,8 @@ export interface DailyWorkoutInput extends BaseWorkoutChainInput {
 /**
  * Output from daily workout generator
  * Uses shared WorkoutChainResult type for consistency
- * Note: Uses z.infer to get base type without date (WorkoutChainResult adds the date)
  */
-export type DailyWorkoutOutput = WorkoutChainResult<z.infer<typeof EnhancedFormattedWorkoutSchema>>;
+export type DailyWorkoutOutput = WorkoutChainResult;
 
 /**
  * Dependencies for daily workout agent

@@ -1,4 +1,4 @@
-import type { LongFormWorkout } from '@/server/models/workout/schema';
+import type { WorkoutGenerationOutput } from '@/server/models/workout/schema';
 
 /**
  * Static system prompt for workout SMS message generation
@@ -187,18 +187,18 @@ Return ONLY the SMS message text - no markdown, no extra formatting, no JSON.
  * Create dynamic user prompt for workout SMS message generation
  * Contains the specific workout description and user context
  *
- * @param longFormWorkout - The long-form workout description and reasoning
+ * @param workout - The long-form workout description and reasoning
  * @param user - User context
  * @param fitnessProfile - Formatted fitness profile string
  * @returns User prompt for SMS conversion
  */
 export function createWorkoutMessageUserPrompt(
-  longFormWorkout: LongFormWorkout,
+  workout: WorkoutGenerationOutput,
 ): string {
   return `
-<Long-Form Workout>
-${longFormWorkout.workout}
-</Long-Form Workout>
+<Workout Description>
+${workout.description}
+</Workout Description>
 
 Convert this workout into an SMS message following the format requirements and examples provided.
 `.trim();

@@ -1,5 +1,4 @@
-import type { LongFormWorkout } from '@/server/models/workout/schema';
-import type { UserWithProfile } from '@/server/models';
+import { WorkoutGenerationOutput } from '@/server/models/workout/schema/openAISchema';
 
 /**
  * System prompt for formatted workout agent
@@ -195,8 +194,7 @@ Return the complete formatted workout as a single markdown string.`;
  * User prompt for formatted workout agent
  */
 export const createFormattedWorkoutUserPrompt = (
-  longFormWorkout: LongFormWorkout,
-  user: UserWithProfile,
+  workout: WorkoutGenerationOutput,
   fitnessProfile: string,
   includeModifications: boolean = false
 ): string => {
@@ -206,11 +204,11 @@ export const createFormattedWorkoutUserPrompt = (
 
   return `Convert the following long-form workout into a beautifully formatted markdown document.
 
-LONG-FORM WORKOUT:
-${longFormWorkout.workout}
+WORKOUT DESCRIPTION:
+${workout.description}
 
 REASONING (for context):
-${longFormWorkout.reasoning}
+${workout.reasoning}
 
 USER PROFILE (for context):
 ${fitnessProfile}
