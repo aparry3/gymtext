@@ -8,9 +8,9 @@ export {
   FitnessPlanOutputSchema,
 } from './generation/types';
 export type {
-  LongFormPlanConfig,
-  LongFormPlanInput,
-  FintessPlanOutput,
+  FitnessPlanConfig,
+  FitnessPlanInput,
+  FitnessPlanOutput,
   FitnessPlanChainContext,
 } from './generation/types';
 
@@ -19,8 +19,8 @@ export {
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
 } from './message/prompt';
-export { createPlanMessageAgent } from './message/chain';
-export type { PlanMessageConfig } from './message/types';
+export { createFitnessPlanMessageAgent } from './message/chain';
+export type { FitnessPlanMessageConfig } from './message/types';
 
 // Formatted step
 export {

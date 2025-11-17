@@ -16,16 +16,13 @@ export interface FitnessPlanAgentDeps {
 
 // Re-export step types for convenience
 export type {
-  LongFormPlanConfig,
-  LongFormPlanInput,
-  LongFormPlanOutput,
+  FitnessPlanOutput,
   FitnessPlanChainContext,
-} from './steps';
+} from './steps/generation/types';
 
 export type {
-  MesocycleExtractorConfig,
-} from './steps';
-
+  FitnessPlanMessageConfig,
+} from './steps/message/types';
 export type {
-  PlanMessageConfig,
-} from './steps';
+  FormattedFitnessPlanConfig,
+} from './steps/formatted/types';

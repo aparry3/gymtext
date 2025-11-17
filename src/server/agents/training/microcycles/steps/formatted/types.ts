@@ -10,8 +10,3 @@ export interface FormattedMicrocycleConfig {
   // Optional agent configuration (model, tokens, etc.)
   agentConfig?: AgentConfig;
 }
-
-/**
- * Output from formatted microcycle agent
- */
-export type FormattedMicrocycleOutput<TMicrocycle> = TMicrocycle;

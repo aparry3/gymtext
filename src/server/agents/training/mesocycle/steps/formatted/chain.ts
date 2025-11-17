@@ -1,5 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import type { FormattedMesocycleConfig, FormattedMesocycleOutput } from './types';
+import type { FormattedMesocycleConfig } from './types';
 import type { MesocycleChainContext } from '../generation/types';
 import { buildFormattedMesocycleSystemPrompt, createFormattedMesocycleUserPrompt } from './prompt';
 

@@ -1,7 +1,7 @@
 import { Microcycles } from '@/server/models/_types';
 
 // Re-export schema types
-export type { MicrocyclePattern, UpdatedMicrocyclePattern, FormattedMicrocycle } from './schema';
+export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
 
 export interface Microcycle {
   id: string;

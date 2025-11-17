@@ -1,6 +1,6 @@
 import { AgentConfig } from "@/server/agents/base";
 
-export interface PlanMessageConfig {
+export interface FitnessPlanMessageConfig {
   agentConfig?: AgentConfig;
   operationName: string;
 }

@@ -14,14 +14,14 @@ export const FitnessPlanOutputSchema = z.object({
   })
 });
 
-export type FintessPlanOutput = z.infer<typeof FitnessPlanOutputSchema>;
+export type FitnessPlanOutput = z.infer<typeof FitnessPlanOutputSchema>;
 
-export interface LongFormPlanConfig {
+export interface FitnessPlanConfig {
   systemPrompt: string;
   agentConfig?: AgentConfig;
 }
 
-export interface LongFormPlanInput {
+export interface FitnessPlanInput {
   user: UserWithProfile;
   fitnessProfile: string;
   prompt: string;
@@ -33,5 +33,5 @@ export interface LongFormPlanInput {
 export interface FitnessPlanChainContext {
   user: UserWithProfile;
   fitnessProfile: string;
-  fitnessPlan: FintessPlanOutput;
+  fitnessPlan: FitnessPlanOutput;
 }

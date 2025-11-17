@@ -199,9 +199,9 @@ export const createFormattedMesocycleUserPrompt = (
   mesocycleIndex: number,
   durationWeeks: number
 ): string => {
-  return `Convert the following long-form mesocycle description into a beautifully formatted markdown document.
+  return `Convert the following mesocycle overview into a beautifully formatted markdown document.
 
-LONG-FORM MESOCYCLE DESCRIPTION:
+MESOCYCLE OVERVIEW:
 ${mesocycle.overview}
 
 MESOCYCLE INDEX: ${mesocycleIndex + 1}

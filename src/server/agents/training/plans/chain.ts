@@ -1,11 +1,11 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { FitnessPlanOverview, FormattedFitnessPlanSchema } from '@/server/models/fitnessPlan';
+import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
   createFitnessPlanGenerationRunnable,
-  createPlanMessageAgent,
+  createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
 import type { FitnessPlanAgentDeps } from './types';
@@ -45,7 +45,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
       });
 
       // Step 3: Create message agent
-      const messageAgent = createPlanMessageAgent({
+      const messageAgent = createFitnessPlanMessageAgent({
         operationName: 'generate plan message'
       });
 

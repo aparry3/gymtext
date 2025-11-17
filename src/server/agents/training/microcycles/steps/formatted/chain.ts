@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildFormattedMicrocycleSystemPrompt, createFormattedMicrocycleUserPrompt } from './prompt';
-import type { FormattedMicrocycleConfig, FormattedMicrocycleOutput } from './types';
+import type { FormattedMicrocycleConfig } from './types';
 import type { MicrocycleChainContext } from '../generation/types';
 
 /**
@@ -22,12 +22,9 @@ export const createFormattedMicrocycleAgent = (
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
     const { microcycle, weekNumber } = input;
 
-    // Get isDeload flag from structured output
-    const isDeload = microcycle.isDeload;
-
     // Build system and user prompts
     const systemPrompt = buildFormattedMicrocycleSystemPrompt();
-    const userPrompt = createFormattedMicrocycleUserPrompt(microcycle, weekNumber, isDeload);
+    const userPrompt = createFormattedMicrocycleUserPrompt(microcycle, weekNumber);
 
     // Invoke model with system and user prompts
     const formattedMicrocycle = await model.invoke([
