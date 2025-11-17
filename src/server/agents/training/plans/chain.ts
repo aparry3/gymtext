@@ -67,13 +67,13 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: FitnessPlanOverview = {
-        description: result.longFormPlan.overview,
-        mesocycles: result.longFormPlan.mesocycles,
+        description: result.fitnessPlan.description,
+        mesocycles: result.fitnessPlan.mesocycles,
         formatted: result.formatted.formatted,
         message: result.message
       };
 
-      console.log(`[FitnessPlan] Generated fitness plan with ${result.longFormPlan.mesocycles.length} mesocycles for user ${user.id}`);
+      console.log(`[FitnessPlan] Generated fitness plan with ${result.fitnessPlan.mesocycles.length} mesocycles for user ${user.id}`);
 
       return finalResult;
     } catch (error) {
