@@ -72,6 +72,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
       const finalResult: FitnessPlanOverview = {
         description: result.fitnessPlan.overview,
         mesocycles: result.fitnessPlan.mesocycles,
+        totalWeeks: result.fitnessPlan.total_weeks,
         formatted: result.formatted,
         message: result.message
       };
