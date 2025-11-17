@@ -153,7 +153,8 @@ Each microcycle string MUST include fields in this exact order:
 
 Week: [Week X – Short Theme]  
 Volume: [Baseline | Moderate | High | Peak | Deload]  
-Intensity: [Steady | Rising | Peak | Taper]  
+Intensity: [Steady | Rising | Peak | Taper]
+Number of Workouts: [Number of workouts in the week]  
 Split: [Weekly split pattern]  
 Weekly Theme & Objectives: ...  
 Session Themes by Day: ...  
