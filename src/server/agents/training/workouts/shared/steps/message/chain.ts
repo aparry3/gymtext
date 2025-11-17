@@ -20,10 +20,10 @@ export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
   };
   const model = initializeModel(undefined, agentConfig);
   return createRunnableAgent<WorkoutMessageInput, WorkoutMessageOutput>(async (input) => {
-    const { workout } = input;
+    const { description } = input;
 
     // Create the user prompt with workout and context
-    const userPrompt = createWorkoutMessageUserPrompt(workout);
+    const userPrompt = createWorkoutMessageUserPrompt(description);
 
     // Invoke model with system and user prompts
     const message = await model.invoke([

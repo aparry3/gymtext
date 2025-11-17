@@ -144,7 +144,7 @@ export class WorkoutInstanceService {
       // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { formatted, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
+      const { formatted, message, description } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayOverview, // Pass the string overview instead of pattern object
@@ -171,7 +171,6 @@ export class WorkoutInstanceService {
         goal: dayOverview.substring(0, 100), // Use first 100 chars of overview as goal
         details: JSON.parse(JSON.stringify(details)),
         description,
-        reasoning,
         message,
         completedAt: null,
         createdAt: new Date(),

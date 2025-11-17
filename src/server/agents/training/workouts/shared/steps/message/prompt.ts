@@ -1,5 +1,3 @@
-import type { WorkoutGenerationOutput } from '@/server/models/workout/schema';
-
 /**
  * Static system prompt for workout SMS message generation
  * Converts detailed workout descriptions into concise, readable SMS messages
@@ -193,11 +191,11 @@ Return ONLY the SMS message text - no markdown, no extra formatting, no JSON.
  * @returns User prompt for SMS conversion
  */
 export function createWorkoutMessageUserPrompt(
-  workout: WorkoutGenerationOutput,
+  description: string,
 ): string {
   return `
 <Workout Description>
-${workout.description}
+${description}
 </Workout Description>
 
 Convert this workout into an SMS message following the format requirements and examples provided.

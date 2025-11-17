@@ -164,7 +164,6 @@ export class WorkoutModificationService {
       await this.workoutInstanceService.updateWorkout(workout.id, {
         details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
-        reasoning: result.reasoning,
         message: result.message,
       });
 
@@ -251,7 +250,6 @@ export class WorkoutModificationService {
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
         details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
-        reasoning: result.reasoning,
         message: result.message,
       });
 

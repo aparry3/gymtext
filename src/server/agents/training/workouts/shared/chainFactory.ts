@@ -4,7 +4,6 @@ import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables
 import { createFormattedWorkoutAgent } from './steps/formatted/chain';
 import { createWorkoutMessageAgent } from './steps/message/chain';
 import { createWorkoutGenerationRunnable } from './steps/generation/chain';
-import { WorkoutGenerationOutput } from '@/server/models/workout/schema/openAISchema';
 
 
 export interface BaseWorkoutChainInput {
@@ -17,7 +16,7 @@ export interface BaseWorkoutChainInput {
  * Contains all dynamic data needed by downstream agents
  */
 export interface WorkoutChainContext extends BaseWorkoutChainInput {
-  workout: WorkoutGenerationOutput;
+  description: string;
   fitnessProfile: string;
 }
 
@@ -43,7 +42,6 @@ export interface WorkoutChainResult {
   formatted: string;
   message: string;
   description: string;
-  reasoning: string;
 }
 
 /**
@@ -99,7 +97,7 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
         })
       ]);
 
-      const result: WorkoutGenerationOutput & {formatted: string, message: string} = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
+      const result: WorkoutChainContext & {formatted: string, message: string} = await sequence.invoke({...context, fitnessProfile, prompt: userMessage});
 
       console.log(`[${config.operationName}] Successfully completed with workout, reasoning, formatted text, and message`);
       // Flatten the result to match WorkoutChainResult type
@@ -107,7 +105,6 @@ export async function executeWorkoutChain<TContext extends BaseWorkoutChainInput
         formatted: result.formatted,
         message: result.message,
         description: result.description,
-        reasoning: result.reasoning
       };
     } catch (error) {
       console.error(`[${config.operationName}] Error on attempt ${attempt + 1}:`, error);

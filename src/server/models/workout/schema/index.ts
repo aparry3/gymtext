@@ -34,7 +34,6 @@ export {
 // OpenAI Schema Exports (use nullable/optional for flexibility)
 // ============================================================================
 export {
-  WorkoutGenerationOutputSchema,
   _WorkoutBlockItemSchema,
   _WorkoutWorkItemSchema,
   _WorkoutBlockSchema,
@@ -45,7 +44,6 @@ export {
   _EnhancedWorkoutInstanceSchema,
   _UpdatedWorkoutInstanceSchema,
   _WorkoutInstanceSchema,
-  type WorkoutGenerationOutput,
   type WorkoutBlockItem,
   type WorkoutBlock,
   type WorkoutModification,
