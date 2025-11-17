@@ -16,36 +16,43 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
 
 interface Mesocycle {
-  name: string
-  objective: string
-  focus: string[]
-  durationWeeks: number
+  id: string
+  mesocycleIndex: number
+  description: string | null
+  formatted: string | null
+  microcycles: string[]
   startWeek: number
-  endWeek: number
-  volumeTrend: 'increasing' | 'stable' | 'decreasing'
-  intensityTrend: 'increasing' | 'stable' | 'taper'
+  durationWeeks: number
+  // Legacy fields for backward compatibility
+  name?: string
+  objective?: string
+  focus?: string[]
+  volumeTrend?: 'increasing' | 'stable' | 'decreasing'
+  intensityTrend?: 'increasing' | 'stable' | 'taper'
   conditioningFocus?: string | null
   weeklyVolumeTargets?: Record<string, number> | null
   avgRIRRange?: [number, number] | null
   keyThemes?: string[] | null
-  longFormDescription: string
-  microcycles: string[]
+  longFormDescription?: string
 }
 
 interface Microcycle {
   id: string
   weekNumber: number
-  pattern: {
-    weekIndex: number
-    days: Array<{
-      day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
-      theme: string
-      load?: 'light' | 'moderate' | 'heavy'
-      notes?: string
-    }>
-  }
+  mondayOverview?: string | null
+  tuesdayOverview?: string | null
+  wednesdayOverview?: string | null
+  thursdayOverview?: string | null
+  fridayOverview?: string | null
+  saturdayOverview?: string | null
+  sundayOverview?: string | null
+  description?: string | null
+  isDeload: boolean
+  formatted?: string | null
+  message?: string | null
   startDate: Date
   endDate: Date
   isActive: boolean
@@ -166,7 +173,7 @@ export function MesocycleDetailView({ userId, mesocycleIndex, basePath }: Mesocy
                 </>
               )}
               <BreadcrumbItem>
-                <BreadcrumbPage>Mesocycle {mesocycleIndex}</BreadcrumbPage>
+                <BreadcrumbPage>Mesocycle {mesocycleIndex + 1}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -213,7 +220,8 @@ interface MesocycleHeaderProps {
 function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeaderProps) {
   const [expandedDescription, setExpandedDescription] = useState(false)
 
-  const getTrendIcon = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+  const getTrendIcon = (trend?: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+    if (!trend) return ''
     switch (trend) {
       case 'increasing': return '↑'
       case 'decreasing': return '↓'
@@ -222,7 +230,8 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
     }
   }
 
-  const getTrendColor = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+  const getTrendColor = (trend?: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
+    if (!trend) return ''
     switch (trend) {
       case 'increasing': return 'text-green-600'
       case 'decreasing': return 'text-red-600'
@@ -231,15 +240,40 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
     }
   }
 
+  // If formatted view is available, use it
+  if (mesocycle.formatted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-semibold">Mesocycle {index + 1}</h1>
+            <p className="text-muted-foreground">
+              {mesocycle.durationWeeks} weeks (Weeks {mesocycle.startWeek + 1}-{mesocycle.startWeek + mesocycle.durationWeeks})
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {isCurrent && (
+              <Badge variant="default">Current</Badge>
+            )}
+          </div>
+        </div>
+        <Card className="p-6">
+          <WorkoutMarkdownRenderer content={mesocycle.formatted} />
+        </Card>
+      </div>
+    )
+  }
+
+  // Legacy structured view
   return (
     <Card className="p-6">
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div>
-              <h1 className="text-2xl font-semibold">{mesocycle.name}</h1>
+              <h1 className="text-2xl font-semibold">{mesocycle.name || `Mesocycle ${index + 1}`}</h1>
               <p className="text-muted-foreground">
-                Mesocycle {index + 1} of {total} • {mesocycle.durationWeeks} weeks (Weeks {mesocycle.startWeek + 1}-{mesocycle.endWeek + 1})
+                Mesocycle {index + 1} of {total} • {mesocycle.durationWeeks} weeks (Weeks {mesocycle.startWeek + 1}-{mesocycle.startWeek + mesocycle.durationWeeks})
               </p>
               {mesocycle.objective && (
                 <p className="text-sm text-muted-foreground mt-2">{mesocycle.objective}</p>
@@ -254,38 +288,46 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="p-3 bg-muted/30 rounded-lg">
-            <div className="text-sm text-muted-foreground mb-1">Volume Trend</div>
-            <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.volumeTrend)}`}>
-                {getTrendIcon(mesocycle.volumeTrend)} {mesocycle.volumeTrend}
+        {(mesocycle.volumeTrend || mesocycle.intensityTrend || mesocycle.avgRIRRange) && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {mesocycle.volumeTrend && (
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Volume Trend</div>
+                <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.volumeTrend)}`}>
+                  {getTrendIcon(mesocycle.volumeTrend)} {mesocycle.volumeTrend}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Intensity Trend</div>
-              <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.intensityTrend)}`}>
-                {getTrendIcon(mesocycle.intensityTrend)} {mesocycle.intensityTrend}
+            {mesocycle.intensityTrend && (
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Intensity Trend</div>
+                <div className={`text-xl font-semibold flex items-center gap-1 ${getTrendColor(mesocycle.intensityTrend)}`}>
+                  {getTrendIcon(mesocycle.intensityTrend)} {mesocycle.intensityTrend}
+                </div>
               </div>
-            </div>
+            )}
 
-          {mesocycle.avgRIRRange && (
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Average RIR Range</div>
-              <div className="text-xl font-semibold">
-                {mesocycle.avgRIRRange[0]} - {mesocycle.avgRIRRange[1]}
+            {mesocycle.avgRIRRange && (
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Average RIR Range</div>
+                <div className="text-xl font-semibold">
+                  {mesocycle.avgRIRRange[0]} - {mesocycle.avgRIRRange[1]}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
-        <div className="flex flex-wrap gap-2">
-          {mesocycle.focus.map((focus, idx) => (
-            <Badge key={idx} variant="outline">
-              {focus}
-            </Badge>
-          ))}
-        </div>
+        {mesocycle.focus && mesocycle.focus.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {mesocycle.focus.map((focus, idx) => (
+              <Badge key={idx} variant="outline">
+                {focus}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {mesocycle.keyThemes && mesocycle.keyThemes.length > 0 && (
           <div>
@@ -361,24 +403,28 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
   }
 
   const getLoadSummary = (microcycle: Microcycle) => {
-    const loads = microcycle.pattern.days
-      .map(day => day.load)
-      .filter(load => load)
+    if (microcycle.isDeload) {
+      return 'Deload week'
+    }
 
-    const loadCounts = loads.reduce((acc, load) => {
-      if (load) acc[load] = (acc[load] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    // Count how many days have overviews
+    const daysWithWorkouts = [
+      microcycle.mondayOverview,
+      microcycle.tuesdayOverview,
+      microcycle.wednesdayOverview,
+      microcycle.thursdayOverview,
+      microcycle.fridayOverview,
+      microcycle.saturdayOverview,
+      microcycle.sundayOverview
+    ].filter(overview => overview && overview.trim()).length
 
-    return Object.entries(loadCounts)
-      .map(([load, count]) => `${count} ${load}`)
-      .join(', ')
+    return daysWithWorkouts > 0 ? `${daysWithWorkouts} training days` : 'No training days'
   }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: mesocycle.durationWeeks }).map((_, weekIndex) => {
-        const microcycle = microcycles.find(m => m.pattern.weekIndex === weekIndex)
+        const microcycle = microcycles.find(m => m.weekNumber === weekIndex)
         const status = getWeekStatus(weekIndex)
 
         const statusColors = {
@@ -408,7 +454,7 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
           >
             <div className="space-y-3">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">Week {weekIndex}</h4>
+                <h4 className="font-medium">Week {weekIndex + 1}</h4>
                 <Badge
                   variant={status === 'current' ? 'default' : 'outline'}
                   className="text-xs"

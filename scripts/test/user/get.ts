@@ -210,16 +210,22 @@ async function displayUser(options: GetUserOptions): Promise<void> {
         console.log(chalk.white('Start Date:'), new Date(microcycle.startDate).toLocaleDateString());
         console.log(chalk.white('End Date:'), new Date(microcycle.endDate).toLocaleDateString());
         
-        if (options.verbose && microcycle.pattern) {
-          console.log(chalk.white('Pattern:'));
-          const pattern = typeof microcycle.pattern === 'string'
-            ? JSON.parse(microcycle.pattern)
-            : microcycle.pattern as any;
-          if (pattern.days) {
-            pattern.days.forEach((day: any) => {
-              console.log(chalk.gray(`  ${day.day}: ${day.theme} (${day.load || 'moderate'})`));
-            });
-          }
+        if (options.verbose) {
+          console.log(chalk.white('Day Overviews:'));
+          const days = [
+            { name: 'Monday', overview: microcycle.mondayOverview },
+            { name: 'Tuesday', overview: microcycle.tuesdayOverview },
+            { name: 'Wednesday', overview: microcycle.wednesdayOverview },
+            { name: 'Thursday', overview: microcycle.thursdayOverview },
+            { name: 'Friday', overview: microcycle.fridayOverview },
+            { name: 'Saturday', overview: microcycle.saturdayOverview },
+            { name: 'Sunday', overview: microcycle.sundayOverview },
+          ];
+          days.forEach(day => {
+            if (day.overview) {
+              console.log(chalk.gray(`  ${day.name}: ${day.overview.substring(0, 60)}...`));
+            }
+          });
         }
       }
 

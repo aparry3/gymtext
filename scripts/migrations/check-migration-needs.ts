@@ -80,14 +80,10 @@ async function main() {
     }
   }
 
-  // Check microcycles
+  // Check microcycles - pattern field removed in schema simplification
   const microcycles = await db.selectFrom('microcycles').selectAll().execute();
   let microcyclesMigrationNeeded = 0;
-  for (const mc of microcycles) {
-    if (isOldMicrocycleFormat(mc.pattern as any)) {
-      microcyclesMigrationNeeded++;
-    }
-  }
+  // Pattern field no longer exists - microcycles now use day overview columns
 
   // Check workouts
   const workouts = await db.selectFrom('workoutInstances').selectAll().execute();

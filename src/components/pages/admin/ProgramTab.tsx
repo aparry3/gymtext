@@ -8,35 +8,29 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
 
 interface Mesocycle {
-  name: string
-  objective: string
-  focus: string[]
-  durationWeeks: number
-  startWeek: number
-  endWeek: number
-  volumeTrend: 'increasing' | 'stable' | 'decreasing'
-  intensityTrend: 'increasing' | 'stable' | 'taper'
-  conditioningFocus?: string | null
-  weeklyVolumeTargets?: Record<string, number> | null
-  avgRIRRange?: [number, number] | null
-  keyThemes?: string[] | null
-  longFormDescription: string
+  id: string
+  mesocycleIndex: number
+  description: string | null
+  formatted: string | null
   microcycles: string[]
+  startWeek: number
+  durationWeeks: number
 }
 
 interface FitnessPlan {
   id: string
   programType: 'endurance' | 'strength' | 'shred' | 'hybrid' | 'rehab' | 'other'
-  lengthWeeks: number
+  lengthWeeks: number | null
   mesocycles: Mesocycle[]
-  overview: string
-  planDescription?: string | null
-  reasoning?: string | null
-  notes?: string | null
-  goalStatement?: string | null
-  startDate?: Date
+  description: string | null
+  formatted: string | null
+  message: string | null
+  notes: string | null
+  goalStatement: string | null
+  startDate: Date
   currentMesocycleIndex: number
   currentMicrocycleWeek: number
 }
@@ -174,9 +168,6 @@ interface ProgramSummaryCardProps {
 }
 
 function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
-  const [expandedDescription, setExpandedDescription] = useState(false)
-  const [expandedReasoning, setExpandedReasoning] = useState(false)
-
   const programTypeLabels = {
     endurance: 'Endurance',
     strength: 'Strength',
@@ -186,18 +177,59 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
     other: 'Other'
   }
 
-  const currentMesocycle = fitnessPlan.mesocycles[fitnessPlan.currentMesocycleIndex]
-
   // Calculate progress percentage
-  const totalWeeks = fitnessPlan.lengthWeeks
+  const totalWeeks = fitnessPlan.lengthWeeks || 0
   let completedWeeks = 0
   for (let i = 0; i < fitnessPlan.currentMesocycleIndex; i++) {
     const meso = fitnessPlan.mesocycles[i]
     completedWeeks += meso.durationWeeks
   }
   completedWeeks += fitnessPlan.currentMicrocycleWeek
-  const progressPercentage = Math.round((completedWeeks / totalWeeks) * 100)
+  const progressPercentage = totalWeeks > 0 ? Math.round((completedWeeks / totalWeeks) * 100) : 0
 
+  // If formatted view is available, use it
+  if (fitnessPlan.formatted) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold mb-2">Program Overview</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="default" className="text-sm">
+                {programTypeLabels[fitnessPlan.programType]}
+              </Badge>
+              <Badge variant="outline">
+                {fitnessPlan.lengthWeeks} weeks
+              </Badge>
+              {fitnessPlan.startDate && (
+                <Badge variant="outline">
+                  Started {new Date(fitnessPlan.startDate).toLocaleDateString()}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">Current Progress</div>
+            <div className="font-medium">
+              Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek + 1}
+            </div>
+            <div className="mt-2">
+              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">{progressPercentage}% complete</div>
+            </div>
+          </div>
+        </div>
+        <WorkoutMarkdownRenderer content={fitnessPlan.formatted} />
+      </Card>
+    )
+  }
+
+  // Legacy view
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-4">
@@ -222,11 +254,6 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
           <div className="font-medium">
             Mesocycle {fitnessPlan.currentMesocycleIndex + 1} • Week {fitnessPlan.currentMicrocycleWeek + 1}
           </div>
-          {currentMesocycle && (
-            <div className="text-sm text-muted-foreground">
-              {currentMesocycle.name}
-            </div>
-          )}
           <div className="mt-2">
             <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
@@ -246,39 +273,9 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
         </div>
       )}
 
-      <p className="text-muted-foreground mb-4">{fitnessPlan.overview}</p>
-
-      {fitnessPlan.planDescription && (
-        <div className="border-t pt-4 mb-4">
-          <button
-            onClick={() => setExpandedDescription(!expandedDescription)}
-            className="flex items-center justify-between w-full text-left mb-2 hover:opacity-70"
-          >
-            <h4 className="font-medium">Plan Description</h4>
-            <span className="text-sm text-muted-foreground">
-              {expandedDescription ? '▼' : '▶'}
-            </span>
-          </button>
-          {expandedDescription && (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fitnessPlan.planDescription}</p>
-          )}
-        </div>
-      )}
-
-      {fitnessPlan.reasoning && (
-        <div className="border-t pt-4 mb-4">
-          <button
-            onClick={() => setExpandedReasoning(!expandedReasoning)}
-            className="flex items-center justify-between w-full text-left mb-2 hover:opacity-70"
-          >
-            <h4 className="font-medium">Programming Reasoning</h4>
-            <span className="text-sm text-muted-foreground">
-              {expandedReasoning ? '▼' : '▶'}
-            </span>
-          </button>
-          {expandedReasoning && (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{fitnessPlan.reasoning}</p>
-          )}
+      {fitnessPlan.description && (
+        <div className="mb-4">
+          <p className="text-muted-foreground whitespace-pre-wrap">{fitnessPlan.description}</p>
         </div>
       )}
 
@@ -310,29 +307,21 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId, basePath }: Mesocy
     router.push(path)
   }
 
-  const getTrendIcon = (trend: 'increasing' | 'stable' | 'decreasing' | 'taper') => {
-    switch (trend) {
-      case 'increasing': return '↑'
-      case 'decreasing': return '↓'
-      case 'taper': return '↘'
-      case 'stable': return '→'
-    }
-  }
-
-  return (
-    <Card
-      className={`p-4 transition-shadow ${
-        isCurrent ? 'border-2 border-primary shadow-lg bg-primary/5' : ''
-      }`}
-    >
-      <div className="cursor-pointer" onClick={handleClick}>
+  // If formatted view is available, show markdown preview
+  if (mesocycle.formatted) {
+    return (
+      <Card
+        className={`p-4 transition-shadow cursor-pointer ${
+          isCurrent ? 'border-2 border-primary shadow-lg bg-primary/5' : ''
+        }`}
+        onClick={handleClick}
+      >
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h4 className={`font-medium ${isCurrent ? 'text-primary' : ''}`}>{mesocycle.name}</h4>
-            <p className="text-sm text-muted-foreground">Mesocycle {index + 1}</p>
-            {mesocycle.objective && (
-              <p className="text-xs text-muted-foreground mt-1">{mesocycle.objective}</p>
-            )}
+            <h4 className={`font-medium ${isCurrent ? 'text-primary' : ''}`}>Mesocycle {index + 1}</h4>
+            <p className="text-sm text-muted-foreground">
+              Weeks {mesocycle.startWeek + 1}-{mesocycle.startWeek + mesocycle.durationWeeks}
+            </p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Badge variant="outline" className="text-xs">
@@ -345,63 +334,42 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId, basePath }: Mesocy
             )}
           </div>
         </div>
+        <div className="text-sm text-muted-foreground line-clamp-3">
+          <WorkoutMarkdownRenderer content={mesocycle.formatted} />
+        </div>
+      </Card>
+    )
+  }
 
-        <div className="space-y-2 mb-3">
-          <div className="flex gap-2 text-xs">
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="font-medium">Vol:</span> {getTrendIcon(mesocycle.volumeTrend)}
-            </span>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="font-medium">Int:</span> {getTrendIcon(mesocycle.intensityTrend)}
-            </span>
-            {mesocycle.avgRIRRange && (
-              <span className="text-muted-foreground">
-                <span className="font-medium">RIR:</span> {mesocycle.avgRIRRange[0]}-{mesocycle.avgRIRRange[1]}
-              </span>
+  // Fallback view when no formatted content available
+  return (
+    <Card
+      className={`p-4 transition-shadow ${
+        isCurrent ? 'border-2 border-primary shadow-lg bg-primary/5' : ''
+      }`}
+    >
+      <div className="cursor-pointer" onClick={handleClick}>
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h4 className={`font-medium ${isCurrent ? 'text-primary' : ''}`}>Mesocycle {index + 1}</h4>
+            <p className="text-sm text-muted-foreground">
+              Weeks {mesocycle.startWeek + 1}-{mesocycle.startWeek + mesocycle.durationWeeks}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant="outline" className="text-xs">
+              {mesocycle.durationWeeks} weeks
+            </Badge>
+            {isCurrent && (
+              <Badge variant="default" className="text-xs">
+                Current
+              </Badge>
             )}
           </div>
-
-          {mesocycle.weeklyVolumeTargets && Object.keys(mesocycle.weeklyVolumeTargets).length > 0 && (
-            <div className="text-xs space-y-1">
-              <div className="font-medium text-muted-foreground">Volume Targets:</div>
-              <div className="flex flex-wrap gap-1">
-                {Object.entries(mesocycle.weeklyVolumeTargets).slice(0, 3).map(([muscle, sets]) => (
-                  <Badge key={muscle} variant="outline" className="text-xs">
-                    {muscle}: {sets}
-                  </Badge>
-                ))}
-                {Object.keys(mesocycle.weeklyVolumeTargets).length > 3 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{Object.keys(mesocycle.weeklyVolumeTargets).length - 3} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
         </div>
-
-        <div className="flex flex-wrap gap-1">
-          {mesocycle.focus.map((focus, focusIndex) => (
-            <Badge key={focusIndex} variant="outline" className="text-xs">
-              {focus}
-            </Badge>
-          ))}
-        </div>
-
-        {mesocycle.keyThemes && mesocycle.keyThemes.length > 0 && (
-          <div className="mt-2">
-            <div className="flex flex-wrap gap-1">
-              {mesocycle.keyThemes.slice(0, 2).map((theme, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
-                  {theme}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {mesocycle.longFormDescription && (
+      {mesocycle.description && (
         <div className="mt-3 pt-3 border-t">
           <button
             onClick={(e) => {
@@ -414,7 +382,7 @@ function MesocycleCard({ mesocycle, index, isCurrent, userId, basePath }: Mesocy
             <span className="text-xs text-muted-foreground">{expanded ? '▼' : '▶'}</span>
           </button>
           {expanded && (
-            <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{mesocycle.longFormDescription}</p>
+            <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{mesocycle.description}</p>
           )}
         </div>
       )}
@@ -548,7 +516,7 @@ function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onW
                     }}
                   >
                     {workout.mesocycleIndex !== undefined && workout.microcycleWeek !== undefined
-                      ? `M${workout.mesocycleIndex} W${workout.microcycleWeek}`
+                      ? `M${workout.mesocycleIndex + 1} W${workout.microcycleWeek + 1}`
                       : '-'
                     }
                   </td>

@@ -1,3 +1,4 @@
 // Update operation
 export { updateMicrocyclePattern } from './update/chain';
-export { updateMicrocyclePatternPrompt, type MicrocycleUpdateParams, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './update/prompt';
+export { updateMicrocyclePrompt, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './update/prompt';
+export type { MicrocycleUpdateParams, MicrocycleUpdateContext, UpdatedMicrocycleDayOverviews } from './update/types';

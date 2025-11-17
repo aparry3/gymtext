@@ -1,24 +1,19 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { UserService } from '../user/userService';
 import { FitnessPlanService } from './fitnessPlanService';
-import { ProgressService } from './progressService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
-import { UserWithProfile, FitnessPlan, Mesocycle } from '@/server/models';
-import { Microcycle, MicrocyclePattern } from '@/server/models/microcycle';
+import { Microcycle } from '@/server/models/microcycle';
+import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
+import type { ProgressInfo } from './progressService';
 
 export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
   private fitnessPlanService: FitnessPlanService;
-  private progressService: ProgressService;
-  private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
     this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.progressService = ProgressService.getInstance();
-    this.userService = UserService.getInstance();
   }
 
   public static getInstance(): MicrocycleService {
@@ -92,111 +87,116 @@ export class MicrocycleService {
   }
 
   /**
-   * Update a microcycle's pattern
+   * Get microcycle for a specific date
+   * Used for date-based progress tracking - finds the microcycle that contains the target date
    */
-  public async updateMicrocyclePattern(
+  public async getMicrocycleByDate(
+    userId: string,
+    fitnessPlanId: string,
+    targetDate: Date
+  ): Promise<Microcycle | null> {
+    return await this.microcycleRepo.getMicrocycleByDate(userId, fitnessPlanId, targetDate);
+  }
+
+  /**
+   * Update a microcycle's day overviews
+   */
+  public async updateMicrocycleDayOverviews(
     microcycleId: string,
-    pattern: MicrocyclePattern
+    dayOverviews: Partial<{
+      mondayOverview: string;
+      tuesdayOverview: string;
+      wednesdayOverview: string;
+      thursdayOverview: string;
+      fridayOverview: string;
+      saturdayOverview: string;
+      sundayOverview: string;
+    }>
   ): Promise<void> {
-    await this.microcycleRepo.updateMicrocycle(microcycleId, { pattern });
+    await this.microcycleRepo.updateMicrocycle(microcycleId, dayOverviews);
   }
 
 
   /**
-   * Get or create microcycle for a specific date (date-based approach)
-   * This is the main entry point for ensuring a user has a microcycle for any given week
+   * Create a new microcycle from progress information
+   * This method takes pre-calculated progress and creates the microcycle in the database
    */
-  public async getOrCreateMicrocycleForDate(
+  public async createMicrocycleFromProgress(
     userId: string,
-    plan: FitnessPlan,
-    targetDate: Date,
-    timezone: string = 'America/New_York'
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    // Calculate progress for the target date
-    const progress = this.progressService.getProgressForDate(plan, targetDate, timezone);
-    if (!progress) {
-      throw new Error(`Could not calculate progress for date ${targetDate}`);
+    fitnessPlanId: string,
+    progress: ProgressInfo
+  ): Promise<Microcycle> {
+    // Microcycle overview must exist to create a microcycle
+    if (!progress.microcycleOverview) {
+      throw new Error(`No microcycle overview found for mesocycle ${progress.mesocycleIndex}, microcycle ${progress.microcycleIndex}`);
     }
 
-    // Check if microcycle exists for this date
-    let microcycle = await this.microcycleRepo.getMicrocycleByDate(
-      userId,
-      plan.id!,
-      targetDate
+    // Generate new day overviews, description, formatted markdown, isDeload flag, and message for the week using AI agent
+    const { dayOverviews, description, formatted, isDeload, message } = await this.generateMicrocyclePattern(
+      progress.microcycleOverview,
+      progress.absoluteWeek
     );
 
-    if (microcycle) {
-      return { microcycle, wasCreated: false };
-    }
-
-    // Generate new pattern, description, reasoning, and message for the week using AI agent
-    const { pattern, description, reasoning, message } = await this.generateMicrocyclePattern(
-      progress.mesocycle,
-      progress.microcycleWeek,
-      plan.programType,
-      plan.notes
-    );
-
-    // Create new microcycle with pre-generated long-form content and message
-    microcycle = await this.microcycleRepo.createMicrocycle({
+    // Create new microcycle with pre-generated long-form content, formatted markdown, and message
+    const microcycle = await this.microcycleRepo.createMicrocycle({
       userId,
-      fitnessPlanId: plan.id!,
+      fitnessPlanId,
       mesocycleIndex: progress.mesocycleIndex,
-      weekNumber: progress.microcycleWeek,
-      pattern,
+      weekNumber: progress.microcycleIndex,
+      mondayOverview: dayOverviews.mondayOverview,
+      tuesdayOverview: dayOverviews.tuesdayOverview,
+      wednesdayOverview: dayOverviews.wednesdayOverview,
+      thursdayOverview: dayOverviews.thursdayOverview,
+      fridayOverview: dayOverviews.fridayOverview,
+      saturdayOverview: dayOverviews.saturdayOverview,
+      sundayOverview: dayOverviews.sundayOverview,
       description,
-      reasoning,
+      isDeload,
+      formatted,
       message,
       startDate: progress.weekStartDate,
       endDate: progress.weekEndDate,
       isActive: false, // No longer using isActive flag - we query by dates instead
     });
 
-    console.log(`Created new microcycle for user ${userId}, week ${progress.microcycleWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
-    return { microcycle, wasCreated: true };
+    console.log(`Created new microcycle for user ${userId}, mesocycle ${progress.mesocycleIndex}, week ${progress.microcycleIndex} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
+    return microcycle;
   }
 
   /**
-   * Get or create the active microcycle for a user (current week)
-   * This is a convenience wrapper around getOrCreateMicrocycleForDate
-   */
-  public async getOrCreateActiveMicrocycle(
-    user: UserWithProfile,
-    plan: FitnessPlan
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
-    const currentDate = now(user.timezone).toJSDate();
-    return this.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
-  }
-
-  /**
-   * Generate a microcycle pattern, description, reasoning, and message using AI agent
+   * Generate a microcycle day overviews, description, formatted markdown, isDeload flag, and message using AI agent
+   * Uses the specific microcycle overview from the mesocycle's microcycles array
    */
   private async generateMicrocyclePattern(
-    mesocycle: Mesocycle,
-    weekIndex: number, // 0-based index
-    programType: string,
-    notes?: string | null
+    microcycleOverview: string,
+    weekNumber: number
   ): Promise<{
-    pattern: import('@/server/models/microcycle/schema').MicrocyclePattern;
+    dayOverviews: {
+      mondayOverview: string;
+      tuesdayOverview: string;
+      wednesdayOverview: string;
+      thursdayOverview: string;
+      fridayOverview: string;
+      saturdayOverview: string;
+      sundayOverview: string;
+    };
     description: string;
-    reasoning: string;
+    isDeload: boolean;
+    formatted: string;
     message: string
   }> {
     try {
-      // Use AI agent to generate pattern, long-form description/reasoning, and message (weekIndex is 0-based)
-      const { createMicrocyclePatternAgent } = await import('@/server/agents/training/microcycles');
+      // Use AI agent to generate day overviews, long-form description, formatted markdown, and message
       const agent = createMicrocyclePatternAgent();
       const result = await agent.invoke({
-        mesocycle,
-        weekIndex,
-        programType,
-        notes
+        microcycleOverview,
+        weekNumber
       });
 
-      console.log(`Generated AI pattern, description, reasoning, and message for week index ${weekIndex} (week ${weekIndex + 1}) of ${mesocycle.name}`);
+      console.log(`Generated AI day overviews, description, formatted markdown, isDeload=${result.isDeload}, and message for week ${weekNumber}`);
       return result;
     } catch (error) {
-      console.error('Failed to generate pattern with AI agent, using fallback:', error);
+      console.error('Failed to generate day overviews with AI agent:', error);
       throw error;
     }
   }

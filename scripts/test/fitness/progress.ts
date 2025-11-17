@@ -200,7 +200,7 @@ async function manageProgress(options: ProgressOptions): Promise<void> {
     const { ProgressService } = await import('@/server/services/training/progressService');
     const fitnessPlan = FitnessPlanModel.fromDB(plan as any);
     const progressService = ProgressService.getInstance();
-    const progress = progressService.getCurrentProgress(fitnessPlan, user.timezone || 'America/New_York');
+    const progress = await progressService.getCurrentProgress(fitnessPlan, user.timezone || 'America/New_York');
     if (!progress) {
       warning('Could not calculate progress for current date');
       process.exit(1);
@@ -244,22 +244,22 @@ async function manageProgress(options: ProgressOptions): Promise<void> {
         : plan.mesocycles || [];
       
       const currentMesocycle = mesocycles[progress.mesocycleIndex];
-      const nextWeek = progress.microcycleWeek + 1;
-      
+      const nextWeek = progress.microcycleIndex + 1;
+
       if (nextWeek > (currentMesocycle?.weeks || 4)) {
         // Move to next mesocycle
         if (progress.mesocycleIndex >= mesocycles.length - 1) {
           warning('Already at the end of the fitness plan');
           return;
         }
-        
+
         console.log(chalk.cyan('Advancing to next mesocycle:'));
-        console.log(chalk.white('From:'), `${currentMesocycle.name} Week ${progress.microcycleWeek}`);
+        console.log(chalk.white('From:'), `${currentMesocycle.name} Week ${progress.microcycleIndex}`);
         console.log(chalk.white('To:'), `${mesocycles[progress.mesocycleIndex + 1].name} Week 1`);
       } else {
         // Advance week
         console.log(chalk.cyan('Advancing to next week:'));
-        console.log(chalk.white('From:'), `Week ${progress.microcycleWeek}`);
+        console.log(chalk.white('From:'), `Week ${progress.microcycleIndex}`);
         console.log(chalk.white('To:'), `Week ${nextWeek}`);
       }
       

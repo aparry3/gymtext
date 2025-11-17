@@ -16,6 +16,7 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import { WorkoutMarkdownRenderer } from './WorkoutMarkdownRenderer'
 
 interface DayPattern {
   day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
@@ -27,10 +28,14 @@ interface DayPattern {
 interface Microcycle {
   id: string
   weekNumber: number
-  pattern: {
+  pattern?: {
     weekIndex: number
     days: DayPattern[]
   }
+  formatted?: string | null
+  description?: string | null
+  isDeload?: boolean
+  message?: string | null
   startDate: Date
   endDate: Date
   isActive: boolean
@@ -195,12 +200,12 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
               )}
               <BreadcrumbItem>
                 <BreadcrumbLink href={basePath === '/me' ? `/me/program/mesocycles/${mesocycleIndex}` : `${basePath}/${userId}/program/mesocycles/${mesocycleIndex}`}>
-                  Mesocycle {mesocycleIndex}
+                  Mesocycle {mesocycleIndex + 1}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Week {weekNumber}</BreadcrumbPage>
+                <BreadcrumbPage>Week {weekNumber + 1}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -208,35 +213,44 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
           {/* Microcycle Header */}
           <MicrocycleHeader microcycle={microcycle} />
 
-          {/* Microcycle Description */}
-          {microcycleDescription && (
+          {/* Formatted Microcycle Overview (new format) */}
+          {microcycle.formatted && (
+            <Card className="p-6">
+              <WorkoutMarkdownRenderer content={microcycle.formatted} />
+            </Card>
+          )}
+
+          {/* Legacy: Microcycle Description (old format) */}
+          {!microcycle.formatted && microcycleDescription && (
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-3">Week Overview</h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{microcycleDescription}</p>
             </Card>
           )}
 
-          {/* Day Cards */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Training Schedule</h3>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {weekDays.map((dayName) => {
-                const dayPattern = microcycle.pattern.days.find(d => d.day === dayName)
-                const dayWorkouts = getWorkoutsForDay(workouts, microcycle, dayName)
-                
-                return (
-                  <DayCard
-                    key={dayName}
-                    dayName={dayName}
-                    dayPattern={dayPattern}
-                    workouts={dayWorkouts}
-                    userId={userId}
-                    basePath={basePath}
-                  />
-                )
-              })}
+          {/* Legacy: Day Cards (old format - only shown if no formatted content) */}
+          {!microcycle.formatted && microcycle.pattern && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Training Schedule</h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {weekDays.map((dayName) => {
+                  const dayPattern = microcycle.pattern!.days.find(d => d.day === dayName)
+                  const dayWorkouts = getWorkoutsForDay(workouts, microcycle, dayName)
+
+                  return (
+                    <DayCard
+                      key={dayName}
+                      dayName={dayName}
+                      dayPattern={dayPattern}
+                      workouts={dayWorkouts}
+                      userId={userId}
+                      basePath={basePath}
+                    />
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -251,12 +265,15 @@ function MicrocycleHeader({ microcycle }: { microcycle: Microcycle }) {
     <Card className="p-6">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">Week {microcycle.pattern.weekIndex}</h1>
+          <h1 className="text-2xl font-semibold">Week {(microcycle.pattern?.weekIndex ?? microcycle.weekNumber) + 1}</h1>
           <p className="text-muted-foreground">
             {startDate} - {endDate}
           </p>
         </div>
         <div className="flex gap-2">
+          {microcycle.isDeload && (
+            <Badge variant="secondary">Deload</Badge>
+          )}
           {microcycle.isActive && (
             <Badge variant="default">Active</Badge>
           )}

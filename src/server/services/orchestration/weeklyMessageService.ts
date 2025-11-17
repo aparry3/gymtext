@@ -137,7 +137,7 @@ export class WeeklyMessageService {
       console.log(`[WeeklyMessageService] Getting next week's plan for ${nextSundayDate.toISOString()} for user ${user.id}`);
 
       // Step 3: Get progress for next week using date-based calculation
-      const nextWeekProgress = this.progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
+      const nextWeekProgress = await this.progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
       if (!nextWeekProgress) {
         console.error(`[WeeklyMessageService] Could not calculate progress for next week for user ${user.id}`);
         return {
@@ -148,7 +148,7 @@ export class WeeklyMessageService {
       }
 
       // Step 4: Get or create next week's microcycle
-      const { microcycle: nextWeekMicrocycle } = await this.microcycleService.getOrCreateMicrocycleForDate(
+      const { microcycle: nextWeekMicrocycle } = await this.progressService.getOrCreateMicrocycleForDate(
         user.id,
         plan,
         nextSundayDate,
@@ -168,7 +168,7 @@ export class WeeklyMessageService {
       const isNewMesocycle = nextWeekMicrocycle.weekNumber === 0;
 
       const mesocycleName = isNewMesocycle
-        ? plan.mesocycles[nextWeekMicrocycle.mesocycleIndex]?.name
+        ? `Mesocycle ${nextWeekMicrocycle.mesocycleIndex + 1}`
         : null;
 
       if (isNewMesocycle) {

@@ -1,11 +1,21 @@
+/**
+ * DEPRECATED: This migration script is no longer compatible with the simplified fitness plan schema.
+ * The new schema stores mesocycles as simple string arrays instead of complex JSON objects.
+ * This file is kept for historical reference only.
+ */
+
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from '@/server/models';
 import { initializeModel } from '@/server/agents/base';
-import { _MesocycleSchema, _FitnessPlanSchema } from '@/server/models/fitnessPlan/schema';
+// import { _MesocycleSchema, _FitnessPlanSchema } from '@/server/models/fitnessPlan/schema';
 import { _StructuredMicrocycleSchema } from '@/server/models/microcycle/schema';
 import { _EnhancedWorkoutInstanceSchema } from '@/server/models/workout/schema';
 import { writeFileSync } from 'fs';
+
+// Placeholder schemas for deprecated script
+const _MesocycleSchema: any = null;
+const _FitnessPlanSchema: any = null;
 
 /**
  * Data Migration Script: Legacy to New Schema Format
@@ -303,48 +313,13 @@ async function migrateFitnessPlans() {
 
 async function migrateMicrocycles() {
   console.log('\nMigrating Microcycles...');
+  console.log('NOTE: Microcycle pattern field has been removed in schema simplification.');
+  console.log('Microcycles now use individual day overview columns instead.\n');
 
-  const microcycles = await db
-    .selectFrom('microcycles')
-    .selectAll()
-    .execute();
+  // Pattern field no longer exists - microcycles now use day overview columns
+  // This migration is no longer applicable
 
-  const total = microcycles.length;
-  console.log(`Found ${total} microcycle(s) to check\n`);
-
-  let transformedCount = 0;
-  let skippedCount = 0;
-
-  for (let i = 0; i < microcycles.length; i++) {
-    const microcycle = microcycles[i];
-    const microcycleId = microcycle.id.substring(0, 8);
-    const pattern = microcycle.pattern as any;
-
-    const needsMigration = isForce || isOldMicrocycleFormat(pattern);
-
-    if (!needsMigration) {
-      console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: [NEW FORMAT] → Skipped`);
-      skippedCount++;
-      continue;
-    }
-
-    console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: [OLD FORMAT] → Transforming...`);
-
-    const transformedPattern = await transformMicrocycle(pattern, i + 1, total);
-
-    if (!isDryRun) {
-      await db
-        .updateTable('microcycles')
-        .set({ pattern: JSON.stringify(transformedPattern) as any })
-        .where('id', '=', microcycle.id)
-        .execute();
-    }
-
-    console.log(`  [${i + 1}/${total}] Microcycle ${microcycleId}: ✓`);
-    transformedCount++;
-  }
-
-  return { transformedCount, skippedCount };
+  return { transformedCount: 0, skippedCount: 0 };
 }
 
 async function migrateWorkoutInstances() {

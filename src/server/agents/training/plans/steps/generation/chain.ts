@@ -1,22 +1,11 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { z } from 'zod';
-import type { LongFormPlanConfig, LongFormPlanInput, LongFormPlanOutput } from './types';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext } from './types';
 
-// Schema for long-form plan description and reasoning
+// Schema for long-form plan description
 const LongFormPlanSchema = z.object({
-  description: z.string().describe("Long-form description of the fitness plan"),
-  reasoning: z.string().describe("Detailed explanation of all decisions made")
+  description: z.string().describe("Comprehensive fitness plan description with mesocycle delimiters")
 });
-
-/**
- * Context that flows through the fitness plan chain
- */
-export interface FitnessPlanChainContext {
-  user: UserWithProfile;
-  fitnessProfile: string;
-  longFormPlan: LongFormPlanOutput;
-}
 
 /**
  * Long-Form Fitness Plan Agent Factory

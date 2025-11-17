@@ -3,6 +3,7 @@ export { UserModel } from './userModel';
 export { FitnessPlanModel } from './fitnessPlan';
 export { MessageModel } from './messageModel';
 export { WorkoutInstanceModel } from './workout';
+export { MesocycleModel } from './mesocycle';
 
 // Type exports from models
 export type {
@@ -26,6 +27,14 @@ export type {
 
 // Microcycle pattern types (not stored in DB)
 export type { MicrocyclePattern } from './microcycle';
+
+// Mesocycle types (stored in DB)
+export type {
+  Mesocycle as MesocycleType,
+  NewMesocycle,
+  MesocycleUpdate,
+  MesocycleDB
+} from './mesocycle';
 
 // Re-export database types from _types
 export * from './_types';

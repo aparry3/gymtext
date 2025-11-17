@@ -290,14 +290,13 @@ export class MessageService {
     // 1. Fetch fitness plan
     const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
     const planContext = fitnessPlan ? {
-      overview: fitnessPlan.overview ?? null,
-      planDescription: fitnessPlan.planDescription ?? null,
-      reasoning: fitnessPlan.reasoning ?? null,
+      description: fitnessPlan.description ?? null,
+      goalStatement: fitnessPlan.goalStatement ?? null,
+      notes: fitnessPlan.notes ?? null,
     } : undefined;
 
     // 2. Fetch current microcycle
     const currentMicrocycle = await this.microcycleService.getActiveMicrocycle(user.id);
-    const microcycleContext = currentMicrocycle?.pattern;
 
     // 3. Fetch today's workout
     const nowInUserTz = now(user.timezone);
@@ -350,7 +349,7 @@ export class MessageService {
       message: content,
       previousMessages,
       currentWorkout: workoutContext,
-      currentMicrocycle: microcycleContext,
+      currentMicrocycle: currentMicrocycle || undefined,
       fitnessPlan: planContext
     });
 
