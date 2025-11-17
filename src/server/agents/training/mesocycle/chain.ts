@@ -3,7 +3,6 @@ import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables
 import {
   MESOCYCLE_SYSTEM_PROMPT,
   createLongFormMesocycleRunnable,
-  createMicrocycleExtractor,
   createFormattedMesocycleAgent,
 } from './steps';
 import { FormattedMesocycleSchema } from '@/server/models/mesocycle/schema';
@@ -15,8 +14,8 @@ export type { FitnessProfileContextService, MesocycleAgentDeps, MesocycleOvervie
  * Creates a mesocycle agent with injected dependencies
  *
  * Uses a composable chain for generating mesocycle breakdowns:
- * 1. Generate long-form mesocycle description with microcycle delimiters
- * 2. Extract microcycle overviews from description
+ * 1. Generate structured mesocycle with overview and microcycles array
+ * 2. Generate formatted markdown for frontend display
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
@@ -33,27 +32,21 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
     try {
 
-      // Step 1: Create long-form mesocycle runnable
+      // Step 1: Create long-form mesocycle runnable (with structured output)
       const longFormRunnable = createLongFormMesocycleRunnable({
         systemPrompt: MESOCYCLE_SYSTEM_PROMPT
       });
 
-      // Step 2: Create microcycle extractor
-      const microcycleExtractor = createMicrocycleExtractor({
-        operationName: 'extract microcycles'
-      });
-
-      // Step 3: Create formatting agent
+      // Step 2: Create formatting agent
       const formattedAgent = createFormattedMesocycleAgent({
         schema: FormattedMesocycleSchema,
         operationName: 'format mesocycle',
       });
 
-      // Compose the chain: long-form → microcycle extraction + formatting (parallel)
+      // Compose the chain: structured generation → formatting
       const sequence = RunnableSequence.from([
         longFormRunnable,
         RunnablePassthrough.assign({
-          microcycles: microcycleExtractor,
           formatted: formattedAgent,
         })
       ]);
@@ -67,13 +60,13 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: MesocycleOverview = {
-        description: result.longFormMesocycle,
-        microcycles: result.microcycles,
+        description: result.longFormMesocycle.overview,
+        microcycles: result.longFormMesocycle.microcycles,
         formatted: result.formatted.formatted,
-        durationWeeks: result.microcycles.length,
+        durationWeeks: result.longFormMesocycle.microcycles.length,
       };
 
-      console.log(`[Mesocycle] Generated mesocycle with ${result.microcycles.length} microcycles for user ${user.id}`);
+      console.log(`[Mesocycle] Generated mesocycle with ${result.longFormMesocycle.microcycles.length} microcycles for user ${user.id}`);
 
       return finalResult;
     } catch (error) {

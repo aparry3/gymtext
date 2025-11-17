@@ -4,16 +4,15 @@ export {
   fitnessPlanUserPrompt,
 } from './generation/prompt';
 export { createLongFormPlanRunnable } from './generation/chain';
+export {
+  LongFormPlanOutputSchema,
+} from './generation/types';
 export type {
   LongFormPlanConfig,
   LongFormPlanInput,
   LongFormPlanOutput,
   FitnessPlanChainContext,
 } from './generation/types';
-
-// Mesocycle extraction step
-export { createMesocycleExtractor } from './mesocycles/chain';
-export type { MesocycleExtractorConfig } from './mesocycles/types';
 
 // Message step
 export {

@@ -33,9 +33,5 @@ export type {
 } from './steps';
 
 export type {
-  MicrocycleExtractorConfig,
-} from './steps';
-
-export type {
   FormattedMesocycleConfig,
 } from './steps';

@@ -9,24 +9,6 @@ Your output MUST contain enough structure for a downstream agent to build daily 
 
 ---
 
-# ⚠️ CRITICAL MICROCYCLE DELIMITER RULE
-
-Every microcycle MUST begin with the **exact delimiter**:
-
-\`\`\`
---- MICROCYCLE N: Week N – [Theme] ---
-\`\`\`
-
-Rules:
-1. Exactly **three** dashes before and after  
-2. Uppercase **MICROCYCLE**  
-3. N = sequential week number (1, 2, 3…)  
-4. Must be on its **own line**  
-5. No extra formatting, emojis, or text  
-6. ANY deviation → parsing failure
-
----
-
 # 📌 SCOPE
 
 You will receive:
@@ -47,12 +29,11 @@ You must NOT:
 
 ---
 
-# 🧩 REQUIRED MESOCYCLE OVERVIEW SECTION
+# 🧩 REQUIRED OUTPUT STRUCTURE
 
-Before listing microcycles, output:
+Your output will be structured as JSON with two fields:
 
-\`\`\`
-[MESOCYCLE OVERVIEW]
+**overview** - A comprehensive mesocycle overview including:
 - Mesocycle name and duration (X weeks)
 - Primary objective
 - Focus areas
@@ -60,23 +41,12 @@ Before listing microcycles, output:
 - Intensity trend across weeks
 - Training split & weekly frequency
 - Conditioning strategy
-\`\`\`
 
-This section MUST appear once before the first microcycle.
-
----
-
-# 🧩 REQUIRED MICROCYCLE TEMPLATE (MANDATORY)
-
-Each microcycle MUST follow **this exact structure**:
-
-\`\`\`
---- MICROCYCLE N: Week N – [Theme] ---
-Volume: [Baseline/Moderate/High/Peak/Deload]
-Intensity: [Steady/Rising/Peak/Taper]
-Split: [Split Name]
-
-[Details]
+**microcycles** - An array of weekly microcycle strings, each containing:
+- Week number and theme (e.g., "Week 1 – Foundation")
+- Volume: [Baseline/Moderate/High/Peak/Deload]
+- Intensity: [Steady/Rising/Peak/Taper]
+- Split: [Split Name]
 - Weekly theme & objectives
 - Session themes for each training day (e.g., "Day 1: Upper Strength")
 - Weekly volume allocation by region or movement pattern
@@ -85,67 +55,11 @@ Split: [Split Name]
 - Rest day placement
 - Warm-up or movement-quality focus
 - Deload: true/false
-\`\`\`
 
-You MUST NOT rename, add, remove, or reorder fields.
+Each microcycle string should be well-formatted and structured with clear field labels.
+You MUST NOT rename, add, remove, or reorder required fields within microcycles.
 
 ---
-
-# 🧩 STRUCTURAL EXAMPLE (DO NOT COPY CONTENT)
-
-This example exists ONLY to demonstrate formatting.  
-Do NOT copy themes, splits, or values.  
-Do NOT replicate the content — only the structure.
-
-\`\`\`
---- MICROCYCLE 1: Week 1 – [Theme] ---
-Volume: Baseline
-Intensity: Steady
-Split: [Split Name]
-
-[Details]
-- Weekly theme & objectives
-- Session themes (e.g., "Day 1: [Theme]", "Day 2: [Theme]")
-- Volume distribution by region
-- RIR/RPE targets
-- Conditioning plan
-- Rest day placement
-- Warm-up focus
-- Deload: false
-
---- MICROCYCLE 2: Week 2 – [Theme] ---
-Volume: Moderate
-Intensity: Rising
-Split: [Split Name]
-
-[Details]
-- Weekly theme & objectives
-- Session themes
-- Volume progression from Week 1
-- RIR progression
-- Conditioning plan
-- Rest distribution
-- Key coaching notes
-- Deload: false
-
---- MICROCYCLE 3: Week 3 – [Theme] ---
-[Same structural fields; progressively higher stress]
-
---- MICROCYCLE X: Week X – [Deload] ---
-Volume: Deload
-Intensity: Taper
-Split: [Split Name]
-
-[Details]
-- Deload strategy
-- Reduced accessory work
-- Lighter conditioning
-- Movement quality emphasis
-- Deload: true
-\`\`\`
-
-This example is **structural only**.  
-Do NOT reuse the placeholder values.
 
 ---
 
@@ -183,14 +97,14 @@ Do NOT reuse the placeholder values.
 
 Output is INVALID if:
 
-- Microcycle delimiter is incorrect  
-- Microcycles are not sequential  
-- Number of microcycles does not match duration  
-- Required sections are missing  
-- Fields are renamed or reordered  
-- Exercises are generated  
-- Day-level details are included  
-- Duplicate templates or commentary appear  
+- Overview is missing or incomplete
+- Microcycles array is empty
+- Number of microcycles does not match mesocycle duration
+- Required microcycle fields are missing
+- Fields are renamed or reordered
+- Exercises are generated
+- Day-level workout details are included
+- Duplicate templates or commentary appear
 
 If invalid → regenerate before submitting.
 `;
@@ -212,8 +126,8 @@ ${fitnessProfile}
 </Fitness Profile>
 
 Follow the system prompt EXACTLY:
-- Use the required microcycle delimiters
-- Follow the required microcycle template
+- Output JSON with overview and microcycles fields
+- Follow the required microcycle field structure
 - Include all required structural fields
 - Do NOT include exercises or day-level programming
 `;
