@@ -22,6 +22,7 @@ export type MesocycleGenerationOutput = z.infer<typeof MesocycleGenerationOutput
 export interface MesocycleAgentConfig {
   systemPrompt: string;
   agentConfig?: AgentConfig;
+  maxRetries?: number;
 }
 
 export interface MesocycleGenerationInput {

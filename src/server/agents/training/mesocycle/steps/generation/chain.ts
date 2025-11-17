@@ -2,6 +2,7 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { MesocycleAgentConfig, MesocycleGenerationInput, MesocycleChainContext, MesocycleGenerationOutput } from './types';
 import { MesocycleGenerationOutputSchema } from './types';
 import { mesocycleUserPrompt } from './prompt';
+import { validateMesocycleOutput } from './validation';
 
 /**
  * Long-Form Mesocycle Agent Factory
@@ -12,11 +13,14 @@ import { mesocycleUserPrompt } from './prompt';
  * Used as the first step in the mesocycle generation chain to produce structured output
  * that can be used directly without string parsing.
  *
+ * Includes validation and retry logic to ensure microcycle count consistency.
+ *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured mesocycle data
  */
 export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) => {
   const model = initializeModel(MesocycleGenerationOutputSchema, config.agentConfig);
+  const maxRetries = config.maxRetries ?? 3;
 
   return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;
@@ -25,20 +29,38 @@ export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) 
       input.user,
       input.fitnessProfile
     );
+    let lastError: string | undefined;
 
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const mesocycle = await model.invoke([
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: userPrompt }
+      ]) as MesocycleGenerationOutput;
 
-    const mesocycle = await model.invoke([
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: userPrompt }
-    ]) as MesocycleGenerationOutput;
+      // Validate the output
+      const validationResult = validateMesocycleOutput(mesocycle);
 
-    console.log(`[MesocycleGenerationRunnable] Generated mesocycle with ${mesocycle.microcycles.length} microcycles`);
+      if (validationResult.isValid) {
+        console.log(`[MesocycleGenerationRunnable] Generated valid mesocycle with ${mesocycle.microcycles.length} microcycles`);
+        return {
+          mesocycle,
+          mesocycleOverview: input.mesocycleOverview,
+          user: input.user,
+          fitnessProfile: input.fitnessProfile
+        };
+      }
 
-    return {
-      mesocycle,
-      mesocycleOverview: input.mesocycleOverview,
-      user: input.user,
-      fitnessProfile: input.fitnessProfile
-    };
+      // Validation failed
+      lastError = validationResult.error;
+      console.warn(`[MesocycleGenerationRunnable] Attempt ${attempt}/${maxRetries} failed validation: ${validationResult.error}`);
+
+      // Continue to next attempt if retries remain
+      if (attempt < maxRetries) {
+        console.log(`[MesocycleGenerationRunnable] Retrying generation...`);
+      }
+    }
+
+    // All retries exhausted
+    throw new Error(`Failed to generate valid mesocycle after ${maxRetries} attempts. Last error: ${lastError}`);
   });
 };
