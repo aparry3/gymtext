@@ -3,7 +3,7 @@ export {
   MESOCYCLE_SYSTEM_PROMPT,
   mesocycleUserPrompt,
 } from './generation/prompt';
-export { createLongFormMesocycleRunnable } from './generation/chain';
+export { createMesocycleGenerationRunnable } from './generation/chain';
 export {
   LongFormMesocycleOutputSchema,
 } from './generation/types';

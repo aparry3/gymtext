@@ -2,7 +2,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   MESOCYCLE_SYSTEM_PROMPT,
-  createLongFormMesocycleRunnable,
+  createMesocycleGenerationRunnable,
   createFormattedMesocycleAgent,
 } from './steps';
 import type { MesocycleAgentDeps, MesocycleChainContext, MesocycleOverview } from './types';
@@ -32,7 +32,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
     try {
 
       // Step 1: Create long-form mesocycle runnable (with structured output)
-      const longFormRunnable = createLongFormMesocycleRunnable({
+      const mesocycleGenerationRunnable = createMesocycleGenerationRunnable({
         systemPrompt: MESOCYCLE_SYSTEM_PROMPT
       });
 
@@ -43,7 +43,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
       // Compose the chain: structured generation → formatting
       const sequence = RunnableSequence.from([
-        longFormRunnable,
+        mesocycleGenerationRunnable,
         RunnablePassthrough.assign({
           formatted: formattedAgent,
         })

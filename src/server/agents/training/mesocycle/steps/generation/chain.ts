@@ -15,7 +15,7 @@ import { mesocycleUserPrompt } from './prompt';
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured mesocycle data
  */
-export const createLongFormMesocycleRunnable = (config: MesocycleAgentConfig) => {
+export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) => {
   const model = initializeModel(LongFormMesocycleOutputSchema, config.agentConfig);
 
   return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleChainContext> => {

@@ -3,7 +3,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { FitnessPlanService } from './fitnessPlanService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
-import { createMicrocyclePatternAgent } from '@/server/agents/training/microcycles/chain';
+import { createMicrocycleAgent } from '@/server/agents/training/microcycles/chain';
 import type { ProgressInfo } from './progressService';
 
 export class MicrocycleService {
@@ -187,7 +187,7 @@ export class MicrocycleService {
   }> {
     try {
       // Use AI agent to generate day overviews, long-form description, formatted markdown, and message
-      const agent = createMicrocyclePatternAgent();
+      const agent = createMicrocycleAgent();
       const result = await agent.invoke({
         microcycleOverview,
         weekNumber
