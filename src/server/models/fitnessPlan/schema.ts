@@ -4,7 +4,7 @@ import { z } from "zod";
    FITNESS PLAN SCHEMA
 
    Simplified schema that stores:
-   - description: Long-form plan with all details
+   - description: Long-form plan with all details and reasoning
    - mesocycles: Array of mesocycle overview strings
    - summary: Brief SMS-friendly summary (optional)
    - notes: Special considerations (optional)

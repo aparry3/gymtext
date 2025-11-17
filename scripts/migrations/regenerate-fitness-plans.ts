@@ -20,6 +20,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 // ============================================================================
 
 const isDryRun = process.argv.includes('--dry-run');
+const CONCURRENCY_LIMIT = 5; // Process 5 users in parallel at a time
 
 // Database connection
 const databaseUrl = process.env.DATABASE_URL;
@@ -55,7 +56,120 @@ function hasValidProfile(user: UserWithProfile): boolean {
 }
 
 /**
- * Regenerate fitness plans for all users
+ * Result of processing a single user
+ */
+interface UserProcessingResult {
+  status: 'success' | 'skipped' | 'failed';
+  userId: string;
+  userName: string;
+  planId?: string;
+  error?: string;
+  reason?: string; // For skipped users
+}
+
+/**
+ * Process a single user - extract fitness plan generation
+ */
+async function processSingleUser(
+  userRow: any,
+  index: number,
+  total: number
+): Promise<UserProcessingResult> {
+  const userId = userRow.id.substring(0, 8);
+  const userName = userRow.name;
+
+  try {
+    // Fetch user with profile
+    const user = await userRepository.findById(userRow.id);
+
+    if (!user) {
+      console.log(`  [${index}/${total}] User ${userId} (${userName}): [NOT FOUND] → Skipped`);
+      return {
+        status: 'skipped',
+        userId: userRow.id,
+        userName,
+        reason: 'User not found'
+      };
+    }
+
+    // Check if user has a valid fitness profile
+    if (!hasValidProfile(user)) {
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): [NO PROFILE] → Skipped`);
+      return {
+        status: 'skipped',
+        userId: userRow.id,
+        userName: user.name,
+        reason: 'No valid fitness profile'
+      };
+    }
+
+    console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING PLAN]...`);
+
+    if (!isDryRun) {
+      // Generate new fitness plan
+      const newPlan = await fitnessPlanService.createFitnessPlan(user);
+      const planId = newPlan.id ? newPlan.id.substring(0, 8) : 'unknown';
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${planId})`);
+
+      return {
+        status: 'success',
+        userId: userRow.id,
+        userName: user.name,
+        planId
+      };
+    } else {
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan (dry-run)`);
+      return {
+        status: 'success',
+        userId: userRow.id,
+        userName: user.name
+      };
+    }
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log(`  [${index}/${total}] User ${userId} (${userName}): ✗ Failed - ${errorMessage}`);
+
+    return {
+      status: 'failed',
+      userId: userRow.id,
+      userName,
+      error: errorMessage
+    };
+  }
+}
+
+/**
+ * Process users in batches with controlled concurrency
+ */
+async function processBatch(users: any[], startIndex: number): Promise<UserProcessingResult[]> {
+  const batch = users.slice(startIndex, startIndex + CONCURRENCY_LIMIT);
+  const total = users.length;
+
+  const results = await Promise.allSettled(
+    batch.map((userRow, batchIndex) =>
+      processSingleUser(userRow, startIndex + batchIndex + 1, total)
+    )
+  );
+
+  return results.map((result, idx) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    } else {
+      // Promise was rejected (shouldn't happen since processSingleUser catches all errors)
+      const userRow = batch[idx];
+      return {
+        status: 'failed' as const,
+        userId: userRow.id,
+        userName: userRow.name,
+        error: result.reason?.message || String(result.reason)
+      };
+    }
+  });
+}
+
+/**
+ * Regenerate fitness plans for all users (with parallel processing)
  */
 async function regenerateFitnessPlans() {
   console.log('\nRegenerating Fitness Plans...');
@@ -66,62 +180,43 @@ async function regenerateFitnessPlans() {
     .selectAll()
     .execute();
 
-  console.log(`Found ${allUsersRows.length} total user(s)\n`);
+  console.log(`Found ${allUsersRows.length} total user(s)`);
+  console.log(`Processing in batches of ${CONCURRENCY_LIMIT} users at a time\n`);
 
+  // Process users in batches
+  const allResults: UserProcessingResult[] = [];
+  const numBatches = Math.ceil(allUsersRows.length / CONCURRENCY_LIMIT);
+
+  for (let batchNum = 0; batchNum < numBatches; batchNum++) {
+    const startIndex = batchNum * CONCURRENCY_LIMIT;
+    const batchResults = await processBatch(allUsersRows, startIndex);
+    allResults.push(...batchResults);
+
+    console.log(`\nCompleted batch ${batchNum + 1}/${numBatches}\n`);
+  }
+
+  // Aggregate results
   let successCount = 0;
   let skippedCount = 0;
   let failedCount = 0;
   const errors: Array<{ userId: string; userName: string; error: string }> = [];
 
-  for (let i = 0; i < allUsersRows.length; i++) {
-    const userRow = allUsersRows[i];
-    const userId = userRow.id.substring(0, 8);
-    const index = i + 1;
-    const total = allUsersRows.length;
-
-    try {
-      // Fetch user with profile
-      const user = await userRepository.findById(userRow.id);
-
-      if (!user) {
-        console.log(`  [${index}/${total}] User ${userId} (${userRow.name}): [NOT FOUND] → Skipped`);
-        skippedCount++;
-        continue;
-      }
-
-      // Check if user has a valid fitness profile
-      if (!hasValidProfile(user)) {
-        console.log(`  [${index}/${total}] User ${userId} (${user.name}): [NO PROFILE] → Skipped`);
-        skippedCount++;
-        continue;
-      }
-
-      console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING PLAN]...`);
-
-      if (!isDryRun) {
-        // Generate new fitness plan
-        const newPlan = await fitnessPlanService.createFitnessPlan(user);
-        const planId = newPlan.id ? newPlan.id.substring(0, 8) : 'unknown';
-        console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${planId})`);
-      } else {
-        console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan (dry-run)`);
-      }
-
+  allResults.forEach(result => {
+    if (result.status === 'success') {
       successCount++;
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log(`  [${index}/${total}] User ${userId} (${userRow.name}): ✗ Failed - ${errorMessage}`);
-
-      errors.push({
-        userId: userRow.id,
-        userName: userRow.name,
-        error: errorMessage
-      });
-
+    } else if (result.status === 'skipped') {
+      skippedCount++;
+    } else if (result.status === 'failed') {
       failedCount++;
+      if (result.error) {
+        errors.push({
+          userId: result.userId,
+          userName: result.userName,
+          error: result.error
+        });
+      }
     }
-  }
+  });
 
   return { successCount, skippedCount, failedCount, errors };
 }

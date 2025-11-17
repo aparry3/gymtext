@@ -18,7 +18,7 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
  * - description: Long-form plan with all details and reasoning
  * - mesocycles: Array of mesocycle overview strings
  * - formatted: Markdown-formatted plan for frontend display
- * - summary: Brief summary for SMS (optional, from message field)
+ * - message: Brief summary for SMS (optional)
  * - notes: Special considerations (optional)
  */
 export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
@@ -74,6 +74,7 @@ export class FitnessPlanModel implements FitnessPlan {
   id: string;
   updatedAt: Date;
   message: string | null;
+  formatted: string | null;
 
   constructor(
     programType: string,
@@ -87,7 +88,8 @@ export class FitnessPlanModel implements FitnessPlan {
     goalStatement: string | null,
     id: string,
     updatedAt: Date,
-    message: string | null
+    message: string | null,
+    formatted: string | null
   ) {
     this.programType = programType;
     this.mesocycles = mesocycles;
@@ -101,6 +103,7 @@ export class FitnessPlanModel implements FitnessPlan {
     this.id = id;
     this.updatedAt = updatedAt;
     this.message = message;
+    this.formatted = formatted;
   }
 
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
