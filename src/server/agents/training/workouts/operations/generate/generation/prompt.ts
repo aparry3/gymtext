@@ -35,7 +35,7 @@ OUTPUT FORMAT:
 Return a **JSON object** with:
 
 {
-  "workout": string,   // a long-form, structured description of the full workout
+  "description": string,   // a long-form, structured description of the full workout
   "reasoning": string  // concise explanation of your coaching logic and adaptations
 }
 
