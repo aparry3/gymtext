@@ -4,9 +4,7 @@ import type { LongFormMesocycleConfig, LongFormMesocycleInput, MesocycleChainCon
 import { mesocycleUserPrompt } from './prompt';
 
 // Schema for long-form mesocycle description
-const LongFormMesocycleSchema = z.object({
-  description: z.string().describe("Comprehensive mesocycle description with microcycle delimiters")
-});
+const LongFormMesocycleSchema = z.string().describe("Comprehensive mesocycle description with microcycle delimiters");
 
 /**
  * Long-Form Mesocycle Agent Factory

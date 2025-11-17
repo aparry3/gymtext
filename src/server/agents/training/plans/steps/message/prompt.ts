@@ -27,10 +27,8 @@ The message should sound like a real coach texting — casual, friendly, confide
 - Intermediate/Advanced → focused, motivating, still simple and natural.
 
 ## Output Format:
-Return ONLY a JSON object with one field:
-{
-  "message": "Your SMS message(s) here. Multiple messages separated by \\n\\n"
-}
+Return ONLY the SMS message text (no JSON wrapper).
+Multiple messages should be separated by \\n\\n.
 
 ## Example Input:
 Generate a short, friendly onboarding SMS for the client below based on their new fitness plan.
@@ -53,12 +51,12 @@ Guidelines:
 - Limit to 1 or 2 short messages total (each under 160 characters).
 - No greetings, names, or em dashes.
 - Use one emoji at most if it fits.
-- Output only the JSON object with the "message" field.
+- Output only the message text (no JSON wrapper).
 
 ## Example Output:
-{
-  "message": "Just finished your 8-week full body plan. We'll build strength, improve energy, and lock in your gym routine.\\n\\nStarts simple and ends with a recovery week 💪"
-}
+Just finished your 8-week full body plan. We'll build strength, improve energy, and lock in your gym routine.
+
+Starts simple and ends with a recovery week 💪
 `;
 
 
@@ -97,6 +95,6 @@ Guidelines:
 - Do not greet or include the client's name.
 - Use first-person tone.
 - Avoid em dashes and long sentences.
-- Output only the JSON object with the "message" field.
+- Output only the message text (no JSON wrapper).
 `.trim();
 };

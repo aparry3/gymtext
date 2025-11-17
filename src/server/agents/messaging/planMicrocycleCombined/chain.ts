@@ -4,9 +4,7 @@ import { planMicrocycleCombinedPrompt } from './prompts';
 import type { PlanMicrocycleCombinedInput, PlanMicrocycleCombinedOutput, PlanMicrocycleCombinedAgentDeps } from './types';
 
 // Schema for the output
-const PlanMicrocycleCombinedSchema = z.object({
-  message: z.string().describe("Combined plan overview + first week breakdown SMS message with blank lines between days (under 500 chars)")
-});
+const PlanMicrocycleCombinedSchema = z.string().describe("Combined plan overview + first week breakdown SMS message with blank lines between days (under 500 chars)");
 
 /**
  * Plan + Microcycle Combined Message Agent Factory
@@ -31,8 +29,6 @@ export const createPlanMicrocycleCombinedAgent = (deps?: PlanMicrocycleCombinedA
     // Invoke model
     const result = await model.invoke(prompt);
 
-    return {
-      message: result.message
-    };
+    return result;
   });
 };

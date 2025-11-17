@@ -202,7 +202,7 @@ export const createFormattedMesocycleUserPrompt = (
   return `Convert the following long-form mesocycle description into a beautifully formatted markdown document.
 
 LONG-FORM MESOCYCLE DESCRIPTION:
-${longFormMesocycle.description}
+${longFormMesocycle}
 
 MESOCYCLE INDEX: ${mesocycleIndex + 1}
 DURATION: ${durationWeeks} weeks

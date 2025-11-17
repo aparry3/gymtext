@@ -15,7 +15,7 @@ import type { MicrocycleChainContext } from '../generation/types';
 export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
   return createRunnableAgent<MicrocycleChainContext, DaysExtractionOutput>(async (input) => {
     const { longFormMicrocycle } = input;
-    const description = longFormMicrocycle.description;
+    const description = longFormMicrocycle;
 
     // Regex to match day headers and capture content until next day header or section
     const dayPattern = /\*\*\*\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\s*-\s*[^*]+\*\*\*([\s\S]*?)(?=\*\*\*\s*(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)|======================================|$)/gi;

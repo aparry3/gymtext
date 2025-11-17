@@ -31,7 +31,7 @@ export const createFormattedMesocycleAgent = <TMesocycle = unknown>(
 
     // Calculate durationWeeks from the description by counting microcycle delimiters
     const microcyclePattern = /\*\*\*\*\* MICROCYCLE \d+:.*?\*\*\*\*\*/gi;
-    const matches = [...longFormMesocycle.description.matchAll(microcyclePattern)];
+    const matches = [...longFormMesocycle.matchAll(microcyclePattern)];
     const durationWeeks = matches.length || 4; // Default to 4 if no delimiters found
 
     // Extract mesocycle index from overview string if needed

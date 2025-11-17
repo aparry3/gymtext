@@ -110,44 +110,39 @@ Each microcycle must include:
 ---
 
 ## OUTPUT REQUIREMENTS
-Your output must be a JSON object with a single "description" field containing the mesocycle breakdown.
+Return a comprehensive mesocycle description as a string with the following structure:
 
-{
-  "description": "string – a comprehensive mesocycle description with the following structure:
+[MESOCYCLE OVERVIEW]
+- Mesocycle name and duration (X weeks)
+- Primary objective (e.g., 'Build hypertrophy base', 'Increase strength capacity')
+- Focus areas (e.g., 'Volume accumulation', 'Movement quality')
+- Volume trend across weeks (increasing/stable/decreasing)
+- Intensity trend across weeks (increasing/stable/taper)
+- Training split and frequency
+- Overall conditioning strategy
 
-  [MESOCYCLE OVERVIEW]
-  - Mesocycle name and duration (X weeks)
-  - Primary objective (e.g., 'Build hypertrophy base', 'Increase strength capacity')
-  - Focus areas (e.g., 'Volume accumulation', 'Movement quality')
-  - Volume trend across weeks (increasing/stable/decreasing)
-  - Intensity trend across weeks (increasing/stable/taper)
-  - Training split and frequency
-  - Overall conditioning strategy
+***** MICROCYCLE 1: Week 1 - [Theme] *****
+Volume: [High/Moderate/Low]
+Intensity: [RPE/RIR targets]
+Split: [Training split for the week]
 
-  ***** MICROCYCLE 1: Week 1 - [Theme] *****
-  Volume: [High/Moderate/Low]
-  Intensity: [RPE/RIR targets]
-  Split: [Training split for the week]
+[Detailed description including:
+- Weekly theme and objective
+- Session themes for each training day (e.g., 'Monday: Upper Strength', 'Wednesday: Lower Hypertrophy')
+- Volume targets per muscle group this week
+- Intensity/RIR targets for main lifts vs accessories
+- Conditioning schedule (type, frequency, duration)
+- Rest day placement
+- Special notes (technique focus, progression from last week, etc.)
+- Whether this is a deload week (if applicable)]
 
-  [Detailed description including:
-  - Weekly theme and objective
-  - Session themes for each training day (e.g., 'Monday: Upper Strength', 'Wednesday: Lower Hypertrophy')
-  - Volume targets per muscle group this week
-  - Intensity/RIR targets for main lifts vs accessories
-  - Conditioning schedule (type, frequency, duration)
-  - Rest day placement
-  - Special notes (technique focus, progression from last week, etc.)
-  - Whether this is a deload week (if applicable)]
+***** MICROCYCLE 2: Week 2 - [Theme] *****
+[Same structure as above, showing progression from Week 1]
 
-  ***** MICROCYCLE 2: Week 2 - [Theme] *****
-  [Same structure as above, showing progression from Week 1]
+***** MICROCYCLE 3: Week 3 - [Theme] *****
+[Same structure...]
 
-  ***** MICROCYCLE 3: Week 3 - [Theme] *****
-  [Same structure...]
-
-  [Continue for all weeks in the mesocycle...]
-  "
-}
+[Continue for all weeks in the mesocycle...]
 
 CRITICAL: Each microcycle MUST start with the delimiter "***** MICROCYCLE N: Week N - [Theme] *****" on its own line for parsing.
 

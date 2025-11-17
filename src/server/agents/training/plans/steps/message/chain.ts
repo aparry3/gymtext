@@ -5,9 +5,7 @@ import type { PlanMessageConfig } from './types';
 import type { FitnessPlanChainContext } from '../generation/types';
 
 // Schema for SMS message generation
-const PlanSummaryMessageSchema = z.object({
-  message: z.string().describe("SMS-formatted plan summary message")
-});
+const PlanSummaryMessageSchema = z.string().describe("SMS-formatted plan summary message");
 
 /**
  * Fitness Plan Message Agent Factory
@@ -25,7 +23,7 @@ export const createPlanMessageAgent = (config: PlanMessageConfig) => {
     const { longFormPlan, user } = input;
 
     // Build user prompt from long-form description and full user object (with profile)
-    const userPrompt = planSummaryMessageUserPrompt(user, longFormPlan.description);
+    const userPrompt = planSummaryMessageUserPrompt(user, longFormPlan);
 
     // Invoke model
     const result = await model.invoke([
@@ -35,6 +33,6 @@ export const createPlanMessageAgent = (config: PlanMessageConfig) => {
 
     console.log(`[${config.operationName}] Generated SMS message for fitness plan`);
 
-    return result.message;
+    return result;
   });
 };

@@ -12,9 +12,7 @@ export interface LongFormPlanInput {
   prompt: string;
 }
 
-export interface LongFormPlanOutput {
-  description: string;
-}
+export type LongFormPlanOutput = string;
 
 /**
  * Context that flows through the fitness plan chain

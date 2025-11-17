@@ -76,7 +76,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: FitnessPlanOverview = {
-        description: result.longFormPlan.description,
+        description: result.longFormPlan,
         mesocycles: result.mesocycles,
         formatted: result.formatted.formatted,
         message: result.message

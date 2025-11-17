@@ -102,10 +102,7 @@ Taking it easier this week to recharge. You've earned it!"
 ---
 
 ## OUTPUT FORMAT
-Return ONLY a JSON object:
-{
-  "message": "Your final SMS message here"
-}
+Return ONLY the SMS message text (no JSON wrapper).
 `
 
 
@@ -119,5 +116,5 @@ Focus on summarizing the week's training theme and providing a clear, easy-to-re
 ${patternJson}
 </Microcycle Description>
 
-Output only the JSON object with the "message" field as specified in your system instructions.
+Output only the message text (no JSON wrapper) as specified in your system instructions.
 `.trim();

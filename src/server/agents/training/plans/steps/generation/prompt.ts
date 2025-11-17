@@ -221,46 +221,39 @@ Your output will be automatically parsed to extract mesocycles using the delimit
 If you do NOT include properly formatted mesocycle delimiters, the parser will return an empty array and the plan will fail validation.
 You MUST include at least one mesocycle with the exact delimiter format shown below.
 
-Your output must be a JSON object with a single "description" field containing the full fitness plan.
+Return a comprehensive fitness plan description as a string with the following MANDATORY structure:
 
-**REQUIRED STRUCTURE:**
+[PLAN OVERVIEW]
+- Brief summary of the program (2-3 sentences)
+- Total duration in weeks
+- Program type and primary goals
 
-{
-  "description": "string – a comprehensive fitness plan with the following MANDATORY structure:
+[REASONING]
+- Why this program structure, split, and progression model were chosen
+- How best practices (specificity, overload, recovery) were applied
+- How training and conditioning were balanced
+- How you accounted for recovery and sustainability
 
-  [PLAN OVERVIEW]
-  - Brief summary of the program (2-3 sentences)
-  - Total duration in weeks
-  - Program type and primary goals
+--- MESOCYCLE 1: [Name] ---
+Duration: [X weeks, Weeks Y-Z]
+Objective: [Main goal]
+Focus: [Key focus areas]
+Volume Trend: [increasing/stable/decreasing]
+Intensity Trend: [increasing/stable/taper]
 
-  [REASONING]
-  - Why this program structure, split, and progression model were chosen
-  - How best practices (specificity, overload, recovery) were applied
-  - How training and conditioning were balanced
-  - How you accounted for recovery and sustainability
+[Detailed natural-language description of this mesocycle, including:
+- Training split and frequency
+- Session themes and structure
+- Weekly volume targets per muscle group
+- Intensity/RIR targets
+- Conditioning schedule
+- How microcycles progress week-by-week
+- Deload strategy if applicable]
 
-  --- MESOCYCLE 1: [Name] ---
-  Duration: [X weeks, Weeks Y-Z]
-  Objective: [Main goal]
-  Focus: [Key focus areas]
-  Volume Trend: [increasing/stable/decreasing]
-  Intensity Trend: [increasing/stable/taper]
+--- MESOCYCLE 2: [Name] ---
+[Same structure as above]
 
-  [Detailed natural-language description of this mesocycle, including:
-  - Training split and frequency
-  - Session themes and structure
-  - Weekly volume targets per muscle group
-  - Intensity/RIR targets
-  - Conditioning schedule
-  - How microcycles progress week-by-week
-  - Deload strategy if applicable]
-
-  --- MESOCYCLE 2: [Name] ---
-  [Same structure as above]
-
-  [Continue for all mesocycles - typically 2-4 total...]
-  "
-}
+[Continue for all mesocycles - typically 2-4 total...]
 
 **🚨 CRITICAL VALIDATION REQUIREMENTS 🚨**
 1. Each mesocycle MUST start with the EXACT delimiter: "--- MESOCYCLE N: [Name] ---" on its own line

@@ -67,7 +67,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: MesocycleOverview = {
-        description: result.longFormMesocycle.description,
+        description: result.longFormMesocycle,
         microcycles: result.microcycles,
         formatted: result.formatted.formatted,
         durationWeeks: result.microcycles.length,

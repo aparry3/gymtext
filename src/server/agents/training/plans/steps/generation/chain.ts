@@ -3,9 +3,7 @@ import { z } from 'zod';
 import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext } from './types';
 
 // Schema for long-form plan description
-const LongFormPlanSchema = z.object({
-  description: z.string().describe("Comprehensive fitness plan description with mesocycle delimiters")
-});
+const LongFormPlanSchema = z.string().describe("Comprehensive fitness plan description with mesocycle delimiters");
 
 /**
  * Long-Form Fitness Plan Agent Factory

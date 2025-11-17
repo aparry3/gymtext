@@ -118,7 +118,7 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
 
         return {
           dayOverviews: result.daysExtraction,
-          description: result.longFormMicrocycle.description,
+          description: result.longFormMicrocycle,
           isDeload: result.daysExtraction.isDeload,
           formatted: result.formatted.formatted, // Extract formatted string from schema object
           message: result.message

@@ -27,7 +27,7 @@ export const createFormattedMicrocycleAgent = <TMicrocycle = unknown>(
     const { longFormMicrocycle, weekNumber } = input;
 
     // Detect if this is a deload week from the description
-    const isDeload = /deload/i.test(longFormMicrocycle.description);
+    const isDeload = /deload/i.test(longFormMicrocycle);
 
     // Build system and user prompts
     const systemPrompt = buildFormattedMicrocycleSystemPrompt();

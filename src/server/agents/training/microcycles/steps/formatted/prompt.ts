@@ -225,7 +225,7 @@ export const createFormattedMicrocycleUserPrompt = (
   return `Convert the following long-form microcycle description into a beautifully formatted markdown document.
 
 LONG-FORM MICROCYCLE DESCRIPTION:
-${longFormMicrocycle.description}
+${longFormMicrocycle}
 
 WEEK NUMBER: ${weekNumber + 1}
 IS DELOAD: ${isDeload ? 'Yes - this is a deload/recovery week' : 'No - regular training week'}

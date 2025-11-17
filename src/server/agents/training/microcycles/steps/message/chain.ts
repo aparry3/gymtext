@@ -5,9 +5,7 @@ import type { MicrocycleMessageConfig } from './types';
 import type { MicrocycleChainContext } from '../generation/types';
 
 // Schema for SMS message generation
-const MicrocycleMessageSchema = z.object({
-  message: z.string().describe("SMS-formatted weekly breakdown message (under 300 characters)")
-});
+const MicrocycleMessageSchema = z.string().describe("SMS-formatted weekly breakdown message (under 300 characters)");
 
 /**
  * Microcycle Message Agent Factory
@@ -25,7 +23,7 @@ export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) =>
     const { longFormMicrocycle } = input;
 
     // Build user prompt from long-form description
-    const userPrompt = microcycleMessageUserPrompt(longFormMicrocycle.description);
+    const userPrompt = microcycleMessageUserPrompt(longFormMicrocycle);
     console.log(`[MicrocycleMessageAgent] User prompt: ${userPrompt}`);
     // Invoke model
     const result = await model.invoke([
@@ -35,6 +33,6 @@ export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) =>
 
     console.log(`[${config.operationName}] Generated SMS message for microcycle`);
 
-    return result.message;
+    return result;
   });
 };

@@ -177,7 +177,7 @@ export class OnboardingService {
 
     // Generate combined message using agent with pre-generated messages
     const planMicrocycleCombinedAgent = createPlanMicrocycleCombinedAgent();
-    const { message } = await planMicrocycleCombinedAgent.invoke({
+    const message = await planMicrocycleCombinedAgent.invoke({
       planMessage: plan.message,
       microcycleMessage: microcycle.message
     });

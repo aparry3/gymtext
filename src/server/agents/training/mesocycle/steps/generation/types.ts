@@ -12,9 +12,7 @@ export interface LongFormMesocycleInput {
   fitnessProfile: string;
 }
 
-export interface LongFormMesocycleOutput {
-  description: string;
-}
+export type LongFormMesocycleOutput = string;
 
 /**
  * Context that flows through the mesocycle chain

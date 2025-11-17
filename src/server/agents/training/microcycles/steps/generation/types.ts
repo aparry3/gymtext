@@ -9,9 +9,7 @@ export interface LongFormMicrocycleConfig {
 // Input is just MicrocyclePatternInput - prompt is generated internally
 export type LongFormMicrocycleInput = MicrocyclePatternInput;
 
-export interface LongFormMicrocycleOutput {
-  description: string;
-}
+export type LongFormMicrocycleOutput = string;
 
 /**
  * Context that flows through the microcycle chain

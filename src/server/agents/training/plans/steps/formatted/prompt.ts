@@ -223,7 +223,7 @@ export const createFormattedFitnessPlanUserPrompt = (
   return `Convert the following long-form fitness plan description into a beautifully formatted markdown document.
 
 LONG-FORM FITNESS PLAN DESCRIPTION:
-${longFormPlan.description}
+${longFormPlan}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt

@@ -14,7 +14,7 @@ import type { MesocycleChainContext } from '../generation/types';
 export const createMicrocycleExtractor = (config: MicrocycleExtractorConfig) => {
   return createRunnableAgent<MesocycleChainContext, string[]>(async (input) => {
     const { longFormMesocycle } = input;
-    const description = longFormMesocycle.description;
+    const description = longFormMesocycle;
 
     // Extract microcycles using delimiter pattern: "***** MICROCYCLE N: Week N - [Theme] *****"
     const microcyclePattern = /\*\*\*\*\* MICROCYCLE \d+:.*?\*\*\*\*\*/gi;

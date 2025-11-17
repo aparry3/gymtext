@@ -14,7 +14,7 @@ import type { FitnessPlanChainContext } from '../generation/types';
 export const createMesocycleExtractor = (config: MesocycleExtractorConfig) => {
   return createRunnableAgent<FitnessPlanChainContext, string[]>(async (input) => {
     const { longFormPlan } = input;
-    const description = longFormPlan.description;
+    const description = longFormPlan;
 
     // Extract mesocycles using delimiter pattern: "--- MESOCYCLE N: [Name] ---"
     const mesocyclePattern = /--- MESOCYCLE \d+:.*?---/gi;
