@@ -50,8 +50,9 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
       console.warn(`[${config.operationName}] WARNING: Only found ${matchCount}/7 day headers in description`);
     }
 
-    // Detect if this is a deload week by checking for "deload" in the description
-    const isDeload = /deload/i.test(description);
+    // Detect if this is a deload week by checking for the explicit *** DELOAD WEEK *** marker
+    // This marker is required to appear at the top of WEEKLY OVERVIEW section for deload weeks
+    const isDeload = /\*\*\*\s*DELOAD WEEK\s*\*\*\*/i.test(description);
 
     // Ensure all days are present (use empty string if not found)
     const result: DaysExtractionOutput = {

@@ -18,6 +18,11 @@ WEEKLY OVERVIEW
 (The high-level summary of the week)
 ======================================
 
+⚠️ CRITICAL: If this is a deload week, you MUST include this marker at the very top of this section:
+*** DELOAD WEEK ***
+
+This marker must ONLY appear if this specific week is actually a deload week (typically the final week of a mesocycle). Do NOT include this marker if you are just mentioning future deload weeks or discussing deload in general context.
+
 Include:
 - Week number + theme (e.g., "Week 1 — Baseline Build")
 - The week's objective within the mesocycle
@@ -117,6 +122,7 @@ Summarize:
 # 🔶 COMPLETION CHECKLIST
 Before submitting your response, verify:
 ✓ WEEKLY OVERVIEW section is complete
+✓ If this is a deload week, *** DELOAD WEEK *** marker appears at top of WEEKLY OVERVIEW
 ✓ DAY-BY-DAY BREAKDOWN section includes ALL 7 days with proper headers (*** MONDAY - ... ***, etc.)
 ✓ WEEKLY NOTES section is complete
 
