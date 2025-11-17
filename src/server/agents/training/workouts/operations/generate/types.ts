@@ -1,7 +1,3 @@
-import type { Microcycle } from '@/server/models/microcycle';
-import type { Mesocycle } from '@/server/models/mesocycle';
-import type { FitnessPlan } from '@/server/models/fitnessPlan';
-import type { WorkoutInstance } from '@/server/models/workout';
 import type { AgentDeps } from '@/server/agents/base';
 import type { BaseWorkoutChainInput, WorkoutChainResult } from '../../shared';
 
@@ -11,11 +7,8 @@ import type { BaseWorkoutChainInput, WorkoutChainResult } from '../../shared';
  * dayPlan is now a simple string overview from the microcycle's day overview fields
  */
 export interface DailyWorkoutInput extends BaseWorkoutChainInput {
-  dayPlan: string; // Day overview from microcycle (e.g., mondayOverview, tuesdayOverview, etc.)
-  microcycle: Microcycle;
-  mesocycle: Mesocycle;
-  fitnessPlan: FitnessPlan;
-  recentWorkouts?: WorkoutInstance[];
+  dayOverview: string;       // The daily training overview from the microcycle
+  isDeload: boolean;         // True/false flag
 }
 
 /**

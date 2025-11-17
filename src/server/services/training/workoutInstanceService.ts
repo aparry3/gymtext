@@ -130,8 +130,6 @@ export class WorkoutInstanceService {
         return null;
       }
 
-      const mesocycle = progress.mesocycle;
-
       // Get the day's overview from the microcycle
       const dayOfWeekLower = targetDate.toFormat('EEEE').toLowerCase(); // monday, tuesday, etc.
       const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
@@ -143,17 +141,14 @@ export class WorkoutInstanceService {
       }
 
       // Get recent workouts for context (last 7 days)
-      const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
+      // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
       const { formatted, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
-        dayPlan: dayOverview, // Pass the string overview instead of pattern object
-        microcycle,
-        mesocycle,
-        fitnessPlan: plan,
-        recentWorkouts
+        dayOverview, // Pass the string overview instead of pattern object
+        isDeload: microcycle.isDeload,
       });
 
       // Extract theme from markdown title (first # line) or use default
