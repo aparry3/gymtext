@@ -6,7 +6,7 @@ import { RunnableLambda } from "@langchain/core/runnables";
  * Configuration for agents
  */
 export interface AgentConfig {
-    model?: 'gpt-5-nano' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite';
+    model?: 'gpt-5-nano' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
     temperature?: number;
     maxTokens?: number;
     verbose?: boolean;

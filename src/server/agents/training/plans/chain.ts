@@ -36,7 +36,10 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Step 1: Create long-form runnable (with structured output)
       const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
-        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT
+        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
+        agentConfig: {
+          model: 'gpt-5.1',
+        }
       });
 
       // Step 2: Create formatting agent
