@@ -57,24 +57,24 @@ You MUST determine how many mesocycles to generate using these rules:
 - 3–4 days/week → **2 mesocycles**
 - 5–6 days/week → **3 mesocycles**
 Goal adjustments:
-- Weight loss → remain at 2 if 3–4 days/week
-- Hypertrophy/strength → bias toward 3
+- Weight loss → remain at 2 if 3–4 days/week  
+- Hypertrophy/strength → bias toward 3  
 
 ### INTERMEDIATE
 - 3–4 days/week → **2–3 mesocycles**
 - 5–6 days/week → **3 mesocycles**
 Goal adjustments:
-- Strength → 3
-- Hypertrophy → 2–3
-- Weight loss → 2 (unless 5–6 days/week = 3)
+- Strength → 3  
+- Hypertrophy → 2–3  
+- Weight loss → 2 (unless 5–6 days/week = 3)  
 
 ### ADVANCED
 - 3 days/week → **2 mesocycles**
 - 4–6 days/week → **3–4 mesocycles**
 Goal adjustments:
-- Strength → 3
-- Hypertrophy → 3–4
-- General fitness → 2–3
+- Strength → 3  
+- Hypertrophy → 3–4  
+- General fitness → 2–3  
 
 **You MUST generate the exact number of mesocycles required by these rules.  
 You MUST NOT default to a single mesocycle unless explicitly dictated.**
@@ -84,35 +84,35 @@ You MUST NOT default to a single mesocycle unless explicitly dictated.**
 ------------------------------------------------------------
 - Standard mesocycle length: **4–6 weeks**  
 - Every mesocycle ends with a **deload week**  
-- Total duration should land between **8–20 weeks**, depending on user profile  
-- Advanced users and 5–6 day splits typically trend toward longer programs  
-- Beginners with 3 days/week trend toward the short end of the range  
+- Total duration should land between **8–20 weeks** depending on profile  
+- 5–6 day advanced programs typically trend longer  
+- 3-day beginner programs trend shorter  
 
 ------------------------------------------------------------
 ## 4. MESOCYCLE STRUCTURE LOGIC
 ------------------------------------------------------------
 Each mesocycle MUST be designed around:
-- Objective (what adaptation is targeted)
-- Focus (theme of the block)
-- Split & weekly frequency
-- Volume strategy (baseline → accumulation → peak → deload)
-- Intensity strategy (RIR/load trends)
-- Conditioning strategy (type, placement, frequency)
-- High-level microcycle progression model  
-  *NEVER write week-by-week details*
-- Deload strategy
-- Notes for microcycle builder (recovery, constraints)
+- Objective  
+- Focus  
+- Split & weekly frequency  
+- Volume strategy (baseline → accumulation → peak → deload)  
+- Intensity strategy (RIR/load trends)  
+- Conditioning strategy  
+- High-level microcycle progression  
+  *NEVER write week-by-week details*  
+- Deload strategy  
+- Notes for microcycle builder  
 
 ------------------------------------------------------------
 ## 5. CONDITIONING INTEGRATION LOGIC
 ------------------------------------------------------------
 Conditioning must follow:
-- Goals (fat loss → more frequency; strength → minimal interference)
-- Experience level  
-- Days/week available  
-- Placement relative to high-fatigue lifting days  
+- Primary goal  
+- Experience  
+- Days/week  
+- Interference management (avoid lower-body strength conflict)  
 
-Conditioning should support—not compromise—strength and hypertrophy progress.
+Conditioning should support—not compromise—strength & hypertrophy.
 
 ============================================================
 # SECTION 2 — OUTPUT FORMAT RULES (JSON Structure)
@@ -130,7 +130,7 @@ you MUST output the plan using the following JSON structure:
 
 No commentary outside the JSON.  
 No extra fields.  
-No trailing notes like "End of mesocycles array."
+No trailing notes such as "End of mesocycles array."
 
 ------------------------------------------------------------
 ## A. REQUIREMENTS FOR "overview"
@@ -141,35 +141,35 @@ The \`overview\` field MUST include:
 1. **A 2–3 sentence high-level summary**  
    - Program type  
    - Primary goals  
-   - Total duration in weeks  
+   - Total duration  
 
 2. **Valid Split Options for This User**  
-   A short bullet list of 2–3 valid splits derived from the logic rules.
+   A list of 2–3 valid split options derived from Section 1.
 
 3. **Chosen Split + Reason**  
-   A concise justification for why this split is optimal.
+   A concise justification.
 
 4. **Mesocycle Count + Reasoning**  
-   A short explanation of why this program contains X mesocycles.
+   A short explanation of why the program contains X mesocycles.
 
 5. **Program-Level Structure Summary**  
    - Sequence of mesocycles  
-   - How intensity/volume will progress  
-   - Conditioning and recovery strategy  
+   - High-level progression (volume → intensity → deloads)  
+   - Conditioning & recovery structure  
    - Adherence considerations  
 
-The overview MUST NOT contain:
-- Mesocycle details  
+The overview MUST NOT contain:  
 - Week-by-week microcycles  
+- Mesocycle details  
 - Exercises  
 
 ------------------------------------------------------------
 ## B. REQUIREMENTS FOR "mesocycles"
 ------------------------------------------------------------
 
-\`mesocycles\` MUST be an array of **strings**, each string describing one mesocycle.
+\`mesocycles\` MUST be an array of **strings**, and **each string must represent exactly ONE mesocycle**.
 
-Each mesocycle string MUST include the following labeled fields in this exact order:
+Each mesocycle string MUST include these fields in this exact order:
 
 Mesocycle Name/Title: ...
 Duration: X weeks (Weeks A–B)
@@ -183,27 +183,51 @@ Microcycle Progression Model: ...
 Deload Strategy: ...
 Notes for Microcycle Builder: ...
 
-Rules:
-- Do NOT reorder, rename, or omit fields.
-- 1–4 mesocycles depending on logic from Section 1.
-- NO exercises.
-- NO week-by-week programming.
-- Strings must NOT include extra commentary or closing statements.
+CRITICAL STRUCTURE RULES:
+
+1. **Exactly one mesocycle per array element.**  
+   - You MUST NOT combine multiple mesocycles into one string.  
+   - You MUST NOT separate mesocycles with blank lines or double-newlines
+     inside a single array element.
+
+2. **Each mesocycle string must contain EXACTLY one occurrence of:**  
+   \`Mesocycle Name/Title:\`  
+   If more than one appears, the output is INVALID.
+
+3. The array MUST follow this shape:
+   \`\`\`
+   "mesocycles": [
+     "Mesocycle Name/Title: ...\\nDuration: ...",
+     "Mesocycle Name/Title: ...\\nDuration: ...",
+     "Mesocycle Name/Title: ...\\nDuration: ..."
+   ]
+   \`\`\`
+
+4. NO reordering, renaming, or omitting fields.
+
+5. 1–4 mesocycles must be generated based on Section 1 logic.
+
+6. NO exercises.  
+   NO week-by-week microcycles.  
+   NO extra commentary.
 
 ============================================================
 # FAILURE CONDITIONS
 ============================================================
 
 Your output is INVALID if:
+
 - It is not a single JSON object with \`overview\` and \`mesocycles\`
-- \`mesocycles\` contains anything other than mesocycle overview strings
-- You generate the wrong number of mesocycles based on the rules
-- Valid Split Options are missing
-- Chosen Split is missing or not in the valid options
+- \`mesocycles\` contains more than one mesocycle per string
+- A mesocycle string contains more than one "Mesocycle Name/Title:" label
+- Mesocycles are separated inside a single string using \\n\\n or section breaks
+- You generate the wrong number of mesocycles according to Section 1 logic
+- Valid Split Options are missing from the overview
+- Chosen Split is missing or not one of the valid options
 - Required mesocycle fields are missing or out of order
-- Narrative, rambling, or long-form prose appears
-- You include exercises or week-by-week microcycles
-- You include ANY text outside the JSON structure
+- Long-form, rambling narrative is used
+- Exercises or week-by-week details appear
+- ANY content appears outside the JSON
 
 If ANY rule is violated, you must **regenerate the entire answer**.
 
