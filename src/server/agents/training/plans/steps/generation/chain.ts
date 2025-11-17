@@ -1,9 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
 import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext } from './types';
-
-// Schema for long-form plan description
-const LongFormPlanSchema = z.string().describe("Comprehensive fitness plan description with mesocycle delimiters");
 
 /**
  * Long-Form Fitness Plan Agent Factory
@@ -15,10 +11,10 @@ const LongFormPlanSchema = z.string().describe("Comprehensive fitness plan descr
  * which can then be structured or summarized for other uses.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
- * @returns Agent (runnable) that produces a long-form plan object with description and reasoning
+ * @returns Agent (runnable) that produces a long-form plan string
  */
 export const createLongFormPlanRunnable = (config: LongFormPlanConfig) => {
-  const model = initializeModel(LongFormPlanSchema, config.agentConfig);
+  const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent(async (input: LongFormPlanInput): Promise<FitnessPlanChainContext> => {
     const systemMessage = config.systemPrompt;
@@ -26,6 +22,8 @@ export const createLongFormPlanRunnable = (config: LongFormPlanConfig) => {
       { role: 'system', content: systemMessage },
       { role: 'user', content: input.prompt }
     ]);
+
+    console.log(`[LongFormPlan] Generated long-form plan: ${longFormPlan}`);
 
     return {
       longFormPlan,

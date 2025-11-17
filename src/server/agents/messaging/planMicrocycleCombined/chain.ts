@@ -1,10 +1,6 @@
-import { z } from 'zod';
 import { initializeModel, createRunnableAgent } from '@/server/agents/base';
 import { planMicrocycleCombinedPrompt } from './prompts';
 import type { PlanMicrocycleCombinedInput, PlanMicrocycleCombinedOutput, PlanMicrocycleCombinedAgentDeps } from './types';
-
-// Schema for the output
-const PlanMicrocycleCombinedSchema = z.string().describe("Combined plan overview + first week breakdown SMS message with blank lines between days (under 500 chars)");
 
 /**
  * Plan + Microcycle Combined Message Agent Factory
@@ -14,14 +10,14 @@ const PlanMicrocycleCombinedSchema = z.string().describe("Combined plan overview
  * 2. "Let's take a look at your first week" + microcycle message content
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that combines pre-generated messages into onboarding message
+ * @returns Agent that combines pre-generated messages into onboarding message string
  */
 export const createPlanMicrocycleCombinedAgent = (deps?: PlanMicrocycleCombinedAgentDeps) => {
   return createRunnableAgent<PlanMicrocycleCombinedInput, PlanMicrocycleCombinedOutput>(async (input) => {
     const { planMessage, microcycleMessage } = input;
 
-    // Initialize model with structured output
-    const model = initializeModel(PlanMicrocycleCombinedSchema, deps?.config);
+    // Initialize model without schema for plain text output
+    const model = initializeModel(undefined, deps?.config);
 
     // Generate prompt from pre-written messages
     const prompt = planMicrocycleCombinedPrompt(planMessage, microcycleMessage);

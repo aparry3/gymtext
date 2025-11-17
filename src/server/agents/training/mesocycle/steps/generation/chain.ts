@@ -1,10 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
 import type { LongFormMesocycleConfig, LongFormMesocycleInput, MesocycleChainContext } from './types';
 import { mesocycleUserPrompt } from './prompt';
-
-// Schema for long-form mesocycle description
-const LongFormMesocycleSchema = z.string().describe("Comprehensive mesocycle description with microcycle delimiters");
 
 /**
  * Long-Form Mesocycle Agent Factory
@@ -16,10 +12,10 @@ const LongFormMesocycleSchema = z.string().describe("Comprehensive mesocycle des
  * which can then be parsed to extract microcycle strings.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
- * @returns Agent (runnable) that produces a long-form mesocycle with microcycle breakdowns
+ * @returns Agent (runnable) that produces a long-form mesocycle string
  */
 export const createLongFormMesocycleRunnable = (config: LongFormMesocycleConfig) => {
-  const model = initializeModel(LongFormMesocycleSchema, config.agentConfig);
+  const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent(async (input: LongFormMesocycleInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;

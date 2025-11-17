@@ -1,11 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
 import { planSummaryMessageUserPrompt, PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT } from './prompt';
 import type { PlanMessageConfig } from './types';
 import type { FitnessPlanChainContext } from '../generation/types';
-
-// Schema for SMS message generation
-const PlanSummaryMessageSchema = z.string().describe("SMS-formatted plan summary message");
 
 /**
  * Fitness Plan Message Agent Factory
@@ -13,11 +9,11 @@ const PlanSummaryMessageSchema = z.string().describe("SMS-formatted plan summary
  * Generates SMS-formatted plan summary messages from long-form fitness plan descriptions.
  *
  * @param config - Static configuration for the agent
- * @returns Agent (runnable) that generates SMS messages from long-form plans
+ * @returns Agent (runnable) that generates SMS message strings from long-form plans
  */
 export const createPlanMessageAgent = (config: PlanMessageConfig) => {
-  // Initialize model with message schema
-  const model = initializeModel(PlanSummaryMessageSchema, config.agentConfig);
+  // Initialize model without schema for plain text output
+  const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
     const { longFormPlan, user } = input;
