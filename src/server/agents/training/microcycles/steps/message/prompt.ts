@@ -115,9 +115,9 @@ Generate a weekly breakdown SMS message based on the following structured microc
 
 Focus on summarizing the week's training theme and providing a clear, easy-to-read breakdown of training days and rest days for the client.
 
-<Structured Microcycle Pattern>
+<Microcycle Description>
 ${patternJson}
-</Structured Microcycle Pattern>
+</Microcycle Description>
 
 Output only the JSON object with the "message" field as specified in your system instructions.
 `.trim();

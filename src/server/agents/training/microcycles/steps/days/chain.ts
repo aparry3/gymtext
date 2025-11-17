@@ -47,7 +47,7 @@ export const createDaysExtractionAgent = (config: DaysExtractionConfig) => {
     }
 
     if (matchCount < 7) {
-      console.warn(`[${config.operationName}] WARNING: Only found ${matchCount}/7 day headers in description`);
+      console.warn(`[${config.operationName}] WARNING: Only found ${matchCount}/7 day headers in description. This will trigger a retry.`);
     }
 
     // Detect if this is a deload week by checking for the explicit *** DELOAD WEEK *** marker
