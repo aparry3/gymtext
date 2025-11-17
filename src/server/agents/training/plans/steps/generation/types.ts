@@ -11,6 +11,12 @@ export const FitnessPlanOutputSchema = z.object({
   }),
   mesocycles: z.array(z.string(), {
     description: "Array of mesocycle overview strings with all required details (duration, objective, focus, etc.)"
+  }),
+  number_of_mesocycles: z.number({
+    description: "The number of mesocycles in the plan"
+  }),
+  total_weeks: z.number({
+    description: "The total number of weeks in the plan"
   })
 });
 
