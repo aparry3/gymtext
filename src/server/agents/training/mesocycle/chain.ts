@@ -34,9 +34,9 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
       // Step 1: Create long-form mesocycle runnable (with structured output)
       const mesocycleGenerationRunnable = createMesocycleGenerationRunnable({
         systemPrompt: MESOCYCLE_SYSTEM_PROMPT,
-        // agentConfig: {
-        //   model: 'gpt-5.1',
-        // }
+        agentConfig: {
+          model: 'gpt-5-mini',
+        }
       });
 
       // Step 2: Create formatting agent
