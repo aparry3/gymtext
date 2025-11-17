@@ -16,10 +16,10 @@ export const createPlanMessageAgent = (config: PlanMessageConfig) => {
   const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
-    const { longFormPlan, user } = input;
+    const { fitnessPlan, user } = input;
 
     // Build user prompt from long-form description and full user object (with profile)
-    const userPrompt = planSummaryMessageUserPrompt(user, longFormPlan);
+    const userPrompt = planSummaryMessageUserPrompt(user, fitnessPlan.overview);
 
     // Invoke model
     const result = await model.invoke([

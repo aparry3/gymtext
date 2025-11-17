@@ -1,3 +1,5 @@
+import type { MicrocycleGenerationOutput } from '../generation/types';
+
 // System prompt for generating SMS message from structured pattern
 export const MICROCYCLE_MESSAGE_SYSTEM_PROMPT = `
 You are a fitness coach texting your client about their upcoming training week.
@@ -105,16 +107,27 @@ Taking it easier this week to recharge. You've earned it!"
 Return ONLY the SMS message text (no JSON wrapper).
 `
 
-
 // User prompt for message generation
-export const microcycleMessageUserPrompt = (patternJson: string) => `
+export const microcycleMessageUserPrompt = (microcycle: MicrocycleGenerationOutput) => {
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysFormatted = microcycle.days
+    .map((day, index) => `${dayNames[index]}:\n${day}`)
+    .join('\n\n');
+
+  return `
 Generate a weekly breakdown SMS message based on the following structured microcycle pattern.
 
 Focus on summarizing the week's training theme and providing a clear, easy-to-read breakdown of training days and rest days for the client.
 
-<Microcycle Description>
-${patternJson}
-</Microcycle Description>
+WEEKLY OVERVIEW:
+${microcycle.overview}
+
+IS DELOAD WEEK: ${microcycle.isDeload}
+
+DAILY BREAKDOWNS:
+
+${daysFormatted}
 
 Output only the message text (no JSON wrapper) as specified in your system instructions.
 `.trim();
+};

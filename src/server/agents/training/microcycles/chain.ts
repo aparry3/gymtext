@@ -2,51 +2,57 @@ import { createRunnableAgent } from '@/server/agents/base';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
-  createLongFormMicrocycleRunnable,
-  createDaysExtractionAgent,
+  MicrocycleChainContext,
+  createMicrocycleGenerationRunnable,
   createMicrocycleMessageAgent,
 } from './steps';
 import { createFormattedMicrocycleAgent } from './steps/formatted';
-import { FormattedMicrocycleSchema } from '@/server/models/microcycle/schema';
-import type { MicrocyclePatternInput, MicrocyclePatternOutput, MicrocyclePatternAgentDeps } from './types';
+import type { MicrocycleGenerationInput, MicrocycleAgentOutput, MicrocycleAgentDeps, DayOverviews } from './types';
 
 /**
- * Validates that all 7 day overviews are present and non-empty
+ * Maps the structured days array to DayOverviews object
+ * Days array is ordered: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
  */
-const validateDayOverviews = (dayOverviews: Record<string, unknown>): boolean => {
-  const requiredDays = [
-    'mondayOverview',
-    'tuesdayOverview',
-    'wednesdayOverview',
-    'thursdayOverview',
-    'fridayOverview',
-    'saturdayOverview',
-    'sundayOverview'
-  ];
+const mapDaysArrayToDayOverviews = (days: string[]): DayOverviews => {
+  if (days.length !== 7) {
+    throw new Error(`Expected exactly 7 days, got ${days.length}`);
+  }
 
-  return requiredDays.every(day => {
-    const value = dayOverviews[day];
-    return value && typeof value === 'string' && value.trim().length > 0;
-  });
+  return {
+    mondayOverview: days[0],
+    tuesdayOverview: days[1],
+    wednesdayOverview: days[2],
+    thursdayOverview: days[3],
+    fridayOverview: days[4],
+    saturdayOverview: days[5],
+    sundayOverview: days[6]
+  };
+};
+
+/**
+ * Validates that all 7 day strings are non-empty
+ */
+const validateDays = (days: string[]): boolean => {
+  return days.length === 7 && days.every(day => day && day.trim().length > 0);
 };
 
 /**
  * Microcycle Pattern Agent Factory
  *
  * Generates weekly training patterns with progressive overload using a composable chain:
- * 1. Generate long-form description and reasoning
- * 2. Extract day overviews from description (parallel with steps 3 and 4)
- * 3. Generate formatted markdown for display (parallel with steps 2 and 4)
- * 4. Generate SMS-formatted weekly message (parallel with steps 2 and 3)
+ * 1. Generate structured output with overview and days array
+ * 2. Generate formatted markdown for display (parallel with step 3)
+ * 3. Generate SMS-formatted weekly message (parallel with step 2)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  * Implements retry logic (max 3 attempts) with validation to ensure all 7 days are generated.
+ * Structured output ensures reliable parsing without regex.
  *
  * @param deps - Optional dependencies (config)
  * @returns Agent that generates microcycle day overviews, formatted markdown, and messages
  */
-export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) => {
-  return createRunnableAgent<MicrocyclePatternInput, MicrocyclePatternOutput>(async (input) => {
+export const createMicrocycleAgent = (deps?: MicrocycleAgentDeps) => {
+  return createRunnableAgent<MicrocycleGenerationInput, MicrocycleAgentOutput>(async (input) => {
     const { weekNumber } = input;
     const MAX_RETRIES = 3;
 
@@ -58,69 +64,61 @@ export const createMicrocyclePatternAgent = (deps?: MicrocyclePatternAgentDeps) 
           console.log(`[Microcycle] Retry attempt ${attempt}/${MAX_RETRIES} for week ${weekNumber}`);
         }
 
-        // Step 1: Create long-form runnable (generates its own prompt internally)
-        const longFormRunnable = createLongFormMicrocycleRunnable({
+        // Step 1: Create long-form runnable (with structured output)
+        const microcycleGenerationRunnable = createMicrocycleGenerationRunnable({
           systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
           agentConfig: deps?.config
         });
 
-        // Step 2a: Create days extraction agent (also detects isDeload)
-        const daysAgent = createDaysExtractionAgent({
-          agentConfig: deps?.config,
-          operationName: 'extract day overviews'
-        });
-
-        // Step 2b: Create formatted microcycle agent
+        // Step 2: Create formatted microcycle agent
         const formattedAgent = createFormattedMicrocycleAgent({
-          schema: FormattedMicrocycleSchema,
           operationName: 'generate formatted microcycle',
           agentConfig: deps?.config
         });
 
-        // Step 2c: Create message agent
+        // Step 3: Create message agent
         const messageAgent = createMicrocycleMessageAgent({
           agentConfig: deps?.config,
           operationName: 'generate microcycle message'
         });
 
-        // Compose the chain: long-form → parallel (days + formatted + message)
+        // Compose the chain: structured generation → parallel (formatted + message)
         const sequence = RunnableSequence.from([
-          longFormRunnable,
+          microcycleGenerationRunnable,
           RunnablePassthrough.assign({
-            daysExtraction: daysAgent,
             formatted: formattedAgent,
             message: messageAgent
           })
         ]);
 
         // Execute the chain
-        const result = await sequence.invoke(input);
+        const result:  MicrocycleChainContext & {formatted: string, message: string} = await sequence.invoke(input);
 
         // Validate that all 7 days are present and non-empty
-        if (!validateDayOverviews(result.daysExtraction)) {
-          const missingDays = [
-            'mondayOverview',
-            'tuesdayOverview',
-            'wednesdayOverview',
-            'thursdayOverview',
-            'fridayOverview',
-            'saturdayOverview',
-            'sundayOverview'
-          ].filter(day => !result.daysExtraction[day] || result.daysExtraction[day].trim().length === 0);
+        if (!validateDays(result.microcycle.days)) {
+          const emptyDayIndices = result.microcycle.days
+            .map((day, index) => (!day || day.trim().length === 0) ? index : -1)
+            .filter(index => index !== -1);
+
+          const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          const missingDays = emptyDayIndices.map(index => dayNames[index]);
 
           throw new Error(
-            `Microcycle generation validation failed: Missing or empty day overviews for ${missingDays.join(', ')}. ` +
+            `Microcycle generation validation failed: Missing or empty days for ${missingDays.join(', ')}. ` +
             `Expected all 7 days to be present and non-empty.`
           );
         }
 
+        // Map structured days array to DayOverviews object
+        const dayOverviews = mapDaysArrayToDayOverviews(result.microcycle.days);
+
         console.log(`[Microcycle] Successfully generated day overviews, formatted markdown, and message for week ${weekNumber}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
 
         return {
-          dayOverviews: result.daysExtraction,
-          description: result.longFormMicrocycle,
-          isDeload: result.daysExtraction.isDeload,
-          formatted: result.formatted.formatted, // Extract formatted string from schema object
+          dayOverviews,
+          description: result.microcycle.overview,
+          isDeload: result.microcycle.isDeload,
+          formatted: result.formatted,
           message: result.message
         };
       } catch (error) {

@@ -61,7 +61,7 @@ Starts simple and ends with a recovery week 💪
 
 
 
-export const planSummaryMessageUserPrompt = (user: UserWithProfile, planJson: string) => {
+export const planSummaryMessageUserPrompt = (user: UserWithProfile, overview: string) => {
   // Determine experience level from user profile
   let userExperience: 'beginner' | 'intermediate' = 'beginner';
 
@@ -83,7 +83,7 @@ Experience Level: ${userExperience}
 </User>
 
 <Fitness Plan>
-${planJson}
+${overview}
 </Fitness Plan>
 
 Guidelines:

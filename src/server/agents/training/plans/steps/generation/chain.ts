@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext, LongFormPlanOutput } from './types';
-import { LongFormPlanOutputSchema } from './types';
+import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext, FintessPlanOutput } from './types';
+import { FitnessPlanOutputSchema } from './types';
 
 /**
  * Long-Form Fitness Plan Agent Factory
@@ -14,20 +14,20 @@ import { LongFormPlanOutputSchema } from './types';
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured plan data
  */
-export const createLongFormPlanRunnable = (config: LongFormPlanConfig) => {
-  const model = initializeModel(LongFormPlanOutputSchema, config.agentConfig);
+export const createFitnessPlanGenerationRunnable = (config: LongFormPlanConfig) => {
+  const model = initializeModel(FitnessPlanOutputSchema, config.agentConfig);
 
   return createRunnableAgent(async (input: LongFormPlanInput): Promise<FitnessPlanChainContext> => {
     const systemMessage = config.systemPrompt;
-    const longFormPlan = await model.invoke([
+    const fitnessPlan = await model.invoke([
       { role: 'system', content: systemMessage },
       { role: 'user', content: input.prompt }
-    ]) as LongFormPlanOutput;
+    ]) as FintessPlanOutput;
 
-    console.log(`[LongFormPlan] Generated plan with ${longFormPlan.mesocycles.length} mesocycles`);
+    console.log(`[LongFormPlan] Generated plan with ${fitnessPlan.mesocycles.length} mesocycles`);
 
     return {
-      longFormPlan,
+      fitnessPlan,
       user: input.user,
       fitnessProfile: input.fitnessProfile
     };

@@ -222,13 +222,23 @@ export const createFormattedMicrocycleUserPrompt = (
   weekNumber: number,
   isDeload: boolean
 ): string => {
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysFormatted = longFormMicrocycle.days
+    .map((day, index) => `${dayNames[index]}:\n${day}`)
+    .join('\n\n');
+
   return `Convert the following long-form microcycle description into a beautifully formatted markdown document.
 
-LONG-FORM MICROCYCLE DESCRIPTION:
-${longFormMicrocycle}
+WEEKLY OVERVIEW:
+${longFormMicrocycle.overview}
+
+IS DELOAD WEEK: ${longFormMicrocycle.isDeload}
+
+DAILY BREAKDOWNS:
+
+${daysFormatted}
 
 WEEK NUMBER: ${weekNumber + 1}
-IS DELOAD: ${isDeload ? 'Yes - this is a deload/recovery week' : 'No - regular training week'}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt

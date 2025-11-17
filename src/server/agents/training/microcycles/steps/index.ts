@@ -3,17 +3,16 @@ export {
   MICROCYCLE_SYSTEM_PROMPT,
   microcycleUserPrompt,
 } from './generation/prompt';
-export { createLongFormMicrocycleRunnable } from './generation/chain';
+export { createMicrocycleGenerationRunnable } from './generation/chain';
+export {
+  MicrocycleGenerationOutputSchema,
+} from './generation/types';
 export type {
-  LongFormMicrocycleConfig,
-  LongFormMicrocycleInput,
-  LongFormMicrocycleOutput,
+  MicrocycleGenerationConfig,
+  MicrocycleGenerationOutput,
   MicrocycleChainContext,
 } from './generation/types';
 
-// Days extraction step
-export { createDaysExtractionAgent } from './days/chain';
-export type { DaysExtractionConfig, DayOverviews } from './days/types';
 
 // Message step
 export {

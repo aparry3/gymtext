@@ -8,9 +8,9 @@ export {
   LongFormMesocycleOutputSchema,
 } from './generation/types';
 export type {
-  LongFormMesocycleConfig,
-  LongFormMesocycleInput,
-  LongFormMesocycleOutput,
+  MesocycleAgentConfig,
+  MesocycleGenerationInput,
+  MesocycleGenerationOutput,
   MesocycleChainContext,
 } from './generation/types';
 

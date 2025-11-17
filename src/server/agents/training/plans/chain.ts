@@ -4,7 +4,7 @@ import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
-  createLongFormPlanRunnable,
+  createFitnessPlanGenerationRunnable,
   createPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
@@ -35,13 +35,12 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
       const userPrompt = fitnessPlanUserPrompt(user, fitnessProfile);
 
       // Step 1: Create long-form runnable (with structured output)
-      const longFormRunnable = createLongFormPlanRunnable({
+      const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
         systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT
       });
 
       // Step 2: Create formatting agent
       const formattedAgent = createFormattedFitnessPlanAgent({
-        schema: FormattedFitnessPlanSchema,
         operationName: 'format fitness plan',
       });
 
@@ -52,7 +51,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Compose the chain: structured generation → parallel (formatted + message)
       const sequence = RunnableSequence.from([
-        longFormRunnable,
+        fitnessPlanGenerationRunnable,
         RunnablePassthrough.assign({
           formatted: formattedAgent,
           message: messageAgent

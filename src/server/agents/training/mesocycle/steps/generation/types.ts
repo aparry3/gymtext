@@ -14,14 +14,14 @@ export const LongFormMesocycleOutputSchema = z.object({
   })
 });
 
-export type LongFormMesocycleOutput = z.infer<typeof LongFormMesocycleOutputSchema>;
+export type MesocycleGenerationOutput = z.infer<typeof LongFormMesocycleOutputSchema>;
 
-export interface LongFormMesocycleConfig {
+export interface MesocycleAgentConfig {
   systemPrompt: string;
   agentConfig?: AgentConfig;
 }
 
-export interface LongFormMesocycleInput {
+export interface MesocycleGenerationInput {
   mesocycleOverview: string;
   user: UserWithProfile;
   fitnessProfile: string;
@@ -34,5 +34,5 @@ export interface MesocycleChainContext {
   mesocycleOverview: string;
   user: UserWithProfile;
   fitnessProfile: string;
-  longFormMesocycle: LongFormMesocycleOutput;
+  mesocycle: MesocycleGenerationOutput;
 }

@@ -1,5 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import type { LongFormMesocycleConfig, LongFormMesocycleInput, MesocycleChainContext, LongFormMesocycleOutput } from './types';
+import type { MesocycleAgentConfig, MesocycleGenerationInput, MesocycleChainContext, MesocycleGenerationOutput } from './types';
 import { LongFormMesocycleOutputSchema } from './types';
 import { mesocycleUserPrompt } from './prompt';
 
@@ -15,10 +15,10 @@ import { mesocycleUserPrompt } from './prompt';
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured mesocycle data
  */
-export const createLongFormMesocycleRunnable = (config: LongFormMesocycleConfig) => {
+export const createLongFormMesocycleRunnable = (config: MesocycleAgentConfig) => {
   const model = initializeModel(LongFormMesocycleOutputSchema, config.agentConfig);
 
-  return createRunnableAgent(async (input: LongFormMesocycleInput): Promise<MesocycleChainContext> => {
+  return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;
     const userPrompt = mesocycleUserPrompt(
       input.mesocycleOverview,
@@ -27,15 +27,15 @@ export const createLongFormMesocycleRunnable = (config: LongFormMesocycleConfig)
     );
 
 
-    const longFormMesocycle = await model.invoke([
+    const mesocycle = await model.invoke([
       { role: 'system', content: systemMessage },
       { role: 'user', content: userPrompt }
-    ]) as LongFormMesocycleOutput;
+    ]) as MesocycleGenerationOutput;
 
-    console.log(`[LongFormMesocycle] Generated mesocycle with ${longFormMesocycle.microcycles.length} microcycles`);
+    console.log(`[MesocycleGenerationRunnable] Generated mesocycle with ${mesocycle.microcycles.length} microcycles`);
 
     return {
-      longFormMesocycle,
+      mesocycle,
       mesocycleOverview: input.mesocycleOverview,
       user: input.user,
       fitnessProfile: input.fitnessProfile

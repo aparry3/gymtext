@@ -16,10 +16,10 @@ export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) =>
   const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
-    const { longFormMicrocycle } = input;
+    const { microcycle } = input;
 
     // Build user prompt from long-form description
-    const userPrompt = microcycleMessageUserPrompt(longFormMicrocycle);
+    const userPrompt = microcycleMessageUserPrompt(microcycle);
     console.log(`[MicrocycleMessageAgent] User prompt: ${userPrompt}`);
     // Invoke model
     const result = await model.invoke([

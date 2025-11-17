@@ -5,8 +5,7 @@ import {
   createLongFormMesocycleRunnable,
   createFormattedMesocycleAgent,
 } from './steps';
-import { FormattedMesocycleSchema } from '@/server/models/mesocycle/schema';
-import type { MesocycleAgentDeps, MesocycleOverview } from './types';
+import type { MesocycleAgentDeps, MesocycleChainContext, MesocycleOverview } from './types';
 
 export type { FitnessProfileContextService, MesocycleAgentDeps, MesocycleOverview } from './types';
 
@@ -39,7 +38,6 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
       // Step 2: Create formatting agent
       const formattedAgent = createFormattedMesocycleAgent({
-        schema: FormattedMesocycleSchema,
         operationName: 'format mesocycle',
       });
 
@@ -52,7 +50,7 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
       ]);
 
       // Execute the chain
-      const result = await sequence.invoke({
+      const result: MesocycleChainContext & {formatted: string} = await sequence.invoke({
         mesocycleOverview: mesocycleOverviewString,
         user,
         fitnessProfile,
@@ -60,13 +58,13 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: MesocycleOverview = {
-        description: result.longFormMesocycle.overview,
-        microcycles: result.longFormMesocycle.microcycles,
-        formatted: result.formatted.formatted,
-        durationWeeks: result.longFormMesocycle.microcycles.length,
+        description: result.mesocycle.overview,
+        microcycles: result.mesocycle.microcycles,
+        formatted: result.formatted,
+        durationWeeks: result.mesocycle.microcycles.length,
       };
 
-      console.log(`[Mesocycle] Generated mesocycle with ${result.longFormMesocycle.microcycles.length} microcycles for user ${user.id}`);
+      console.log(`[Mesocycle] Generated mesocycle with ${result.mesocycle.microcycles.length} microcycles for user ${user.id}`);
 
       return finalResult;
     } catch (error) {

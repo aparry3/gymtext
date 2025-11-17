@@ -5,7 +5,7 @@ import type { UserWithProfile } from "@/server/models/userModel";
 /**
  * Schema for structured fitness plan generation output
  */
-export const LongFormPlanOutputSchema = z.object({
+export const FitnessPlanOutputSchema = z.object({
   overview: z.string({
     description: "Comprehensive plan overview including reasoning, split selection, and overall structure"
   }),
@@ -14,7 +14,7 @@ export const LongFormPlanOutputSchema = z.object({
   })
 });
 
-export type LongFormPlanOutput = z.infer<typeof LongFormPlanOutputSchema>;
+export type FintessPlanOutput = z.infer<typeof FitnessPlanOutputSchema>;
 
 export interface LongFormPlanConfig {
   systemPrompt: string;
@@ -33,5 +33,5 @@ export interface LongFormPlanInput {
 export interface FitnessPlanChainContext {
   user: UserWithProfile;
   fitnessProfile: string;
-  longFormPlan: LongFormPlanOutput;
+  fitnessPlan: FintessPlanOutput;
 }

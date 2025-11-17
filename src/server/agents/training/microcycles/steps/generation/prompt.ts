@@ -17,28 +17,21 @@ Your job is to produce a **structured long-form weekly plan** suitable for downs
 ---
 
 # ⚠️ OUTPUT FORMAT (MANDATORY — NO DEVIATION)
-Your output MUST contain these THREE SECTIONS IN ORDER:
 
-1. **WEEKLY OVERVIEW**
-2. **DAY-BY-DAY BREAKDOWN** (ALL 7 DAYS)
-3. **WEEKLY NOTES**
+Your output will be structured as JSON with three fields:
 
-NO TEXT may appear before WEEKLY OVERVIEW or after WEEKLY NOTES.
+**overview** - A comprehensive weekly overview
+**isDeload** - A boolean (true/false) indicating if this is a deload/recovery week
+**days** - An array of exactly 7 day strings in order (Monday through Sunday)
 
 ---
 
-# 1️⃣ WEEKLY OVERVIEW — REQUIRED STRUCTURE
+# 1️⃣ OVERVIEW FIELD — REQUIRED STRUCTURE
 
-If this is a deload week, the FIRST LINE of this section MUST be:
-
-*** DELOAD WEEK ***
-
-This marker MUST NOT appear unless this specific week is a deload.
-
-Weekly Overview MUST include:
+The **overview** field MUST include:
 - Week number + theme (e.g., "Week 3 — Peak Volume")
 - Week objective within the mesocycle
-- Exact split for the week (copied from the overview)
+- Exact split for the week (copied from the microcycle overview)
 - Total sessions this week
 - Weekly volume trend (baseline, progressive, peak, deload)
 - Weekly intensity trend (steady, rising, taper)
@@ -46,22 +39,37 @@ Weekly Overview MUST include:
 - Conditioning plan (type, frequency, placement)
 - Rest day placement + rationale
 - How this week fits into the broader mesocycle
+- Weekly notes on adaptations, fatigue management, and preparation for next week
 
 NO exercises. NO sets/reps.
 
+# 1️⃣a. ISDELOAD FIELD — REQUIRED
+
+The **isDeload** boolean field MUST be:
+- 'true' - ONLY if this is explicitly a deload/recovery week with reduced volume and intensity
+- 'false' - For all regular training weeks
+
+This field is separate from the overview text and must be set accurately based on the microcycle type.
+
 ---
 
-# 2️⃣ DAY-BY-DAY BREAKDOWN — REQUIRED STRUCTURE
+# 2️⃣ DAYS ARRAY — REQUIRED STRUCTURE
 
-You MUST output ALL 7 days (Monday → Sunday).
+The **days** array MUST contain exactly 7 strings in this order:
+1. Monday
+2. Tuesday
+3. Wednesday
+4. Thursday
+5. Friday
+6. Saturday
+7. Sunday
 
-Each day MUST follow this EXACT header pattern:
+Each day string should include:
 
-\`\`\`
-*** MONDAY - <Session Type> ***
-\`\`\`
+**Day Header:**
+- Day name and session type (e.g., "Monday - Full Body Strength")
 
-<Session Type> examples:
+**Session Type** examples:
 - Full Body Strength
 - Lower Strength
 - Push A
@@ -70,7 +78,7 @@ Each day MUST follow this EXACT header pattern:
 
 Session Type MUST match the microcycle overview and CANNOT be invented.
 
-For **each day**, include:
+**For each day, include:**
 
 1. **Session Objective**
    - What the day is designed to accomplish.
@@ -83,9 +91,9 @@ For **each day**, include:
 
 4. **Rep & RIR Bands**
    - Follow mesocycle rules:
-     - Compounds: 4–6 or 6–10 w/ 1–3 RIR  
-     - Hypertrophy: 6–10 or 10–15 @ 0–2 RIR  
-     - Core: 30–60 sec  
+     - Compounds: 4–6 or 6–10 w/ 1–3 RIR
+     - Hypertrophy: 6–10 or 10–15 @ 0–2 RIR
+     - Core: 30–60 sec
      - Deload: all movements @ 2–3 RIR w/ reduced volume
 
 5. **Intensity / Effort Focus**
@@ -93,83 +101,34 @@ For **each day**, include:
 
 6. **Conditioning (if applicable)**
    Follow strict rules:
-   - Zone 2 allowed after upper-body or rest days  
-   - Avoid after lower-body strength  
-   - 20–30 minutes unless specified otherwise  
-   - Deload → light Z2 only  
+   - Zone 2 allowed after upper-body or rest days
+   - Avoid after lower-body strength
+   - 20–30 minutes unless specified otherwise
+   - Deload → light Z2 only
 
 7. **Warm-Up Focus**
    - Provide pattern-specific prep guidance.
 
 8. **Rest Day Specifics** (If the session type is Rest Day)
-   - Light movement goals  
-   - Optional light Zone 2  
+   - Light movement goals
+   - Optional light Zone 2
    - Recovery focus  
-
----
-
-# 3️⃣ WEEKLY NOTES — REQUIRED STRUCTURE
-
-Include:
-- Targeted adaptations this week  
-- How fatigue is managed  
-- How conditioning integrates with lifting  
-- How this week prepares the athlete for the next one  
-- Any relevant time-per-session considerations  
-
----
-
-# 🔶 STRUCTURAL EXAMPLE (DO NOT COPY CONTENT)
-
-This is ONLY an example of structure.  
-Do NOT copy themes, splits, or coaching content.
-
-\`\`\`
-WEEKLY OVERVIEW
-Week 1 — [Theme]
-- Objectives...
-- Split: [Split Name]
-- Weekly trends: Volume = Baseline, Intensity = Steady
-- Conditioning plan...
-- Rest day placement...
-- Integration into the mesocycle...
-
-DAY-BY-DAY BREAKDOWN
-
-*** MONDAY - [Session Type] ***
-- Session Objective...
-- Primary Movement Patterns...
-- Daily Volume Slice...
-- Rep & RIR Bands...
-- Intensity...
-- Conditioning...
-- Warm-Up Focus...
-
-*** TUESDAY - [Session Type] ***
-[Same structure]
-
-...continue through Sunday...
-
-WEEKLY NOTES
-- Summary of adaptations...
-- Fatigue/recovery management...
-- Preparation for next week...
-\`\`\`
 
 ---
 
 # 🔥 STRICT VALIDATION RULES
 
 Your output is INVALID if:
-- Any section is missing  
-- Section order is changed  
-- DELOAD marker appears incorrectly  
-- Any day header is missing or incorrectly formatted  
-- Exercises are listed  
-- Sets/reps are listed  
-- A new split or weekly structure is invented  
-- Session types don't match the microcycle overview  
-- The text contains additional commentary or meta explanations  
+- Overview field is missing or incomplete
+- isDeload field is missing or not a boolean
+- isDeload is true for a non-deload week, or false for a deload week
+- Days array does not contain exactly 7 entries
+- Days are not in Monday-Sunday order
+- Exercises are listed
+- Sets/reps are listed
+- A new split or weekly structure is invented
+- Session types don't match the microcycle overview
+- The output contains additional commentary or meta explanations
 
 If invalid → regenerate before submitting.
 
@@ -197,22 +156,22 @@ export const microcycleUserPrompt = ({
    }**.
  
  You MUST:
+ - Output JSON with overview, isDeload, and days fields
  - Follow the split, weekly frequency, and progression EXACTLY as defined
- - Use the required section structure
- - Include all 7 days with proper headers
+ - Set isDeload to true ONLY if this is a deload/recovery week, otherwise false
+ - Include exactly 7 days in Monday-Sunday order in the days array
  - Respect RIR, volume, and conditioning rules
- - Include the *** DELOAD WEEK *** marker ONLY if this week is a deload
- 
+
  You MUST NOT:
  - Invent new structures or splits
  - Add exercises or sets/reps
  - Change session types
- 
+
  <Microcycle Overview>
  ${microcycleOverview}
  </Microcycle Overview>
- 
- Generate the full Weekly Overview, Day-by-Day Breakdown, and Weekly Notes exactly as instructed.
+
+ Generate the structured output with overview, isDeload, and days fields exactly as instructed.
  `.trim();
  };
  

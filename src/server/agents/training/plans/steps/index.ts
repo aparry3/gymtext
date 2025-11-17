@@ -3,14 +3,14 @@ export {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
 } from './generation/prompt';
-export { createLongFormPlanRunnable } from './generation/chain';
+export { createFitnessPlanGenerationRunnable } from './generation/chain';
 export {
-  LongFormPlanOutputSchema,
+  FitnessPlanOutputSchema,
 } from './generation/types';
 export type {
   LongFormPlanConfig,
   LongFormPlanInput,
-  LongFormPlanOutput,
+  FintessPlanOutput,
   FitnessPlanChainContext,
 } from './generation/types';
 
