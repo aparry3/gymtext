@@ -48,7 +48,9 @@
     "test:docker:integration": "./scripts/docker/run-tests.sh integration",
     "test:docker:watch": "./scripts/docker/run-tests.sh watch keep",
     "test:docker:coverage": "./scripts/docker/run-tests.sh coverage",
-    "favicon:generate": "node scripts/generate-favicons.js"
+    "favicon:generate": "node scripts/generate-favicons.js",
+    "backup:local": "source .env.local && ./scripts/backup-db.sh",
+    "backup:prod": "source .env.production && ./scripts/backup-db.sh"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
