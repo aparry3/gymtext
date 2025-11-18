@@ -1,5 +1,8 @@
 // Main operation
-export { updateWorkout, type UpdateWorkoutContext } from './chain';
+export { createWorkoutUpdateAgent } from './chain';
 
-// Generation prompts
+// Types
+export type { WorkoutUpdateInput, WorkoutUpdateOutput } from './types';
+
+// Generation prompts (for reference/testing)
 export { SYSTEM_PROMPT, userPrompt } from './steps/generation/prompt';

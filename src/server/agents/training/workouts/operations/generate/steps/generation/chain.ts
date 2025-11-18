@@ -1,6 +1,9 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { WorkoutGenerationConfig, WorkoutGenerationInput } from './types';
+import { WorkoutGenerationConfig } from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
+import { SYSTEM_PROMPT, userPrompt } from './prompt';
+import { formatFitnessProfile } from '@/server/utils/formatters';
+import { WorkoutGenerateInput } from './types';
 
 /**
  * Long-Form Workout Agent Factory
@@ -14,16 +17,19 @@ import { WorkoutChainContext } from '../../../../shared/types';
  */
 export const createWorkoutGenerationRunnable = (config: WorkoutGenerationConfig) => {
   const model = initializeModel(undefined, config.agentConfig);  
-  return createRunnableAgent(async (input: WorkoutGenerationInput): Promise<WorkoutChainContext> => {
-    const systemMessage = config.systemPrompt;
+  return createRunnableAgent(async (input: WorkoutGenerateInput): Promise<WorkoutChainContext> => {
+        // Prepare input with fitness profile and prompt
+    const fitnessProfile = formatFitnessProfile(input.user);
+    const prompt = userPrompt({...input, fitnessProfile});
+    
     const description = await model.invoke([
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: input.prompt }
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: prompt }
     ]) as string;
     return {
       description,
       user: input.user,
-      fitnessProfile: input.fitnessProfile,
+      fitnessProfile,
       date: input.date
     };
   });

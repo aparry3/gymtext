@@ -1,4 +1,4 @@
-import { DailyWorkoutInput } from './types';
+import { WorkoutGeneratePromptParams } from './types';
 
 export const SYSTEM_PROMPT = `
 ROLE
@@ -204,10 +204,10 @@ Just output the finished workout.
 
 // User prompt - dynamic context and user-specific data
 export const userPrompt = (
-  input: DailyWorkoutInput
-) => (fitnessProfile: string) => {    
+  input: WorkoutGeneratePromptParams
+) => {    
   
-  const { dayOverview, isDeload } = input;
+  const { dayOverview, isDeload, fitnessProfile } = input;
   
     const deloadNotice = isDeload
       ? `⚠️ This is a DELOAD WEEK. Follow reduced volume and higher RIR targets as indicated in the Day Overview.\n\n`

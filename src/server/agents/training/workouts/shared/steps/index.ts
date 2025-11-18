@@ -2,7 +2,6 @@
 export { createWorkoutGenerationRunnable } from '../../operations/generate/steps/generation/chain';
 export type {
   WorkoutGenerationConfig,
-  WorkoutGenerationInput,
 } from '../../operations/generate/steps/generation/types';
 
 // Formatted step (shared across all workout operations)

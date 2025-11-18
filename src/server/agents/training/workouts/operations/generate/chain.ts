@@ -1,19 +1,18 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
-import { formatFitnessProfile } from '@/server/utils/formatters';
 import {
   createWorkoutGenerationRunnable,
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
   type WorkoutChainResult,
 } from '../../shared';
-import { SYSTEM_PROMPT, userPrompt } from './prompt';
-import type { DailyWorkoutInput, DailyWorkoutAgentDeps } from './types';
+import type { WorkoutGenerateAgentDeps } from './types';
+import { WorkoutGenerateInput } from './steps/generation/types';
 
 /**
- * Daily Workout Agent Factory
+ * Workout Generate Agent Factory
  *
- * Generates personalized daily workouts using a composable chain:
+ * Generates personalized workouts using a composable chain:
  * 1. Generate long-form workout description (generation step)
  * 2. In parallel: convert to formatted markdown + SMS message (shared steps)
  *
@@ -21,13 +20,12 @@ import type { DailyWorkoutInput, DailyWorkoutAgentDeps } from './types';
  * Implements retry logic (max 2 attempts) with validation.
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that generates daily workouts with formatted text and message
+ * @returns Agent that generates workouts with formatted text and message
  */
-export const createDailyWorkoutAgent = (deps?: DailyWorkoutAgentDeps) => {
-  return createRunnableAgent<DailyWorkoutInput, WorkoutChainResult>(async (input) => {
+export const createWorkoutGenerateAgent = (deps?: WorkoutGenerateAgentDeps) => {
+  return createRunnableAgent<WorkoutGenerateInput, WorkoutChainResult>(async (input) => {
     // Step 1: Create generation runnable (generate-specific)
     const generationRunnable = createWorkoutGenerationRunnable({
-      systemPrompt: SYSTEM_PROMPT,
       agentConfig: deps?.config
     });
 
@@ -53,9 +51,6 @@ export const createDailyWorkoutAgent = (deps?: DailyWorkoutAgentDeps) => {
       })
     ]);
 
-    // Prepare input with fitness profile and prompt
-    const fitnessProfile = formatFitnessProfile(input.user);
-    const prompt = userPrompt(input)(fitnessProfile);
 
     // Execute with retry mechanism
     const maxRetries = 2;
@@ -63,11 +58,7 @@ export const createDailyWorkoutAgent = (deps?: DailyWorkoutAgentDeps) => {
       try {
         console.log(`[generate workout] Attempting operation (attempt ${attempt + 1}/${maxRetries})`);
 
-        const result = await sequence.invoke({
-          ...input,
-          fitnessProfile,
-          prompt
-        });
+        const result = await sequence.invoke(input);
 
         console.log(`[generate workout] Successfully completed with workout, formatted text, and message`);
 

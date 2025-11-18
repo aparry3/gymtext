@@ -1,43 +1,37 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables';
-import { formatFitnessProfile } from '@/server/utils/formatters';
-import { WorkoutInstance } from '@/server/models/workout';
-import { UserWithProfile } from '@/server/models';
 import {
-  createWorkoutGenerationRunnable,
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
   type WorkoutChainResult,
 } from '../../shared';
-import { SYSTEM_PROMPT, userPrompt } from './steps/generation/prompt';
 import { createWorkoutUpdateGenerationRunnable } from './steps/generation/chain';
-
-export interface UpdateWorkoutContext {
-  user: UserWithProfile;
-  workout: WorkoutInstance;
-  changeRequest: string;
-}
+import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps } from './types';
 
 /**
- * Update Workout Agent
+ * Workout Update Agent Factory
  *
  * Updates an existing workout based on user constraints using a composable chain:
- * 1. Generate updated long-form workout description (generation step)
+ * 1. Generate updated long-form workout description (update-specific generation step)
  * 2. In parallel: convert to formatted markdown + SMS message (shared steps)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  * Implements retry logic (max 2 attempts) with validation.
  * Tracks modifications made to the original workout.
+ *
+ * @param deps - Optional dependencies (config)
+ * @returns Agent that updates workouts with formatted text and message
  */
-export const updateWorkout = async (context: UpdateWorkoutContext): Promise<WorkoutChainResult> => {
-  if (!context.workout.description) {
-    throw new Error('Workout description is required');
-  }
-  if (!context.changeRequest) {
-    throw new Error('Change request is required');
-  }
+export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
+  return createRunnableAgent<WorkoutUpdateInput, WorkoutChainResult>(async (input) => {
+    // Validation
+    if (!input.workout.description) {
+      throw new Error('Workout description is required');
+    }
+    if (!input.changeRequest) {
+      throw new Error('Change request is required');
+    }
 
-  const agent = createRunnableAgent<UpdateWorkoutContext & { date: Date }, WorkoutChainResult>(async (input) => {
     // Step 1: Create generation runnable (update-specific)
     const generationRunnable = createWorkoutUpdateGenerationRunnable({
       agentConfig: deps?.config
@@ -47,11 +41,13 @@ export const updateWorkout = async (context: UpdateWorkoutContext): Promise<Work
     const formattedAgent = createFormattedWorkoutAgent({
       includeModifications: true,
       operationName: 'update workout',
+      agentConfig: deps?.config
     });
 
     // Step 2b: Create message agent (shared step)
     const messageAgent = createWorkoutMessageAgent({
       operationName: 'update workout',
+      agentConfig: deps?.config
     });
 
     // Compose the full chain: generation → parallel (formatted + message)
@@ -63,20 +59,13 @@ export const updateWorkout = async (context: UpdateWorkoutContext): Promise<Work
       })
     ]);
 
-    // Prepare input with fitness profile and prompt
-    const fitnessProfile = formatFitnessProfile(input.user);
-
     // Execute with retry mechanism
     const maxRetries = 2;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         console.log(`[update workout] Attempting operation (attempt ${attempt + 1}/${maxRetries})`);
 
-        const result = await sequence.invoke({
-          ...input,
-          fitnessProfile,
-          prompt
-        });
+        const result = await sequence.invoke(input);
 
         console.log(`[update workout] Successfully completed with updated workout, formatted text, and message`);
 
@@ -107,6 +96,4 @@ export const updateWorkout = async (context: UpdateWorkoutContext): Promise<Work
 
     throw new Error(`[update workout] Failed after all retry attempts`);
   });
-
-  return agent.invoke({...context, date: context.workout.date as Date});
 };

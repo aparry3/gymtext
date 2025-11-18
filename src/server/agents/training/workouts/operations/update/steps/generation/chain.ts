@@ -1,33 +1,60 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { WorkoutUpdateGenerationInput } from './types';
+import {
+  WorkoutUpdateGenerationInput,
+  WorkoutUpdateGenerationConfig,
+  WorkoutUpdateGenerationOutputSchema,
+  WorkoutUpdateGenerationOutput,
+} from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
 import { SYSTEM_PROMPT, userPrompt } from './prompt';
 import { formatFitnessProfile } from '@/server/utils/formatters';
 
 /**
- * Long-Form Workout Agent Factory
+ * Workout Update Generation Runnable
  *
- * Generates comprehensive workout plans in natural language form, including both a detailed description and reasoning.
+ * Generates updated workout text using structured output with conditional modifications tracking.
  *
- * Used as the first step in the workout generation chain to produce a long-form workout, which can then be structured or summarized for other uses.
+ * Uses Zod schema to parse JSON output with:
+ * - overview: Full workout text (modified or original)
+ * - wasModified: Boolean indicating if changes were made
+ * - modifications: (conditional) Explanation of changes when wasModified is true
  *
- * @param config - Configuration containing prompts and (optionally) agent/model settings.
- * @returns Agent (runnable) that produces a long-form workout object with description and reasoning.
+ * The overview field is extracted and returned as "description" for downstream processing.
+ *
+ * @param config - Configuration containing (optionally) agent/model settings
+ * @returns Agent (runnable) that produces workout context with modification tracking
  */
 export const createWorkoutUpdateGenerationRunnable = (config: WorkoutUpdateGenerationConfig) => {
-  const model = initializeModel(undefined, config.agentConfig);  
+  // Initialize model with structured output schema
+  const model = initializeModel(WorkoutUpdateGenerationOutputSchema, config.agentConfig);
+
   return createRunnableAgent(async (input: WorkoutUpdateGenerationInput): Promise<WorkoutChainContext> => {
     const fitnessProfile = formatFitnessProfile(input.user);
     const prompt = userPrompt(input.workout.description!, input.changeRequest, fitnessProfile);
-    const description = await model.invoke([
+
+    // Invoke model with structured output
+    const result = await model.invoke([
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: prompt }
-    ]) as string;
+    ]) as WorkoutUpdateGenerationOutput;
+
+    // Log modification status
+    if (result.wasModified) {
+      console.log('[update generation] Workout was modified:', result.modifications);
+    } else {
+      console.log('[update generation] Workout was not modified - original workout satisfies constraints');
+    }
+
+    // Extract overview as description for downstream processing
+    // Preserve modification metadata for potential logging/debugging
     return {
-      description,
+      description: result.overview,
       user: input.user,
       fitnessProfile,
-      date: input.date
+      date: input.date,
+      // Optional metadata
+      wasModified: result.wasModified,
+      modifications: result.wasModified ? result.modifications : undefined,
     };
   });
 }

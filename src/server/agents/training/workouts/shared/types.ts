@@ -15,6 +15,9 @@ export interface BaseWorkoutChainInput {
 export interface WorkoutChainContext extends BaseWorkoutChainInput {
   description: string;
   fitnessProfile: string;
+  // Optional metadata from update operation (tracks if workout was modified)
+  wasModified?: boolean;
+  modifications?: string;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
+import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts/operations/generate';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanService } from './fitnessPlanService';
@@ -144,7 +144,7 @@ export class WorkoutInstanceService {
       // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { formatted, message, description } = await createDailyWorkoutAgent().invoke({
+      const { formatted, message, description } = await createWorkoutGenerateAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayOverview, // Pass the string overview instead of pattern object

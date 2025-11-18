@@ -1,7 +1,7 @@
 import { UserService } from '../user/userService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { updateWorkout } from '@/server/agents/training/workouts/operations/update';
+import { createWorkoutUpdateAgent } from '@/server/agents/training/workouts/operations/update';
 import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
@@ -111,10 +111,11 @@ export class WorkoutModificationService {
       }
 
 
-      // Use the replace workout agent to modify the workout
-      const result = await updateWorkout({
+      // Use the workout update agent to modify the workout
+      const result = await createWorkoutUpdateAgent().invoke({
         workout: existingWorkout,
         user,
+        date: existingWorkout.date as Date,
         changeRequest: reason,
       });
 

@@ -1,12 +1,13 @@
 // Generate operation
 export {
-  createDailyWorkoutAgent,
-  type DailyWorkoutInput,
-  type DailyWorkoutOutput,
+  createWorkoutGenerateAgent,
+  type WorkoutGenerateInput,
+  type WorkoutGenerateOutput,
 } from './generate';
 
 // Update operation
 export {
-  updateWorkout,
-  type UpdateWorkoutContext,
+  createWorkoutUpdateAgent,
+  type WorkoutUpdateInput,
+  type WorkoutUpdateOutput,
 } from './update';
