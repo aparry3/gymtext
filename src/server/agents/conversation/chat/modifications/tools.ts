@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { type SubstituteExerciseResult, type ModifyWorkoutResult } from '@/server/services';
+import { type SubstituteExerciseResult, type UpdateWorkoutResult } from '@/server/services';
 import { type ModifyWeekResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 
@@ -8,7 +8,7 @@ import { tool, type StructuredToolInterface } from '@langchain/core/tools';
  */
 export interface WorkoutModificationService {
   substituteExercise: (params: SubstituteExerciseParams) => Promise<SubstituteExerciseResult>;
-  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
+  modifyWorkout: (params: UpdateWorkoutParams) => Promise<UpdateWorkoutResult>;
 }
 
 export interface MicrocycleModificationService {
@@ -44,7 +44,7 @@ export interface SubstituteExerciseParams {
 }
 
 
-const ModifyWorkoutSchema = z.object({
+const UpdateWorkoutSchema = z.object({
   userId: z.string().describe('The user ID'),
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
   reason: z.string().describe('Reason for the modification'),
@@ -53,9 +53,9 @@ const ModifyWorkoutSchema = z.object({
   focusAreas: z.array(z.string()).nullish().describe('Optional: specific areas to focus on or avoid'),
 });
 
-type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
+type UpdateWorkoutInput = z.infer<typeof UpdateWorkoutSchema>;
 
-export interface ModifyWorkoutParams {
+export interface UpdateWorkoutParams {
   userId: string;
   workoutDate: Date;
   reason: string;
@@ -121,7 +121,7 @@ DO NOT use for workout type changes - use modify_week instead.`,
 
   // Tool 2: Modify Workout
   const modifyWorkoutTool = tool(
-    async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<ModifyWorkoutResult> => {
+    async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: UpdateWorkoutInput): Promise<UpdateWorkoutResult> => {
       return await deps.workoutService.modifyWorkout({
         userId,
         workoutDate: new Date(workoutDate),
@@ -143,7 +143,7 @@ Use ONLY when the user explicitly wants to keep the same muscle group/workout ty
 IMPORTANT: User must indicate they want to keep the SAME muscle group/workout type.
 DO NOT use if user requests a DIFFERENT muscle group or doesn't specify - use modify_week instead.
 This is the LEAST commonly used tool - default to modify_week when uncertain.`,
-      schema: ModifyWorkoutSchema,
+      schema: UpdateWorkoutSchema,
     }
   );
 

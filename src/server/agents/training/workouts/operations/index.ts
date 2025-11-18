@@ -14,7 +14,6 @@ export {
 
 // Replace operation
 export {
-  replaceWorkout,
-  type ReplaceWorkoutContext,
-  type ReplaceWorkoutParams,
-} from './replace';
+  updateWorkout,
+  type UpdateWorkoutContext,
+} from './update';

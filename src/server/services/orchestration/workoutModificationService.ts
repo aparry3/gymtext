@@ -2,7 +2,7 @@ import { UserService } from '../user/userService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { substituteExercises, type Modification } from '@/server/agents/training/workouts/operations/substitute';
-import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/training/workouts/operations/replace';
+import { updateWorkout, type UpdateWorkoutContext } from '@/server/agents/training/workouts/operations/update';
 import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared/chainFactory';
@@ -25,31 +25,13 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
  * and eliminates circular dependencies between MicrocycleService and WorkoutInstanceService.
  */
 
-export interface SubstituteExerciseParams {
-  userId: string;
-  workoutDate: Date;
-  exercises: string[];
-  reason: string;
-}
-
-export interface SubstituteExerciseResult {
-  success: boolean;
-  workout?: WorkoutChainResult;
-  modificationsApplied?: string[];
-  message?: string;
-  error?: string;
-}
-
-export interface ModifyWorkoutParams {
+export interface UpdateWorkoutParams {
   userId: string;
   workoutDate: Date;
   reason: string;
-  constraints: string[];
-  preferredEquipment?: string[];
-  focusAreas?: string[];
 }
 
-export interface ModifyWorkoutResult {
+export interface UpdateWorkoutResult {
   success: boolean;
   workout?: WorkoutChainResult;
   modificationsApplied?: string[];
@@ -95,96 +77,13 @@ export class WorkoutModificationService {
     return WorkoutModificationService.instance;
   }
 
-  /**
-   * Substitute a specific exercise in a workout using the workout update agent
-   */
-  public async substituteExercise(params: SubstituteExerciseParams): Promise<SubstituteExerciseResult> {
-    try {
-      const { userId, workoutDate, exercises, reason } = params;
-
-      // Get user with profile first to determine timezone
-      const user = await this.userService.getUserWithProfile(userId);
-      if (!user) {
-        return {
-          success: false,
-          error: 'User not found',
-        };
-      }
-
-      // Convert the workout date to the user's timezone
-      // If the date came as an ISO string like "2024-10-08", it was parsed as UTC midnight
-      // We need to interpret it as a calendar date in the user's timezone instead
-      const dateStr = workoutDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
-      const userLocalDate = DateTime.fromISO(dateStr, { zone: user.timezone }).startOf('day').toJSDate();
-
-      // Get the workout for the specified date
-      const workout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, userLocalDate);
-
-      if (!workout) {
-        return {
-          success: false,
-          error: 'No workout found for the specified date',
-        };
-      }
-
-      // Build modification object for the agent
-      const modifications: Modification[] = exercises.map(exercise => ({
-        exercise,
-        reason,
-        constraints: [],
-      }));
-
-      // Use the substitute exercises agent to perform the substitution
-      const result = await substituteExercises({
-        workout,
-        user,
-        modifications,
-      });
-
-      // Extract theme from markdown title (first # line) or use default
-      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
-      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
-
-      // Extract modifications applied section from markdown if present
-      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
-      const modificationsApplied = modificationsMatch
-        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
-        : [];
-
-      // Store formatted text in details.formatted
-      const details = {
-        formatted: result.formatted,  // Store the formatted markdown text
-        theme,                       // Keep theme for quick access
-      };
-
-      // Update the workout in the database
-      await this.workoutInstanceService.updateWorkout(workout.id, {
-        details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        description: result.description,
-        message: result.message,
-      });
-
-      return {
-        success: true,
-        workout: result,
-        modificationsApplied,
-        message: result.message,
-      };
-    } catch (error) {
-      console.error('Error substituting exercise:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
-    }
-  }
 
   /**
    * Modify an entire workout based on constraints
    */
-  public async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
+  public async updateWorkout(params: UpdateWorkoutParams): Promise<UpdateWorkoutResult> {
     try {
-      const { userId, workoutDate, reason, constraints, preferredEquipment, focusAreas } = params;
+      const { userId, workoutDate, reason } = params;
 
       console.log('Modifying workout', params);
       // Get user with profile first to determine timezone
@@ -212,19 +111,12 @@ export class WorkoutModificationService {
         };
       }
 
-      // Build replace workout params for the agent
-      const replaceParams: ReplaceWorkoutParams = {
-        reason,
-        constraints,
-        preferredEquipment,
-        focusAreas,
-      };
 
       // Use the replace workout agent to modify the workout
-      const result = await replaceWorkout({
+      const result = await updateWorkout({
         workout: existingWorkout,
         user,
-        params: replaceParams,
+        changeRequest: reason,
       });
 
       // Extract theme from markdown title (first # line) or use default
@@ -245,9 +137,9 @@ export class WorkoutModificationService {
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
-        details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
         message: result.message,
+        details,
       });
 
       return {

@@ -26,4 +26,4 @@ export type { OnboardingDataService } from '@/server/services/user/onboardingDat
 export type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
 export type { MicrocycleService } from '@/server/services/training/microcycleService';
 export type { OnboardingService } from '@/server/services/orchestration/onboardingService';
-export type { WorkoutModificationService, SubstituteExerciseResult, ModifyWorkoutResult, ModifyWeekResult } from '@/server/services/orchestration/workoutModificationService';
+export type { WorkoutModificationService, SubstituteExerciseResult, UpdateWorkoutResult, ModifyWeekResult } from '@/server/services/orchestration/workoutModificationService';
