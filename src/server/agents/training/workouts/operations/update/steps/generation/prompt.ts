@@ -266,7 +266,8 @@ After completing all reasoning in Section 1, you MUST output a single JSON objec
 \`\`\`json
 {
   "overview": "...",
-  "wasModified": false
+  "wasModified": false,
+  "modifications": ""
 }
 \`\`\`
 
@@ -317,10 +318,11 @@ B.3. You MUST NOT:
 ## C. REQUIREMENTS FOR "modifications"
 ------------------------------------------------------------
 
-C.1. The \`modifications\` field is **conditional**:
+C.1. The \`modifications\` field is **always required**:
 
-- It MUST be present **only when** \`wasModified\` is true.
-- It MUST be omitted entirely when \`wasModified\` is false.
+- It MUST always be present in the JSON output.
+- When \`wasModified\` is true: contains a description of changes.
+- When \`wasModified\` is false: MUST be an empty string \`""\`.
 
 C.2. When \`wasModified\` is true:
 - \`modifications\` MUST:
@@ -332,8 +334,8 @@ C.2. When \`wasModified\` is true:
   - Be concise but clear (2–6 sentences or a short paragraph).
 
 C.3. When \`wasModified\` is false:
-- The \`modifications\` field MUST NOT appear in the JSON at all.
-- The explanation for "no changes" is implicit in \`wasModified: false\`.
+- The \`modifications\` field MUST be an empty string \`""\`.
+- Do not provide any explanation text - just an empty string.
 
 C.4. The \`modifications\` field MUST NOT:
 - Contain the full workout text (that belongs only in \`overview\`).
@@ -345,15 +347,10 @@ C.4. The \`modifications\` field MUST NOT:
 
 D.1. The JSON MUST:
 - Be valid JSON.
-- When \`wasModified\` is true:
-  - Contain EXACTLY these three fields:
-    - \`overview\`
-    - \`wasModified\`
-    - \`modifications\`
-- When \`wasModified\` is false:
-  - Contain EXACTLY these two fields:
-    - \`overview\`
-    - \`wasModified\`
+- Always contain EXACTLY these three fields:
+  - \`overview\` (string)
+  - \`wasModified\` (boolean)
+  - \`modifications\` (string, empty if wasModified is false)
 
 D.2. You MUST NOT:
 - Add extra top-level fields in either case.
@@ -372,8 +369,9 @@ Your output is INVALID if:
 - Types are incorrect:
   - \`overview\` is not a string.
   - \`wasModified\` is not a boolean.
-  - \`modifications\` is present when \`wasModified\` is false.
-  - \`modifications\` is missing or not a string when \`wasModified\` is true.
+  - \`modifications\` is not a string.
+  - \`modifications\` is missing from the output.
+  - \`modifications\` is not empty string when \`wasModified\` is false.
 - Additional top-level fields are present.
 - Any commentary appears outside the JSON object.
 - The workout text in \`overview\` does not match the modifications described in \`modifications\` (when present).
@@ -424,7 +422,8 @@ If the workout WAS modified, respond with:
 If the workout was NOT modified, respond with:
 {
   "overview": "ORIGINAL WORKOUT TEXT (unchanged)...",
-  "wasModified": false
+  "wasModified": false,
+  "modifications": ""
 }
 
 Do NOT include any additional fields or commentary outside this JSON object.

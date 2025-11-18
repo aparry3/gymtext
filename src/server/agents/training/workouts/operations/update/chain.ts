@@ -3,10 +3,9 @@ import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables
 import {
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
-  type WorkoutChainResult,
 } from '../../shared';
 import { createWorkoutUpdateGenerationRunnable } from './steps/generation/chain';
-import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps } from './types';
+import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps, WorkoutUpdateOutput } from './types';
 
 /**
  * Workout Update Agent Factory
@@ -23,7 +22,7 @@ import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps } from './types';
  * @returns Agent that updates workouts with formatted text and message
  */
 export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
-  return createRunnableAgent<WorkoutUpdateInput, WorkoutChainResult>(async (input) => {
+  return createRunnableAgent<WorkoutUpdateInput, WorkoutUpdateOutput>(async (input) => {
     // Validation
     if (!input.workout.description) {
       throw new Error('Workout description is required');
@@ -73,6 +72,8 @@ export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
           formatted: result.formatted,
           message: result.message,
           description: result.description,
+          modifications: result.modifications,
+          wasModified: result.wasModified,
         };
       } catch (error) {
         console.error(`[update workout] Error on attempt ${attempt + 1}:`, error);

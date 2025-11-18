@@ -15,7 +15,10 @@ export interface WorkoutUpdateInput extends BaseWorkoutChainInput {
  * Output from workout update
  * Uses shared WorkoutChainResult type for consistency
  */
-export type WorkoutUpdateOutput = WorkoutChainResult;
+export type WorkoutUpdateOutput = WorkoutChainResult & {
+  wasModified?: boolean;
+  modifications?: string;
+};
 
 /**
  * Dependencies for workout update agent

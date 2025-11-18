@@ -6,29 +6,16 @@ import { WorkoutInstance } from "@/server/models/workout";
 /**
  * Zod schema for workout update structured output
  *
- * The output has conditional fields based on whether the workout was modified:
- * - If wasModified = true: includes "modifications" field explaining changes
- * - If wasModified = false: omits "modifications" field
+ * Single unified schema with all fields:
+ * - overview: Full workout text (modified or original)
+ * - wasModified: Boolean indicating if changes were made
+ * - modifications: Explanation of changes (empty string if wasModified is false)
  */
-
-// Schema when workout was modified (includes modifications explanation)
-const ModifiedUpdateOutputSchema = z.object({
-  overview: z.string().describe('Full workout text after applying modifications'),
-  wasModified: z.literal(true).describe('Indicates the workout was modified'),
-  modifications: z.string().describe('Explanation of what changed and why'),
+export const WorkoutUpdateGenerationOutputSchema = z.object({
+  overview: z.string().describe('Full workout text after modifications (or original if unchanged)'),
+  wasModified: z.boolean().describe('Whether the workout was actually modified'),
+  modifications: z.string().default('').describe('Explanation of what changed and why (empty string if wasModified is false)'),
 });
-
-// Schema when workout was not modified (no modifications field)
-const UnmodifiedUpdateOutputSchema = z.object({
-  overview: z.string().describe('Original workout text (unchanged)'),
-  wasModified: z.literal(false).describe('Indicates the workout was not modified'),
-});
-
-// Union schema that handles both cases
-export const WorkoutUpdateGenerationOutputSchema = z.discriminatedUnion('wasModified', [
-  ModifiedUpdateOutputSchema,
-  UnmodifiedUpdateOutputSchema,
-]);
 
 export type WorkoutUpdateGenerationOutput = z.infer<typeof WorkoutUpdateGenerationOutputSchema>;
 

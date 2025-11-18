@@ -39,7 +39,7 @@ export const createWorkoutUpdateGenerationRunnable = (config: WorkoutUpdateGener
     ]) as WorkoutUpdateGenerationOutput;
 
     // Log modification status
-    if (result.wasModified) {
+    if (result.wasModified && result.modifications) {
       console.log('[update generation] Workout was modified:', result.modifications);
     } else {
       console.log('[update generation] Workout was not modified - original workout satisfies constraints');
@@ -52,9 +52,9 @@ export const createWorkoutUpdateGenerationRunnable = (config: WorkoutUpdateGener
       user: input.user,
       fitnessProfile,
       date: input.date,
-      // Optional metadata
+      // Metadata (modifications will be empty string if not modified)
       wasModified: result.wasModified,
-      modifications: result.wasModified ? result.modifications : undefined,
+      modifications: result.modifications,
     };
   });
 }
