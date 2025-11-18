@@ -23,6 +23,24 @@
 
 import { DateTime, IANAZone } from 'luxon';
 
+export type DayOfWeek =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
+
+export const DAY_NAMES = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as DayOfWeek[];
 /**
  * Date format types for different use cases
  */

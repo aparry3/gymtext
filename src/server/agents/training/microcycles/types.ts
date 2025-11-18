@@ -27,6 +27,7 @@ export interface MicrocycleAgentOutput {
   isDeload: boolean; // Whether this is a deload week (reduced volume and intensity)
   formatted: string; // Markdown-formatted weekly overview for frontend display
   message: string; // SMS-formatted weekly check-in/breakdown message
+  wasModified?: boolean; // Whether the microcycle was modified (only present for update operations)
 }
 
 /**

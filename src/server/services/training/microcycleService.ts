@@ -115,6 +115,15 @@ export class MicrocycleService {
   ): Promise<void> {
     await this.microcycleRepo.updateMicrocycle(microcycleId, dayOverviews);
   }
+  /**
+   * Update a microcycle's day overviews
+   */
+  public async updateMicrocycle(
+    microcycleId: string,
+    microcycle: Partial<Microcycle>
+  ): Promise<void> {
+    await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
+  }
 
 
   /**

@@ -76,7 +76,7 @@ type ModifyWeekInput = z.infer<typeof ModifyWeekSchema>;
 export interface ModifyWeekParams {
   userId: string;
   targetDay: string;
-  changes: string[];
+  changeRequest: string;
   reason: string;
 }
 /**
@@ -150,10 +150,13 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
   // Tool 3: Modify Week
   const modifyWeekTool = tool(
     async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<ModifyWeekResult> => {
+      // Convert changes array to a single changeRequest string
+      const changeRequest = changes.join('. ');
+
       return await deps.microcycleService.modifyWeek({
         userId,
         targetDay,
-        changes,
+        changeRequest,
         reason,
       });
     },

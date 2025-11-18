@@ -1,4 +1,9 @@
+// Generate operation
+export { createMicrocycleGenerateAgent } from './generate/chain';
+export type { MicrocycleGenerationInput, MicrocycleAgentOutput, MicrocycleAgentDeps } from './generate/types';
+
 // Update operation
-export { updateMicrocyclePattern } from './update/chain';
-export { updateMicrocyclePrompt, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './update/prompt';
-export type { MicrocycleUpdateParams, MicrocycleUpdateContext, UpdatedMicrocycleDayOverviews } from './update/types';
+export { createMicrocycleUpdateAgent } from './update/chain';
+export { microcycleUpdateUserPrompt, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './update/prompt';
+export { MicrocycleUpdateOutputSchema } from './update/types';
+export type { MicrocycleUpdateInput, MicrocycleUpdateOutput, MicrocycleUpdateContext, UpdatedMicrocycleDayOverviews } from './update/types';

@@ -21,3 +21,6 @@ export {
 } from './message/prompt';
 export { createMicrocycleMessageAgent } from './message/chain';
 export type { MicrocycleMessageConfig } from './message/types';
+
+// Post-processing step (shared between operations)
+export { createMicrocyclePostProcessChain } from './postprocess';

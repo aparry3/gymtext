@@ -1,3 +1,4 @@
+import { DAY_NAMES } from '@/shared/utils/date';
 import type { MicrocycleGenerationOutput } from '../generation/types';
 
 // System prompt for generating SMS message from structured pattern
@@ -94,9 +95,8 @@ Return **ONLY** the final SMS message text. Nothing else.
 
 // User prompt for message generation
 export const microcycleMessageUserPrompt = (microcycle: MicrocycleGenerationOutput) => {
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const daysFormatted = microcycle.days
-    .map((day, index) => `${dayNames[index]}:\n${day}`)
+    .map((day, index) => `${DAY_NAMES[index]}:\n${day}`)
     .join('\n\n');
 
   return `
