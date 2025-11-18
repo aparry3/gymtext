@@ -389,8 +389,8 @@ If ANY rule is violated, you must **regenerate the entire answer** so that it fu
 
 export const userPrompt = (
   workoutOverview: string,
-  changesRequested: string
-) => (fitnessProfile: string) => `
+  changesRequested: string,
+  fitnessProfile: string) => `
 You are given the following context about the user's training session.
 
 <WorkoutOverview>

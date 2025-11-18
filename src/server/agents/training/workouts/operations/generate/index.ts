@@ -2,7 +2,7 @@
 export { createDailyWorkoutAgent } from './chain';
 
 // Generation prompts
-export { SYSTEM_PROMPT, userPrompt } from './generation/prompt';
+export { SYSTEM_PROMPT, userPrompt } from './prompt';
 
 // Types
 export type { DailyWorkoutInput, DailyWorkoutOutput } from './types';

@@ -1,7 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildFormattedWorkoutSystemPrompt, createFormattedWorkoutUserPrompt } from './prompt';
 import type { FormattedWorkoutConfig } from './types';
-import { WorkoutChainContext } from '../../chainFactory';
+import { WorkoutChainContext } from '../../types';
 
 /**
  * Formatted Workout Agent Factory

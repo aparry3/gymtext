@@ -4,8 +4,7 @@ import { initializeModel } from '@/server/agents/base';
 import type { ChatSubagentInput } from '../types';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { StructuredToolInterface } from '@langchain/core/tools';
-import type { SubstituteExerciseResult, UpdateWorkoutResult } from '@/server/services';
-import type { ModifyWeekResult } from '@/server/services';
+import type { UpdateWorkoutResult, ModifyWeekResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**
@@ -16,7 +15,7 @@ export interface ModificationsAgentDeps {
 }
 
 // Union type for all modification results
-type ModificationResult = SubstituteExerciseResult | UpdateWorkoutResult | ModifyWeekResult;
+type ModificationResult = UpdateWorkoutResult | ModifyWeekResult;
 
 /**
  * Schema for modifications agent output

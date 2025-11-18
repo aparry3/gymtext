@@ -1,11 +1,10 @@
 import { UserService } from '../user/userService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { substituteExercises, type Modification } from '@/server/agents/training/workouts/operations/substitute';
-import { updateWorkout, type UpdateWorkoutContext } from '@/server/agents/training/workouts/operations/update';
+import { updateWorkout } from '@/server/agents/training/workouts/operations/update';
 import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import { WorkoutChainResult } from '@/server/agents/training/workouts/shared/chainFactory';
+import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createMicrocycleUpdateAgent } from '@/server/agents/training/microcycles/operations/update/chain';
 import { ProgressService } from '../training/progressService';
 import { FitnessPlanService } from '../training/fitnessPlanService';

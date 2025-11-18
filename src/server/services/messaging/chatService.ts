@@ -91,8 +91,7 @@ export class ChatService {
       const agent = createChatAgent({
         patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
         workoutService: {
-          substituteExercise: this.workoutModificationService.substituteExercise.bind(this.workoutModificationService),
-          modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
+          modifyWorkout: this.workoutModificationService.updateWorkout.bind(this.workoutModificationService),
         },
         microcycleService: {
           modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),

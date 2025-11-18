@@ -3,7 +3,7 @@ import { formatFitnessProfile } from '@/server/utils/formatters';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createFormattedWorkoutAgent } from './steps/formatted/chain';
 import { createWorkoutMessageAgent } from './steps/message/chain';
-import { createWorkoutGenerationRunnable } from './steps/generation/chain';
+import { createWorkoutGenerationRunnable } from '../operations/generate/steps/generation/chain';
 
 
 export interface BaseWorkoutChainInput {

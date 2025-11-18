@@ -1,7 +1,13 @@
-// Shared steps (structure and message)
+// Shared types
+export type {
+  BaseWorkoutChainInput,
+  WorkoutChainContext,
+  WorkoutChainResult,
+} from './types';
+
+// Shared steps (generation, formatted, message)
 export * from './steps';
 
-// Shared utilities
-export { executeWorkoutChain, type WorkoutChainResult, type BaseWorkoutChainInput } from './chainFactory';
+// Shared prompt utilities
 export { formatRecentWorkouts } from './promptHelpers';
 export { OUTPUT_FORMAT_SECTION, buildDescriptionGuidelines, buildReasoningGuidelines } from './promptComponents';

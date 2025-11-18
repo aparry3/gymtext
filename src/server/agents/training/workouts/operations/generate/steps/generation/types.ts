@@ -1,5 +1,5 @@
 import { AgentConfig } from "@/server/agents/base";
-import { BaseWorkoutChainInput } from "../../chainFactory";
+import { BaseWorkoutChainInput } from "../../../../shared/types";
 
 
 export interface WorkoutGenerationConfig {

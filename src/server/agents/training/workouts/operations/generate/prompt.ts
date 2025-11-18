@@ -1,4 +1,4 @@
-import { DailyWorkoutInput } from '../types';
+import { DailyWorkoutInput } from './types';
 
 export const SYSTEM_PROMPT = `
 ROLE

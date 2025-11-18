@@ -5,14 +5,7 @@ export {
   type DailyWorkoutOutput,
 } from './generate';
 
-// Substitute operation
-export {
-  substituteExercises,
-  type SubstituteExercisesContext,
-  type Modification,
-} from './substitute';
-
-// Replace operation
+// Update operation
 export {
   updateWorkout,
   type UpdateWorkoutContext,
