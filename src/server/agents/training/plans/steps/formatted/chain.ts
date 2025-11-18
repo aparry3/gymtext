@@ -1,5 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import type { FormattedFitnessPlanConfig, FormattedFitnessPlanOutput } from './types';
+import type { FormattedFitnessPlanConfig } from './types';
 import type { FitnessPlanChainContext } from '../generation/types';
 import { buildFormattedFitnessPlanSystemPrompt, createFormattedFitnessPlanUserPrompt } from './prompt';
 
@@ -15,33 +15,24 @@ import { buildFormattedFitnessPlanSystemPrompt, createFormattedFitnessPlanUserPr
  * @param config - Configuration containing schema and agent settings
  * @returns Agent (runnable) that produces formatted fitness plan markdown
  */
-export const createFormattedFitnessPlanAgent = <TFitnessPlan = unknown>(
+export const createFormattedFitnessPlanAgent = (
   config: FormattedFitnessPlanConfig
 ) => {
-  const agentConfig = config.agentConfig || {
-    modelType: 'openai',
-    modelName: 'gpt-4o-mini',
-    temperature: 0.7,
-  };
+  const model = initializeModel(undefined, config.agentConfig);
 
-  const model = initializeModel(config.schema, agentConfig);
-
-  return createRunnableAgent<FitnessPlanChainContext, FormattedFitnessPlanOutput<TFitnessPlan>>(async (input) => {
-    const { longFormPlan } = input;
+  return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
+    const { fitnessPlan } = input;
 
     const systemPrompt = buildFormattedFitnessPlanSystemPrompt();
-    const userPrompt = createFormattedFitnessPlanUserPrompt(longFormPlan);
+    const userPrompt = createFormattedFitnessPlanUserPrompt(fitnessPlan);
 
-    const fitnessPlan = await model.invoke([
+    const formattedFitnessPlan = await model.invoke([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
 
-    // Validate schema
-    const validatedFitnessPlan = config.schema.parse(fitnessPlan);
-
     console.log(`[Fitness Plan Formatting] Generated formatted fitness plan markdown`);
 
-    return validatedFitnessPlan as FormattedFitnessPlanOutput<TFitnessPlan>;
+    return formattedFitnessPlan;
   });
 };

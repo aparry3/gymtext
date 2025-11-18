@@ -1,24 +1,44 @@
+import { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { Mesocycle } from '@/server/models/fitnessPlan';
+import { DayOfWeek } from '@/shared/utils/date';
+import type { UserWithProfile } from '@/server/models/userModel';
+import { MicrocycleGenerationOutputSchema } from '../../steps';
+
+/**
+ * Schema for microcycle update output - extends base schema with wasModified flag
+ */
+export const MicrocycleUpdateOutputSchema = MicrocycleGenerationOutputSchema.extend({
+  wasModified: z.boolean().describe(
+    'Whether the microcycle was actually modified in response to the change request. ' +
+    'False if the current plan already satisfies the request or no changes were needed.'
+  )
+});
+
+export type MicrocycleUpdateOutput = z.infer<typeof MicrocycleUpdateOutputSchema>;
 
 /**
  * Parameters for updating a microcycle
  */
-export interface MicrocycleUpdateParams {
-  targetDay: string; // The specific day being modified (e.g., "Monday", typically "today")
-  changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 minutes", "Apply hotel gym constraints to remaining days"])
-  reason: string; // Why the modification is needed (e.g., "Gym is too crowded", "Traveling for work")
-  remainingDays?: string[]; // Days that are remaining in the week (today and future)
+export interface MicrocycleUpdateInput {
+  user: UserWithProfile;
+  currentMicrocycle: Microcycle;
+  changeRequest: string;
+  currentDayOfWeek: DayOfWeek;
+  weekNumber: number;
 }
 
 /**
  * Context required to update a microcycle
  */
 export interface MicrocycleUpdateContext {
-  currentMicrocycle: Microcycle;
-  params: MicrocycleUpdateParams;
-  mesocycle: Mesocycle;
-  programType: string;
+  overview: string;
+  isDeload: boolean;
+  days: {
+    [key in DayOfWeek]: {
+      sessionType: string;
+      theme: string;
+    };
+  };
 }
 
 /**

@@ -6,7 +6,7 @@ import { RunnableLambda } from "@langchain/core/runnables";
  * Configuration for agents
  */
 export interface AgentConfig {
-    model?: 'gpt-5-nano' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite';
+    model?: 'gpt-5-nano' | 'gpt-5-mini' |'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
     temperature?: number;
     maxTokens?: number;
     verbose?: boolean;
@@ -53,6 +53,10 @@ export function createRunnableAgent<TInput, TOutput>(
 
 /**
  * Initialize the model with structured output using the provided schema
+ *
+ * @param outputSchema - Optional Zod schema for structured output. If provided, returns T. If undefined, returns string.
+ * @param config - Optional agent configuration
+ * @returns Model that returns structured output (T) or plain text (string)
  */
 export const initializeModel = (outputSchema?: any,config?: AgentConfig): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
     const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
@@ -66,7 +70,15 @@ export const initializeModel = (outputSchema?: any,config?: AgentConfig): any =>
       if (outputSchema) {
         return llm.withStructuredOutput(outputSchema);
       }
-      return llm;
+      // When no schema provided, wrap LLM to auto-extract .content from AIMessage
+      return {
+        invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+          const response = await llm.invoke(input);
+          return typeof response.content === 'string'
+            ? response.content
+            : String(response.content);
+        }
+      };
     } else {
       const llm = new ChatOpenAI({
         model: model,
@@ -77,7 +89,15 @@ export const initializeModel = (outputSchema?: any,config?: AgentConfig): any =>
       if (outputSchema) {
         return llm.withStructuredOutput(outputSchema);
       }
-      return llm;
+      // When no schema provided, wrap LLM to auto-extract .content from AIMessage
+      return {
+        invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+          const response = await llm.invoke(input);
+          return typeof response.content === 'string'
+            ? response.content
+            : String(response.content);
+        }
+      };
     }
   };
   

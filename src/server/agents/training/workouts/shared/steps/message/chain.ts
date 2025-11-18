@@ -20,19 +20,16 @@ export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
   };
   const model = initializeModel(undefined, agentConfig);
   return createRunnableAgent<WorkoutMessageInput, WorkoutMessageOutput>(async (input) => {
-    const { longFormWorkout } = input;
+    const { description } = input;
 
     // Create the user prompt with workout and context
-    const userPrompt = createWorkoutMessageUserPrompt(longFormWorkout);
+    const userPrompt = createWorkoutMessageUserPrompt(description);
 
     // Invoke model with system and user prompts
-    const response = await model.invoke([
+    const message = await model.invoke([
       { role: 'system', content: WORKOUT_MESSAGE_SYSTEM_PROMPT },
       { role: 'user', content: userPrompt }
     ]);
-
-    // Extract message content
-    const message = typeof response.content === 'string' ? response.content : String(response.content);
 
     console.log(`[${config?.operationName || 'generate message'}] Generated SMS message (${message.length} characters)`);
 

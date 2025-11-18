@@ -1,15 +1,14 @@
 import { UserService } from '../user/userService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { ProgressService } from '../training/progressService';
 import { substituteExercises, type Modification } from '@/server/agents/training/workouts/operations/substitute';
 import { replaceWorkout, type ReplaceWorkoutParams } from '@/server/agents/training/workouts/operations/replace';
-// import { updateMicrocyclePattern, type MicrocycleUpdateParams } from '@/server/agents/training/microcycles/operations/update/chain';
-// import { createDailyWorkoutAgent } from '@/server/agents/training/workouts/operations/generate';
-// import { DailyWorkoutInput } from '@/server/agents/training/workouts/operations/generate';
-import { now, getWeekday } from '@/shared/utils/date';
+import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
+import { WorkoutChainResult } from '@/server/agents/training/workouts/shared/chainFactory';
+import { createMicrocycleUpdateAgent } from '@/server/agents/training/microcycles/operations/update/chain';
+import { ProgressService } from '../training/progressService';
+import { FitnessPlanService } from '../training/fitnessPlanService';
 
 /**
  * WorkoutModificationService
@@ -35,7 +34,7 @@ export interface SubstituteExerciseParams {
 
 export interface SubstituteExerciseResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -52,7 +51,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modificationsApplied?: string[];
   message?: string;
   error?: string;
@@ -61,13 +60,13 @@ export interface ModifyWorkoutResult {
 export interface ModifyWeekParams {
   userId: string;
   targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
-  changes: string[]; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
+  changeRequest: string; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
   reason: string; // Why the modification is needed
 }
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'];
+  workout?: WorkoutChainResult;
   modifiedDays?: number;
   modificationsApplied?: string[];
   message?: string;
@@ -77,17 +76,16 @@ export interface ModifyWeekResult {
 export class WorkoutModificationService {
   private static instance: WorkoutModificationService;
   private userService: UserService;
-  private fitnessPlanService: FitnessPlanService;
   private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
   private progressService: ProgressService;
-
+  private fitnessPlanService: FitnessPlanService;
   private constructor() {
     this.userService = UserService.getInstance();
-    this.fitnessPlanService = FitnessPlanService.getInstance();
     this.microcycleService = MicrocycleService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.progressService = ProgressService.getInstance();
+    this.fitnessPlanService = FitnessPlanService.getInstance();
   }
 
   public static getInstance(): WorkoutModificationService {
@@ -143,27 +141,32 @@ export class WorkoutModificationService {
         modifications,
       });
 
-      // Extract formatted text and theme for storage
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, formatted, theme } = result.workout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
 
-      // Store formatted text in details.formatted for backward compatibility
+      // Extract modifications applied section from markdown if present
+      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
+      const modificationsApplied = modificationsMatch
+        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
+        : [];
+
+      // Store formatted text in details.formatted
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted: result.formatted,  // Store the formatted markdown text
+        theme,                       // Keep theme for quick access
       };
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(workout.id, {
         details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
-        reasoning: result.reasoning,
         message: result.message,
       });
 
       return {
         success: true,
-        workout: result.workout,
+        workout: result,
         modificationsApplied,
         message: result.message,
       };
@@ -224,27 +227,32 @@ export class WorkoutModificationService {
         params: replaceParams,
       });
 
-      // Extract formatted text and theme for storage
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { modificationsApplied, date, formatted, theme } = result.workout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
 
-      // Store formatted text in details.formatted for backward compatibility
+      // Extract modifications applied section from markdown if present
+      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
+      const modificationsApplied = modificationsMatch
+        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
+        : [];
+
+      // Store formatted text in details.formatted
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted: result.formatted,  // Store the formatted markdown text
+        theme,                       // Keep theme for quick access
       };
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
         details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         description: result.description,
-        reasoning: result.reasoning,
         message: result.message,
       });
 
       return {
         success: true,
-        workout: result.workout,
+        workout: result,
         modificationsApplied,
         message: result.message,
       };
@@ -262,8 +270,9 @@ export class WorkoutModificationService {
    */
   public async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
     try {
-      const { userId, targetDay, changes } = params;
+      const { userId, changeRequest } = params;
       // const reason = params.reason; // Not currently used
+      // targetDay is not currently used - we use the current day of week instead
 
       // Get user with profile
       const user = await this.userService.getUserWithProfile(userId);
@@ -274,107 +283,85 @@ export class WorkoutModificationService {
         };
       }
 
-      // Get the current fitness plan
-      const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(userId);
-      if (!fitnessPlan) {
+      const plan = await this.fitnessPlanService.getCurrentPlan(userId);
+      if (!plan) {
         return {
           success: false,
-          error: 'No active fitness plan found',
+          error: 'No fitness plan found',
+        };
+      }
+      const progress = await this.progressService.getCurrentProgress(plan, user.timezone);
+      if (!progress) {
+        return {
+          success: false,
+          error: 'No progress found',
         };
       }
 
-      // Get the current active microcycle (the one for this week)
-      const relevantMicrocycle = await this.microcycleService.getActiveMicrocycle(userId);
+      const {microcycle, absoluteWeek} = progress;
 
-      if (!relevantMicrocycle) {
-        console.error(`[MODIFY_WEEK] No active microcycle found for user ${userId}`);
+      if (!microcycle) {
         return {
           success: false,
-          error: 'No active microcycle found. Please ensure you have an active fitness plan.',
+          error: 'No microcycle found',
         };
       }
 
-      console.log(`[MODIFY_WEEK] Using active microcycle ${relevantMicrocycle.id} (${new Date(relevantMicrocycle.startDate).toLocaleDateString()} - ${new Date(relevantMicrocycle.endDate).toLocaleDateString()})`);
-
-      // Note: Mesocycles are now stored as simple strings in fitness_plans.mesocycles
-      // Full mesocycle data is in the mesocycles table if needed
-      // For now, we'll just use the mesocycle overview string from the fitness plan
-      const mesocycleOverview = fitnessPlan.mesocycles[relevantMicrocycle.mesocycleIndex];
-      if (!mesocycleOverview) {
-        return {
-          success: false,
-          error: 'Could not find mesocycle information',
-        };
-      }
+      console.log(`[MODIFY_WEEK] Using active microcycle ${microcycle.id} (${new Date(microcycle.startDate).toLocaleDateString()} - ${new Date(microcycle.endDate).toLocaleDateString()})`);
 
       // Calculate remaining days (today and future days only) in user's timezone
       const today = now(user.timezone).toJSDate();
 
-      const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
       // getWeekday returns 1-7 (Mon-Sun), convert to 0-6 (Sun-Sat) for array indexing
       const weekday = getWeekday(today, user.timezone);
-      const todayDayIndex = weekday === 7 ? 0 : weekday;
-      const todayDayOfWeek = daysOfWeek[todayDayIndex];
+      const todayDayOfWeek = DAY_NAMES[weekday - 1];
 
-      // Find today's index
-      const todayIndex = daysOfWeek.indexOf(todayDayOfWeek);
 
-      // Get remaining days (today and after)
-      const remainingDays = daysOfWeek.slice(todayIndex);
+      // Use the microcycle update agent to modify the pattern
+      const microcycleUpdateAgent = createMicrocycleUpdateAgent();
+      const microcycleUpdateResult = await microcycleUpdateAgent.invoke({
+        currentMicrocycle: microcycle,
+        user,
+        changeRequest,
+        currentDayOfWeek: todayDayOfWeek as DayOfWeek,
+        weekNumber: absoluteWeek,
+      });
 
-      console.log(`[MODIFY_WEEK] Today is ${todayDayOfWeek}, remaining days: ${remainingDays.join(', ')}`);
+      // Check if the microcycle was actually modified
+      if (microcycleUpdateResult.wasModified) {
+        console.log(`[MODIFY_WEEK] Microcycle was modified - updating database`);
 
-      // Check if the target day is in the remaining days
-      const remainingDaysSet = new Set(remainingDays);
-      const targetDayUpper = targetDay.toUpperCase();
+        // Update the microcycle with the new pattern (dayOverviews from the result)
+        await this.microcycleService.updateMicrocycle(
+          microcycle.id,
+          {
+            ...microcycleUpdateResult.dayOverviews,
+            description: microcycleUpdateResult.description,
+            isDeload: microcycleUpdateResult.isDeload,
+            formatted: microcycleUpdateResult.formatted,
+            message: microcycleUpdateResult.message
+          }
+        );
 
-      if (!remainingDaysSet.has(targetDayUpper)) {
-        console.log(`[MODIFY_WEEK] Target day ${targetDay} has already passed`);
+        // Return success with the updated microcycle message
         return {
-          success: false,
-          error: `Cannot modify ${targetDay} - this day has already passed. Today is ${todayDayOfWeek}.`,
+          success: true,
+          message: microcycleUpdateResult.message || 'Weekly pattern updated successfully',
+        };
+      } else {
+        console.log(`[MODIFY_WEEK] No modifications needed - current plan already satisfies the request`);
+
+        // Return success without database update
+        return {
+          success: true,
+          message: 'Your current weekly plan already matches your request. No changes were needed.',
         };
       }
-
-      console.log(`[MODIFY_WEEK] Target day: ${targetDay}, changes: ${changes.join('; ')}`);
-
-      // TODO: Microcycle pattern modification needs to be refactored for new architecture
-      // The new microcycle model doesn't store patterns, only day overviews
-      // This service will need to be updated to work with the new structure
-      return {
-        success: false,
-        error: 'Week modification not yet supported with new architecture - requires refactoring',
-      };
-
-      // // Capture the original pattern BEFORE updating
-      // const originalPattern = relevantMicrocycle.pattern;
-
-      // // Build microcycle update params for the agent
-      // const updateParams: MicrocycleUpdateParams = {
-      //   targetDay,
-      //   changes,
-      //   reason,
-      //   remainingDays,
-      // };
-
-      // // Use the microcycle update agent to modify the pattern
-      // const updatedPattern = await updateMicrocyclePattern({
-      //   currentPattern: originalPattern,
-      //   params: updateParams,
-      //   mesocycle,
-      //   programType: fitnessPlan.programType,
-      // });
-
-      // // Extract the modifications applied (remove before saving)
-      // const { modificationsApplied, ...patternToSave } = updatedPattern;
-
-      // // Update the microcycle with the new pattern
-      // await this.microcycleService.updateMicrocyclePattern(relevantMicrocycle.id, patternToSave);
 
       // // Check if today's pattern changed - if so, regenerate today's workout
       // // This handles cases where modifying a future day causes today's workout to be reshuffled
       // let workoutRegenerated = false;
-      // let regeneratedWorkout: import('@/server/agents/training/workouts/operations/generate').DailyWorkoutOutput['workout'] | undefined;
+      // let regeneratedWorkout: Da | undefined;
       // let workoutMessage: string | undefined;
 
       // const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);

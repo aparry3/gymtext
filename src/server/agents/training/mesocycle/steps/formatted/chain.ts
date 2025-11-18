@@ -1,5 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import type { FormattedMesocycleConfig, FormattedMesocycleOutput } from './types';
+import type { FormattedMesocycleConfig } from './types';
 import type { MesocycleChainContext } from '../generation/types';
 import { buildFormattedMesocycleSystemPrompt, createFormattedMesocycleUserPrompt } from './prompt';
 
@@ -15,24 +15,16 @@ import { buildFormattedMesocycleSystemPrompt, createFormattedMesocycleUserPrompt
  * @param config - Configuration containing schema and agent settings
  * @returns Agent (runnable) that produces formatted mesocycle markdown
  */
-export const createFormattedMesocycleAgent = <TMesocycle = unknown>(
+export const createFormattedMesocycleAgent = (
   config: FormattedMesocycleConfig
 ) => {
-  const agentConfig = config.agentConfig || {
-    modelType: 'openai',
-    modelName: 'gpt-4o-mini',
-    temperature: 0.7,
-  };
 
-  const model = initializeModel(config.schema, agentConfig);
+  const model = initializeModel(undefined, config.agentConfig);
 
-  return createRunnableAgent<MesocycleChainContext, FormattedMesocycleOutput<TMesocycle>>(async (input) => {
-    const { longFormMesocycle } = input;
+  return createRunnableAgent<MesocycleChainContext, string>(async (input) => {
+    const { mesocycle } = input;
 
-    // Calculate durationWeeks from the description by counting microcycle delimiters
-    const microcyclePattern = /\*\*\*\*\* MICROCYCLE \d+:.*?\*\*\*\*\*/gi;
-    const matches = [...longFormMesocycle.description.matchAll(microcyclePattern)];
-    const durationWeeks = matches.length || 4; // Default to 4 if no delimiters found
+    const durationWeeks = mesocycle.microcycles.length
 
     // Extract mesocycle index from overview string if needed
     // Assuming mesocycle overview might contain index info, otherwise default to 0
@@ -40,21 +32,18 @@ export const createFormattedMesocycleAgent = <TMesocycle = unknown>(
 
     const systemPrompt = buildFormattedMesocycleSystemPrompt();
     const userPrompt = createFormattedMesocycleUserPrompt(
-      longFormMesocycle,
+      mesocycle,
       mesocycleIndex,
       durationWeeks
     );
 
-    const mesocycle = await model.invoke([
+    const formattedMesocycle = await model.invoke([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
 
-    // Validate schema
-    const validatedMesocycle = config.schema.parse(mesocycle);
-
     console.log(`[Mesocycle Formatting] Generated formatted mesocycle markdown (${durationWeeks} weeks)`);
 
-    return validatedMesocycle as FormattedMesocycleOutput<TMesocycle>;
+    return formattedMesocycle;
   });
 };

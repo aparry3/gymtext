@@ -45,10 +45,11 @@ ${microcycleMessage}
 - Maintain friendly, coach-like tone
 
 <Output Format>
-Return a JSON object with the complete message:
-{
-  "message": "Just finished putting your plan together. [plan message content]\\n\\nLet's take a look at your first week. [microcycle message content]"
-}
+Return ONLY the complete message text (no JSON wrapper):
+
+Just finished putting your plan together. [plan message content]
+
+Let's take a look at your first week. [microcycle message content]
 
 Note: Use \\n for single line breaks and \\n\\n for blank lines between paragraphs.
 </Output Format>

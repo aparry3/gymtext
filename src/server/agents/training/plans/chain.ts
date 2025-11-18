@@ -1,12 +1,11 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { FitnessPlanOverview, FormattedFitnessPlanSchema } from '@/server/models/fitnessPlan';
+import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
-  createLongFormPlanRunnable,
-  createMesocycleExtractor,
-  createPlanMessageAgent,
+  createFitnessPlanGenerationRunnable,
+  createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
 import type { FitnessPlanAgentDeps } from './types';
@@ -17,10 +16,9 @@ export type { FitnessProfileContextService, FitnessPlanAgentDeps } from './types
  * Creates a fitness plan agent with injected dependencies
  *
  * Uses a composable chain for generating fitness plans:
- * 1. Generate long-form plan description with mesocycle delimiters
- * 2. Extract mesocycle overviews from description (parallel with steps 3-4)
- * 3. Generate formatted markdown for frontend display (parallel with steps 2 & 4)
- * 4. Generate SMS-formatted summary message (parallel with steps 2-3)
+ * 1. Generate structured plan with overview and mesocycles array
+ * 2. Generate formatted markdown for frontend display (parallel with step 3)
+ * 3. Generate SMS-formatted summary message (parallel with step 2)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
@@ -36,32 +34,28 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
       // Build user prompt for step 1
       const userPrompt = fitnessPlanUserPrompt(user, fitnessProfile);
 
-      // Step 1: Create long-form runnable
-      const longFormRunnable = createLongFormPlanRunnable({
-        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT
+      // Step 1: Create long-form runnable (with structured output)
+      const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
+        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
+        agentConfig: {
+          model: 'gpt-5-mini',
+        }
       });
 
-      // Step 2: Create mesocycle extractor
-      const mesocycleExtractor = createMesocycleExtractor({
-        operationName: 'extract mesocycles'
-      });
-
-      // Step 3: Create formatting agent
+      // Step 2: Create formatting agent
       const formattedAgent = createFormattedFitnessPlanAgent({
-        schema: FormattedFitnessPlanSchema,
         operationName: 'format fitness plan',
       });
 
-      // Step 4: Create message agent
-      const messageAgent = createPlanMessageAgent({
+      // Step 3: Create message agent
+      const messageAgent = createFitnessPlanMessageAgent({
         operationName: 'generate plan message'
       });
 
-      // Compose the chain: long-form → parallel (mesocycles + formatted + message)
+      // Compose the chain: structured generation → parallel (formatted + message)
       const sequence = RunnableSequence.from([
-        longFormRunnable,
+        fitnessPlanGenerationRunnable,
         RunnablePassthrough.assign({
-          mesocycles: mesocycleExtractor,
           formatted: formattedAgent,
           message: messageAgent
         })
@@ -76,13 +70,14 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Combine results into final overview
       const finalResult: FitnessPlanOverview = {
-        description: result.longFormPlan.description,
-        mesocycles: result.mesocycles,
-        formatted: result.formatted.formatted,
+        description: result.fitnessPlan.overview,
+        mesocycles: result.fitnessPlan.mesocycles,
+        totalWeeks: result.fitnessPlan.total_weeks,
+        formatted: result.formatted,
         message: result.message
       };
 
-      console.log(`[FitnessPlan] Generated fitness plan with ${result.mesocycles.length} mesocycles for user ${user.id}`);
+      console.log(`[FitnessPlan] Generated fitness plan with ${result.fitnessPlan.mesocycles.length} mesocycles for user ${user.id}`);
 
       return finalResult;
     } catch (error) {

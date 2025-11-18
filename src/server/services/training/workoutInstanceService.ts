@@ -130,8 +130,6 @@ export class WorkoutInstanceService {
         return null;
       }
 
-      const mesocycle = progress.mesocycle;
-
       // Get the day's overview from the microcycle
       const dayOfWeekLower = targetDate.toFormat('EEEE').toLowerCase(); // monday, tuesday, etc.
       const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
@@ -143,24 +141,23 @@ export class WorkoutInstanceService {
       }
 
       // Get recent workouts for context (last 7 days)
-      const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
+      // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { workout: formattedWorkout, message, description, reasoning } = await createDailyWorkoutAgent().invoke({
+      const { formatted, message, description } = await createDailyWorkoutAgent().invoke({
         user,
         date: targetDate.toJSDate(),
-        dayPlan: dayOverview, // Pass the string overview instead of pattern object
-        microcycle,
-        mesocycle,
-        fitnessPlan: plan,
-        recentWorkouts
+        dayOverview, // Pass the string overview instead of pattern object
+        isDeload: microcycle.isDeload,
       });
 
-      // Extract formatted text and theme for storage
-      const { formatted, theme } = formattedWorkout;
+      // Extract theme from markdown title (first # line) or use default
+      const themeMatch = formatted.match(/^#\s+(.+)$/m);
+      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
+
       const details = {
-        formatted,  // New: formatted markdown text
-        theme,      // Keep theme for quick access
+        formatted,  // Store the formatted markdown text
+        theme,                         // Keep theme for quick access
       };
 
       // Convert to database format
@@ -174,7 +171,6 @@ export class WorkoutInstanceService {
         goal: dayOverview.substring(0, 100), // Use first 100 chars of overview as goal
         details: JSON.parse(JSON.stringify(details)),
         description,
-        reasoning,
         message,
         completedAt: null,
         createdAt: new Date(),

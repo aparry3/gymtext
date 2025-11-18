@@ -3,25 +3,24 @@ export {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
 } from './generation/prompt';
-export { createLongFormPlanRunnable } from './generation/chain';
+export { createFitnessPlanGenerationRunnable } from './generation/chain';
+export {
+  FitnessPlanOutputSchema,
+} from './generation/types';
 export type {
-  LongFormPlanConfig,
-  LongFormPlanInput,
-  LongFormPlanOutput,
+  FitnessPlanConfig,
+  FitnessPlanInput,
+  FitnessPlanOutput,
   FitnessPlanChainContext,
 } from './generation/types';
-
-// Mesocycle extraction step
-export { createMesocycleExtractor } from './mesocycles/chain';
-export type { MesocycleExtractorConfig } from './mesocycles/types';
 
 // Message step
 export {
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
 } from './message/prompt';
-export { createPlanMessageAgent } from './message/chain';
-export type { PlanMessageConfig } from './message/types';
+export { createFitnessPlanMessageAgent } from './message/chain';
+export type { FitnessPlanMessageConfig } from './message/types';
 
 // Formatted step
 export {

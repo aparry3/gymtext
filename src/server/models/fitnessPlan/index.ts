@@ -1,11 +1,7 @@
 import type { FitnessPlans } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { _FitnessPlanSchema, FormattedFitnessPlanSchema } from './schema';
+import { _FitnessPlanSchema } from './schema';
 import { UserWithProfile } from '../userModel';
-
-// Re-export schema types
-export type { FormattedFitnessPlan } from './schema';
-export { FormattedFitnessPlanSchema };
 
 export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;
@@ -33,6 +29,7 @@ export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
 export interface FitnessPlanOverview {
   description: string; // Long-form plan description with mesocycle delimiters
   mesocycles: string[]; // Extracted mesocycle overviews
+  totalWeeks: number; // Total number of weeks in the plan
   formatted: string; // Markdown-formatted plan for frontend display
   summary?: string; // Brief summary for SMS
   notes?: string; // Special considerations
@@ -130,7 +127,7 @@ export class FitnessPlanModel implements FitnessPlan {
     // Calculate lengthWeeks from mesocycles count (estimate)
     // Each mesocycle is typically 4-8 weeks, but we'll use a default of 4 for now
     // This can be extracted from the description if needed
-    const estimatedWeeks = fitnessPlanOverview.mesocycles.length * 4;
+    const estimatedWeeks = fitnessPlanOverview.totalWeeks || fitnessPlanOverview.mesocycles.length * 4;
 
     return {
       programType: 'other', // Default, can be extracted from description if needed

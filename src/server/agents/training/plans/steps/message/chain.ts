@@ -1,13 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
 import { planSummaryMessageUserPrompt, PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT } from './prompt';
-import type { PlanMessageConfig } from './types';
+import type { FitnessPlanMessageConfig } from './types';
 import type { FitnessPlanChainContext } from '../generation/types';
-
-// Schema for SMS message generation
-const PlanSummaryMessageSchema = z.object({
-  message: z.string().describe("SMS-formatted plan summary message")
-});
 
 /**
  * Fitness Plan Message Agent Factory
@@ -15,17 +9,17 @@ const PlanSummaryMessageSchema = z.object({
  * Generates SMS-formatted plan summary messages from long-form fitness plan descriptions.
  *
  * @param config - Static configuration for the agent
- * @returns Agent (runnable) that generates SMS messages from long-form plans
+ * @returns Agent (runnable) that generates SMS message strings from long-form plans
  */
-export const createPlanMessageAgent = (config: PlanMessageConfig) => {
-  // Initialize model with message schema
-  const model = initializeModel(PlanSummaryMessageSchema, config.agentConfig);
+export const createFitnessPlanMessageAgent = (config: FitnessPlanMessageConfig) => {
+  // Initialize model without schema for plain text output
+  const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
-    const { longFormPlan, user } = input;
+    const { fitnessPlan, user } = input;
 
     // Build user prompt from long-form description and full user object (with profile)
-    const userPrompt = planSummaryMessageUserPrompt(user, longFormPlan.description);
+    const userPrompt = planSummaryMessageUserPrompt(user, fitnessPlan.overview);
 
     // Invoke model
     const result = await model.invoke([
@@ -35,6 +29,6 @@ export const createPlanMessageAgent = (config: PlanMessageConfig) => {
 
     console.log(`[${config.operationName}] Generated SMS message for fitness plan`);
 
-    return result.message;
+    return result;
   });
 };

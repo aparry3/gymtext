@@ -1,47 +1,66 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
-import type { LongFormMesocycleConfig, LongFormMesocycleInput, MesocycleChainContext } from './types';
+import type { MesocycleAgentConfig, MesocycleGenerationInput, MesocycleChainContext, MesocycleGenerationOutput } from './types';
+import { MesocycleGenerationOutputSchema } from './types';
 import { mesocycleUserPrompt } from './prompt';
-
-// Schema for long-form mesocycle description
-const LongFormMesocycleSchema = z.object({
-  description: z.string().describe("Comprehensive mesocycle description with microcycle delimiters")
-});
+import { validateMesocycleOutput } from './validation';
 
 /**
  * Long-Form Mesocycle Agent Factory
  *
- * Generates comprehensive mesocycle descriptions in natural language form,
- * breaking down the mesocycle into detailed weekly microcycle descriptions.
+ * Generates comprehensive mesocycles with structured output containing
+ * an overview and array of weekly microcycle strings.
  *
- * Used as the first step in the mesocycle generation chain to produce long-form output,
- * which can then be parsed to extract microcycle strings.
+ * Used as the first step in the mesocycle generation chain to produce structured output
+ * that can be used directly without string parsing.
+ *
+ * Includes validation and retry logic to ensure microcycle count consistency.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
- * @returns Agent (runnable) that produces a long-form mesocycle with microcycle breakdowns
+ * @returns Agent (runnable) that produces structured mesocycle data
  */
-export const createLongFormMesocycleRunnable = (config: LongFormMesocycleConfig) => {
-  const model = initializeModel(LongFormMesocycleSchema, config.agentConfig);
+export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) => {
+  const model = initializeModel(MesocycleGenerationOutputSchema, config.agentConfig);
+  const maxRetries = config.maxRetries ?? 3;
 
-  return createRunnableAgent(async (input: LongFormMesocycleInput): Promise<MesocycleChainContext> => {
+  return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleChainContext> => {
     const systemMessage = config.systemPrompt;
     const userPrompt = mesocycleUserPrompt(
       input.mesocycleOverview,
       input.user,
       input.fitnessProfile
     );
+    let lastError: string | undefined;
 
-    
-    const longFormMesocycle = await model.invoke([
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: userPrompt }
-    ]);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const mesocycle = await model.invoke([
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: userPrompt }
+      ]) as MesocycleGenerationOutput;
 
-    return {
-      longFormMesocycle,
-      mesocycleOverview: input.mesocycleOverview,
-      user: input.user,
-      fitnessProfile: input.fitnessProfile
-    };
+      // Validate the output
+      const validationResult = validateMesocycleOutput(mesocycle);
+
+      if (validationResult.isValid) {
+        console.log(`[MesocycleGenerationRunnable] Generated valid mesocycle with ${mesocycle.microcycles.length} microcycles`);
+        return {
+          mesocycle,
+          mesocycleOverview: input.mesocycleOverview,
+          user: input.user,
+          fitnessProfile: input.fitnessProfile
+        };
+      }
+
+      // Validation failed
+      lastError = validationResult.error;
+      console.warn(`[MesocycleGenerationRunnable] Attempt ${attempt}/${maxRetries} failed validation: ${validationResult.error}`);
+
+      // Continue to next attempt if retries remain
+      if (attempt < maxRetries) {
+        console.log(`[MesocycleGenerationRunnable] Retrying generation...`);
+      }
+    }
+
+    // All retries exhausted
+    throw new Error(`Failed to generate valid mesocycle after ${maxRetries} attempts. Last error: ${lastError}`);
   });
 };

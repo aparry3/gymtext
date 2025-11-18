@@ -1,4 +1,4 @@
-import type { LongFormMesocycleOutput } from '../generation/types';
+import type { MesocycleGenerationOutput } from '../generation/types';
 
 /**
  * System prompt for formatted mesocycle agent
@@ -195,14 +195,14 @@ Return the complete formatted mesocycle as a single markdown string.`;
  * User prompt for formatted mesocycle agent
  */
 export const createFormattedMesocycleUserPrompt = (
-  longFormMesocycle: LongFormMesocycleOutput,
+  mesocycle: MesocycleGenerationOutput,
   mesocycleIndex: number,
   durationWeeks: number
 ): string => {
-  return `Convert the following long-form mesocycle description into a beautifully formatted markdown document.
+  return `Convert the following mesocycle overview into a beautifully formatted markdown document.
 
-LONG-FORM MESOCYCLE DESCRIPTION:
-${longFormMesocycle.description}
+MESOCYCLE OVERVIEW:
+${mesocycle.overview}
 
 MESOCYCLE INDEX: ${mesocycleIndex + 1}
 DURATION: ${durationWeeks} weeks

@@ -542,10 +542,7 @@ export class MessageService {
 
         // Invoke with runtime context
         message = await messageAgent.invoke({
-          longFormWorkout: {
-            workout: workout.description,
-            reasoning: workout.reasoning
-          }
+          description: workout.description,
         });
 
         // Save generated message for future use

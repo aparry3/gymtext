@@ -1,4 +1,4 @@
-import type { LongFormPlanOutput } from '../generation/types';
+import type { FitnessPlanOutput } from '../generation/types';
 
 /**
  * System prompt for formatted fitness plan agent
@@ -218,12 +218,12 @@ Return the complete formatted fitness plan as a single markdown string.`;
  * User prompt for formatted fitness plan agent
  */
 export const createFormattedFitnessPlanUserPrompt = (
-  longFormPlan: LongFormPlanOutput
+  fitnessPlan: FitnessPlanOutput
 ): string => {
-  return `Convert the following long-form fitness plan description into a beautifully formatted markdown document.
+  return `Convert the following fitness plan overview into a beautifully formatted markdown document.
 
-LONG-FORM FITNESS PLAN DESCRIPTION:
-${longFormPlan.description}
+FITNESS PLAN OVERVIEW:
+${fitnessPlan.overview}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt

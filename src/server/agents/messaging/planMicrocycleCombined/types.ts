@@ -12,9 +12,7 @@ export interface PlanMicrocycleCombinedInput {
 /**
  * Output from combined plan+microcycle message agent
  */
-export interface PlanMicrocycleCombinedOutput {
-  message: string;
-}
+export type PlanMicrocycleCombinedOutput = string;
 
 /**
  * Dependencies for combined plan+microcycle message agent

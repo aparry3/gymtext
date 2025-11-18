@@ -1,9 +1,6 @@
 import { Mesocycles } from '@/server/models/_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
-// Re-export schema types
-export type { FormattedMesocycle } from './schema';
-
 export type MesocycleDB = Selectable<Mesocycles>;
 export type NewMesocycle = Insertable<Mesocycles>;
 export type MesocycleUpdate = Updateable<Mesocycles>;

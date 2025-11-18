@@ -2,12 +2,12 @@ import { AgentConfig } from "@/server/agents/base";
 import { BaseWorkoutChainInput } from "../../chainFactory";
 
 
-export interface LongFormatWorkoutConfig {
+export interface WorkoutGenerationConfig {
   systemPrompt: string;
   agentConfig?: AgentConfig;
 }
 
-export interface LongFormatWorkoutInput extends BaseWorkoutChainInput {
+export interface WorkoutGenerationInput extends BaseWorkoutChainInput {
   prompt: string;
   fitnessProfile: string;
 }

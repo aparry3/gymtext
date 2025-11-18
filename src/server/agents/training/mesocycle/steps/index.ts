@@ -3,17 +3,16 @@ export {
   MESOCYCLE_SYSTEM_PROMPT,
   mesocycleUserPrompt,
 } from './generation/prompt';
-export { createLongFormMesocycleRunnable } from './generation/chain';
+export { createMesocycleGenerationRunnable } from './generation/chain';
+export {
+  MesocycleGenerationOutputSchema,
+} from './generation/types';
 export type {
-  LongFormMesocycleConfig,
-  LongFormMesocycleInput,
-  LongFormMesocycleOutput,
+  MesocycleAgentConfig,
+  MesocycleGenerationInput,
+  MesocycleGenerationOutput,
   MesocycleChainContext,
 } from './generation/types';
-
-// Microcycle extraction step
-export { createMicrocycleExtractor } from './microcycles/chain';
-export type { MicrocycleExtractorConfig } from './microcycles/types';
 
 // Formatting step
 export { createFormattedMesocycleAgent } from './formatted/chain';

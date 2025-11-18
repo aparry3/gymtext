@@ -1,38 +1,59 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { z } from 'zod';
-import type { LongFormPlanConfig, LongFormPlanInput, FitnessPlanChainContext } from './types';
-
-// Schema for long-form plan description
-const LongFormPlanSchema = z.object({
-  description: z.string().describe("Comprehensive fitness plan description with mesocycle delimiters")
-});
+import type { FitnessPlanConfig, FitnessPlanInput, FitnessPlanChainContext, FitnessPlanOutput } from './types';
+import { FitnessPlanOutputSchema } from './types';
+import { validateFitnessPlanOutput } from './validation';
 
 /**
- * Long-Form Fitness Plan Agent Factory
+ * Fitness Plan Generation Agent Factory
  *
- * Generates comprehensive fitness plan descriptions in natural language form,
- * including both detailed structure and reasoning.
+ * Generates comprehensive fitness plans with structured output containing
+ * an overview and array of mesocycle strings.
  *
- * Used as the first step in the fitness plan generation chain to produce long-form output,
- * which can then be structured or summarized for other uses.
+ * Used as the first step in the fitness plan generation chain to produce structured output
+ * that can be used directly without string parsing.
+ *
+ * Includes validation and retry logic to ensure mesocycle count consistency.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
- * @returns Agent (runnable) that produces a long-form plan object with description and reasoning
+ * @returns Agent (runnable) that produces structured plan data
  */
-export const createLongFormPlanRunnable = (config: LongFormPlanConfig) => {
-  const model = initializeModel(LongFormPlanSchema, config.agentConfig);
+export const createFitnessPlanGenerationRunnable = (config: FitnessPlanConfig) => {
+  const model = initializeModel(FitnessPlanOutputSchema, config.agentConfig);
+  const maxRetries = config.maxRetries ?? 3;
 
-  return createRunnableAgent(async (input: LongFormPlanInput): Promise<FitnessPlanChainContext> => {
+  return createRunnableAgent(async (input: FitnessPlanInput): Promise<FitnessPlanChainContext> => {
     const systemMessage = config.systemPrompt;
-    const longFormPlan = await model.invoke([
-      { role: 'system', content: systemMessage },
-      { role: 'user', content: input.prompt }
-    ]);
+    let lastError: string | undefined;
 
-    return {
-      longFormPlan,
-      user: input.user,
-      fitnessProfile: input.fitnessProfile
-    };
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const fitnessPlan = await model.invoke([
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: input.prompt }
+      ]) as FitnessPlanOutput;
+
+      // Validate the output
+      const validationResult = validateFitnessPlanOutput(fitnessPlan);
+
+      if (validationResult.isValid) {
+        console.log(`[FitnessPlanGenerationRunnable] Generated valid plan with ${fitnessPlan.mesocycles.length} mesocycles`);
+        return {
+          fitnessPlan,
+          user: input.user,
+          fitnessProfile: input.fitnessProfile
+        };
+      }
+
+      // Validation failed
+      lastError = validationResult.error;
+      console.warn(`[FitnessPlanGenerationRunnable] Attempt ${attempt}/${maxRetries} failed validation: ${validationResult.error}`);
+
+      // Continue to next attempt if retries remain
+      if (attempt < maxRetries) {
+        console.log(`[FitnessPlanGenerationRunnable] Retrying generation...`);
+      }
+    }
+
+    // All retries exhausted
+    throw new Error(`Failed to generate valid fitness plan after ${maxRetries} attempts. Last error: ${lastError}`);
   });
 };

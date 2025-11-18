@@ -26,14 +26,10 @@ export interface MesocycleOverview {
 
 // Re-export step types for convenience
 export type {
-  LongFormMesocycleConfig,
-  LongFormMesocycleInput,
-  LongFormMesocycleOutput,
+  MesocycleAgentConfig,
+  MesocycleGenerationInput,
+  MesocycleGenerationOutput,
   MesocycleChainContext,
-} from './steps';
-
-export type {
-  MicrocycleExtractorConfig,
 } from './steps';
 
 export type {

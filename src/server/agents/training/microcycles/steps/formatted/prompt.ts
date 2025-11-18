@@ -1,4 +1,4 @@
-import type { LongFormMicrocycleOutput } from '../generation/types';
+import type { MicrocycleGenerationOutput } from '../generation/types';
 
 /**
  * System prompt for formatted microcycle agent
@@ -218,17 +218,26 @@ Return the complete formatted microcycle as a single markdown string.`;
  * User prompt for formatted microcycle agent
  */
 export const createFormattedMicrocycleUserPrompt = (
-  longFormMicrocycle: LongFormMicrocycleOutput,
+  microcycle: MicrocycleGenerationOutput,
   weekNumber: number,
-  isDeload: boolean
 ): string => {
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysFormatted = microcycle.days
+    .map((day, index) => `${dayNames[index]}:\n${day}`)
+    .join('\n\n');
+
   return `Convert the following long-form microcycle description into a beautifully formatted markdown document.
 
-LONG-FORM MICROCYCLE DESCRIPTION:
-${longFormMicrocycle.description}
+WEEKLY OVERVIEW:
+${microcycle.overview}
+
+IS DELOAD WEEK: ${microcycle.isDeload}
+
+DAILY BREAKDOWNS:
+
+${daysFormatted}
 
 WEEK NUMBER: ${weekNumber + 1}
-IS DELOAD: ${isDeload ? 'Yes - this is a deload/recovery week' : 'No - regular training week'}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt

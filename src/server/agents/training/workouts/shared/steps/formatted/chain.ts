@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { buildFormattedWorkoutSystemPrompt, createFormattedWorkoutUserPrompt } from './prompt';
-import type { FormattedWorkoutConfig, FormattedWorkoutOutput } from './types';
+import type { FormattedWorkoutConfig } from './types';
 import { WorkoutChainContext } from '../../chainFactory';
 
 /**
@@ -10,9 +10,9 @@ import { WorkoutChainContext } from '../../chainFactory';
  * This replaces the complex structured JSON approach with a more flexible text-based format.
  *
  * @param config - Static configuration for the agent
- * @returns Agent (runnable) that converts long-form workouts to formatted markdown
+ * @returns Agent (runnable) that converts long-form workouts to formatted markdown strings
  */
-export const createFormattedWorkoutAgent = <TWorkout = unknown>(
+export const createFormattedWorkoutAgent = (
   config: FormattedWorkoutConfig
 ) => {
   const agentConfig = config.agentConfig || {
@@ -20,43 +20,22 @@ export const createFormattedWorkoutAgent = <TWorkout = unknown>(
     maxTokens: 16384
   };
 
-  // Initialize model with schema from config
-  const model = initializeModel(config.schema, agentConfig);
+  // Initialize model without schema (returns string)
+  const model = initializeModel(undefined, agentConfig);
 
-  return createRunnableAgent<WorkoutChainContext, FormattedWorkoutOutput<TWorkout>>(async (input) => {
-    const { longFormWorkout, user, fitnessProfile, date } = input;
+  return createRunnableAgent<WorkoutChainContext, string>(async (input) => {
+    const { description, fitnessProfile } = input;
 
     // Build system and user prompts using config
     const systemPrompt = buildFormattedWorkoutSystemPrompt(config.includeModifications);
-    const userPrompt = createFormattedWorkoutUserPrompt(longFormWorkout, user, fitnessProfile, config.includeModifications);
+    const userPrompt = createFormattedWorkoutUserPrompt(description, fitnessProfile, config.includeModifications);
 
     // Invoke model with system and user prompts
-    const workout = await model.invoke([
+    const formattedWorkout = await model.invoke([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
-    ]) as TWorkout;
+    ]) as string;
 
-    // Validate the workout structure
-    const validatedWorkout = config.schema.parse(workout);
-
-    // Basic validation - ensure formatted text exists and is not empty
-    if ('formatted' in validatedWorkout) {
-      const formatted = validatedWorkout.formatted as string;
-      if (!formatted || formatted.trim().length < 100) {
-        throw new Error('Formatted workout is too short or empty');
-      }
-      // Check for required markdown headers
-      if (!formatted.includes('# ') || !formatted.includes('## ')) {
-        throw new Error('Formatted workout missing required headers');
-      }
-    }
-
-    console.log(`[${config.operationName}] Generated formatted workout (${config.includeModifications ? 'with modifications' : 'new'})`);
-
-    // Add date to workout
-    return {
-      ...validatedWorkout,
-      date
-    } as FormattedWorkoutOutput<TWorkout>;
+    return formattedWorkout;
   });
 };

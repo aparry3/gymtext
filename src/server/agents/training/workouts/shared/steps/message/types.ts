@@ -1,5 +1,4 @@
 import { AgentConfig } from '@/server/agents/base';
-import type { LongFormWorkout } from '@/server/models/workout/schema';
 
 /**
  * Configuration for workout message agent
@@ -15,7 +14,7 @@ export interface WorkoutMessageConfig {
  * Runtime context passed through the chain
  */
 export interface WorkoutMessageInput {
-  longFormWorkout: LongFormWorkout;
+  description: string;
 }
 
 /**
