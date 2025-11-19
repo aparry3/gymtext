@@ -154,15 +154,27 @@ export class UserService {
     const result = await this.circuitBreaker.execute(async () => {
       // Validate profile data using domain model
       UserModel.validateFitnessProfileData(profileData);
-      
+
       // Update using repository
       return await this.userRepository.createOrUpdateFitnessProfile(userId, profileData);
     });
-    
+
     if (!result) {
       throw new Error('Failed to update fitness profile');
     }
-    
+
+    return result;
+  }
+
+  async updatePreferences(userId: string, preferences: { preferredSendHour?: number; timezone?: string }): Promise<UserWithProfile> {
+    const result = await this.circuitBreaker.execute(async () => {
+      return await this.userRepository.updatePreferences(userId, preferences);
+    });
+
+    if (!result) {
+      throw new Error('Failed to update preferences');
+    }
+
     return result;
   }
 

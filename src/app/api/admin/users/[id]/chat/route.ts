@@ -1,4 +1,4 @@
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -22,8 +22,7 @@ export async function POST(
       );
     }
 
-    const userRepository = new UserRepository();
-    const user = await userRepository.findById(userId);
+    const user = await userService.getUserById(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -33,7 +32,7 @@ export async function POST(
     }
 
     // Get user with profile for chat context
-    const userWithProfile = await userRepository.findWithProfile(user.id);
+    const userWithProfile = await userService.getUser(user.id);
 
     if (!userWithProfile) {
       return NextResponse.json(
@@ -94,8 +93,7 @@ export async function GET(
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100 per request
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const userRepository = new UserRepository();
-    const user = await userRepository.findById(userId);
+    const user = await userService.getUserById(userId);
 
     if (!user) {
       return NextResponse.json(

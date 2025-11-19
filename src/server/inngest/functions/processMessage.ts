@@ -18,7 +18,7 @@
 
 import { inngest } from '@/server/connections/inngest/client';
 import { messageService, chatService } from '@/server/services';
-import { UserRepository } from '@/server/repositories';
+import { userService } from '@/server/services/user/userService';
 
 export const processMessageFunction = inngest.createFunction(
   {
@@ -34,8 +34,7 @@ export const processMessageFunction = inngest.createFunction(
     // Load user fresh in this step to avoid serialization issues
     const response = await step.run('generate-response', async () => {
       console.log('[Inngest] Loading user and generating response:', userId);
-      const userRepo = new UserRepository();
-      const user = await userRepo.findWithProfile(userId);
+      const user = await userService.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
@@ -53,8 +52,7 @@ export const processMessageFunction = inngest.createFunction(
     // Load user fresh again to avoid serialization issues
     const messageResult = await step.run('send-message', async () => {
       console.log('[Inngest] Loading user and sending message:', userId);
-      const userRepo = new UserRepository();
-      const user = await userRepo.findWithProfile(userId);
+      const user = await userService.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);

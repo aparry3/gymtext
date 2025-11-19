@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { dailyMessageService } from '@/server/services';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
@@ -24,8 +24,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Fetch the user from the database
-    const userRepository = new UserRepository();
-    const user = await userRepository.findWithProfile(userId);
+    const user = await userService.getUser(userId);
 
     if (!user) {
       return NextResponse.json(

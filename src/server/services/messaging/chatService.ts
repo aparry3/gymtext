@@ -5,7 +5,7 @@ import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutModificationService } from '../orchestration/workoutModificationService';
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
@@ -30,14 +30,12 @@ export class ChatService {
   private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
   private workoutModificationService: WorkoutModificationService;
-  private userRepository: UserRepository;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
     this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.workoutModificationService = WorkoutModificationService.getInstance();
-    this.userRepository = new UserRepository();
   }
 
   public static getInstance(): ChatService {
@@ -93,7 +91,7 @@ export class ChatService {
       // Fetch user with markdown profile (if not already included)
       const userWithMarkdown = user.markdownProfile !== undefined
         ? user
-        : await this.userRepository.findWithMarkdownProfile(user.id) || user;
+        : await userService.getUser(user.id) || user;
 
       // Create chat agent with simplified dependencies using DI pattern
       const agent = createChatAgent({

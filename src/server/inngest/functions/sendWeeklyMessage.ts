@@ -19,7 +19,7 @@
 
 import { inngest } from '@/server/connections/inngest/client';
 import { weeklyMessageService } from '@/server/services';
-import { UserRepository } from '@/server/repositories';
+import { userService } from '@/server/services/user/userService';
 
 export const sendWeeklyMessageFunction = inngest.createFunction(
   {
@@ -39,8 +39,7 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
     const result = await step.run('send-weekly-message', async () => {
       console.log('[Inngest] Sending weekly message:', { userId });
 
-      const userRepo = new UserRepository();
-      const user = await userRepo.findWithProfile(userId);
+      const user = await userService.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
