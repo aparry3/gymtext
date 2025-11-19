@@ -86,7 +86,7 @@ export class WorkoutModificationService {
 
       console.log('Modifying workout', params);
       // Get user with profile first to determine timezone
-      const user = await this.userService.getUserWithProfile(userId);
+      const user = await this.userService.getUser(userId);
       if (!user) {
         return {
           success: false,
@@ -161,7 +161,7 @@ export class WorkoutModificationService {
       // targetDay is not currently used - we use the current day of week instead
 
       // Get user with profile
-      const user = await this.userService.getUserWithProfile(userId);
+      const user = await this.userService.getUser(userId);
       if (!user) {
         return {
           success: false,

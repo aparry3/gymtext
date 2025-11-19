@@ -25,9 +25,9 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
+import { fitnessProfileServiceV2 } from '@/server/services/user/fitnessProfileServiceV2';
 import { onboardingService } from '@/server/services/orchestration/onboardingService';
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
 
@@ -48,7 +48,6 @@ export const onboardUserFunction = inngest.createFunction(
       await step.run('mark-started', async () => {
         console.log(`[Inngest] Marking onboarding as started for ${userId}`);
         await onboardingDataService.markStarted(userId);
-        await onboardingDataService.updateCurrentStep(userId, 1);
       });
 
     // Step 2: Load signup data
@@ -69,19 +68,18 @@ export const onboardUserFunction = inngest.createFunction(
       console.log(`[Inngest] Extracting fitness profile for ${userId} (LLM)`);
       await onboardingDataService.updateCurrentStep(userId, 2);
 
-      // Load user fresh to avoid serialization issues
-      const userRepo = new UserRepository();
-      const user = await userRepo.findWithProfile(userId);
+      // Load user with markdown profile
+      const user = await userService.getUser(userId);
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }
 
       try {
-        // Pass raw signup data - service handles formatting and baseline creation
-        await fitnessProfileService.createFitnessProfile(user, signupData);
-        console.log(`[Inngest] Fitness profile extracted for ${userId}`);
+        // Pass raw signup data - V2 service creates markdown profile using Profile Update Agent
+        await fitnessProfileServiceV2.createFitnessProfile(user, signupData);
+        console.log(`[Inngest] Fitness profile created for ${userId}`);
       } catch (error) {
-        console.error(`[Inngest] Failed to extract profile for ${userId}:`, error);
+        console.error(`[Inngest] Failed to create profile for ${userId}:`, error);
         throw error;
       }
     });
@@ -91,15 +89,14 @@ export const onboardUserFunction = inngest.createFunction(
       console.log(`[Inngest] Creating fitness plan for ${userId}`);
       await onboardingDataService.updateCurrentStep(userId, 3);
 
-      // Reload user with updated profile
-      const userRepo = new UserRepository();
-      const userWithProfile = await userRepo.findWithProfile(userId);
-      if (!userWithProfile) {
+      // Reload user with updated markdown profile
+      const user = await userService.getUser(userId);
+      if (!user) {
         throw new Error(`User ${userId} not found after profile creation`);
       }
 
       try {
-        await onboardingService.createFitnessPlan(userWithProfile);
+        await onboardingService.createFitnessPlan(user);
         console.log(`[Inngest] Fitness plan created for ${userId}`);
       } catch (error) {
         console.error(`[Inngest] Failed to create fitness plan for ${userId}:`, error);
@@ -112,15 +109,14 @@ export const onboardUserFunction = inngest.createFunction(
       console.log(`[Inngest] Creating first microcycle for ${userId}`);
       await onboardingDataService.updateCurrentStep(userId, 4);
 
-      // Reload user (ensure fresh data)
-      const userRepo = new UserRepository();
-      const userWithProfile = await userRepo.findWithProfile(userId);
-      if (!userWithProfile) {
+      // Reload user with markdown profile
+      const user = await userService.getUser(userId);
+      if (!user) {
         throw new Error(`User ${userId} not found`);
       }
 
       try {
-        await onboardingService.createFirstMicrocycle(userWithProfile);
+        await onboardingService.createFirstMicrocycle(user);
         console.log(`[Inngest] First microcycle created for ${userId}`);
       } catch (error) {
         console.error(`[Inngest] Failed to create first microcycle for ${userId}:`, error);
@@ -133,15 +129,14 @@ export const onboardUserFunction = inngest.createFunction(
       console.log(`[Inngest] Creating first workout for ${userId}`);
       await onboardingDataService.updateCurrentStep(userId, 5);
 
-      // Reload user (ensure fresh data)
-      const userRepo = new UserRepository();
-      const userWithProfile = await userRepo.findWithProfile(userId);
-      if (!userWithProfile) {
+      // Reload user with markdown profile
+      const user = await userService.getUser(userId);
+      if (!user) {
         throw new Error(`User ${userId} not found`);
       }
 
       try {
-        await onboardingService.createFirstWorkout(userWithProfile);
+        await onboardingService.createFirstWorkout(user);
         console.log(`[Inngest] First workout created for ${userId}`);
       } catch (error) {
         console.error(`[Inngest] Failed to create first workout for ${userId}:`, error);

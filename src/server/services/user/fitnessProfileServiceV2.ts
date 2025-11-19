@@ -16,7 +16,6 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createProfileUpdateAgent } from '@/server/agents/profileUpdate';
-import type { ProfileUpdateOutput } from '@/server/agents/profileUpdate';
 import { convertJsonProfileToMarkdown, createEmptyMarkdownProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
@@ -143,58 +142,6 @@ export class FitnessProfileServiceV2 {
         return result.updatedProfile;
       } catch (error) {
         console.error('[FitnessProfileServiceV2] Error creating profile:', error);
-        throw error;
-      }
-    });
-  }
-
-  /**
-   * Update/patch a user's profile based on a message
-   * Uses the Profile Update Agent to handle the update
-   *
-   * @param user - User whose profile to update
-   * @param message - User message that may contain profile updates
-   * @returns Profile update result
-   */
-  async updateProfileFromMessage(
-    user: UserWithProfile,
-    message: string
-  ): Promise<ProfileUpdateResult | null> {
-    return this.circuitBreaker.execute<ProfileUpdateResult | null>(async (): Promise<ProfileUpdateResult> => {
-      try {
-        // Get current profile (or empty)
-        const currentProfile = await this.getCurrentProfile(user.id) || createEmptyMarkdownProfile(user);
-
-        // Get current date for temporal reasoning
-        const currentDate = formatForAI(new Date(), user.timezone);
-
-        // Use Profile Update Agent
-        const agent = createProfileUpdateAgent();
-        const result: ProfileUpdateOutput = await agent.invoke({
-          currentProfile,
-          message,
-          user,
-          currentDate,
-        });
-
-        console.log('[FitnessProfileServiceV2] Profile update result:', {
-          wasUpdated: result.wasUpdated,
-          summary: result.updateSummary,
-        });
-
-        // If profile was updated, save new version to database
-        if (result.wasUpdated) {
-          await this.profileRepository.createProfileForUser(user.id, result.updatedProfile);
-          console.log('[FitnessProfileServiceV2] Saved updated profile to database');
-        }
-
-        return {
-          profile: result.updatedProfile,
-          wasUpdated: result.wasUpdated,
-          updateSummary: result.updateSummary,
-        };
-      } catch (error) {
-        console.error('[FitnessProfileServiceV2] Error updating profile:', error);
         throw error;
       }
     });

@@ -176,7 +176,7 @@ export class MessageService {
     // TODO: Implement periodic message summarization
     return await this.circuitBreaker.execute(async () => {
 
-      const user = await this.userService.getUserWithProfile(userId);
+      const user = await this.userService.getUser(userId);
       if (!user) {
         return null;
       }

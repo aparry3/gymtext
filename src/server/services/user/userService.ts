@@ -98,9 +98,9 @@ export class UserService {
     return result || undefined;
   }
 
-  async getUserWithProfile(userId: string) {
+  async getUser(userId: string) {
     return await this.circuitBreaker.execute(async () => {
-      return await this.userRepository.findWithProfile(userId);
+      return await this.userRepository.findWithMarkdownProfile(userId);
     });
   }
 
