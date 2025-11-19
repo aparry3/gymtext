@@ -118,6 +118,11 @@ export const createMicrocyclePostProcessChain = (
           output.wasModified = (input as { wasModified: boolean }).wasModified;
         }
 
+        // Propagate modifications if present (only for update operations when wasModified is true)
+        if ('modifications' in input && typeof (input as { modifications?: string }).modifications === 'string') {
+          output.modifications = (input as { modifications: string }).modifications;
+        }
+
         return output;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));

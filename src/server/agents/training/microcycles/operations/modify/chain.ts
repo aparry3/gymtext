@@ -48,14 +48,15 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
 
         console.log(`[Modify] Successfully modified microcycle with ${microcycle.days.length} days (wasModified: ${microcycle.wasModified})`);
 
-        // Extract wasModified and return MicrocycleChainContext for post-processing
-        const { wasModified, ...baseMicrocycle } = microcycle;
+        // Extract wasModified and modifications, return MicrocycleChainContext for post-processing
+        const { wasModified, modifications, ...baseMicrocycle } = microcycle;
 
         return {
           microcycle: baseMicrocycle,
           microcycleOverview: currentMicrocycle.description ?? '',
           weekNumber,
-          wasModified
+          wasModified,
+          modifications
         };
       } catch (error) {
         console.error(`[Modify] Error modifying microcycle (attempt ${attempt + 1}):`, error);

@@ -33,7 +33,7 @@ export interface ModifyWorkoutParams {
 export interface ModifyWorkoutResult {
   success: boolean;
   workout?: WorkoutChainResult;
-  modificationsApplied?: string[];
+  modifications?: string;
   message?: string;
   error?: string;
 }
@@ -49,7 +49,7 @@ export interface ModifyWeekResult {
   success: boolean;
   workout?: WorkoutChainResult;
   modifiedDays?: number;
-  modificationsApplied?: string[];
+  modifications?: string;
   message?: string;
   error?: string;
 }
@@ -123,12 +123,6 @@ export class WorkoutModificationService {
       const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
       const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
 
-      // Extract modifications applied section from markdown if present
-      const modificationsMatch = result.formatted.match(/##\s+Modifications Applied\s+([\s\S]+?)(?=\n##|\n---|\n$)/i);
-      const modificationsApplied = modificationsMatch
-        ? modificationsMatch[1].trim().split('\n').map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean)
-        : [];
-
       // Store formatted text in details.formatted
       const details = {
         formatted: result.formatted,  // Store the formatted markdown text
@@ -145,7 +139,7 @@ export class WorkoutModificationService {
       return {
         success: true,
         workout: result,
-        modificationsApplied,
+        modifications: result.modifications,
         message: result.message,
       };
     } catch (error) {
@@ -235,10 +229,11 @@ export class WorkoutModificationService {
           }
         );
 
-        // Return success with the modified microcycle message
+        // Return success with the modified microcycle message and modifications
         return {
           success: true,
           message: modifyMicrocycleResult.message || 'Weekly pattern modified successfully',
+          modifications: modifyMicrocycleResult.modifications,
         };
       } else {
         console.log(`[MODIFY_WEEK] No modifications needed - current plan already satisfies the request`);

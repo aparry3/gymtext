@@ -104,21 +104,55 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     }
 
     // Extract message from tool result
-    // Workout agents already generate contextual messages, so we use those directly
     if (!toolResult) {
       return {
         response: 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!',
       };
     }
 
-    if (toolResult.success && toolResult.message) {
-      console.log(`[${agentName}] Using message from workout agent:`, {
-        response: toolResult.message.substring(0, 100) + (toolResult.message.length > 100 ? '...' : ''),
-      });
+    // If tool execution succeeded
+    if (toolResult.success) {
+      // If we have modifications data, generate a conversational message
+      if (toolResult.modifications && toolResult.modifications.trim().length > 0) {
+        try {
+          console.log(`[${agentName}] Generating conversational message from modifications:`, {
+            modifications: toolResult.modifications.substring(0, 100) + (toolResult.modifications.length > 100 ? '...' : ''),
+          });
 
-      return {
-        response: toolResult.message,
-      };
+          // Generate conversational message from modifications
+          const conversationalModel = initializeModel(ModificationsResponseSchema, { model: 'gpt-5-nano' });
+          const conversationalResponse = await conversationalModel.invoke([
+            {
+              role: 'system',
+              content: 'You are a friendly fitness coach communicating via SMS. Convert technical workout modification descriptions into brief, encouraging, conversational messages. Keep it under 160 characters when possible. Use a warm, supportive tone.'
+            },
+            {
+              role: 'user',
+              content: `Convert this modification description into a friendly SMS message:\n\n${toolResult.modifications}`
+            }
+          ]) as ModificationsResponse;
+
+          console.log(`[${agentName}] Generated conversational message:`, {
+            response: conversationalResponse.response.substring(0, 100) + (conversationalResponse.response.length > 100 ? '...' : ''),
+          });
+
+          return conversationalResponse;
+        } catch (error) {
+          console.error(`[${agentName}] Error generating conversational message, falling back to tool message:`, error);
+          // Fall through to use toolResult.message
+        }
+      }
+
+      // Fall back to pre-generated message if available
+      if (toolResult.message) {
+        console.log(`[${agentName}] Using message from tool:`, {
+          response: toolResult.message.substring(0, 100) + (toolResult.message.length > 100 ? '...' : ''),
+        });
+
+        return {
+          response: toolResult.message,
+        };
+      }
     }
 
     // If failed or no message, provide error message
