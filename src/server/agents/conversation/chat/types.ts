@@ -70,7 +70,6 @@ export interface ChatOutput {
  * Dependencies for chat agent (includes DI for profile and modification services)
  */
 export interface ChatAgentDeps extends AgentDeps {
-  getCurrentProfile: (userId: string) => Promise<string | null>;
   saveProfile: (userId: string, markdownProfile: string) => Promise<void>;
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;

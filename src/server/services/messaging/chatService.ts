@@ -5,6 +5,7 @@ import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutModificationService } from '../orchestration/workoutModificationService';
+import { UserRepository } from '@/server/repositories/userRepository';
 import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
@@ -29,12 +30,14 @@ export class ChatService {
   private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
   private workoutModificationService: WorkoutModificationService;
+  private userRepository: UserRepository;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
     this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.workoutModificationService = WorkoutModificationService.getInstance();
+    this.userRepository = new UserRepository();
   }
 
   public static getInstance(): ChatService {
@@ -86,18 +89,22 @@ export class ChatService {
 
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
-      
-      // Create chat agent with injected dependencies using DI pattern
+
+      // Fetch user with markdown profile (if not already included)
+      const userWithMarkdown = user.markdownProfile !== undefined
+        ? user
+        : await this.userRepository.findWithMarkdownProfile(user.id) || user;
+
+      // Create chat agent with simplified dependencies using DI pattern
       const agent = createChatAgent({
-        getCurrentProfile: this.fitnessProfileService.getCurrentMarkdownProfile.bind(this.fitnessProfileService),
         saveProfile: this.fitnessProfileService.saveMarkdownProfile.bind(this.fitnessProfileService),
         modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
         modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
       });
 
-      // Invoke the agent
+      // Invoke the agent with user that includes markdown profile
       const chatResult = await agent.invoke({
-        user,
+        user: userWithMarkdown,
         message,
         previousMessages: contextMessages,
         currentWorkout: currentWorkout,

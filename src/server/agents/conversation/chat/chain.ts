@@ -10,6 +10,7 @@ import { updatesAgentRunnable } from './updates/chain';
 import { createModificationsAgent } from './modifications/chain';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
 import { formatForAI } from '@/shared/utils/date';
+import { convertJsonProfileToMarkdown } from '@/server/utils/profile/jsonToMarkdown';
 
 // Re-export types for backward compatibility
 export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService };
@@ -46,12 +47,14 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     'modifications': createModificationsAgent({ tools: modificationTools }),
   };
 
-  // Profile Runnable - fetches current profile, updates via agent, returns result
+  // Profile Runnable - uses markdown profile from user object, updates via agent
   // Input: ChatInput (initial chain input)
   // Output: ProfileUpdateOutput
   const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
-    // Fetch current profile via service callback
-    const currentProfile = await deps.getCurrentProfile(input.user.id) || '';
+    // Get markdown profile from user object (with JSON fallback for migration)
+    const currentProfile = input.user.markdownProfile
+      || (input.user.profile ? convertJsonProfileToMarkdown(input.user.profile, input.user) : '')
+      || '';
 
     // Create and invoke profile update agent
     const agent = createProfileUpdateAgent();
