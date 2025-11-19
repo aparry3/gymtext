@@ -6,6 +6,7 @@ import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './pr
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { ModifyWorkoutResult, ModifyWeekResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import { createModificationMessageRunnable } from './message/chain';
 
 /**
  * Dependencies for Modifications Agent (DI)
@@ -119,24 +120,17 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
             modifications: toolResult.modifications.substring(0, 100) + (toolResult.modifications.length > 100 ? '...' : ''),
           });
 
-          // Generate conversational message from modifications
-          const conversationalModel = initializeModel(ModificationsResponseSchema, { model: 'gpt-5-nano' });
-          const conversationalResponse = await conversationalModel.invoke([
-            {
-              role: 'system',
-              content: 'You are a friendly fitness coach communicating via SMS. Convert technical workout modification descriptions into brief, encouraging, conversational messages. Keep it under 160 characters when possible. Use a warm, supportive tone.'
-            },
-            {
-              role: 'user',
-              content: `Convert this modification description into a friendly SMS message:\n\n${toolResult.modifications}`
-            }
-          ]) as ModificationsResponse;
+          // Use the message runnable to generate conversational message
+          const messageRunnable = createModificationMessageRunnable();
+          const conversationalMessage = await messageRunnable.invoke(toolResult.modifications);
 
           console.log(`[${agentName}] Generated conversational message:`, {
-            response: conversationalResponse.response.substring(0, 100) + (conversationalResponse.response.length > 100 ? '...' : ''),
+            response: conversationalMessage.substring(0, 100) + (conversationalMessage.length > 100 ? '...' : ''),
           });
 
-          return conversationalResponse;
+          return {
+            response: conversationalMessage,
+          };
         } catch (error) {
           console.error(`[${agentName}] Error generating conversational message, falling back to tool message:`, error);
           // Fall through to use toolResult.message
