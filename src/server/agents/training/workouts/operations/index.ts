@@ -5,9 +5,9 @@ export {
   type WorkoutGenerateOutput,
 } from './generate';
 
-// Update operation
+// Modify operation
 export {
-  createWorkoutUpdateAgent,
-  type WorkoutUpdateInput,
-  type WorkoutUpdateOutput,
-} from './update';
+  createModifyWorkoutAgent,
+  type ModifyWorkoutInput,
+  type ModifyWorkoutOutput,
+} from './modify';

@@ -3,10 +3,9 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
 import type { PatchProfileCallback } from '@/server/agents/profile/chain';
-import type { WorkoutModificationService } from './modifications/tools';
-import type { MicrocycleModificationService } from './modifications/tools';
+import type { ModifyWeekParams, ModifyWorkoutParams } from './modifications/tools';
 import { WorkoutInstance } from '@/server/models';
-import type { ProfilePatchResult } from '@/server/services';
+import type { ModifyWeekResult, ProfilePatchResult, ModifyWorkoutResult } from '@/server/services';
 
 /**
  * Intent types that the triage agent can identify
@@ -72,6 +71,6 @@ export interface ChatOutput {
  */
 export interface ChatAgentDeps extends AgentDeps {
   patchProfile: PatchProfileCallback;
-  workoutService: WorkoutModificationService;
-  microcycleService: MicrocycleModificationService;
+  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
+  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }

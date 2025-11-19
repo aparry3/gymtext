@@ -1,27 +1,27 @@
-import { microcycleUpdateUserPrompt, MICROCYCLE_UPDATE_SYSTEM_PROMPT } from './prompt';
+import { modifyMicrocycleUserPrompt, MICROCYCLE_MODIFY_SYSTEM_PROMPT } from './prompt';
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { RunnableSequence } from '@langchain/core/runnables';
-import type { MicrocycleUpdateInput } from './types';
-import { MicrocycleUpdateOutputSchema, type MicrocycleUpdateOutput } from './types';
+import type { ModifyMicrocycleInput } from './types';
+import { ModifyMicrocycleOutputSchema, type ModifyMicrocycleOutput } from './types';
 import { MicrocycleAgentDeps, MicrocycleAgentOutput } from '../../types';
 import { createMicrocyclePostProcessChain } from '../../steps';
 import type { MicrocycleChainContext } from '../../steps';
 import { formatFitnessProfile } from '@/server/utils/formatters';
 
-export type { MicrocycleUpdateInput } from './types';
+export type { ModifyMicrocycleInput } from './types';
 
 /**
- * Creates the update-specific first step runnable
- * Takes MicrocycleUpdateInput and produces MicrocycleChainContext (with wasModified)
+ * Creates the modify-specific first step runnable
+ * Takes ModifyMicrocycleInput and produces MicrocycleChainContext (with wasModified)
  */
-const createMicrocycleUpdateRunnable = (deps?: MicrocycleAgentDeps) => {
-  const model = initializeModel(MicrocycleUpdateOutputSchema, deps?.config);
+const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
+  const model = initializeModel(ModifyMicrocycleOutputSchema, deps?.config);
 
-  return createRunnableAgent<MicrocycleUpdateInput, MicrocycleChainContext & { wasModified: boolean }>(async (input) => {
+  return createRunnableAgent<ModifyMicrocycleInput, MicrocycleChainContext & { wasModified: boolean }>(async (input) => {
     const { user, currentMicrocycle, changeRequest, currentDayOfWeek, weekNumber } = input;
 
     // Generate prompt
-    const prompt = microcycleUpdateUserPrompt({
+    const prompt = modifyMicrocycleUserPrompt({
       fitnessProfile: formatFitnessProfile(user),
       currentMicrocycle,
       changeRequest,
@@ -33,20 +33,20 @@ const createMicrocycleUpdateRunnable = (deps?: MicrocycleAgentDeps) => {
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`[Update] Attempting to update microcycle (attempt ${attempt + 1}/${maxRetries})`);
+        console.log(`[Modify] Attempting to modify microcycle (attempt ${attempt + 1}/${maxRetries})`);
 
-        // Generate the updated microcycle
+        // Generate the modified microcycle
         const microcycle = await model.invoke([
-          { role: 'system', content: MICROCYCLE_UPDATE_SYSTEM_PROMPT },
+          { role: 'system', content: MICROCYCLE_MODIFY_SYSTEM_PROMPT },
           { role: 'user', content: prompt }
-        ]) as MicrocycleUpdateOutput;
+        ]) as ModifyMicrocycleOutput;
 
         // Ensure we have a valid response
         if (!microcycle) {
           throw new Error('AI returned null/undefined microcycle');
         }
 
-        console.log(`[Update] Successfully updated microcycle with ${microcycle.days.length} days (wasModified: ${microcycle.wasModified})`);
+        console.log(`[Modify] Successfully modified microcycle with ${microcycle.days.length} days (wasModified: ${microcycle.wasModified})`);
 
         // Extract wasModified and return MicrocycleChainContext for post-processing
         const { wasModified, ...baseMicrocycle } = microcycle;
@@ -58,7 +58,7 @@ const createMicrocycleUpdateRunnable = (deps?: MicrocycleAgentDeps) => {
           wasModified
         };
       } catch (error) {
-        console.error(`[Update] Error updating microcycle (attempt ${attempt + 1}):`, error);
+        console.error(`[Modify] Error modifying microcycle (attempt ${attempt + 1}):`, error);
 
         // Log more details about the error for debugging
         if (error instanceof Error) {
@@ -80,15 +80,15 @@ const createMicrocycleUpdateRunnable = (deps?: MicrocycleAgentDeps) => {
       }
     }
 
-    throw new Error('Failed to update microcycle after all attempts');
+    throw new Error('Failed to modify microcycle after all attempts');
   });
 };
 
 /**
- * Microcycle Update Agent Factory
+ * Microcycle Modification Agent Factory
  *
- * Updates weekly training patterns based on user change requests using a composable chain:
- * 1. Update structured output based on change request (update-specific step)
+ * Modifies weekly training patterns based on user change requests using a composable chain:
+ * 1. Modify structured output based on change request (modify-specific step)
  * 2. Post-process: formatted markdown + SMS message + validation + transformation (shared step)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
@@ -96,19 +96,19 @@ const createMicrocycleUpdateRunnable = (deps?: MicrocycleAgentDeps) => {
  * Structured output ensures reliable parsing without regex.
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that updates microcycle day overviews, formatted markdown, and messages
+ * @returns Agent that modifies microcycle day overviews, formatted markdown, and messages
  */
-export const createMicrocycleUpdateAgent = (deps?: MicrocycleAgentDeps) => {
-  return createRunnableAgent<MicrocycleUpdateInput, MicrocycleAgentOutput>(async (input) => {
-    // Step 1: Create update runnable (update-specific)
-    const microcycleUpdateRunnable = createMicrocycleUpdateRunnable(deps);
+export const createModifyMicrocycleAgent = (deps?: MicrocycleAgentDeps) => {
+  return createRunnableAgent<ModifyMicrocycleInput, MicrocycleAgentOutput>(async (input) => {
+    // Step 1: Create modify runnable (modify-specific)
+    const modifyMicrocycleRunnable = createModifyMicrocycleRunnable(deps);
 
     // Step 2: Create shared post-processing chain
-    const postProcessChain = createMicrocyclePostProcessChain(deps, 'update');
+    const postProcessChain = createMicrocyclePostProcessChain(deps, 'modify');
 
-    // Compose the full chain: update → post-processing
+    // Compose the full chain: modify → post-processing
     const sequence = RunnableSequence.from([
-      microcycleUpdateRunnable,
+      modifyMicrocycleRunnable,
       postProcessChain
     ]);
 

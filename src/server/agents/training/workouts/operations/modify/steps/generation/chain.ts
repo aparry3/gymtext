@@ -1,18 +1,18 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import {
-  WorkoutUpdateGenerationInput,
-  WorkoutUpdateGenerationConfig,
-  WorkoutUpdateGenerationOutputSchema,
-  WorkoutUpdateGenerationOutput,
+  ModifyWorkoutGenerationInput,
+  ModifyWorkoutGenerationConfig,
+  ModifyWorkoutGenerationOutputSchema,
+  ModifyWorkoutGenerationOutput,
 } from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
 import { SYSTEM_PROMPT, userPrompt } from './prompt';
 import { formatFitnessProfile } from '@/server/utils/formatters';
 
 /**
- * Workout Update Generation Runnable
+ * Workout Modification Generation Runnable
  *
- * Generates updated workout text using structured output with conditional modifications tracking.
+ * Generates modified workout text using structured output with conditional modifications tracking.
  *
  * Uses Zod schema to parse JSON output with:
  * - overview: Full workout text (modified or original)
@@ -24,11 +24,11 @@ import { formatFitnessProfile } from '@/server/utils/formatters';
  * @param config - Configuration containing (optionally) agent/model settings
  * @returns Agent (runnable) that produces workout context with modification tracking
  */
-export const createWorkoutUpdateGenerationRunnable = (config: WorkoutUpdateGenerationConfig) => {
+export const createModifyWorkoutGenerationRunnable = (config: ModifyWorkoutGenerationConfig) => {
   // Initialize model with structured output schema
-  const model = initializeModel(WorkoutUpdateGenerationOutputSchema, config.agentConfig);
+  const model = initializeModel(ModifyWorkoutGenerationOutputSchema, config.agentConfig);
 
-  return createRunnableAgent(async (input: WorkoutUpdateGenerationInput): Promise<WorkoutChainContext> => {
+  return createRunnableAgent(async (input: ModifyWorkoutGenerationInput): Promise<WorkoutChainContext> => {
     const fitnessProfile = formatFitnessProfile(input.user);
     const prompt = userPrompt(input.workout.description!, input.changeRequest, fitnessProfile);
 
@@ -36,13 +36,13 @@ export const createWorkoutUpdateGenerationRunnable = (config: WorkoutUpdateGener
     const result = await model.invoke([
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: prompt }
-    ]) as WorkoutUpdateGenerationOutput;
+    ]) as ModifyWorkoutGenerationOutput;
 
     // Log modification status
     if (result.wasModified && result.modifications) {
-      console.log('[update generation] Workout was modified:', result.modifications);
+      console.log('[modify generation] Workout was modified:', result.modifications);
     } else {
-      console.log('[update generation] Workout was not modified - original workout satisfies constraints');
+      console.log('[modify generation] Workout was not modified - original workout satisfies constraints');
     }
 
     // Extract overview as description for downstream processing

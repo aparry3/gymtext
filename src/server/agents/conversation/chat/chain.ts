@@ -35,8 +35,8 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
 
   // Create modification tools with injected services (DI pattern)
   const modificationTools = createModificationTools({
-    workoutService: deps.workoutService,
-    microcycleService: deps.microcycleService,
+    modifyWorkout: deps.modifyWorkout,
+    modifyWeek: deps.modifyWeek,
   });
 
   // Create triage action map with injected dependencies

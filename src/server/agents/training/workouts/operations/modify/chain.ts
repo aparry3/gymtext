@@ -4,14 +4,14 @@ import {
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
 } from '../../shared';
-import { createWorkoutUpdateGenerationRunnable } from './steps/generation/chain';
-import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps, WorkoutUpdateOutput } from './types';
+import { createModifyWorkoutGenerationRunnable } from './steps/generation/chain';
+import type { ModifyWorkoutInput, ModifyWorkoutAgentDeps, ModifyWorkoutOutput } from './types';
 
 /**
- * Workout Update Agent Factory
+ * Workout Modification Agent Factory
  *
- * Updates an existing workout based on user constraints using a composable chain:
- * 1. Generate updated long-form workout description (update-specific generation step)
+ * Modifies an existing workout based on user constraints using a composable chain:
+ * 1. Generate modified long-form workout description (modify-specific generation step)
  * 2. In parallel: convert to formatted markdown + SMS message (shared steps)
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
@@ -19,10 +19,10 @@ import type { WorkoutUpdateInput, WorkoutUpdateAgentDeps, WorkoutUpdateOutput } 
  * Tracks modifications made to the original workout.
  *
  * @param deps - Optional dependencies (config)
- * @returns Agent that updates workouts with formatted text and message
+ * @returns Agent that modifies workouts with formatted text and message
  */
-export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
-  return createRunnableAgent<WorkoutUpdateInput, WorkoutUpdateOutput>(async (input) => {
+export const createModifyWorkoutAgent = (deps?: ModifyWorkoutAgentDeps) => {
+  return createRunnableAgent<ModifyWorkoutInput, ModifyWorkoutOutput>(async (input) => {
     // Validation
     if (!input.workout.description) {
       throw new Error('Workout description is required');
@@ -31,21 +31,21 @@ export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
       throw new Error('Change request is required');
     }
 
-    // Step 1: Create generation runnable (update-specific)
-    const generationRunnable = createWorkoutUpdateGenerationRunnable({
+    // Step 1: Create generation runnable (modify-specific)
+    const generationRunnable = createModifyWorkoutGenerationRunnable({
       agentConfig: deps?.config
     });
 
     // Step 2a: Create formatted workout agent (shared step, with modifications tracking)
     const formattedAgent = createFormattedWorkoutAgent({
       includeModifications: true,
-      operationName: 'update workout',
+      operationName: 'modify workout',
       agentConfig: deps?.config
     });
 
     // Step 2b: Create message agent (shared step)
     const messageAgent = createWorkoutMessageAgent({
-      operationName: 'update workout',
+      operationName: 'modify workout',
       agentConfig: deps?.config
     });
 
@@ -62,11 +62,11 @@ export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
     const maxRetries = 2;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`[update workout] Attempting operation (attempt ${attempt + 1}/${maxRetries})`);
+        console.log(`[modify workout] Attempting operation (attempt ${attempt + 1}/${maxRetries})`);
 
         const result = await sequence.invoke(input);
 
-        console.log(`[update workout] Successfully completed with updated workout, formatted text, and message`);
+        console.log(`[modify workout] Successfully completed with modified workout, formatted text, and message`);
 
         return {
           formatted: result.formatted,
@@ -76,7 +76,7 @@ export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
           wasModified: result.wasModified,
         };
       } catch (error) {
-        console.error(`[update workout] Error on attempt ${attempt + 1}:`, error);
+        console.error(`[modify workout] Error on attempt ${attempt + 1}:`, error);
 
         if (error instanceof Error) {
           console.error('Error details:', {
@@ -95,6 +95,6 @@ export const createWorkoutUpdateAgent = (deps?: WorkoutUpdateAgentDeps) => {
       }
     }
 
-    throw new Error(`[update workout] Failed after all retry attempts`);
+    throw new Error(`[modify workout] Failed after all retry attempts`);
   });
 };

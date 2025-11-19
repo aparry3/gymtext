@@ -90,12 +90,8 @@ export class ChatService {
       // Create chat agent with injected dependencies using DI pattern
       const agent = createChatAgent({
         patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
-        workoutService: {
-          modifyWorkout: this.workoutModificationService.updateWorkout.bind(this.workoutModificationService),
-        },
-        microcycleService: {
-          modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
-        },
+        modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
+        modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
       });
 
       // Invoke the agent

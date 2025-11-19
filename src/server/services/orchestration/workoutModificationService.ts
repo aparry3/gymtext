@@ -1,11 +1,11 @@
 import { UserService } from '../user/userService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { createWorkoutUpdateAgent } from '@/server/agents/training/workouts/operations/update';
+import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
 import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
-import { createMicrocycleUpdateAgent } from '@/server/agents/training/microcycles/operations/update/chain';
+import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
 import { ProgressService } from '../training/progressService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 
@@ -24,13 +24,13 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
  * and eliminates circular dependencies between MicrocycleService and WorkoutInstanceService.
  */
 
-export interface UpdateWorkoutParams {
+export interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
   reason: string;
 }
 
-export interface UpdateWorkoutResult {
+export interface ModifyWorkoutResult {
   success: boolean;
   workout?: WorkoutChainResult;
   modificationsApplied?: string[];
@@ -80,7 +80,7 @@ export class WorkoutModificationService {
   /**
    * Modify an entire workout based on constraints
    */
-  public async updateWorkout(params: UpdateWorkoutParams): Promise<UpdateWorkoutResult> {
+  public async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
     try {
       const { userId, workoutDate, reason } = params;
 
@@ -111,8 +111,8 @@ export class WorkoutModificationService {
       }
 
 
-      // Use the workout update agent to modify the workout
-      const result = await createWorkoutUpdateAgent().invoke({
+      // Use the workout modification agent to modify the workout
+      const result = await createModifyWorkoutAgent().invoke({
         workout: existingWorkout,
         user,
         date: existingWorkout.date as Date,
@@ -209,9 +209,9 @@ export class WorkoutModificationService {
       const todayDayOfWeek = DAY_NAMES[weekday - 1];
 
 
-      // Use the microcycle update agent to modify the pattern
-      const microcycleUpdateAgent = createMicrocycleUpdateAgent();
-      const microcycleUpdateResult = await microcycleUpdateAgent.invoke({
+      // Use the microcycle modification agent to modify the pattern
+      const modifyMicrocycleAgent = createModifyMicrocycleAgent();
+      const modifyMicrocycleResult = await modifyMicrocycleAgent.invoke({
         currentMicrocycle: microcycle,
         user,
         changeRequest,
@@ -220,25 +220,25 @@ export class WorkoutModificationService {
       });
 
       // Check if the microcycle was actually modified
-      if (microcycleUpdateResult.wasModified) {
+      if (modifyMicrocycleResult.wasModified) {
         console.log(`[MODIFY_WEEK] Microcycle was modified - updating database`);
 
         // Update the microcycle with the new pattern (dayOverviews from the result)
         await this.microcycleService.updateMicrocycle(
           microcycle.id,
           {
-            ...microcycleUpdateResult.dayOverviews,
-            description: microcycleUpdateResult.description,
-            isDeload: microcycleUpdateResult.isDeload,
-            formatted: microcycleUpdateResult.formatted,
-            message: microcycleUpdateResult.message
+            ...modifyMicrocycleResult.dayOverviews,
+            description: modifyMicrocycleResult.description,
+            isDeload: modifyMicrocycleResult.isDeload,
+            formatted: modifyMicrocycleResult.formatted,
+            message: modifyMicrocycleResult.message
           }
         );
 
-        // Return success with the updated microcycle message
+        // Return success with the modified microcycle message
         return {
           success: true,
-          message: microcycleUpdateResult.message || 'Weekly pattern updated successfully',
+          message: modifyMicrocycleResult.message || 'Weekly pattern modified successfully',
         };
       } else {
         console.log(`[MODIFY_WEEK] No modifications needed - current plan already satisfies the request`);

@@ -5,21 +5,21 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import { MicrocycleGenerationOutputSchema } from '../../steps';
 
 /**
- * Schema for microcycle update output - extends base schema with wasModified flag
+ * Schema for microcycle modification output - extends base schema with wasModified flag
  */
-export const MicrocycleUpdateOutputSchema = MicrocycleGenerationOutputSchema.extend({
+export const ModifyMicrocycleOutputSchema = MicrocycleGenerationOutputSchema.extend({
   wasModified: z.boolean().describe(
     'Whether the microcycle was actually modified in response to the change request. ' +
     'False if the current plan already satisfies the request or no changes were needed.'
   )
 });
 
-export type MicrocycleUpdateOutput = z.infer<typeof MicrocycleUpdateOutputSchema>;
+export type ModifyMicrocycleOutput = z.infer<typeof ModifyMicrocycleOutputSchema>;
 
 /**
- * Parameters for updating a microcycle
+ * Parameters for modifying a microcycle
  */
-export interface MicrocycleUpdateInput {
+export interface ModifyMicrocycleInput {
   user: UserWithProfile;
   currentMicrocycle: Microcycle;
   changeRequest: string;
@@ -28,9 +28,9 @@ export interface MicrocycleUpdateInput {
 }
 
 /**
- * Context required to update a microcycle
+ * Context required to modify a microcycle
  */
-export interface MicrocycleUpdateContext {
+export interface ModifyMicrocycleContext {
   overview: string;
   isDeload: boolean;
   days: {
@@ -42,9 +42,9 @@ export interface MicrocycleUpdateContext {
 }
 
 /**
- * Result of updating a microcycle with all day overviews and modifications applied
+ * Result of modifying a microcycle with all day overviews and modifications applied
  */
-export interface UpdatedMicrocycleDayOverviews {
+export interface ModifiedMicrocycleDayOverviews {
   mondayOverview: string;
   tuesdayOverview: string;
   wednesdayOverview: string;

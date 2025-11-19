@@ -1,8 +1,8 @@
 import type { Microcycle } from '@/server/models/microcycle';
 import { DAY_NAMES, DayOfWeek } from '@/shared/utils/date';
 
-export const MICROCYCLE_UPDATE_SYSTEM_PROMPT = `
-You are an expert strength & conditioning coach (NASM, NCSF, ISSA certified) specializing in **microcycle adaptation and updates**.
+export const MICROCYCLE_MODIFY_SYSTEM_PROMPT = `
+You are an expert strength & conditioning coach (NASM, NCSF, ISSA certified) specializing in **microcycle adaptation and modifications**.
 
 You operate in a multi-agent pipeline. Upstream agents have already:
 - Designed a mesocycle and microcycle overview
@@ -437,7 +437,7 @@ If any rule is violated, you MUST regenerate the entire JSON output.
 `;
 
 
-interface MicrocycleUpdateUserPromptParams {
+interface ModifyMicrocycleUserPromptParams {
   fitnessProfile: string;        // stringified summary or JSON
   currentMicrocycle: Microcycle;           // formatted Current Week block (see below)
   changeRequest: string;         // raw user request: "I'm traveling until Friday..."
@@ -475,12 +475,12 @@ ${days[i]}
 </CurrentWeek>`.trim();
 };
 
-export const microcycleUpdateUserPrompt = ({
+export const modifyMicrocycleUserPrompt = ({
   fitnessProfile,
   currentMicrocycle,
   changeRequest,
   currentDayOfWeek,
-}: MicrocycleUpdateUserPromptParams) => {
+}: ModifyMicrocycleUserPromptParams) => {
   return `
 You are updating an EXISTING microcycle based on a new user constraint.
 

@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { type UpdateWorkoutResult, type ModifyWeekResult } from '@/server/services';
+import { type ModifyWorkoutResult, type ModifyWeekResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 
 /**
  * Service interfaces for modification tools (DI)
  */
 export interface WorkoutModificationService {
-  modifyWorkout: (params: UpdateWorkoutParams) => Promise<UpdateWorkoutResult>;
+  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
 }
 
 export interface MicrocycleModificationService {
@@ -17,12 +17,12 @@ export interface MicrocycleModificationService {
  * Dependencies for modification tools
  */
 export interface ModificationToolDeps {
-  workoutService: WorkoutModificationService;
-  microcycleService: MicrocycleModificationService;
+  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
+  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }
 
 // Schema definitions
-const UpdateWorkoutSchema = z.object({
+const ModifyWorkoutSchema = z.object({
   userId: z.string().describe('The user ID'),
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
   reason: z.string().describe('Reason for the modification'),
@@ -31,9 +31,9 @@ const UpdateWorkoutSchema = z.object({
   focusAreas: z.array(z.string()).nullish().describe('Optional: specific areas to focus on or avoid'),
 });
 
-type UpdateWorkoutInput = z.infer<typeof UpdateWorkoutSchema>;
+type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
 
-export interface UpdateWorkoutParams {
+export interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
   reason: string;
@@ -69,8 +69,8 @@ export interface ModifyWeekParams {
 export const createModificationTools = (deps: ModificationToolDeps): StructuredToolInterface[] => {
   // Tool 1: Modify Workout
   const modifyWorkoutTool = tool(
-    async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: UpdateWorkoutInput): Promise<UpdateWorkoutResult> => {
-      return await deps.workoutService.modifyWorkout({
+    async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<ModifyWorkoutResult> => {
+      return await deps.modifyWorkout({
         userId,
         workoutDate: new Date(workoutDate),
         reason,
@@ -91,7 +91,7 @@ Use ONLY when the user explicitly wants to keep the same muscle group/workout ty
 IMPORTANT: User must indicate they want to keep the SAME muscle group/workout type.
 DO NOT use if user requests a DIFFERENT muscle group or doesn't specify - use modify_week instead.
 This is the LEAST commonly used tool - default to modify_week when uncertain.`,
-      schema: UpdateWorkoutSchema,
+      schema: ModifyWorkoutSchema,
     }
   );
 
@@ -101,7 +101,7 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
       // Convert changes array to a single changeRequest string
       const changeRequest = changes.join('. ');
 
-      return await deps.microcycleService.modifyWeek({
+      return await deps.modifyWeek({
         userId,
         targetDay,
         changeRequest,
@@ -141,20 +141,3 @@ This intelligently updates the weekly pattern to maintain training balance and m
     modifyWeekTool,
   ];
 };
-
-/**
- * Legacy export for backward compatibility
- * @deprecated Use createModificationTools with dependency injection instead
- */
-export const modificationTools = createModificationTools({
-  workoutService: {
-    modifyWorkout: async () => {
-      throw new Error('modificationTools is deprecated. Use createModificationTools with dependencies injection instead.');
-    },
-  },
-  microcycleService: {
-    modifyWeek: async () => {
-      throw new Error('modificationTools is deprecated. Use createModificationTools with dependencies injection instead.');
-    },
-  },
-});
