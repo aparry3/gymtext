@@ -159,8 +159,8 @@ export class FitnessProfileServiceV2 {
   async updateProfileFromMessage(
     user: UserWithProfile,
     message: string
-  ): Promise<ProfileUpdateResult> {
-    return this.circuitBreaker.execute<ProfileUpdateResult>(async (): Promise<ProfileUpdateResult> => {
+  ): Promise<ProfileUpdateResult | null> {
+    return this.circuitBreaker.execute<ProfileUpdateResult | null>(async (): Promise<ProfileUpdateResult> => {
       try {
         // Get current profile (or empty)
         const currentProfile = await this.getCurrentProfile(user.id) || createEmptyMarkdownProfile(user);

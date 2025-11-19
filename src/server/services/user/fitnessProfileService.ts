@@ -1,12 +1,14 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileUpdateRepository, NewProfileUpdate } from '@/server/repositories/profileUpdateRepository';
+import { ProfileRepository } from '@/server/repositories/profileRepository';
 import type { User, FitnessProfile } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createProfileAgent } from '../../agents/profile/chain';
 import { ProfileExtractionResults } from '../../agents/profile/types';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
+import { convertJsonProfileToMarkdown } from '@/server/utils/profile/jsonToMarkdown';
 
 
 export interface CreateFitnessProfileRequest {
@@ -44,6 +46,7 @@ export class FitnessProfileService {
   private circuitBreaker: CircuitBreaker;
   private userRepository: UserRepository;
   private profileUpdateRepository: ProfileUpdateRepository;
+  private profileRepository: ProfileRepository;
 
   private constructor() {
     this.circuitBreaker = new CircuitBreaker({
@@ -53,6 +56,7 @@ export class FitnessProfileService {
     });
     this.userRepository = new UserRepository();
     this.profileUpdateRepository = new ProfileUpdateRepository();
+    this.profileRepository = new ProfileRepository();
   }
 
   public static getInstance(): FitnessProfileService {
@@ -320,7 +324,53 @@ export class FitnessProfileService {
       user: updatedUser,
       summary: updates.metadata
     };
-  } 
+  }
+
+  /**
+   * Get current Markdown profile for a user
+   * Handles fallback to JSON conversion during migration period
+   *
+   * @param userId - UUID of the user
+   * @returns Markdown profile text or null if no profile exists
+   */
+  async getCurrentMarkdownProfile(userId: string): Promise<string | null> {
+    try {
+      // Try to get Markdown profile from profiles table
+      const markdownProfile = await this.profileRepository.getCurrentProfileText(userId);
+      if (markdownProfile) {
+        return markdownProfile;
+      }
+
+      // Fallback: Convert JSON profile if exists (migration compatibility)
+      const user = await this.userRepository.findWithProfile(userId);
+      if (user?.profile) {
+        console.log(`[FitnessProfileService] Converting JSON profile to Markdown for user ${userId}`);
+        return convertJsonProfileToMarkdown(user.profile, user);
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`[FitnessProfileService] Error getting Markdown profile for user ${userId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Save updated Markdown profile
+   * Creates new row in profiles table for history tracking
+   *
+   * @param userId - UUID of the user
+   * @param markdownProfile - Complete Markdown profile text
+   */
+  async saveMarkdownProfile(userId: string, markdownProfile: string): Promise<void> {
+    try {
+      await this.profileRepository.createProfileForUser(userId, markdownProfile);
+      console.log(`[FitnessProfileService] Saved Markdown profile for user ${userId}`);
+    } catch (error) {
+      console.error(`[FitnessProfileService] Error saving Markdown profile for user ${userId}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

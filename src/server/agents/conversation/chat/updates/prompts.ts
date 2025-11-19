@@ -99,7 +99,7 @@ export const buildUpdatesUserMessage = (input: ChatSubagentInput): string => {
 
 ## DYNAMIC CONTEXT
 
-**Recent Profile Updates**: ${profile.summary?.reason || 'None'}
+**Recent Profile Updates**: ${profile.updateSummary || 'None'}
 
 ---
 

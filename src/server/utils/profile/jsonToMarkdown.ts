@@ -172,9 +172,7 @@ export function convertJsonProfileToMarkdown(
     profile.activities.forEach((activity, index) => {
       if (index > 0) activitiesLines.push(''); // Blank line between activities
 
-      const activityType = activity.type === 'strength' ? 'Strength Training' :
-                          activity.type === 'cardio' ? 'Cardio' :
-                          activity.type.charAt(0).toUpperCase() + activity.type.slice(1);
+      const activityType = activity.type === 'strength' ? 'Strength Training' : 'Cardio';
 
       activitiesLines.push(`## ${activityType}`);
 

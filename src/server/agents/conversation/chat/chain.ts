@@ -2,16 +2,17 @@ import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agen
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { initializeModel, createRunnableAgent } from '../../base';
-import { createProfileAgent, type PatchProfileCallback } from '../../profile/chain';
+import { createProfileUpdateAgent } from '../../profileUpdate';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
 import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterParallelInput, ChatOutput, ChatAgentDeps, IntentAnalysis } from './types';
 import { updatesAgentRunnable } from './updates/chain';
 // import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
+import { formatForAI } from '@/shared/utils/date';
 
 // Re-export types for backward compatibility
-export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService, PatchProfileCallback };
+export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService };
 
 /**
  * Chat Agent Factory
@@ -45,11 +46,23 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     'modifications': createModificationsAgent({ tools: modificationTools }),
   };
 
-  // Profile Runnable - extracts and updates user profile
+  // Profile Runnable - fetches current profile, updates via agent, returns result
   // Input: ChatInput (initial chain input)
-  // Output: ProfilePatchResult
-  const profileRunnable = createProfileAgent({
-    patchProfile: deps.patchProfile,
+  // Output: ProfileUpdateOutput
+  const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
+    // Fetch current profile via service callback
+    const currentProfile = await deps.getCurrentProfile(input.user.id) || '';
+
+    // Create and invoke profile update agent
+    const agent = createProfileUpdateAgent();
+    const result = await agent.invoke({
+      currentProfile,
+      message: input.message,
+      user: input.user,
+      currentDate: formatForAI(new Date(), input.user.timezone),
+    });
+
+    return result;
   });
 
   // Triage Runnable - analyzes message intent
@@ -75,7 +88,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
   // Input: ChatInput
   // Output: ChatAfterParallelInput (ChatInput + { profile, triage })
   const parallel = RunnablePassthrough.assign({
-    profile: profileRunnable,
+    profile: profileRunnable as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     triage: routingRunnable as any, // eslint-disable-line @typescript-eslint/no-explicit-any
   }) as unknown as RunnableSequence<ChatInput, ChatAfterParallelInput>;
 
@@ -83,6 +96,12 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
   // Input: ChatAfterParallelInput (ChatInput + profile + triage)
   // Output: ChatOutput
   const actionRunnable = RunnableLambda.from(async (input: ChatAfterParallelInput): Promise<ChatOutput> => {
+    // Save profile if it was updated (via service callback)
+    if (input.profile.wasUpdated) {
+      await deps.saveProfile(input.user.id, input.profile.updatedProfile);
+      console.log('[CHAT AGENT] Profile updated and saved');
+    }
+
     // Find the intent with the highest confidence
     const primaryIntent = input.triage.intents.reduce((max: IntentAnalysis, current: IntentAnalysis) =>
       current.confidence > max.confidence ? current : max
@@ -119,12 +138,10 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
 
     console.log(`[CHAT AGENT] ${primaryIntent.intent} sub-agent completed successfully`);
 
-    // Transform sub-agent output to ChatOutput format
-    const profileUpdated = input.profile.summary?.reason !== 'No updates detected';
-
+    // Return chat output with profile update status
     return {
       response: result.response,
-      profileUpdated,
+      profileUpdated: input.profile.wasUpdated,
     };
   });
 

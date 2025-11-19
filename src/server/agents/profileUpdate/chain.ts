@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel, type AgentConfig } from '../base';
 import type { ProfileUpdateInput, ProfileUpdateOutput } from './types';
-import { PROFILE_UPDATE_SYSTEM_PROMPT, buildProfileUpdateUserMessage } from './prompt';
+import { PROFILE_UPDATE_SYSTEM_PROMPT, buildProfileUpdateUserMessage } from './prompts';
 import { ProfileUpdateOutputSchema } from './schema';
 
 /**
