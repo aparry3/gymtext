@@ -2,7 +2,6 @@
 export {
   createMesocycleAgent,
   type FitnessProfileContextService,
-  type MesocycleAgentDeps,
   type MesocycleOverview
 } from './chain';
 

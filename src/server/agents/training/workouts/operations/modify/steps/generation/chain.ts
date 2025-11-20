@@ -7,7 +7,6 @@ import {
 } from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
 import { SYSTEM_PROMPT, userPrompt } from './prompt';
-import { formatFitnessProfile } from '@/server/utils/formatters';
 
 /**
  * Workout Modification Generation Runnable
@@ -29,8 +28,7 @@ export const createModifyWorkoutGenerationRunnable = (config: ModifyWorkoutGener
   const model = initializeModel(ModifyWorkoutGenerationOutputSchema, config.agentConfig);
 
   return createRunnableAgent(async (input: ModifyWorkoutGenerationInput): Promise<WorkoutChainContext> => {
-    const fitnessProfile = formatFitnessProfile(input.user);
-    const prompt = userPrompt(input.workout.description!, input.changeRequest, fitnessProfile);
+    const prompt = userPrompt(input.user, input.workout.description!, input.changeRequest);
 
     // Invoke model with structured output
     const result = await model.invoke([
@@ -50,7 +48,6 @@ export const createModifyWorkoutGenerationRunnable = (config: ModifyWorkoutGener
     return {
       description: result.overview,
       user: input.user,
-      fitnessProfile,
       date: input.date,
       // Metadata (modifications will be empty string if not modified)
       wasModified: result.wasModified,

@@ -1,3 +1,5 @@
+import { UserWithProfile } from "@/server/models";
+
 export const SYSTEM_PROMPT = `
 You are a **certified strength & conditioning coach** responsible for MODIFYING an already-planned workout for a specific day.
 Your output is consumed by downstream systems and will be shown directly to the end user.
@@ -386,18 +388,16 @@ If ANY rule is violated, you must **regenerate the entire answer** so that it fu
 `;
 
 export const userPrompt = (
+  user: UserWithProfile,
   workoutOverview: string,
-  changesRequested: string,
-  fitnessProfile: string) => `
+  changesRequested: string) => `
 You are given the following context about the user's training session.
 
 <WorkoutOverview>
 ${workoutOverview}
 </WorkoutOverview>
 
-<FitnessProfile>
-${fitnessProfile}
-</FitnessProfile>
+${user.markdownProfile ? `<Fitness Profile>\n${user.markdownProfile.trim()}\n</Fitness Profile>` : ''}
 
 <ChangesRequested>
 ${changesRequested}

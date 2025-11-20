@@ -2,7 +2,6 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { WorkoutGenerationConfig } from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
 import { SYSTEM_PROMPT, userPrompt } from './prompt';
-import { formatFitnessProfile } from '@/server/utils/formatters';
 import { WorkoutGenerateInput } from './types';
 
 /**

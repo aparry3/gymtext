@@ -3,7 +3,6 @@ import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
-  fitnessPlanUserPrompt,
   createFitnessPlanGenerationRunnable,
   createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,

@@ -8,7 +8,7 @@ export { createAgentFromFunction, createRunnableAgent } from './base';
 export type { Agent, AgentDeps, AgentConfig } from './base';
 
 // Fitness Plan Agents
-export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './training/plans';
+export { createFitnessPlanAgent } from './training/plans';
 
 // Conversation Agents
 export { type ChatAgentDeps } from './conversation/chat/chain';
