@@ -3,7 +3,7 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { now, startOfDay } from '@/shared/utils/date';
+import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
 import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
 
@@ -175,11 +175,15 @@ export class OnboardingService {
       throw new Error(`No microcycle message found for user ${user.id}`);
     }
 
-    // Generate combined message using agent with pre-generated messages
+    // Get current weekday for the user's timezone
+    const currentWeekday = getDayOfWeek(undefined, user.timezone);
+
+    // Generate combined message using agent with fitness plan and week one details
     const planMicrocycleCombinedAgent = createPlanMicrocycleCombinedAgent();
     const message = await planMicrocycleCombinedAgent.invoke({
-      planMessage: plan.message,
-      microcycleMessage: microcycle.message
+      fitnessPlan: plan.message,
+      weekOne: microcycle.message,
+      currentWeekday
     });
 
     // Send the combined message

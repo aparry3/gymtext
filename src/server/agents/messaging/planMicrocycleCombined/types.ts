@@ -1,12 +1,14 @@
 import type { AgentDeps } from '@/server/agents/base';
+import type { DayOfWeek } from '@/shared/utils/date';
 
 /**
  * Input for combined plan+microcycle message agent
- * Uses pre-generated SMS messages from plan and microcycle
+ * Uses fitness plan summary and week one breakdown
  */
 export interface PlanMicrocycleCombinedInput {
-  planMessage: string;
-  microcycleMessage: string;
+  fitnessPlan: string;
+  weekOne: string;
+  currentWeekday: DayOfWeek;
 }
 
 /**
