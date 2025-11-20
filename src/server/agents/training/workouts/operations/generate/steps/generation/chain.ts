@@ -19,8 +19,7 @@ export const createWorkoutGenerationRunnable = (config: WorkoutGenerationConfig)
   const model = initializeModel(undefined, config.agentConfig);  
   return createRunnableAgent(async (input: WorkoutGenerateInput): Promise<WorkoutChainContext> => {
         // Prepare input with fitness profile and prompt
-    const fitnessProfile = formatFitnessProfile(input.user);
-    const prompt = userPrompt({...input, fitnessProfile});
+    const prompt = userPrompt({...input});
     
     const description = await model.invoke([
       { role: 'system', content: SYSTEM_PROMPT },
@@ -29,7 +28,6 @@ export const createWorkoutGenerationRunnable = (config: WorkoutGenerationConfig)
     return {
       description,
       user: input.user,
-      fitnessProfile,
       date: input.date
     };
   });

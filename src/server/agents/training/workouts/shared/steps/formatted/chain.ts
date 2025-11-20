@@ -24,11 +24,11 @@ export const createFormattedWorkoutAgent = (
   const model = initializeModel(undefined, agentConfig);
 
   return createRunnableAgent<WorkoutChainContext, string>(async (input) => {
-    const { description, fitnessProfile } = input;
+    const { description } = input;
 
     // Build system and user prompts using config
     const systemPrompt = buildFormattedWorkoutSystemPrompt(config.includeModifications);
-    const userPrompt = createFormattedWorkoutUserPrompt(description, fitnessProfile, config.includeModifications);
+    const userPrompt = createFormattedWorkoutUserPrompt(description, config.includeModifications);
 
     // Invoke model with system and user prompts
     const formattedWorkout = await model.invoke([

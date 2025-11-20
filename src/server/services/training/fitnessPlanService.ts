@@ -4,19 +4,16 @@ import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/userModel';
 import { createFitnessPlanAgent } from '../../agents/training/plans';
 import { createMesocycleAgent } from '../../agents/training/mesocycle';
-import { FitnessProfileContext } from '../context/fitnessProfileContext';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 export class FitnessPlanService {
   private static instance: FitnessPlanService;
   private fitnessPlanRepo: FitnessPlanRepository;
   private mesocycleRepo: MesocycleRepository;
-  private contextService: FitnessProfileContext;
 
   private constructor() {
     this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
     this.mesocycleRepo = new MesocycleRepository(postgresDb);
-    this.contextService = new FitnessProfileContext();
   }
 
   public static getInstance(): FitnessPlanService {
@@ -28,9 +25,7 @@ export class FitnessPlanService {
 
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
     // Create agent with injected context service (DI pattern)
-    const fitnessPlanAgent = createFitnessPlanAgent({
-      contextService: this.contextService
-    });
+    const fitnessPlanAgent = createFitnessPlanAgent();
 
     const agentResponse = await fitnessPlanAgent(user);
 
@@ -42,9 +37,7 @@ export class FitnessPlanService {
     }
 
     // Generate and store full mesocycle records with formatted field
-    const mesocycleAgent = createMesocycleAgent({
-      contextService: this.contextService
-    });
+    const mesocycleAgent = createMesocycleAgent();
 
     let currentWeek = 0;
     for (let i = 0; i < agentResponse.mesocycles.length; i++) {

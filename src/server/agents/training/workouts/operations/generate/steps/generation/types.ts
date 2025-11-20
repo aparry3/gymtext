@@ -15,8 +15,3 @@ export interface WorkoutGenerateInput extends BaseWorkoutChainInput {
  isDeload: boolean;        // True/false flag
 }
 
-export interface WorkoutGeneratePromptParams {
-  dayOverview: string;       // The daily training overview from the microcycle
-  isDeload: boolean;        // True/false flag
-  fitnessProfile: string;     
-}

@@ -2,6 +2,7 @@ import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { FitnessPlanConfig, FitnessPlanInput, FitnessPlanChainContext, FitnessPlanOutput } from './types';
 import { FitnessPlanOutputSchema } from './types';
 import { validateFitnessPlanOutput } from './validation';
+import { fitnessPlanUserPrompt } from './prompt';
 
 /**
  * Fitness Plan Generation Agent Factory
@@ -25,10 +26,12 @@ export const createFitnessPlanGenerationRunnable = (config: FitnessPlanConfig) =
     const systemMessage = config.systemPrompt;
     let lastError: string | undefined;
 
+    const userPrompt = fitnessPlanUserPrompt(input.user);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       const fitnessPlan = await model.invoke([
         { role: 'system', content: systemMessage },
-        { role: 'user', content: input.prompt }
+        { role: 'user', content: userPrompt }
       ]) as FitnessPlanOutput;
 
       // Validate the output
@@ -39,7 +42,6 @@ export const createFitnessPlanGenerationRunnable = (config: FitnessPlanConfig) =
         return {
           fitnessPlan,
           user: input.user,
-          fitnessProfile: input.fitnessProfile
         };
       }
 

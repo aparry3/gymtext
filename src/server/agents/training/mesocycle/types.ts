@@ -8,13 +8,6 @@ export interface FitnessProfileContextService {
 }
 
 /**
- * Dependencies for Mesocycle Agent (DI)
- */
-export interface MesocycleAgentDeps {
-  contextService: FitnessProfileContextService;
-}
-
-/**
  * Mesocycle overview returned by the agent
  */
 export interface MesocycleOverview {

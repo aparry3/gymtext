@@ -1,4 +1,4 @@
-import { WorkoutGeneratePromptParams } from './types';
+import { WorkoutGenerateInput } from './types';
 
 export const SYSTEM_PROMPT = `
 ROLE
@@ -204,10 +204,10 @@ Just output the finished workout.
 
 // User prompt - dynamic context and user-specific data
 export const userPrompt = (
-  input: WorkoutGeneratePromptParams
+  input: WorkoutGenerateInput
 ) => {    
   
-  const { dayOverview, isDeload, fitnessProfile } = input;
+  const { dayOverview, isDeload } = input;
   
     const deloadNotice = isDeload
       ? `⚠️ This is a DELOAD WEEK. Follow reduced volume and higher RIR targets as indicated in the Day Overview.\n\n`
@@ -218,10 +218,9 @@ export const userPrompt = (
   ${dayOverview.trim()}
   
   ${deloadNotice}
-  
-  ## Client Profile
-  ${fitnessProfile.trim()}
-  
+
+  ${input.user.markdownProfile ? `## Fitness Profile\n${input.user.markdownProfile.trim()}` : ''}
+
   ---
   Using the information above, generate a complete, personalized workout for this day. 
   Follow the session intent, movement patterns, RIR targets, intensity focus, and volume distribution exactly as described in the Day Overview. 
