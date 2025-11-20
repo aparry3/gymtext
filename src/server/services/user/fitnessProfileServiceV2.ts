@@ -29,8 +29,8 @@ export interface ProfileUpdateResult {
   profile: string;
   /** Whether the profile was actually updated */
   wasUpdated: boolean;
-  /** Summary of changes made */
-  updateSummary?: string;
+  /** Summary of changes made. Empty string if nothing was updated. */
+  updateSummary: string;
 }
 
 export class FitnessProfileServiceV2 {

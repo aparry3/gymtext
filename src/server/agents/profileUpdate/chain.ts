@@ -48,7 +48,7 @@ export function createProfileUpdateAgent(config?: AgentConfig) {
         return {
           updatedProfile: response.updatedProfile,
           wasUpdated: response.wasUpdated,
-          updateSummary: response.updateSummary,
+          updateSummary: response.updateSummary || '',
         };
       } catch (error) {
         console.error('[PROFILE UPDATE AGENT] Error:', error);

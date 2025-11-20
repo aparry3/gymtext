@@ -225,16 +225,17 @@ export class UserService {
 
   async getUserForAdmin(id: string): Promise<AdminUserDetailResponse> {
     const result = await this.circuitBreaker.execute(async () => {
-      const user = await this.userRepository.findById(id);
+      const user = await this.userRepository.findWithMarkdownProfile(id);
       if (!user) {
         throw new Error('User not found');
       }
 
       const adminUser = this.transformToAdminUser(user);
-      
+
       return {
         user: adminUser,
         profile: user.profile,
+        markdownProfile: user.markdownProfile || null,
         recentActivity: {
           totalMessages: 0,
           totalWorkouts: 0

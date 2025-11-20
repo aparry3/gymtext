@@ -22,6 +22,6 @@ export interface ProfileUpdateOutput {
   updatedProfile: string;
   /** Whether any changes were made */
   wasUpdated: boolean;
-  /** Brief summary of what was updated (for logging/display) */
-  updateSummary?: string;
+  /** Brief summary of what was updated (for logging/display). Empty string if nothing was updated. */
+  updateSummary: string;
 }

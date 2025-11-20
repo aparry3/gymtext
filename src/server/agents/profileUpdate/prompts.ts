@@ -134,7 +134,7 @@ You must return a JSON object with this structure:
 **CRITICAL**:
 - Always return the COMPLETE profile in "updatedProfile", not just changed sections
 - Set "wasUpdated" to false if no changes were needed
-- Include a helpful "updateSummary" describing what changed
+- Include a helpful "updateSummary" describing what changed (use empty string if nothing changed)
 
 # TIMEZONE AND DATE HANDLING
 
