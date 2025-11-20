@@ -98,7 +98,7 @@ export class UserService {
     return result || undefined;
   }
 
-  async getUser(userId: string) {
+  async getUser(userId: string): Promise<UserWithProfile | undefined | null> {
     return await this.circuitBreaker.execute(async () => {
       return await this.userRepository.findWithMarkdownProfile(userId);
     });

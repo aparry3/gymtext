@@ -13,9 +13,6 @@ export { createFitnessPlanAgent, type FitnessPlanAgentDeps } from './training/pl
 // Conversation Agents
 export { type ChatAgentDeps } from './conversation/chat/chain';
 
-// Profile Agents
-export { createProfileAgent, type ProfileAgentDeps, type PatchProfileCallback } from './profile/chain';
-
 // Modification Agents (subagents of chat)
 export { createModificationsAgent, type ModificationsAgentDeps } from './conversation/chat/modifications/chain';
 export { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './conversation/chat/modifications/tools';
