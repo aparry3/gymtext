@@ -20,6 +20,10 @@ interface ResetStats {
   microcyclesDeleted: number;
   mesocyclesDeleted: number;
   plansDeleted: number;
+  messagesDeleted: number;
+  profilesDeleted: number;
+  profileUpdatesDeleted: number;
+  userProfileCleared: boolean;
   subscriptionCreated: boolean;
   onboardingReset: boolean;
   eventTriggered: boolean;
@@ -38,6 +42,10 @@ class OnboardingReset {
       microcyclesDeleted: 0,
       mesocyclesDeleted: 0,
       plansDeleted: 0,
+      messagesDeleted: 0,
+      profilesDeleted: 0,
+      profileUpdatesDeleted: 0,
+      userProfileCleared: false,
       subscriptionCreated: false,
       onboardingReset: false,
       eventTriggered: false,
@@ -144,6 +152,47 @@ class OnboardingReset {
     this.stats.plansDeleted = Number(plans.numDeletedRows || 0);
     if (this.options.verbose) {
       console.log(chalk.gray(`  Deleted ${this.stats.plansDeleted} fitness plans`));
+    }
+
+    // Delete messages
+    const messages = await this.db.db
+      .deleteFrom('messages')
+      .where('userId', '=', userId)
+      .executeTakeFirst();
+    this.stats.messagesDeleted = Number(messages.numDeletedRows || 0);
+    if (this.options.verbose) {
+      console.log(chalk.gray(`  Deleted ${this.stats.messagesDeleted} messages`));
+    }
+
+    // Delete profiles
+    const profiles = await this.db.db
+      .deleteFrom('profiles')
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    this.stats.profilesDeleted = Number(profiles.numDeletedRows || 0);
+    if (this.options.verbose) {
+      console.log(chalk.gray(`  Deleted ${this.stats.profilesDeleted} profiles`));
+    }
+
+    // Delete profile updates
+    const profileUpdates = await this.db.db
+      .deleteFrom('profileUpdates')
+      .where('userId', '=', userId)
+      .executeTakeFirst();
+    this.stats.profileUpdatesDeleted = Number(profileUpdates.numDeletedRows || 0);
+    if (this.options.verbose) {
+      console.log(chalk.gray(`  Deleted ${this.stats.profileUpdatesDeleted} profile updates`));
+    }
+
+    // Clear user profile JSON
+    await this.db.db
+      .updateTable('users')
+      .set({ profile: null })
+      .where('id', '=', userId)
+      .execute();
+    this.stats.userProfileCleared = true;
+    if (this.options.verbose) {
+      console.log(chalk.gray('  Cleared user profile JSON'));
     }
 
     success('Fitness data deleted successfully');
@@ -266,6 +315,10 @@ class OnboardingReset {
       ['Microcycles Deleted', this.stats.microcyclesDeleted.toString()],
       ['Mesocycles Deleted', this.stats.mesocyclesDeleted.toString()],
       ['Fitness Plans Deleted', this.stats.plansDeleted.toString()],
+      ['Messages Deleted', this.stats.messagesDeleted.toString()],
+      ['Profiles Deleted', this.stats.profilesDeleted.toString()],
+      ['Profile Updates Deleted', this.stats.profileUpdatesDeleted.toString()],
+      ['User Profile JSON', this.stats.userProfileCleared ? 'Cleared' : 'Not Cleared'],
       ['Free Subscription', this.stats.subscriptionCreated ? 'Created' : 'Already Exists'],
       ['Onboarding Status', this.stats.onboardingReset ? 'Reset to Pending' : 'Not Reset'],
       ['Onboarding Event', this.stats.eventTriggered ? 'Triggered' : 'Not Triggered'],
@@ -295,7 +348,7 @@ class OnboardingReset {
 
     // Confirm
     const confirmed = await this.confirm(
-      '\nThis will delete all fitness data (plans, microcycles, workouts) and re-trigger onboarding. Continue?'
+      '\nThis will delete all fitness data (plans, microcycles, workouts, messages, profiles) and re-trigger onboarding. Continue?'
     );
     if (!confirmed) {
       warning('Reset cancelled');
