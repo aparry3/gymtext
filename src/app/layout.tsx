@@ -17,10 +17,6 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    type: 'website',
-    siteName: 'GymText',
-    title: "GymText - Daily Personalized Workouts via Text",
-    description: "Get personalized daily workouts delivered straight to your phone. Transform your fitness journey with AI-powered workout recommendations.",
     images: [
       {
         url: '/OpenGraphGymtext.png',
@@ -38,8 +34,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "GymText - Daily Personalized Workouts via Text",
-    description: "Get personalized daily workouts delivered straight to your phone. Transform your fitness journey with AI-powered workout recommendations.",
     images: ['/OpenGraphGymtext.png'],
   },
 };
