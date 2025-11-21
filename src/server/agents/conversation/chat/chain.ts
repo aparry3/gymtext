@@ -9,7 +9,7 @@ import { updatesAgentRunnable } from './updates/chain';
 // import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
-import { formatForAI } from '@/shared/utils/date';
+import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { convertJsonProfileToMarkdown } from '@/server/utils/profile/jsonToMarkdown';
 
 // Re-export types for backward compatibility
@@ -35,11 +35,24 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     const { user, message, previousMessages, currentWorkout } = input;
   console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
-  // Create modification tools with injected services (DI pattern)
-  const modificationTools = createModificationTools({
-    modifyWorkout: deps.modifyWorkout,
-    modifyWeek: deps.modifyWeek,
-  });
+  // Calculate context for modification tools
+  const today = now(user.timezone).toJSDate();
+  const weekday = getWeekday(today, user.timezone);
+  const targetDay = DAY_NAMES[weekday - 1]; // getWeekday returns 1-7 (Mon-Sun)
+
+  // Create modification tools with context and injected services (DI pattern)
+  const modificationTools = createModificationTools(
+    {
+      userId: user.id,
+      message,
+      workoutDate: today,
+      targetDay,
+    },
+    {
+      modifyWorkout: deps.modifyWorkout,
+      modifyWeek: deps.modifyWeek,
+    }
+  );
 
   // Create triage action map with injected dependencies
   const TriageActionMap: Record<MessageIntent, Runnable> = {

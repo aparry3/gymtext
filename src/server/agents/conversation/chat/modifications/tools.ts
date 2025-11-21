@@ -21,41 +21,31 @@ export interface ModificationToolDeps {
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }
 
-// Schema definitions
-const ModifyWorkoutSchema = z.object({
-  userId: z.string().describe('The user ID'),
-  workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
-  reason: z.string().describe('Reason for the modification'),
-  constraints: z.array(z.string()).describe('List of constraints or modifications needed (e.g., "No gym equipment", "Avoid shoulder exercises", "30 minutes max")'),
-  preferredEquipment: z.array(z.string()).nullish().describe('Optional: equipment available (e.g., ["dumbbells", "resistance bands"])'),
-  focusAreas: z.array(z.string()).nullish().describe('Optional: specific areas to focus on or avoid'),
-});
+/**
+ * Context required for modification tools (pre-filled from chat context)
+ */
+export interface ModificationToolContext {
+  userId: string;
+  message: string;
+  workoutDate: Date;
+  targetDay: string;
+}
 
-type ModifyWorkoutInput = z.infer<typeof ModifyWorkoutSchema>;
+// Schema definitions - empty because all params come from context
+const ModifyWorkoutSchema = z.object({});
 
 export interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
-  reason: string;
-  constraints: string[];
-  preferredEquipment?: string[];
-  focusAreas?: string[];
+  changeRequest: string;
 }
 
-const ModifyWeekSchema = z.object({
-  userId: z.string().describe('The user ID'),
-  targetDay: z.string().describe('The day being modified (e.g., "Monday", "Tuesday", "Wednesday"). Typically "today" or the current day of the week.'),
-  changes: z.array(z.string()).describe('List of all changes and constraints needed. Include everything in this array - both changes to the target day and any constraints for remaining days. Examples: ["Change chest to back workout", "Use dumbbells only for today", "Hotel gym constraints for rest of week", "30 min limit per day"]'),
-  reason: z.string().describe('Why the modification is needed (e.g., "Gym is too crowded for chest workout", "Traveling for work with limited equipment", "Weather preventing outdoor cardio")'),
-});
-
-type ModifyWeekInput = z.infer<typeof ModifyWeekSchema>;
+const ModifyWeekSchema = z.object({});
 
 export interface ModifyWeekParams {
   userId: string;
   targetDay: string;
   changeRequest: string;
-  reason: string;
 }
 /**
  * Factory function to create modification tools with injected dependencies (DI pattern)
@@ -63,25 +53,28 @@ export interface ModifyWeekParams {
  * This allows services to be injected rather than directly imported,
  * breaking circular dependencies and improving testability.
  *
+ * @param context - Context from chat (userId, message, workoutDate, targetDay)
  * @param deps - Dependencies including workout and microcycle services
  * @returns Array of LangChain tools configured with the provided services
  */
-export const createModificationTools = (deps: ModificationToolDeps): StructuredToolInterface[] => {
+export const createModificationTools = (
+  context: ModificationToolContext,
+  deps: ModificationToolDeps
+): StructuredToolInterface[] => {
   // Tool 1: Modify Workout
   const modifyWorkoutTool = tool(
-    async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<ModifyWorkoutResult> => {
+    async (): Promise<ModifyWorkoutResult> => {
       return await deps.modifyWorkout({
-        userId,
-        workoutDate: new Date(workoutDate),
-        reason,
-        constraints,
-        preferredEquipment: preferredEquipment ?? undefined,
-        focusAreas: focusAreas ?? undefined,
+        userId: context.userId,
+        workoutDate: context.workoutDate,
+        changeRequest: context.message,
       });
     },
     {
       name: 'modify_workout',
       description: `Regenerate today's workout keeping the SAME muscle group/focus but with different constraints.
+
+NOTE: All parameters (userId, date, request) are automatically filled from context - no input needed.
 
 Use ONLY when the user explicitly wants to keep the same muscle group/workout type but change HOW they do it:
 - Same muscle group, different equipment (e.g., "Today is chest - can't make it to my gym, need a chest workout with just dumbbells")
@@ -97,20 +90,18 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
 
   // Tool 2: Modify Week
   const modifyWeekTool = tool(
-    async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<ModifyWeekResult> => {
-      // Convert changes array to a single changeRequest string
-      const changeRequest = changes.join('. ');
-
+    async (): Promise<ModifyWeekResult> => {
       return await deps.modifyWeek({
-        userId,
-        targetDay,
-        changeRequest,
-        reason,
+        userId: context.userId,
+        targetDay: context.targetDay,
+        changeRequest: context.message,
       });
     },
     {
       name: 'modify_week',
       description: `Modify the weekly training pattern and regenerate workouts as needed. **This is the PRIMARY and MOST COMMON tool.**
+
+NOTE: All parameters (userId, targetDay, request) are automatically filled from context - no input needed.
 
 Use this for ANY request for a different workout type or muscle group:
 - ANY different muscle group request (e.g., "can I have a leg workout", "chest workout please", "give me back instead")
@@ -125,11 +116,6 @@ Examples that should use modify_week:
 - "Chest workout please" → YES (potentially different from scheduled)
 - "I want to run instead" → YES (different workout type)
 - "Can't make it to gym this week" → YES (multi-day change)
-
-Parameters:
-- targetDay: Which day to start modifications (typically "today" or current weekday)
-- changes: Array of all modifications (e.g., ["Change to leg workout", "Use dumbbells only for rest of week"])
-- reason: Why the changes are needed
 
 This intelligently updates the weekly pattern to maintain training balance and muscle group spacing.`,
       schema: ModifyWeekSchema,

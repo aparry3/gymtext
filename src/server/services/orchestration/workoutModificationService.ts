@@ -23,11 +23,10 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
  * This service follows the orchestration pattern (like OnboardingService, DailyMessageService)
  * and eliminates circular dependencies between MicrocycleService and WorkoutInstanceService.
  */
-
 export interface ModifyWorkoutParams {
   userId: string;
   workoutDate: Date;
-  reason: string;
+  changeRequest: string;
 }
 
 export interface ModifyWorkoutResult {
@@ -42,7 +41,6 @@ export interface ModifyWeekParams {
   userId: string;
   targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
   changeRequest: string; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
-  reason: string; // Why the modification is needed
 }
 
 export interface ModifyWeekResult {
@@ -82,7 +80,7 @@ export class WorkoutModificationService {
    */
   public async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
     try {
-      const { userId, workoutDate, reason } = params;
+      const { userId, workoutDate, changeRequest } = params;
 
       console.log('Modifying workout', params);
       // Get user with profile first to determine timezone
@@ -116,7 +114,7 @@ export class WorkoutModificationService {
         workout: existingWorkout,
         user,
         date: existingWorkout.date as Date,
-        changeRequest: reason,
+        changeRequest,
       });
 
       // Extract theme from markdown title (first # line) or use default
