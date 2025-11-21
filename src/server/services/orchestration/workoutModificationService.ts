@@ -2,7 +2,8 @@ import { UserService } from '../user/userService';
 import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
-import { now, getWeekday, DayOfWeek, DAY_NAMES } from '@/shared/utils/date';
+import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
+import { now, getWeekday, DayOfWeek, DAY_NAMES, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
@@ -197,9 +198,11 @@ export class WorkoutModificationService {
       const today = now(user.timezone).toJSDate();
 
       // getWeekday returns 1-7 (Mon-Sun), convert to 0-6 (Sun-Sat) for array indexing
-      const weekday = getWeekday(today, user.timezone);
-      const todayDayOfWeek = DAY_NAMES[weekday - 1];
+      const todayDayOfWeek = getDayOfWeek(today, user.timezone);
 
+      // Capture original day overview for today (for comparison after modification)
+      const todayOverviewField = this.getDayOverviewField(todayDayOfWeek);
+      const originalTodayOverview = (microcycle as unknown as Record<string, unknown>)[todayOverviewField] as string | null;
 
       // Use the microcycle modification agent to modify the pattern
       const modifyMicrocycleAgent = createModifyMicrocycleAgent();
@@ -226,6 +229,71 @@ export class WorkoutModificationService {
             message: modifyMicrocycleResult.message
           }
         );
+        
+        // Check if today's overview changed - if so, regenerate today's workout
+        const newTodayOverview = (modifyMicrocycleResult.dayOverviews as unknown as Record<string, unknown>)[todayOverviewField] as string | null;
+
+        if (originalTodayOverview !== newTodayOverview) {
+
+          // Generate new workout for today
+          const workoutGenerateAgent = createWorkoutGenerateAgent();
+          const workoutInput: WorkoutGenerateInput = {
+            user,
+            date: today,
+            dayOverview: newTodayOverview || '',
+            isDeload: modifyMicrocycleResult.isDeload || false,
+          };
+
+          const workoutResult = await workoutGenerateAgent.invoke(workoutInput);
+
+          // Extract theme from formatted markdown (first # line)
+          const themeMatch = workoutResult.formatted.match(/^#\s+(.+)$/m);
+          const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
+
+          // Store formatted text and theme in details
+          const details = {
+            formatted: workoutResult.formatted,
+            theme,
+          };
+
+          // Check if a workout exists for today
+          const existingWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
+
+          if (existingWorkout) {
+            // Update existing workout
+            await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
+              details,
+              description: workoutResult.description,
+              message: workoutResult.message,
+              goal: theme,
+              sessionType: this.mapThemeToSessionType(theme),
+            });
+            console.log(`[MODIFY_WEEK] Updated today's workout`);
+          } else {
+            // Create new workout
+            await this.workoutInstanceService.createWorkout({
+              clientId: userId,
+              fitnessPlanId: plan.id!,
+              mesocycleId: null,
+              microcycleId: microcycle.id,
+              date: today,
+              sessionType: this.mapThemeToSessionType(theme),
+              goal: theme,
+              details,
+              description: workoutResult.description,
+              message: workoutResult.message,
+            });
+            console.log(`[MODIFY_WEEK] Created new workout for today`);
+          }
+
+          // Return with workout and its message
+          return {
+            success: true,
+            workout: workoutResult,
+            message: workoutResult.message || 'Weekly pattern modified and workout regenerated',
+            modifications: modifyMicrocycleResult.modifications,
+          };
+        }
 
         // Return success with the modified microcycle message and modifications
         return {
@@ -242,100 +310,6 @@ export class WorkoutModificationService {
           message: 'Your current weekly plan already matches your request. No changes were needed.',
         };
       }
-
-      // // Check if today's pattern changed - if so, regenerate today's workout
-      // // This handles cases where modifying a future day causes today's workout to be reshuffled
-      // let workoutRegenerated = false;
-      // let regeneratedWorkout: Da | undefined;
-      // let workoutMessage: string | undefined;
-
-      // const todayOriginalPlan = originalPattern.days.find(d => d.day === todayDayOfWeek);
-      // const todayUpdatedPlan = patternToSave.days.find(d => d.day === todayDayOfWeek);
-
-      // // Check if today's plan actually changed (theme or load)
-      // const todayPlanChanged = todayOriginalPlan && todayUpdatedPlan && (
-      //   todayOriginalPlan.theme !== todayUpdatedPlan.theme ||
-      //   todayOriginalPlan.load !== todayUpdatedPlan.load
-      // );
-
-      // if (todayPlanChanged) {
-      //   console.log(`[MODIFY_WEEK] Today's pattern changed from "${todayOriginalPlan?.theme}" to "${todayUpdatedPlan?.theme}" - regenerating workout`);
-
-      //   // Use today's date in user's timezone (start of day)
-      //   const todayDate = today;
-
-      //   // Generate new workout for today with context
-      //   const context: DailyWorkoutInput = {
-      //     user,
-      //     date: todayDate,
-      //     dayPlan: todayUpdatedPlan!,
-      //     microcycle: relevantMicrocycle,
-      //     mesocycle,
-      //     fitnessPlan,
-      //     recentWorkouts: await this.workoutInstanceService.getRecentWorkouts(userId, 5),
-      //   };
-
-      //   const result = await createDailyWorkoutAgent().invoke(context);
-
-      //   // Extract formatted text and theme for storage
-      //   const { formatted, theme } = result.workout;
-      //   const details = {
-      //     formatted,  // New: formatted markdown text
-      //     theme,      // Keep theme for quick access
-      //   };
-
-      //   console.log('[MODIFY_WEEK] Generated workout with formatted text');
-      //   // Check if a workout exists for today to update it, otherwise create it
-      //   const existingWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayDate);
-
-      //   if (existingWorkout) {
-      //     // Update existing workout
-      //     await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
-      //       details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      //       description: result.description,
-      //       reasoning: result.reasoning,
-      //       message: result.message,
-      //       goal: `${todayUpdatedPlan!.theme}${todayUpdatedPlan!.notes ? ` - ${todayUpdatedPlan!.notes}` : ''}`,
-      //       sessionType: this.mapThemeToSessionType(todayUpdatedPlan!.theme),
-      //     });
-      //     console.log(`[MODIFY_WEEK] Regenerated and updated today's workout based on updated pattern`);
-      //   } else {
-      //     // Create new workout
-      //     await this.workoutInstanceService.createWorkout({
-      //       clientId: userId,
-      //       fitnessPlanId: fitnessPlan.id!,
-      //       mesocycleId: null, // No longer using mesocycles table
-      //       microcycleId: relevantMicrocycle.id,
-      //       date: todayDate,
-      //       sessionType: this.mapThemeToSessionType(todayUpdatedPlan!.theme),
-      //       goal: `${todayUpdatedPlan!.theme}${todayUpdatedPlan!.notes ? ` - ${todayUpdatedPlan!.notes}` : ''}`,
-      //       details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      //       description: result.description,
-      //       reasoning: result.reasoning,
-      //       message: result.message,
-      //     });
-
-      //     console.log(`[MODIFY_WEEK] Created new workout with message for updated pattern`);
-      //   }
-
-      //   regeneratedWorkout = result.workout;
-      //   workoutMessage = result.message;
-      //   workoutRegenerated = true;
-      // } else {
-      //   console.log(`[MODIFY_WEEK] Today's pattern unchanged - no need to regenerate workout`);
-      // }
-
-      // // Use the agent's message if a workout was generated, otherwise provide a generic message
-      // console.log(`[MODIFY_WEEK] Workout message: ${workoutMessage}`);
-      // const message = workoutMessage || `Updated weekly pattern for remaining days. Applied ${modificationsApplied.length} pattern modifications.`;
-
-      // return {
-      //   success: true,
-      //   workout: regeneratedWorkout,
-      //   modifiedDays: workoutRegenerated ? 1 : 0,
-      //   modificationsApplied,
-      //   message,
-      // };
     } catch (error) {
       console.error('Error modifying week:', error);
       return {
@@ -344,6 +318,11 @@ export class WorkoutModificationService {
       };
     }
   }
+
+  /**
+   * Get the day overview field name for a given day of week
+   */
+  private getDayOverviewField(dayOfWeek: string): string { return `${dayOfWeek.toLowerCase()}Overview`; }
 
   /**
    * Map workout theme to session type for database storage

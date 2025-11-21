@@ -18,6 +18,7 @@ export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) =>
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
     const { microcycle } = input;
 
+    console.log(`[MicrocycleMessageAgent] Microcycle: ${JSON.stringify(microcycle)}`);
     // Build user prompt from long-form description
     const userPrompt = microcycleMessageUserPrompt(microcycle);
     console.log(`[MicrocycleMessageAgent] User prompt: ${userPrompt}`);
