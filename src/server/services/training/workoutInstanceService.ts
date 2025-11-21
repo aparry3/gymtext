@@ -8,6 +8,7 @@ import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
 import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
+import { getDayOfWeek, getDayOfWeekName } from '@/shared/utils/date';
 
 export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
@@ -131,7 +132,8 @@ export class WorkoutInstanceService {
       }
 
       // Get the day's overview from the microcycle
-      const dayOfWeekLower = targetDate.toFormat('EEEE').toLowerCase(); // monday, tuesday, etc.
+      const dayOfWeekLower = getDayOfWeek(targetDate.toJSDate(), user.timezone).toLowerCase(); // monday, tuesday, etc.
+      const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone); // Monday, Tuesday, etc.
       const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
       const dayOverview = microcycle[dayOverviewKey];
 
@@ -189,7 +191,7 @@ export class WorkoutInstanceService {
 
         // Append short link to message
         if (savedWorkout.message) {
-          savedWorkout.message = `${dayOfWeekLower}\n\n${savedWorkout.message}\n\(More details: ${fullUrl})`;
+          savedWorkout.message = `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\(More details: ${fullUrl})`;
           await this.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
         }
       } catch (error) {
