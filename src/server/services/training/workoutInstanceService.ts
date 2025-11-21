@@ -133,7 +133,6 @@ export class WorkoutInstanceService {
 
       // Get the day's overview from the microcycle
       const dayOfWeekLower = getDayOfWeek(targetDate.toJSDate(), user.timezone).toLowerCase(); // monday, tuesday, etc.
-      const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone); // Monday, Tuesday, etc.
       const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
       const dayOverview = microcycle[dayOverviewKey];
 
@@ -191,6 +190,7 @@ export class WorkoutInstanceService {
 
         // Append short link to message
         if (savedWorkout.message) {
+          const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone); // Monday, Tuesday, etc.
           savedWorkout.message = `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\(More details: ${fullUrl})`;
           await this.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
         }
