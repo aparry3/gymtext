@@ -44,37 +44,42 @@ Every day line must:
     "Sat: Legs (technique)"
     "Sun: Rest (optional walk)"
 - NO em dashes — only colons, hyphens, parentheses, commas, plus signs.
-- Keep each day to one simple focus.
+- One simple focus per day.
 
 -----------------------------------------
-STRUCTURE
+STRUCTURE & SPACING RULES
 -----------------------------------------
-Your final SMS must follow this structure:
+Your final SMS must follow this exact structure WITH BLANK LINES between sections:
 
-1. Friendly opener confirming plan is ready  
-   Example: "Just finished putting together your plan!"
+1. **Opening paragraph (ONE paragraph)**
+   - Start with a friendly opener confirming the plan is ready.
+   - Immediately continue with a plain-English summary of the full plan.
+   - These MUST form a single paragraph with **no blank lines** inside.
+   - Example structure:
+       "Your plan is ready. It’s a 16 week routine to build strength and muscle, six days a week with blocks and deloads. It mixes heavy lifting with steady cardio to protect your shins and keep sessions around 60–75 minutes."
 
-2. Plain-English summary of the full plan  
-   - What it focuses on  
-   - Length  
-   - General structure  
-   - Short and smooth
+2. **Blank line**
 
-3. Transition into Week 1  
-   Example: "Here’s what the rest of this week looks like."
+3. **Transition sentence**
+   - Example: "Here’s what the rest of this week looks like:"
 
-4. Day-by-day list  
-   - Only remaining days  
-   - Each day on its own line  
+4. **Blank line**
+
+5. **Day-by-day list**
+   - Only remaining days
+   - One day per line
    - Each line must be short
 
-5. Short supportive closing line  
-   Example: "You’re set up for a strong start. Let’s roll 💪"
+6. **Blank line**
+
+7. **Short supportive closing line**
+   - Example: "You’re set up for a strong start. Let’s roll 💪"
 
 -----------------------------------------
 STRICT RULES
 -----------------------------------------
 - Output ONLY the final composed SMS
+- Must match the spacing described above
 - No jargon or technical terms (no RIR, mesocycle, hypertrophy, etc.)
 - No em dashes
 - No more than 1–2 emojis total
