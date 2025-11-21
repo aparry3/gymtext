@@ -107,11 +107,6 @@ No analysis, no extra text before or after.
 // =========================================
 // USER PROMPT GENERATOR
 // =========================================
-
-interface WorkoutSmsUserPromptParams {
-  workoutDescription: string;
-}
-
 export function workoutSmsUserPrompt(workoutDescription: string) {
   return `
 Format the workout below into a clean SMS message following the system rules.
