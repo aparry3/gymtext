@@ -62,7 +62,8 @@ export type ChatSubagentInput = ChatAfterParallelInput;
  * Output from chat agent
  */
 export interface ChatOutput {
-  response: string;
+  response?: string; // Single response (for backward compatibility)
+  messages?: string[]; // Multiple messages (for modifications that send multiple messages)
   profileUpdated: boolean;
 }
 

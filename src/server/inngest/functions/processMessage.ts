@@ -30,9 +30,9 @@ export const processMessageFunction = inngest.createFunction(
   async ({ event, step }) => {
     const { userId, content } = event.data;
 
-    // Step 1: Generate response (can be slow - LLM call)
+    // Step 1: Generate response(s) (can be slow - LLM call)
     // Load user fresh in this step to avoid serialization issues
-    const response = await step.run('generate-response', async () => {
+    const messages = await step.run('generate-response', async () => {
       console.log('[Inngest] Loading user and generating response:', userId);
       const user = await userService.getUser(userId);
 
@@ -40,36 +40,44 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      const chatResponse = await chatService.handleIncomingMessage(
+      const chatMessages = await chatService.handleIncomingMessage(
         user,
         content
       );
-      console.log('[Inngest] Response generated, length:', chatResponse.length);
-      return chatResponse;
+      console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
+      return chatMessages;
     });
 
-    // Step 2: Send message
+    // Step 2: Send messages sequentially
     // Load user fresh again to avoid serialization issues
-    const messageResult = await step.run('send-message', async () => {
-      console.log('[Inngest] Loading user and sending message:', userId);
+    const messageResults = await step.run('send-messages', async () => {
+      console.log('[Inngest] Loading user and sending messages:', userId);
       const user = await userService.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }
 
-      return await messageService.sendMessage(user, response);
+      // Send each message sequentially
+      const results = [];
+      for (const message of messages) {
+        const result = await messageService.sendMessage(user, message);
+        results.push(result);
+      }
+
+      return results;
     });
 
     console.log('[Inngest] Message processing complete:', {
       userId,
-      messageId: messageResult.id,
+      messageCount: messageResults.length,
+      messageIds: messageResults.map(r => r.id),
     });
 
     return {
       success: true,
-      messageId: messageResult.id,
-      responseLength: response.length,
+      messageIds: messageResults.map(r => r.id),
+      messageCount: messageResults.length,
     };
   }
 );

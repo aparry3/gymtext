@@ -6,7 +6,6 @@ import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './pr
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { ModifyWorkoutResult, ModifyWeekResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import { createModificationMessageRunnable } from './message/chain';
 
 /**
  * Dependencies for Modifications Agent (DI)
@@ -22,7 +21,7 @@ type ModificationResult = ModifyWorkoutResult | ModifyWeekResult;
  * Schema for modifications agent output
  */
 export const ModificationsResponseSchema = z.object({
-    response: z.string().describe('acknowledgment of the request and a response to the request'),
+    messages: z.array(z.string()).describe('array of messages to send (e.g., week update message, workout message)'),
 });
 
 export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
@@ -97,64 +96,47 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
           // Create an error result
           toolResult = {
             success: false,
+            messages: [],
             error: error instanceof Error ? error.message : 'Unknown error',
           };
         }
       }
     }
 
-    // Extract message from tool result
+    // Extract messages from tool result
     if (!toolResult) {
       return {
-        response: 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!',
+        messages: ['I tried to make that change but encountered an issue. Please try again or let me know if you need help!'],
       };
     }
 
     // If tool execution succeeded
     if (toolResult.success) {
-      // If we have modifications data, generate a conversational message
-      if (toolResult.modifications && toolResult.modifications.trim().length > 0) {
-        try {
-          console.log(`[${agentName}] Generating conversational message from modifications:`, {
-            modifications: toolResult.modifications.substring(0, 100) + (toolResult.modifications.length > 100 ? '...' : ''),
-          });
-
-          // Use the message runnable to generate conversational message
-          const messageRunnable = createModificationMessageRunnable();
-          const conversationalMessage = await messageRunnable.invoke(toolResult.modifications);
-
-          console.log(`[${agentName}] Generated conversational message:`, {
-            response: conversationalMessage.substring(0, 100) + (conversationalMessage.length > 100 ? '...' : ''),
-          });
-
-          return {
-            response: conversationalMessage,
-          };
-        } catch (error) {
-          console.error(`[${agentName}] Error generating conversational message, falling back to tool message:`, error);
-          // Fall through to use toolResult.message
-        }
-      }
-
-      // Fall back to pre-generated message if available
-      if (toolResult.message) {
-        console.log(`[${agentName}] Using message from tool:`, {
-          response: toolResult.message.substring(0, 100) + (toolResult.message.length > 100 ? '...' : ''),
+      // Use messages from tool result (agents already generated user-friendly messages)
+      if (toolResult.messages && toolResult.messages.length > 0) {
+        console.log(`[${agentName}] Using ${toolResult.messages.length} message(s) from tool:`, {
+          messages: toolResult.messages.map(m => m.substring(0, 100) + (m.length > 100 ? '...' : '')),
         });
 
         return {
-          response: toolResult.message,
+          messages: toolResult.messages,
         };
       }
+
+      // No messages generated - use default success message
+      console.log(`[${agentName}] No messages from tool, using default success message`);
+      return {
+        messages: ['Done! Your changes have been applied.'],
+      };
     }
 
-    // If failed or no message, provide error message
+    // If failed, provide error message
     const errorMessage = toolResult.error
       ? `I tried to make that change but ran into an issue: ${toolResult.error}`
       : 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!';
 
     return {
-      response: errorMessage,
+      messages: [errorMessage],
     };
   });
 };

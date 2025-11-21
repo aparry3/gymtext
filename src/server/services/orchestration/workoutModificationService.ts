@@ -34,7 +34,7 @@ export interface ModifyWorkoutResult {
   success: boolean;
   workout?: WorkoutChainResult;
   modifications?: string;
-  message?: string;
+  messages: string[];
   error?: string;
 }
 
@@ -49,7 +49,7 @@ export interface ModifyWeekResult {
   workout?: WorkoutChainResult;
   modifiedDays?: number;
   modifications?: string;
-  message?: string;
+  messages: string[];
   error?: string;
 }
 
@@ -89,6 +89,7 @@ export class WorkoutModificationService {
       if (!user) {
         return {
           success: false,
+          messages: [],
           error: 'User not found',
         };
       }
@@ -105,6 +106,7 @@ export class WorkoutModificationService {
       if (!existingWorkout) {
         return {
           success: false,
+          messages: [],
           error: 'No workout found for the specified date',
         };
       }
@@ -139,12 +141,13 @@ export class WorkoutModificationService {
         success: true,
         workout: result,
         modifications: result.modifications,
-        message: result.message,
+        messages: result.message ? [result.message] : [],
       };
     } catch (error) {
       console.error('Error modifying workout:', error);
       return {
         success: false,
+        messages: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
@@ -164,6 +167,7 @@ export class WorkoutModificationService {
       if (!user) {
         return {
           success: false,
+          messages: [],
           error: 'User not found',
         };
       }
@@ -172,6 +176,7 @@ export class WorkoutModificationService {
       if (!plan) {
         return {
           success: false,
+          messages: [],
           error: 'No fitness plan found',
         };
       }
@@ -179,6 +184,7 @@ export class WorkoutModificationService {
       if (!progress) {
         return {
           success: false,
+          messages: [],
           error: 'No progress found',
         };
       }
@@ -188,6 +194,7 @@ export class WorkoutModificationService {
       if (!microcycle) {
         return {
           success: false,
+          messages: [],
           error: 'No microcycle found',
         };
       }
@@ -286,11 +293,19 @@ export class WorkoutModificationService {
             console.log(`[MODIFY_WEEK] Created new workout for today`);
           }
 
-          // Return with workout and its message
+          // Return with both microcycle and workout messages
+          const messages: string[] = [];
+          if (modifyMicrocycleResult.message) {
+            messages.push(modifyMicrocycleResult.message);
+          }
+          if (workoutResult.message) {
+            messages.push(workoutResult.message);
+          }
+
           return {
             success: true,
             workout: workoutResult,
-            message: workoutResult.message || 'Weekly pattern modified and workout regenerated',
+            messages,
             modifications: modifyMicrocycleResult.modifications,
           };
         }
@@ -298,7 +313,7 @@ export class WorkoutModificationService {
         // Return success with the modified microcycle message and modifications
         return {
           success: true,
-          message: modifyMicrocycleResult.message || 'Weekly pattern modified successfully',
+          messages: modifyMicrocycleResult.message ? [modifyMicrocycleResult.message] : [],
           modifications: modifyMicrocycleResult.modifications,
         };
       } else {
@@ -307,13 +322,14 @@ export class WorkoutModificationService {
         // Return success without database update
         return {
           success: true,
-          message: 'Your current weekly plan already matches your request. No changes were needed.',
+          messages: ['Your current weekly plan already matches your request. No changes were needed.'],
         };
       }
     } catch (error) {
       console.error('Error modifying week:', error);
       return {
         success: false,
+        messages: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }

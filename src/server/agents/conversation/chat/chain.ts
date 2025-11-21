@@ -155,6 +155,14 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     console.log(`[CHAT AGENT] ${primaryIntent.intent} sub-agent completed successfully`);
 
     // Return chat output with profile update status
+    // Handle both single response (updates agent) and messages array (modifications agent)
+    if ('messages' in result && result.messages) {
+      return {
+        messages: result.messages,
+        profileUpdated: input.profile.wasUpdated,
+      };
+    }
+
     return {
       response: result.response,
       profileUpdated: input.profile.wasUpdated,

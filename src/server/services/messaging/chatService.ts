@@ -50,7 +50,7 @@ export class ChatService {
    *
    * @param user - The user object with their profile information
    * @param message - The incoming SMS message text from the user
-   * @returns A promise that resolves to the response message text
+   * @returns A promise that resolves to an array of response messages
    *
    * @remarks
    * The method now follows a two-agent pattern:
@@ -61,10 +61,11 @@ export class ChatService {
    * - Profile information is always current
    * - No duplicate LLM calls for the same information
    * - Proper acknowledgment of profile updates in responses
+   * - Support for multiple messages (e.g., week update + workout message)
    *
    * @example
    * ```typescript
-   * const response = await chatService.handleIncomingMessage(
+   * const messages = await chatService.handleIncomingMessage(
    *   user,
    *   "I now train 5 days a week at Planet Fitness"
    * );
@@ -74,7 +75,7 @@ export class ChatService {
   async handleIncomingMessage(
     user: UserWithProfile,
     message: string
-  ): Promise<string> {
+  ): Promise<string[]> {
     try {
       // Get recent conversation context for the user
       // This retrieves the last 10 messages for the user
@@ -108,20 +109,29 @@ export class ChatService {
         currentWorkout: currentWorkout,
       });
 
-      // Validate response exists
-      if (!chatResult?.response) {
+      // Handle both single response and multiple messages
+      let messages: string[];
+
+      if (chatResult.messages && chatResult.messages.length > 0) {
+        // Multiple messages from modifications agent
+        messages = chatResult.messages;
+      } else if (chatResult.response) {
+        // Single response from updates agent or other subagents
+        messages = [chatResult.response];
+      } else {
         throw new Error('Chat agent returned invalid response');
       }
 
-      // Step 5: Enforce SMS length constraints
-      // Note: Message storage is handled by the API route
-      const responseText = chatResult.response.trim();
+      // Enforce SMS length constraints on each message
+      const validatedMessages = messages.map(msg => {
+        const trimmed = msg.trim();
+        if (trimmed.length > SMS_MAX_LENGTH) {
+          return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';
+        }
+        return trimmed;
+      });
 
-      if (responseText.length > SMS_MAX_LENGTH) {
-        return responseText.substring(0, SMS_MAX_LENGTH - 3) + '...';
-      }
-
-      return responseText;
+      return validatedMessages;
 
     } catch (error) {
       console.error('[ChatService] Error handling message:', error);
@@ -136,7 +146,7 @@ export class ChatService {
       }
 
       // Return a helpful fallback message
-      return "Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!";
+      return ["Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!"];
     }
   }
 }
