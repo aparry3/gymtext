@@ -1,6 +1,7 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import { RunnableLambda } from "@langchain/core/runnables";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 
 /**
  * Configuration for agents
@@ -11,6 +12,13 @@ export interface AgentConfig {
     maxTokens?: number;
     verbose?: boolean;
   }
+
+/**
+ * Options for model initialization
+ */
+export interface ModelOptions {
+  tools?: StructuredToolInterface[];
+}
 
 /**
  * Standard agent interface - all agents should implement this
@@ -56,9 +64,10 @@ export function createRunnableAgent<TInput, TOutput>(
  *
  * @param outputSchema - Optional Zod schema for structured output. If provided, returns T. If undefined, returns string.
  * @param config - Optional agent configuration
- * @returns Model that returns structured output (T) or plain text (string)
+ * @param options - Optional model options (e.g., tools)
+ * @returns Model that returns structured output (T), plain text (string), or model with tools bound
  */
-export const initializeModel = (outputSchema?: any,config?: AgentConfig): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const initializeModel = (outputSchema?: any, config?: AgentConfig, options?: ModelOptions): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
     const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
 
     if (model.startsWith('gemini')) {
@@ -67,6 +76,9 @@ export const initializeModel = (outputSchema?: any,config?: AgentConfig): any =>
         temperature,
         maxOutputTokens: maxTokens,
       })
+      if (options?.tools) {
+        return llm.bindTools(options.tools);
+      }
       if (outputSchema) {
         return llm.withStructuredOutput(outputSchema);
       }
@@ -86,6 +98,9 @@ export const initializeModel = (outputSchema?: any,config?: AgentConfig): any =>
         maxCompletionTokens: maxTokens,
         reasoningEffort: 'low',
       })
+      if (options?.tools) {
+        return llm.bindTools(options.tools);
+      }
       if (outputSchema) {
         return llm.withStructuredOutput(outputSchema);
       }

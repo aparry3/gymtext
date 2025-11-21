@@ -47,8 +47,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     });
 
     // Initialize model with injected tools (DI pattern)
-    const model = initializeModel(undefined, { model: 'gpt-5-nano' });
-    const modelWithTools = model.bindTools(deps.tools);
+    const model = initializeModel(undefined, { model: 'gpt-5-nano' }, { tools: deps.tools });
 
     const systemMessage = {
       role: 'system',
@@ -67,7 +66,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     ];
 
     // Call model with tools
-    const response = await modelWithTools.invoke(messages);
+    const response = await model.invoke(messages);
 
     // Track tool result
     let toolResult: ModificationResult | null = null;
