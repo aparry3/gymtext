@@ -3,7 +3,7 @@ import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
 import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
-import { now, getWeekday, DayOfWeek, DAY_NAMES, getDayOfWeek } from '@/shared/utils/date';
+import { now, DayOfWeek, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
@@ -229,7 +229,7 @@ export class WorkoutModificationService {
             message: modifyMicrocycleResult.message
           }
         );
-        
+
         // Check if today's overview changed - if so, regenerate today's workout
         const newTodayOverview = (modifyMicrocycleResult.dayOverviews as unknown as Record<string, unknown>)[todayOverviewField] as string | null;
 
