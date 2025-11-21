@@ -16,6 +16,32 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName: 'GymText',
+    title: "GymText - Daily Personalized Workouts via Text",
+    description: "Get personalized daily workouts delivered straight to your phone. Transform your fitness journey with AI-powered workout recommendations.",
+    images: [
+      {
+        url: '/OpenGraphGymtext.png',
+        width: 1200,
+        height: 630,
+        alt: 'GymText - Daily Personalized Workouts via Text',
+      },
+      {
+        url: '/IconBG.png',
+        width: 600,
+        height: 600,
+        alt: 'GymText Icon',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "GymText - Daily Personalized Workouts via Text",
+    description: "Get personalized daily workouts delivered straight to your phone. Transform your fitness journey with AI-powered workout recommendations.",
+    images: ['/OpenGraphGymtext.png'],
+  },
 };
 
 export default function RootLayout({
