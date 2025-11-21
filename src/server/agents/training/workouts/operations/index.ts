@@ -1,20 +1,13 @@
 // Generate operation
 export {
-  createDailyWorkoutAgent,
-  type DailyWorkoutInput,
-  type DailyWorkoutOutput,
+  createWorkoutGenerateAgent,
+  type WorkoutGenerateInput,
+  type WorkoutGenerateOutput,
 } from './generate';
 
-// Substitute operation
+// Modify operation
 export {
-  substituteExercises,
-  type SubstituteExercisesContext,
-  type Modification,
-} from './substitute';
-
-// Replace operation
-export {
-  replaceWorkout,
-  type ReplaceWorkoutContext,
-  type ReplaceWorkoutParams,
-} from './replace';
+  createModifyWorkoutAgent,
+  type ModifyWorkoutInput,
+  type ModifyWorkoutOutput,
+} from './modify';

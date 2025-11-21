@@ -26,7 +26,7 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
       message: input.message.substring(0, 100) + (input.message.length > 100 ? '...' : ''),
       primaryIntent: input.triage.intents[0]?.intent,
       confidence: input.triage.intents[0]?.confidence,
-      hasProfileUpdates: input.profile.summary?.reason !== 'No updates detected',
+      hasProfileUpdates: input.profile.wasUpdated,
       previousMessagesCount: input.previousMessages?.length || 0
     });
 

@@ -98,9 +98,9 @@ export class UserService {
     return result || undefined;
   }
 
-  async getUserWithProfile(userId: string) {
+  async getUser(userId: string): Promise<UserWithProfile | undefined | null> {
     return await this.circuitBreaker.execute(async () => {
-      return await this.userRepository.findWithProfile(userId);
+      return await this.userRepository.findWithMarkdownProfile(userId);
     });
   }
 
@@ -154,15 +154,27 @@ export class UserService {
     const result = await this.circuitBreaker.execute(async () => {
       // Validate profile data using domain model
       UserModel.validateFitnessProfileData(profileData);
-      
+
       // Update using repository
       return await this.userRepository.createOrUpdateFitnessProfile(userId, profileData);
     });
-    
+
     if (!result) {
       throw new Error('Failed to update fitness profile');
     }
-    
+
+    return result;
+  }
+
+  async updatePreferences(userId: string, preferences: { preferredSendHour?: number; timezone?: string }): Promise<UserWithProfile> {
+    const result = await this.circuitBreaker.execute(async () => {
+      return await this.userRepository.updatePreferences(userId, preferences);
+    });
+
+    if (!result) {
+      throw new Error('Failed to update preferences');
+    }
+
     return result;
   }
 
@@ -213,16 +225,17 @@ export class UserService {
 
   async getUserForAdmin(id: string): Promise<AdminUserDetailResponse> {
     const result = await this.circuitBreaker.execute(async () => {
-      const user = await this.userRepository.findById(id);
+      const user = await this.userRepository.findWithMarkdownProfile(id);
       if (!user) {
         throw new Error('User not found');
       }
 
       const adminUser = this.transformToAdminUser(user);
-      
+
       return {
         user: adminUser,
         profile: user.profile,
+        markdownProfile: user.markdownProfile || null,
         recentActivity: {
           totalMessages: 0,
           totalWorkouts: 0

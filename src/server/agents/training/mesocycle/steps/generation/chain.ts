@@ -27,7 +27,6 @@ export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) 
     const userPrompt = mesocycleUserPrompt(
       input.mesocycleOverview,
       input.user,
-      input.fitnessProfile
     );
     let lastError: string | undefined;
 
@@ -46,7 +45,6 @@ export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) 
           mesocycle,
           mesocycleOverview: input.mesocycleOverview,
           user: input.user,
-          fitnessProfile: input.fitnessProfile
         };
       }
 

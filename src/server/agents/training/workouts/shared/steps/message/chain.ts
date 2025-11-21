@@ -1,5 +1,5 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
-import { WORKOUT_MESSAGE_SYSTEM_PROMPT, createWorkoutMessageUserPrompt } from './prompt';
+import { WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT, workoutSmsUserPrompt } from './prompt';
 import type { WorkoutMessageConfig, WorkoutMessageInput, WorkoutMessageOutput } from './types';
 
 /**
@@ -23,11 +23,11 @@ export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
     const { description } = input;
 
     // Create the user prompt with workout and context
-    const userPrompt = createWorkoutMessageUserPrompt(description);
+    const userPrompt = workoutSmsUserPrompt(description);
 
     // Invoke model with system and user prompts
     const message = await model.invoke([
-      { role: 'system', content: WORKOUT_MESSAGE_SYSTEM_PROMPT },
+      { role: 'system', content: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT },
       { role: 'user', content: userPrompt }
     ]);
 

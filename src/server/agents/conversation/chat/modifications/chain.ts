@@ -4,9 +4,9 @@ import { initializeModel } from '@/server/agents/base';
 import type { ChatSubagentInput } from '../types';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { StructuredToolInterface } from '@langchain/core/tools';
-import type { SubstituteExerciseResult, ModifyWorkoutResult } from '@/server/services';
-import type { ModifyWeekResult } from '@/server/services';
+import type { ModifyWorkoutResult, ModifyWeekResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import { createModificationMessageRunnable } from './message/chain';
 
 /**
  * Dependencies for Modifications Agent (DI)
@@ -16,7 +16,7 @@ export interface ModificationsAgentDeps {
 }
 
 // Union type for all modification results
-type ModificationResult = SubstituteExerciseResult | ModifyWorkoutResult | ModifyWeekResult;
+type ModificationResult = ModifyWorkoutResult | ModifyWeekResult;
 
 /**
  * Schema for modifications agent output
@@ -105,21 +105,48 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     }
 
     // Extract message from tool result
-    // Workout agents already generate contextual messages, so we use those directly
     if (!toolResult) {
       return {
         response: 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!',
       };
     }
 
-    if (toolResult.success && toolResult.message) {
-      console.log(`[${agentName}] Using message from workout agent:`, {
-        response: toolResult.message.substring(0, 100) + (toolResult.message.length > 100 ? '...' : ''),
-      });
+    // If tool execution succeeded
+    if (toolResult.success) {
+      // If we have modifications data, generate a conversational message
+      if (toolResult.modifications && toolResult.modifications.trim().length > 0) {
+        try {
+          console.log(`[${agentName}] Generating conversational message from modifications:`, {
+            modifications: toolResult.modifications.substring(0, 100) + (toolResult.modifications.length > 100 ? '...' : ''),
+          });
 
-      return {
-        response: toolResult.message,
-      };
+          // Use the message runnable to generate conversational message
+          const messageRunnable = createModificationMessageRunnable();
+          const conversationalMessage = await messageRunnable.invoke(toolResult.modifications);
+
+          console.log(`[${agentName}] Generated conversational message:`, {
+            response: conversationalMessage.substring(0, 100) + (conversationalMessage.length > 100 ? '...' : ''),
+          });
+
+          return {
+            response: conversationalMessage,
+          };
+        } catch (error) {
+          console.error(`[${agentName}] Error generating conversational message, falling back to tool message:`, error);
+          // Fall through to use toolResult.message
+        }
+      }
+
+      // Fall back to pre-generated message if available
+      if (toolResult.message) {
+        console.log(`[${agentName}] Using message from tool:`, {
+          response: toolResult.message.substring(0, 100) + (toolResult.message.length > 100 ? '...' : ''),
+        });
+
+        return {
+          response: toolResult.message,
+        };
+      }
     }
 
     // If failed or no message, provide error message

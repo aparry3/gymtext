@@ -1,4 +1,4 @@
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
@@ -18,8 +18,7 @@ export async function POST(req: NextRequest) {
     const from = body.From as string || '';
     const to = body.To as string || process.env.TWILIO_NUMBER || '';
 
-    const userRepository = new UserRepository();
-    const user = await userRepository.findByPhoneNumber(from);
+    const user = await userService.getUserByPhone(from);
 
     if (!user) {
         twiml.message(
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user with profile for chat context
-    const userWithProfile = await userRepository.findWithProfile(user.id);
+    const userWithProfile = await userService.getUser(user.id);
 
     if (!userWithProfile) {
       twiml.message('Sorry, I had trouble loading your profile. Please try again later.');

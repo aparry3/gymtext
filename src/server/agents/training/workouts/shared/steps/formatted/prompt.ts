@@ -193,7 +193,6 @@ Return the complete formatted workout as a single markdown string.`;
  */
 export const createFormattedWorkoutUserPrompt = (
   description: string,
-  fitnessProfile: string,
   includeModifications: boolean = false
 ): string => {
   const modificationsSection = includeModifications
@@ -204,9 +203,6 @@ export const createFormattedWorkoutUserPrompt = (
 
 WORKOUT DESCRIPTION:
 ${description}
-
-USER PROFILE (for context):
-${fitnessProfile}
 
 INSTRUCTIONS:
 - Convert this into the extended markdown format specified in the system prompt

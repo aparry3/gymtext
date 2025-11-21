@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 import { userAuthService } from '@/server/services/auth/userAuthService';
 import { userService } from '@/server/services';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { UserRepository } from '@/server/repositories/userRepository';
 import { messageService } from '@/server/services';
 import { inngest } from '@/server/connections/inngest/client';
 
@@ -59,8 +58,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Update user with Stripe customer ID
-    const userRepo = new UserRepository();
-    await userRepo.update(user.id, {
+    await userService.updateUser(user.id, {
       stripeCustomerId: customer.id,
     });
 
@@ -83,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Send welcome SMS
     console.log('[Signup] Sending welcome SMS');
-    const userWithProfile = await userRepo.findWithProfile(user.id);
+    const userWithProfile = await userService.getUser(user.id);
     if (userWithProfile) {
       await messageService.sendWelcomeMessage(userWithProfile);
     }

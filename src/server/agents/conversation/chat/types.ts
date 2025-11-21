@@ -2,11 +2,10 @@ import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
-import type { PatchProfileCallback } from '@/server/agents/profile/chain';
-import type { WorkoutModificationService } from './modifications/tools';
-import type { MicrocycleModificationService } from './modifications/tools';
+import type { ModifyWeekParams, ModifyWorkoutParams } from './modifications/tools';
 import { WorkoutInstance } from '@/server/models';
-import type { ProfilePatchResult } from '@/server/services';
+import type { ModifyWeekResult, ModifyWorkoutResult } from '@/server/services';
+import type { ProfileUpdateOutput } from '@/server/agents/profileUpdate';
 
 /**
  * Intent types that the triage agent can identify
@@ -49,7 +48,7 @@ export interface ChatInput {
  * All fields from ChatInput flow through, plus profile and triage results.
  */
 export interface ChatAfterParallelInput extends ChatInput {
-  profile: ProfilePatchResult;
+  profile: ProfileUpdateOutput;
   triage: TriageResult;
 }
 
@@ -71,7 +70,7 @@ export interface ChatOutput {
  * Dependencies for chat agent (includes DI for profile and modification services)
  */
 export interface ChatAgentDeps extends AgentDeps {
-  patchProfile: PatchProfileCallback;
-  workoutService: WorkoutModificationService;
-  microcycleService: MicrocycleModificationService;
+  saveProfile: (userId: string, markdownProfile: string) => Promise<void>;
+  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
+  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }

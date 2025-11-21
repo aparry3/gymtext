@@ -1,8 +1,9 @@
 // Main agent
-export { createDailyWorkoutAgent } from './chain';
+export { createWorkoutGenerateAgent } from './chain';
 
 // Generation prompts
-export { SYSTEM_PROMPT, userPrompt } from './generation/prompt';
+export { SYSTEM_PROMPT, userPrompt } from './steps/generation/prompt';
 
 // Types
-export type { DailyWorkoutInput, DailyWorkoutOutput } from './types';
+export type { WorkoutGenerateOutput } from './types';
+export type { WorkoutGenerateInput } from './steps/generation/types';

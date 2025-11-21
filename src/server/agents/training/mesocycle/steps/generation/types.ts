@@ -28,7 +28,6 @@ export interface MesocycleAgentConfig {
 export interface MesocycleGenerationInput {
   mesocycleOverview: string;
   user: UserWithProfile;
-  fitnessProfile: string;
 }
 
 /**
@@ -37,6 +36,5 @@ export interface MesocycleGenerationInput {
 export interface MesocycleChainContext {
   mesocycleOverview: string;
   user: UserWithProfile;
-  fitnessProfile: string;
   mesocycle: MesocycleGenerationOutput;
 }

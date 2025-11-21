@@ -203,7 +203,6 @@ If ANY violation occurs, you must **regenerate the entire answer**.
 export const mesocycleUserPrompt = (
   mesocycleOverview: string,
   user: UserWithProfile,
-  fitnessProfile: string
 ) => `
 Expand the mesocycle below into structured week-by-week microcycles for ${user.name}.
 
@@ -219,7 +218,5 @@ You MUST:
 ${mesocycleOverview}
 </Mesocycle Overview>
 
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
+${user.markdownProfile ? `<Fitness Profile>\n${user.markdownProfile.trim()}\n</Fitness Profile>` : ''}
 `.trim();

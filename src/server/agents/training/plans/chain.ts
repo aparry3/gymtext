@@ -3,14 +3,12 @@ import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
-  fitnessPlanUserPrompt,
   createFitnessPlanGenerationRunnable,
   createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
-import type { FitnessPlanAgentDeps } from './types';
 
-export type { FitnessProfileContextService, FitnessPlanAgentDeps } from './types';
+export type { FitnessProfileContextService } from './types';
 
 /**
  * Creates a fitness plan agent with injected dependencies
@@ -25,15 +23,10 @@ export type { FitnessProfileContextService, FitnessPlanAgentDeps } from './types
  * @param deps - Dependencies including context service
  * @returns Function that generates fitness plans with summary message
  */
-export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
+export const createFitnessPlanAgent = () => {
   return async (user: UserWithProfile): Promise<FitnessPlanOverview> => {
-    // Get fitness profile context from service
-    const fitnessProfile = await deps.contextService.getContext(user);
 
     try {
-      // Build user prompt for step 1
-      const userPrompt = fitnessPlanUserPrompt(user, fitnessProfile);
-
       // Step 1: Create long-form runnable (with structured output)
       const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
         systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
@@ -63,9 +56,7 @@ export const createFitnessPlanAgent = (deps: FitnessPlanAgentDeps) => {
 
       // Execute the chain
       const result = await sequence.invoke({
-        user,
-        fitnessProfile,
-        prompt: userPrompt
+        user
       });
 
       // Combine results into final overview

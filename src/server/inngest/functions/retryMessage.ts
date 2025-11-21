@@ -18,7 +18,7 @@
 
 import { inngest } from '@/server/connections/inngest/client';
 import { MessageRepository } from '@/server/repositories';
-import { UserRepository } from '@/server/repositories';
+import { userService } from '@/server/services/user/userService';
 import { messagingClient } from '@/server/connections/messaging';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
@@ -109,10 +109,9 @@ export const retryMessageFunction = inngest.createFunction(
 
     // Step 3: Load user and retry sending
     const retryResult = await step.run('retry-send-message', async () => {
-      const userRepo = new UserRepository();
       const messageRepo = new MessageRepository(postgresDb);
 
-      const user = await userRepo.findWithProfile(userId);
+      const user = await userService.getUser(userId);
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }

@@ -5,6 +5,7 @@ import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutModificationService } from '../orchestration/workoutModificationService';
+import { userService } from '@/server/services/user/userService';
 import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
@@ -86,22 +87,22 @@ export class ChatService {
 
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
-      
-      // Create chat agent with injected dependencies using DI pattern
+
+      // Fetch user with markdown profile (if not already included)
+      const userWithMarkdown = user.markdownProfile !== undefined
+        ? user
+        : await userService.getUser(user.id) || user;
+
+      // Create chat agent with simplified dependencies using DI pattern
       const agent = createChatAgent({
-        patchProfile: this.fitnessProfileService.patchProfile.bind(this.fitnessProfileService),
-        workoutService: {
-          substituteExercise: this.workoutModificationService.substituteExercise.bind(this.workoutModificationService),
-          modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
-        },
-        microcycleService: {
-          modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
-        },
+        saveProfile: this.fitnessProfileService.saveMarkdownProfile.bind(this.fitnessProfileService),
+        modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
+        modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
       });
 
-      // Invoke the agent
+      // Invoke the agent with user that includes markdown profile
       const chatResult = await agent.invoke({
-        user,
+        user: userWithMarkdown,
         message,
         previousMessages: contextMessages,
         currentWorkout: currentWorkout,

@@ -30,8 +30,6 @@ export interface FitnessPlanConfig {
 
 export interface FitnessPlanInput {
   user: UserWithProfile;
-  fitnessProfile: string;
-  prompt: string;
 }
 
 /**
@@ -39,6 +37,5 @@ export interface FitnessPlanInput {
  */
 export interface FitnessPlanChainContext {
   user: UserWithProfile;
-  fitnessProfile: string;
   fitnessPlan: FitnessPlanOutput;
 }

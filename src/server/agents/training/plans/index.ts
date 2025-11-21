@@ -1,5 +1,5 @@
 // Main agent
-export { createFitnessPlanAgent, type FitnessProfileContextService, type FitnessPlanAgentDeps } from './chain';
+export { createFitnessPlanAgent, type FitnessProfileContextService } from './chain';
 
 // Steps (for advanced usage)
 export * from './steps';

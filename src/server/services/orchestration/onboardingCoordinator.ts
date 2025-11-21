@@ -1,6 +1,6 @@
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { OnboardingService } from './onboardingService';
 
 /**
@@ -17,12 +17,10 @@ import { OnboardingService } from './onboardingService';
 export class OnboardingCoordinator {
   private static instance: OnboardingCoordinator;
   private subscriptionRepo: SubscriptionRepository;
-  private userRepo: UserRepository;
   private onboardingService: OnboardingService;
 
   private constructor() {
     this.subscriptionRepo = new SubscriptionRepository();
-    this.userRepo = new UserRepository();
     this.onboardingService = OnboardingService.getInstance();
   }
 
@@ -72,7 +70,7 @@ export class OnboardingCoordinator {
       console.log(`[OnboardingCoordinator] All conditions met, sending onboarding messages to user ${userId}`);
 
       // Get user with profile
-      const user = await this.userRepo.findWithProfile(userId);
+      const user = await userService.getUser(userId);
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }

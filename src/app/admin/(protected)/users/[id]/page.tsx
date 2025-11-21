@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { AdminUser } from '@/types/admin'
-import { FitnessProfile } from '@/server/models/user'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,7 +25,7 @@ export default function AdminUserDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const [user, setUser] = useState<AdminUser | null>(null)
-  const [profile, setProfile] = useState<FitnessProfile | null>(null)
+  const [markdownProfile, setMarkdownProfile] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSendingWorkout, setIsSendingWorkout] = useState(false)
@@ -44,10 +43,10 @@ export default function AdminUserDetailPage() {
         throw new Error(result.message || 'Failed to fetch user')
       }
 
-      const { user: fetchedUser, profile: fetchedProfile } = result.data
+      const { user: fetchedUser, markdownProfile: fetchedMarkdownProfile } = result.data
 
       setUser(fetchedUser)
-      setProfile(fetchedProfile)
+      setMarkdownProfile(fetchedMarkdownProfile || null)
     } catch (err) {
       setError('Failed to load user')
       console.error('Error fetching user:', err)
@@ -245,189 +244,10 @@ export default function AdminUserDetailPage() {
 
           <TabsContent value="profile">
             {/* Profile Content */}
-            {profile ? (
-              <div className="space-y-6">
-                {/* Goals */}
-                <ProfileSection
-                  title="Goals"
-                  icon={<Target className="h-5 w-5" />}
-                >
-                  <div className="space-y-3">
-                    {profile.goals.summary && (
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <p className="text-sm italic">{profile.goals.summary}</p>
-                      </div>
-                    )}
-                    <div><strong>Primary Goal:</strong> {profile.goals.primary}</div>
-                    {profile.goals.timeline && (
-                      <div><strong>Timeline:</strong> {profile.goals.timeline} weeks</div>
-                    )}
-                    {profile.goals.specific && (
-                      <div><strong>Specific Goals:</strong> {profile.goals.specific}</div>
-                    )}
-                    {profile.goals.motivation && (
-                      <div>
-                        <strong>Motivation:</strong>
-                        <p className="mt-1 text-muted-foreground">{profile.goals.motivation}</p>
-                      </div>
-                    )}
-                  </div>
-                </ProfileSection>
-
-                {/* Availability & Equipment */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <ProfileSection
-                    title="Availability"
-                    icon={<Calendar className="h-5 w-5" />}
-                  >
-                    <div className="space-y-2">
-                      {profile.availability?.summary && (
-                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
-                          {profile.availability.summary}
-                        </div>
-                      )}
-                      {profile.availability?.daysPerWeek && (
-                        <div><strong>Frequency:</strong> {profile.availability.daysPerWeek} days/week</div>
-                      )}
-                      {profile.availability?.minutesPerSession && (
-                        <div><strong>Session Length:</strong> {profile.availability.minutesPerSession} minutes</div>
-                      )}
-                      {profile.availability?.preferredTimes && profile.availability.preferredTimes.length > 0 && (
-                        <div><strong>Preferred Times:</strong> {profile.availability.preferredTimes.join(', ')}</div>
-                      )}
-                      {profile.availability?.schedule && (
-                        <div>
-                          <strong>Schedule:</strong>
-                          <p className="mt-1 text-sm text-muted-foreground">{profile.availability.schedule}</p>
-                        </div>
-                      )}
-                    </div>
-                  </ProfileSection>
-
-                  <ProfileSection
-                    title="Equipment Access"
-                    icon={<Dumbbell className="h-5 w-5" />}
-                  >
-                    <div className="space-y-2">
-                      {profile.equipmentAccess?.summary && (
-                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
-                          {profile.equipmentAccess.summary}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <strong>Gym Access:</strong>
-                        {profile.equipmentAccess?.gymAccess ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-600" />
-                        )}
-                        <Badge variant={profile.equipmentAccess?.gymAccess ? "default" : "secondary"}>
-                          {profile.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
-                        </Badge>
-                      </div>
-                      {profile.equipmentAccess?.gymType && (
-                        <div><strong>Gym Type:</strong> {profile.equipmentAccess.gymType}</div>
-                      )}
-                      {profile.equipmentAccess?.homeEquipment && profile.equipmentAccess.homeEquipment.length > 0 && (
-                        <div><strong>Home Equipment:</strong> {profile.equipmentAccess.homeEquipment.join(', ')}</div>
-                      )}
-                      {profile.equipmentAccess?.limitations && profile.equipmentAccess.limitations.length > 0 && (
-                        <div><strong>Limitations:</strong> {profile.equipmentAccess.limitations.join(', ')}</div>
-                      )}
-                      {profile.equipmentAccess?.temporaryChanges && profile.equipmentAccess.temporaryChanges.length > 0 && (
-                        <div>
-                          <strong>Temporary Changes:</strong>
-                          <div className="mt-1 space-y-1">
-                            {profile.equipmentAccess.temporaryChanges.map((change, idx) => (
-                              <div key={idx} className="text-sm p-2 bg-yellow-50 border border-yellow-200 rounded">
-                                <div className="font-medium">{change.description}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {new Date(change.startDate).toLocaleDateString()} - {change.endDate ? new Date(change.endDate).toLocaleDateString() : 'Ongoing'}
-                                  {change.location && ` • ${change.location}`}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </ProfileSection>
-                </div>
-
-                {/* Constraints */}
-                {profile.constraints && profile.constraints.length > 0 && (
-                  <ProfileSection
-                    title="Constraints"
-                    icon={<AlertTriangle className="h-5 w-5" />}
-                  >
-                    <div className="space-y-3">
-                      {profile.constraints.map((constraint) => (
-                        <ConstraintCard key={constraint.id} constraint={constraint} />
-                      ))}
-                    </div>
-                  </ProfileSection>
-                )}
-
-                {/* Metrics & Activity Data */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <ProfileSection
-                    title="Metrics"
-                    icon={<TrendingUp className="h-5 w-5" />}
-                  >
-                    <div className="space-y-2">
-                      {profile.metrics?.summary && (
-                        <div className="p-2 bg-muted/30 rounded text-sm italic mb-2">
-                          {profile.metrics.summary}
-                        </div>
-                      )}
-                      {profile.metrics?.height && (
-                        <div className="flex items-center gap-2">
-                          <Ruler className="h-4 w-4 text-muted-foreground" />
-                          <span><strong>Height:</strong> {profile.metrics.height} cm</span>
-                        </div>
-                      )}
-                      {profile.metrics?.weight && (
-                        <div className="flex items-center gap-2">
-                          <Weight className="h-4 w-4 text-muted-foreground" />
-                          <span><strong>Weight:</strong> {profile.metrics.weight.value} {profile.metrics.weight.unit}</span>
-                          {profile.metrics.weight.date && (
-                            <span className="text-xs text-muted-foreground">({new Date(profile.metrics.weight.date).toLocaleDateString()})</span>
-                          )}
-                        </div>
-                      )}
-                      {profile.metrics?.bodyComposition && (
-                        <div className="flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-muted-foreground" />
-                          <span><strong>Body Fat:</strong> {profile.metrics.bodyComposition}%</span>
-                        </div>
-                      )}
-                      {profile.metrics?.fitnessLevel && (
-                        <div className="flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-muted-foreground" />
-                          <Badge variant="outline">
-                            {profile.metrics.fitnessLevel.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                  </ProfileSection>
-
-                </div>
-
-                {/* Activities Section */}
-                {profile.activities && profile.activities.length > 0 && (
-                  <ProfileSection
-                    title="Activities"
-                    icon={<Activity className="h-5 w-5" />}
-                  >
-                    <div className="space-y-4">
-                      {profile.activities.map((activity, index) => (
-                        <ActivityCard key={index} activity={activity} />
-                      ))}
-                    </div>
-                  </ProfileSection>
-                )}
-              </div>
+            {markdownProfile ? (
+              <Card className="p-6">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{markdownProfile}</pre>
+              </Card>
             ) : (
               <EmptyProfileState />
             )}
@@ -465,226 +285,6 @@ function QuickFactCard({ icon, label, value, muted = false }: QuickFactCardProps
         </div>
       </div>
     </Card>
-  )
-}
-
-interface ProfileSectionProps {
-  title: string
-  icon: React.ReactNode
-  children: React.ReactNode
-}
-
-function ProfileSection({ title, icon, children }: ProfileSectionProps) {
-  return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-center gap-2">
-        {icon}
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
-    </Card>
-  )
-}
-
-interface ConstraintCardProps {
-  constraint: {
-    id: string
-    type: 'injury' | 'mobility' | 'medical' | 'preference'
-    description: string
-    severity?: 'mild' | 'moderate' | 'severe' | null
-    affectedMovements?: string[] | null
-    status: 'active' | 'resolved'
-    startDate?: string | null
-    endDate?: string | null
-    isTemporary?: boolean
-  }
-}
-
-function ConstraintCard({ constraint }: ConstraintCardProps) {
-  const severityColors = {
-    mild: 'bg-orange-50 text-orange-700 border-orange-100 ring-orange-100',
-    moderate: 'bg-orange-100 text-orange-800 border-orange-200 ring-orange-200',
-    severe: 'bg-red-50 text-red-700 border-red-100 ring-red-100'
-  }
-
-  const statusColors = {
-    active: 'bg-red-50 text-red-700',
-    resolved: 'bg-green-50 text-green-700'
-  }
-
-  return (
-    <div className={`rounded-xl border p-4 ring-1 ${constraint.severity ? severityColors[constraint.severity] : 'bg-gray-50 border-gray-100 ring-gray-100'}`}>
-      <div className="mb-2 flex items-start justify-between">
-        <h4 className="font-medium">{constraint.description}</h4>
-        <div className="flex flex-col gap-1 items-end">
-          <Badge className={statusColors[constraint.status]} variant="secondary">
-            {constraint.status}
-          </Badge>
-          {constraint.isTemporary && (
-            <Badge variant="outline" className="text-xs">
-              Temporary
-            </Badge>
-          )}
-        </div>
-      </div>
-      <div className="space-y-1 text-sm">
-        <div><strong>Type:</strong> {constraint.type} • <strong>Severity:</strong> {constraint.severity || 'Not specified'}</div>
-        {(constraint.startDate || constraint.endDate) && (
-          <div className="text-xs text-muted-foreground">
-            {constraint.startDate && `Started: ${new Date(constraint.startDate).toLocaleDateString()}`}
-            {constraint.startDate && constraint.endDate && ' • '}
-            {constraint.endDate && `Ends: ${new Date(constraint.endDate).toLocaleDateString()}`}
-          </div>
-        )}
-        {constraint.affectedMovements && constraint.affectedMovements.length > 0 && (
-          <div><strong>Affected movements:</strong> {constraint.affectedMovements.join(', ')}</div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-interface ActivityCardProps {
-  activity: {
-    type: 'strength' | 'cardio'
-    summary?: string | null
-    experience: 'beginner' | 'intermediate' | 'advanced'
-  } & (
-    | {
-        type: 'strength'
-        trainingFrequency: number
-        currentProgram?: string | null
-        keyLifts?: Record<string, number> | null
-        preferences?: {
-          workoutStyle?: string | null
-          likedExercises?: string[] | null
-          dislikedExercises?: string[] | null
-        } | null
-      }
-    | {
-        type: 'cardio'
-        primaryActivities: string[]
-        frequency?: number | null
-        keyMetrics?: {
-          weeklyDistance?: number | null
-          longestSession?: number | null
-          averagePace?: string | null
-          preferredIntensity?: 'low' | 'moderate' | 'high' | null
-        } | null
-        preferences?: {
-          indoor?: boolean | null
-          outdoor?: boolean | null
-          groupVsIndividual?: 'group' | 'individual' | 'both' | null
-          timeOfDay?: string[] | null
-        } | null
-      }
-  )
-}
-
-function ActivityCard({ activity }: ActivityCardProps) {
-  return (
-    <div className="border rounded-lg p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <Badge variant={activity.type === 'strength' ? 'default' : 'secondary'}>
-          {activity.type}
-        </Badge>
-        <Badge variant="outline">
-          {activity.experience}
-        </Badge>
-      </div>
-
-      {activity.summary && (
-        <div className="p-2 bg-muted/30 rounded text-sm italic">
-          {activity.summary}
-        </div>
-      )}
-
-      {activity.type === 'strength' && (
-        <div className="space-y-2">
-          <div className="text-sm">
-            <strong>Training Frequency:</strong> {activity.trainingFrequency}x/week
-          </div>
-          {activity.currentProgram && (
-            <div className="text-sm">
-              <strong>Current Program:</strong> {activity.currentProgram}
-            </div>
-          )}
-          {activity.keyLifts && Object.keys(activity.keyLifts).length > 0 && (
-            <div className="text-sm">
-              <strong>Key Lifts:</strong>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {Object.entries(activity.keyLifts).map(([lift, weight]) => (
-                  <Badge key={lift} variant="outline" className="text-xs">
-                    {lift}: {weight}lbs
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          {activity.preferences && (
-            <div className="text-sm">
-              {activity.preferences.workoutStyle && (
-                <div><strong>Workout Style:</strong> {activity.preferences.workoutStyle}</div>
-              )}
-              {activity.preferences.likedExercises && activity.preferences.likedExercises.length > 0 && (
-                <div><strong>Liked:</strong> {activity.preferences.likedExercises.join(', ')}</div>
-              )}
-              {activity.preferences.dislikedExercises && activity.preferences.dislikedExercises.length > 0 && (
-                <div><strong>Disliked:</strong> {activity.preferences.dislikedExercises.join(', ')}</div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activity.type === 'cardio' && (
-        <div className="space-y-2">
-          <div className="text-sm">
-            <strong>Primary Activities:</strong> {activity.primaryActivities.join(', ')}
-          </div>
-          {activity.frequency && (
-            <div className="text-sm">
-              <strong>Frequency:</strong> {activity.frequency}x/week
-            </div>
-          )}
-          {activity.keyMetrics && (
-            <div className="text-sm space-y-1">
-              <div><strong>Key Metrics:</strong></div>
-              {activity.keyMetrics.weeklyDistance && (
-                <div className="ml-4">• Weekly Distance: {activity.keyMetrics.weeklyDistance} miles</div>
-              )}
-              {activity.keyMetrics.longestSession && (
-                <div className="ml-4">• Longest Session: {activity.keyMetrics.longestSession} min</div>
-              )}
-              {activity.keyMetrics.averagePace && (
-                <div className="ml-4">• Average Pace: {activity.keyMetrics.averagePace}</div>
-              )}
-              {activity.keyMetrics.preferredIntensity && (
-                <div className="ml-4">• Preferred Intensity: {activity.keyMetrics.preferredIntensity}</div>
-              )}
-            </div>
-          )}
-          {activity.preferences && (
-            <div className="text-sm">
-              <div><strong>Preferences:</strong></div>
-              <div className="ml-4 space-y-0.5">
-                {activity.preferences.indoor !== undefined && activity.preferences.outdoor !== undefined && (
-                  <div>
-                    • Location: {activity.preferences.indoor && activity.preferences.outdoor ? 'Indoor & Outdoor' : activity.preferences.indoor ? 'Indoor' : 'Outdoor'}
-                  </div>
-                )}
-                {activity.preferences.groupVsIndividual && (
-                  <div>• Style: {activity.preferences.groupVsIndividual}</div>
-                )}
-                {activity.preferences.timeOfDay && activity.preferences.timeOfDay.length > 0 && (
-                  <div>• Time: {activity.preferences.timeOfDay.join(', ')}</div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -788,66 +388,10 @@ const Calendar = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const Target = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-  </svg>
-)
-
-const Dumbbell = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
-  </svg>
-)
-
-const Activity = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
-  </svg>
-)
-
-const AlertTriangle = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-  </svg>
-)
-
-const TrendingUp = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-  </svg>
-)
-
 const MapPin = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-  </svg>
-)
-
-
-const Weight = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52 1.307.266 2.505 1.967 2.505 3.29 0 1.323-1.198 3.024-2.505 3.29a48.329 48.329 0 0 1-3-.52m-13.5 0c-1.01.143-2.01.317-3 .52-1.307.266-2.505 1.967-2.505 3.29 0 1.323 1.198 3.024 2.505 3.29a48.329 48.329 0 0 1 3-.52" />
-  </svg>
-)
-
-const Ruler = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5.25h18v4.5H3v-4.5ZM3 14.25h18v4.5H3v-4.5Z" />
-  </svg>
-)
-
-const CheckCircle = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-  </svg>
-)
-
-const XCircle = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
   </svg>
 )
 

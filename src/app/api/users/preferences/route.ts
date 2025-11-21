@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { UserRepository } from '@/server/repositories/userRepository';
+import { userService } from '@/server/services/user/userService';
 import { isValidIANATimezone, formatTimezoneForDisplay } from '@/server/utils/timezone';
 import { now } from '@/shared/utils/date';
 
@@ -26,9 +26,8 @@ export async function GET(request: Request) {
       );
     }
     
-    const userRepository = new UserRepository();
-    const user = await userRepository.findById(userId);
-    
+    const user = await userService.getUserById(userId);
+
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -114,19 +113,18 @@ export async function PUT(request: Request) {
     }
     
     // Update preferences
-    const userRepository = new UserRepository();
     const updateData: { preferredSendHour?: number; timezone?: string } = {};
-    
+
     if (preferredSendHour !== undefined) {
       updateData.preferredSendHour = preferredSendHour;
     }
-    
+
     if (timezone !== undefined) {
       updateData.timezone = timezone;
     }
-    
-    const updatedUser = await userRepository.updatePreferences(userId, updateData);
-    
+
+    const updatedUser = await userService.updatePreferences(userId, updateData);
+
     if (!updatedUser) {
       return NextResponse.json(
         { error: 'Failed to update preferences' },

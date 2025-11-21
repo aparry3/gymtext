@@ -257,12 +257,9 @@ If ANY rule is violated, you must **regenerate the entire answer**.
 // User prompt with context
 export const fitnessPlanUserPrompt = (
   user: UserWithProfile,
-  fitnessProfile: string
 ) => `
 Create a comprehensive fitness plan for ${user.name}.
 
-<Fitness Profile>
-${fitnessProfile}
-</Fitness Profile>
+${user.markdownProfile ? `## Fitness Profile\n${user.markdownProfile.trim()}` : ''}
 
 Design the plan from first principles. Do **not** repeat or adapt ${user.name}'s current routine or split — use it only as background context.`.trim();

@@ -1,13 +1,11 @@
 import { z } from 'zod';
-import { type SubstituteExerciseResult, type ModifyWorkoutResult } from '@/server/services';
-import { type ModifyWeekResult } from '@/server/services';
+import { type ModifyWorkoutResult, type ModifyWeekResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 
 /**
  * Service interfaces for modification tools (DI)
  */
 export interface WorkoutModificationService {
-  substituteExercise: (params: SubstituteExerciseParams) => Promise<SubstituteExerciseResult>;
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
 }
 
@@ -19,31 +17,11 @@ export interface MicrocycleModificationService {
  * Dependencies for modification tools
  */
 export interface ModificationToolDeps {
-  workoutService: WorkoutModificationService;
-  microcycleService: MicrocycleModificationService;
+  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
+  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }
 
 // Schema definitions
-const SubstituteExerciseSchema = z.object({
-  userId: z.string().describe('The user ID'),
-  workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
-  exercises: z.array(z.string()).describe('List of exercises to replace (e.g., ["Barbell Bench Press", "Squat"])'),
-  reason: z
-    .string()
-    .describe('Reason for the substitution (e.g., "No barbell available", "Shoulder injury")'),
-});
-
-type SubstituteExerciseInput = z.infer<typeof SubstituteExerciseSchema>;
-
-// Type exports for service interfaces
-export interface SubstituteExerciseParams {
-  userId: string;
-  workoutDate: Date;
-  exercises: string[];
-  reason: string;
-}
-
-
 const ModifyWorkoutSchema = z.object({
   userId: z.string().describe('The user ID'),
   workoutDate: z.string().describe('The date of the workout to modify (ISO format)'),
@@ -89,40 +67,10 @@ export interface ModifyWeekParams {
  * @returns Array of LangChain tools configured with the provided services
  */
 export const createModificationTools = (deps: ModificationToolDeps): StructuredToolInterface[] => {
-  // Tool 1: Substitute Exercise
-  const substituteExerciseTool = tool(
-    async ({
-      userId,
-      workoutDate,
-      exercises,
-      reason,
-    }: SubstituteExerciseInput): Promise<SubstituteExerciseResult> => {
-      return await deps.workoutService.substituteExercise({
-        userId,
-        workoutDate: new Date(workoutDate),
-        exercises,
-        reason,
-      });
-    },
-    {
-      name: 'substitute_exercise',
-      description: `Swap specific exercises or blocks WITHIN the user's current workout.
-
-Use ONLY for in-workout modifications where the user wants to replace specific exercises:
-- Equipment unavailable (e.g., "fly machine is taken, got a replacement?")
-- Exercise preference changes (e.g., "can we switch the abs at the end to be a circuit")
-- Specific movement substitutions (e.g., "replace squats with leg press")
-
-This modifies the existing workout in place WITHOUT changing the muscle group focus or workout type.
-DO NOT use for workout type changes - use modify_week instead.`,
-      schema: SubstituteExerciseSchema,
-    }
-  );
-
-  // Tool 2: Modify Workout
+  // Tool 1: Modify Workout
   const modifyWorkoutTool = tool(
     async ({ userId, workoutDate, reason, constraints, preferredEquipment, focusAreas }: ModifyWorkoutInput): Promise<ModifyWorkoutResult> => {
-      return await deps.workoutService.modifyWorkout({
+      return await deps.modifyWorkout({
         userId,
         workoutDate: new Date(workoutDate),
         reason,
@@ -147,13 +95,13 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
     }
   );
 
-  // Tool 3: Modify Week
+  // Tool 2: Modify Week
   const modifyWeekTool = tool(
     async ({ userId, targetDay, changes, reason }: ModifyWeekInput): Promise<ModifyWeekResult> => {
       // Convert changes array to a single changeRequest string
       const changeRequest = changes.join('. ');
 
-      return await deps.microcycleService.modifyWeek({
+      return await deps.modifyWeek({
         userId,
         targetDay,
         changeRequest,
@@ -189,28 +137,7 @@ This intelligently updates the weekly pattern to maintain training balance and m
   );
 
   return [
-    substituteExerciseTool,
     modifyWorkoutTool,
     modifyWeekTool,
   ];
 };
-
-/**
- * Legacy export for backward compatibility
- * @deprecated Use createModificationTools with dependency injection instead
- */
-export const modificationTools = createModificationTools({
-  workoutService: {
-    substituteExercise: async () => {
-      throw new Error('modificationTools is deprecated. Use createModificationTools with dependencies injection instead.');
-    },
-    modifyWorkout: async () => {
-      throw new Error('modificationTools is deprecated. Use createModificationTools with dependencies injection instead.');
-    },
-  },
-  microcycleService: {
-    modifyWeek: async () => {
-      throw new Error('modificationTools is deprecated. Use createModificationTools with dependencies injection instead.');
-    },
-  },
-});

@@ -5,9 +5,9 @@ import {
   createMesocycleGenerationRunnable,
   createFormattedMesocycleAgent,
 } from './steps';
-import type { MesocycleAgentDeps, MesocycleChainContext, MesocycleOverview } from './types';
+import type { MesocycleChainContext, MesocycleOverview } from './types';
 
-export type { FitnessProfileContextService, MesocycleAgentDeps, MesocycleOverview } from './types';
+export type { FitnessProfileContextService, MesocycleOverview } from './types';
 
 /**
  * Creates a mesocycle agent with injected dependencies
@@ -21,13 +21,11 @@ export type { FitnessProfileContextService, MesocycleAgentDeps, MesocycleOvervie
  * @param deps - Dependencies including context service
  * @returns Function that generates mesocycle breakdowns with microcycle strings
  */
-export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
+export const createMesocycleAgent = () => {
   return async (
     mesocycleOverviewString: string,
     user: UserWithProfile
   ): Promise<MesocycleOverview> => {
-    // Get fitness profile context from service
-    const fitnessProfile = await deps.contextService.getContext(user);
 
     try {
 
@@ -56,7 +54,6 @@ export const createMesocycleAgent = (deps: MesocycleAgentDeps) => {
       const result: MesocycleChainContext & {formatted: string} = await sequence.invoke({
         mesocycleOverview: mesocycleOverviewString,
         user,
-        fitnessProfile,
       });
 
       // Combine results into final overview

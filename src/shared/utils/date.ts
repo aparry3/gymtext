@@ -498,21 +498,30 @@ export function subtractDays(date: Date | string, days: number, timezone?: strin
 }
 
 /**
- * Get day of week (0 = Sunday, 6 = Saturday)
+ * Get day of week as DayOfWeek type
+ * @param date - Optional date to check (defaults to current date/time)
+ * @param timezone - Timezone to use (required)
+ * @returns DayOfWeek string (e.g., "MONDAY", "TUESDAY")
  */
-export function getDayOfWeek(date: Date | string, timezone?: string): number {
-  const parsed = parseDate(date);
-  if (!parsed) {
-    throw new Error('Invalid date provided to getDayOfWeek');
+export function getDayOfWeek(date: Date | string | undefined, timezone: string): DayOfWeek {
+  let dt: DateTime;
+
+  if (date === undefined) {
+    // Use current date/time in the specified timezone
+    dt = now(timezone);
+  } else {
+    const parsed = parseDate(date);
+    if (!parsed) {
+      throw new Error('Invalid date provided to getDayOfWeek');
+    }
+    dt = DateTime.fromJSDate(parsed);
+    if (timezone && isValidTimezone(timezone)) {
+      dt = dt.setZone(timezone);
+    }
   }
 
-  let dt = DateTime.fromJSDate(parsed);
-  if (timezone && isValidTimezone(timezone)) {
-    dt = dt.setZone(timezone);
-  }
-
-  // Luxon uses 1-7 (Mon-Sun), convert to JS 0-6 (Sun-Sat)
-  return dt.weekday === 7 ? 0 : dt.weekday;
+  // Luxon weekday is 1-7 (Monday-Sunday), DAY_NAMES is 0-indexed (Monday-Sunday)
+  return DAY_NAMES[dt.weekday - 1];
 }
 
 /**

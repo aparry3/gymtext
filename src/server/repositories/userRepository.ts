@@ -214,12 +214,44 @@ export class UserRepository extends BaseRepository {
 
   async findWithProfile(userId: string): Promise<UserWithProfile | undefined> {
     const user = await this.findById(userId);
-    
+
     if (!user) {
       return undefined;
     }
 
     return UserModel.fromDb(user)
+  }
+
+  /**
+   * Find user with both JSON profile AND latest Markdown profile
+   * Performs LEFT JOIN with profiles table to get most recent markdown profile
+   */
+  async findWithMarkdownProfile(userId: string): Promise<UserWithProfile | undefined> {
+    const result = await this.db
+      .selectFrom('users')
+      .leftJoin('profiles', (join) =>
+        join
+          .onRef('profiles.clientId', '=', 'users.id')
+          .on((eb) => {
+            // Only join the most recent profile for this user
+            const subquery = eb
+              .selectFrom('profiles as p2')
+              .select((eb) => eb.fn.max('p2.createdAt').as('maxCreated'))
+              .whereRef('p2.clientId', '=', 'users.id');
+
+            return eb('profiles.createdAt', '=', subquery);
+          })
+      )
+      .selectAll('users')
+      .select('profiles.profile as markdownProfile')
+      .where('users.id', '=', userId)
+      .executeTakeFirst();
+
+    if (!result) {
+      return undefined;
+    }
+
+    return UserModel.fromDbWithMarkdown(result);
   }
 
   async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {

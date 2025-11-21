@@ -7,12 +7,6 @@ export interface FitnessProfileContextService {
   getContext: (user: UserWithProfile) => Promise<string>;
 }
 
-/**
- * Dependencies for FitnessPlan Agent (DI)
- */
-export interface FitnessPlanAgentDeps {
-  contextService: FitnessProfileContextService;
-}
 
 // Re-export step types for convenience
 export type {
