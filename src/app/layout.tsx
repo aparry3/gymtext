@@ -16,24 +16,26 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
+  metadataBase: new URL('https://gtxt.ai'), // Add your domain here
   openGraph: {
+    title: 'GymText - 24/7 Personal Training via Text Message',
+    description: '', // Empty or minimal for cleaner preview
+    url: 'https://gtxt.ai',
+    siteName: 'GymText',
+    type: 'website',
     images: [
       {
-        url: '/OpenGraphGymtext.png',
+        url: '/OpenGraphGymtext.png', // Will be absolute with metadataBase
         width: 1200,
         height: 630,
         alt: 'GymText - Daily Personalized Workouts via Text',
-      },
-      {
-        url: '/IconBG.png',
-        width: 600,
-        height: 600,
-        alt: 'GymText Icon',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
+    title: 'GymText - 24/7 Personal Training via Text Message',
+    description: '',
     images: ['/OpenGraphGymtext.png'],
   },
 };
