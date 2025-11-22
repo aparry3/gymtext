@@ -138,7 +138,28 @@ export class DailyMessageService {
         }
       }
 
-      // Generate and send message
+      // Send logo image before workout message (image only, no text)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
+      if (baseUrl) {
+        const logoUrl = `${baseUrl}/OpenGraphGymtext.png`;
+        try {
+          await this.messageService.sendMessage(
+            user,
+            undefined,
+            [logoUrl]
+          );
+          console.log(`Successfully sent logo image to user ${user.id}`);
+          // Small delay between messages to ensure proper ordering
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`Error sending logo image to user ${user.id}:`, error);
+          // Don't fail the whole message if logo fails - continue with workout
+        }
+      } else {
+        console.warn('BASE_URL not configured - skipping logo image');
+      }
+
+      // Generate and send workout message
       const storedMessage = await this.messageService.sendWorkoutMessage(user, workout);
       console.log(`Successfully sent daily message to user ${user.id}`);
       return {

@@ -39,8 +39,9 @@ export interface IMessagingClient {
   /**
    * Send a message to a user
    * @param user - User object containing phone number and other properties
-   * @param message - Message content to send
+   * @param message - Optional message content to send (can be undefined for MMS-only messages)
+   * @param mediaUrls - Optional array of media URLs for MMS (images, videos, etc.)
    * @returns Promise resolving to message result with delivery status
    */
-  sendMessage(user: UserWithProfile, message: string): Promise<MessageResult>;
+  sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult>;
 }

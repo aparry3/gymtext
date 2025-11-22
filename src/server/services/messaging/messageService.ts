@@ -415,9 +415,12 @@ export class MessageService {
   /**
    * Send a message to a user
    * Stores the message and sends it via the configured messaging client
+   * @param user - User to send message to
+   * @param message - Optional message content (can be undefined for MMS-only messages)
+   * @param mediaUrls - Optional array of media URLs for MMS (images, videos, etc.)
    * @returns The stored Message object
    */
-  public async sendMessage(user: UserWithProfile, message: string): Promise<Message> {
+  public async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<Message> {
     // Get the provider from the messaging client
     const provider = messagingClient.provider;
 
@@ -426,10 +429,11 @@ export class MessageService {
         stored = await this.storeOutboundMessage(
             user.id,
             user.phoneNumber,
-            message,
+            message || '[MMS only]', // Store placeholder for MMS-only messages
             undefined, // from (uses default)
             provider, // messaging provider
-            undefined  // providerMessageId (not available yet)
+            undefined,  // providerMessageId (not available yet)
+            mediaUrls ? { mediaUrls } : undefined // store media URLs in metadata
         );
         if (!stored) {
             console.warn('Circuit breaker prevented storing outbound message');
@@ -444,7 +448,7 @@ export class MessageService {
     }
 
     // Send via messaging client and get the result
-    const result = await messagingClient.sendMessage(user, message);
+    const result = await messagingClient.sendMessage(user, message, mediaUrls);
 
     // Update the stored message with provider message ID from the send result
     if (result.messageId) {

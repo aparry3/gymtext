@@ -17,9 +17,16 @@ class TwilioClient {
     this.client = twilio(accountSid, authToken);
   }
 
-  async sendSMS(to: string, message: string): Promise<MessageInstance> {
+  async sendSMS(to: string, message?: string, mediaUrls?: string[]): Promise<MessageInstance> {
     try {
-      console.log('Sending SMS from:', this.fromNumber, 'to:', to);
+      const messageType = mediaUrls && mediaUrls.length > 0 ? 'MMS' : 'SMS';
+      console.log(`Sending ${messageType} from:`, this.fromNumber, 'to:', to);
+      if (mediaUrls && mediaUrls.length > 0) {
+        console.log('Media URLs:', mediaUrls);
+      }
+      if (!message && (!mediaUrls || mediaUrls.length === 0)) {
+        throw new Error('Must provide either message text or media URLs');
+      }
 
       // Build status callback URL if BASE_URL is configured
       const statusCallback = process.env.BASE_URL
@@ -27,16 +34,21 @@ class TwilioClient {
         : undefined;
 
       const response = await this.client.messages.create({
-        body: message,
+        ...(message && { body: message }),
         from: this.fromNumber,
         to: to,
         statusCallback,
+        ...(mediaUrls && mediaUrls.length > 0 && { mediaUrl: mediaUrls }),
       });
       return response;
     } catch (error) {
-      console.error('Error sending SMS:', error);
+      console.error('Error sending SMS/MMS:', error);
       throw error;
     }
+  }
+
+  async sendMMS(to: string, message: string | undefined, mediaUrls: string[]): Promise<MessageInstance> {
+    return this.sendSMS(to, message, mediaUrls);
   }
 }
 

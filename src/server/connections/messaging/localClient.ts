@@ -29,7 +29,7 @@ export class LocalMessagingClient implements IMessagingClient {
     this.eventEmitter.setMaxListeners(100);
   }
 
-  async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
+  async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult> {
     const messageId = `local-${Date.now()}-${++this.messageCounter}`;
     const timestamp = new Date();
     const to = user.phoneNumber;
@@ -38,7 +38,7 @@ export class LocalMessagingClient implements IMessagingClient {
       messageId,
       to,
       from: 'local-system',
-      content: message,
+      content: message || '[MMS only - no text]',
       timestamp,
     };
 
@@ -49,7 +49,8 @@ export class LocalMessagingClient implements IMessagingClient {
       messageId,
       to,
       userId: user.id,
-      preview: message.substring(0, 50),
+      preview: message ? message.substring(0, 50) : '[MMS only]',
+      mediaUrls,
     });
 
     return {
@@ -62,7 +63,8 @@ export class LocalMessagingClient implements IMessagingClient {
       metadata: {
         userId: user.id,
         phoneNumber: to,
-        contentLength: message.length,
+        contentLength: message?.length || 0,
+        mediaUrls,
       },
     };
   }

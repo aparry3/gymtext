@@ -12,9 +12,9 @@ import type { UserWithProfile } from '@/server/models/userModel';
 export class TwilioMessagingClient implements IMessagingClient {
   public readonly provider: MessagingProvider = 'twilio';
 
-  async sendMessage(user: UserWithProfile, message: string): Promise<MessageResult> {
+  async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult> {
     try {
-      const twilioResponse = await twilioSdk.sendSMS(user.phoneNumber, message);
+      const twilioResponse = await twilioSdk.sendSMS(user.phoneNumber, message, mediaUrls);
 
       return {
         messageId: twilioResponse.sid,
@@ -28,6 +28,7 @@ export class TwilioMessagingClient implements IMessagingClient {
           twilioStatus: twilioResponse.status,
           errorCode: twilioResponse.errorCode,
           errorMessage: twilioResponse.errorMessage,
+          mediaUrls,
         },
       };
     } catch (error) {
