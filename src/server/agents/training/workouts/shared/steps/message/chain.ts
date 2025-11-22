@@ -14,11 +14,7 @@ import type { WorkoutMessageConfig, WorkoutMessageInput, WorkoutMessageOutput } 
  * @returns Agent (runnable) that converts long-form workouts to SMS strings
  */
 export const createWorkoutMessageAgent = (config?: WorkoutMessageConfig) => {
-  const agentConfig = config?.agentConfig || {
-    model: 'gemini-2.5-flash-lite',
-    maxTokens: 4096
-  };
-  const model = initializeModel(undefined, agentConfig);
+  const model = initializeModel(undefined);
   return createRunnableAgent<WorkoutMessageInput, WorkoutMessageOutput>(async (input) => {
     const { description } = input;
 

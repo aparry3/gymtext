@@ -15,13 +15,8 @@ import { WorkoutChainContext } from '../../types';
 export const createFormattedWorkoutAgent = (
   config: FormattedWorkoutConfig
 ) => {
-  const agentConfig = config.agentConfig || {
-    model: 'gemini-2.5-flash-lite',
-    maxTokens: 16384
-  };
-
   // Initialize model without schema (returns string)
-  const model = initializeModel(undefined, agentConfig);
+  const model = initializeModel(undefined);
 
   return createRunnableAgent<WorkoutChainContext, string>(async (input) => {
     const { description } = input;
