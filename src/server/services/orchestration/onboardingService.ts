@@ -6,6 +6,7 @@ import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
 import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
+import { messageQueueService } from '../messaging/messageQueueService';
 
 /**
  * OnboardingService
@@ -128,7 +129,7 @@ export class OnboardingService {
    * Send onboarding messages (combined plan+week + workout)
    * Called after both onboarding and payment are complete
    *
-   * Sends two messages:
+   * Sends two messages in order using queue system:
    * 1. Combined plan summary + first week breakdown
    * 2. First workout message
    *
@@ -139,11 +140,21 @@ export class OnboardingService {
     console.log(`[Onboarding] Sending onboarding messages to ${user.id}`);
 
     try {
-      // Send combined plan+microcycle message and workout message
-      await this.sendCombinedPlanMicrocycleMessage(user);
-      await this.sendWorkoutMessage(user);
+      // Prepare both messages
+      const planMicrocycleMessage = await this.prepareCombinedPlanMicrocycleMessage(user);
+      const workoutMessage = await this.prepareWorkoutMessage(user);
 
-      console.log(`[Onboarding] Successfully sent all onboarding messages to ${user.id}`);
+      // Enqueue both messages for ordered delivery
+      await messageQueueService.enqueueMessages(
+        user.id,
+        [
+          { content: planMicrocycleMessage },
+          { content: workoutMessage }
+        ],
+        'onboarding'
+      );
+
+      console.log(`[Onboarding] Successfully queued onboarding messages for ${user.id}`);
     } catch (error) {
       console.error(`[Onboarding] Failed to send onboarding messages to ${user.id}:`, error);
       throw error;
@@ -151,10 +162,10 @@ export class OnboardingService {
   }
 
   /**
-   * Send combined plan + first week message
+   * Prepare combined plan + first week message
    * Combines pre-generated plan and microcycle messages into a single onboarding message
    */
-  private async sendCombinedPlanMicrocycleMessage(user: UserWithProfile): Promise<void> {
+  private async prepareCombinedPlanMicrocycleMessage(user: UserWithProfile): Promise<string> {
     const plan = await this.fitnessPlanService.getCurrentPlan(user.id);
     if (!plan) {
       throw new Error(`No fitness plan found for user ${user.id}`);
@@ -186,15 +197,14 @@ export class OnboardingService {
       currentWeekday
     });
 
-    // Send the combined message
-    await this.messageService.sendMessage(user, message);
-    console.log(`[Onboarding] Sent combined plan+microcycle message to ${user.id}`);
+    console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
+    return message;
   }
 
   /**
-   * Send pre-generated workout message
+   * Prepare workout message
    */
-  private async sendWorkoutMessage(user: UserWithProfile): Promise<void> {
+  private async prepareWorkoutMessage(user: UserWithProfile): Promise<string> {
     const targetDate = startOfDay(now(user.timezone).toJSDate(), user.timezone);
     const workout = await this.dailyMessageService.getTodaysWorkout(user.id, targetDate);
 
@@ -202,12 +212,12 @@ export class OnboardingService {
       throw new Error(`No workout found for user ${user.id} on ${targetDate.toISOString()}`);
     }
 
-    if (workout.message) {
-      await this.messageService.sendMessage(user, workout.message);
-      console.log(`[Onboarding] Sent workout message to ${user.id}`);
-    } else {
-      console.warn(`[Onboarding] No workout message found for ${workout.id}, skipping`);
+    if (!workout.message) {
+      throw new Error(`No workout message found for ${workout.id}`);
     }
+
+    console.log(`[Onboarding] Prepared workout message for ${user.id}`);
+    return workout.message;
   }
 }
 

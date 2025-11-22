@@ -23,7 +23,15 @@
 
 import { serve } from 'inngest/next';
 import { inngest } from '@/server/connections/inngest/client';
-import { processMessageFunction, sendDailyWorkoutFunction, sendWeeklyMessageFunction, onboardUserFunction } from '@/server/inngest/functions';
+import {
+  processMessageFunction,
+  sendDailyWorkoutFunction,
+  sendWeeklyMessageFunction,
+  onboardUserFunction,
+  processNextQueuedMessageFunction,
+  sendQueuedMessageFunction,
+  checkStalledQueuesFunction
+} from '@/server/inngest/functions';
 import { retryMessageFunction } from '@/server/inngest/functions/retryMessage';
 
 export const { GET, POST, PUT } = serve({
@@ -34,9 +42,8 @@ export const { GET, POST, PUT } = serve({
     sendDailyWorkoutFunction,
     sendWeeklyMessageFunction,
     onboardUserFunction,
-    // Add more functions here as needed:
-    // processComplexMessageFunction,
-    // processBatchMessagesFunction,
-    // etc.
+    processNextQueuedMessageFunction,
+    sendQueuedMessageFunction,
+    checkStalledQueuesFunction,
   ],
 });

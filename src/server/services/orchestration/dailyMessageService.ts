@@ -6,6 +6,7 @@ import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { inngest } from '@/server/connections/inngest/client';
+import { messageQueueService } from '../messaging/messageQueueService';
 
 interface MessageResult {
   success: boolean;
@@ -138,34 +139,46 @@ export class DailyMessageService {
         }
       }
 
-      // Send logo image before workout message (image only, no text)
+      // Use message queue to ensure ordered delivery (logo first, then workout)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
+      const queuedMessages = [];
+
+      // Add logo image first (if configured)
       if (baseUrl) {
         const logoUrl = `${baseUrl}/OpenGraphGymtext.png`;
-        try {
-          await this.messageService.sendMessage(
-            user,
-            undefined,
-            [logoUrl]
-          );
-          console.log(`Successfully sent logo image to user ${user.id}`);
-          // Small delay between messages to ensure proper ordering
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          console.error(`Error sending logo image to user ${user.id}:`, error);
-          // Don't fail the whole message if logo fails - continue with workout
-        }
+        queuedMessages.push({
+          mediaUrls: [logoUrl]
+        });
       } else {
         console.warn('BASE_URL not configured - skipping logo image');
       }
 
-      // Generate and send workout message
-      const storedMessage = await this.messageService.sendWorkoutMessage(user, workout);
-      console.log(`Successfully sent daily message to user ${user.id}`);
+      // Add workout message
+      // Extract message content (either pre-generated or need to generate)
+      let workoutMessage: string;
+      if ('message' in workout && workout.message) {
+        workoutMessage = workout.message;
+      } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
+        // Fallback: Generate message if needed (shouldn't happen in production)
+        const { createWorkoutMessageAgent } = await import('@/server/agents/training/workouts/shared/steps/message/chain');
+        const messageAgent = createWorkoutMessageAgent({ operationName: 'fallback message' });
+        workoutMessage = await messageAgent.invoke({ description: workout.description });
+      } else {
+        throw new Error('Workout missing required fields for message generation');
+      }
+
+      queuedMessages.push({
+        content: workoutMessage
+      });
+
+      // Enqueue all messages for ordered delivery
+      await messageQueueService.enqueueMessages(user.id, queuedMessages, 'daily');
+      console.log(`Successfully queued daily messages for user ${user.id}`);
+
       return {
         success: true,
         userId: user.id,
-        messageId: storedMessage.id
+        messageId: undefined // Messages will be sent asynchronously by queue
       };
     } catch (error) {
       console.error(`Error sending daily message to user ${user.id}:`, error);

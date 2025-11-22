@@ -89,10 +89,20 @@ export async function POST(req: NextRequest) {
       status: messageStatus,
     });
 
-    // If message failed or undelivered, trigger retry
-    if (messageStatus === 'failed' || messageStatus === 'undelivered') {
-      console.log('[Twilio Status Callback] Triggering retry for message:', message.id);
+    // Handle message queue processing
+    // Import here to avoid circular dependency at module level
+    const { messageQueueService } = await import('@/server/services/messaging/messageQueueService');
 
+    if (messageStatus === 'delivered') {
+      // Mark as delivered in queue and trigger next message
+      console.log('[Twilio Status Callback] Message delivered, processing queue');
+      await messageQueueService.markMessageDelivered(message.id);
+    } else if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+      // Handle failure in queue (retry or skip)
+      console.log('[Twilio Status Callback] Message failed, handling in queue');
+      await messageQueueService.markMessageFailed(message.id, deliveryError);
+
+      // Also trigger the existing retry mechanism for non-queued messages
       await inngest.send({
         name: 'message/delivery-failed',
         data: {

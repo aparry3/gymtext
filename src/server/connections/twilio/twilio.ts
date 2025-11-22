@@ -50,6 +50,14 @@ class TwilioClient {
   async sendMMS(to: string, message: string | undefined, mediaUrls: string[]): Promise<MessageInstance> {
     return this.sendSMS(to, message, mediaUrls);
   }
+
+  /**
+   * Get message status from Twilio
+   * Used for checking delivery status of sent messages
+   */
+  async getMessageStatus(messageSid: string): Promise<MessageInstance> {
+    return await this.client.messages(messageSid).fetch();
+  }
 }
 
 export const twilioClient = new TwilioClient(); 
