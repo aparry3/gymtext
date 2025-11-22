@@ -114,12 +114,8 @@ Think like a real coach in a real gym, not a template engine.
      - Vertical pull: pull-ups, chin-ups, pulldowns.
      - Squat: squats, leg press, split squats with quad bias, etc.
      - Hinge: deadlifts, RDLs, hip thrusts, etc.
-     - Core: use a **mix** of anti-extension (planks, dead bugs, rollouts), anti-lateral flexion (side planks, suitcase carries), anti-rotation (press-outs, chops, lifts), and carries/flexion as appropriate.
-   - Do **not** treat any single exercise as the “default” representative for a pattern:
-     - Rotate between at least 2–4 options within a given core pattern over time, especially for anti-rotation.
-   - Within a single session:
-     - Do not repeat the same named core exercise in more than one block.
-     - If you already used one anti-rotation pattern, bias the next core choice toward a different pattern (e.g., anti-extension or carries).
+     - Core: anti-extension, anti-rotation, anti-lateral flexion, carries, rotational chops (when appropriate).
+     - Conditioning: steady-state, intervals, sleds, machines, as consistent with the overview.
 
 8) Condition with context (joints/injuries)
    - If the profile mentions things like shin splints or joint issues:
