@@ -9,4 +9,3 @@ export { sendDailyWorkoutFunction } from './sendDailyWorkout';
 export { sendWeeklyMessageFunction } from './sendWeeklyMessage';
 export { onboardUserFunction } from './onboardUser';
 export { processNextQueuedMessageFunction, sendQueuedMessageFunction } from './processQueuedMessage';
-export { checkStalledQueuesFunction } from './checkStalledQueues';

@@ -465,6 +465,35 @@ export class MessageService {
       }
     }
 
+    // Simulate instant delivery for local messages (for queue processing)
+    if (provider === 'local') {
+      try {
+        console.log('[MessageService] Simulating local message delivery for queue');
+
+        // Simulate delivery after a short delay (to mimic real-world timing)
+        setTimeout(async () => {
+          try {
+            // Update message delivery status in database (simulates Twilio webhook)
+            const messageRepo = new MessageRepository(postgresDb);
+            await messageRepo.updateDeliveryStatus(stored.id, 'delivered');
+
+            // Import here to avoid circular dependency
+            const { messageQueueService } = await import('./messageQueueService');
+
+            // Trigger queue processing (simulates webhook calling queue service)
+            await messageQueueService.markMessageDelivered(stored.id);
+
+            console.log('[MessageService] Local message delivery simulated successfully');
+          } catch (error) {
+            console.error('[MessageService] Error in local delivery simulation:', error);
+          }
+        }, 1000); // 1 second delay
+      } catch (error) {
+        console.error('[MessageService] Failed to setup local delivery simulation:', error);
+        // Don't throw - message was sent successfully
+      }
+    }
+
     return stored;
   }
 
