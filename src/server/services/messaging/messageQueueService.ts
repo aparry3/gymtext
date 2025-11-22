@@ -72,6 +72,7 @@ export class MessageQueueService {
       queueName,
       sequenceNumber: index + 1,
       messageContent: msg.content || null,
+      // Stringify array for JSONB storage (Kysely will handle the JSONB insert)
       mediaUrls: msg.mediaUrls ? JSON.stringify(msg.mediaUrls) : null,
       status: 'pending' as const,
     }));
@@ -145,13 +146,18 @@ export class MessageQueueService {
       throw new Error(`User ${queueEntry.userId} not found`);
     }
 
-    // Parse media URLs if present
+    // Get media URLs if present
+    // Handle both stringified JSON and already-parsed arrays
     let mediaUrls: string[] | undefined;
     if (queueEntry.mediaUrls) {
-      try {
-        mediaUrls = JSON.parse(queueEntry.mediaUrls as string);
-      } catch (error) {
-        console.error('[MessageQueueService] Failed to parse media URLs:', error);
+      if (typeof queueEntry.mediaUrls === 'string') {
+        try {
+          mediaUrls = JSON.parse(queueEntry.mediaUrls);
+        } catch (error) {
+          console.error('[MessageQueueService] Failed to parse media URLs:', error);
+        }
+      } else {
+        mediaUrls = queueEntry.mediaUrls as string[];
       }
     }
 

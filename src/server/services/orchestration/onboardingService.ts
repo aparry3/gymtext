@@ -6,7 +6,7 @@ import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
 import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
-import { messageQueueService } from '../messaging/messageQueueService';
+import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 
 /**
  * OnboardingService
@@ -145,12 +145,14 @@ export class OnboardingService {
       const workoutMessage = await this.prepareWorkoutMessage(user);
 
       // Enqueue both messages for ordered delivery
+      const messages: QueuedMessage[] = [
+        { content: planMicrocycleMessage },
+        { content: workoutMessage }
+      ];
+
       await messageQueueService.enqueueMessages(
         user.id,
-        [
-          { content: planMicrocycleMessage },
-          { content: workoutMessage }
-        ],
+        messages,
         'onboarding'
       );
 

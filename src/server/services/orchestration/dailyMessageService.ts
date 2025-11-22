@@ -6,7 +6,7 @@ import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { inngest } from '@/server/connections/inngest/client';
-import { messageQueueService } from '../messaging/messageQueueService';
+import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 
 interface MessageResult {
   success: boolean;
@@ -141,7 +141,7 @@ export class DailyMessageService {
 
       // Use message queue to ensure ordered delivery (logo first, then workout)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
-      const queuedMessages = [];
+      const queuedMessages: QueuedMessage[] = [];
 
       // Add logo image first (if configured)
       if (baseUrl) {
