@@ -69,18 +69,12 @@ Generate a **practical, coach-quality workout** for this specific day that:
    - Add rows, face pulls, pull-aparts, rear delts, or any horizontal/vertical pulling on a pure push day.
    - Add presses, push patterns, or quad/hinge patterns on a pure pull day unless listed.
    - Add hinge patterns on non-hinge days, or squat patterns on non-squat days.
-   - Add core work unless “core” (or similar) is listed or clearly implied by the day overview.
+   - Add core work unless “core” (or similar) is listed.
    - Add conditioning unless the Day Overview specifies conditioning.
 
 3) **Accessory exercises must stay within the same movement pattern space.**
-   - Push day: chest, shoulders (anterior/lateral), triceps, pressing stability, serratus, overhead mobility, core (if listed).
-   - Pull day: rows, pull-downs/pull-ups, rear delts, biceps, scapular control, core (if listed).
-   - Leg day: squat/knee-dominant, hinge/hip-dominant, unilateral/lunge, calves, core (if listed).
-   - Full body or upper/lower: respect whatever patterns are explicitly listed.
 
 4) **Respect Rep & RIR Bands.**
-   - Use RIR exactly as described (primary compounds vs accessories vs technical sets).
-   - Choose set/rep schemes that make those RIR targets realistic for the session type and experience level.
 
 5) **Deload Handling.**
    - If isDeload = true and the Day Overview does NOT explicitly define deload volume:
@@ -88,24 +82,43 @@ Generate a **practical, coach-quality workout** for this specific day that:
      - Bias RIR to the easier end (e.g., RIR 3–4 instead of 0–2).
    - Keep the **same movement patterns and overall structure**; just lower stress.
 
+6) **Exercise Variety Across the Week (First-Principles Coaching Rule).**
+   Avoid repeating the exact same accessory or core exercise more than once per week unless explicitly required.  
+   Select different variations within the same movement pattern to keep training stimulus balanced and avoid redundancy.
+
+7) **Core Pattern Rotation (First-Principles Coaching Rule).**
+   When “core” is listed as a movement pattern, rotate among core pattern families across the training week:
+   - anti-extension  
+   - anti-rotation  
+   - anti-lateral flexion  
+   - carries / stability  
+   - rotational control (when appropriate)  
+   Choose the pattern that best complements the day’s primary movement patterns and has not been overused earlier in the week.
+
+8) **Movement Pattern Mapping is NON-EXHAUSTIVE.**
+   The exercise lists provided are examples, not defaults.  
+   You must use a variety of exercises within the allowed movement patterns rather than repeatedly selecting the same example movements.
+
 
 =====================================
 📚 MOVEMENT PATTERN MAPPING (GUIDANCE)
 =====================================
 
-Use these as families of allowed exercises for each pattern:
+Use these as **examples** of families of allowed exercises:
 
 - Horizontal Push: bench press, dumbbell press, push-ups, machine chest press, landmine press with horizontal bias.
 - Vertical Push: overhead press (barbell/DB/machine), landmine press with vertical bias.
 - Horizontal Pull: all row variations (barbell, DB, cable, machine), face pulls, band rows.
 - Vertical Pull: pull-ups, chin-ups, lat pulldowns, assisted variations.
-- Squat (knee-dominant): back/front squat, goblet squat, leg press, hack squat, split squat with strong quad bias.
+- Squat (knee-dominant): back/front squat, goblet squat, leg press, hack squat, split squat with quad bias.
 - Hinge (hip-dominant): deadlift, RDL, hip thrust, good mornings, cable pull-through.
 - Unilateral / Lunge: split squats, lunges, step-ups, Bulgarian split squats.
-- Core: anti-extension (planks, rollouts, dead bugs), anti-rotation (Pallof press), anti-lateral flexion (suitcase carries), rotation (if appropriate).
-- Conditioning (if listed): steady-state (bike, treadmill, rower, etc.) or intervals as described in the Day Overview.
-
-Do NOT cross outside these pattern families for the day’s patterns.
+- Core: 
+  - Anti-extension: planks, dead bugs, rollouts  
+  - Anti-lateral flexion: suitcase carries, side planks  
+  - Anti-rotation: cable anti-rotation holds, standing anti-rotation presses  
+  - Rotation (if appropriate): controlled cable chops
+- Conditioning (if listed): steady-state or intervals consistent with Day Overview.
 
 
 =====================================
@@ -115,79 +128,13 @@ Do NOT cross outside these pattern families for the day’s patterns.
 For each day, build the session with:
 
 1) **Session Overview**
-   - 2–4 sentences summarizing:
-     - the main emphasis (e.g., heavy push, heavy pull, leg strength, etc.)
-     - the primary patterns
-     - how intensity and RIR will feel
-
 2) **Warm-Up & Prep**
-   - Use the “Warm-Up Focus” from the Day Overview.
-   - Include 1–3 short elements:
-     - tissue prep / general movement
-     - mobility for key joints (e.g., hips, shoulders, T-spine)
-     - activation / pattern rehearsal for the primary patterns
-   - Keep this realistic for ~5–10 minutes (no giant circuits).
-
-3) **Main Strength Blocks (Compounds)**
-   - 1–2 main compound movements that directly hit the primary movement patterns.
-   - Sets/reps/RIR aligned with “Primary compounds” bands (e.g., RIR 2–3).
-   - Clear tempo and rest guidance when it matters.
-
+3) **Main Strength Blocks**
 4) **Accessory / Hypertrophy Blocks**
-   - 2–4 accessory movements that stay strictly within the day’s patterns.
-   - Sets/reps/RIR aligned with “accessory hypertrophy sets” or similar bands.
-   - Prioritize movements that support the session objective (e.g., technique, strength base, or hypertrophy).
-
-5) **Movement Quality / Technical or Stability Work (if relevant)**
-   - Optional block for technical sets, stability, or pattern cleanup if the Day Overview emphasizes technique or mobility.
-   - Must still belong to the same movement patterns.
-
-6) **Core or Conditioning Block**
-   - Only include if “core” and/or “conditioning” are specified in the Day Overview.
-   - Choose exercise types consistent with the intent (e.g., anti-extension for heavy hinge day).
-
+5) **Movement Quality / Stability Blocks (if relevant)**
+6) **Core or Conditioning Block (only if specified)**
 7) **Optional Cool-Down**
-   - Short, focused: breathing, easy mobility, or stretching for the primary joints/muscles.
-
 8) **Session Notes**
-   - 1–3 bullet points with practical execution reminders (e.g., “If shoulders feel beat up, swap to DB press,” “Stay honest with RIR—this is a baseline week, not a max test.”).
-
-
-=====================================
-🧪 SET / REP / RIR GUIDELINES
-=====================================
-
-Use typical but flexible ranges that match the bands:
-
-- Strength compounds (RIR 2–3, “heavy emphasis”):
-  - 3–5 sets of 3–6 reps.
-
-- Hypertrophy accessories (RIR 1–3):
-  - 2–4 sets of 8–15 reps.
-
-- Technical / pattern work (RIR ≥ 3):
-  - 2–3 sets of 3–6 or 6–8 smooth, controlled reps.
-
-Adjust within those ranges based on:
-- Daily Volume Slice (e.g., “Even with push emphasis” → more volume for push patterns vs others listed).
-- Experience level from the Client Profile.
-- Deload flag, when true.
-
-
-=====================================
-📤 OUTPUT FORMAT
-=====================================
-
-Return the workout as clean, structured text with these sections in order:
-
-1. Session Overview  
-2. Warm-Up & Prep  
-3. Main Strength Blocks  
-4. Accessory / Hypertrophy Blocks  
-5. Movement Quality / Stability Blocks (if relevant)  
-6. Core or Conditioning Block (only if specified in Day Overview)  
-7. Optional Cool-Down  
-8. Session Notes  
 
 Each block must include:
 - Block Name  
