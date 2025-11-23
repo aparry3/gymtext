@@ -33,7 +33,7 @@ export const createModifyWorkoutAgent = (deps?: ModifyWorkoutAgentDeps) => {
 
     // Step 1: Create generation runnable (modify-specific)
     const generationRunnable = createModifyWorkoutGenerationRunnable({
-      agentConfig: deps?.config
+      agentConfig: { model: 'gpt-5-mini' }
     });
 
     // Step 2a: Create formatted workout agent (shared step, with modifications tracking)
