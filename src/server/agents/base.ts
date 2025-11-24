@@ -1,5 +1,6 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
+import { ChatXAI } from "@langchain/xai";
 import { RunnableLambda } from "@langchain/core/runnables";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
@@ -7,7 +8,7 @@ import type { StructuredToolInterface } from "@langchain/core/tools";
  * Configuration for agents
  */
 export interface AgentConfig {
-    model?: 'gpt-5-nano' | 'gpt-5-mini' |'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
+    model?: 'gpt-5-nano' | 'gpt-5-mini' |'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1' | 'grok-4-1-fast-reasoning';
     temperature?: number;
     maxTokens?: number;
     verbose?: boolean;
@@ -60,6 +61,52 @@ export function createRunnableAgent<TInput, TOutput>(
 }
 
 /**
+ * Helper to configure LLM with tools, structured output, or plain text extraction
+ */
+const configureLLM = (llm: any, outputSchema?: any, options?: ModelOptions): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  if (options?.tools) {
+    return llm.bindTools(options.tools);
+  }
+  if (outputSchema) {
+    return llm.withStructuredOutput(outputSchema);
+  }
+  // When no schema provided, wrap LLM to auto-extract .content from AIMessage
+  return {
+    invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const response = await llm.invoke(input);
+      return typeof response.content === 'string'
+        ? response.content
+        : String(response.content);
+    }
+  };
+};
+
+/**
+ * Map of model prefixes to their LLM factory functions
+ */
+const MODEL_PROVIDERS = {
+  gemini: (model: string, temperature: number, maxTokens: number) =>
+    new ChatGoogleGenerativeAI({
+      model,
+      temperature,
+      maxOutputTokens: maxTokens,
+    }),
+  grok: (model: string, temperature: number, maxTokens: number) =>
+    new ChatXAI({
+      model,
+      temperature,
+      maxTokens,
+    }),
+  default: (model: string, temperature: number, maxTokens: number) =>
+    new ChatOpenAI({
+      model,
+      temperature: model !== 'gpt-5-nano' ? temperature : 1,
+      maxCompletionTokens: maxTokens,
+      reasoningEffort: 'low',
+    }),
+};
+
+/**
  * Initialize the model with structured output using the provided schema
  *
  * @param outputSchema - Optional Zod schema for structured output. If provided, returns T. If undefined, returns string.
@@ -68,52 +115,16 @@ export function createRunnableAgent<TInput, TOutput>(
  * @returns Model that returns structured output (T), plain text (string), or model with tools bound
  */
 export const initializeModel = (outputSchema?: any, config?: AgentConfig, options?: ModelOptions): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
+  const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
 
-    if (model.startsWith('gemini')) {
-      const llm = new ChatGoogleGenerativeAI({
-        model: model,
-        temperature,
-        maxOutputTokens: maxTokens,
-      })
-      if (options?.tools) {
-        return llm.bindTools(options.tools);
-      }
-      if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema);
-      }
-      // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
-        invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-          const response = await llm.invoke(input);
-          return typeof response.content === 'string'
-            ? response.content
-            : String(response.content);
-        }
-      };
-    } else {
-      const llm = new ChatOpenAI({
-        model: model,
-        temperature: model !== 'gpt-5-nano' ? temperature : 1,
-        maxCompletionTokens: maxTokens,
-        reasoningEffort: 'low',
-      })
-      if (options?.tools) {
-        return llm.bindTools(options.tools);
-      }
-      if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema);
-      }
-      // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
-        invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-          const response = await llm.invoke(input);
-          return typeof response.content === 'string'
-            ? response.content
-            : String(response.content);
-        }
-      };
-    }
-  };
+  // Find the appropriate provider based on model prefix
+  const providerKey = Object.keys(MODEL_PROVIDERS).find(key =>
+    key !== 'default' && model.startsWith(key)
+  ) ?? 'default';
+
+  const llm = MODEL_PROVIDERS[providerKey as keyof typeof MODEL_PROVIDERS](model, temperature, maxTokens);
+
+  return configureLLM(llm, outputSchema, options);
+};
   
   

@@ -59,6 +59,7 @@
     "@langchain/core": "^0.3.78",
     "@langchain/google-genai": "^0.2.4",
     "@langchain/openai": "^0.6.13",
+    "@langchain/xai": "^1.0.1",
     "@pinecone-database/pinecone": "^5.1.1",
     "@radix-ui/react-tabs": "^1.1.13",
     "@stripe/react-stripe-js": "^2.4.0",
