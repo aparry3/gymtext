@@ -8,12 +8,12 @@ import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterPa
 import { updatesAgentRunnable } from './updates/chain';
 // import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
-import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
+import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService, type FitnessPlanModificationService } from './modifications/tools';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { convertJsonProfileToMarkdown } from '@/server/utils/profile/jsonToMarkdown';
 
 // Re-export types for backward compatibility
-export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService };
+export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService, FitnessPlanModificationService };
 
 /**
  * Chat Agent Factory
@@ -51,6 +51,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     {
       modifyWorkout: deps.modifyWorkout,
       modifyWeek: deps.modifyWeek,
+      modifyPlan: deps.modifyPlan,
     }
   );
 

@@ -5,6 +5,7 @@ import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutModificationService } from '../orchestration/workoutModificationService';
+import { FitnessPlanService } from '../training/fitnessPlanService';
 import { userService } from '@/server/services/user/userService';
 import { now } from '@/shared/utils/date';
 
@@ -30,12 +31,14 @@ export class ChatService {
   private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
   private workoutModificationService: WorkoutModificationService;
+  private fitnessPlanService: FitnessPlanService;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
     this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.workoutModificationService = WorkoutModificationService.getInstance();
+    this.fitnessPlanService = FitnessPlanService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -99,6 +102,7 @@ export class ChatService {
         saveProfile: this.fitnessProfileService.saveMarkdownProfile.bind(this.fitnessProfileService),
         modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
         modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
+        modifyPlan: this.fitnessPlanService.modifyFitnessPlan.bind(this.fitnessPlanService),
       });
 
       // Invoke the agent with user that includes markdown profile

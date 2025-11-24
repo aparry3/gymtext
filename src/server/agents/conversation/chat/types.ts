@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
-import type { ModifyWeekParams, ModifyWorkoutParams } from './modifications/tools';
+import type { ModifyWeekParams, ModifyWorkoutParams, ModifyPlanParams, ModifyPlanResult } from './modifications/tools';
 import { WorkoutInstance } from '@/server/models';
 import type { ModifyWeekResult, ModifyWorkoutResult } from '@/server/services';
 import type { ProfileUpdateOutput } from '@/server/agents/profileUpdate';
@@ -74,4 +74,5 @@ export interface ChatAgentDeps extends AgentDeps {
   saveProfile: (userId: string, markdownProfile: string) => Promise<void>;
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
+  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
 }

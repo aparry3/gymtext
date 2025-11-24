@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { type ModifyWorkoutResult, type ModifyWeekResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
 
 /**
  * Service interfaces for modification tools (DI)
@@ -13,12 +14,17 @@ export interface MicrocycleModificationService {
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }
 
+export interface FitnessPlanModificationService {
+  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
+}
+
 /**
  * Dependencies for modification tools
  */
 export interface ModificationToolDeps {
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
+  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
 }
 
 /**
@@ -46,6 +52,22 @@ export interface ModifyWeekParams {
   userId: string;
   targetDay: string;
   changeRequest: string;
+}
+
+const ModifyPlanSchema = z.object({});
+
+export interface ModifyPlanParams {
+  userId: string;
+  changeRequest: string;
+}
+
+export interface ModifyPlanResult {
+  success: boolean;
+  plan?: FitnessPlan;
+  wasModified: boolean;
+  modifications: string;
+  messages: string[];
+  error?: string;
 }
 /**
  * Factory function to create modification tools with injected dependencies (DI pattern)
@@ -122,8 +144,41 @@ This intelligently updates the weekly pattern to maintain training balance and m
     }
   );
 
+  // Tool 3: Modify Plan
+  const modifyPlanTool = tool(
+    async (): Promise<ModifyPlanResult> => {
+      const result = await deps.modifyPlan({
+        userId: context.userId,
+        changeRequest: context.message,
+      });
+
+      return {
+        ...result,
+        messages: result.message ? [result.message] : [],
+      };
+    },
+    {
+      name: 'modify_plan',
+      description: `Modify the overall fitness plan structure (frequency, split, duration, emphasis). Use for plan-level changes.
+
+NOTE: All parameters (userId, request) are automatically filled from context - no input needed.
+
+Use this for structural changes to the overall program:
+- Frequency changes (e.g., "Can I train 6 days instead of 4?", "I can only do 3 days per week")
+- Split changes (e.g., "I prefer upper/lower instead of PPL", "Can we do full body?")
+- Ordering preferences (e.g., "I want to do legs first in the week")
+- Duration changes (e.g., "Compress to 8 weeks", "Extend to 16 weeks")
+- Goal emphasis adjustments (e.g., "More strength focus", "Add more cardio")
+
+This modifies the high-level fitness plan and may require regenerating mesocycles.
+This is LESS COMMON than modify_week - only use for fundamental plan structure changes.`,
+      schema: ModifyPlanSchema,
+    }
+  );
+
   return [
     modifyWorkoutTool,
     modifyWeekTool,
+    modifyPlanTool,
   ];
 };
