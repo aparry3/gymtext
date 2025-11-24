@@ -1,5 +1,6 @@
 import { UserWithProfile } from "@/server/models/userModel";
 
+
 export const MESOCYCLE_SYSTEM_PROMPT = `
 You are a **certified strength & conditioning coach** specializing in mesocycle → microcycle expansion.
 
