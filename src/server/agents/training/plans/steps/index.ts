@@ -4,15 +4,18 @@ export {
   fitnessPlanUserPrompt,
 } from './generation/prompt';
 export { createFitnessPlanGenerationRunnable } from './generation/chain';
+
+// Structured step
 export {
-  FitnessPlanOutputSchema,
-} from './generation/types';
+  STRUCTURED_FITNESS_PLAN_SYSTEM_PROMPT,
+  fitnessPlanUserPrompt as structuredFitnessPlanUserPrompt,
+} from './structured/prompt';
+export { createStructuredFitnessPlanAgent } from './structured/chain';
 export type {
-  FitnessPlanConfig,
-  FitnessPlanInput,
   FitnessPlanOutput,
-  FitnessPlanChainContext,
-} from './generation/types';
+  StructuredFitnessPlanInput,
+  FitnessPlanChainContext
+} from './structured/types';
 
 // Message step
 export {

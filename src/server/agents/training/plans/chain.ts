@@ -2,11 +2,11 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
-  FITNESS_PLAN_SYSTEM_PROMPT,
   createFitnessPlanGenerationRunnable,
   createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
 } from './steps';
+import { createStructuredFitnessPlanAgent } from './steps/structured/chain';
 
 export type { FitnessProfileContextService } from './types';
 
@@ -29,11 +29,17 @@ export const createFitnessPlanAgent = () => {
     try {
       // Step 1: Create long-form runnable (with structured output)
       const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
-        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
         agentConfig: {
           model: 'gpt-5-mini',
         }
       });
+
+      const structuredFitnessPlanRunnable = createStructuredFitnessPlanAgent({
+        agentConfig: {
+          model: 'gpt-5-mini',
+        }
+      });
+
 
       // Step 2: Create formatting agent
       const formattedAgent = createFormattedFitnessPlanAgent({
@@ -48,6 +54,7 @@ export const createFitnessPlanAgent = () => {
       // Compose the chain: structured generation → parallel (formatted + message)
       const sequence = RunnableSequence.from([
         fitnessPlanGenerationRunnable,
+        structuredFitnessPlanRunnable,
         RunnablePassthrough.assign({
           formatted: formattedAgent,
           message: messageAgent

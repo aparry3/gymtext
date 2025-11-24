@@ -1,7 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { planSummaryMessageUserPrompt, PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT } from './prompt';
 import type { FitnessPlanMessageConfig } from './types';
-import type { FitnessPlanChainContext } from '../generation/types';
+import { FitnessPlanChainContext } from '../structured/types';
 
 /**
  * Fitness Plan Message Agent Factory

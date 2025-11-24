@@ -1,4 +1,4 @@
-import type { FitnessPlanOutput } from '../generation/types';
+import { FitnessPlanOutput } from "../structured/types";
 
 /**
  * System prompt for formatted fitness plan agent
