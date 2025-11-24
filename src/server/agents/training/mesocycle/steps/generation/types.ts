@@ -2,7 +2,6 @@ import type { AgentConfig } from "@/server/agents/base";
 import type { UserWithProfile } from "@/server/models/userModel";
 
 export interface MesocycleAgentConfig {
-  systemPrompt: string;
   agentConfig?: AgentConfig;
   maxRetries?: number;
 }

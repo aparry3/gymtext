@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { MesocycleAgentConfig, MesocycleGenerationInput, MesocycleGenerationOutput } from './types';
-import { mesocycleUserPrompt } from './prompt';
+import { MESOCYCLE_SYSTEM_PROMPT, mesocycleUserPrompt } from './prompt';
 
 /**
  * Mesocycle Text Generation Agent Factory
@@ -19,7 +19,6 @@ export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) 
   const maxRetries = config.maxRetries ?? 3;
 
   return createRunnableAgent(async (input: MesocycleGenerationInput): Promise<MesocycleGenerationOutput> => {
-    const systemMessage = config.systemPrompt;
     const userPrompt = mesocycleUserPrompt(
       input.mesocycleOverview,
       input.user,
@@ -27,7 +26,7 @@ export const createMesocycleGenerationRunnable = (config: MesocycleAgentConfig) 
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       const mesocycleText = await model.invoke([
-        { role: 'system', content: systemMessage },
+        { role: 'system', content: MESOCYCLE_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ]) as string;
 

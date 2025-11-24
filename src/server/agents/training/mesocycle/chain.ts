@@ -1,7 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
-  MESOCYCLE_SYSTEM_PROMPT,
   createMesocycleGenerationRunnable,
   createStructuredMesocycleAgent,
   createFormattedMesocycleAgent,
@@ -33,7 +32,6 @@ export const createMesocycleAgent = () => {
 
       // Step 1: Create mesocycle text generation runnable
       const mesocycleGenerationRunnable = createMesocycleGenerationRunnable({
-        systemPrompt: MESOCYCLE_SYSTEM_PROMPT,
         agentConfig: {
           model: 'gpt-5-mini',
         }
@@ -41,7 +39,6 @@ export const createMesocycleAgent = () => {
 
       // Step 2: Create structured agent
       const structuredAgent = createStructuredMesocycleAgent({
-        systemPrompt: MESOCYCLE_SYSTEM_PROMPT,
         agentConfig: {
           model: 'gpt-5-mini',
         }
