@@ -3,9 +3,10 @@ import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables
 import {
   MESOCYCLE_SYSTEM_PROMPT,
   createMesocycleGenerationRunnable,
+  createStructuredMesocycleAgent,
   createFormattedMesocycleAgent,
 } from './steps';
-import type { MesocycleChainContext, MesocycleOverview } from './types';
+import type { MesocycleOverview } from './types';
 
 export type { FitnessProfileContextService, MesocycleOverview } from './types';
 
@@ -13,8 +14,9 @@ export type { FitnessProfileContextService, MesocycleOverview } from './types';
  * Creates a mesocycle agent with injected dependencies
  *
  * Uses a composable chain for generating mesocycle breakdowns:
- * 1. Generate structured mesocycle with overview and microcycles array
- * 2. Generate formatted markdown for frontend display
+ * 1. Generate mesocycle text description with week-by-week breakdowns
+ * 2. Structure the text into JSON with overview and microcycles array
+ * 3. Generate formatted markdown for frontend display
  *
  * Uses LangChain's RunnableSequence for composability and proper context flow.
  *
@@ -29,7 +31,7 @@ export const createMesocycleAgent = () => {
 
     try {
 
-      // Step 1: Create long-form mesocycle runnable (with structured output)
+      // Step 1: Create mesocycle text generation runnable
       const mesocycleGenerationRunnable = createMesocycleGenerationRunnable({
         systemPrompt: MESOCYCLE_SYSTEM_PROMPT,
         agentConfig: {
@@ -37,21 +39,30 @@ export const createMesocycleAgent = () => {
         }
       });
 
-      // Step 2: Create formatting agent
+      // Step 2: Create structured agent
+      const structuredAgent = createStructuredMesocycleAgent({
+        systemPrompt: MESOCYCLE_SYSTEM_PROMPT,
+        agentConfig: {
+          model: 'gpt-5-mini',
+        }
+      });
+
+      // Step 3: Create formatting agent
       const formattedAgent = createFormattedMesocycleAgent({
         operationName: 'format mesocycle',
       });
 
-      // Compose the chain: structured generation → formatting
+      // Compose the chain: text generation → structured → formatted
       const sequence = RunnableSequence.from([
         mesocycleGenerationRunnable,
+        structuredAgent,
         RunnablePassthrough.assign({
           formatted: formattedAgent,
         })
       ]);
 
       // Execute the chain
-      const result: MesocycleChainContext & {formatted: string} = await sequence.invoke({
+      const result = await sequence.invoke({
         mesocycleOverview: mesocycleOverviewString,
         user,
       });
