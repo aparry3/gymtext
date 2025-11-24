@@ -16,6 +16,7 @@ interface ResetOptions {
 }
 
 interface ResetStats {
+  inngestRunsCancelled: number;
   workoutsDeleted: number;
   microcyclesDeleted: number;
   mesocyclesDeleted: number;
@@ -38,6 +39,7 @@ class OnboardingReset {
     this.options = options;
     this.db = TestDatabase.getInstance();
     this.stats = {
+      inngestRunsCancelled: 0,
       workoutsDeleted: 0,
       microcyclesDeleted: 0,
       mesocyclesDeleted: 0,
@@ -99,6 +101,64 @@ class OnboardingReset {
         resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
       });
     });
+  }
+
+  /**
+   * Cancel any running Inngest onboarding functions
+   * Uses Inngest REST API to cancel in-progress runs
+   */
+  private async cancelInngestRuns(userId: string): Promise<void> {
+    info('Cancelling any running Inngest onboarding functions...');
+
+    const signingKey = process.env.INNGEST_SIGNING_KEY;
+    if (!signingKey) {
+      warning('INNGEST_SIGNING_KEY not found - skipping Inngest cancellation');
+      if (this.options.verbose) {
+        console.log(chalk.gray('  Set INNGEST_SIGNING_KEY in .env to enable cancellation'));
+      }
+      return;
+    }
+
+    try {
+      // Cancel runs from the last 24 hours
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const response = await fetch('https://api.inngest.com/v1/cancellations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${signingKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          app_id: 'gymtext',
+          function_id: 'onboard-user',
+          started_after: yesterday.toISOString(),
+          started_before: now.toISOString(),
+          // Filter to only cancel runs for this specific user
+          if: `async.data.userId == "${userId}"`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Inngest API error (${response.status}): ${errorText}`);
+      }
+
+      const result = await response.json();
+      this.stats.inngestRunsCancelled = result.cancelled || 0;
+
+      if (this.stats.inngestRunsCancelled > 0) {
+        success(`Cancelled ${this.stats.inngestRunsCancelled} running Inngest function(s)`);
+      } else {
+        if (this.options.verbose) {
+          console.log(chalk.gray('  No running Inngest functions found'));
+        }
+      }
+    } catch (err) {
+      error(`Failed to cancel Inngest runs: ${err instanceof Error ? err.message : String(err)}`);
+      warning('Continuing with reset (Inngest runs may still be active)');
+    }
   }
 
   /**
@@ -311,6 +371,7 @@ class OnboardingReset {
     console.log(chalk.cyan('\nActions Taken:'));
     const data = [
       ['Action', 'Result'],
+      ['Inngest Runs Cancelled', this.stats.inngestRunsCancelled.toString()],
       ['Workout Instances Deleted', this.stats.workoutsDeleted.toString()],
       ['Microcycles Deleted', this.stats.microcyclesDeleted.toString()],
       ['Mesocycles Deleted', this.stats.mesocyclesDeleted.toString()],
@@ -358,16 +419,19 @@ class OnboardingReset {
     console.log('\n');
 
     try {
-      // Step 1: Delete fitness data
+      // Step 1: Cancel any running Inngest functions
+      await this.cancelInngestRuns(user.id);
+
+      // Step 2: Delete fitness data
       await this.deleteFitnessData(user.id);
 
-      // Step 2: Ensure free subscription
+      // Step 3: Ensure free subscription
       await this.ensureFreeSubscription(user.id);
 
-      // Step 3: Reset onboarding status
+      // Step 4: Reset onboarding status
       await this.resetOnboardingStatus(user.id);
 
-      // Step 4: Trigger onboarding
+      // Step 5: Trigger onboarding
       await this.triggerOnboarding(user.id);
 
       // Display summary
