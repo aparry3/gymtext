@@ -105,11 +105,22 @@ class OnboardingReset {
 
   /**
    * Cancel any running Inngest onboarding functions
-   * Uses Inngest REST API to cancel in-progress runs
+   * Uses Inngest REST API to cancel in-progress runs (production only)
    */
   private async cancelInngestRuns(userId: string): Promise<void> {
+    // Detect dev vs production mode
+    const isDevMode = process.env.INNGEST_DEV === 'true';
+
+    if (isDevMode) {
+      warning('Running in dev mode - automatic cancellation not available');
+      console.log(chalk.gray('  Check http://localhost:8288 to manually cancel any running functions'));
+      console.log(chalk.gray('  Continuing with reset...'));
+      return;
+    }
+
     info('Cancelling any running Inngest onboarding functions...');
 
+    // In production, signing key is required
     const signingKey = process.env.INNGEST_SIGNING_KEY;
     if (!signingKey) {
       warning('INNGEST_SIGNING_KEY not found - skipping Inngest cancellation');
@@ -119,12 +130,18 @@ class OnboardingReset {
       return;
     }
 
+    const apiUrl = 'https://api.inngest.com/v1/cancellations';
+
+    if (this.options.verbose) {
+      console.log(chalk.gray(`  Using production API: ${apiUrl}`));
+    }
+
     try {
       // Cancel runs from the last 24 hours
       const now = new Date();
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      const response = await fetch('https://api.inngest.com/v1/cancellations', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${signingKey}`,
