@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
 import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
+import { getStepName, getProgressPercentage, TOTAL_STEPS } from '@/shared/constants/onboarding'
 
 interface Mesocycle {
   id: string
@@ -48,9 +49,17 @@ interface ProgramTabProps {
   userId: string
   basePath?: string
   showAdminActions?: boolean
+  onboardingStatus?: 'pending' | 'in_progress' | 'completed' | 'failed' | null
+  currentStep?: number | null
 }
 
-export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions = true }: ProgramTabProps) {
+export function ProgramTab({
+  userId,
+  basePath = '/admin/users',
+  showAdminActions = true,
+  onboardingStatus = null,
+  currentStep = null
+}: ProgramTabProps) {
   const [fitnessPlan, setFitnessPlan] = useState<FitnessPlan | null>(null)
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -69,29 +78,30 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
         fetch(`/api/users/${userId}/workouts?limit=5`)
       ])
 
-      if (!planResponse.ok && planResponse.status !== 404) {
+      // Handle fitness plan response - 404 is expected during onboarding
+      if (planResponse.ok) {
+        const planResult = await planResponse.json()
+        if (planResult.success) {
+          setFitnessPlan(planResult.data)
+        }
+      } else if (planResponse.status !== 404) {
         throw new Error('Failed to fetch fitness plan')
       }
 
-      if (!workoutsResponse.ok) {
+      // Handle workouts response - empty results are expected during onboarding
+      if (workoutsResponse.ok) {
+        const workoutsResult = await workoutsResponse.json()
+        if (workoutsResult.success) {
+          // Parse date strings to Date objects when loading
+          const workouts = workoutsResult.data.map((w: WorkoutInstance) => ({
+            ...w,
+            date: parseDate(w.date),
+            completedAt: w.completedAt ? new Date(w.completedAt) : null
+          }))
+          setRecentWorkouts(workouts)
+        }
+      } else if (workoutsResponse.status !== 404) {
         throw new Error('Failed to fetch workouts')
-      }
-
-      const planResult = planResponse.ok ? await planResponse.json() : { success: false }
-      const workoutsResult = await workoutsResponse.json()
-
-      if (planResult.success) {
-        setFitnessPlan(planResult.data)
-      }
-
-      if (workoutsResult.success) {
-        // Parse date strings to Date objects when loading
-        const workouts = workoutsResult.data.map((w: WorkoutInstance) => ({
-          ...w,
-          date: parseDate(w.date),
-          completedAt: w.completedAt ? new Date(w.completedAt) : null
-        }))
-        setRecentWorkouts(workouts)
       }
     } catch (err) {
       setError('Failed to load program data')
@@ -104,6 +114,13 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
   useEffect(() => {
     fetchProgramData()
   }, [fetchProgramData])
+
+  // Re-fetch when onboarding status changes (to pick up new data as it's created)
+  useEffect(() => {
+    if (onboardingStatus === 'in_progress' || onboardingStatus === 'completed') {
+      fetchProgramData()
+    }
+  }, [onboardingStatus, fetchProgramData])
 
   if (isLoading) {
     return <ProgramTabSkeleton />
@@ -118,7 +135,12 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
     )
   }
 
+  // If no fitness plan yet, check if onboarding is in progress
   if (!fitnessPlan) {
+    if (onboardingStatus === 'in_progress' || onboardingStatus === 'pending') {
+      return <OnboardingInProgressCard currentStep={currentStep} />
+    }
+
     return (
       <Card className="p-12 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -126,7 +148,7 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
         </div>
         <h3 className="mb-2 text-lg font-semibold">No Program Found</h3>
         <p className="text-muted-foreground">
-          This user doesn&apos;t have an active fitness program yet.
+          You don&apos;t have an active fitness program yet.
         </p>
       </Card>
     )
@@ -157,7 +179,11 @@ export function ProgramTab({ userId, basePath = '/admin/users', showAdminActions
       {/* Recent Workouts */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Recent Workouts</h3>
-        <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} basePath={basePath} showAdminActions={showAdminActions} onWorkoutDeleted={fetchProgramData} />
+        {recentWorkouts.length === 0 && (onboardingStatus === 'in_progress' || onboardingStatus === 'pending') ? (
+          <OnboardingWorkoutsLoadingCard currentStep={currentStep} />
+        ) : (
+          <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} basePath={basePath} showAdminActions={showAdminActions} onWorkoutDeleted={fetchProgramData} />
+        )}
       </div>
     </div>
   )
@@ -605,6 +631,57 @@ function ProgramTabSkeleton() {
         </Card>
       </div>
     </div>
+  )
+}
+
+function OnboardingInProgressCard({ currentStep }: { currentStep: number | null }) {
+  const stepName = currentStep ? getStepName(currentStep) : 'Getting started...'
+  const progress = currentStep ? getProgressPercentage(currentStep) : 0
+
+  return (
+    <Card className="p-12 text-center">
+      <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+        <Dumbbell className="h-6 w-6 text-primary animate-pulse" />
+      </div>
+      <h3 className="mb-2 text-lg font-semibold">Building Your Program</h3>
+      <p className="text-muted-foreground mb-6">
+        We&apos;re creating your personalized fitness plan. This usually takes 30-60 seconds.
+      </p>
+
+      {/* Progress bar */}
+      <div className="mt-6 h-2 w-full bg-gray-200 rounded-full overflow-hidden max-w-md mx-auto">
+        <div
+          className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+
+      {/* Step indicator */}
+      <div className="mt-4 space-y-1">
+        <p className="text-sm font-medium text-primary">
+          {currentStep ? `Step ${currentStep} of ${TOTAL_STEPS}` : 'Starting...'}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {stepName}
+        </p>
+      </div>
+    </Card>
+  )
+}
+
+function OnboardingWorkoutsLoadingCard({ currentStep }: { currentStep: number | null }) {
+  const stepName = currentStep ? getStepName(currentStep) : 'Getting started...'
+
+  return (
+    <Card className="p-8 text-center">
+      <div className="flex items-center justify-center gap-3">
+        <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+        <div>
+          <p className="text-sm font-medium">Creating your workouts...</p>
+          <p className="text-xs text-muted-foreground">{stepName}</p>
+        </div>
+      </div>
+    </Card>
   )
 }
 

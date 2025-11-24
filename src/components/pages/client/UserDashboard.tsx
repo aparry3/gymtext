@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProgramTab } from '@/components/pages/admin/ProgramTab';
 import { formatRelative } from '@/shared/utils/date';
-import { getStepName, getProgressPercentage, TOTAL_STEPS } from '@/shared/constants/onboarding';
 import {
   Mail,
   Phone,
@@ -20,7 +19,6 @@ import {
   MapPin,
   UserIcon,
   LogOut,
-  Dumbbell,
 } from 'lucide-react';
 
 interface UserDashboardProps {
@@ -31,38 +29,13 @@ export function UserDashboard({ userId }: UserDashboardProps) {
   const router = useRouter();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [markdownProfile, setMarkdownProfile] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [onboardingStatus, setOnboardingStatus] = useState<'pending' | 'in_progress' | 'completed' | 'failed' | null>(null);
   const [currentStep, setCurrentStep] = useState<number | null>(null);
 
-  // Fetch onboarding status
-  const fetchOnboardingStatus = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/users/${userId}/onboarding-status`);
-      const result = await response.json();
-
-      if (response.ok) {
-        setOnboardingStatus(result.onboardingStatus);
-        setCurrentStep(result.currentStep || null);
-
-        // If completed, return true to signal we should fetch full user data
-        if (result.onboardingStatus === 'completed' && result.hasProgram) {
-          return true;
-        }
-      }
-      return false;
-    } catch (err) {
-      console.error('Error fetching onboarding status:', err);
-      return false;
-    }
-  }, [userId]);
-
-  // Fetch user data
+  // Fetch user data - called immediately and independently of onboarding
   const fetchUser = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
       const response = await fetch(`/api/users/${userId}`);
       const result = await response.json();
@@ -79,54 +52,61 @@ export function UserDashboard({ userId }: UserDashboardProps) {
       setError('Failed to load your profile');
       console.error('Error fetching user:', err);
     } finally {
-      setIsLoading(false);
+      setIsLoadingUser(false);
     }
   }, [userId]);
 
-  // Initial load and polling for onboarding status
+  // Fetch onboarding status - used for polling and showing progress
+  const fetchOnboardingStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/users/${userId}/onboarding-status`);
+      const result = await response.json();
+
+      if (response.ok) {
+        setOnboardingStatus(result.onboardingStatus);
+        setCurrentStep(result.currentStep || null);
+
+        // Return true if onboarding completed (signals to stop polling)
+        return result.onboardingStatus === 'completed' || result.onboardingStatus === 'failed';
+      }
+      return false;
+    } catch (err) {
+      console.error('Error fetching onboarding status:', err);
+      return false;
+    }
+  }, [userId]);
+
+  // Initial load: fetch user data immediately
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // Separate effect: poll onboarding status
   useEffect(() => {
     let pollInterval: NodeJS.Timeout | null = null;
 
-    const checkAndLoad = async () => {
-      const shouldFetchUser = await fetchOnboardingStatus();
+    const pollStatus = async () => {
+      const isComplete = await fetchOnboardingStatus();
 
-      if (shouldFetchUser) {
-        // Onboarding complete, fetch user data
-        await fetchUser();
-
-        // Stop polling
-        if (pollInterval) {
-          clearInterval(pollInterval);
-          pollInterval = null;
-        }
-      } else if (onboardingStatus === 'pending' || onboardingStatus === 'in_progress') {
-        // Still processing, show loading state
-        setIsLoading(false);
-      } else if (onboardingStatus === 'failed') {
-        // Failed, show error
-        setError('There was an error setting up your program. Please contact support.');
-        setIsLoading(false);
-
-        // Stop polling
-        if (pollInterval) {
-          clearInterval(pollInterval);
-          pollInterval = null;
-        }
+      // Stop polling if completed or failed
+      if (isComplete && pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
       }
     };
 
-    // Initial check
-    checkAndLoad();
+    // Initial status check
+    pollStatus();
 
-    // Poll every 3 seconds if not completed
-    pollInterval = setInterval(checkAndLoad, 3000);
+    // Poll every 3 seconds
+    pollInterval = setInterval(pollStatus, 3000);
 
     return () => {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
     };
-  }, [fetchOnboardingStatus, fetchUser, onboardingStatus]);
+  }, [fetchOnboardingStatus]);
 
   const handleLogout = async () => {
     try {
@@ -137,57 +117,33 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     }
   };
 
-  if (isLoading && !onboardingStatus) {
+  // Show skeleton only while loading user data initially
+  if (isLoadingUser) {
     return <UserDetailSkeleton />;
   }
 
-  // Show onboarding in progress state
-  if (onboardingStatus === 'pending' || onboardingStatus === 'in_progress') {
-    const stepName = currentStep ? getStepName(currentStep) : 'Getting started...';
-    const progress = currentStep ? getProgressPercentage(currentStep) : 0;
-
+  // Show error state if user data failed to load or onboarding failed
+  if (error || onboardingStatus === 'failed') {
     return (
-      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-8 text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="rounded-full bg-primary/10 p-6">
-              <Dumbbell className="h-12 w-12 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-semibold mb-2">Building Your Program</h1>
-          <p className="text-muted-foreground mb-4">
-            We&apos;re creating your personalized fitness plan based on your goals and profile. This usually takes 30-60 seconds.
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="text-center py-12">
+          <p className="text-lg text-muted-foreground mb-4">
+            {error || 'There was an error setting up your program. Please contact support.'}
           </p>
-
-          {/* Progress bar with smooth animation */}
-          <div className="mt-6 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-
-          {/* Step indicator */}
-          <div className="mt-4 space-y-1">
-            <p className="text-sm font-medium text-primary">
-              {currentStep ? `Step ${currentStep} of ${TOTAL_STEPS}` : 'Starting...'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {stepName}
-            </p>
-          </div>
+          <Button onClick={handleLogout} variant="outline">
+            Back to Login
+          </Button>
         </div>
       </div>
     );
   }
 
-  if (!isLoading && (error || !user)) {
+  // User not found
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground mb-4">
-            {error || 'User not found'}
-          </p>
+          <p className="text-lg text-muted-foreground mb-4">User not found</p>
           <Button onClick={handleLogout} variant="outline">
             Back to Login
           </Button>
@@ -293,7 +249,13 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             </TabsList>
 
             <TabsContent value="program">
-              <ProgramTab userId={userId} basePath="/me" showAdminActions={false} />
+              <ProgramTab
+                userId={userId}
+                basePath="/me"
+                showAdminActions={false}
+                onboardingStatus={onboardingStatus}
+                currentStep={currentStep}
+              />
             </TabsContent>
 
             <TabsContent value="profile">
