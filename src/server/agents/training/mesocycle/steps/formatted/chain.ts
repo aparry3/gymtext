@@ -1,6 +1,6 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import type { FormattedMesocycleConfig } from './types';
-import type { MesocycleChainContext } from '../generation/types';
+import type { StructuredMesocycleContext } from '../structured/types';
 import { buildFormattedMesocycleSystemPrompt, createFormattedMesocycleUserPrompt } from './prompt';
 
 /**
@@ -21,7 +21,7 @@ export const createFormattedMesocycleAgent = (
 
   const model = initializeModel(undefined, config.agentConfig);
 
-  return createRunnableAgent<MesocycleChainContext, string>(async (input) => {
+  return createRunnableAgent<StructuredMesocycleContext, string>(async (input) => {
     const { mesocycle } = input;
 
     const durationWeeks = mesocycle.microcycles.length

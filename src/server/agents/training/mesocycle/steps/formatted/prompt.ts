@@ -1,4 +1,4 @@
-import type { MesocycleGenerationOutput } from '../generation/types';
+import type { MesocycleOutput } from '../structured/types';
 
 /**
  * System prompt for formatted mesocycle agent
@@ -195,7 +195,7 @@ Return the complete formatted mesocycle as a single markdown string.`;
  * User prompt for formatted mesocycle agent
  */
 export const createFormattedMesocycleUserPrompt = (
-  mesocycle: MesocycleGenerationOutput,
+  mesocycle: MesocycleOutput,
   mesocycleIndex: number,
   durationWeeks: number
 ): string => {

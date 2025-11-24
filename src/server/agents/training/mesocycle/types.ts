@@ -22,9 +22,9 @@ export type {
   MesocycleAgentConfig,
   MesocycleGenerationInput,
   MesocycleGenerationOutput,
-  MesocycleChainContext,
 } from './steps';
 
 export type {
   FormattedMesocycleConfig,
+  StructuredMesocycleContext,
 } from './steps';

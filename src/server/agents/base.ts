@@ -102,7 +102,6 @@ const MODEL_PROVIDERS = {
       model,
       temperature: model !== 'gpt-5-nano' ? temperature : 1,
       maxCompletionTokens: maxTokens,
-      reasoningEffort: 'low',
     }),
 };
 
