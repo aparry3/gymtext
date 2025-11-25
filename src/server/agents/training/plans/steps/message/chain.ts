@@ -19,7 +19,7 @@ export const createFitnessPlanMessageAgent = (config: FitnessPlanMessageConfig) 
     const { fitnessPlan, user } = input;
 
     // Build user prompt from plan description and full user object (with profile)
-    const userPrompt = planSummaryMessageUserPrompt(user, fitnessPlan.plan);
+    const userPrompt = planSummaryMessageUserPrompt(user, fitnessPlan);
 
     // Invoke model
     const result = await model.invoke([

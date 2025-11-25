@@ -1,5 +1,3 @@
-import type { FitnessPlanOutput } from '../generation/types';
-
 /**
  * System prompt for formatted fitness plan agent
  */
@@ -115,12 +113,12 @@ Return the complete formatted fitness plan as a single markdown string.`;
  * User prompt for formatted fitness plan agent
  */
 export const createFormattedFitnessPlanUserPrompt = (
-  fitnessPlan: FitnessPlanOutput
+  fitnessPlan: string
 ): string => {
   return `Convert the following fitness plan into a beautifully formatted markdown document.
 
 FITNESS PLAN:
-${fitnessPlan.plan}
+${fitnessPlan}
 
 INSTRUCTIONS:
 - Convert this into the markdown format specified in the system prompt

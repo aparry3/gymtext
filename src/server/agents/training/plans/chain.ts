@@ -2,7 +2,6 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { FitnessPlanOverview } from '@/server/models/fitnessPlan';
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import {
-  FITNESS_PLAN_SYSTEM_PROMPT,
   createFitnessPlanGenerationRunnable,
   createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
@@ -28,7 +27,6 @@ export const createFitnessPlanAgent = () => {
     try {
       // Step 1: Create generation runnable (with structured output)
       const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
-        systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
         agentConfig: {
           model: 'gpt-5-mini',
         }
@@ -60,7 +58,7 @@ export const createFitnessPlanAgent = () => {
 
       // Combine results into final overview
       const finalResult: FitnessPlanOverview = {
-        description: result.fitnessPlan.plan,
+        description: result.fitnessPlan,
         formatted: result.formatted,
         message: result.message
       };
