@@ -4,185 +4,84 @@
  * Async function that processes user onboarding after signup.
  * Triggered by 'user/onboarding.requested' event from signup API.
  *
- * Flow:
- * 1. Mark onboarding as 'in_progress'
- * 2. Load raw signup data
- * 3. Format signup data for LLM using signupDataFormatter
- * 4. Extract fitness profile from formatted data using LLM (slow!)
- * 5. Create fitness plan with message
- * 6. Create first microcycle with message
- * 7. Create first workout with message
- * 8. Mark onboarding as 'completed'
- * 9. Check if payment is complete, send messages if ready
- * 10. Clean up signup data (optional)
+ * Uses a "get or create" pattern for each step:
+ * - If data exists, returns it immediately (cached by Inngest)
+ * - If not, creates it via LLM
  *
- * Benefits:
- * - Runs async (doesn't block signup)
- * - Automatic retries on failure per step
- * - Parallel with checkout (race optimization)
- * - Pre-generates all messages for fast delivery
- * - All raw signup data preserved for debugging/analytics
+ * This makes the flow idempotent - running multiple times produces same result.
+ *
+ * Data Flow:
+ * Step 1 (loadData) → { initialUser, signupData }
+ * Step 2 (profile)  → { user } (with profile)
+ * Step 3 (plan)     → { plan }
+ * Step 4 (microcycle) → { microcycle }
+ * Step 5 (workout)  → { workout }
+ * Step 6 (markCompleted)
+ * Step 7 (sendMessages)
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { userService } from '@/server/services/user/userService';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { fitnessProfileServiceV2 } from '@/server/services/user/fitnessProfileServiceV2';
-import { onboardingService } from '@/server/services/orchestration/onboardingService';
-import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
+import { onboardingSteps } from '@/server/services/orchestration/onboardingSteps';
+import type { UserWithProfile } from '@/server/models/userModel';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
+import type { Microcycle } from '@/server/models/microcycle';
+import type { SignupData } from '@/server/repositories/onboardingRepository';
 
 export const onboardUserFunction = inngest.createFunction(
   {
     id: 'onboard-user',
     name: 'Onboard New User',
-    retries: 2, // Retry up to 2 times on failure
+    retries: 2,
   },
   { event: 'user/onboarding.requested' },
   async ({ event, step }) => {
     const { userId } = event.data;
 
-    console.log(`[Inngest] Starting onboarding for user ${userId}`);
-
     try {
-      // Step 1: Mark as in progress
-      await step.run('mark-started', async () => {
-        console.log(`[Inngest] Marking onboarding as started for ${userId}`);
-        await onboardingDataService.markStarted(userId);
-      });
+      // Mark as started
+      await step.run('mark-started', () => onboardingDataService.markStarted(userId));
 
-    // Step 2: Load signup data
-    const signupData = await step.run('load-signup-data', async () => {
-      console.log(`[Inngest] Loading signup data for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 1);
+      // Step 1: Load user + signup data (cached by Inngest)
+      // Note: Inngest serializes data between steps, so Date objects become strings.
+      // We use type assertions to satisfy TypeScript - the underlying data works fine at runtime.
+      const { user: initialUser, signupData } = await step.run('step-1-load-data', () =>
+        onboardingSteps.loadData(userId)
+      ) as unknown as { user: UserWithProfile; signupData: SignupData };
 
-      const signupData = await onboardingDataService.getSignupData(userId);
-      if (!signupData) {
-        throw new Error(`No signup data found for user ${userId}`);
-      }
+      // Step 2: Get or create profile (returns updated user)
+      const { user } = await step.run('step-2-profile', () =>
+        onboardingSteps.getOrCreateProfile(initialUser, signupData)
+      ) as unknown as { user: UserWithProfile; wasCreated: boolean };
 
-      return signupData;
-    });
+      // Step 3: Get or create plan (uses user with profile)
+      const { plan } = await step.run('step-3-plan', () =>
+        onboardingSteps.getOrCreatePlan(user)
+      ) as unknown as { plan: FitnessPlan; wasCreated: boolean };
 
-    // Step 3: Extract fitness profile using LLM (SLOW!)
-    await step.run('extract-fitness-profile', async () => {
-      console.log(`[Inngest] Extracting fitness profile for ${userId} (LLM)`);
-      await onboardingDataService.updateCurrentStep(userId, 2);
+      // Step 4: Get or create microcycle (needs plan)
+      const { microcycle } = await step.run('step-4-microcycle', () =>
+        onboardingSteps.getOrCreateMicrocycle(user, plan)
+      ) as unknown as { microcycle: Microcycle; wasCreated: boolean };
 
-      // Load user with markdown profile
-      const user = await userService.getUser(userId);
-      if (!user) {
-        throw new Error(`User ${userId} not found`);
-      }
+      // Step 5: Get or create workout (needs microcycle)
+      await step.run('step-5-workout', () =>
+        onboardingSteps.getOrCreateWorkout(user, microcycle)
+      );
 
-      try {
-        // Pass raw signup data - V2 service creates markdown profile using Profile Update Agent
-        await fitnessProfileServiceV2.createFitnessProfile(user, signupData);
-        console.log(`[Inngest] Fitness profile created for ${userId}`);
-      } catch (error) {
-        console.error(`[Inngest] Failed to create profile for ${userId}:`, error);
-        throw error;
-      }
-    });
+      // Step 6: Mark completed
+      await step.run('step-6-complete', () =>
+        onboardingSteps.markCompleted(userId)
+      );
 
-    // Step 4: Create fitness plan
-    await step.run('create-fitness-plan', async () => {
-      console.log(`[Inngest] Creating fitness plan for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 3);
-
-      // Reload user with updated markdown profile
-      const user = await userService.getUser(userId);
-      if (!user) {
-        throw new Error(`User ${userId} not found after profile creation`);
-      }
-
-      try {
-        await onboardingService.createFitnessPlan(user);
-        console.log(`[Inngest] Fitness plan created for ${userId}`);
-      } catch (error) {
-        console.error(`[Inngest] Failed to create fitness plan for ${userId}:`, error);
-        throw error;
-      }
-    });
-
-    // Step 5: Create first microcycle
-    await step.run('create-first-microcycle', async () => {
-      console.log(`[Inngest] Creating first microcycle for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 4);
-
-      // Reload user with markdown profile
-      const user = await userService.getUser(userId);
-      if (!user) {
-        throw new Error(`User ${userId} not found`);
-      }
-
-      try {
-        await onboardingService.createFirstMicrocycle(user);
-        console.log(`[Inngest] First microcycle created for ${userId}`);
-      } catch (error) {
-        console.error(`[Inngest] Failed to create first microcycle for ${userId}:`, error);
-        throw error;
-      }
-    });
-
-    // Step 6: Create first workout
-    await step.run('create-first-workout', async () => {
-      console.log(`[Inngest] Creating first workout for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 5);
-
-      // Reload user with markdown profile
-      const user = await userService.getUser(userId);
-      if (!user) {
-        throw new Error(`User ${userId} not found`);
-      }
-
-      try {
-        await onboardingService.createFirstWorkout(user);
-        console.log(`[Inngest] First workout created for ${userId}`);
-      } catch (error) {
-        console.error(`[Inngest] Failed to create first workout for ${userId}:`, error);
-        throw error;
-      }
-    });
-
-    // Step 7: Mark as completed
-    await step.run('mark-completed', async () => {
-      console.log(`[Inngest] Marking onboarding as completed for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 6);
-      await onboardingDataService.markCompleted(userId);
-    });
-
-    // Step 8: Check if ready to send onboarding messages
-    await step.run('check-send-messages', async () => {
-      console.log(`[Inngest] Checking if ready to send messages for ${userId}`);
-      await onboardingDataService.updateCurrentStep(userId, 7);
-
-      try {
-        const sent = await onboardingCoordinator.sendOnboardingMessages(userId);
-        if (sent) {
-          console.log(`[Inngest] Onboarding messages sent to ${userId}`);
-        } else {
-          console.log(`[Inngest] Waiting for payment to complete for ${userId}`);
-        }
-      } catch (error) {
-        // Don't fail the whole onboarding if message sending fails
-        // Webhook will retry when payment completes
-        console.error(`[Inngest] Failed to send messages for ${userId}:`, error);
-      }
-    });
-
-    // Step 9: Clean up signup data
-    // TEMP: Commented out for debugging - keeping signup data for inspection
-    // await step.run('cleanup-signup-data', async () => {
-    //   console.log(`[Inngest] Cleaning up signup data for ${userId}`);
-    //   await onboardingDataService.clearSignupData(userId);
-    // });
+      // Step 7: Send messages
+      const messagesSent = await step.run('step-7-messages', () =>
+        onboardingSteps.sendMessages(userId)
+      );
 
       console.log(`[Inngest] Onboarding complete for user ${userId}`);
 
-      return {
-        success: true,
-        userId,
-      };
+      return { success: true, userId, messagesSent };
     } catch (error) {
       // Mark onboarding as failed
       console.error(`[Inngest] Onboarding failed for user ${userId}:`, error);

@@ -3,6 +3,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts/operations/generate';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
+import type { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
@@ -98,11 +99,13 @@ export class WorkoutInstanceService {
    *
    * @param user - User with profile
    * @param targetDate - Date to generate workout for
+   * @param providedMicrocycle - Optional pre-loaded microcycle (avoids extra DB query)
    * @returns Generated and saved workout instance
    */
   public async generateWorkoutForDate(
     user: UserWithProfile,
-    targetDate: DateTime
+    targetDate: DateTime,
+    providedMicrocycle?: Microcycle
   ): Promise<WorkoutInstance | null> {
     try {
       // Get fitness plan
@@ -119,13 +122,17 @@ export class WorkoutInstanceService {
         return null;
       }
 
-      // Get or create microcycle for the target date
-      const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(
-        user.id,
-        plan,
-        targetDate.toJSDate(),
-        user.timezone
-      );
+      // Use provided microcycle or get/create one for the target date
+      let microcycle: Microcycle | null = providedMicrocycle ?? null;
+      if (!microcycle) {
+        const result = await this.progressService.getOrCreateMicrocycleForDate(
+          user.id,
+          plan,
+          targetDate.toJSDate(),
+          user.timezone
+        );
+        microcycle = result.microcycle;
+      }
       if (!microcycle) {
         console.log(`Could not get/create microcycle for user ${user.id}`);
         return null;

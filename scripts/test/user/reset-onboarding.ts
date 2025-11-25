@@ -69,8 +69,18 @@ async function findUserByPhone(phone: string) {
   return user;
 }
 
-async function countRecordsToDelete(userId: string): Promise<DeleteCounts> {
-  const [messageQueue, messages, workouts, microcycles, fitnessPlans, profiles] = await Promise.all([
+async function countRecordsToDelete(userId: string, startStep: number): Promise<DeleteCounts> {
+  const counts: DeleteCounts = {
+    messageQueue: 0,
+    messages: 0,
+    workouts: 0,
+    microcycles: 0,
+    fitnessPlans: 0,
+    profiles: 0,
+  };
+
+  // Always count messages and queue (steps 6-7 create these)
+  const [messageQueue, messages] = await Promise.all([
     postgresDb
       .selectFrom('messageQueues')
       .select(postgresDb.fn.count('id').as('count'))
@@ -81,39 +91,54 @@ async function countRecordsToDelete(userId: string): Promise<DeleteCounts> {
       .select(postgresDb.fn.count('id').as('count'))
       .where('userId', '=', userId)
       .executeTakeFirst(),
-    postgresDb
+  ]);
+  counts.messageQueue = Number(messageQueue?.count ?? 0);
+  counts.messages = Number(messages?.count ?? 0);
+
+  // Count workouts if starting from step 5 or earlier
+  if (startStep <= 5) {
+    const workouts = await postgresDb
       .selectFrom('workoutInstances')
       .select(postgresDb.fn.count('id').as('count'))
       .where('clientId', '=', userId)
-      .executeTakeFirst(),
-    postgresDb
+      .executeTakeFirst();
+    counts.workouts = Number(workouts?.count ?? 0);
+  }
+
+  // Count microcycles if starting from step 4 or earlier
+  if (startStep <= 4) {
+    const microcycles = await postgresDb
       .selectFrom('microcycles')
       .select(postgresDb.fn.count('id').as('count'))
       .where('userId', '=', userId)
-      .executeTakeFirst(),
-    postgresDb
+      .executeTakeFirst();
+    counts.microcycles = Number(microcycles?.count ?? 0);
+  }
+
+  // Count fitness plans if starting from step 3 or earlier
+  if (startStep <= 3) {
+    const fitnessPlans = await postgresDb
       .selectFrom('fitnessPlans')
       .select(postgresDb.fn.count('id').as('count'))
       .where('clientId', '=', userId)
-      .executeTakeFirst(),
-    postgresDb
+      .executeTakeFirst();
+    counts.fitnessPlans = Number(fitnessPlans?.count ?? 0);
+  }
+
+  // Count profiles if starting from step 2 or earlier
+  if (startStep <= 2) {
+    const profiles = await postgresDb
       .selectFrom('profiles')
       .select(postgresDb.fn.count('id').as('count'))
       .where('clientId', '=', userId)
-      .executeTakeFirst(),
-  ]);
+      .executeTakeFirst();
+    counts.profiles = Number(profiles?.count ?? 0);
+  }
 
-  return {
-    messageQueue: Number(messageQueue?.count ?? 0),
-    messages: Number(messages?.count ?? 0),
-    workouts: Number(workouts?.count ?? 0),
-    microcycles: Number(microcycles?.count ?? 0),
-    fitnessPlans: Number(fitnessPlans?.count ?? 0),
-    profiles: Number(profiles?.count ?? 0),
-  };
+  return counts;
 }
 
-async function deleteUserData(userId: string, verbose: boolean): Promise<DeleteCounts> {
+async function deleteUserData(userId: string, startStep: number, verbose: boolean): Promise<DeleteCounts> {
   const counts: DeleteCounts = {
     messageQueue: 0,
     messages: 0,
@@ -123,7 +148,7 @@ async function deleteUserData(userId: string, verbose: boolean): Promise<DeleteC
     profiles: 0,
   };
 
-  // 1. Delete message queue entries
+  // Always delete message queue entries (steps 6-7 create these)
   if (verbose) console.log(chalk.gray('  Deleting message queue entries...'));
   const queueResult = await postgresDb
     .deleteFrom('messageQueues')
@@ -131,7 +156,7 @@ async function deleteUserData(userId: string, verbose: boolean): Promise<DeleteC
     .executeTakeFirst();
   counts.messageQueue = Number(queueResult.numDeletedRows);
 
-  // 2. Delete messages
+  // Always delete messages (steps 6-7 create these)
   if (verbose) console.log(chalk.gray('  Deleting messages...'));
   const messagesResult = await postgresDb
     .deleteFrom('messages')
@@ -139,37 +164,45 @@ async function deleteUserData(userId: string, verbose: boolean): Promise<DeleteC
     .executeTakeFirst();
   counts.messages = Number(messagesResult.numDeletedRows);
 
-  // 3. Delete workouts (must be before microcycles due to FK)
-  if (verbose) console.log(chalk.gray('  Deleting workouts...'));
-  const workoutsResult = await postgresDb
-    .deleteFrom('workoutInstances')
-    .where('clientId', '=', userId)
-    .executeTakeFirst();
-  counts.workouts = Number(workoutsResult.numDeletedRows);
+  // Delete workouts if starting from step 5 or earlier
+  if (startStep <= 5) {
+    if (verbose) console.log(chalk.gray('  Deleting workouts...'));
+    const workoutsResult = await postgresDb
+      .deleteFrom('workoutInstances')
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.workouts = Number(workoutsResult.numDeletedRows);
+  }
 
-  // 4. Delete microcycles (must be before fitness plans due to FK)
-  if (verbose) console.log(chalk.gray('  Deleting microcycles...'));
-  const microcyclesResult = await postgresDb
-    .deleteFrom('microcycles')
-    .where('userId', '=', userId)
-    .executeTakeFirst();
-  counts.microcycles = Number(microcyclesResult.numDeletedRows);
+  // Delete microcycles if starting from step 4 or earlier
+  if (startStep <= 4) {
+    if (verbose) console.log(chalk.gray('  Deleting microcycles...'));
+    const microcyclesResult = await postgresDb
+      .deleteFrom('microcycles')
+      .where('userId', '=', userId)
+      .executeTakeFirst();
+    counts.microcycles = Number(microcyclesResult.numDeletedRows);
+  }
 
-  // 5. Delete fitness plans
-  if (verbose) console.log(chalk.gray('  Deleting fitness plans...'));
-  const plansResult = await postgresDb
-    .deleteFrom('fitnessPlans')
-    .where('clientId', '=', userId)
-    .executeTakeFirst();
-  counts.fitnessPlans = Number(plansResult.numDeletedRows);
+  // Delete fitness plans if starting from step 3 or earlier
+  if (startStep <= 3) {
+    if (verbose) console.log(chalk.gray('  Deleting fitness plans...'));
+    const plansResult = await postgresDb
+      .deleteFrom('fitnessPlans')
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.fitnessPlans = Number(plansResult.numDeletedRows);
+  }
 
-  // 6. Delete fitness profiles
-  if (verbose) console.log(chalk.gray('  Deleting fitness profiles...'));
-  const profilesResult = await postgresDb
-    .deleteFrom('profiles')
-    .where('clientId', '=', userId)
-    .executeTakeFirst();
-  counts.profiles = Number(profilesResult.numDeletedRows);
+  // Delete fitness profiles if starting from step 2 or earlier
+  if (startStep <= 2) {
+    if (verbose) console.log(chalk.gray('  Deleting fitness profiles...'));
+    const profilesResult = await postgresDb
+      .deleteFrom('profiles')
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.profiles = Number(profilesResult.numDeletedRows);
+  }
 
   return counts;
 }
@@ -248,9 +281,10 @@ async function resetOnboarding(options: ResetOptions) {
 
   console.log(chalk.green(`✓ Found user: ${user.name || 'Unknown'} (${user.id})`));
 
-  // 2. Count records to delete
-  console.log(chalk.gray('\nCounting records to delete...'));
-  const counts = await countRecordsToDelete(user.id);
+  // 2. Count records to delete (based on starting step)
+  const startStep = options.step ?? 1;
+  console.log(chalk.gray(`\nCounting records to delete (starting from step ${startStep})...`));
+  const counts = await countRecordsToDelete(user.id, startStep);
 
   const totalRecords =
     counts.messageQueue +
@@ -288,7 +322,7 @@ async function resetOnboarding(options: ResetOptions) {
 
   // 5. Delete data
   console.log(chalk.blue('\nDeleting data...'));
-  const deletedCounts = await deleteUserData(user.id, options.verbose ?? false);
+  const deletedCounts = await deleteUserData(user.id, startStep, options.verbose ?? false);
 
   console.log(chalk.green('✓ Data deleted'));
   if (options.verbose) {
@@ -373,12 +407,21 @@ program
 // Example usage helper
 program.on('--help', () => {
   console.log('');
+  console.log('Onboarding Steps (data deleted when restarting FROM this step):');
+  console.log('  1 - Load signup data           → Deletes: all data');
+  console.log('  2 - Extract fitness profile    → Deletes: all data');
+  console.log('  3 - Create fitness plan        → Deletes: plan, microcycle, workout, messages');
+  console.log('  4 - Create first microcycle    → Deletes: microcycle, workout, messages');
+  console.log('  5 - Create first workout       → Deletes: workout, messages');
+  console.log('  6 - Finalize program           → Deletes: messages only');
+  console.log('  7 - Send onboarding messages   → Deletes: messages only');
+  console.log('');
   console.log('Examples:');
-  console.log('  $ pnpm test:onboarding:reset -p "+14155551234"');
-  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -s 3');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234"              # Delete all, start fresh');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -s 3         # Keep profile, redo plan');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -s 4         # Keep profile+plan, redo microcycle');
   console.log('  $ pnpm test:onboarding:reset -p "+14155551234" --dry-run');
   console.log('  $ pnpm test:onboarding:reset -p "+14155551234" --skip-trigger -y');
-  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -v');
 });
 
 program.parse();
