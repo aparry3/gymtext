@@ -4,13 +4,9 @@ export {
   fitnessPlanUserPrompt,
 } from './generation/prompt';
 export { createFitnessPlanGenerationRunnable } from './generation/chain';
-export {
-  FitnessPlanOutputSchema,
-} from './generation/types';
 export type {
   FitnessPlanConfig,
   FitnessPlanInput,
-  FitnessPlanOutput,
   FitnessPlanChainContext,
 } from './generation/types';
 

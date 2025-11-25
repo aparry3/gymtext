@@ -8,7 +8,7 @@ import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
 import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
-import { getDayOfWeek, getDayOfWeekName } from '@/shared/utils/date';
+import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
 
 export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
@@ -132,12 +132,12 @@ export class WorkoutInstanceService {
       }
 
       // Get the day's overview from the microcycle
-      const dayOfWeekLower = getDayOfWeek(targetDate.toJSDate(), user.timezone).toLowerCase(); // monday, tuesday, etc.
-      const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
-      const dayOverview = microcycle[dayOverviewKey];
+      // getWeekday returns 1-7 (Mon-Sun), days array is 0-indexed (Mon=0, Sun=6)
+      const dayIndex = getWeekday(targetDate.toJSDate(), user.timezone) - 1;
+      const dayOverview = microcycle.days?.[dayIndex];
 
       if (!dayOverview || typeof dayOverview !== 'string') {
-        console.log(`No overview found for ${dayOfWeekLower} in microcycle ${microcycle.id}`);
+        console.log(`No overview found for day index ${dayIndex} in microcycle ${microcycle.id}`);
         return null;
       }
 
