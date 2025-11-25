@@ -3,20 +3,17 @@ import type { AgentConfig } from "@/server/agents/base";
 import type { UserWithProfile } from "@/server/models/userModel";
 
 /**
- * Schema for structured fitness plan generation output
+ * Schema for simplified fitness plan generation output
+ *
+ * The plan is now a structured text description containing:
+ * - Training split and frequency
+ * - Goals and focus areas
+ * - Deload rules (e.g., "every 4th week")
+ * - Progression guidelines
  */
 export const FitnessPlanOutputSchema = z.object({
-  overview: z.string({
-    description: "Comprehensive plan overview including reasoning, split selection, and overall structure"
-  }),
-  mesocycles: z.array(z.string(), {
-    description: "Array of mesocycle overview strings with all required details (duration, objective, focus, etc.)"
-  }),
-  number_of_mesocycles: z.number({
-    description: "The number of mesocycles in the plan"
-  }),
-  total_weeks: z.number({
-    description: "The total number of weeks in the plan"
+  plan: z.string({
+    description: "Structured text plan containing split, frequency, goals, deload rules, and progression guidelines"
   })
 });
 

@@ -5,13 +5,12 @@ import { MicrocycleGenerationOutputSchema } from './types';
 import { MicrocycleGenerationInput } from '../../types';
 
 /**
- * Long-Form Microcycle Agent Factory
+ * Microcycle Generation Agent Factory
  *
  * Generates comprehensive weekly training patterns with structured output containing
  * an overview and array of exactly 7 day strings (Monday-Sunday).
  *
- * Used as the first step in the microcycle generation chain to produce structured output
- * that can be used directly without string parsing.
+ * Uses the fitness plan text and user profile to generate the weekly pattern.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured microcycle data
@@ -24,8 +23,10 @@ export const createMicrocycleGenerationRunnable = (config: MicrocycleGenerationC
 
     // Generate user prompt from input
     const userPrompt = microcycleUserPrompt({
-      microcycleOverview: input.microcycleOverview,
-      weekNumber: input.weekNumber
+      planText: input.planText,
+      userProfile: input.userProfile,
+      absoluteWeek: input.absoluteWeek,
+      isDeload: input.isDeload
     });
 
     const microcycle = await model.invoke([
@@ -33,12 +34,14 @@ export const createMicrocycleGenerationRunnable = (config: MicrocycleGenerationC
       { role: 'user', content: userPrompt }
     ]) as MicrocycleGenerationOutput;
 
-    console.log(`[MicrocycleGenerationRunnable] Generated microcycle with ${microcycle.days.length} days for week ${input.weekNumber + 1}`);
+    console.log(`[MicrocycleGenerationRunnable] Generated microcycle with ${microcycle.days.length} days for week ${input.absoluteWeek}`);
 
     return {
       microcycle,
-      microcycleOverview: input.microcycleOverview,
-      weekNumber: input.weekNumber
+      planText: input.planText,
+      userProfile: input.userProfile,
+      absoluteWeek: input.absoluteWeek,
+      isDeload: input.isDeload
     };
   });
 };

@@ -1,34 +1,28 @@
 import type { AgentDeps } from '@/server/agents/base';
 
 /**
- * Input for microcycle pattern agent
- * Uses the specific microcycle overview from mesocycle.microcycles[index]
+ * Input for microcycle generation agent
+ *
+ * Uses the fitness plan text and user profile to generate a weekly pattern
  */
 export interface MicrocycleGenerationInput {
-  microcycleOverview: string; // Specific microcycle description from mesocycle.microcycles[index]
-  weekNumber: number;
+  planText: string;        // Full fitness plan description
+  userProfile: string;     // User's markdown profile
+  absoluteWeek: number;    // Week number from plan start (1-indexed)
+  isDeload: boolean;       // Whether this should be a deload week
 }
 
-export interface DayOverviews {
-  mondayOverview: string;
-  tuesdayOverview: string;
-  wednesdayOverview: string;
-  thursdayOverview: string;
-  fridayOverview: string;
-  saturdayOverview: string;
-  sundayOverview: string;
-}
 /**
  * Output from microcycle agent
  */
 export interface MicrocycleAgentOutput {
-  dayOverviews: DayOverviews; // Individual day overviews extracted from description
-  description: string; // Long-form narrative description of the weekly microcycle
-  isDeload: boolean; // Whether this is a deload week (reduced volume and intensity)
-  formatted: string; // Markdown-formatted weekly overview for frontend display
-  message: string; // SMS-formatted weekly check-in/breakdown message
-  wasModified?: boolean; // Whether the microcycle was modified (only present for update operations)
-  modifications?: string; // Explanation of changes made (only present for update operations when wasModified is true)
+  days: string[];          // Array of 7 day overviews [Monday-Sunday]
+  description: string;     // Long-form narrative description of the weekly microcycle
+  isDeload: boolean;       // Whether this is a deload week (reduced volume and intensity)
+  formatted: string;       // Markdown-formatted weekly overview for frontend display
+  message: string;         // SMS-formatted weekly check-in/breakdown message
+  wasModified?: boolean;   // Whether the microcycle was modified (only present for update operations)
+  modifications?: string;  // Explanation of changes made (only present for update operations when wasModified is true)
 }
 
 /**

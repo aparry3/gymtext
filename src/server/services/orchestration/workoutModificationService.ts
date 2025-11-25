@@ -205,12 +205,17 @@ export class WorkoutModificationService {
       // Calculate remaining days (today and future days only) in user's timezone
       const today = now(user.timezone).toJSDate();
 
-      // getWeekday returns 1-7 (Mon-Sun), convert to 0-6 (Sun-Sat) for array indexing
+      // getWeekday returns 0-6 (Mon-Sun), which maps directly to days array index
       const todayDayOfWeek = getDayOfWeek(today, user.timezone);
 
       // Capture original day overview for today (for comparison after modification)
-      const todayOverviewField = this.getDayOverviewField(todayDayOfWeek);
-      const originalTodayOverview = (microcycle as unknown as Record<string, unknown>)[todayOverviewField] as string | null;
+      // Days array is indexed 0-6 (Mon-Sun)
+      const dayIndexMap: Record<DayOfWeek, number> = {
+        'MONDAY': 0, 'TUESDAY': 1, 'WEDNESDAY': 2, 'THURSDAY': 3,
+        'FRIDAY': 4, 'SATURDAY': 5, 'SUNDAY': 6
+      };
+      const todayDayIndex = dayIndexMap[todayDayOfWeek];
+      const originalTodayOverview = microcycle.days[todayDayIndex] || null;
 
       // Use the microcycle modification agent to modify the pattern
       const modifyMicrocycleAgent = createModifyMicrocycleAgent();
@@ -232,26 +237,18 @@ export class WorkoutModificationService {
           modifiedMicrocycle: {
             overview: modifyMicrocycleResult.description,
             isDeload: modifyMicrocycleResult.isDeload || false,
-            days: [
-              modifyMicrocycleResult.dayOverviews.mondayOverview || '',
-              modifyMicrocycleResult.dayOverviews.tuesdayOverview || '',
-              modifyMicrocycleResult.dayOverviews.wednesdayOverview || '',
-              modifyMicrocycleResult.dayOverviews.thursdayOverview || '',
-              modifyMicrocycleResult.dayOverviews.fridayOverview || '',
-              modifyMicrocycleResult.dayOverviews.saturdayOverview || '',
-              modifyMicrocycleResult.dayOverviews.sundayOverview || '',
-            ],
+            days: modifyMicrocycleResult.days,
           },
           modifications: modifyMicrocycleResult.modifications || 'Updated weekly pattern based on your request',
           currentWeekday: todayDayOfWeek as DayOfWeek,
           user,
         });
 
-        // Update the microcycle with the new pattern (dayOverviews from the result)
+        // Update the microcycle with the new pattern (days array from the result)
         await this.microcycleService.updateMicrocycle(
           microcycle.id,
           {
-            ...modifyMicrocycleResult.dayOverviews,
+            days: modifyMicrocycleResult.days,
             description: modifyMicrocycleResult.description,
             isDeload: modifyMicrocycleResult.isDeload,
             formatted: modifyMicrocycleResult.formatted,
@@ -260,7 +257,7 @@ export class WorkoutModificationService {
         );
 
         // Check if today's overview changed - if so, regenerate today's workout
-        const newTodayOverview = (modifyMicrocycleResult.dayOverviews as unknown as Record<string, unknown>)[todayOverviewField] as string | null;
+        const newTodayOverview = modifyMicrocycleResult.days[todayDayIndex] || null;
 
         if (originalTodayOverview !== newTodayOverview) {
 
@@ -303,7 +300,6 @@ export class WorkoutModificationService {
             await this.workoutInstanceService.createWorkout({
               clientId: userId,
               fitnessPlanId: plan.id!,
-              mesocycleId: null,
               microcycleId: microcycle.id,
               date: today,
               sessionType: this.mapThemeToSessionType(theme),

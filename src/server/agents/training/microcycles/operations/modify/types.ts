@@ -49,12 +49,6 @@ export interface ModifyMicrocycleContext {
  * Result of modifying a microcycle with all day overviews and modifications applied
  */
 export interface ModifiedMicrocycleDayOverviews {
-  mondayOverview: string;
-  tuesdayOverview: string;
-  wednesdayOverview: string;
-  thursdayOverview: string;
-  fridayOverview: string;
-  saturdayOverview: string;
-  sundayOverview: string;
+  days: string[];  // Array of 7 day overviews [Monday-Sunday]
   modificationsApplied: string[]; // List of specific changes made to the weekly pattern
 }

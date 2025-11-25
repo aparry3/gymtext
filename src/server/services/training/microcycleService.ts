@@ -1,19 +1,26 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { FitnessPlanService } from './fitnessPlanService';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
+import { FitnessPlan } from '@/server/models/fitnessPlan';
 import { createMicrocycleAgent } from '@/server/agents/training/microcycles/chain';
 import type { ProgressInfo } from './progressService';
+import { UserService } from '../user/userService';
 
+/**
+ * Simplified MicrocycleService
+ *
+ * Creates and manages microcycles. Now works directly with fitness plan text
+ * instead of mesocycle overviews. Uses absoluteWeek and days array.
+ */
 export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
-  private fitnessPlanService: FitnessPlanService;
+  private userService: UserService;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.userService = UserService.getInstance();
   }
 
   public static getInstance(): MicrocycleService {
@@ -61,29 +68,14 @@ export class MicrocycleService {
   }
 
   /**
-   * Get microcycles by mesocycle index
+   * Get microcycle by absolute week number
    */
-  public async getMicrocyclesByMesocycleIndex(userId: string, mesocycleIndex: number) {
-    return await this.microcycleRepo.getMicrocyclesByMesocycleIndex(userId, mesocycleIndex);
-  }
-
-  /**
-   * Get a specific microcycle by mesocycle index and week number
-   */
-  public async getMicrocycleByWeek(userId: string, mesocycleIndex: number, weekNumber: number) {
-    // First get the fitness plan to get the fitnessPlanId
-    const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(userId);
-
-    if (!fitnessPlan || !fitnessPlan.id) {
-      return null;
-    }
-
-    return await this.microcycleRepo.getMicrocycleByWeek(
-      userId,
-      fitnessPlan.id,
-      mesocycleIndex,
-      weekNumber
-    );
+  public async getMicrocycleByAbsoluteWeek(
+    userId: string,
+    fitnessPlanId: string,
+    absoluteWeek: number
+  ): Promise<Microcycle | null> {
+    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(userId, fitnessPlanId, absoluteWeek);
   }
 
   /**
@@ -99,24 +91,17 @@ export class MicrocycleService {
   }
 
   /**
-   * Update a microcycle's day overviews
+   * Update a microcycle's days array
    */
-  public async updateMicrocycleDayOverviews(
+  public async updateMicrocycleDays(
     microcycleId: string,
-    dayOverviews: Partial<{
-      mondayOverview: string;
-      tuesdayOverview: string;
-      wednesdayOverview: string;
-      thursdayOverview: string;
-      fridayOverview: string;
-      saturdayOverview: string;
-      sundayOverview: string;
-    }>
+    days: string[]
   ): Promise<void> {
-    await this.microcycleRepo.updateMicrocycle(microcycleId, dayOverviews);
+    await this.microcycleRepo.updateMicrocycle(microcycleId, { days });
   }
+
   /**
-   * Update a microcycle's day overviews
+   * Update a microcycle
    */
   public async updateMicrocycle(
     microcycleId: string,
@@ -125,40 +110,35 @@ export class MicrocycleService {
     await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
   }
 
-
   /**
    * Create a new microcycle from progress information
-   * This method takes pre-calculated progress and creates the microcycle in the database
+   * Uses fitness plan text and user profile to generate the week
    */
   public async createMicrocycleFromProgress(
     userId: string,
-    fitnessPlanId: string,
+    plan: FitnessPlan,
     progress: ProgressInfo
   ): Promise<Microcycle> {
-    // Microcycle overview must exist to create a microcycle
-    if (!progress.microcycleOverview) {
-      throw new Error(`No microcycle overview found for mesocycle ${progress.mesocycleIndex}, microcycle ${progress.microcycleIndex}`);
+    // Get user profile for context
+    const user = await this.userService.getUser(userId);
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
     }
 
-    // Generate new day overviews, description, formatted markdown, isDeload flag, and message for the week using AI agent
-    const { dayOverviews, description, formatted, isDeload, message } = await this.generateMicrocyclePattern(
-      progress.microcycleOverview,
-      progress.absoluteWeek
+    // Generate microcycle using AI agent with plan text + user profile + week number
+    const { days, description, formatted, isDeload, message } = await this.generateMicrocyclePattern(
+      plan.description,
+      user.markdownProfile || '',
+      progress.absoluteWeek,
+      progress.isDeload  // Pass the calculated isDeload from progress
     );
 
-    // Create new microcycle with pre-generated long-form content, formatted markdown, and message
+    // Create new microcycle
     const microcycle = await this.microcycleRepo.createMicrocycle({
       userId,
-      fitnessPlanId,
-      mesocycleIndex: progress.mesocycleIndex,
-      weekNumber: progress.microcycleIndex,
-      mondayOverview: dayOverviews.mondayOverview,
-      tuesdayOverview: dayOverviews.tuesdayOverview,
-      wednesdayOverview: dayOverviews.wednesdayOverview,
-      thursdayOverview: dayOverviews.thursdayOverview,
-      fridayOverview: dayOverviews.fridayOverview,
-      saturdayOverview: dayOverviews.saturdayOverview,
-      sundayOverview: dayOverviews.sundayOverview,
+      fitnessPlanId: plan.id!,
+      absoluteWeek: progress.absoluteWeek,
+      days,
       description,
       isDeload,
       formatted,
@@ -168,44 +148,40 @@ export class MicrocycleService {
       isActive: false, // No longer using isActive flag - we query by dates instead
     });
 
-    console.log(`Created new microcycle for user ${userId}, mesocycle ${progress.mesocycleIndex}, week ${progress.microcycleIndex} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
+    console.log(`[MicrocycleService] Created microcycle for user ${userId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
     return microcycle;
   }
 
   /**
-   * Generate a microcycle day overviews, description, formatted markdown, isDeload flag, and message using AI agent
-   * Uses the specific microcycle overview from the mesocycle's microcycles array
+   * Generate a microcycle using AI agent
+   * Uses fitness plan text and user profile to generate day descriptions
    */
   private async generateMicrocyclePattern(
-    microcycleOverview: string,
-    weekNumber: number
+    planText: string,
+    userProfile: string,
+    absoluteWeek: number,
+    isDeloadFromProgress: boolean
   ): Promise<{
-    dayOverviews: {
-      mondayOverview: string;
-      tuesdayOverview: string;
-      wednesdayOverview: string;
-      thursdayOverview: string;
-      fridayOverview: string;
-      saturdayOverview: string;
-      sundayOverview: string;
-    };
+    days: string[];
     description: string;
     isDeload: boolean;
     formatted: string;
-    message: string
+    message: string;
   }> {
     try {
-      // Use AI agent to generate day overviews, long-form description, formatted markdown, and message
+      // Use AI agent to generate the microcycle
       const agent = createMicrocycleAgent();
       const result = await agent.invoke({
-        microcycleOverview,
-        weekNumber
+        planText,
+        userProfile,
+        absoluteWeek,
+        isDeload: isDeloadFromProgress,
       });
 
-      console.log(`Generated AI day overviews, description, formatted markdown, isDeload=${result.isDeload}, and message for week ${weekNumber}`);
+      console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;
     } catch (error) {
-      console.error('Failed to generate day overviews with AI agent:', error);
+      console.error('[MicrocycleService] Failed to generate microcycle:', error);
       throw error;
     }
   }
@@ -220,6 +196,13 @@ export class MicrocycleService {
       startDate: startOfWeek(currentDate, timezone),
       endDate: endOfWeek(currentDate, timezone),
     };
+  }
+
+  /**
+   * Get all microcycles for a fitness plan
+   */
+  public async getMicrocyclesByPlanId(fitnessPlanId: string): Promise<Microcycle[]> {
+    return await this.microcycleRepo.getMicrocyclesByPlanId(fitnessPlanId);
   }
 }
 

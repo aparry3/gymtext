@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { microcycleService } from '@/server/services'
 import { checkAuthorization } from '@/server/utils/authMiddleware'
 
+/**
+ * GET /api/users/[id]/microcycles
+ *
+ * Get all microcycles for a user
+ *
+ * Authorization:
+ * - Admin can access any user
+ * - Regular user can only access their own data
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,9 +27,6 @@ export async function GET(
       )
     }
 
-    const { searchParams } = new URL(request.url)
-    const mesocycleIndex = searchParams.get('mesocycleIndex')
-
     if (!userId) {
       return NextResponse.json(
         { success: false, message: 'User ID is required' },
@@ -28,19 +34,8 @@ export async function GET(
       )
     }
 
-    let microcycles
-    if (mesocycleIndex !== null) {
-      const index = parseInt(mesocycleIndex, 10)
-      if (isNaN(index)) {
-        return NextResponse.json(
-          { success: false, message: 'Invalid mesocycle index' },
-          { status: 400 }
-        )
-      }
-      microcycles = await microcycleService.getMicrocyclesByMesocycleIndex(userId, index)
-    } else {
-      microcycles = await microcycleService.getAllMicrocycles(userId)
-    }
+    // Get all microcycles for the user
+    const microcycles = await microcycleService.getAllMicrocycles(userId)
 
     return NextResponse.json({
       success: true,

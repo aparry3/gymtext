@@ -110,7 +110,7 @@ export class WeeklyMessageService {
    * 1. Calculate next Sunday's date in user's timezone
    * 2. Get progress for next week using date-based calculation
    * 3. Get/create next week's microcycle
-   * 4. Check if it's the first week of a new mesocycle
+   * 4. Check if it's a deload week
    * 5. Generate personalized feedback message using AI agent
    * 6. Retrieve breakdown message from stored microcycle.message
    * 7. Send both messages with delay
@@ -164,23 +164,19 @@ export class WeeklyMessageService {
         };
       }
 
-      // Step 5: Check if it's the first week of a new mesocycle
-      const isNewMesocycle = nextWeekMicrocycle.weekNumber === 0;
+      // Step 5: Check if next week is a deload week
+      const isDeload = nextWeekMicrocycle.isDeload;
 
-      const mesocycleName = isNewMesocycle
-        ? `Mesocycle ${nextWeekMicrocycle.mesocycleIndex + 1}`
-        : null;
-
-      if (isNewMesocycle) {
-        console.log(`[WeeklyMessageService] User ${user.id} is starting new mesocycle: ${mesocycleName}`);
+      if (isDeload) {
+        console.log(`[WeeklyMessageService] User ${user.id} is entering a deload week (week ${nextWeekMicrocycle.absoluteWeek})`);
       }
 
       // Step 6: Generate feedback message using AI agent
       const weeklyMessageAgent = createWeeklyMessageAgent();
       const { feedbackMessage } = await weeklyMessageAgent.invoke({
         user,
-        isNewMesocycle,
-        mesocycleName
+        isDeload,
+        absoluteWeek: nextWeekMicrocycle.absoluteWeek
       });
 
       // Step 7: Get breakdown message from stored microcycle

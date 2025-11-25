@@ -9,22 +9,32 @@ export interface ValidationResult {
 }
 
 /**
- * Validates that the fitness plan output has consistent mesocycle count
+ * Validates that the fitness plan output has valid content
  *
  * Checks:
- * - number_of_mesocycles matches the length of the mesocycles array
+ * - plan is a non-empty string
+ * - plan contains expected sections
  *
  * @param output - The fitness plan output to validate
  * @returns Validation result with error message if invalid
  */
 export const validateFitnessPlanOutput = (output: FitnessPlanOutput): ValidationResult => {
-  const { number_of_mesocycles, mesocycles } = output;
+  const { plan } = output;
 
-  // Check mesocycle count matches array length
-  if (number_of_mesocycles !== mesocycles.length) {
+  // Check plan is not empty
+  if (!plan || plan.trim().length === 0) {
     return {
       isValid: false,
-      error: `Mesocycle count mismatch: number_of_mesocycles=${number_of_mesocycles} but mesocycles.length=${mesocycles.length}`
+      error: 'Plan is empty or missing'
+    };
+  }
+
+  // Check for some expected sections (basic validation)
+  const lowerPlan = plan.toLowerCase();
+  if (!lowerPlan.includes('training') && !lowerPlan.includes('split')) {
+    return {
+      isValid: false,
+      error: 'Plan does not appear to contain training structure information'
     };
   }
 

@@ -22,7 +22,6 @@ export type {
 export class WorkoutInstanceModel implements NewWorkoutInstance {
   clientId: string;
   microcycleId: string | null | undefined;
-  mesocycleId: string | null | undefined;
   sessionType: string;
   createdAt: Date | string | undefined;
   date: Date | string;
@@ -40,7 +39,6 @@ export class WorkoutInstanceModel implements NewWorkoutInstance {
     this.fitnessPlanId = workoutInstance.fitnessPlanId;
     this.id = workoutInstance.id;
     this.microcycleId = workoutInstance.microcycleId;
-    this.mesocycleId = workoutInstance.mesocycleId;
     this.sessionType = workoutInstance.sessionType;
     this.details = workoutInstance.details!; // Details is required in DB
     this.goal = workoutInstance.goal;

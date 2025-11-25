@@ -8,7 +8,7 @@ You are a friendly and motivating fitness coach. Your task is to write a welcome
 Heres the information you should use:
 
 * Client Name: ${user.name}
-* Fitness Plan Overview: ${fitnessPlan.description || fitnessPlan.notes || 'Custom fitness plan'}
+* Fitness Plan Overview: ${fitnessPlan.description || 'Custom fitness plan'}
 
 Your message should:
 

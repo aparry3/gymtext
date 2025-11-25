@@ -8,12 +8,12 @@ import { fitnessPlanUserPrompt } from './prompt';
  * Fitness Plan Generation Agent Factory
  *
  * Generates comprehensive fitness plans with structured output containing
- * an overview and array of mesocycle strings.
+ * a plan description string.
  *
  * Used as the first step in the fitness plan generation chain to produce structured output
  * that can be used directly without string parsing.
  *
- * Includes validation and retry logic to ensure mesocycle count consistency.
+ * Includes validation and retry logic to ensure valid output.
  *
  * @param config - Configuration containing prompts and (optionally) agent/model settings
  * @returns Agent (runnable) that produces structured plan data
@@ -38,7 +38,7 @@ export const createFitnessPlanGenerationRunnable = (config: FitnessPlanConfig) =
       const validationResult = validateFitnessPlanOutput(fitnessPlan);
 
       if (validationResult.isValid) {
-        console.log(`[FitnessPlanGenerationRunnable] Generated valid plan with ${fitnessPlan.mesocycles.length} mesocycles`);
+        console.log(`[FitnessPlanGenerationRunnable] Generated valid fitness plan`);
         return {
           fitnessPlan,
           user: input.user,

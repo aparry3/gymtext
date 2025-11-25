@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { microcycleService } from '@/server/services'
+import { microcycleService, fitnessPlanService } from '@/server/services'
 import { checkAuthorization } from '@/server/utils/authMiddleware'
 
+/**
+ * GET /api/users/[id]/microcycle
+ *
+ * Get microcycle by absolute week number
+ *
+ * Query params:
+ * - absoluteWeek: Week number from plan start (1-indexed)
+ *
+ * Authorization:
+ * - Admin can access any user
+ * - Regular user can only access their own data
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -19,8 +31,7 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const mesocycleIndex = searchParams.get('mesocycleIndex')
-    const weekNumber = searchParams.get('weekNumber')
+    const absoluteWeekParam = searchParams.get('absoluteWeek')
 
     if (!userId) {
       return NextResponse.json(
@@ -29,24 +40,32 @@ export async function GET(
       )
     }
 
-    if (mesocycleIndex === null || weekNumber === null) {
+    if (absoluteWeekParam === null) {
       return NextResponse.json(
-        { success: false, message: 'Mesocycle index and week number are required' },
+        { success: false, message: 'absoluteWeek is required' },
         { status: 400 }
       )
     }
 
-    const mesocycleIdx = parseInt(mesocycleIndex, 10)
-    const week = parseInt(weekNumber, 10)
+    const absoluteWeek = parseInt(absoluteWeekParam, 10)
 
-    if (isNaN(mesocycleIdx) || isNaN(week)) {
+    if (isNaN(absoluteWeek) || absoluteWeek < 1) {
       return NextResponse.json(
-        { success: false, message: 'Invalid mesocycle index or week number' },
+        { success: false, message: 'Invalid absolute week number (must be >= 1)' },
         { status: 400 }
       )
     }
 
-    const microcycle = await microcycleService.getMicrocycleByWeek(userId, mesocycleIdx, week)
+    // Get the user's current plan
+    const plan = await fitnessPlanService.getCurrentPlan(userId)
+    if (!plan || !plan.id) {
+      return NextResponse.json(
+        { success: false, message: 'No fitness plan found for user' },
+        { status: 404 }
+      )
+    }
+
+    const microcycle = await microcycleService.getMicrocycleByAbsoluteWeek(userId, plan.id, absoluteWeek)
 
     if (!microcycle) {
       return NextResponse.json(

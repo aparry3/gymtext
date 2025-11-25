@@ -1,6 +1,6 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import type { 
-  NewWorkoutInstance, 
+import type {
+  NewWorkoutInstance,
   WorkoutInstance
 } from '@/server/models/workout';
 
@@ -12,17 +12,17 @@ export class WorkoutInstanceRepository extends BaseRepository {
     // Ensure details field is properly serialized for JSONB column
     const serializedData = {
       ...data,
-      details: typeof data.details === 'string' 
-        ? data.details 
+      details: typeof data.details === 'string'
+        ? data.details
         : JSON.stringify(data.details)
     };
-    
+
     const result = await this.db
       .insertInto('workoutInstances')
       .values(serializedData)
       .returningAll()
       .executeTakeFirstOrThrow();
-    
+
     return result;
   }
 
@@ -30,8 +30,8 @@ export class WorkoutInstanceRepository extends BaseRepository {
    * Find workout instances for a client within a date range
    */
   async findByClientIdAndDateRange(
-    clientId: string, 
-    startDate: Date, 
+    clientId: string,
+    startDate: Date,
     endDate: Date
   ): Promise<WorkoutInstance[]> {
     const results = await this.db
@@ -42,7 +42,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .orderBy('date', 'asc')
       .selectAll()
       .execute();
-    
+
     return results;
   }
 
@@ -87,7 +87,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
         'workoutInstances.id',
         'workoutInstances.clientId',
         'workoutInstances.fitnessPlanId',
-        'workoutInstances.mesocycleId',
         'workoutInstances.microcycleId',
         'workoutInstances.date',
         'workoutInstances.sessionType',
@@ -96,8 +95,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
         'workoutInstances.completedAt',
         'workoutInstances.createdAt',
         'workoutInstances.updatedAt',
-        'microcycles.mesocycleIndex',
-        'microcycles.weekNumber as microcycleWeek'
+        'microcycles.absoluteWeek'
       ])
       .where('workoutInstances.clientId', '=', userId)
       .orderBy('workoutInstances.date', 'desc')
@@ -119,7 +117,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    
+
     const results = await this.db
       .selectFrom('workoutInstances')
       .where('clientId', '=', userId)
@@ -128,7 +126,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .orderBy('date', 'desc')
       .selectAll()
       .execute();
-    
+
     return results;
   }
 
@@ -157,20 +155,20 @@ export class WorkoutInstanceRepository extends BaseRepository {
       ...data,
       updatedAt: new Date()
     };
-    
+
     if (data.details) {
-      updateData.details = typeof data.details === 'string' 
-        ? data.details 
+      updateData.details = typeof data.details === 'string'
+        ? data.details
         : JSON.stringify(data.details);
     }
-    
+
     const result = await this.db
       .updateTable('workoutInstances')
       .set(updateData)
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
-    
+
     return result;
   }
 
@@ -181,12 +179,12 @@ export class WorkoutInstanceRepository extends BaseRepository {
   async deleteOldWorkouts(daysToKeep: number = 90): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-    
+
     const result = await this.db
       .deleteFrom('workoutInstances')
       .where('date', '<', cutoffDate)
       .executeTakeFirst();
-    
+
     return Number(result.numDeletedRows);
   }
 
@@ -200,30 +198,27 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .selectAll()
       .where('id', '=', workoutId)
       .executeTakeFirst();
-    
+
     return result;
   }
 
   /**
-   * Get workouts by microcycle and mesocycle
+   * Get workouts by microcycle
    * @param userId The user's ID
-   * @param mesocycleId The mesocycle ID
    * @param microcycleId The microcycle ID
    */
   async getWorkoutsByMicrocycle(
     userId: string,
-    mesocycleId: string,
     microcycleId: string
   ): Promise<WorkoutInstance[]> {
     const results = await this.db
       .selectFrom('workoutInstances')
       .where('clientId', '=', userId)
-      .where('mesocycleId', '=', mesocycleId)
       .where('microcycleId', '=', microcycleId)
       .orderBy('date', 'asc')
       .selectAll()
       .execute();
-    
+
     return results;
   }
 
@@ -245,7 +240,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
         'workoutInstances.id',
         'workoutInstances.clientId',
         'workoutInstances.fitnessPlanId',
-        'workoutInstances.mesocycleId',
         'workoutInstances.microcycleId',
         'workoutInstances.date',
         'workoutInstances.sessionType',
@@ -254,8 +248,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
         'workoutInstances.completedAt',
         'workoutInstances.createdAt',
         'workoutInstances.updatedAt',
-        'microcycles.mesocycleIndex',
-        'microcycles.weekNumber as microcycleWeek'
+        'microcycles.absoluteWeek'
       ])
       .where('workoutInstances.clientId', '=', userId)
       .where('workoutInstances.date', '>=', startDate)

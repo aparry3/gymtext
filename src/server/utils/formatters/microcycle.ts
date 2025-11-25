@@ -7,111 +7,58 @@
 
 import type { MicrocyclePattern } from '@/server/models/microcycle/schema';
 
-type StructuredDay = MicrocyclePattern['days'][number];
-
 /**
- * Flexible day input type that accepts both full StructuredDay and partial day objects
- * Omits the strict enum from StructuredDay to allow any string for 'day'
+ * Simple day input with day name and content
  */
-type DayInput = Omit<Partial<StructuredDay>, 'day' | 'theme'> & {
-  day: string;
-  theme: string;
-};
+interface DayInput {
+  day: string;    // Day name (e.g., "MONDAY")
+  content: string; // Day overview content
+}
 
 /**
- * Format a structured microcycle day into a detailed string representation
+ * Format a microcycle day into a string representation
  *
- * Converts all available structured fields into a human-readable format
- * suitable for LLM prompts and workout generation.
- *
- * @param day - Structured day object from microcycle pattern or partial day object
- * @returns Formatted multi-line string with all available day details
- *
- * @example
- * ```typescript
- * const formatted = formatMicrocycleDay({
- *   day: "MONDAY",
- *   theme: "Upper Strength",
- *   load: "heavy",
- *   intensity: { percent1RM: "75-85%", rir: "2-3" },
- *   // ... other fields
- * });
- * // Returns:
- * // Day: MONDAY
- * // Theme: Upper Strength
- * // Load Level: heavy
- * // ...
- * ```
+ * @param day - Day object with name and content
+ * @returns Formatted string with day details
  */
 export function formatMicrocycleDay(day: DayInput): string {
+  return `Day: ${day.day}\n${day.content}`;
+}
+
+/**
+ * Format all days of a microcycle into a summary
+ *
+ * @param days - Array of 7 day overview strings
+ * @returns Formatted multi-line string with all days
+ */
+export function formatMicrocycleDays(days: string[]): string {
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  return days.map((content, index) => {
+    const dayName = dayNames[index] || `Day ${index + 1}`;
+    return `## ${dayName}\n${content}`;
+  }).join('\n\n');
+}
+
+/**
+ * Format a full microcycle pattern into a readable overview
+ *
+ * @param pattern - Complete microcycle pattern
+ * @returns Formatted overview string
+ */
+export function formatMicrocyclePattern(pattern: MicrocyclePattern): string {
   const sections: string[] = [];
 
-  // Day and theme (always present)
-  sections.push(`Day: ${day.day}`);
-  sections.push(`Theme: ${day.theme}`);
+  // Overview
+  sections.push(`# Weekly Overview\n${pattern.overview}`);
 
-  // Load level
-  if (day.load) {
-    sections.push(`Load Level: ${day.load}`);
+  // Deload indicator
+  if (pattern.isDeload) {
+    sections.push('**Note: This is a DELOAD week**');
   }
 
-  // Session focus
-  if (day.sessionFocus) {
-    sections.push(`Focus: ${day.sessionFocus}`);
-  }
+  // Days
+  sections.push(formatMicrocycleDays(pattern.days));
 
-  // Primary muscle groups
-  if (day.primaryMuscleGroups && day.primaryMuscleGroups.length > 0) {
-    sections.push(`Primary Muscles: ${day.primaryMuscleGroups.join(', ')}`);
-  }
-
-  // Secondary muscle groups
-  if (day.secondaryMuscleGroups && day.secondaryMuscleGroups.length > 0) {
-    sections.push(`Secondary Muscles: ${day.secondaryMuscleGroups.join(', ')}`);
-  }
-
-  // Intensity guidance
-  if (day.intensity) {
-    const intensityParts: string[] = [];
-    if (day.intensity.percent1RM) {
-      intensityParts.push(`${day.intensity.percent1RM} 1RM`);
-    }
-    if (day.intensity.rir) {
-      intensityParts.push(`RIR ${day.intensity.rir}`);
-    }
-    if (intensityParts.length > 0) {
-      sections.push(`Intensity: ${intensityParts.join(', ')}`);
-    }
-  }
-
-  // Volume target
-  if (day.volumeTarget) {
-    const volumeParts: string[] = [];
-    if (day.volumeTarget.setsPerMuscle) {
-      volumeParts.push(day.volumeTarget.setsPerMuscle);
-    }
-    if (day.volumeTarget.totalSetsEstimate) {
-      volumeParts.push(`~${day.volumeTarget.totalSetsEstimate} total sets`);
-    }
-    if (volumeParts.length > 0) {
-      sections.push(`Volume: ${volumeParts.join(', ')}`);
-    }
-  }
-
-  // Conditioning
-  if (day.conditioning) {
-    sections.push(`Conditioning: ${day.conditioning}`);
-  }
-
-  // Session duration
-  if (day.sessionDuration) {
-    sections.push(`Duration: ${day.sessionDuration}`);
-  }
-
-  // Notes (coaching cues, recovery reminders, etc.)
-  if (day.notes) {
-    sections.push(`Notes: ${day.notes}`);
-  }
-
-  return sections.join('\n');
+  return sections.join('\n\n');
 }

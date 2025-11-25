@@ -11,112 +11,73 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
  * Simplified FitnessPlan type
  *
  * Stores:
- * - description: Long-form plan with all details and reasoning
- * - mesocycles: Array of mesocycle overview strings
+ * - description: Structured text plan (contains split, frequency, goals, deload rules, etc.)
  * - formatted: Markdown-formatted plan for frontend display
  * - message: Brief summary for SMS (optional)
- * - notes: Special considerations (optional)
+ *
+ * Plans are ongoing by default - no fixed duration.
+ * All versions are kept (query latest by created_at).
  */
-export type FitnessPlan = Omit<NewFitnessPlan, 'mesocycles'> & {
-  mesocycles: string[];
-  formatted?: string | null;
+export interface FitnessPlan {
   id?: string;
-};
+  clientId: string;
+  description: string;  // Structured text plan
+  formatted?: string | null;
+  message?: string | null;
+  startDate: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 /**
  * Overview returned by fitness plan agent
  */
 export interface FitnessPlanOverview {
-  description: string; // Long-form plan description with mesocycle delimiters
-  mesocycles: string[]; // Extracted mesocycle overviews
-  totalWeeks: number; // Total number of weeks in the plan
-  formatted: string; // Markdown-formatted plan for frontend display
-  summary?: string; // Brief summary for SMS
-  notes?: string; // Special considerations
-  message?: string; // SMS-formatted plan message
-}
-
-/**
- * DEPRECATED: Legacy Mesocycle interface for backward compatibility
- * This interface is kept to support legacy code that hasn't been migrated yet.
- * New code should use mesocycle strings directly from FitnessPlan.mesocycles
- */
-export interface Mesocycle {
-  name: string;
-  objective?: string;
-  focus?: string[];
-  durationWeeks?: number;
-  startWeek?: number;
-  endWeek?: number;
-  volumeTrend?: "increasing" | "stable" | "decreasing";
-  intensityTrend?: "increasing" | "stable" | "taper";
-  conditioningFocus?: string;
-  weeklyVolumeTargets?: Record<string, number>;
-  avgRIRRange?: [number, number];
-  keyThemes?: string[];
-  longFormDescription?: string;
-  microcycles?: string[];
+  description: string;  // Structured text plan
+  formatted: string;    // Markdown-formatted plan for frontend display
+  message?: string;     // SMS-friendly summary
 }
 
 export class FitnessPlanModel implements FitnessPlan {
-  programType: string;
-  mesocycles: string[];
-  lengthWeeks: number | null;
-  notes: string | null;
-  description: string | null;
-  startDate: Date;
-  clientId: string;
-  createdAt: Date;
-  goalStatement: string | null;
   id: string;
-  updatedAt: Date;
-  message: string | null;
+  clientId: string;
+  description: string;
   formatted: string | null;
+  message: string | null;
+  startDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
 
   constructor(
-    programType: string,
-    mesocycles: string[],
-    lengthWeeks: number | null,
-    notes: string | null,
-    description: string | null,
-    startDate: Date,
-    clientId: string,
-    createdAt: Date,
-    goalStatement: string | null,
     id: string,
-    updatedAt: Date,
+    clientId: string,
+    description: string,
+    formatted: string | null,
     message: string | null,
-    formatted: string | null
+    startDate: Date,
+    createdAt: Date,
+    updatedAt: Date
   ) {
-    this.programType = programType;
-    this.mesocycles = mesocycles;
-    this.lengthWeeks = lengthWeeks;
-    this.notes = notes;
-    this.description = description;
-    this.startDate = startDate;
-    this.clientId = clientId;
-    this.createdAt = createdAt;
-    this.goalStatement = goalStatement;
     this.id = id;
-    this.updatedAt = updatedAt;
-    this.message = message;
+    this.clientId = clientId;
+    this.description = description;
     this.formatted = formatted;
+    this.message = message;
+    this.startDate = startDate;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
-    // Parse mesocycles from JSON if needed
-    let mesocycles: string[] = [];
-    if (fitnessPlan.mesocycles) {
-      if (Array.isArray(fitnessPlan.mesocycles)) {
-        mesocycles = fitnessPlan.mesocycles as string[];
-      } else if (typeof fitnessPlan.mesocycles === 'string') {
-        mesocycles = JSON.parse(fitnessPlan.mesocycles);
-      }
-    }
-
     return {
-      ...fitnessPlan,
-      mesocycles,
+      id: fitnessPlan.id,
+      clientId: fitnessPlan.clientId,
+      description: fitnessPlan.description || '',
+      formatted: fitnessPlan.formatted,
+      message: fitnessPlan.message,
+      startDate: new Date(fitnessPlan.startDate as unknown as string | number | Date),
+      createdAt: new Date(fitnessPlan.createdAt as unknown as string | number | Date),
+      updatedAt: new Date(fitnessPlan.updatedAt as unknown as string | number | Date),
     };
   }
 
@@ -124,22 +85,12 @@ export class FitnessPlanModel implements FitnessPlan {
     user: UserWithProfile,
     fitnessPlanOverview: FitnessPlanOverview
   ): FitnessPlan {
-    // Calculate lengthWeeks from mesocycles count (estimate)
-    // Each mesocycle is typically 4-8 weeks, but we'll use a default of 4 for now
-    // This can be extracted from the description if needed
-    const estimatedWeeks = fitnessPlanOverview.totalWeeks || fitnessPlanOverview.mesocycles.length * 4;
-
     return {
-      programType: 'other', // Default, can be extracted from description if needed
-      mesocycles: fitnessPlanOverview.mesocycles,
-      formatted: fitnessPlanOverview.formatted,
-      lengthWeeks: estimatedWeeks,
-      notes: fitnessPlanOverview.notes || null,
-      description: fitnessPlanOverview.description,
-      message: fitnessPlanOverview.message || fitnessPlanOverview.summary || null,
       clientId: user.id,
+      description: fitnessPlanOverview.description,
+      formatted: fitnessPlanOverview.formatted,
+      message: fitnessPlanOverview.message || null,
       startDate: new Date(),
-      goalStatement: null,
     };
   }
 

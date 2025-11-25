@@ -475,15 +475,8 @@ interface ModifyMicrocycleUserPromptParams {
 }
 
 const formatCurrentWeekFromRecord = (microcycle: Microcycle) => {
-  const days = [
-    microcycle.mondayOverview ?? "",
-    microcycle.tuesdayOverview ?? "",
-    microcycle.wednesdayOverview ?? "",
-    microcycle.thursdayOverview ?? "",
-    microcycle.fridayOverview ?? "",
-    microcycle.saturdayOverview ?? "",
-    microcycle.sundayOverview ?? "",
-  ];
+  // Use the days array (7 entries: Monday-Sunday)
+  const days = microcycle.days ?? [];
 
   const overview = microcycle.description ?? "";
 
@@ -497,7 +490,7 @@ ${overview}
 ${DAY_NAMES
   .map(
     (name, i) => `    <Day name="${name}">
-${days[i]}
+${days[i] ?? ""}
     </Day>`,
   )
   .join('\n\n')}

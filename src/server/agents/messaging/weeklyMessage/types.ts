@@ -7,11 +7,11 @@ export interface WeeklyMessageInput {
   /** User receiving the weekly message */
   user: UserWithProfile;
 
-  /** Whether next week is the first week of a new mesocycle */
-  isNewMesocycle: boolean;
+  /** Whether next week is a deload week */
+  isDeload: boolean;
 
-  /** Name of the new mesocycle (if isNewMesocycle is true) */
-  mesocycleName?: string | null;
+  /** Week number from plan start (1-indexed) */
+  absoluteWeek: number;
 }
 
 /**
