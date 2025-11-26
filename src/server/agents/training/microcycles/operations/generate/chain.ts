@@ -27,7 +27,7 @@ export const createMicrocycleGenerateAgent = (deps?: MicrocycleAgentDeps) => {
     const microcycleGenerationRunnable = createMicrocycleGenerationRunnable({
       systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
       agentConfig: {
-        model: 'gpt-5-mini'
+        model: 'gpt-5.1'
       }
     });
 
