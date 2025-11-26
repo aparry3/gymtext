@@ -105,7 +105,11 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
 export const createModifyMicrocycleAgent = (deps?: MicrocycleAgentDeps) => {
   return createRunnableAgent<ModifyMicrocycleInput, MicrocycleAgentOutput>(async (input) => {
     // Step 1: Create modify runnable (modify-specific)
-    const modifyMicrocycleRunnable = createModifyMicrocycleRunnable(deps);
+    const modifyMicrocycleRunnable = createModifyMicrocycleRunnable({
+      config: {
+        model: 'gpt-5.1'
+      }
+    });
 
     // Step 2: Create shared post-processing chain
     const postProcessChain = createMicrocyclePostProcessChain(deps, 'modify');

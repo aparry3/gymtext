@@ -44,16 +44,10 @@ const fitnessPlanService = FitnessPlanService.getInstance();
 // ============================================================================
 
 /**
- * Check if a user has a valid fitness profile
+ * Check if a user has a valid fitness profile (markdownProfile is used by AI agents)
  */
 function hasValidProfile(user: UserWithProfile): boolean {
-  if (!user.profile) {
-    return false;
-  }
-
-  // Check if profile has essential data (goals field is required)
-  const profile = user.profile;
-  return !!(profile.goals?.primary);
+  return !!user.markdownProfile;
 }
 
 /**
