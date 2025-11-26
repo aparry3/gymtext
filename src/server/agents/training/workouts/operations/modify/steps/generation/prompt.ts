@@ -397,7 +397,7 @@ You are given the following context about the user's training session.
 ${workoutOverview}
 </WorkoutOverview>
 
-${user.markdownProfile ? `<Fitness Profile>\n${user.markdownProfile.trim()}\n</Fitness Profile>` : ''}
+${user.profile ? `<Fitness Profile>\n${user.profile.trim()}\n</Fitness Profile>` : ''}
 
 <ChangesRequested>
 ${changesRequested}

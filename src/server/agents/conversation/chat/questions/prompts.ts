@@ -113,7 +113,7 @@ export const buildQuestionsUserMessage = (input: ChatSubagentInput): string => {
 **User Gender**: ${user.gender || 'Unknown'}
 
 ### User Profile
-${user.markdownProfile || 'No profile available'}
+${user.profile || 'No profile available'}
 
 ## DYNAMIC CONTEXT
 

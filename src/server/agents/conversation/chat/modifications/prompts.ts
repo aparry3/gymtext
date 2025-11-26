@@ -102,7 +102,7 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
 **User Name**: ${user.name}
 
 ### User Profile
-${user.markdownProfile || 'No profile available'}
+${user.profile || 'No profile available'}
 
 ---
 

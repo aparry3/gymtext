@@ -10,7 +10,7 @@ import type { User } from '@/server/models/user/schemas';
  * Create a default/empty Markdown profile
  * Used when creating a new user with no profile data
  */
-export function createEmptyMarkdownProfile(user?: Partial<User>): string {
+export function createEmptyProfile(user?: Partial<User>): string {
   const sections: string[] = [];
 
   // Minimal IDENTITY section

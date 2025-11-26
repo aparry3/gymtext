@@ -34,7 +34,7 @@ export const onboardingPrompt = (user: UserWithProfile) => `
 Create an onboarding guidance message for ${user.name}.
 
 <User Profile>
-${user.markdownProfile || 'No profile information available yet'}
+${user.profile || 'No profile information available yet'}
 </User Profile>
 
 <Instructions>
@@ -53,7 +53,7 @@ export const programReadyPrompt = (user: UserWithProfile, programOverview: strin
 Create a message announcing that ${user.name}s fitness program is ready.
 
 <User Profile>
-${user.markdownProfile || 'No profile information available'}
+${user.profile || 'No profile information available'}
 </User Profile>
 
 <Program Overview>
@@ -75,7 +75,7 @@ export const firstWorkoutPrompt = (user: UserWithProfile, firstWorkout: { name?:
 Create a message for ${user.name}s first workout.
 
 <User Profile>
-${user.markdownProfile || 'No profile information available'}
+${user.profile || 'No profile information available'}
 </User Profile>
 
 <First Workout>

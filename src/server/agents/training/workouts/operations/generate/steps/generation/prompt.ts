@@ -297,7 +297,7 @@ export const userPrompt = (
   
   ${deloadNotice}
 
-  ${input.user.markdownProfile ? `## Fitness Profile\n${input.user.markdownProfile.trim()}` : ''}
+  ${input.user.profile ? `## Fitness Profile\n${input.user.profile.trim()}` : ''}
 
   ---
   Using the information above, generate a complete, personalized workout for this day. 

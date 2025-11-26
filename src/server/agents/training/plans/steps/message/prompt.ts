@@ -70,7 +70,7 @@ Name: ${user.name}
 </User>
 
 <User Profile>
-${user.markdownProfile || 'No profile information available'}
+${user.profile || 'No profile information available'}
 </User Profile>
 
 <Fitness Plan>

@@ -92,7 +92,7 @@ export class UserService {
 
   async getUser(userId: string): Promise<UserWithProfile | undefined | null> {
     return await this.circuitBreaker.execute(async () => {
-      return await this.userRepository.findWithMarkdownProfile(userId);
+      return await this.userRepository.findWithProfile(userId);
     });
   }
 
@@ -201,7 +201,7 @@ export class UserService {
 
   async getUserForAdmin(id: string): Promise<AdminUserDetailResponse> {
     const result = await this.circuitBreaker.execute(async () => {
-      const user = await this.userRepository.findWithMarkdownProfile(id);
+      const user = await this.userRepository.findWithProfile(id);
       if (!user) {
         throw new Error('User not found');
       }
@@ -210,7 +210,7 @@ export class UserService {
 
       return {
         user: adminUser,
-        markdownProfile: user.markdownProfile || null,
+        profile: user.profile || null,
         recentActivity: {
           totalMessages: 0,
           totalWorkouts: 0
@@ -226,7 +226,7 @@ export class UserService {
   }
 
   private transformToAdminUser(user: UserWithProfile): AdminUser {
-    const hasProfile = Boolean(user.markdownProfile);
+    const hasProfile = Boolean(user.profile);
 
     return {
       ...user,
@@ -246,8 +246,8 @@ export class UserService {
 
     const totalUsers = users.length;
     const withEmail = users.filter(u => u.email).length;
-    // Count users with profiles by checking markdownProfile
-    const withProfile = users.filter(u => u.markdownProfile).length;
+    // Count users with profiles by checking profile
+    const withProfile = users.filter(u => u.profile).length;
     const activeToday = 0; // TODO: Implement active user tracking
 
     return {

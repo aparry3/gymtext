@@ -15,7 +15,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
-import { createEmptyMarkdownProfile } from '@/server/utils/profile/jsonToMarkdown';
+import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { formatForAI } from '@/shared/utils/date';
@@ -64,18 +64,18 @@ export class FitnessProfileService {
   }
 
   /**
-   * Save updated Markdown profile
+   * Save updated profile
    * Creates new row in profiles table for history tracking
    *
    * @param userId - UUID of the user
-   * @param markdownProfile - Complete Markdown profile text
+   * @param profile - Complete profile text
    */
-  async saveMarkdownProfile(userId: string, markdownProfile: string): Promise<void> {
+  async saveProfile(userId: string, profile: string): Promise<void> {
     try {
-      await this.profileRepository.createProfileForUser(userId, markdownProfile);
-      console.log(`[FitnessProfileService] Saved Markdown profile for user ${userId}`);
+      await this.profileRepository.createProfileForUser(userId, profile);
+      console.log(`[FitnessProfileService] Saved profile for user ${userId}`);
     } catch (error) {
-      console.error(`[FitnessProfileService] Error saving Markdown profile for user ${userId}:`, error);
+      console.error(`[FitnessProfileService] Error saving profile for user ${userId}:`, error);
       throw error;
     }
   }
@@ -116,7 +116,7 @@ export class FitnessProfileService {
         const message = messageParts.join('\n\n');
 
         // Start with empty profile
-        const currentProfile = createEmptyMarkdownProfile(user);
+        const currentProfile = createEmptyProfile(user);
 
         // Use Profile Update Agent to build initial profile from signup data
         const currentDate = formatForAI(new Date(), user.timezone);

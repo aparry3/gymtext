@@ -44,10 +44,10 @@ const fitnessPlanService = FitnessPlanService.getInstance();
 // ============================================================================
 
 /**
- * Check if a user has a valid fitness profile (markdownProfile is used by AI agents)
+ * Check if a user has a valid fitness profile (profile is used by AI agents)
  */
 function hasValidProfile(user: UserWithProfile): boolean {
-  return !!user.markdownProfile;
+  return !!user.profile;
 }
 
 /**
@@ -75,7 +75,7 @@ async function processSingleUser(
   const userName = userRow.name;
 
   try {
-    // Fetch user with profile (includes markdownProfile for AI agents)
+    // Fetch user with profile (includes profile for AI agents)
     const user = await userService.getUser(userRow.id);
 
     if (!user) {

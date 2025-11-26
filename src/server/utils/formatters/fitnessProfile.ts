@@ -35,11 +35,11 @@ export function formatFitnessProfile(user: UserWithProfile): string {
 
   const header = headerParts.join(' | ');
 
-  // Return minimal info if no markdown profile
-  if (!user.markdownProfile) {
+  // Return minimal info if no profile
+  if (!user.profile) {
     return header + '\n\nSTATUS: No fitness profile available';
   }
 
-  // Return header + markdown profile
-  return header + '\n\n' + user.markdownProfile;
+  // Return header + profile
+  return header + '\n\n' + user.profile;
 }

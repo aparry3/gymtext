@@ -25,7 +25,7 @@ export default function AdminUserDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const [user, setUser] = useState<AdminUser | null>(null)
-  const [markdownProfile, setMarkdownProfile] = useState<string | null>(null)
+  const [profile, setProfile] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSendingWorkout, setIsSendingWorkout] = useState(false)
@@ -43,10 +43,10 @@ export default function AdminUserDetailPage() {
         throw new Error(result.message || 'Failed to fetch user')
       }
 
-      const { user: fetchedUser, markdownProfile: fetchedMarkdownProfile } = result.data
+      const { user: fetchedUser, profile: fetchedProfile } = result.data
 
       setUser(fetchedUser)
-      setMarkdownProfile(fetchedMarkdownProfile || null)
+      setProfile(fetchedProfile || null)
     } catch (err) {
       setError('Failed to load user')
       console.error('Error fetching user:', err)
@@ -244,9 +244,9 @@ export default function AdminUserDetailPage() {
 
           <TabsContent value="profile">
             {/* Profile Content */}
-            {markdownProfile ? (
+            {profile ? (
               <Card className="p-6">
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{markdownProfile}</pre>
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{profile}</pre>
               </Card>
             ) : (
               <EmptyProfileState />

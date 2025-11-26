@@ -89,7 +89,7 @@ export class TestDatabase {
             })
         )
         .selectAll('users')
-        .select('profiles.profile as markdownProfile')
+        .select('profiles.profile')
         .where('users.id', '=', userId)
         .executeTakeFirst();
 

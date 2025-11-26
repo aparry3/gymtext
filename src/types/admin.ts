@@ -55,7 +55,7 @@ export interface AdminUsersResponse {
 
 export interface AdminUserDetailResponse {
   user: AdminUser;
-  markdownProfile: string | null;
+  profile: string | null;
   recentActivity?: {
     lastMessage?: string;
     lastWorkout?: string;

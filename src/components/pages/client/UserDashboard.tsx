@@ -28,7 +28,7 @@ interface UserDashboardProps {
 export function UserDashboard({ userId }: UserDashboardProps) {
   const router = useRouter();
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [markdownProfile, setMarkdownProfile] = useState<string | null>(null);
+  const [profile, setProfile] = useState<string | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [onboardingStatus, setOnboardingStatus] = useState<'pending' | 'in_progress' | 'completed' | 'failed' | null>(null);
@@ -44,10 +44,10 @@ export function UserDashboard({ userId }: UserDashboardProps) {
         throw new Error(result.message || 'Failed to fetch user data');
       }
 
-      const { user: fetchedUser, markdownProfile: fetchedMarkdownProfile } = result.data;
+      const { user: fetchedUser, profile: fetchedProfile } = result.data;
 
       setUser(fetchedUser);
-      setMarkdownProfile(fetchedMarkdownProfile || null);
+      setProfile(fetchedProfile || null);
     } catch (err) {
       setError('Failed to load your profile');
       console.error('Error fetching user:', err);
@@ -260,9 +260,9 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
             <TabsContent value="profile">
               {/* Profile Content */}
-              {markdownProfile ? (
+              {profile ? (
                 <Card className="p-6">
-                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{markdownProfile}</pre>
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{profile}</pre>
                 </Card>
               ) : (
                 <EmptyProfileState />

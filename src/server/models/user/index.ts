@@ -9,7 +9,7 @@ export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
 export type UserWithProfile = User & {
-  markdownProfile?: string | null; // Joined from profiles table
+  profile?: string | null; // Joined from profiles table
 }
 
 /**
@@ -22,14 +22,14 @@ export class UserModel {
   }
 
   /**
-   * Convert DB result with joined markdown profile to UserWithProfile
+   * Convert DB result with joined profile to UserWithProfile
    * Used when fetching user with profiles table joined
    */
-  static fromDbWithMarkdown(dbResult: any): UserWithProfile { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const { markdownProfile, ...userData } = dbResult;
+  static fromDbWithProfile(dbResult: any): UserWithProfile { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { profile, ...userData } = dbResult;
     return {
       ...userData,
-      markdownProfile: markdownProfile || null,
+      profile: profile || null,
     };
   }
 
@@ -102,13 +102,13 @@ export class UserModel {
   /**
    * Transforms user data for display/serialization
    * @param user - User data from database
-   * @param hasMarkdownProfile - Whether the user has a markdown profile in the profiles table
+   * @param hasProfile - Whether the user has a profile in the profiles table
    * @returns Transformed user data
    */
-  static transformUserForDisplay(user: User, hasMarkdownProfile = false): User & { hasProfile: boolean } {
+  static transformUserForDisplay(user: User, hasProfile = false): User & { hasProfile: boolean } {
     return {
       ...user,
-      hasProfile: hasMarkdownProfile
+      hasProfile
     };
   }
 

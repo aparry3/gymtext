@@ -188,10 +188,10 @@ export class UserRepository extends BaseRepository {
   }
 
   /**
-   * Find user with latest Markdown profile
-   * Performs LEFT JOIN with profiles table to get most recent markdown profile
+   * Find user with latest profile
+   * Performs LEFT JOIN with profiles table to get most recent profile
    */
-  async findWithMarkdownProfile(userId: string): Promise<UserWithProfile | undefined> {
+  async findWithProfile(userId: string): Promise<UserWithProfile | undefined> {
     const result = await this.db
       .selectFrom('users')
       .leftJoin('profiles', (join) =>
@@ -208,7 +208,7 @@ export class UserRepository extends BaseRepository {
           })
       )
       .selectAll('users')
-      .select('profiles.profile as markdownProfile')
+      .select('profiles.profile')
       .where('users.id', '=', userId)
       .executeTakeFirst();
 
@@ -216,7 +216,7 @@ export class UserRepository extends BaseRepository {
       return undefined;
     }
 
-    return UserModel.fromDbWithMarkdown(result);
+    return UserModel.fromDbWithProfile(result);
   }
 
   async updatePreferences(userId: string, preferences: { 

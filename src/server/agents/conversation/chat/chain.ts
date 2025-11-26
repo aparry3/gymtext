@@ -59,12 +59,12 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     'modifications': createModificationsAgent({ tools: modificationTools }),
   };
 
-  // Profile Runnable - uses markdown profile from user object, updates via agent
+  // Profile Runnable - uses profile from user object, updates via agent
   // Input: ChatInput (initial chain input)
   // Output: ProfileUpdateOutput
   const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
-    // Get markdown profile from user object
-    const currentProfile = input.user.markdownProfile || '';
+    // Get profile from user object
+    const currentProfile = input.user.profile || '';
 
     // Create and invoke profile update agent
     const agent = createProfileUpdateAgent();

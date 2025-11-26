@@ -111,6 +111,6 @@ export const fitnessPlanUserPrompt = (
 ) => `
 Create a comprehensive fitness plan for ${user.name}.
 
-${user.markdownProfile ? `## Fitness Profile\n${user.markdownProfile.trim()}` : ''}
+${user.profile ? `## Fitness Profile\n${user.profile.trim()}` : ''}
 
 Design the plan from first principles based on their profile. The plan should be ongoing (no fixed duration) and include clear deload rules.`.trim();

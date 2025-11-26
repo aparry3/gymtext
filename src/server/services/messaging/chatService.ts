@@ -89,21 +89,21 @@ export class ChatService {
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
 
-      // Fetch user with markdown profile (if not already included)
-      const userWithMarkdown = user.markdownProfile !== undefined
+      // Fetch user with profile (if not already included)
+      const userWithProfile = user.profile !== undefined
         ? user
         : await userService.getUser(user.id) || user;
 
       // Create chat agent with simplified dependencies using DI pattern
       const agent = createChatAgent({
-        saveProfile: this.fitnessProfileService.saveMarkdownProfile.bind(this.fitnessProfileService),
+        saveProfile: this.fitnessProfileService.saveProfile.bind(this.fitnessProfileService),
         modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
         modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
       });
 
-      // Invoke the agent with user that includes markdown profile
+      // Invoke the agent with user that includes profile
       const chatResult = await agent.invoke({
-        user: userWithMarkdown,
+        user: userWithProfile,
         message,
         previousMessages: contextMessages,
         currentWorkout: currentWorkout,

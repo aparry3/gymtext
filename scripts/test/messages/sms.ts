@@ -109,9 +109,9 @@ class SmsConversationTester {
       userName: userWithProfile?.name || undefined,
       messageCount,
       lastMessage,
-      fitnessProfile: userWithProfile?.markdownProfile ? {
+      fitnessProfile: userWithProfile?.profile ? {
         hasProfile: true,
-        profilePreview: userWithProfile.markdownProfile.substring(0, 200) + '...',
+        profilePreview: userWithProfile.profile.substring(0, 200) + '...',
       } : undefined,
       currentPlan: fitnessPlan ? {
         id: fitnessPlan.id,
