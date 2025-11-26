@@ -62,25 +62,16 @@ Starts simple and ends with a recovery week 💪
 
 
 export const planSummaryMessageUserPrompt = (user: UserWithProfile, overview: string) => {
-  // Determine experience level from user profile
-  let userExperience: 'beginner' | 'intermediate' = 'beginner';
-
-  if (user.profile?.experienceLevel) {
-    userExperience = user.profile.experienceLevel === 'beginner' ? 'beginner' : 'intermediate';
-  } else if (user.profile?.activities) {
-    const strengthActivity = user.profile.activities.find(a => a.type === 'strength');
-    if (strengthActivity && 'experience' in strengthActivity) {
-      userExperience = strengthActivity.experience === 'beginner' ? 'beginner' : 'intermediate';
-    }
-  }
-
   return `
 Generate a short, friendly onboarding SMS for the client below based on their new fitness plan.
 
 <User>
 Name: ${user.name}
-Experience Level: ${userExperience}
 </User>
+
+<User Profile>
+${user.markdownProfile || 'No profile information available'}
+</User Profile>
 
 <Fitness Plan>
 ${overview}

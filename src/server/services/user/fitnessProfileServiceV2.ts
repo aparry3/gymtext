@@ -12,11 +12,10 @@
  */
 
 import { UserWithProfile } from '@/server/models/userModel';
-import { UserRepository } from '@/server/repositories/userRepository';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createProfileUpdateAgent } from '@/server/agents/profileUpdate';
-import { convertJsonProfileToMarkdown, createEmptyMarkdownProfile } from '@/server/utils/profile/jsonToMarkdown';
+import { createProfileUpdateAgent } from '@/server/agents/profile';
+import { createEmptyMarkdownProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { formatForAI } from '@/shared/utils/date';
@@ -36,7 +35,6 @@ export interface ProfileUpdateResult {
 export class FitnessProfileServiceV2 {
   private static instance: FitnessProfileServiceV2;
   private circuitBreaker: CircuitBreaker;
-  private userRepository: UserRepository;
   private profileRepository: ProfileRepository;
 
   private constructor() {
@@ -45,7 +43,6 @@ export class FitnessProfileServiceV2 {
       resetTimeout: 60000, // 1 minute
       monitoringPeriod: 60000 // 1 minute
     });
-    this.userRepository = new UserRepository();
     this.profileRepository = new ProfileRepository();
   }
 
@@ -58,28 +55,12 @@ export class FitnessProfileServiceV2 {
 
   /**
    * Get the current Markdown profile for a user
-   * Falls back to converting JSON profile if Markdown doesn't exist yet
    *
    * @param userId - UUID of the user
    * @returns Markdown profile text or null if no profile exists
    */
   async getCurrentProfile(userId: string): Promise<string | null> {
-    // Try to get Markdown profile from new profiles table
-    const markdownProfile = await this.profileRepository.getCurrentProfileText(userId);
-
-    if (markdownProfile) {
-      return markdownProfile;
-    }
-
-    // Fallback: Check if user has old JSON profile
-    const user = await this.userRepository.findWithProfile(userId);
-    if (user?.profile) {
-      console.log('[FitnessProfileServiceV2] Found JSON profile, converting to Markdown');
-      // Convert JSON to Markdown (migration helper)
-      return convertJsonProfileToMarkdown(user.profile, user);
-    }
-
-    return null;
+    return await this.profileRepository.getCurrentProfileText(userId);
   }
 
   /**
@@ -156,43 +137,6 @@ export class FitnessProfileServiceV2 {
    */
   async getProfileHistory(userId: string, limit: number = 10) {
     return await this.profileRepository.getProfileHistory(userId, limit);
-  }
-
-  /**
-   * Migrate a user's JSON profile to Markdown format
-   * This is a helper method for the migration process
-   *
-   * @param userId - UUID of the user
-   * @returns True if migration was performed, false if already migrated or no profile
-   */
-  async migrateUserToMarkdown(userId: string): Promise<boolean> {
-    try {
-      // Check if already has Markdown profile
-      const hasMarkdownProfile = await this.profileRepository.hasProfile(userId);
-      if (hasMarkdownProfile) {
-        console.log(`[FitnessProfileServiceV2] User ${userId} already has Markdown profile`);
-        return false;
-      }
-
-      // Get JSON profile
-      const user = await this.userRepository.findWithProfile(userId);
-      if (!user?.profile) {
-        console.log(`[FitnessProfileServiceV2] User ${userId} has no profile to migrate`);
-        return false;
-      }
-
-      // Convert to Markdown
-      const markdownProfile = convertJsonProfileToMarkdown(user.profile, user);
-
-      // Save to profiles table
-      await this.profileRepository.createProfileForUser(userId, markdownProfile);
-
-      console.log(`[FitnessProfileServiceV2] Successfully migrated user ${userId} to Markdown profile`);
-      return true;
-    } catch (error) {
-      console.error(`[FitnessProfileServiceV2] Error migrating user ${userId}:`, error);
-      return false;
-    }
   }
 }
 

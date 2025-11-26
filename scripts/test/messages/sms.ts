@@ -27,9 +27,8 @@ interface ConversationContext {
     isFromUser: boolean;
   };
   fitnessProfile?: {
-    goals: string[];
-    level: string;
-    frequency: string;
+    hasProfile: boolean;
+    profilePreview: string;
   };
   currentPlan?: {
     id: string;
@@ -110,16 +109,9 @@ class SmsConversationTester {
       userName: userWithProfile?.name || undefined,
       messageCount,
       lastMessage,
-      fitnessProfile: userWithProfile?.profile ? {
-        goals: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'fitnessGoals' in userWithProfile.profile
-          ? [userWithProfile.profile.fitnessGoals as string]
-          : [],
-        level: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'skillLevel' in userWithProfile.profile
-          ? (userWithProfile.profile.skillLevel as string)
-          : 'beginner',
-        frequency: typeof userWithProfile.profile === 'object' && userWithProfile.profile && 'exerciseFrequency' in userWithProfile.profile
-          ? (userWithProfile.profile.exerciseFrequency as string)
-          : '3x/week',
+      fitnessProfile: userWithProfile?.markdownProfile ? {
+        hasProfile: true,
+        profilePreview: userWithProfile.markdownProfile.substring(0, 200) + '...',
       } : undefined,
       currentPlan: fitnessPlan ? {
         id: fitnessPlan.id,
@@ -149,9 +141,8 @@ class SmsConversationTester {
 
     if (context.fitnessProfile) {
       data.push(['─────────', '─────────']);
-      data.push(['Fitness Level', context.fitnessProfile.level]);
-      data.push(['Frequency', context.fitnessProfile.frequency]);
-      data.push(['Goals', context.fitnessProfile.goals.join(', ')]);
+      data.push(['Has Profile', context.fitnessProfile.hasProfile ? 'Yes' : 'No']);
+      data.push(['Profile Preview', context.fitnessProfile.profilePreview]);
     }
 
     if (context.currentPlan) {

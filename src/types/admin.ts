@@ -1,4 +1,4 @@
-import { User, FitnessProfile } from '@/server/models/user';
+import { User } from '@/server/models/user';
 
 // Admin-specific user types
 export interface AdminUser extends User {
@@ -55,8 +55,7 @@ export interface AdminUsersResponse {
 
 export interface AdminUserDetailResponse {
   user: AdminUser;
-  profile: FitnessProfile | null;
-  markdownProfile?: string | null;
+  markdownProfile: string | null;
   recentActivity?: {
     lastMessage?: string;
     lastWorkout?: string;

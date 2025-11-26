@@ -5,7 +5,7 @@ import type { AgentDeps } from '@/server/agents/base';
 import type { ModifyWeekParams, ModifyWorkoutParams } from './modifications/tools';
 import { WorkoutInstance } from '@/server/models';
 import type { ModifyWeekResult, ModifyWorkoutResult } from '@/server/services';
-import type { ProfileUpdateOutput } from '@/server/agents/profileUpdate';
+import type { ProfileUpdateOutput } from '@/server/agents/profile';
 
 /**
  * Intent types that the triage agent can identify

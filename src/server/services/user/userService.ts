@@ -1,6 +1,6 @@
-import { UserModel, CreateUserData, CreateFitnessProfileData, UserWithProfile } from '@/server/models/userModel';
+import { UserModel, CreateUserData, UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
-import type { User, FitnessProfile } from '@/server/models/user/schemas';
+import type { User } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/types/admin';
 import { getTimezonesAtLocalTime } from '@/shared/utils/date';
@@ -55,7 +55,6 @@ export class UserService {
         preferredSendHour: request.preferredSendHour,
         email: request.email || null,
         stripeCustomerId: request.stripeCustomerId || null,
-        profile: null,
       };
 
       // Validate user data using domain model
@@ -66,15 +65,8 @@ export class UserService {
       if (!user) {
         throw new Error('Failed to create user');
       }
-      
-      // Get user with profile for agent processing
-      const userWithProfile = await this.userRepository.findWithProfile(user.id);
-      if (!userWithProfile) {
-        throw new Error('Failed to retrieve created user');
-      }
 
-
-      return userWithProfile;
+      return user;
     });
     
     if (!result) {
@@ -150,22 +142,6 @@ export class UserService {
     return result;
   }
 
-  async updateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile> {
-    const result = await this.circuitBreaker.execute(async () => {
-      // Validate profile data using domain model
-      UserModel.validateFitnessProfileData(profileData);
-
-      // Update using repository
-      return await this.userRepository.createOrUpdateFitnessProfile(userId, profileData);
-    });
-
-    if (!result) {
-      throw new Error('Failed to update fitness profile');
-    }
-
-    return result;
-  }
-
   async updatePreferences(userId: string, preferences: { preferredSendHour?: number; timezone?: string }): Promise<UserWithProfile> {
     const result = await this.circuitBreaker.execute(async () => {
       return await this.userRepository.updatePreferences(userId, preferences);
@@ -234,7 +210,6 @@ export class UserService {
 
       return {
         user: adminUser,
-        profile: user.profile,
         markdownProfile: user.markdownProfile || null,
         recentActivity: {
           totalMessages: 0,
@@ -251,15 +226,12 @@ export class UserService {
   }
 
   private transformToAdminUser(user: UserWithProfile): AdminUser {
-    const hasProfile = Boolean(user.profile && Object.keys(user.profile).length > 0);
-    
+    const hasProfile = Boolean(user.markdownProfile);
+
     return {
       ...user,
       hasProfile,
-      profileSummary: hasProfile && user.profile ? {
-        primaryGoal: user.profile.goals?.primary,
-        experienceLevel: user.profile.activities?.[0]?.experience || 'Not specified'
-      } : undefined,
+      profileSummary: undefined, // Profile summary now comes from markdown profile parsing if needed
       stats: {
         totalWorkouts: 0,
         isActiveToday: false
@@ -271,10 +243,11 @@ export class UserService {
     // Get basic counts from repository
     const allUsersResult = await this.userRepository.list({ pageSize: 1000 });
     const users = allUsersResult.users;
-    
+
     const totalUsers = users.length;
     const withEmail = users.filter(u => u.email).length;
-    const withProfile = users.filter(u => u.profile && Object.keys(u.profile).length > 0).length;
+    // Count users with profiles by checking markdownProfile
+    const withProfile = users.filter(u => u.markdownProfile).length;
     const activeToday = 0; // TODO: Implement active user tracking
 
     return {

@@ -1,11 +1,8 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import { sql } from 'kysely';
 import {
   type User,
-  type FitnessProfile,
   type UserWithProfile,
   type CreateUserData,
-  type CreateFitnessProfileData,
   UserModel
 } from '@/server/models/userModel';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
@@ -53,15 +50,25 @@ export class UserRepository extends BaseRepository {
       query = query.where('users.createdAt', '<=', new Date(createdTo));
     }
 
-    // Note: hasProfile filter can check if profile is not empty JSON
+    // hasProfile filter checks for existence in profiles table
     if (params.hasProfile === true) {
-      query = query.where('users.profile', 'is not', null)
-        .where('users.profile', '!=', '{}');
+      query = query.where((eb) =>
+        eb.exists(
+          eb.selectFrom('profiles')
+            .whereRef('profiles.clientId', '=', 'users.id')
+            .select('profiles.id')
+        )
+      );
     } else if (params.hasProfile === false) {
-      query = query.where((eb) => eb.or([
-        eb('users.profile', 'is', null),
-        eb('users.profile', '=', '{}')
-      ]));
+      query = query.where((eb) =>
+        eb.not(
+          eb.exists(
+            eb.selectFrom('profiles')
+              .whereRef('profiles.clientId', '=', 'users.id')
+              .select('profiles.id')
+          )
+        )
+      );
     }
 
     let countBuilder = this.db
@@ -77,15 +84,26 @@ export class UserRepository extends BaseRepository {
     }
     if (createdFrom) countBuilder = countBuilder.where('users.createdAt', '>=', new Date(createdFrom));
     if (createdTo) countBuilder = countBuilder.where('users.createdAt', '<=', new Date(createdTo));
-    
+
+    // hasProfile filter checks for existence in profiles table
     if (params.hasProfile === true) {
-      countBuilder = countBuilder.where('users.profile', 'is not', null)
-        .where('users.profile', '!=', '{}');
+      countBuilder = countBuilder.where((eb) =>
+        eb.exists(
+          eb.selectFrom('profiles')
+            .whereRef('profiles.clientId', '=', 'users.id')
+            .select('profiles.id')
+        )
+      );
     } else if (params.hasProfile === false) {
-      countBuilder = countBuilder.where((eb) => eb.or([
-        eb('users.profile', 'is', null),
-        eb('users.profile', '=', '{}')
-      ]));
+      countBuilder = countBuilder.where((eb) =>
+        eb.not(
+          eb.exists(
+            eb.selectFrom('profiles')
+              .whereRef('profiles.clientId', '=', 'users.id')
+              .select('profiles.id')
+          )
+        )
+      );
     }
 
     const totalResult = await countBuilder
@@ -117,7 +135,6 @@ export class UserRepository extends BaseRepository {
       stripeCustomerId: userData.stripeCustomerId || null,
       timezone: userData.timezone,
       preferredSendHour: userData.preferredSendHour,
-      profile: userData.profile || {},
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -170,60 +187,8 @@ export class UserRepository extends BaseRepository {
       .executeTakeFirst());
   }
 
-  async createOrUpdateFitnessProfile(userId: string, profileData: CreateFitnessProfileData): Promise<FitnessProfile | undefined> {
-    // Get the current user
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Merge the new profile data with existing profile
-    const existingProfile = user.profile
-    
-    // Ensure required fields have defaults for new schema structure
-    const updatedProfile: FitnessProfile = {
-      goals: { primary: 'General fitness improvement' }, // Default goal
-      ...existingProfile,
-      ...profileData,
-    };
-
-    // Update the user's profile field
-    await this.db
-      .updateTable('users')
-      .set({
-        profile: JSON.parse(JSON.stringify(updatedProfile)), // Ensure it's a plain object
-        updatedAt: new Date(),
-      })
-      .where('id', '=', userId)
-      .execute();
-
-    // Also log the update in profile_updates table
-    await this.db
-      .insertInto('profileUpdates')
-      .values({
-        userId,
-        patch: JSON.parse(JSON.stringify(profileData)),
-        source: 'api',
-        reason: 'Profile update',
-        createdAt: new Date()
-      })
-      .execute();
-
-    return updatedProfile;
-  }
-
-  async findWithProfile(userId: string): Promise<UserWithProfile | undefined> {
-    const user = await this.findById(userId);
-
-    if (!user) {
-      return undefined;
-    }
-
-    return UserModel.fromDb(user)
-  }
-
   /**
-   * Find user with both JSON profile AND latest Markdown profile
+   * Find user with latest Markdown profile
    * Performs LEFT JOIN with profiles table to get most recent markdown profile
    */
   async findWithMarkdownProfile(userId: string): Promise<UserWithProfile | undefined> {
@@ -252,15 +217,6 @@ export class UserRepository extends BaseRepository {
     }
 
     return UserModel.fromDbWithMarkdown(result);
-  }
-
-  async findFitnessProfileByUserId(userId: string): Promise<FitnessProfile | undefined> {
-    const user = await this.findById(userId);
-    if (!user) {
-      return undefined;
-    }
-    
-    return UserModel.parseProfile(user.profile) || undefined;
   }
 
   async updatePreferences(userId: string, preferences: { 
@@ -330,26 +286,5 @@ export class UserRepository extends BaseRepository {
       .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();
-  }
-
-  /**
-   * Patch the user's profile with a partial update using JSONB merge
-   * This performs a deep merge of the provided patch with the existing profile
-   */
-  async patchProfile(userId: string, patch: Partial<FitnessProfile>): Promise<UserWithProfile | undefined> {
-    // Use PostgreSQL's JSONB merge operator to deep merge the patch
-    // The || operator merges two JSONB values, with the right-hand value overwriting keys
-    const result = await this.db
-      .updateTable('users')
-      .set({
-        // Use raw SQL for JSONB merge operation
-        profile: sql`profile || ${JSON.stringify(patch)}::jsonb`,
-        updatedAt: new Date(),
-      })
-      .where('id', '=', userId)
-      .returningAll()
-      .executeTakeFirstOrThrow();
-
-      return UserModel.fromDb(result);
   }
 }

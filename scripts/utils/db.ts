@@ -69,17 +69,31 @@ export class TestDatabase {
   }
 
   /**
-   * Get user with fitness profile
+   * Get user with fitness profile (markdown profile from profiles table)
    */
   async getUserWithProfile(userId: string) {
     try {
-      const user = await this._db
+      const result = await this._db
         .selectFrom('users')
-        .selectAll()
+        .leftJoin('profiles', (join) =>
+          join
+            .onRef('profiles.clientId', '=', 'users.id')
+            .on((eb) => {
+              // Only join the most recent profile for this user
+              const subquery = eb
+                .selectFrom('profiles as p2')
+                .select((eb) => eb.fn.max('p2.createdAt').as('maxCreated'))
+                .whereRef('p2.clientId', '=', 'users.id');
+
+              return eb('profiles.createdAt', '=', subquery);
+            })
+        )
+        .selectAll('users')
+        .select('profiles.profile as markdownProfile')
         .where('users.id', '=', userId)
         .executeTakeFirst();
-      
-      return user || null;
+
+      return result || null;
     } catch (error) {
       console.error(chalk.red('Error fetching user with profile:'), error);
       return null;

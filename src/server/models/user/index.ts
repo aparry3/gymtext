@@ -8,8 +8,7 @@ import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
 export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
-export type UserWithProfile = Omit<User, 'profile'> & {
-  profile: FitnessProfile | null;
+export type UserWithProfile = User & {
   markdownProfile?: string | null; // Joined from profiles table
 }
 
@@ -19,10 +18,7 @@ export type UserWithProfile = Omit<User, 'profile'> & {
  */
 export class UserModel {
   static fromDb(user?: User): UserWithProfile | undefined {
-    return user ? {
-      ...user,
-      profile: this.parseProfile(user.profile)
-    } : undefined;
+    return user ? { ...user } : undefined;
   }
 
   /**
@@ -33,29 +29,9 @@ export class UserModel {
     const { markdownProfile, ...userData } = dbResult;
     return {
       ...userData,
-      profile: this.parseProfile(userData.profile),
       markdownProfile: markdownProfile || null,
     };
   }
-
-  static parseProfile(profile: unknown): FitnessProfile | null {
-    if (!profile || (typeof profile === 'object' && Object.keys(profile).length === 0)) {
-      return null;
-    }
-    
-    // If it's a string, parse it
-    if (typeof profile === 'string') {
-      try {
-        return JSON.parse(profile) as FitnessProfile;
-      } catch {
-        return null;
-      }
-    }
-    
-    // If it's already an object, return it
-    return profile as FitnessProfile;
-  }
-
 
   /**
    * Validates user data for creation
@@ -126,13 +102,13 @@ export class UserModel {
   /**
    * Transforms user data for display/serialization
    * @param user - User data from database
+   * @param hasMarkdownProfile - Whether the user has a markdown profile in the profiles table
    * @returns Transformed user data
    */
-  static transformUserForDisplay(user: User): Omit<User, 'profile'> & { hasProfile: boolean } {
-    const { profile, ...userWithoutProfile } = user;
+  static transformUserForDisplay(user: User, hasMarkdownProfile = false): User & { hasProfile: boolean } {
     return {
-      ...userWithoutProfile,
-      hasProfile: Boolean(profile)
+      ...user,
+      hasProfile: hasMarkdownProfile
     };
   }
 
