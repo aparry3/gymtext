@@ -137,11 +137,11 @@ export class TestDatabase {
       const microcycle = await this._db
         .selectFrom('microcycles')
         .selectAll()
-        .where('userId', '=', userId)
+        .where('clientId', '=', userId)
         .where('isActive', '=', true)
         .orderBy('createdAt', 'desc')
         .executeTakeFirst();
-      
+
       return microcycle || null;
     } catch (error) {
       console.error(chalk.red('Error fetching microcycle:'), error);
@@ -205,11 +205,11 @@ export class TestDatabase {
     try {
       const users = await this._db
         .selectFrom('users')
-        .innerJoin('subscriptions', 'users.id', 'subscriptions.userId')
+        .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
         .selectAll('users')
         .where('subscriptions.status', '=', 'active')
         .execute();
-      
+
       return users;
     } catch (error) {
       console.error(chalk.red('Error fetching active users:'), error);
@@ -224,12 +224,12 @@ export class TestDatabase {
     try {
       const users = await this._db
         .selectFrom('users')
-        .innerJoin('subscriptions', 'users.id', 'subscriptions.userId')
+        .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
         .selectAll('users')
         .where('subscriptions.status', '=', 'active')
         .where('users.preferredSendHour', '=', hour)
         .execute();
-      
+
       return users;
     } catch (error) {
       console.error(chalk.red('Error fetching users for hour:'), error);
@@ -244,10 +244,10 @@ export class TestDatabase {
     try {
       // Delete in order of dependencies
       await this._db.deleteFrom('workoutInstances').where('clientId', '=', userId).execute();
-      await this._db.deleteFrom('microcycles').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('microcycles').where('clientId', '=', userId).execute();
       await this._db.deleteFrom('fitnessPlans').where('clientId', '=', userId).execute();
-      await this._db.deleteFrom('messages').where('userId', '=', userId).execute();
-      await this._db.deleteFrom('subscriptions').where('userId', '=', userId).execute();
+      await this._db.deleteFrom('messages').where('clientId', '=', userId).execute();
+      await this._db.deleteFrom('subscriptions').where('clientId', '=', userId).execute();
       // Profile is now stored in users table, no need to delete separately
       await this._db.deleteFrom('users').where('id', '=', userId).execute();
 

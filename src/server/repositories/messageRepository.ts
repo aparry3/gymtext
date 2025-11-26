@@ -21,12 +21,12 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirst();
   }
 
-  async findByUserId(userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
+  async findByClientId(clientId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
     // Return messages in DESC order (latest first) with pagination support
     return await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .offset(offset)
@@ -34,14 +34,14 @@ export class MessageRepository extends BaseRepository {
   }
 
   /**
-   * Find recent messages for a user, ordered oldest to newest
+   * Find recent messages for a client, ordered oldest to newest
    * This is the primary method for getting message history
    */
-  async findRecentByUserId(userId: string, limit: number = 10): Promise<Message[]> {
+  async findRecentByClientId(clientId: string, limit: number = 10): Promise<Message[]> {
     const messages = await this.db
       .selectFrom('messages')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
@@ -50,11 +50,11 @@ export class MessageRepository extends BaseRepository {
     return messages.reverse();
   }
 
-  async countByUserId(userId: string): Promise<number> {
+  async countByClientId(clientId: string): Promise<number> {
     const result = await this.db
       .selectFrom('messages')
       .select(({ fn }) => fn.count('id').as('count'))
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .executeTakeFirst();
 
     return Number(result?.count ?? 0);

@@ -13,7 +13,7 @@ export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
  */
 export interface Microcycle {
   id: string;
-  userId: string;
+  clientId: string;
   fitnessPlanId: string;
   absoluteWeek: number;  // Week from plan start (1-indexed)
   days: string[];        // Ordered array of day overviews [day1, day2, ..., day7]
@@ -32,7 +32,7 @@ export class MicrocycleModel {
   static fromDB(row: Microcycles): Microcycle {
     return {
       id: row.id as unknown as string,
-      userId: row.userId as unknown as string,
+      clientId: row.clientId as unknown as string,
       fitnessPlanId: row.fitnessPlanId as unknown as string,
       absoluteWeek: row.absoluteWeek as unknown as number,
       days: (row.days as unknown as string[] | null) ?? [],
@@ -50,7 +50,7 @@ export class MicrocycleModel {
 
   static toDB(microcycle: Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>): Omit<Microcycles, 'id' | 'createdAt' | 'updatedAt'> {
     return {
-      userId: microcycle.userId,
+      clientId: microcycle.clientId,
       fitnessPlanId: microcycle.fitnessPlanId,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       absoluteWeek: microcycle.absoluteWeek as any,

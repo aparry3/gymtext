@@ -50,7 +50,7 @@ async function testShortLinks() {
     const resolved = await shortLinkService.resolveShortLink(workoutLink.code);
     if (resolved && !resolved.isExpired) {
       console.log(`✓ Resolved link successfully`);
-      console.log(`  - User ID: ${resolved.link.userId}`);
+      console.log(`  - Client ID: ${resolved.link.clientId}`);
       console.log(`  - Target: ${resolved.link.targetPath}`);
       console.log(`  - Access count: ${resolved.link.accessCount}\n`);
     } else {

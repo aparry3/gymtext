@@ -53,7 +53,7 @@ export class OnboardingCoordinator {
       }
 
       // Check 2: Onboarding complete?
-      const onboarding = await onboardingDataService.findByUserId(userId);
+      const onboarding = await onboardingDataService.findByClientId(userId);
       if (!onboarding || onboarding.status !== 'completed') {
         console.log(`[OnboardingCoordinator] Onboarding not complete for user ${userId} (status: ${onboarding?.status}), waiting`);
         return false;

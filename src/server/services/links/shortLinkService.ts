@@ -30,13 +30,13 @@ export class ShortLinkService {
    * Create a short link
    * Generates a unique code and stores the mapping
    *
-   * @param userId - User ID to associate with the link
+   * @param clientId - Client ID to associate with the link
    * @param targetPath - Path to redirect to (e.g., /me/program/workouts/123)
    * @param options - Optional configuration (custom code, expiration)
    * @returns The created short link
    */
   async createShortLink(
-    userId: string,
+    clientId: string,
     targetPath: string,
     options?: CreateShortLinkOptions
   ): Promise<ShortLink> {
@@ -52,7 +52,7 @@ export class ShortLinkService {
     const link = await this.repository.createShortLink({
       code,
       targetPath,
-      userId,
+      clientId,
       expiresAt,
     });
 

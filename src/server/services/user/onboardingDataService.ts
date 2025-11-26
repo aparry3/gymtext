@@ -73,18 +73,18 @@ export class OnboardingDataService {
   }
 
   /**
-   * Get onboarding status for a user
+   * Get onboarding status for a client
    */
-  async getStatus(userId: string): Promise<OnboardingStatus | null> {
-    const record = await this.repository.findByUserId(userId);
+  async getStatus(clientId: string): Promise<OnboardingStatus | null> {
+    const record = await this.repository.findByClientId(clientId);
     return record ? (record.status as OnboardingStatus) : null;
   }
 
   /**
-   * Get complete onboarding record by user ID
+   * Get complete onboarding record by client ID
    */
-  async findByUserId(userId: string): Promise<OnboardingRecord | null> {
-    return await this.repository.findByUserId(userId);
+  async findByClientId(clientId: string): Promise<OnboardingRecord | null> {
+    return await this.repository.findByClientId(clientId);
   }
 
   /**

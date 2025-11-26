@@ -30,7 +30,7 @@ export class ShortLinkRepository extends BaseRepository {
       .values({
         code: link.code,
         targetPath: link.targetPath,
-        userId: link.userId,
+        clientId: link.clientId,
         expiresAt: link.expiresAt,
         createdAt: new Date(),
         accessCount: 0,
@@ -38,7 +38,7 @@ export class ShortLinkRepository extends BaseRepository {
       .onConflict((oc) =>
         oc.column('code').doUpdateSet({
           targetPath: link.targetPath,
-          userId: link.userId,
+          clientId: link.clientId,
           expiresAt: link.expiresAt,
           createdAt: new Date(),
           accessCount: 0,
@@ -95,27 +95,27 @@ export class ShortLinkRepository extends BaseRepository {
   }
 
   /**
-   * Delete all short links for a user
-   * Useful for cleanup when a user is deleted
+   * Delete all short links for a client
+   * Useful for cleanup when a client is deleted
    */
-  async deleteByUserId(userId: string): Promise<number> {
+  async deleteByClientId(clientId: string): Promise<number> {
     const result = await this.db
       .deleteFrom('shortLinks')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .executeTakeFirst();
 
     return Number(result.numDeletedRows || 0);
   }
 
   /**
-   * Find all short links for a user
+   * Find all short links for a client
    * Useful for admin views or user dashboards
    */
-  async findByUserId(userId: string): Promise<ShortLink[]> {
+  async findByClientId(clientId: string): Promise<ShortLink[]> {
     return await this.db
       .selectFrom('shortLinks')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .execute();
   }

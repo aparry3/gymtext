@@ -282,7 +282,7 @@ export class UserRepository extends BaseRepository {
   async findActiveUsersWithPreferences(): Promise<User[]> {
     return await this.db
       .selectFrom('users')
-      .innerJoin('subscriptions', 'users.id', 'subscriptions.userId')
+      .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
       .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();

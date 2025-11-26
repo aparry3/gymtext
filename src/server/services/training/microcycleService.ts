@@ -31,17 +31,17 @@ export class MicrocycleService {
   }
 
   /**
-   * Get the active microcycle for a user (the one flagged as active in DB)
+   * Get the active microcycle for a client (the one flagged as active in DB)
    */
-  public async getActiveMicrocycle(userId: string) {
-    return await this.microcycleRepo.getActiveMicrocycle(userId);
+  public async getActiveMicrocycle(clientId: string) {
+    return await this.microcycleRepo.getActiveMicrocycle(clientId);
   }
 
   /**
-   * Check if the active microcycle encompasses the current week in the user's timezone
+   * Check if the active microcycle encompasses the current week in the client's timezone
    */
-  public async isActiveMicrocycleCurrent(userId: string, timezone: string = 'America/New_York'): Promise<boolean> {
-    const activeMicrocycle = await this.microcycleRepo.getActiveMicrocycle(userId);
+  public async isActiveMicrocycleCurrent(clientId: string, timezone: string = 'America/New_York'): Promise<boolean> {
+    const activeMicrocycle = await this.microcycleRepo.getActiveMicrocycle(clientId);
     if (!activeMicrocycle) {
       return false;
     }
@@ -61,21 +61,21 @@ export class MicrocycleService {
   }
 
   /**
-   * Get all microcycles for a user
+   * Get all microcycles for a client
    */
-  public async getAllMicrocycles(userId: string) {
-    return await this.microcycleRepo.getAllMicrocycles(userId);
+  public async getAllMicrocycles(clientId: string) {
+    return await this.microcycleRepo.getAllMicrocycles(clientId);
   }
 
   /**
    * Get microcycle by absolute week number
    */
   public async getMicrocycleByAbsoluteWeek(
-    userId: string,
+    clientId: string,
     fitnessPlanId: string,
     absoluteWeek: number
   ): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(userId, fitnessPlanId, absoluteWeek);
+    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(clientId, fitnessPlanId, absoluteWeek);
   }
 
   /**
@@ -83,11 +83,11 @@ export class MicrocycleService {
    * Used for date-based progress tracking - finds the microcycle that contains the target date
    */
   public async getMicrocycleByDate(
-    userId: string,
+    clientId: string,
     fitnessPlanId: string,
     targetDate: Date
   ): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByDate(userId, fitnessPlanId, targetDate);
+    return await this.microcycleRepo.getMicrocycleByDate(clientId, fitnessPlanId, targetDate);
   }
 
   /**
@@ -115,14 +115,14 @@ export class MicrocycleService {
    * Uses fitness plan text and user profile to generate the week
    */
   public async createMicrocycleFromProgress(
-    userId: string,
+    clientId: string,
     plan: FitnessPlan,
     progress: ProgressInfo
   ): Promise<Microcycle> {
     // Get user profile for context
-    const user = await this.userService.getUser(userId);
+    const user = await this.userService.getUser(clientId);
     if (!user) {
-      throw new Error(`User not found: ${userId}`);
+      throw new Error(`Client not found: ${clientId}`);
     }
 
     // Generate microcycle using AI agent with plan text + user profile + week number
@@ -135,7 +135,7 @@ export class MicrocycleService {
 
     // Create new microcycle
     const microcycle = await this.microcycleRepo.createMicrocycle({
-      userId,
+      clientId,
       fitnessPlanId: plan.id!,
       absoluteWeek: progress.absoluteWeek,
       days,
@@ -148,7 +148,7 @@ export class MicrocycleService {
       isActive: false, // No longer using isActive flag - we query by dates instead
     });
 
-    console.log(`[MicrocycleService] Created microcycle for user ${userId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
+    console.log(`[MicrocycleService] Created microcycle for client ${clientId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
     return microcycle;
   }
 

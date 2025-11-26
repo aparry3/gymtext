@@ -19,7 +19,7 @@ export class MicrocycleRepository {
       .insertInto('microcycles')
       .values({
         id: uuidv4(),
-        userId: microcycle.userId,
+        clientId: microcycle.clientId,
         fitnessPlanId: microcycle.fitnessPlanId,
         absoluteWeek: microcycle.absoluteWeek,
         days: microcycle.days,
@@ -38,11 +38,11 @@ export class MicrocycleRepository {
     return MicrocycleModel.fromDB(result as any);
   }
 
-  async getActiveMicrocycle(userId: string): Promise<Microcycle | null> {
+  async getActiveMicrocycle(clientId: string): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('isActive', '=', true)
       .orderBy('createdAt', 'desc')
       .executeTakeFirst();
@@ -55,14 +55,14 @@ export class MicrocycleRepository {
    * Get microcycle by absolute week number
    */
   async getMicrocycleByAbsoluteWeek(
-    userId: string,
+    clientId: string,
     fitnessPlanId: string,
     absoluteWeek: number
   ): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('fitnessPlanId', '=', fitnessPlanId)
       .where('absoluteWeek', '=', absoluteWeek)
       .executeTakeFirst();
@@ -71,11 +71,11 @@ export class MicrocycleRepository {
     return result ? MicrocycleModel.fromDB(result as any) : null;
   }
 
-  async deactivatePreviousMicrocycles(userId: string): Promise<void> {
+  async deactivatePreviousMicrocycles(clientId: string): Promise<void> {
     await this.db
       .updateTable('microcycles')
       .set({ isActive: false })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('isActive', '=', true)
       .execute();
   }
@@ -141,11 +141,11 @@ export class MicrocycleRepository {
     return result ? MicrocycleModel.fromDB(result as any) : null;
   }
 
-  async getRecentMicrocycles(userId: string, limit: number = 5): Promise<Microcycle[]> {
+  async getRecentMicrocycles(clientId: string, limit: number = 5): Promise<Microcycle[]> {
     const results = await this.db
       .selectFrom('microcycles')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
@@ -164,13 +164,13 @@ export class MicrocycleRepository {
   }
 
   /**
-   * Get all microcycles for a user ordered by absolute week
+   * Get all microcycles for a client ordered by absolute week
    */
-  async getAllMicrocycles(userId: string): Promise<Microcycle[]> {
+  async getAllMicrocycles(clientId: string): Promise<Microcycle[]> {
     const results = await this.db
       .selectFrom('microcycles')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('absoluteWeek', 'asc')
       .execute();
 
@@ -183,14 +183,14 @@ export class MicrocycleRepository {
    * Used for date-based progress tracking - finds the microcycle that contains the target date
    */
   async getMicrocycleByDate(
-    userId: string,
+    clientId: string,
     fitnessPlanId: string,
     targetDate: Date
   ): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('fitnessPlanId', '=', fitnessPlanId)
       .where('startDate', '<=', targetDate)
       .where('endDate', '>=', targetDate)

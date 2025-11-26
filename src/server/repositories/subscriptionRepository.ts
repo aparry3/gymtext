@@ -7,7 +7,7 @@ export type NewSubscription = Insertable<Subscriptions>;
 export type SubscriptionUpdate = Updateable<Subscriptions>;
 
 export interface CreateSubscriptionData {
-  userId: string;
+  clientId: string;
   stripeSubscriptionId: string;
   status: string;
   planType: string;
@@ -26,7 +26,7 @@ export class SubscriptionRepository extends BaseRepository {
    */
   async create(data: CreateSubscriptionData): Promise<Subscription> {
     const subscription: NewSubscription = {
-      userId: data.userId,
+      clientId: data.clientId,
       stripeSubscriptionId: data.stripeSubscriptionId,
       status: data.status,
       planType: data.planType,
@@ -57,13 +57,13 @@ export class SubscriptionRepository extends BaseRepository {
   }
 
   /**
-   * Find subscription by user ID
+   * Find subscription by client ID
    */
-  async findByUserId(userId: string): Promise<Subscription[]> {
+  async findByClientId(clientId: string): Promise<Subscription[]> {
     return await this.db
       .selectFrom('subscriptions')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .execute();
   }
@@ -80,23 +80,23 @@ export class SubscriptionRepository extends BaseRepository {
   }
 
   /**
-   * Get active subscription for user
+   * Get active subscription for client
    */
-  async getActiveSubscription(userId: string): Promise<Subscription | null> {
+  async getActiveSubscription(clientId: string): Promise<Subscription | null> {
     return await this.db
       .selectFrom('subscriptions')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('status', '=', 'active')
       .orderBy('createdAt', 'desc')
       .executeTakeFirst() ?? null;
   }
 
   /**
-   * Check if user has active subscription
+   * Check if client has active subscription
    */
-  async hasActiveSubscription(userId: string): Promise<boolean> {
-    const subscription = await this.getActiveSubscription(userId);
+  async hasActiveSubscription(clientId: string): Promise<boolean> {
+    const subscription = await this.getActiveSubscription(clientId);
     return subscription !== null;
   }
 

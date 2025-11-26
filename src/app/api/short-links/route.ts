@@ -111,12 +111,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const clientId = searchParams.get('clientId') || searchParams.get('userId');
 
-    if (userId) {
-      // Get links for specific user
+    if (clientId) {
+      // Get links for specific client
       const repository = new (await import('@/server/repositories/shortLinkRepository')).ShortLinkRepository();
-      const links = await repository.findByUserId(userId);
+      const links = await repository.findByClientId(clientId);
 
       return NextResponse.json({
         success: true,

@@ -84,12 +84,12 @@ async function countRecordsToDelete(userId: string, startStep: number): Promise<
     postgresDb
       .selectFrom('messageQueues')
       .select(postgresDb.fn.count('id').as('count'))
-      .where('userId', '=', userId)
+      .where('clientId', '=', userId)
       .executeTakeFirst(),
     postgresDb
       .selectFrom('messages')
       .select(postgresDb.fn.count('id').as('count'))
-      .where('userId', '=', userId)
+      .where('clientId', '=', userId)
       .executeTakeFirst(),
   ]);
   counts.messageQueue = Number(messageQueue?.count ?? 0);
@@ -110,7 +110,7 @@ async function countRecordsToDelete(userId: string, startStep: number): Promise<
     const microcycles = await postgresDb
       .selectFrom('microcycles')
       .select(postgresDb.fn.count('id').as('count'))
-      .where('userId', '=', userId)
+      .where('clientId', '=', userId)
       .executeTakeFirst();
     counts.microcycles = Number(microcycles?.count ?? 0);
   }
@@ -152,7 +152,7 @@ async function deleteUserData(userId: string, startStep: number, verbose: boolea
   if (verbose) console.log(chalk.gray('  Deleting message queue entries...'));
   const queueResult = await postgresDb
     .deleteFrom('messageQueues')
-    .where('userId', '=', userId)
+    .where('clientId', '=', userId)
     .executeTakeFirst();
   counts.messageQueue = Number(queueResult.numDeletedRows);
 
@@ -160,7 +160,7 @@ async function deleteUserData(userId: string, startStep: number, verbose: boolea
   if (verbose) console.log(chalk.gray('  Deleting messages...'));
   const messagesResult = await postgresDb
     .deleteFrom('messages')
-    .where('userId', '=', userId)
+    .where('clientId', '=', userId)
     .executeTakeFirst();
   counts.messages = Number(messagesResult.numDeletedRows);
 
@@ -179,7 +179,7 @@ async function deleteUserData(userId: string, startStep: number, verbose: boolea
     if (verbose) console.log(chalk.gray('  Deleting microcycles...'));
     const microcyclesResult = await postgresDb
       .deleteFrom('microcycles')
-      .where('userId', '=', userId)
+      .where('clientId', '=', userId)
       .executeTakeFirst();
     counts.microcycles = Number(microcyclesResult.numDeletedRows);
   }
@@ -218,7 +218,7 @@ async function resetOnboardingRecord(userId: string, step: number | null) {
       errorMessage: null,
       programMessagesSent: false,
     })
-    .where('userId', '=', userId)
+    .where('clientId', '=', userId)
     .execute();
 }
 
@@ -227,7 +227,7 @@ async function ensureActiveSubscription(userId: string, verbose: boolean): Promi
   const existingSubscription = await postgresDb
     .selectFrom('subscriptions')
     .selectAll()
-    .where('userId', '=', userId)
+    .where('clientId', '=', userId)
     .where('status', '=', 'active')
     .executeTakeFirst();
 
@@ -245,7 +245,7 @@ async function ensureActiveSubscription(userId: string, verbose: boolean): Promi
   await postgresDb
     .insertInto('subscriptions')
     .values({
-      userId,
+      clientId: userId,
       stripeSubscriptionId: testSubscriptionId,
       status: 'active',
       planType: 'monthly',

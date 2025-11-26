@@ -20,15 +20,15 @@ export class ProfileUpdateRepository extends BaseRepository {
   }
 
   /**
-   * Get profile updates for a specific user
+   * Get profile updates for a specific client
    */
-  async getUserUpdates(
-    userId: string,
+  async getClientUpdates(
+    clientId: string,
     limit: number = 10
   ): Promise<ProfileUpdate[]> {
     const updates = await this.db
       .selectFrom('profileUpdates')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .selectAll()
@@ -70,12 +70,12 @@ export class ProfileUpdateRepository extends BaseRepository {
   }
 
   /**
-   * Count profile updates for a user
+   * Count profile updates for a client
    */
-  async countUserUpdates(userId: string): Promise<number> {
+  async countClientUpdates(clientId: string): Promise<number> {
     const result = await this.db
       .selectFrom('profileUpdates')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .select(this.db.fn.count('id').as('count'))
       .executeTakeFirstOrThrow();
 

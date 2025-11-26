@@ -42,10 +42,10 @@ export async function GET(
     const targetUrl = new URL(link.targetPath, request.url);
     const response = NextResponse.redirect(targetUrl, { status: 307 });
 
-    // Set auth cookie if link has associated user
-    // This allows users who receive links via SMS to be automatically authenticated
-    if (link.userId) {
-      const sessionToken = encryptUserId(link.userId);
+    // Set auth cookie if link has associated client
+    // This allows clients who receive links via SMS to be automatically authenticated
+    if (link.clientId) {
+      const sessionToken = encryptUserId(link.clientId);
 
       response.cookies.set('gt_user_session', sessionToken, {
         httpOnly: true,
@@ -55,7 +55,7 @@ export async function GET(
         path: '/',
       });
 
-      console.log(`[ShortLink] Set session cookie for user ${link.userId} via link ${code}`);
+      console.log(`[ShortLink] Set session cookie for client ${link.clientId} via link ${code}`);
     }
 
     return response;

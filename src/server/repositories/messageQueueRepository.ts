@@ -54,16 +54,16 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
-   * Find all pending entries for a user's queue, ordered by sequence
+   * Find all pending entries for a client's queue, ordered by sequence
    */
-  async findPendingByUser(
-    userId: string,
+  async findPendingByClient(
+    clientId: string,
     queueName: string
   ): Promise<MessageQueue[]> {
     return await this.db
       .selectFrom('messageQueues')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('queueName', '=', queueName)
       .where('status', '=', 'pending')
       .orderBy('sequenceNumber', 'asc')
@@ -74,13 +74,13 @@ export class MessageQueueRepository extends BaseRepository {
    * Find the next pending message in a queue
    */
   async findNextPending(
-    userId: string,
+    clientId: string,
     queueName: string
   ): Promise<MessageQueue | undefined> {
     return await this.db
       .selectFrom('messageQueues')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('queueName', '=', queueName)
       .where('status', '=', 'pending')
       .orderBy('sequenceNumber', 'asc')
@@ -160,10 +160,10 @@ export class MessageQueueRepository extends BaseRepository {
   /**
    * Delete completed/failed queue entries for cleanup
    */
-  async deleteCompleted(userId: string, queueName: string): Promise<void> {
+  async deleteCompleted(clientId: string, queueName: string): Promise<void> {
     await this.db
       .deleteFrom('messageQueues')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('queueName', '=', queueName)
       .where('status', 'in', ['delivered', 'failed'])
       .execute();
@@ -172,7 +172,7 @@ export class MessageQueueRepository extends BaseRepository {
   /**
    * Get queue status summary
    */
-  async getQueueStatus(userId: string, queueName: string): Promise<{
+  async getQueueStatus(clientId: string, queueName: string): Promise<{
     total: number;
     pending: number;
     sent: number;
@@ -182,7 +182,7 @@ export class MessageQueueRepository extends BaseRepository {
     const entries = await this.db
       .selectFrom('messageQueues')
       .select(['status'])
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('queueName', '=', queueName)
       .execute();
 

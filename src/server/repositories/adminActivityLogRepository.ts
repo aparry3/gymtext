@@ -2,8 +2,8 @@ import { BaseRepository } from '@/server/repositories/baseRepository';
 
 export class AdminActivityLogRepository extends BaseRepository {
   async log(params: {
-    actorUserId?: string | null;
-    targetUserId: string;
+    actorClientId?: string | null;
+    targetClientId: string;
     action: string;
     payload?: unknown;
     result: 'success' | 'failure';
@@ -12,8 +12,8 @@ export class AdminActivityLogRepository extends BaseRepository {
     await this.db
       .insertInto('adminActivityLogs')
       .values({
-        actorUserId: params.actorUserId ?? null,
-        targetUserId: params.targetUserId,
+        actorClientId: params.actorClientId ?? null,
+        targetClientId: params.targetClientId,
         action: params.action,
         // JSON stringify/parse to ensure it's JSON-serializable for jsonb
         payload: JSON.parse(JSON.stringify(params.payload ?? {})),
@@ -23,14 +23,14 @@ export class AdminActivityLogRepository extends BaseRepository {
       .execute();
   }
 
-  async listForUser(targetUserId: string, options: { page?: number; pageSize?: number } = {}) {
+  async listForClient(targetClientId: string, options: { page?: number; pageSize?: number } = {}) {
     const page = options.page ?? 1;
     const pageSize = options.pageSize ?? 20;
 
     const rows = await this.db
       .selectFrom('adminActivityLogs')
       .selectAll()
-      .where('targetUserId', '=', targetUserId)
+      .where('targetClientId', '=', targetClientId)
       .orderBy('createdAt', 'desc')
       .offset((page - 1) * pageSize)
       .limit(pageSize)

@@ -22,7 +22,7 @@ import { WorkoutInstanceService } from '../training/workoutInstanceService';
  * Parameters for storing an inbound message
  */
 export interface StoreInboundMessageParams {
-  userId: string;
+  clientId: string;
   from: string;
   to: string;
   content: string;
@@ -142,12 +142,12 @@ export class MessageService {
    */
   async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
     return await this.circuitBreaker.execute(async () => {
-      const { userId, from, to, content, twilioData } = params;
+      const { clientId, from, to, content, twilioData } = params;
 
       // Store the message directly (no conversation needed)
       const message = await this.messageRepo.create({
         conversationId: null, // No longer using conversations
-        userId: userId,
+        clientId: clientId,
         direction: 'inbound',
         content,
         phoneFrom: from,
@@ -165,7 +165,7 @@ export class MessageService {
    * Store an outbound message to the database
    */
   async storeOutboundMessage(
-    userId: string,
+    clientId: string,
     to: string,
     messageContent: string,
     from: string = process.env.TWILIO_NUMBER || '',
@@ -176,7 +176,7 @@ export class MessageService {
     // TODO: Implement periodic message summarization
     return await this.circuitBreaker.execute(async () => {
 
-      const user = await this.userService.getUser(userId);
+      const user = await this.userService.getUser(clientId);
       if (!user) {
         return null;
       }
@@ -184,7 +184,7 @@ export class MessageService {
       // Store the message with initial delivery tracking
       const message = await this.messageRepo.create({
         conversationId: null, // No longer using conversations
-        userId: userId,
+        clientId: clientId,
         direction: 'outbound',
         content: messageContent,
         phoneFrom: from,
@@ -199,7 +199,7 @@ export class MessageService {
 
       // Optionally summarize messages periodically (implementation TBD)
       // For now, we'll skip summarization on every message to improve performance
-      // const messages = await this.getRecentMessages(userId, 50);
+      // const messages = await this.getRecentMessages(clientId, 50);
       // const summary = await this.summarizeMessages(user, messages);
       // Store summary somewhere (TBD - maybe in a separate summaries table)
 
@@ -208,32 +208,32 @@ export class MessageService {
   }
 
   /**
-   * Get messages for a user with pagination support
+   * Get messages for a client with pagination support
    */
-  async getMessages(userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
-    return await this.messageRepo.findByUserId(userId, limit, offset);
+  async getMessages(clientId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
+    return await this.messageRepo.findByClientId(clientId, limit, offset);
   }
 
   /**
-   * Get recent messages for a user
+   * Get recent messages for a client
    *
-   * Convenience method for retrieving the most recent messages for a user.
+   * Convenience method for retrieving the most recent messages for a client.
    * Useful for passing conversation context to agents.
    *
-   * @param userId - The user ID
+   * @param clientId - The client ID
    * @param limit - Maximum number of recent messages to return (default: 10)
    * @returns Array of recent messages, ordered oldest to newest
    *
    * @example
    * ```typescript
    * // Get last 10 messages for context
-   * const previousMessages = await messageService.getRecentMessages(userId);
+   * const previousMessages = await messageService.getRecentMessages(clientId);
    * const response = await chatAgent(user, message, previousMessages);
    * ```
    */
-  async getRecentMessages(userId: string, limit: number = 10): Promise<Message[]> {
-    // Get recent messages directly by userId
-    return await this.messageRepo.findRecentByUserId(userId, limit);
+  async getRecentMessages(clientId: string, limit: number = 10): Promise<Message[]> {
+    // Get recent messages directly by clientId
+    return await this.messageRepo.findRecentByClientId(clientId, limit);
   }
 
   /**
@@ -272,7 +272,7 @@ export class MessageService {
 
     // Store the inbound message
     const storedMessage = await this.storeInboundMessage({
-      userId: user.id,
+      clientId: user.id,
       from,
       to,
       content,

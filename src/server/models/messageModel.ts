@@ -24,8 +24,8 @@ export class MessageModel {
     return await this.messageRepository.findById(id);
   }
 
-  async getMessagesByUser(userId: string, limit?: number): Promise<Message[]> {
-    return await this.messageRepository.findByUserId(userId, limit);
+  async getMessagesByClient(clientId: string, limit?: number): Promise<Message[]> {
+    return await this.messageRepository.findByClientId(clientId, limit);
   }
 
   async updateMessage(id: string, updates: Partial<Message>): Promise<Message> {
@@ -45,8 +45,8 @@ export class MessageModel {
   }
 
   private validateMessageData(data: NewMessage): void {
-    if (!data.userId) {
-      throw new Error('User ID is required');
+    if (!data.clientId) {
+      throw new Error('Client ID is required');
     }
 
     if (!data.direction || !['inbound', 'outbound'].includes(data.direction)) {

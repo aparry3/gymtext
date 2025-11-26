@@ -40,7 +40,7 @@ export async function GET(
     const fitnessPlanRepo = new FitnessPlanRepository();
 
     // Get onboarding record
-    const onboarding = await onboardingDataService.findByUserId(userId);
+    const onboarding = await onboardingDataService.findByClientId(userId);
     if (!onboarding) {
       return NextResponse.json({
         onboardingStatus: 'pending',

@@ -81,7 +81,7 @@ class SmsConversationTester {
     // Get message history (no longer using conversations)
     const messages = await this.db.db
       .selectFrom('messages')
-      .where('userId', '=', user.id!)
+      .where('clientId', '=', user.id!)
       .orderBy('createdAt', 'desc')
       .limit(1)
       .selectAll()
@@ -89,7 +89,7 @@ class SmsConversationTester {
 
     const messageCountResult = await this.db.db
       .selectFrom('messages')
-      .where('userId', '=', user.id!)
+      .where('clientId', '=', user.id!)
       .select(({ fn }) => [fn.count<number>('id').as('count')])
       .executeTakeFirst();
 

@@ -52,23 +52,23 @@ export class MessageQueueService {
    * Creates queue entries and immediately starts sending the first message.
    * Subsequent messages will be sent after previous ones are delivered.
    *
-   * @param userId - User to send messages to
+   * @param clientId - Client to send messages to
    * @param messages - Array of messages to queue
    * @param queueName - Named queue (e.g., 'daily', 'onboarding')
    * @returns Array of created queue entries
    */
   async enqueueMessages(
-    userId: string,
+    clientId: string,
     messages: QueuedMessage[],
     queueName: string
   ): Promise<void> {
     if (messages.length === 0) return;
 
-    console.log(`[MessageQueueService] Enqueueing ${messages.length} messages for user ${userId} in queue '${queueName}'`);
+    console.log(`[MessageQueueService] Enqueueing ${messages.length} messages for client ${clientId} in queue '${queueName}'`);
 
     // Create queue entries with sequence numbers
     const queueEntries = messages.map((msg, index) => ({
-      userId,
+      clientId,
       queueName,
       sequenceNumber: index + 1,
       messageContent: msg.content || null,
@@ -86,7 +86,7 @@ export class MessageQueueService {
     await inngest.send({
       name: 'message-queue/process-next',
       data: {
-        userId,
+        clientId,
         queueName,
       },
     });
@@ -98,19 +98,19 @@ export class MessageQueueService {
    * Sends the next message via MessageService and updates queue status.
    * Called by Inngest when the previous message is delivered.
    *
-   * @param userId - User ID
+   * @param clientId - Client ID
    * @param queueName - Queue name
    */
-  async processNextMessage(userId: string, queueName: string): Promise<void> {
-    console.log(`[MessageQueueService] Processing next message for user ${userId} in queue '${queueName}'`);
+  async processNextMessage(clientId: string, queueName: string): Promise<void> {
+    console.log(`[MessageQueueService] Processing next message for client ${clientId} in queue '${queueName}'`);
 
     // Get next pending message
-    const nextEntry = await this.messageQueueRepo.findNextPending(userId, queueName);
+    const nextEntry = await this.messageQueueRepo.findNextPending(clientId, queueName);
 
     if (!nextEntry) {
-      console.log(`[MessageQueueService] No more pending messages in queue '${queueName}' for user ${userId}`);
+      console.log(`[MessageQueueService] No more pending messages in queue '${queueName}' for client ${clientId}`);
       // Optionally clean up completed queue
-      await this.clearQueue(userId, queueName);
+      await this.clearQueue(clientId, queueName);
       return;
     }
 
@@ -121,7 +121,7 @@ export class MessageQueueService {
       name: 'message-queue/send-message',
       data: {
         queueEntryId: nextEntry.id,
-        userId: nextEntry.userId,
+        clientId: nextEntry.clientId,
         queueName: nextEntry.queueName,
       },
     });
@@ -141,9 +141,9 @@ export class MessageQueueService {
     const { messageService } = await import('./messageService');
     const { userService } = await import('../user/userService');
 
-    const user = await userService.getUser(queueEntry.userId);
+    const user = await userService.getUser(queueEntry.clientId);
     if (!user) {
-      throw new Error(`User ${queueEntry.userId} not found`);
+      throw new Error(`Client ${queueEntry.clientId} not found`);
     }
 
     // Get media URLs if present
@@ -209,7 +209,7 @@ export class MessageQueueService {
     await inngest.send({
       name: 'message-queue/process-next',
       data: {
-        userId: queueEntry.userId,
+        clientId: queueEntry.clientId,
         queueName: queueEntry.queueName,
       },
     });
@@ -256,7 +256,7 @@ export class MessageQueueService {
         name: 'message/delivery-failed',
         data: {
           messageId,
-          userId: queueEntry.userId,
+          clientId: queueEntry.clientId,
           providerMessageId: messageId,
           error: error || 'Unknown error',
         },
@@ -276,7 +276,7 @@ export class MessageQueueService {
       await inngest.send({
         name: 'message-queue/process-next',
         data: {
-          userId: queueEntry.userId,
+          clientId: queueEntry.clientId,
           queueName: queueEntry.queueName,
         },
       });
@@ -320,7 +320,7 @@ export class MessageQueueService {
           console.warn(`[MessageQueueService] Message ${entry.messageId} not found or has no provider ID`);
           // Assume delivered to avoid blocking queue
           await this.messageQueueRepo.updateStatus(entry.id, 'delivered', { deliveredAt: new Date() });
-          await this.processNextMessage(entry.userId, entry.queueName);
+          await this.processNextMessage(entry.clientId, entry.queueName);
           continue;
         }
 
@@ -338,30 +338,30 @@ export class MessageQueueService {
           // Still in transit, assume delivered to avoid blocking indefinitely
           console.log(`[MessageQueueService] Message still in transit (${twilioMessage.status}), assuming delivered`);
           await this.messageQueueRepo.updateStatus(entry.id, 'delivered', { deliveredAt: new Date() });
-          await this.processNextMessage(entry.userId, entry.queueName);
+          await this.processNextMessage(entry.clientId, entry.queueName);
         }
       } catch (error) {
         console.error(`[MessageQueueService] Error checking stalled message ${entry.id}:`, error);
         // Assume delivered to avoid blocking queue indefinitely
         await this.messageQueueRepo.updateStatus(entry.id, 'delivered', { deliveredAt: new Date() });
-        await this.processNextMessage(entry.userId, entry.queueName);
+        await this.processNextMessage(entry.clientId, entry.queueName);
       }
     }
   }
 
   /**
-   * Get queue status for a user
+   * Get queue status for a client
    */
-  async getQueueStatus(userId: string, queueName: string) {
-    return await this.messageQueueRepo.getQueueStatus(userId, queueName);
+  async getQueueStatus(clientId: string, queueName: string) {
+    return await this.messageQueueRepo.getQueueStatus(clientId, queueName);
   }
 
   /**
    * Clear completed/failed queue entries
    */
-  async clearQueue(userId: string, queueName: string): Promise<void> {
-    console.log(`[MessageQueueService] Clearing completed queue '${queueName}' for user ${userId}`);
-    await this.messageQueueRepo.deleteCompleted(userId, queueName);
+  async clearQueue(clientId: string, queueName: string): Promise<void> {
+    console.log(`[MessageQueueService] Clearing completed queue '${queueName}' for client ${clientId}`);
+    await this.messageQueueRepo.deleteCompleted(clientId, queueName);
   }
 }
 

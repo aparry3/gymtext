@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         name: 'message/delivery-failed',
         data: {
           messageId: message.id,
-          userId: message.userId,
+          clientId: message.clientId,
           providerMessageId: messageSid,
           error: deliveryError || 'Unknown error',
         },

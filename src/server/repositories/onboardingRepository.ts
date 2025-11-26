@@ -34,11 +34,11 @@ export type OnboardingStatus = 'pending' | 'in_progress' | 'completed' | 'failed
  */
 export class OnboardingRepository extends BaseRepository {
   /**
-   * Create an onboarding record for a user
+   * Create an onboarding record for a client
    */
-  async create(userId: string, signupData?: SignupData): Promise<OnboardingRecord> {
+  async create(clientId: string, signupData?: SignupData): Promise<OnboardingRecord> {
     const record: NewOnboardingRecord = {
-      userId,
+      clientId,
       signupData: signupData ? JSON.parse(JSON.stringify(signupData)) : null,
       status: 'pending',
       programMessagesSent: false,
@@ -52,13 +52,13 @@ export class OnboardingRepository extends BaseRepository {
   }
 
   /**
-   * Find onboarding record by user ID
+   * Find onboarding record by client ID
    */
-  async findByUserId(userId: string): Promise<OnboardingRecord | null> {
+  async findByClientId(clientId: string): Promise<OnboardingRecord | null> {
     return await this.db
       .selectFrom('userOnboarding')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .executeTakeFirst() ?? null;
   }
 
@@ -66,7 +66,7 @@ export class OnboardingRepository extends BaseRepository {
    * Update onboarding status
    */
   async updateStatus(
-    userId: string,
+    clientId: string,
     status: OnboardingStatus,
     errorMessage?: string
   ): Promise<OnboardingRecord> {
@@ -78,7 +78,7 @@ export class OnboardingRepository extends BaseRepository {
     return await this.db
       .updateTable('userOnboarding')
       .set(update)
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -86,14 +86,14 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Mark onboarding as started
    */
-  async markStarted(userId: string): Promise<OnboardingRecord> {
+  async markStarted(clientId: string): Promise<OnboardingRecord> {
     return await this.db
       .updateTable('userOnboarding')
       .set({
         status: 'in_progress',
         startedAt: sql`CURRENT_TIMESTAMP`,
       })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -101,11 +101,11 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Update current step (for progress tracking)
    */
-  async updateCurrentStep(userId: string, stepNumber: number): Promise<OnboardingRecord> {
+  async updateCurrentStep(clientId: string, stepNumber: number): Promise<OnboardingRecord> {
     return await this.db
       .updateTable('userOnboarding')
       .set({ currentStep: stepNumber })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -113,14 +113,14 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Mark onboarding as completed
    */
-  async markCompleted(userId: string): Promise<OnboardingRecord> {
+  async markCompleted(clientId: string): Promise<OnboardingRecord> {
     return await this.db
       .updateTable('userOnboarding')
       .set({
         status: 'completed',
         completedAt: sql`CURRENT_TIMESTAMP`,
       })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -128,11 +128,11 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Mark final program messages as sent
    */
-  async markMessagesSent(userId: string): Promise<OnboardingRecord> {
+  async markMessagesSent(clientId: string): Promise<OnboardingRecord> {
     return await this.db
       .updateTable('userOnboarding')
       .set({ programMessagesSent: true })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -140,11 +140,11 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Check if messages have been sent
    */
-  async hasMessagesSent(userId: string): Promise<boolean> {
+  async hasMessagesSent(clientId: string): Promise<boolean> {
     const result = await this.db
       .selectFrom('userOnboarding')
       .select('programMessagesSent')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .executeTakeFirst();
 
     return result?.programMessagesSent ?? false;
@@ -153,11 +153,11 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Get signup data
    */
-  async getSignupData(userId: string): Promise<SignupData | null> {
+  async getSignupData(clientId: string): Promise<SignupData | null> {
     const result = await this.db
       .selectFrom('userOnboarding')
       .select('signupData')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .executeTakeFirst();
 
     return result?.signupData as SignupData ?? null;
@@ -166,11 +166,11 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Clear signup data (cleanup after profile creation)
    */
-  async clearSignupData(userId: string): Promise<OnboardingRecord> {
+  async clearSignupData(clientId: string): Promise<OnboardingRecord> {
     return await this.db
       .updateTable('userOnboarding')
       .set({ signupData: null })
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -178,10 +178,10 @@ export class OnboardingRepository extends BaseRepository {
   /**
    * Delete onboarding record (full cleanup)
    */
-  async delete(userId: string): Promise<void> {
+  async delete(clientId: string): Promise<void> {
     await this.db
       .deleteFrom('userOnboarding')
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .execute();
   }
 }

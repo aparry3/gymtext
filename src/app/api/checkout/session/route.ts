@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       );
 
       await subscriptionRepo.create({
-        userId,
+        clientId: userId,
         stripeSubscriptionId: subscription.id,
         status: subscription.status,
         planType: 'monthly', // TODO: Get from subscription price
