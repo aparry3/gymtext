@@ -20,7 +20,7 @@ export const createPlanMicrocycleCombinedAgent = (deps?: PlanMicrocycleCombinedA
     const { fitnessPlan, weekOne, currentWeekday } = input;
 
     // Initialize model without schema for plain text output
-    const model = initializeModel(undefined, deps?.config);
+    const model = initializeModel(undefined, { ...deps?.config, agentPath: 'messaging/planMicrocycleCombined' });
 
     // Build user prompt from input parameters
     const userPrompt = planReadyUserPrompt({ fitnessPlan, weekOne, currentWeekday });

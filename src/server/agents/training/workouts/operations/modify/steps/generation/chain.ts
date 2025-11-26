@@ -25,7 +25,7 @@ import { SYSTEM_PROMPT, userPrompt } from './prompt';
  */
 export const createModifyWorkoutGenerationRunnable = (config: ModifyWorkoutGenerationConfig) => {
   // Initialize model with structured output schema
-  const model = initializeModel(ModifyWorkoutGenerationOutputSchema, config.agentConfig);
+  const model = initializeModel(ModifyWorkoutGenerationOutputSchema, { ...config.agentConfig, agentPath: 'training/workouts/operations/modify/steps/generation' });
 
   return createRunnableAgent(async (input: ModifyWorkoutGenerationInput): Promise<WorkoutChainContext> => {
     const prompt = userPrompt(input.user, input.workout.description!, input.changeRequest);

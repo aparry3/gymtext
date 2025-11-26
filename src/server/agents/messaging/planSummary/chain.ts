@@ -22,7 +22,7 @@ export const createPlanSummaryAgent = (deps?: PlanSummaryAgentDeps) => {
     const { user, plan, previousMessages } = input;
 
     // Initialize model with structured output
-    const model = initializeModel(PlanSummarySchema, deps?.config);
+    const model = initializeModel(PlanSummarySchema, { ...deps?.config, agentPath: 'messaging/planSummary' });
 
     // Generate prompt
     const prompt = planSummaryPrompt(user, plan, previousMessages);

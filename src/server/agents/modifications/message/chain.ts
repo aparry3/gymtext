@@ -13,7 +13,7 @@ import { MODIFICATIONS_MESSAGE_SYSTEM_PROMPT, buildModificationsMessageUserPromp
 export const createModificationMessageRunnable = () => {
   return RunnableLambda.from(async (modifications: string): Promise<string> => {
     // Initialize model for plain string output (no schema)
-    const model = initializeModel(undefined, { model: 'gpt-5-nano' });
+    const model = initializeModel(undefined, { model: 'gpt-5-nano', agentPath: 'conversation/chat/modifications/message' });
 
     // Build user prompt
     const userPrompt = buildModificationsMessageUserPrompt(modifications);

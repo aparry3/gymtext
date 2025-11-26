@@ -3,6 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { RunnableLambda } from "@langchain/core/runnables";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import { GoogleGenAI } from "@google/genai";
+import { isAgentLoggingEnabled, logAgentInvocation, extractPromptsFromMessages, stringifyOutput } from './logging';
 
 /**
  * Configuration for agents
@@ -12,6 +13,8 @@ export interface AgentConfig {
     temperature?: number;
     maxTokens?: number;
     verbose?: boolean;
+    /** Path for logging (e.g., 'training/plans/steps/generation') - enables file logging when AGENT_LOGGING_ENABLED=true */
+    agentPath?: string;
   }
 
 /**
@@ -72,6 +75,37 @@ export function createRunnableAgent<TInput, TOutput>(
 }
 
 /**
+ * Wrap a model with logging functionality
+ * Intercepts invoke calls to log system/user prompts and outputs
+ */
+function wrapModelWithLogging<T extends { invoke: (input: any) => Promise<any> }>( // eslint-disable-line @typescript-eslint/no-explicit-any
+  model: T,
+  agentPath: string
+): T {
+  const originalInvoke = model.invoke.bind(model);
+
+  return {
+    ...model,
+    invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const response = await originalInvoke(input);
+
+      // Log if enabled and we have messages to extract from
+      if (isAgentLoggingEnabled() && Array.isArray(input)) {
+        const { systemPrompt, userPrompt } = extractPromptsFromMessages(input);
+        await logAgentInvocation({
+          agentPath,
+          systemPrompt,
+          userPrompt,
+          output: stringifyOutput(response),
+        });
+      }
+
+      return response;
+    },
+  } as T;
+}
+
+/**
  * Initialize the model with structured output using the provided schema
  *
  * @param outputSchema - Optional Zod schema for structured output. If provided, returns T. If undefined, returns string.
@@ -80,7 +114,15 @@ export function createRunnableAgent<TInput, TOutput>(
  * @returns Model that returns structured output (T), plain text (string), or model with tools bound
  */
 export const initializeModel = (outputSchema?: any, config?: AgentConfig, options?: ModelOptions): any => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
+    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000, agentPath } = config || {};
+
+    // Helper to conditionally wrap with logging
+    const maybeWrapWithLogging = <T extends { invoke: (input: any) => Promise<any> }>(m: T): T => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (agentPath && isAgentLoggingEnabled()) {
+        return wrapModelWithLogging(m, agentPath);
+      }
+      return m;
+    };
 
     if (model.startsWith('gemini')) {
       const llm = new ChatGoogleGenerativeAI({
@@ -89,20 +131,20 @@ export const initializeModel = (outputSchema?: any, config?: AgentConfig, option
         maxOutputTokens: maxTokens,
       })
       if (options?.tools) {
-        return llm.bindTools(options.tools);
+        return maybeWrapWithLogging(llm.bindTools(options.tools));
       }
       if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema);
+        return maybeWrapWithLogging(llm.withStructuredOutput(outputSchema));
       }
       // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
+      return maybeWrapWithLogging({
         invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
           const response = await llm.invoke(input);
           return typeof response.content === 'string'
             ? response.content
             : String(response.content);
         }
-      };
+      });
     } else {
       const llm = new ChatOpenAI({
         model: model,
@@ -111,20 +153,20 @@ export const initializeModel = (outputSchema?: any, config?: AgentConfig, option
         reasoningEffort: 'low',
       })
       if (options?.tools) {
-        return llm.bindTools(options.tools);
+        return maybeWrapWithLogging(llm.bindTools(options.tools));
       }
       if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema);
+        return maybeWrapWithLogging(llm.withStructuredOutput(outputSchema));
       }
       // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
+      return maybeWrapWithLogging({
         invoke: async (input: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
           const response = await llm.invoke(input);
           return typeof response.content === 'string'
             ? response.content
             : String(response.content);
         }
-      };
+      });
     }
   };
 

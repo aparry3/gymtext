@@ -18,7 +18,7 @@ import { FITNESS_PLAN_SYSTEM_PROMPT, fitnessPlanUserPrompt } from './prompt';
  * @returns Agent (runnable) that produces structured plan data
  */
 export const createFitnessPlanGenerationRunnable = (config: FitnessPlanConfig) => {
-  const model = initializeModel(undefined, config.agentConfig);
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/plans/steps/generation' });
   const maxRetries = config.maxRetries ?? 3;
 
   return createRunnableAgent(async (input: FitnessPlanInput): Promise<FitnessPlanChainContext> => {

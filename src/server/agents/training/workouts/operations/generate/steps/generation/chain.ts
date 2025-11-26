@@ -15,7 +15,7 @@ import { WorkoutGenerateInput } from './types';
  * @returns Agent (runnable) that produces a long-form workout object with description and reasoning.
  */
 export const createWorkoutGenerationRunnable = (config: WorkoutGenerationConfig) => {
-  const model = initializeModel(undefined, config.agentConfig);  
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/workouts/operations/generate/steps/generation' });  
   return createRunnableAgent(async (input: WorkoutGenerateInput): Promise<WorkoutChainContext> => {
         // Prepare input with fitness profile and prompt
     const prompt = dailyWorkoutUserPrompt({dayOutline: input.dayOverview, clientProfile: input.user.profile || '', isDeload: input.isDeload});

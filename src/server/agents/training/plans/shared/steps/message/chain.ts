@@ -13,7 +13,7 @@ import type { FitnessPlanChainContext } from '../../types';
  */
 export const createFitnessPlanMessageAgent = (config: FitnessPlanMessageConfig) => {
   // Initialize model without schema for plain text output
-  const model = initializeModel(undefined, config.agentConfig);
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/plans/steps/message' });
 
   return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
     const { fitnessPlan, user } = input;

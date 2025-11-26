@@ -18,7 +18,7 @@ import { buildFormattedFitnessPlanSystemPrompt, createFormattedFitnessPlanUserPr
 export const createFormattedFitnessPlanAgent = (
   config: FormattedFitnessPlanConfig
 ) => {
-  const model = initializeModel(undefined, config.agentConfig);
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/plans/steps/formatted' });
 
   return createRunnableAgent<FitnessPlanChainContext, string>(async (input) => {
     const { fitnessPlan } = input;
