@@ -14,7 +14,7 @@ import { ProfileUpdateOutputSchema } from './schema';
  */
 export function createProfileUpdateAgent(config?: AgentConfig) {
   // Initialize model with structured output (returns JSON matching ProfileUpdateOutputSchema)
-  const model = initializeModel(ProfileUpdateOutputSchema, config);
+  const model = initializeModel(ProfileUpdateOutputSchema, { ...config, agentPath: 'profile' });
 
   return createRunnableAgent<ProfileUpdateInput, ProfileUpdateOutput>(
     async (input: ProfileUpdateInput): Promise<ProfileUpdateOutput> => {

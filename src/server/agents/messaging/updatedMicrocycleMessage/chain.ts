@@ -20,7 +20,7 @@ export const createUpdatedMicrocycleMessageAgent = (deps?: UpdatedMicrocycleMess
     const { modifiedMicrocycle, modifications, currentWeekday } = input;
 
     // Initialize model without schema for plain text output
-    const model = initializeModel(undefined, deps?.config);
+    const model = initializeModel(undefined, { ...deps?.config, agentPath: 'messaging/updatedMicrocycleMessage' });
 
     // Build user prompt from input parameters
     const userPrompt = updatedMicrocycleUserPrompt({
