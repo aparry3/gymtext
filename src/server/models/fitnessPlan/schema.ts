@@ -4,22 +4,22 @@ import { z } from "zod";
    FITNESS PLAN SCHEMA
 
    Simplified schema that stores:
-   - description: Long-form plan with all details and reasoning
-   - mesocycles: Array of mesocycle overview strings
-   - summary: Brief SMS-friendly summary (optional)
-   - notes: Special considerations (optional)
+   - description: Structured text plan (split, frequency, goals, deload rules, etc.)
+   - formatted: Markdown-formatted for frontend display
+   - message: Brief SMS-friendly summary (optional)
+
+   Plans are ongoing by default - no fixed duration.
 ----------------------------- */
 export const _FitnessPlanSchema = z.object({
   description: z.string({
-    description: "Comprehensive long-form fitness plan description with mesocycle sections delimited by '--- MESOCYCLE N: [Name] ---'"
+    description: "Structured text fitness plan containing split, frequency, deload rules, goals, and progression principles"
   }),
-  mesocycles: z.array(z.string(), {
-    description: "Array of mesocycle overview strings extracted from the plan description"
+  formatted: z.string({
+    description: "Markdown-formatted plan for frontend display"
   }),
-  summary: z.string({
+  message: z.string({
     description: "Brief summary of the fitness plan for SMS messages"
-  }).nullish(),
-  notes: z.string({
-    description: "Special considerations like travel plans, injuries, or schedule constraints"
   }).nullish()
 });
+
+export type FitnessPlanSchemaType = z.infer<typeof _FitnessPlanSchema>;

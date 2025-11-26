@@ -291,8 +291,6 @@ export class MessageService {
     const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
     const planContext = fitnessPlan ? {
       description: fitnessPlan.description ?? null,
-      goalStatement: fitnessPlan.goalStatement ?? null,
-      notes: fitnessPlan.notes ?? null,
     } : undefined;
 
     // 2. Fetch current microcycle

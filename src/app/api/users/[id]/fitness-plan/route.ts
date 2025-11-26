@@ -5,7 +5,7 @@ import { checkAuthorization } from '@/server/utils/authMiddleware';
 /**
  * GET /api/users/[id]/fitness-plan
  *
- * Get user's fitness plan
+ * Get user's current fitness plan
  *
  * Authorization:
  * - Admin can access any user
@@ -41,8 +41,8 @@ export async function GET(
       );
     }
 
-    // Fetch fitness plan with mesocycle records
-    const fitnessPlan = await fitnessPlanService.getCurrentPlanWithMesocycles(requestedUserId);
+    // Fetch current fitness plan
+    const fitnessPlan = await fitnessPlanService.getCurrentPlan(requestedUserId);
 
     if (!fitnessPlan) {
       return NextResponse.json(

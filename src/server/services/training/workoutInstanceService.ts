@@ -3,12 +3,13 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts/operations/generate';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
+import type { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
 import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
-import { getDayOfWeek, getDayOfWeekName } from '@/shared/utils/date';
+import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
 
 export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
@@ -98,11 +99,13 @@ export class WorkoutInstanceService {
    *
    * @param user - User with profile
    * @param targetDate - Date to generate workout for
+   * @param providedMicrocycle - Optional pre-loaded microcycle (avoids extra DB query)
    * @returns Generated and saved workout instance
    */
   public async generateWorkoutForDate(
     user: UserWithProfile,
-    targetDate: DateTime
+    targetDate: DateTime,
+    providedMicrocycle?: Microcycle
   ): Promise<WorkoutInstance | null> {
     try {
       // Get fitness plan
@@ -119,25 +122,29 @@ export class WorkoutInstanceService {
         return null;
       }
 
-      // Get or create microcycle for the target date
-      const { microcycle } = await this.progressService.getOrCreateMicrocycleForDate(
-        user.id,
-        plan,
-        targetDate.toJSDate(),
-        user.timezone
-      );
+      // Use provided microcycle or get/create one for the target date
+      let microcycle: Microcycle | null = providedMicrocycle ?? null;
+      if (!microcycle) {
+        const result = await this.progressService.getOrCreateMicrocycleForDate(
+          user.id,
+          plan,
+          targetDate.toJSDate(),
+          user.timezone
+        );
+        microcycle = result.microcycle;
+      }
       if (!microcycle) {
         console.log(`Could not get/create microcycle for user ${user.id}`);
         return null;
       }
 
       // Get the day's overview from the microcycle
-      const dayOfWeekLower = getDayOfWeek(targetDate.toJSDate(), user.timezone).toLowerCase(); // monday, tuesday, etc.
-      const dayOverviewKey = `${dayOfWeekLower}Overview` as keyof typeof microcycle;
-      const dayOverview = microcycle[dayOverviewKey];
+      // getWeekday returns 1-7 (Mon-Sun), days array is 0-indexed (Mon=0, Sun=6)
+      const dayIndex = getWeekday(targetDate.toJSDate(), user.timezone) - 1;
+      const dayOverview = microcycle.days?.[dayIndex];
 
       if (!dayOverview || typeof dayOverview !== 'string') {
-        console.log(`No overview found for ${dayOfWeekLower} in microcycle ${microcycle.id}`);
+        console.log(`No overview found for day index ${dayIndex} in microcycle ${microcycle.id}`);
         return null;
       }
 
@@ -165,7 +172,6 @@ export class WorkoutInstanceService {
       const workout: NewWorkoutInstance = {
         clientId: user.id,
         fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleId: null,
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
         sessionType: 'workout', // Use generic session type since we don't have theme from day overview

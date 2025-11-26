@@ -254,8 +254,6 @@ export const buildReplyMessage = (
   currentMicrocycle?: Microcycle,
   fitnessPlan?: {
     description: string | null;
-    goalStatement?: string | null;
-    notes?: string | null;
   }
 ): string => {
   const now = new Date();
@@ -267,42 +265,23 @@ export const buildReplyMessage = (
 **User**: ${user.name}`;
 
   // Add fitness plan context if available
-  if (fitnessPlan) {
+  if (fitnessPlan && fitnessPlan.description) {
     contextMessage += `\n\n## FITNESS PLAN CONTEXT`;
-
-    if (fitnessPlan.description) {
-      contextMessage += `\n\n**Plan Description**: ${fitnessPlan.description}`;
-    }
-
-    if (fitnessPlan.goalStatement) {
-      contextMessage += `\n\n**Goal**: ${fitnessPlan.goalStatement}`;
-    }
-
-    if (fitnessPlan.notes) {
-      contextMessage += `\n\n**Notes**: ${fitnessPlan.notes}`;
-    }
+    contextMessage += `\n\n**Plan**: ${fitnessPlan.description}`;
   }
 
   // Add current week context if available
-  if (currentMicrocycle) {
+  if (currentMicrocycle && currentMicrocycle.days) {
     contextMessage += `\n\n## THIS WEEK'S SCHEDULE`;
     contextMessage += `\n\n**Weekly Pattern**:`;
 
-    const dayOverviews = [
-      { day: 'Monday', overview: currentMicrocycle.mondayOverview },
-      { day: 'Tuesday', overview: currentMicrocycle.tuesdayOverview },
-      { day: 'Wednesday', overview: currentMicrocycle.wednesdayOverview },
-      { day: 'Thursday', overview: currentMicrocycle.thursdayOverview },
-      { day: 'Friday', overview: currentMicrocycle.fridayOverview },
-      { day: 'Saturday', overview: currentMicrocycle.saturdayOverview },
-      { day: 'Sunday', overview: currentMicrocycle.sundayOverview },
-    ];
+    const dayNames = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
 
-    dayOverviews.forEach(({ day, overview }) => {
+    currentMicrocycle.days.forEach((overview, index) => {
       if (overview) {
         // Extract just the header line (first line) from the overview for a summary
         const headerLine = overview.split('\n')[0].replace(/^\*+\s*/, '').trim();
-        contextMessage += `\n- ${day}: ${headerLine}`;
+        contextMessage += `\n- ${dayNames[index]}: ${headerLine}`;
       }
     });
   }

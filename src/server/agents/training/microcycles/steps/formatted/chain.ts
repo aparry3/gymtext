@@ -20,11 +20,11 @@ export const createFormattedMicrocycleAgent = (
   const model = initializeModel(undefined, config.agentConfig);
 
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
-    const { microcycle, weekNumber } = input;
+    const { microcycle, absoluteWeek } = input;
 
     // Build system and user prompts
     const systemPrompt = buildFormattedMicrocycleSystemPrompt();
-    const userPrompt = createFormattedMicrocycleUserPrompt(microcycle, weekNumber);
+    const userPrompt = createFormattedMicrocycleUserPrompt(microcycle, absoluteWeek);
 
     // Invoke model with system and user prompts
     const formattedMicrocycle = await model.invoke([
@@ -33,7 +33,7 @@ export const createFormattedMicrocycleAgent = (
     ]);
 
 
-    console.log(`[${config.operationName}] Generated formatted microcycle for week ${weekNumber}`);
+    console.log(`[${config.operationName}] Generated formatted microcycle for week ${absoluteWeek}`);
 
     return formattedMicrocycle;
   });

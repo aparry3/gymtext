@@ -8,7 +8,7 @@ MESSAGE REQUIREMENTS:
 - Warm, conversational greeting using their first name
 - Ask about their training progress this past week
 - Keep it encouraging and supportive
-- If they're starting a new mesocycle phase, acknowledge the transition and congratulate them
+- If next week is a deload week, acknowledge it positively (recovery is important!)
 - Keep it around 20-40 words total
 - SMS-friendly format
 
@@ -25,7 +25,7 @@ Return a JSON object with one field:
 }`;
 
 export const userPrompt = (input: WeeklyMessageInput): string => {
-  const { user, isNewMesocycle, mesocycleName } = input;
+  const { user, isDeload, absoluteWeek } = input;
   const firstName = user.name.split(' ')[0];
 
   return `Generate a weekly feedback check-in message for the user.
@@ -33,9 +33,10 @@ export const userPrompt = (input: WeeklyMessageInput): string => {
 User Information:
 - Name: ${user.name}
 - First Name: ${firstName}
+- Week: ${absoluteWeek} of their program
 
-${isNewMesocycle ? `IMPORTANT: Next week is the first week of a new mesocycle phase: "${mesocycleName}"
-Acknowledge this transition and congratulate them on completing the previous phase.` : 'This is a regular weekly check-in during an ongoing mesocycle phase.'}
+${isDeload ? `IMPORTANT: Next week is a DELOAD week - a planned recovery week with reduced intensity.
+Acknowledge this positively and remind them that recovery is part of the training process.` : 'This is a regular training week.'}
 
 Generate the feedback message now.`;
 };

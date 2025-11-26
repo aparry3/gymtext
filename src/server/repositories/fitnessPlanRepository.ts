@@ -3,28 +3,35 @@ import {
   FitnessPlanModel,
   type FitnessPlan,
 } from '@/server/models/fitnessPlan';
-import { Json } from '@/server/models/_types';
 
-
+/**
+ * Repository for fitness plan database operations
+ *
+ * Plans are now simple structured text - no more JSON mesocycles array
+ */
 export class FitnessPlanRepository extends BaseRepository {
-  async insertFitnessPlan(
-    fitnessPlan: FitnessPlan
-  ): Promise<FitnessPlan> {
-    // Convert mesocycles to JSON for database storage
-    const dbValues = {
-      ...fitnessPlan,
-      mesocycles: JSON.stringify(fitnessPlan.mesocycles) as unknown as Json,
-    };
-
+  /**
+   * Insert a new fitness plan
+   */
+  async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
     const result = await this.db
       .insertInto('fitnessPlans')
-      .values(dbValues)
+      .values({
+        clientId: fitnessPlan.clientId,
+        description: fitnessPlan.description,
+        formatted: fitnessPlan.formatted,
+        message: fitnessPlan.message,
+        startDate: fitnessPlan.startDate,
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
 
     return FitnessPlanModel.fromDB(result);
   }
 
+  /**
+   * Get a fitness plan by ID
+   */
   async getFitnessPlan(id: string): Promise<FitnessPlan | null> {
     const result = await this.db
       .selectFrom('fitnessPlans')
@@ -36,6 +43,9 @@ export class FitnessPlanRepository extends BaseRepository {
     return FitnessPlanModel.fromDB(result);
   }
 
+  /**
+   * Get the current (latest) fitness plan for a user
+   */
   async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
     const result = await this.db
       .selectFrom('fitnessPlans')
@@ -48,4 +58,18 @@ export class FitnessPlanRepository extends BaseRepository {
     return FitnessPlanModel.fromDB(result);
   }
 
+  /**
+   * Get all fitness plans for a user (for history)
+   * Returns plans ordered by creation date (newest first)
+   */
+  async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
+    const results = await this.db
+      .selectFrom('fitnessPlans')
+      .selectAll()
+      .where('clientId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .execute();
+
+    return results.map(FitnessPlanModel.fromDB);
+  }
 }

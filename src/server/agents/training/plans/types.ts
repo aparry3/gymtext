@@ -10,7 +10,6 @@ export interface FitnessProfileContextService {
 
 // Re-export step types for convenience
 export type {
-  FitnessPlanOutput,
   FitnessPlanChainContext,
 } from './steps/generation/types';
 

@@ -18,7 +18,7 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
   const model = initializeModel(ModifyMicrocycleOutputSchema, deps?.config);
 
   return createRunnableAgent<ModifyMicrocycleInput, MicrocycleChainContext & { wasModified: boolean }>(async (input) => {
-    const { user, currentMicrocycle, changeRequest, currentDayOfWeek, weekNumber } = input;
+    const { user, currentMicrocycle, changeRequest, currentDayOfWeek } = input;
 
     // Generate prompt
     const prompt = modifyMicrocycleUserPrompt({
@@ -53,8 +53,11 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
 
         return {
           microcycle: baseMicrocycle,
-          microcycleOverview: currentMicrocycle.description ?? '',
-          weekNumber,
+          // Use currentMicrocycle.description as stand-in for plan context in modify flow
+          planText: currentMicrocycle.description ?? '',
+          userProfile: formatFitnessProfile(user),
+          absoluteWeek: currentMicrocycle.absoluteWeek,
+          isDeload: currentMicrocycle.isDeload,
           wasModified,
           modifications
         };

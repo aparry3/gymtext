@@ -27,5 +27,4 @@ export interface MicrocycleGenerationConfig {
  */
 export interface MicrocycleChainContext extends MicrocycleGenerationInput {
   microcycle: MicrocycleGenerationOutput;
-  isDeload?: boolean; // Extracted from overview text
 }

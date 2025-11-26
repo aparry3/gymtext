@@ -3,6 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { DB } from '@/server/models/_types';
 import { Microcycle, MicrocycleModel } from '@/server/models/microcycle';
 
+/**
+ * Repository for microcycle database operations
+ *
+ * Microcycles now use:
+ * - absoluteWeek: Week number from plan start (1-indexed)
+ * - days: Ordered array of day descriptions
+ * - No mesocycleIndex or weekNumber
+ */
 export class MicrocycleRepository {
   constructor(private db: Kysely<DB>) {}
 
@@ -13,15 +21,8 @@ export class MicrocycleRepository {
         id: uuidv4(),
         userId: microcycle.userId,
         fitnessPlanId: microcycle.fitnessPlanId,
-        mesocycleIndex: microcycle.mesocycleIndex,
-        weekNumber: microcycle.weekNumber,
-        mondayOverview: microcycle.mondayOverview,
-        tuesdayOverview: microcycle.tuesdayOverview,
-        wednesdayOverview: microcycle.wednesdayOverview,
-        thursdayOverview: microcycle.thursdayOverview,
-        fridayOverview: microcycle.fridayOverview,
-        saturdayOverview: microcycle.saturdayOverview,
-        sundayOverview: microcycle.sundayOverview,
+        absoluteWeek: microcycle.absoluteWeek,
+        days: microcycle.days,
         description: microcycle.description,
         isDeload: microcycle.isDeload,
         formatted: microcycle.formatted,
@@ -50,19 +51,20 @@ export class MicrocycleRepository {
     return result ? MicrocycleModel.fromDB(result as any) : null;
   }
 
-  async getMicrocycleByWeek(
-    userId: string, 
+  /**
+   * Get microcycle by absolute week number
+   */
+  async getMicrocycleByAbsoluteWeek(
+    userId: string,
     fitnessPlanId: string,
-    mesocycleIndex: number, 
-    weekNumber: number
+    absoluteWeek: number
   ): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('userId', '=', userId)
       .where('fitnessPlanId', '=', fitnessPlanId)
-      .where('mesocycleIndex', '=', mesocycleIndex)
-      .where('weekNumber', '=', weekNumber)
+      .where('absoluteWeek', '=', absoluteWeek)
       .executeTakeFirst();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,26 +83,8 @@ export class MicrocycleRepository {
   async updateMicrocycle(id: string, updates: Partial<Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Microcycle | null> {
     const updateData: Record<string, unknown> = {};
 
-    if (updates.mondayOverview !== undefined) {
-      updateData.mondayOverview = updates.mondayOverview;
-    }
-    if (updates.tuesdayOverview !== undefined) {
-      updateData.tuesdayOverview = updates.tuesdayOverview;
-    }
-    if (updates.wednesdayOverview !== undefined) {
-      updateData.wednesdayOverview = updates.wednesdayOverview;
-    }
-    if (updates.thursdayOverview !== undefined) {
-      updateData.thursdayOverview = updates.thursdayOverview;
-    }
-    if (updates.fridayOverview !== undefined) {
-      updateData.fridayOverview = updates.fridayOverview;
-    }
-    if (updates.saturdayOverview !== undefined) {
-      updateData.saturdayOverview = updates.saturdayOverview;
-    }
-    if (updates.sundayOverview !== undefined) {
-      updateData.sundayOverview = updates.sundayOverview;
+    if (updates.days !== undefined) {
+      updateData.days = updates.days;
     }
     if (updates.description !== undefined) {
       updateData.description = updates.description;
@@ -122,6 +106,9 @@ export class MicrocycleRepository {
     }
     if (updates.endDate !== undefined) {
       updateData.endDate = updates.endDate;
+    }
+    if (updates.absoluteWeek !== undefined) {
+      updateData.absoluteWeek = updates.absoluteWeek;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -176,26 +163,15 @@ export class MicrocycleRepository {
     return result.numDeletedRows > 0;
   }
 
-  async getMicrocyclesByMesocycleIndex(userId: string, mesocycleIndex: number): Promise<Microcycle[]> {
-    const results = await this.db
-      .selectFrom('microcycles')
-      .selectAll()
-      .where('userId', '=', userId)
-      .where('mesocycleIndex', '=', mesocycleIndex)
-      .orderBy('weekNumber', 'asc')
-      .execute();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((r) => MicrocycleModel.fromDB(r as any));
-  }
-
+  /**
+   * Get all microcycles for a user ordered by absolute week
+   */
   async getAllMicrocycles(userId: string): Promise<Microcycle[]> {
     const results = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('userId', '=', userId)
-      .orderBy('mesocycleIndex', 'asc')
-      .orderBy('weekNumber', 'asc')
+      .orderBy('absoluteWeek', 'asc')
       .execute();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,5 +198,20 @@ export class MicrocycleRepository {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result ? MicrocycleModel.fromDB(result as any) : null;
+  }
+
+  /**
+   * Get all microcycles for a fitness plan
+   */
+  async getMicrocyclesByPlanId(fitnessPlanId: string): Promise<Microcycle[]> {
+    const results = await this.db
+      .selectFrom('microcycles')
+      .selectAll()
+      .where('fitnessPlanId', '=', fitnessPlanId)
+      .orderBy('absoluteWeek', 'asc')
+      .execute();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return results.map((r) => MicrocycleModel.fromDB(r as any));
   }
 }

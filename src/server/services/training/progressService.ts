@@ -1,5 +1,4 @@
 import { FitnessPlan } from '../../models/fitnessPlan';
-import { Mesocycle } from '../../models/mesocycle';
 import { Microcycle } from '../../models/microcycle';
 import {
   parseDate,
@@ -9,31 +8,35 @@ import {
   diffInWeeks,
   getWeekday,
 } from '@/shared/utils/date';
-import { MesocycleService } from './mesocycleService';
 import { MicrocycleService } from './microcycleService';
 
+/**
+ * Simplified ProgressInfo without mesocycle layer
+ */
 export interface ProgressInfo {
-  mesocycle: Mesocycle;              // The mesocycle object (from DB)
-  microcycle: Microcycle | null;     // The microcycle if exists, else null
-  microcycleOverview: string | null; // Overview from mesocycle.microcycles[index] if microcycle doesn't exist
-  mesocycleIndex: number;            // Which mesocycle (0-based)
-  microcycleIndex: number;           // Which week within mesocycle (0-based)
-  absoluteWeek: number;              // Weeks since plan start
-  dayOfWeek: number;                 // Day of week (1-7, Luxon format: 1=Mon, 7=Sun)
-  weekStartDate: Date;               // Start of current week
-  weekEndDate: Date;                 // End of current week
+  fitnessPlan: FitnessPlan;
+  microcycle: Microcycle | null;
+  absoluteWeek: number;          // Weeks since plan start (1-indexed)
+  dayOfWeek: number;             // Day of week (1-7, Luxon format: 1=Mon, 7=Sun)
+  weekStartDate: Date;           // Start of current week
+  weekEndDate: Date;             // End of current week
+  isDeload: boolean;             // Whether this week should be a deload
 }
 
+/**
+ * Simplified ProgressService
+ *
+ * Calculates progress based on plan start date and absolute week number.
+ * No mesocycle layer - deload logic is derived from plan description.
+ */
 export class ProgressService {
   private static instance: ProgressService;
-  private mesocycleService: MesocycleService;
   private microcycleService: MicrocycleService;
 
   private constructor() {
-    // Singleton - no dependencies needed for pure date calculations
-    this.mesocycleService = MesocycleService.getInstance();
     this.microcycleService = MicrocycleService.getInstance();
   }
+
   public static getInstance(): ProgressService {
     if (!ProgressService.instance) {
       ProgressService.instance = new ProgressService();
@@ -43,7 +46,7 @@ export class ProgressService {
 
   /**
    * Calculate progress for a specific date based on the fitness plan
-   * Uses efficient DB queries to find mesocycle and microcycle
+   * Uses absolute week number from plan start - no mesocycle lookup needed
    */
   public async getProgressForDate(
     plan: FitnessPlan,
@@ -60,54 +63,34 @@ export class ProgressService {
       return null;
     }
 
-    // Calculate absolute week number since plan start
+    // Calculate absolute week number since plan start (1-indexed)
     const planStart = startOfWeek(planStartDate, timezone);
     const targetWeekStart = startOfWeek(targetDate, timezone);
-
-    let absoluteWeek = diffInWeeks(targetWeekStart, planStart, timezone);
+    const absoluteWeek = diffInWeeks(targetWeekStart, planStart, timezone) + 1;
 
     // If before plan start, return null
-    if (absoluteWeek < 0) {
+    if (absoluteWeek < 1) {
       return null;
     }
 
-    // Handle looping if past end of plan
-    // Get all mesocycles to calculate total weeks for looping
-    const allMesocycles = await this.mesocycleService.getMesocyclesByPlanId(plan.id);
-    const totalWeeks = allMesocycles.reduce((sum, m) => sum + m.durationWeeks, 0);
-
-    if (totalWeeks === 0) {
-      console.error(`No mesocycles with valid duration found for plan ${plan.id}`);
-      return null;
-    }
-
-    // If past end of plan, loop back
-    if (absoluteWeek >= totalWeeks) {
-      absoluteWeek = absoluteWeek % totalWeeks;
-    }
-
-    // Query mesocycle by absolute week using efficient DB query
-    const mesocycle = await this.mesocycleService.getMesocycleByWeek(plan.id, absoluteWeek);
-
-    if (!mesocycle) {
-      console.error(`Mesocycle not found for plan ${plan.id}, week ${absoluteWeek}`);
-      return null;
-    }
-
-    // Calculate microcycle index within this mesocycle
-    const microcycleIndex = absoluteWeek - mesocycle.startWeek;
-
-    // Query for existing microcycle by date
-    const microcycle = await this.microcycleService.getMicrocycleByDate(
+    // Query for existing microcycle by date or absolute week
+    let microcycle = await this.microcycleService.getMicrocycleByDate(
       plan.clientId,
       plan.id,
       targetDate
     );
 
-    // Get microcycle overview from mesocycle's microcycles array if microcycle doesn't exist
-    const microcycleOverview = microcycle
-      ? null
-      : (mesocycle.microcycles[microcycleIndex] || null);
+    // If not found by date, try by absolute week
+    if (!microcycle) {
+      microcycle = await this.microcycleService.getMicrocycleByAbsoluteWeek(
+        plan.clientId,
+        plan.id,
+        absoluteWeek
+      );
+    }
+
+    // Calculate if this should be a deload week based on plan rules
+    const isDeload = this.calculateIsDeload(plan.description, absoluteWeek);
 
     // Calculate date-related fields
     const dayOfWeek = getWeekday(targetDate, timezone);
@@ -115,15 +98,13 @@ export class ProgressService {
     const weekEnd = endOfWeek(targetDate, timezone);
 
     return {
-      mesocycle,
+      fitnessPlan: plan,
       microcycle,
-      microcycleOverview,
-      mesocycleIndex: mesocycle.mesocycleIndex,
-      microcycleIndex,
       absoluteWeek,
       dayOfWeek,
       weekStartDate: weekStart,
       weekEndDate: weekEnd,
+      isDeload,
     };
   }
 
@@ -139,7 +120,7 @@ export class ProgressService {
   }
 
   /**
-   * Get or create microcycle for a specific date (orchestration method)
+   * Get or create microcycle for a specific date
    * This is the main entry point for ensuring a user has a microcycle for any given week
    */
   public async getOrCreateMicrocycleForDate(
@@ -147,7 +128,7 @@ export class ProgressService {
     plan: FitnessPlan,
     targetDate: Date,
     timezone: string = 'America/New_York'
-  ): Promise<{ microcycle: Microcycle; wasCreated: boolean }> {
+  ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }> {
     // Calculate progress for the target date
     const progress = await this.getProgressForDate(plan, targetDate, timezone);
     if (!progress) {
@@ -156,17 +137,51 @@ export class ProgressService {
 
     // If microcycle already exists, return it
     if (progress.microcycle) {
-      return { microcycle: progress.microcycle, wasCreated: false };
+      return { microcycle: progress.microcycle, progress, wasCreated: false };
     }
 
     // Microcycle doesn't exist - create it using MicrocycleService
     const microcycle = await this.microcycleService.createMicrocycleFromProgress(
       userId,
-      plan.id!,
+      plan,
       progress
     );
 
-    return { microcycle, wasCreated: true };
+    // Update progress with new microcycle
+    const updatedProgress = { ...progress, microcycle };
+
+    return { microcycle, progress: updatedProgress, wasCreated: true };
+  }
+
+  /**
+   * Calculate if a given week should be a deload week based on plan description
+   * Parses common patterns like "Deload: Every 4th week" from the plan text
+   */
+  private calculateIsDeload(planDescription: string, absoluteWeek: number): boolean {
+    if (!planDescription) return false;
+
+    // Common patterns to look for:
+    // "Deload: Every 4th week"
+    // "Deload every 4 weeks"
+    // "Every 4th week is deload"
+    const patterns = [
+      /deload[:\s]+every\s+(\d+)(?:th|st|nd|rd)?\s+week/i,
+      /every\s+(\d+)(?:th|st|nd|rd)?\s+week[:\s]+deload/i,
+      /every\s+(\d+)(?:th|st|nd|rd)?\s+week\s+(?:is\s+)?(?:a\s+)?deload/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = planDescription.match(pattern);
+      if (match) {
+        const deloadFrequency = parseInt(match[1], 10);
+        if (deloadFrequency > 0) {
+          // Week numbers are 1-indexed, so week 4, 8, 12 are deloads with frequency 4
+          return absoluteWeek % deloadFrequency === 0;
+        }
+      }
+    }
+
+    return false;
   }
 }
 

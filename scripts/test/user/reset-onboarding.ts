@@ -1,438 +1,427 @@
 #!/usr/bin/env tsx
 
+/**
+ * Reset Onboarding Script
+ *
+ * Resets a user's onboarding state for testing purposes.
+ * Cleans up all generated data while preserving the user account,
+ * then optionally restarts the onboarding flow.
+ *
+ * Usage:
+ *   pnpm test:onboarding:reset -p "+14155551234"
+ *   pnpm test:onboarding:reset -p "+14155551234" -s 3  # Start from step 3
+ *   pnpm test:onboarding:reset -p "+14155551234" --dry-run
+ *   pnpm test:onboarding:reset -p "+14155551234" --skip-trigger
+ */
+
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { table } from 'table';
-import { TestDatabase } from '../../utils/db';
-import { success, error, warning, info, displayHeader } from '../../utils/common';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+import * as readline from 'readline';
+
+// Load environment variables
+config({ path: resolve(process.cwd(), '.env.local') });
+
+// Import database and services after env is loaded
+import { postgresDb } from '@/server/connections/postgres/postgres';
 import { inngest } from '@/server/connections/inngest/client';
-import readline from 'readline';
 
 interface ResetOptions {
-  phone?: string;
-  userId?: string;
+  phone: string;
+  step?: number;
+  skipTrigger?: boolean;
   yes?: boolean;
   verbose?: boolean;
+  dryRun?: boolean;
 }
 
-interface ResetStats {
-  workoutsDeleted: number;
-  microcyclesDeleted: number;
-  mesocyclesDeleted: number;
-  plansDeleted: number;
-  messagesDeleted: number;
-  profilesDeleted: number;
-  profileUpdatesDeleted: number;
-  userProfileCleared: boolean;
-  subscriptionCreated: boolean;
-  onboardingReset: boolean;
-  eventTriggered: boolean;
+interface DeleteCounts {
+  messageQueue: number;
+  messages: number;
+  workouts: number;
+  microcycles: number;
+  fitnessPlans: number;
+  profiles: number;
 }
 
-class OnboardingReset {
-  private db: TestDatabase;
-  private options: ResetOptions;
-  private stats: ResetStats;
+async function prompt(question: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-  constructor(options: ResetOptions) {
-    this.options = options;
-    this.db = TestDatabase.getInstance();
-    this.stats = {
-      workoutsDeleted: 0,
-      microcyclesDeleted: 0,
-      mesocyclesDeleted: 0,
-      plansDeleted: 0,
-      messagesDeleted: 0,
-      profilesDeleted: 0,
-      profileUpdatesDeleted: 0,
-      userProfileCleared: false,
-      subscriptionCreated: false,
-      onboardingReset: false,
-      eventTriggered: false,
-    };
-  }
-
-  /**
-   * Get user from phone or ID
-   */
-  private async getUser(): Promise<{ id: string; phoneNumber: string; name: string } | null> {
-    if (this.options.userId) {
-      const user = await this.db.getUserById(this.options.userId);
-      if (!user) {
-        error(`User not found with ID: ${this.options.userId}`);
-        return null;
-      }
-      return user;
-    }
-
-    if (this.options.phone) {
-      // Ensure phone is in E.164 format
-      const phone = this.options.phone.startsWith('+') ? this.options.phone : `+${this.options.phone}`;
-      const user = await this.db.getUserByPhone(phone);
-      if (!user) {
-        error(`User not found with phone: ${phone}`);
-        return null;
-      }
-      return user;
-    }
-
-    error('No user identifier provided. Use --phone or --user-id');
-    return null;
-  }
-
-  /**
-   * Prompt for confirmation
-   */
-  private async confirm(message: string): Promise<boolean> {
-    if (this.options.yes) {
-      return true;
-    }
-
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
+  });
+}
 
-    return new Promise((resolve) => {
-      rl.question(chalk.yellow(`${message} (y/N): `), (answer) => {
-        rl.close();
-        resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-      });
-    });
+async function findUserByPhone(phone: string) {
+  const user = await postgresDb
+    .selectFrom('users')
+    .selectAll()
+    .where('phoneNumber', '=', phone)
+    .executeTakeFirst();
+
+  return user;
+}
+
+async function countRecordsToDelete(userId: string, startStep: number): Promise<DeleteCounts> {
+  const counts: DeleteCounts = {
+    messageQueue: 0,
+    messages: 0,
+    workouts: 0,
+    microcycles: 0,
+    fitnessPlans: 0,
+    profiles: 0,
+  };
+
+  // Always count messages and queue (steps 6-7 create these)
+  const [messageQueue, messages] = await Promise.all([
+    postgresDb
+      .selectFrom('messageQueues')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('userId', '=', userId)
+      .executeTakeFirst(),
+    postgresDb
+      .selectFrom('messages')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('userId', '=', userId)
+      .executeTakeFirst(),
+  ]);
+  counts.messageQueue = Number(messageQueue?.count ?? 0);
+  counts.messages = Number(messages?.count ?? 0);
+
+  // Count workouts if starting from step 5 or earlier
+  if (startStep <= 5) {
+    const workouts = await postgresDb
+      .selectFrom('workoutInstances')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.workouts = Number(workouts?.count ?? 0);
   }
 
-  /**
-   * Delete fitness data
-   */
-  private async deleteFitnessData(userId: string): Promise<void> {
-    info('Deleting fitness data...');
+  // Count microcycles if starting from step 4 or earlier
+  if (startStep <= 4) {
+    const microcycles = await postgresDb
+      .selectFrom('microcycles')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('userId', '=', userId)
+      .executeTakeFirst();
+    counts.microcycles = Number(microcycles?.count ?? 0);
+  }
 
-    // Delete workout instances
-    const workouts = await this.db.db
+  // Count fitness plans if starting from step 3 or earlier
+  if (startStep <= 3) {
+    const fitnessPlans = await postgresDb
+      .selectFrom('fitnessPlans')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.fitnessPlans = Number(fitnessPlans?.count ?? 0);
+  }
+
+  // Count profiles if starting from step 2 or earlier
+  if (startStep <= 2) {
+    const profiles = await postgresDb
+      .selectFrom('profiles')
+      .select(postgresDb.fn.count('id').as('count'))
+      .where('clientId', '=', userId)
+      .executeTakeFirst();
+    counts.profiles = Number(profiles?.count ?? 0);
+  }
+
+  return counts;
+}
+
+async function deleteUserData(userId: string, startStep: number, verbose: boolean): Promise<DeleteCounts> {
+  const counts: DeleteCounts = {
+    messageQueue: 0,
+    messages: 0,
+    workouts: 0,
+    microcycles: 0,
+    fitnessPlans: 0,
+    profiles: 0,
+  };
+
+  // Always delete message queue entries (steps 6-7 create these)
+  if (verbose) console.log(chalk.gray('  Deleting message queue entries...'));
+  const queueResult = await postgresDb
+    .deleteFrom('messageQueues')
+    .where('userId', '=', userId)
+    .executeTakeFirst();
+  counts.messageQueue = Number(queueResult.numDeletedRows);
+
+  // Always delete messages (steps 6-7 create these)
+  if (verbose) console.log(chalk.gray('  Deleting messages...'));
+  const messagesResult = await postgresDb
+    .deleteFrom('messages')
+    .where('userId', '=', userId)
+    .executeTakeFirst();
+  counts.messages = Number(messagesResult.numDeletedRows);
+
+  // Delete workouts if starting from step 5 or earlier
+  if (startStep <= 5) {
+    if (verbose) console.log(chalk.gray('  Deleting workouts...'));
+    const workoutsResult = await postgresDb
       .deleteFrom('workoutInstances')
       .where('clientId', '=', userId)
       .executeTakeFirst();
-    this.stats.workoutsDeleted = Number(workouts.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.workoutsDeleted} workout instances`));
-    }
+    counts.workouts = Number(workoutsResult.numDeletedRows);
+  }
 
-    // Delete microcycles
-    const microcycles = await this.db.db
+  // Delete microcycles if starting from step 4 or earlier
+  if (startStep <= 4) {
+    if (verbose) console.log(chalk.gray('  Deleting microcycles...'));
+    const microcyclesResult = await postgresDb
       .deleteFrom('microcycles')
       .where('userId', '=', userId)
       .executeTakeFirst();
-    this.stats.microcyclesDeleted = Number(microcycles.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.microcyclesDeleted} microcycles`));
-    }
+    counts.microcycles = Number(microcyclesResult.numDeletedRows);
+  }
 
-    // Delete mesocycles (if table exists)
-    try {
-      const mesocycles = await this.db.db
-        .deleteFrom('mesocycles')
-        .where('userId', '=', userId)
-        .executeTakeFirst();
-      this.stats.mesocyclesDeleted = Number(mesocycles.numDeletedRows || 0);
-      if (this.options.verbose) {
-        console.log(chalk.gray(`  Deleted ${this.stats.mesocyclesDeleted} mesocycles`));
-      }
-    } catch (err) {
-      // Table might not exist in older schemas
-      if (this.options.verbose) {
-        console.log(chalk.gray('  Mesocycles table not found (skipping)'));
-      }
-    }
-
-    // Delete fitness plans
-    const plans = await this.db.db
+  // Delete fitness plans if starting from step 3 or earlier
+  if (startStep <= 3) {
+    if (verbose) console.log(chalk.gray('  Deleting fitness plans...'));
+    const plansResult = await postgresDb
       .deleteFrom('fitnessPlans')
       .where('clientId', '=', userId)
       .executeTakeFirst();
-    this.stats.plansDeleted = Number(plans.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.plansDeleted} fitness plans`));
-    }
+    counts.fitnessPlans = Number(plansResult.numDeletedRows);
+  }
 
-    // Delete messages
-    const messages = await this.db.db
-      .deleteFrom('messages')
-      .where('userId', '=', userId)
-      .executeTakeFirst();
-    this.stats.messagesDeleted = Number(messages.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.messagesDeleted} messages`));
-    }
-
-    // Delete profiles
-    const profiles = await this.db.db
+  // Delete fitness profiles if starting from step 2 or earlier
+  if (startStep <= 2) {
+    if (verbose) console.log(chalk.gray('  Deleting fitness profiles...'));
+    const profilesResult = await postgresDb
       .deleteFrom('profiles')
       .where('clientId', '=', userId)
       .executeTakeFirst();
-    this.stats.profilesDeleted = Number(profiles.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.profilesDeleted} profiles`));
-    }
-
-    // Delete profile updates
-    const profileUpdates = await this.db.db
-      .deleteFrom('profileUpdates')
-      .where('userId', '=', userId)
-      .executeTakeFirst();
-    this.stats.profileUpdatesDeleted = Number(profileUpdates.numDeletedRows || 0);
-    if (this.options.verbose) {
-      console.log(chalk.gray(`  Deleted ${this.stats.profileUpdatesDeleted} profile updates`));
-    }
-
-    // Clear user profile JSON
-    await this.db.db
-      .updateTable('users')
-      .set({ profile: null })
-      .where('id', '=', userId)
-      .execute();
-    this.stats.userProfileCleared = true;
-    if (this.options.verbose) {
-      console.log(chalk.gray('  Cleared user profile JSON'));
-    }
-
-    success('Fitness data deleted successfully');
+    counts.profiles = Number(profilesResult.numDeletedRows);
   }
 
-  /**
-   * Ensure free subscription exists
-   */
-  private async ensureFreeSubscription(userId: string): Promise<void> {
-    info('Checking subscription...');
-
-    // Check if subscription exists
-    const existingSub = await this.db.db
-      .selectFrom('subscriptions')
-      .selectAll()
-      .where('userId', '=', userId)
-      .executeTakeFirst();
-
-    if (existingSub) {
-      if (this.options.verbose) {
-        console.log(chalk.gray(`  Existing subscription found: ${existingSub.stripeSubscriptionId}`));
-      }
-      success('Subscription already exists');
-      return;
-    }
-
-    // Create free subscription
-    await this.db.db
-      .insertInto('subscriptions')
-      .values({
-        userId,
-        stripeSubscriptionId: `free_dev_${userId}`,
-        status: 'active',
-        planType: 'monthly',
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date('2125-01-01'), // Far future date
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .execute();
-
-    this.stats.subscriptionCreated = true;
-    success('Free subscription created');
-  }
-
-  /**
-   * Reset onboarding status
-   */
-  private async resetOnboardingStatus(userId: string): Promise<void> {
-    info('Resetting onboarding status...');
-
-    // Check if onboarding record exists
-    const onboarding = await this.db.db
-      .selectFrom('userOnboarding')
-      .selectAll()
-      .where('userId', '=', userId)
-      .executeTakeFirst();
-
-    if (!onboarding) {
-      error('No onboarding record found - cannot reset');
-      return;
-    }
-
-    // Reset onboarding status
-    await this.db.db
-      .updateTable('userOnboarding')
-      .set({
-        status: 'pending',
-        currentStep: 0,
-        completedAt: null,
-        programMessagesSent: false,
-        errorMessage: null,
-        updatedAt: new Date(),
-      })
-      .where('userId', '=', userId)
-      .execute();
-
-    this.stats.onboardingReset = true;
-    success('Onboarding status reset to pending');
-  }
-
-  /**
-   * Trigger onboarding event
-   */
-  private async triggerOnboarding(userId: string): Promise<void> {
-    info('Triggering onboarding event...');
-
-    try {
-      await inngest.send({
-        name: 'user/onboarding.requested',
-        data: {
-          userId,
-        },
-      });
-
-      this.stats.eventTriggered = true;
-      success('Onboarding event triggered successfully');
-    } catch (err) {
-      error(`Failed to trigger onboarding event: ${err instanceof Error ? err.message : String(err)}`);
-      throw err;
-    }
-  }
-
-  /**
-   * Display summary
-   */
-  private displaySummary(user: { id: string; phoneNumber: string; name: string }): void {
-    console.log('\n');
-    displayHeader('Reset Complete', '✅');
-
-    console.log(chalk.cyan('\nUser:'));
-    console.log(`  Name: ${user.name}`);
-    console.log(`  Phone: ${user.phoneNumber}`);
-    console.log(`  ID: ${user.id}`);
-
-    console.log(chalk.cyan('\nActions Taken:'));
-    const data = [
-      ['Action', 'Result'],
-      ['Workout Instances Deleted', this.stats.workoutsDeleted.toString()],
-      ['Microcycles Deleted', this.stats.microcyclesDeleted.toString()],
-      ['Mesocycles Deleted', this.stats.mesocyclesDeleted.toString()],
-      ['Fitness Plans Deleted', this.stats.plansDeleted.toString()],
-      ['Messages Deleted', this.stats.messagesDeleted.toString()],
-      ['Profiles Deleted', this.stats.profilesDeleted.toString()],
-      ['Profile Updates Deleted', this.stats.profileUpdatesDeleted.toString()],
-      ['User Profile JSON', this.stats.userProfileCleared ? 'Cleared' : 'Not Cleared'],
-      ['Free Subscription', this.stats.subscriptionCreated ? 'Created' : 'Already Exists'],
-      ['Onboarding Status', this.stats.onboardingReset ? 'Reset to Pending' : 'Not Reset'],
-      ['Onboarding Event', this.stats.eventTriggered ? 'Triggered' : 'Not Triggered'],
-    ];
-    console.log(table(data));
-
-    console.log(chalk.green('\n✓ Onboarding flow will now regenerate fitness plan, microcycle, and workout'));
-    console.log(chalk.gray('  Monitor Inngest dashboard for progress'));
-  }
-
-  /**
-   * Run the reset
-   */
-  async run(): Promise<void> {
-    displayHeader('Reset User Onboarding', '🔄');
-
-    // Get user
-    const user = await this.getUser();
-    if (!user) {
-      process.exit(1);
-    }
-
-    console.log(chalk.cyan('\nUser Found:'));
-    console.log(`  Name: ${user.name}`);
-    console.log(`  Phone: ${user.phoneNumber}`);
-    console.log(`  ID: ${user.id}`);
-
-    // Confirm
-    const confirmed = await this.confirm(
-      '\nThis will delete all fitness data (plans, microcycles, workouts, messages, profiles) and re-trigger onboarding. Continue?'
-    );
-    if (!confirmed) {
-      warning('Reset cancelled');
-      process.exit(0);
-    }
-
-    console.log('\n');
-
-    try {
-      // Step 1: Delete fitness data
-      await this.deleteFitnessData(user.id);
-
-      // Step 2: Ensure free subscription
-      await this.ensureFreeSubscription(user.id);
-
-      // Step 3: Reset onboarding status
-      await this.resetOnboardingStatus(user.id);
-
-      // Step 4: Trigger onboarding
-      await this.triggerOnboarding(user.id);
-
-      // Display summary
-      this.displaySummary(user);
-    } catch (err) {
-      error(`Reset failed: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
-  }
-
-  /**
-   * Cleanup
-   */
-  async cleanup(): Promise<void> {
-    await this.db.close();
-  }
+  return counts;
 }
 
-/**
- * Main CLI
- */
+async function resetOnboardingRecord(userId: string, step: number | null) {
+  await postgresDb
+    .updateTable('userOnboarding')
+    .set({
+      status: 'pending',
+      currentStep: step,
+      startedAt: null,
+      completedAt: null,
+      errorMessage: null,
+      programMessagesSent: false,
+    })
+    .where('userId', '=', userId)
+    .execute();
+}
+
+async function ensureActiveSubscription(userId: string, verbose: boolean): Promise<boolean> {
+  // Check if user already has active subscription
+  const existingSubscription = await postgresDb
+    .selectFrom('subscriptions')
+    .selectAll()
+    .where('userId', '=', userId)
+    .where('status', '=', 'active')
+    .executeTakeFirst();
+
+  if (existingSubscription) {
+    if (verbose) console.log(chalk.gray('  User already has active subscription'));
+    return false;
+  }
+
+  // Create a test subscription
+  const testSubscriptionId = `test_sub_${Date.now()}`;
+  const now = new Date();
+  const oneMonthFromNow = new Date(now);
+  oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
+  await postgresDb
+    .insertInto('subscriptions')
+    .values({
+      userId,
+      stripeSubscriptionId: testSubscriptionId,
+      status: 'active',
+      planType: 'monthly',
+      currentPeriodStart: now,
+      currentPeriodEnd: oneMonthFromNow,
+    })
+    .execute();
+
+  if (verbose) console.log(chalk.gray(`  Created test subscription: ${testSubscriptionId}`));
+  return true;
+}
+
+async function triggerOnboarding(userId: string) {
+  await inngest.send({
+    name: 'user/onboarding.requested',
+    data: { userId },
+  });
+}
+
+async function resetOnboarding(options: ResetOptions) {
+  const startTime = performance.now();
+
+  console.log(chalk.blue('\n🔄 Onboarding Reset Tool\n'));
+
+  // 1. Find user
+  console.log(chalk.gray(`Looking up user: ${options.phone}`));
+  const user = await findUserByPhone(options.phone);
+
+  if (!user) {
+    console.log(chalk.red(`\n❌ User not found with phone: ${options.phone}`));
+    process.exit(1);
+  }
+
+  console.log(chalk.green(`✓ Found user: ${user.name || 'Unknown'} (${user.id})`));
+
+  // 2. Count records to delete (based on starting step)
+  const startStep = options.step ?? 1;
+  console.log(chalk.gray(`\nCounting records to delete (starting from step ${startStep})...`));
+  const counts = await countRecordsToDelete(user.id, startStep);
+
+  const totalRecords =
+    counts.messageQueue +
+    counts.messages +
+    counts.workouts +
+    counts.microcycles +
+    counts.fitnessPlans +
+    counts.profiles;
+
+  console.log(chalk.white('\nRecords to delete:'));
+  console.log(chalk.gray(`  Message queue entries: ${counts.messageQueue}`));
+  console.log(chalk.gray(`  Messages: ${counts.messages}`));
+  console.log(chalk.gray(`  Workouts: ${counts.workouts}`));
+  console.log(chalk.gray(`  Microcycles: ${counts.microcycles}`));
+  console.log(chalk.gray(`  Fitness plans: ${counts.fitnessPlans}`));
+  console.log(chalk.gray(`  Fitness profiles: ${counts.profiles}`));
+  console.log(chalk.white(`  Total: ${totalRecords} records`));
+
+  // 3. Dry run stops here
+  if (options.dryRun) {
+    console.log(chalk.yellow('\n--dry-run flag set. No changes made.'));
+    process.exit(0);
+  }
+
+  // 4. Confirmation prompt
+  if (!options.yes) {
+    const confirmed = await prompt(
+      chalk.yellow(`\nAre you sure you want to delete ${totalRecords} records? (y/N): `)
+    );
+    if (!confirmed) {
+      console.log(chalk.gray('Aborted.'));
+      process.exit(0);
+    }
+  }
+
+  // 5. Delete data
+  console.log(chalk.blue('\nDeleting data...'));
+  const deletedCounts = await deleteUserData(user.id, startStep, options.verbose ?? false);
+
+  console.log(chalk.green('✓ Data deleted'));
+  if (options.verbose) {
+    console.log(chalk.gray(`  Deleted ${deletedCounts.messageQueue} queue entries`));
+    console.log(chalk.gray(`  Deleted ${deletedCounts.messages} messages`));
+    console.log(chalk.gray(`  Deleted ${deletedCounts.workouts} workouts`));
+    console.log(chalk.gray(`  Deleted ${deletedCounts.microcycles} microcycles`));
+    console.log(chalk.gray(`  Deleted ${deletedCounts.fitnessPlans} fitness plans`));
+    console.log(chalk.gray(`  Deleted ${deletedCounts.profiles} profiles`));
+  }
+
+  // 6. Reset onboarding record
+  console.log(chalk.blue('\nResetting onboarding record...'));
+  await resetOnboardingRecord(user.id, options.step ?? null);
+  console.log(chalk.green(`✓ Onboarding reset to step ${options.step ?? 1}`));
+
+  // 7. Ensure active subscription
+  console.log(chalk.blue('\nChecking subscription...'));
+  const createdSubscription = await ensureActiveSubscription(user.id, options.verbose ?? false);
+  if (createdSubscription) {
+    console.log(chalk.green('✓ Created test subscription'));
+  } else {
+    console.log(chalk.green('✓ Active subscription exists'));
+  }
+
+  // 8. Trigger onboarding
+  if (!options.skipTrigger) {
+    console.log(chalk.blue('\nTriggering onboarding...'));
+    await triggerOnboarding(user.id);
+    console.log(chalk.green('✓ Onboarding triggered'));
+    console.log(chalk.yellow('  Note: Make sure Inngest is running (pnpm inngest)'));
+  } else {
+    console.log(chalk.gray('\n--skip-trigger flag set. Onboarding not triggered.'));
+  }
+
+  // 9. Summary
+  const endTime = performance.now();
+  const duration = Math.round(endTime - startTime);
+
+  console.log(chalk.green(`\n✅ Reset complete (${duration}ms)`));
+  console.log(chalk.white('\nSummary:'));
+  console.log(chalk.gray(`  User: ${user.name || 'Unknown'} (${options.phone})`));
+  console.log(chalk.gray(`  Records deleted: ${totalRecords}`));
+  console.log(chalk.gray(`  Starting step: ${options.step ?? 1}`));
+  console.log(chalk.gray(`  Onboarding triggered: ${!options.skipTrigger}`));
+}
+
+// CLI setup
 const program = new Command();
 
 program
   .name('reset-onboarding')
-  .description('Reset user onboarding flow - deletes fitness data and re-triggers onboarding')
+  .description('Reset a user\'s onboarding state for testing')
   .version('1.0.0')
-  .option('-p, --phone <phone>', 'User phone number (E.164 format, e.g., +1234567890)')
-  .option('-u, --user-id <userId>', 'User ID')
-  .option('-y, --yes', 'Skip confirmation prompt')
-  .option('-v, --verbose', 'Show detailed output')
-  .action(async (options: ResetOptions) => {
-    if (!options.phone && !options.userId) {
-      error('You must provide either --phone or --user-id');
-      program.outputHelp();
-      process.exit(1);
+  .requiredOption('-p, --phone <phone>', 'Phone number (E.164 format)')
+  .option('-s, --step <number>', 'Step to restart from (1-7)', (value) => {
+    const step = parseInt(value, 10);
+    if (isNaN(step) || step < 1 || step > 7) {
+      throw new Error('Step must be a number between 1 and 7');
     }
-
-    const reset = new OnboardingReset(options);
-
+    return step;
+  })
+  .option('--skip-trigger', 'Don\'t re-trigger onboarding after reset', false)
+  .option('-y, --yes', 'Skip confirmation prompt', false)
+  .option('-v, --verbose', 'Show verbose output', false)
+  .option('--dry-run', 'Show what would be deleted without doing it', false)
+  .action(async (options) => {
     try {
-      await reset.run();
-    } catch (err) {
-      error(`Reset failed: ${err instanceof Error ? err.message : String(err)}`);
+      await resetOnboarding(options);
+    } catch (error) {
+      console.log(chalk.red('\n❌ Error:'), (error as Error).message);
+      if (options.verbose) {
+        console.error(error);
+      }
       process.exit(1);
     } finally {
-      await reset.cleanup();
+      // Close database connection
+      await postgresDb.destroy();
     }
   });
 
-// Show help if no arguments
-if (process.argv.length === 2) {
-  program.outputHelp();
-  console.log(chalk.gray('\nExamples:'));
-  console.log(chalk.gray('  # Reset using phone number'));
-  console.log('  $ pnpm test:user:reset --phone +1234567890');
-  console.log();
-  console.log(chalk.gray('  # Reset using user ID'));
-  console.log('  $ pnpm test:user:reset --user-id abc123');
-  console.log();
-  console.log(chalk.gray('  # Skip confirmation prompt'));
-  console.log('  $ pnpm test:user:reset --phone +1234567890 --yes');
-  console.log();
-  console.log(chalk.gray('  # Verbose output'));
-  console.log('  $ pnpm test:user:reset --phone +1234567890 --verbose');
-}
+// Example usage helper
+program.on('--help', () => {
+  console.log('');
+  console.log('Onboarding Steps (data deleted when restarting FROM this step):');
+  console.log('  1 - Load signup data           → Deletes: all data');
+  console.log('  2 - Extract fitness profile    → Deletes: all data');
+  console.log('  3 - Create fitness plan        → Deletes: plan, microcycle, workout, messages');
+  console.log('  4 - Create first microcycle    → Deletes: microcycle, workout, messages');
+  console.log('  5 - Create first workout       → Deletes: workout, messages');
+  console.log('  6 - Finalize program           → Deletes: messages only');
+  console.log('  7 - Send onboarding messages   → Deletes: messages only');
+  console.log('');
+  console.log('Examples:');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234"              # Delete all, start fresh');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -s 3         # Keep profile, redo plan');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" -s 4         # Keep profile+plan, redo microcycle');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" --dry-run');
+  console.log('  $ pnpm test:onboarding:reset -p "+14155551234" --skip-trigger -y');
+});
 
-program.parse(process.argv);
+program.parse();

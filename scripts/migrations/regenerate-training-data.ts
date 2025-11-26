@@ -1,18 +1,20 @@
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from '@/server/models';
-import { UserRepository } from '@/server/repositories/userRepository';
 import { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
+import { progressService } from '@/server/services/training/progressService';
+import { userService } from '@/server/services/user/userService';
 import { UserWithProfile } from '@/server/models/userModel';
+import { now } from '@/shared/utils/date';
 
 /**
- * Data Migration Script: Regenerate Fitness Plans for All Users
+ * Data Migration Script: Regenerate Training Data for All Users
  *
- * Generates new fitness plans for all users with fitness profiles using the
- * updated fitness plan generator.
+ * Generates new fitness plans and microcycles for all users with fitness profiles
+ * using the updated fitness plan generator.
  *
  * Usage:
- *   source .env.local && tsx scripts/migrations/regenerate-fitness-plans.ts [--dry-run]
+ *   source .env.local && tsx scripts/migrations/regenerate-training-data.ts [--dry-run]
  */
 
 // ============================================================================
@@ -20,7 +22,7 @@ import { UserWithProfile } from '@/server/models/userModel';
 // ============================================================================
 
 const isDryRun = process.argv.includes('--dry-run');
-const CONCURRENCY_LIMIT = 5; // Process 5 users in parallel at a time
+const CONCURRENCY_LIMIT = 10; // Process 10 users in parallel at a time
 
 // Database connection
 const databaseUrl = process.env.DATABASE_URL;
@@ -35,7 +37,6 @@ const db = new Kysely<DB>({
 });
 
 // Initialize services
-const userRepository = new UserRepository(db);
 const fitnessPlanService = FitnessPlanService.getInstance();
 
 // ============================================================================
@@ -63,12 +64,13 @@ interface UserProcessingResult {
   userId: string;
   userName: string;
   planId?: string;
+  microcycleId?: string;
   error?: string;
   reason?: string; // For skipped users
 }
 
 /**
- * Process a single user - extract fitness plan generation
+ * Process a single user - generate fitness plan and microcycle
  */
 async function processSingleUser(
   userRow: any,
@@ -79,8 +81,8 @@ async function processSingleUser(
   const userName = userRow.name;
 
   try {
-    // Fetch user with profile
-    const user = await userRepository.findById(userRow.id);
+    // Fetch user with profile (includes markdownProfile for AI agents)
+    const user = await userService.getUser(userRow.id);
 
     if (!user) {
       console.log(`  [${index}/${total}] User ${userId} (${userName}): [NOT FOUND] → Skipped`);
@@ -103,7 +105,7 @@ async function processSingleUser(
       };
     }
 
-    console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING PLAN]...`);
+    console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING]...`);
 
     if (!isDryRun) {
       // Generate new fitness plan
@@ -111,14 +113,26 @@ async function processSingleUser(
       const planId = newPlan.id ? newPlan.id.substring(0, 8) : 'unknown';
       console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${planId})`);
 
+      // Create first microcycle
+      const currentDate = now(user.timezone).toJSDate();
+      const { microcycle } = await progressService.getOrCreateMicrocycleForDate(
+        user.id,
+        newPlan,
+        currentDate,
+        user.timezone
+      );
+      const microcycleId = microcycle?.id?.substring(0, 8) ?? 'unknown';
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Microcycle created (${microcycleId})`);
+
       return {
         status: 'success',
         userId: userRow.id,
         userName: user.name,
-        planId
+        planId,
+        microcycleId
       };
     } else {
-      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan (dry-run)`);
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan + microcycle (dry-run)`);
       return {
         status: 'success',
         userId: userRow.id,
@@ -169,10 +183,10 @@ async function processBatch(users: any[], startIndex: number): Promise<UserProce
 }
 
 /**
- * Regenerate fitness plans for all users (with parallel processing)
+ * Regenerate training data (plans + microcycles) for all users (with parallel processing)
  */
-async function regenerateFitnessPlans() {
-  console.log('\nRegenerating Fitness Plans...');
+async function regenerateTrainingData() {
+  console.log('\nRegenerating Training Data (Plans + Microcycles)...');
 
   // Get all users from database
   const allUsersRows = await db
@@ -227,7 +241,7 @@ async function regenerateFitnessPlans() {
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Data Migration: Regenerate Fitness Plans for All Users');
+  console.log('Data Migration: Regenerate Training Data for All Users');
   console.log('='.repeat(60));
 
   if (isDryRun) {
@@ -236,13 +250,13 @@ async function main() {
 
   try {
     // Run migration
-    const result = await regenerateFitnessPlans();
+    const result = await regenerateTrainingData();
 
     // Summary
     console.log('\n' + '='.repeat(60));
     console.log('Migration Complete!');
     console.log('='.repeat(60));
-    console.log(`✓ Success: ${result.successCount} plan(s) ${isDryRun ? 'would be' : ''} created`);
+    console.log(`✓ Success: ${result.successCount} user(s) ${isDryRun ? 'would have' : ''} plan + microcycle created`);
     console.log(`⊘ Skipped: ${result.skippedCount} user(s) (no profile or invalid)`);
     console.log(`✗ Failed: ${result.failedCount} user(s)`);
 

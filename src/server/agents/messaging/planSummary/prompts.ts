@@ -32,20 +32,14 @@ Name: ${user.name}
 </User>
 
 <Plan Details>
-Program Type: ${plan.programType}
-Duration: ${plan.lengthWeeks} weeks
-Plan Description:
-${plan.description || ''}
-
-${plan.notes ? `Notes: ${plan.notes}` : ''}
+${plan.description || 'No plan description available.'}
 </Plan Details>
 
 <Guidelines>
 - Keep each message under 160 characters (SMS limit)
 - Be enthusiastic and motivational
 - Focus on what the plan will do for them (outcomes, not just structure)
-- Mention the program type and duration
-- Highlight the key phases or training focuses
+- Mention the training split and key focuses from the plan
 - Make them excited to start
 - Use conversational, friendly tone
 - Don't use emojis unless they help save characters
@@ -62,6 +56,6 @@ Return a JSON object with an array of messages:
 }
 </Output Format>
 
-Now create the motivational SMS messages for ${user.name}'s ${plan.lengthWeeks}-week ${plan.programType} program.
+Now create the motivational SMS messages for ${user.name}'s training program.
 `;
 };
