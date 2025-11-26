@@ -15,7 +15,7 @@
 
 import { userService } from '@/server/services/user/userService';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { fitnessProfileServiceV2 } from '@/server/services/user/fitnessProfileServiceV2';
+import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
 import { fitnessPlanService } from '@/server/services/training/fitnessPlanService';
 import { progressService } from '@/server/services/training/progressService';
 import { workoutInstanceService } from '@/server/services/training/workoutInstanceService';
@@ -79,14 +79,14 @@ export const onboardingSteps = {
    * Returns updated user with profile for subsequent steps
    */
   async getOrCreateProfile(user: UserWithProfile, signupData: SignupData): Promise<ProfileResult> {
-    const existingProfile = await fitnessProfileServiceV2.getCurrentProfile(user.id);
+    const existingProfile = await fitnessProfileService.getCurrentProfile(user.id);
     if (existingProfile) {
       console.log(`[Onboarding] Step 2: Profile already exists for ${user.id}`);
       return { user, wasCreated: false };
     }
 
     console.log(`[Onboarding] Step 2: Creating profile for ${user.id} (LLM)`);
-    await fitnessProfileServiceV2.createFitnessProfile(user, signupData);
+    await fitnessProfileService.createFitnessProfile(user, signupData);
 
     // Re-fetch user to get updated profile
     const updatedUser = await userService.getUser(user.id);
