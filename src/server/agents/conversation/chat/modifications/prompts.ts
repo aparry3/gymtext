@@ -95,20 +95,14 @@ export const buildModificationsUserMessage = (input: ChatSubagentInput): string 
   // Get the current day of the week
   const currentDayOfWeek = getDayOfWeekName(now, user.timezone); // Full weekday name (e.g., "Monday")
 
-  // Extract profile context
-  const userProfile = user.profile;
-  const goals = userProfile?.goals?.summary || 'General fitness';
-  const equipment = userProfile?.equipmentAccess?.summary || 'Unknown equipment access';
-  const constraints = userProfile?.constraints?.map(c => c.description).join(', ') || 'None';
-
   return `## CONTEXT
 
 **Todays Date**: ${currentDate}
 **Todays Day of Week**: ${currentDayOfWeek}
 **User Name**: ${user.name}
-**Primary Goal**: ${goals}
-**Equipment Access**: ${equipment}
-**Constraints**: ${constraints}
+
+### User Profile
+${user.markdownProfile || 'No profile available'}
 
 ---
 

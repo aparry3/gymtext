@@ -2,7 +2,7 @@ import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agen
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { initializeModel, createRunnableAgent } from '../../base';
-import { createProfileUpdateAgent } from '../../profileUpdate';
+import { createProfileUpdateAgent } from '../../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
 import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterParallelInput, ChatOutput, ChatAgentDeps, IntentAnalysis } from './types';
 import { updatesAgentRunnable } from './updates/chain';
@@ -10,7 +10,6 @@ import { updatesAgentRunnable } from './updates/chain';
 import { createModificationsAgent } from './modifications/chain';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
-import { convertJsonProfileToMarkdown } from '@/server/utils/profile/jsonToMarkdown';
 
 // Re-export types for backward compatibility
 export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService };
@@ -64,10 +63,8 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
   // Input: ChatInput (initial chain input)
   // Output: ProfileUpdateOutput
   const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
-    // Get markdown profile from user object (with JSON fallback for migration)
-    const currentProfile = input.user.markdownProfile
-      || (input.user.profile ? convertJsonProfileToMarkdown(input.user.profile, input.user) : '')
-      || '';
+    // Get markdown profile from user object
+    const currentProfile = input.user.markdownProfile || '';
 
     // Create and invoke profile update agent
     const agent = createProfileUpdateAgent();

@@ -34,11 +34,7 @@ export const onboardingPrompt = (user: UserWithProfile) => `
 Create an onboarding guidance message for ${user.name}.
 
 <User Profile>
-- Name: ${user.name}
-- Goals: ${user.profile?.goals?.primary || 'General fitness'}
-- Training Days: ${user.profile?.availability?.daysPerWeek || 'Not specified'} per week
-- Session Length: ${user.profile?.availability?.minutesPerSession || 'Not specified'} minutes
-- Gym Access: ${user.profile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
+${user.markdownProfile || 'No profile information available yet'}
 </User Profile>
 
 <Instructions>
@@ -56,11 +52,9 @@ Create an informative onboarding message.
 export const programReadyPrompt = (user: UserWithProfile, programOverview: string) => `
 Create a message announcing that ${user.name}s fitness program is ready.
 
-<User Info>
-- Name: ${user.name}
-- Goals: ${user.profile?.goals?.primary || 'General fitness'}
-- Gym Access: ${user.profile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
-</User Info>
+<User Profile>
+${user.markdownProfile || 'No profile information available'}
+</User Profile>
 
 <Program Overview>
 ${programOverview}
@@ -80,10 +74,9 @@ Generate a program announcement message.
 export const firstWorkoutPrompt = (user: UserWithProfile, firstWorkout: { name?: string; focus?: string; estimatedDuration?: string }) => `
 Create a message for ${user.name}s first workout.
 
-<User Info>
-- Name: ${user.name}
-- Gym Access: ${user.profile?.equipmentAccess?.gymAccess ? 'Yes' : 'No'}
-</User Info>
+<User Profile>
+${user.markdownProfile || 'No profile information available'}
+</User Profile>
 
 <First Workout>
 - Name: ${firstWorkout?.name || 'Your first workout'}

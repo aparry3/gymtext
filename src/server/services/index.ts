@@ -21,7 +21,7 @@ export type { DailyMessageService } from '@/server/services/orchestration/dailyM
 export type { WeeklyMessageService } from '@/server/services/orchestration/weeklyMessageService';
 export type { UserService, CreateUserRequest } from '@/server/services/user/userService';
 export type { MessageService } from '@/server/services/messaging/messageService';
-export type { FitnessProfileService, CreateFitnessProfileRequest, ProfilePatchResult } from '@/server/services/user/fitnessProfileService';
+export type { FitnessProfileService } from '@/server/services/user/fitnessProfileService';
 export type { OnboardingDataService } from '@/server/services/user/onboardingDataService';
 export type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
 export type { MicrocycleService } from '@/server/services/training/microcycleService';

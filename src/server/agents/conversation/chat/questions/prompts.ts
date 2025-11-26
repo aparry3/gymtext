@@ -105,19 +105,15 @@ export const buildQuestionsUserMessage = (input: ChatSubagentInput): string => {
   const now = new Date();
   const currentDate = formatForAI(now, user.timezone);
 
-  // Extract profile context
-  const userProfile = user.profile;
-  const goals = userProfile?.goals?.primary || 'General fitness';
-  const experience = userProfile?.activities?.[0]?.experience || 'Unknown';
-
   return `## STATIC CONTEXT
 
 **Todays Date**: ${currentDate} (Timezone: ${user.timezone})
 **User Name**: ${user.name}
 **User Age**: ${user.age || 'Unknown'}
 **User Gender**: ${user.gender || 'Unknown'}
-**Primary Goal**: ${goals}
-**Experience Level**: ${experience}
+
+### User Profile
+${user.markdownProfile || 'No profile available'}
 
 ## DYNAMIC CONTEXT
 
