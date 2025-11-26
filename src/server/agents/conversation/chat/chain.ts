@@ -93,7 +93,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
         content: userMessage,
       }
     ]
-    const model = initializeModel(TriageResultSchema);
+    const model = initializeModel(TriageResultSchema, { agentPath: 'conversation/chat/triage' });
     return await model.invoke(messages) as TriageResult;
   });
 

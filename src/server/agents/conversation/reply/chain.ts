@@ -45,7 +45,7 @@ export const createReplyAgent = (deps?: ReplyAgentDeps) => {
     ];
 
     // Initialize model with structured output schema
-    const model = initializeModel(ReplyAgentResponseSchema, deps?.config);
+    const model = initializeModel(ReplyAgentResponseSchema, { ...deps?.config, agentPath: 'conversation/reply' });
 
     // Invoke the model and get structured response
     const response = await model.invoke(messages) as ReplyAgentResponse;

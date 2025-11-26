@@ -13,7 +13,7 @@ import type { MicrocycleChainContext } from '../generation/types';
  */
 export const createMicrocycleMessageAgent = (config: MicrocycleMessageConfig) => {
   // Initialize model without schema for plain text output
-  const model = initializeModel(undefined, config.agentConfig);
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/microcycles/steps/message' });
 
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
     const { microcycle } = input;

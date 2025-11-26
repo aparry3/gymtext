@@ -15,9 +15,9 @@ import type { MicrocycleChainContext } from '../generation/types';
 export const createFormattedMicrocycleAgent = (
   config: FormattedMicrocycleConfig
 ) => {
-  
+
   // Initialize model with schema from config
-  const model = initializeModel(undefined, config.agentConfig);
+  const model = initializeModel(undefined, { ...config.agentConfig, agentPath: 'training/microcycles/steps/formatted' });
 
   return createRunnableAgent<MicrocycleChainContext, string>(async (input) => {
     const { microcycle, absoluteWeek } = input;

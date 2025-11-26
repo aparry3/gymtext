@@ -46,7 +46,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     });
 
     // Initialize model with injected tools (DI pattern)
-    const model = initializeModel(undefined, { model: 'gpt-5-nano' }, { tools: deps.tools });
+    const model = initializeModel(undefined, { model: 'gpt-5-nano', agentPath: 'conversation/chat/modifications' }, { tools: deps.tools });
 
     const systemMessage = {
       role: 'system',

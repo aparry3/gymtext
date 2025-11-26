@@ -30,7 +30,12 @@ export const createChatSubagentRunnable = <T extends z.ZodType>(
       previousMessagesCount: input.previousMessages?.length || 0
     });
 
-    const model = initializeModel(outputSchema, config);
+    // Derive agentPath from agentName for logging (e.g., 'UPDATES' -> 'conversation/chat/updates')
+    const agentPath = name !== 'SUBAGENT'
+      ? `conversation/chat/${name.toLowerCase()}`
+      : config?.agentPath;
+
+    const model = initializeModel(outputSchema, { ...config, agentPath });
 
     // Build the user message (now without conversation history)
     const userMessage = userMessageBuilder(input);

@@ -16,7 +16,7 @@ import { MicrocycleGenerationInput } from '../../types';
  * @returns Agent (runnable) that produces structured microcycle data
  */
 export const createMicrocycleGenerationRunnable = (config: MicrocycleGenerationConfig) => {
-  const model = initializeModel(MicrocycleGenerationOutputSchema, config.agentConfig);
+  const model = initializeModel(MicrocycleGenerationOutputSchema, { ...config.agentConfig, agentPath: 'training/microcycles/steps/generation' });
 
   return createRunnableAgent(async (input: MicrocycleGenerationInput): Promise<MicrocycleChainContext> => {
     const systemMessage = config.systemPrompt;

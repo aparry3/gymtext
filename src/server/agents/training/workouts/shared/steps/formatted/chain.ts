@@ -16,7 +16,7 @@ export const createFormattedWorkoutAgent = (
   config: FormattedWorkoutConfig
 ) => {
   // Initialize model without schema (returns string)
-  const model = initializeModel(undefined);
+  const model = initializeModel(undefined, { agentPath: 'training/workouts/shared/steps/formatted' });
 
   return createRunnableAgent<WorkoutChainContext, string>(async (input) => {
     const { description } = input;

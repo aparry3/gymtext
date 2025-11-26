@@ -21,7 +21,7 @@ const WeeklyMessageSchema = z.object({
 export const createWeeklyMessageAgent = () => {
   return createRunnableAgent<WeeklyMessageInput, WeeklyMessageOutput>(async (input) => {
     // Initialize model with structured output
-    const model = initializeModel(WeeklyMessageSchema);
+    const model = initializeModel(WeeklyMessageSchema, { agentPath: 'messaging/weeklyMessage' });
 
     const up = userPrompt(input);
     console.log(`[WeeklyMessageAgent] User prompt: ${up}`);
