@@ -26,7 +26,9 @@ export const createMicrocycleGenerateAgent = (deps?: MicrocycleAgentDeps) => {
     // Step 1: Create generation runnable (generate-specific)
     const microcycleGenerationRunnable = createMicrocycleGenerationRunnable({
       systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
-      agentConfig: deps?.config
+      agentConfig: {
+        model: 'gpt-5-mini'
+      }
     });
 
     // Step 2: Create shared post-processing chain
