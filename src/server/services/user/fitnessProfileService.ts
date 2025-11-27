@@ -120,7 +120,7 @@ export class FitnessProfileService {
 
         // Use Profile Update Agent to build initial profile from signup data
         const currentDate = formatForAI(new Date(), user.timezone);
-        const agent = createProfileUpdateAgent();
+        const agent = createProfileUpdateAgent({ model: 'gpt-5.1' });
 
         const result = await agent.invoke({
           currentProfile,

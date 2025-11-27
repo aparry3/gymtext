@@ -54,6 +54,11 @@ Return a valid JSON object:
   "wasUpdated": boolean,
   "updateSummary": "string (Brief summary of changes made, or empty string if none)"
 }
+
+**CRITICAL:** The "updatedProfile" field must contain ONLY the profile Markdown document itself.
+- Start directly with "# IDENTITY" (or the first relevant section header)
+- Do NOT include any input context (dates, timezone, user message, task instructions, etc.)
+- Do NOT include any preamble, commentary, or explanation
 `;
 
 /**
