@@ -4,14 +4,26 @@ import { DB } from '@/server/models';
 import { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
 import { progressService } from '@/server/services/training/progressService';
 import { userService } from '@/server/services/user/userService';
+import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
 import { UserWithProfile } from '@/server/models/userModel';
-import { now } from '@/shared/utils/date';
+import { now, formatForAI } from '@/shared/utils/date';
+import { OnboardingRepository, SignupData } from '@/server/repositories/onboardingRepository';
+import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
+import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
+import { createProfileUpdateAgent } from '@/server/agents/profile';
 
 /**
- * Data Migration Script: Regenerate Training Data for All Users
+ * Data Migration Script: Full Reset & Regenerate Training Data for All Users
  *
- * Generates new fitness plans and microcycles for all users with fitness profiles
- * using the updated fitness plan generator.
+ * Performs a complete reset of all training data for each user:
+ * 1. Captures existing profile (for fallback)
+ * 2. Generates new profile from signupData (or uses existing profile if no signupData)
+ * 3. Deletes all existing data (profiles, fitness plans, microcycles, workout instances)
+ * 4. Saves the new profile
+ * 5. Generates new fitness plan
+ * 6. Creates first microcycle
+ *
+ * Safety: Profile generation happens BEFORE deletion, so no data is lost on failure.
  *
  * Usage:
  *   source .env.local && tsx scripts/migrations/regenerate-training-data.ts [--dry-run]
@@ -38,17 +50,121 @@ const db = new Kysely<DB>({
 
 // Initialize services
 const fitnessPlanService = FitnessPlanService.getInstance();
+const onboardingRepository = new OnboardingRepository();
+
+// ============================================================================
+// Data Deletion
+// ============================================================================
+
+/**
+ * Delete counts for a single user
+ */
+interface DeleteCounts {
+  workouts: number;
+  microcycles: number;
+  fitnessPlans: number;
+  profiles: number;
+}
+
+/**
+ * Delete all training data for a user (workouts, microcycles, plans, profiles)
+ * Deletes in correct order: child → parent
+ */
+async function deleteUserData(userId: string): Promise<DeleteCounts> {
+  const counts: DeleteCounts = {
+    workouts: 0,
+    microcycles: 0,
+    fitnessPlans: 0,
+    profiles: 0,
+  };
+
+  // 1. Delete workout instances
+  const workoutsResult = await db
+    .deleteFrom('workoutInstances')
+    .where('clientId', '=', userId)
+    .executeTakeFirst();
+  counts.workouts = Number(workoutsResult.numDeletedRows);
+
+  // 2. Delete microcycles
+  const microcyclesResult = await db
+    .deleteFrom('microcycles')
+    .where('clientId', '=', userId)
+    .executeTakeFirst();
+  counts.microcycles = Number(microcyclesResult.numDeletedRows);
+
+  // 3. Delete fitness plans
+  const plansResult = await db
+    .deleteFrom('fitnessPlans')
+    .where('clientId', '=', userId)
+    .executeTakeFirst();
+  counts.fitnessPlans = Number(plansResult.numDeletedRows);
+
+  // 4. Delete profiles
+  const profilesResult = await db
+    .deleteFrom('profiles')
+    .where('clientId', '=', userId)
+    .executeTakeFirst();
+  counts.profiles = Number(profilesResult.numDeletedRows);
+
+  return counts;
+}
+
+// ============================================================================
+// Profile Generation
+// ============================================================================
+
+/**
+ * Generate profile from signup data without saving
+ * Returns the profile text for safe generation before deletion
+ */
+async function generateProfileFromSignupData(
+  user: UserWithProfile,
+  signupData: SignupData
+): Promise<string> {
+  // Format signup data for agent processing
+  const formattedData = formatSignupDataForLLM(signupData);
+
+  // Build message from signup data
+  const messageParts: string[] = [];
+
+  if (formattedData.fitnessGoals?.trim()) {
+    messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
+  }
+
+  if (formattedData.currentExercise?.trim()) {
+    messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
+  }
+
+  if (formattedData.environment?.trim()) {
+    messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
+  }
+
+  if (formattedData.injuries?.trim()) {
+    messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
+  }
+
+  const message = messageParts.join('\n\n');
+
+  // Start with empty profile
+  const currentProfile = createEmptyProfile(user);
+
+  // Use Profile Update Agent to build profile from signup data
+  const currentDate = formatForAI(new Date(), user.timezone);
+  const agent = createProfileUpdateAgent();
+
+  const result = await agent.invoke({
+    currentProfile,
+    message,
+    user,
+    currentDate,
+  });
+
+  return result.updatedProfile;
+}
 
 // ============================================================================
 // Migration Logic
 // ============================================================================
-
-/**
- * Check if a user has a valid fitness profile (profile is used by AI agents)
- */
-function hasValidProfile(user: UserWithProfile): boolean {
-  return !!user.profile;
-}
 
 /**
  * Result of processing a single user
@@ -57,6 +173,8 @@ interface UserProcessingResult {
   status: 'success' | 'skipped' | 'failed';
   userId: string;
   userName: string;
+  profileSource?: 'signupData' | 'existingProfile';
+  deleteCounts?: DeleteCounts;
   planId?: string;
   microcycleId?: string;
   error?: string;
@@ -64,7 +182,7 @@ interface UserProcessingResult {
 }
 
 /**
- * Process a single user - generate fitness plan and microcycle
+ * Process a single user - full reset: delete all data, regenerate profile + plan + microcycle
  */
 async function processSingleUser(
   userRow: any,
@@ -75,7 +193,7 @@ async function processSingleUser(
   const userName = userRow.name;
 
   try {
-    // Fetch user with profile (includes profile for AI agents)
+    // 1. Fetch user with profile (capture BEFORE any changes)
     const user = await userService.getUser(userRow.id);
 
     if (!user) {
@@ -88,26 +206,57 @@ async function processSingleUser(
       };
     }
 
-    // Check if user has a valid fitness profile
-    if (!hasValidProfile(user)) {
-      console.log(`  [${index}/${total}] User ${userId} (${user.name}): [NO PROFILE] → Skipped`);
+    const existingProfile = user.profile; // Save for fallback
+
+    // 2. Get signupData from onboarding table
+    const signupData = await onboardingRepository.getSignupData(user.id);
+
+    // Must have either signupData OR existing profile
+    if (!signupData && !existingProfile) {
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): [NO DATA] → Skipped`);
       return {
         status: 'skipped',
         userId: userRow.id,
         userName: user.name,
-        reason: 'No valid fitness profile'
+        reason: 'No signup data or profile available'
       };
     }
 
-    console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING]...`);
+    const profileSource = signupData ? 'signupData' : 'existingProfile';
+    console.log(`  [${index}/${total}] User ${userId} (${user.name}): [PROCESSING] (source: ${profileSource})...`);
 
     if (!isDryRun) {
-      // Generate new fitness plan
-      const newPlan = await fitnessPlanService.createFitnessPlan(user);
+      // 3. Generate new profile FIRST (before any deletion)
+      let newProfile: string;
+      if (signupData) {
+        console.log(`  [${index}/${total}] User ${userId} (${user.name}): [GENERATING PROFILE]...`);
+        newProfile = await generateProfileFromSignupData(user, signupData);
+      } else {
+        // Fallback: Use existing profile as-is
+        newProfile = existingProfile!;
+        console.log(`  [${index}/${total}] User ${userId} (${user.name}): [USING EXISTING PROFILE]`);
+      }
+
+      // 4. Only delete AFTER successful profile generation
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): [DELETING OLD DATA]...`);
+      const deleteCounts = await deleteUserData(user.id);
+
+      // 5. Save the new profile
+      await fitnessProfileService.saveProfile(user.id, newProfile);
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Profile saved`);
+
+      // 6. Re-fetch user with new profile
+      const updatedUser = await userService.getUser(user.id);
+      if (!updatedUser) {
+        throw new Error('Failed to re-fetch user after profile save');
+      }
+
+      // 7. Generate fitness plan
+      const newPlan = await fitnessPlanService.createFitnessPlan(updatedUser);
       const planId = newPlan.id ? newPlan.id.substring(0, 8) : 'unknown';
       console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Plan created (${planId})`);
 
-      // Create first microcycle
+      // 8. Create first microcycle
       const currentDate = now(user.timezone).toJSDate();
       const { microcycle } = await progressService.getOrCreateMicrocycleForDate(
         user.id,
@@ -122,15 +271,18 @@ async function processSingleUser(
         status: 'success',
         userId: userRow.id,
         userName: user.name,
+        profileSource,
+        deleteCounts,
         planId,
         microcycleId
       };
     } else {
-      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would create plan + microcycle (dry-run)`);
+      console.log(`  [${index}/${total}] User ${userId} (${user.name}): ✓ Would delete + regenerate all (dry-run)`);
       return {
         status: 'success',
         userId: userRow.id,
-        userName: user.name
+        userName: user.name,
+        profileSource
       };
     }
 
@@ -177,10 +329,10 @@ async function processBatch(users: any[], startIndex: number): Promise<UserProce
 }
 
 /**
- * Regenerate training data (plans + microcycles) for all users (with parallel processing)
+ * Full reset and regenerate training data for all users (with parallel processing)
  */
 async function regenerateTrainingData() {
-  console.log('\nRegenerating Training Data (Plans + Microcycles)...');
+  console.log('\nFull Reset: Regenerating Profiles + Plans + Microcycles...');
 
   // Get all users from database
   const allUsersRows = await db
@@ -235,11 +387,13 @@ async function regenerateTrainingData() {
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Data Migration: Regenerate Training Data for All Users');
+  console.log('Data Migration: Full Reset & Regenerate All Training Data');
   console.log('='.repeat(60));
 
   if (isDryRun) {
     console.log('⚠️  DRY-RUN MODE: No changes will be made to the database\n');
+  } else {
+    console.log('⚠️  WARNING: This will DELETE and REGENERATE all profiles, plans, and microcycles!\n');
   }
 
   try {
@@ -250,8 +404,8 @@ async function main() {
     console.log('\n' + '='.repeat(60));
     console.log('Migration Complete!');
     console.log('='.repeat(60));
-    console.log(`✓ Success: ${result.successCount} user(s) ${isDryRun ? 'would have' : ''} plan + microcycle created`);
-    console.log(`⊘ Skipped: ${result.skippedCount} user(s) (no profile or invalid)`);
+    console.log(`✓ Success: ${result.successCount} user(s) ${isDryRun ? 'would have' : ''} full reset completed`);
+    console.log(`⊘ Skipped: ${result.skippedCount} user(s) (no signup data or profile)`);
     console.log(`✗ Failed: ${result.failedCount} user(s)`);
 
     if (result.errors.length > 0) {
