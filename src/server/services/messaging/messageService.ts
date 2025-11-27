@@ -463,36 +463,39 @@ export class MessageService {
       }
     }
 
-    // Simulate instant delivery for local messages (for queue processing)
+    // Simulate delivery for local messages (for queue processing)
     if (provider === 'local') {
-      try {
-        console.log('[MessageService] Simulating local message delivery for queue');
-
-        // Simulate delivery after a short delay (to mimic real-world timing)
-        setTimeout(async () => {
-          try {
-            // Update message delivery status in database (simulates Twilio webhook)
-            const messageRepo = new MessageRepository(postgresDb);
-            await messageRepo.updateDeliveryStatus(stored.id, 'delivered');
-
-            // Import here to avoid circular dependency
-            const { messageQueueService } = await import('./messageQueueService');
-
-            // Trigger queue processing (simulates webhook calling queue service)
-            await messageQueueService.markMessageDelivered(stored.id);
-
-            console.log('[MessageService] Local message delivery simulated successfully');
-          } catch (error) {
-            console.error('[MessageService] Error in local delivery simulation:', error);
-          }
-        }, 1000); // 1 second delay
-      } catch (error) {
-        console.error('[MessageService] Failed to setup local delivery simulation:', error);
-        // Don't throw - message was sent successfully
-      }
+      // Fire-and-forget delivery simulation (non-blocking)
+      this.simulateLocalDelivery(stored.id).catch(error => {
+        console.error('[MessageService] Local delivery simulation failed:', error);
+      });
     }
 
     return stored;
+  }
+
+  /**
+   * Simulate message delivery for local development
+   *
+   * Called when using the local messaging client to simulate the Twilio
+   * webhook callback that normally triggers queue processing.
+   *
+   * @param messageId - ID of the message to mark as delivered
+   */
+  private async simulateLocalDelivery(messageId: string): Promise<void> {
+    const delay = 1500; // 1.5 seconds to simulate realistic SMS timing
+    console.log(`[MessageService] Simulating local delivery in ${delay}ms for message ${messageId}`);
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    // Update message delivery status in database
+    await this.messageRepo.updateDeliveryStatus(messageId, 'delivered');
+
+    // Trigger queue processing (simulates Twilio webhook calling queue service)
+    const { messageQueueService } = await import('./messageQueueService');
+    await messageQueueService.markMessageDelivered(messageId);
+
+    console.log(`[MessageService] Local delivery simulation complete for message ${messageId}`);
   }
 
   /**
