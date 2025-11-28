@@ -139,21 +139,6 @@ export class DailyMessageService {
         }
       }
 
-      // Use message queue to ensure ordered delivery (logo first, then workout)
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
-      const queuedMessages: QueuedMessage[] = [];
-
-      // Add logo image first (if configured)
-      if (baseUrl) {
-        const logoUrl = `${baseUrl}/OpenGraphGymtext.png`;
-        queuedMessages.push({
-          mediaUrls: [logoUrl]
-        });
-      } else {
-        console.warn('BASE_URL not configured - skipping logo image');
-      }
-
-      // Add workout message
       // Extract message content (either pre-generated or need to generate)
       let workoutMessage: string;
       if ('message' in workout && workout.message) {
@@ -167,11 +152,19 @@ export class DailyMessageService {
         throw new Error('Workout missing required fields for message generation');
       }
 
-      queuedMessages.push({
-        content: workoutMessage
-      });
+      // Send single message with both image and text
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
+      const mediaUrls = baseUrl ? [`${baseUrl}/OpenGraphGymtext.png`] : undefined;
 
-      // Enqueue all messages for ordered delivery
+      if (!baseUrl) {
+        console.warn('BASE_URL not configured - sending workout without logo image');
+      }
+
+      const queuedMessages: QueuedMessage[] = [{
+        content: workoutMessage,
+        mediaUrls
+      }];
+
       await messageQueueService.enqueueMessages(user.id, queuedMessages, 'daily');
       console.log(`Successfully queued daily messages for user ${user.id}`);
 
