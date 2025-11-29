@@ -1,7 +1,7 @@
 import { createRunnableAgent, initializeModel } from '@/server/agents/base';
 import { WorkoutGenerationConfig } from './types';
 import { WorkoutChainContext } from '../../../../shared/types';
-import { SYSTEM_PROMPT, userPrompt } from './prompt';
+import { DAILY_WORKOUT_SYSTEM_PROMPT, dailyWorkoutUserPrompt } from './prompt';
 import { WorkoutGenerateInput } from './types';
 
 /**
@@ -18,10 +18,10 @@ export const createWorkoutGenerationRunnable = (config: WorkoutGenerationConfig)
   const model = initializeModel(undefined, config.agentConfig);  
   return createRunnableAgent(async (input: WorkoutGenerateInput): Promise<WorkoutChainContext> => {
         // Prepare input with fitness profile and prompt
-    const prompt = userPrompt({...input});
+    const prompt = dailyWorkoutUserPrompt({dayOutline: input.dayOverview, clientProfile: input.user.profile || '', isDeload: input.isDeload});
     
     const description = await model.invoke([
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: DAILY_WORKOUT_SYSTEM_PROMPT },
       { role: 'user', content: prompt }
     ]) as string;
     return {
