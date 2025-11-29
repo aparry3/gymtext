@@ -121,13 +121,13 @@ Your output is INVALID if:
 
 interface MicrocycleUserPromptParams {
   planText: string;
-  userProfile: string;
+  clientProfile: string;
   absoluteWeek: number;
 }
 
 export const microcycleUserPrompt = ({
   planText,
-  userProfile,
+  clientProfile,
   absoluteWeek,
 }: MicrocycleUserPromptParams) => {
   return `
@@ -143,9 +143,9 @@ You MUST:
 ${planText}
 </FitnessPlan>
 
-<UserProfile>
-${userProfile || 'No additional user notes'}
-</UserProfile>
+<ClientProfile>
+${clientProfile || 'No additional user notes'}
+</ClientProfile>
 
 <Context>
 Current Week: ${absoluteWeek}

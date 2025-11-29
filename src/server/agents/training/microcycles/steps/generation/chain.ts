@@ -24,9 +24,8 @@ export const createMicrocycleGenerationRunnable = (config: MicrocycleGenerationC
     // Generate user prompt from input
     const userPrompt = microcycleUserPrompt({
       planText: input.planText,
-      userProfile: input.userProfile,
+      clientProfile: input.userProfile || '',
       absoluteWeek: input.absoluteWeek,
-      isDeload: input.isDeload
     });
 
     const microcycle = await model.invoke([
