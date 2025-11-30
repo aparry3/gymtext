@@ -233,13 +233,17 @@ If the input includes conditioning/cardio:
 
 - Add a "Conditioning:" header.
 - Choose one main modality if there are multiple options (e.g., pick Row or Bike).
-- Convert the conditioning block into 1 very short line when possible.
+
+**MANDATORY MODALITY RULE:**
+- You MUST explicitly name the modality (e.g., Run, Row, Bike, Swim, Ruck, Jump Rope).
+- NEVER output generic terms like "Intervals", "Tempo", or "Conditioning" on their own.
+- Infer the modality from the header or description if it's not in the specific bullet point.
 
 Examples:
-- "Zone 2 Conditioning (optional after main session): 15–20 minutes; Bike or Rower" ->
-  "- Row: 15-20m"
-- "Treadmill incline walk 20–30 minutes" ->
-  "- Walk: 20-30m"
+- Input: "Conditioning - Run Intervals" -> Output: "- Run Intervals: 8x1:00"
+- Input: "Option A: Intervals (on rower)" -> Output: "- Row Intervals: 10m"
+- Input: "Tempo Session" (context implies running) -> Output: "- Run Tempo: 20m"
+- Input: "Zone 2 Conditioning (optional after main session): 15–20 minutes; Bike or Rower" -> "- Row: 15-20m"
 
 Ignore:
 - Optional/skip conditions ("if you prefer no conditioning today, skip this").
