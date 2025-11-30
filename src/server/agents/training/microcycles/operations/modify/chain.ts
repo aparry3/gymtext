@@ -6,7 +6,6 @@ import { ModifyMicrocycleOutputSchema, type ModifyMicrocycleOutput } from './typ
 import { MicrocycleAgentDeps, MicrocycleAgentOutput } from '../../types';
 import { createMicrocyclePostProcessChain } from '../../steps';
 import type { MicrocycleChainContext } from '../../steps';
-import { formatFitnessProfile } from '@/server/utils/formatters';
 
 export type { ModifyMicrocycleInput } from './types';
 
@@ -20,9 +19,9 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
   return createRunnableAgent<ModifyMicrocycleInput, MicrocycleChainContext & { wasModified: boolean }>(async (input) => {
     const { user, currentMicrocycle, changeRequest, currentDayOfWeek } = input;
 
-    // Generate prompt
+    // Generate prompt - use user.profile directly (markdown from profiles table)
     const prompt = modifyMicrocycleUserPrompt({
-      fitnessProfile: formatFitnessProfile(user),
+      fitnessProfile: user.profile || 'No additional user notes',
       currentMicrocycle,
       changeRequest,
       currentDayOfWeek,
@@ -55,7 +54,7 @@ const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
           microcycle: baseMicrocycle,
           // Use currentMicrocycle.description as stand-in for plan context in modify flow
           planText: currentMicrocycle.description ?? '',
-          userProfile: formatFitnessProfile(user),
+          userProfile: user.profile || 'No additional user notes',
           absoluteWeek: currentMicrocycle.absoluteWeek,
           isDeload: currentMicrocycle.isDeload,
           wasModified,
