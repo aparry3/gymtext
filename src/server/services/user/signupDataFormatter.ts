@@ -20,11 +20,11 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
  */
 export function formatSignupDataForLLM(data: SignupData): {
   fitnessGoals: string;
-  currentExercise: string;
+  currentExercise: string; // Keeping key name for compatibility, but content is changed
   environment: string;
   injuries?: string;
 } {
-  // Build fitness goals text
+  // 1. Fitness Goals
   const goalsList = `My goals are: ${(data.primaryGoals || [])
     .map(getGoalDescription)
     .join(', ')}`;
@@ -32,18 +32,23 @@ export function formatSignupDataForLLM(data: SignupData): {
     ? `${goalsList}. Additional details: ${data.goalsElaboration.trim()}`
     : goalsList;
 
-  // Build current exercise text
+  // 2. Current Exercise (Now formatted as History vs Constraints)
   const activityLevel = data.currentActivity
     ? getActivityDescription(data.currentActivity)
     : '';
   const experienceLevel = data.experienceLevel
     ? `Experience level: ${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}`
     : '';
-  const currentExercise = data.activityElaboration?.trim()
-    ? `${experienceLevel}. ${activityLevel}. Additional details: ${data.activityElaboration.trim()}`
-    : `${experienceLevel}. ${activityLevel}`;
+  
+  // CRITICAL CHANGE: We frame this as "Historical Context" to prevent the LLM
+  // from interpreting "I run 3x a week" as a "Constraint that must continue."
+  const historyText = `***Historical Routine (Context Only)***:
+  ${experienceLevel}. ${activityLevel}.
+  Past/Current Routine Details: ${data.activityElaboration?.trim() || 'None provided.'}`;
 
-  // Build environment text
+  const currentExercise = historyText; 
+
+  // 3. Environment
   const locationText = data.trainingLocation
     ? `Training location: ${getLocationDescription(data.trainingLocation)}`
     : '';
@@ -51,7 +56,9 @@ export function formatSignupDataForLLM(data: SignupData): {
     data.equipment && data.equipment.length > 0
       ? `Available equipment: ${data.equipment.map(e => getEquipmentDescription(e)).join(', ')}`
       : 'No specific equipment';
-  const environment = `${locationText}. ${equipmentText}`;
+  
+  const environment = `***Environment & Constraints***:
+  ${locationText}. ${equipmentText}`;
 
   return {
     fitnessGoals,
@@ -60,7 +67,6 @@ export function formatSignupDataForLLM(data: SignupData): {
     injuries: data.injuries,
   };
 }
-
 // Helper functions for converting enum values to descriptions
 
 function getGoalDescription(goal: string): string {
