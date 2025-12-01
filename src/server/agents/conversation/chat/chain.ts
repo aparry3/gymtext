@@ -177,16 +177,3 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     return result;
   });
 };
-
-/**
- * @deprecated Legacy export for backward compatibility - use createChatAgent instead
- */
-export const chatAgent = async (
-  deps: ChatAgentDeps,
-  user: UserWithProfile,
-  message: string,
-  previousMessages?: Message[],
-) => {
-  const agent = createChatAgent(deps);
-  return agent.invoke({ user, message, previousMessages });
-};

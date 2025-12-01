@@ -3,9 +3,10 @@ import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MicrocycleService } from '../training/microcycleService';
 import { ProgressService } from '../training/progressService';
 import { createModifyFitnessPlanAgent } from '@/server/agents/training/plans';
+import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { now } from '@/shared/utils/date';
+import { now, getDayOfWeek } from '@/shared/utils/date';
 
 /**
  * PlanModificationService
@@ -14,9 +15,9 @@ import { now } from '@/shared/utils/date';
  *
  * Responsibilities:
  * - Modify fitness plans based on user change requests
- * - Automatically regenerate the current microcycle when plan structure changes
+ * - Modify (not regenerate) the current microcycle to preserve completed workouts
  * - Handle AI agent interactions for plan modifications
- * - Ensure proper sequencing and state updates
+ * - Run plan and microcycle modifications in parallel for faster response
  *
  * This service follows the orchestration pattern (like WorkoutModificationService)
  * and coordinates between plan, microcycle, and progress services.
@@ -60,7 +61,8 @@ export class PlanModificationService {
 
   /**
    * Modify a user's fitness plan based on their change request
-   * Automatically regenerates the current microcycle if the plan was modified
+   * Modifies (not regenerates) the current microcycle to preserve completed workouts
+   * Runs plan and microcycle modifications in parallel for faster response
    */
   public async modifyPlan(params: ModifyPlanParams): Promise<ModifyPlanResult> {
     try {
@@ -88,16 +90,42 @@ export class PlanModificationService {
         };
       }
 
-      // 3. Call the modify plan agent
-      const modifyAgent = createModifyFitnessPlanAgent();
-      const modifyResult = await modifyAgent.invoke({
-        user,
-        currentPlan,
-        changeRequest,
-      });
+      // 3. Get existing microcycle BEFORE modifications (needed for parallel execution)
+      const today = now(user.timezone);
+      const existingMicrocycle = await this.microcycleService.getMicrocycleByDate(
+        userId,
+        currentPlan.id!,
+        today.toJSDate()
+      );
 
-      // 4. Check if the plan was actually modified
-      if (!modifyResult.wasModified) {
+      // 4. Run plan and microcycle modifications in PARALLEL
+      const modifyPlanAgent = createModifyFitnessPlanAgent();
+      const modifyMicrocycleAgent = createModifyMicrocycleAgent();
+      const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
+
+      console.log('[MODIFY_PLAN] Running plan and microcycle modifications in parallel');
+
+      const [planResult, microcycleResult] = await Promise.all([
+        // Modify plan
+        modifyPlanAgent.invoke({
+          user,
+          currentPlan,
+          changeRequest,
+        }),
+        // Modify microcycle (only if exists)
+        existingMicrocycle
+          ? modifyMicrocycleAgent.invoke({
+              user,
+              currentMicrocycle: existingMicrocycle,
+              changeRequest, // Use original user request
+              currentDayOfWeek,
+              weekNumber: existingMicrocycle.absoluteWeek,
+            })
+          : Promise.resolve(null),
+      ]);
+
+      // 5. Check if plan was actually modified
+      if (!planResult.wasModified) {
         console.log('[MODIFY_PLAN] No modifications needed - current plan already satisfies the request');
         return {
           success: true,
@@ -108,54 +136,52 @@ export class PlanModificationService {
 
       console.log('[MODIFY_PLAN] Plan was modified - saving new version');
 
-      // 5. Save the modified plan as a new version (preserves history)
+      // 6. Save new plan version
       const newPlan = await this.fitnessPlanRepo.insertFitnessPlan({
         clientId: userId,
-        description: modifyResult.description,
-        formatted: modifyResult.formatted,
-        message: modifyResult.message,
-        startDate: new Date(), // New plan starts today
+        description: planResult.description,
+        formatted: planResult.formatted,
+        message: planResult.message,
+        startDate: new Date(),
       });
 
       console.log(`[MODIFY_PLAN] Saved new plan version ${newPlan.id}`);
 
-      // 6. Regenerate the current microcycle with the new plan
-      const today = now(user.timezone).toJSDate();
-      const progress = await this.progressService.getProgressForDate(newPlan, today, user.timezone);
-
-      if (!progress) {
-        console.error('[MODIFY_PLAN] Could not calculate progress for new plan');
-        return {
-          success: true,
-          wasModified: true,
-          modifications: modifyResult.modifications,
-          messages: modifyResult.message ? [modifyResult.message] : ['Your plan has been updated.'],
-        };
+      // 7. Update or create microcycle
+      if (microcycleResult && existingMicrocycle) {
+        // Update existing microcycle with modified data + link to new plan
+        await this.microcycleService.updateMicrocycle(existingMicrocycle.id!, {
+          fitnessPlanId: newPlan.id!,
+          days: microcycleResult.days,
+          description: microcycleResult.description,
+          formatted: microcycleResult.formatted,
+          message: microcycleResult.message,
+          isDeload: microcycleResult.isDeload,
+        });
+        console.log(`[MODIFY_PLAN] Updated existing microcycle ${existingMicrocycle.id} and linked to new plan`);
+      } else {
+        // No existing microcycle - create new one
+        const progress = await this.progressService.getProgressForDate(newPlan, today.toJSDate(), user.timezone);
+        if (progress) {
+          const newMicrocycle = await this.microcycleService.createMicrocycleFromProgress(userId, newPlan, progress);
+          console.log(`[MODIFY_PLAN] Created new microcycle ${newMicrocycle.id} for week ${progress.absoluteWeek}`);
+        }
       }
 
-      // Create new microcycle for the current week
-      const newMicrocycle = await this.microcycleService.createMicrocycleFromProgress(
-        userId,
-        newPlan,
-        progress
-      );
-
-      console.log(`[MODIFY_PLAN] Created new microcycle ${newMicrocycle.id} for week ${progress.absoluteWeek}`);
-
-      // 7. Build response messages
+      // 8. Build response messages
       const messages: string[] = [];
-      if (modifyResult.message) {
-        messages.push(modifyResult.message);
+      if (planResult.message) {
+        messages.push(planResult.message);
       }
-      if (newMicrocycle.message) {
-        messages.push(newMicrocycle.message);
+      if (microcycleResult?.message) {
+        messages.push(microcycleResult.message);
       }
 
       return {
         success: true,
         wasModified: true,
-        modifications: modifyResult.modifications,
-        messages: messages.length > 0 ? messages : ['Your plan has been updated and your weekly schedule has been regenerated.'],
+        modifications: planResult.modifications,
+        messages: messages.length > 0 ? messages : ['Your plan has been updated and your weekly schedule has been adjusted.'],
       };
     } catch (error) {
       console.error('[MODIFY_PLAN] Error modifying plan:', error);
