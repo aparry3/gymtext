@@ -1,6 +1,4 @@
 import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agents/conversation/chat/prompts';
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
 import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileUpdateAgent } from '../../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';

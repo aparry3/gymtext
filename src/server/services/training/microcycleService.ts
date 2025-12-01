@@ -3,7 +3,10 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
-import { createMicrocycleAgent } from '@/server/agents/training/microcycles/chain';
+import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles';
+
+// Backwards-compatible alias
+const createMicrocycleAgent = createMicrocycleGenerateAgent;
 import type { ProgressInfo } from './progressService';
 import { UserService } from '../user/userService';
 

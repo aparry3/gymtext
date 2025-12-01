@@ -1,10 +1,8 @@
 import { createRunnableAgent } from '@/server/agents/base';
 import { RunnableSequence } from '@langchain/core/runnables';
-import {
-  MICROCYCLE_SYSTEM_PROMPT,
-  createMicrocycleGenerationRunnable,
-  createMicrocyclePostProcessChain,
-} from '../../steps';
+import { MICROCYCLE_SYSTEM_PROMPT } from './steps/generation/prompt';
+import { createMicrocycleGenerationRunnable } from './steps/generation/chain';
+import { createMicrocyclePostProcessChain } from '../../shared/steps/postprocess';
 import type { MicrocycleGenerationInput, MicrocycleAgentOutput, MicrocycleAgentDeps } from '../../types';
 
 /**

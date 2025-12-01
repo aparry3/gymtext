@@ -1,9 +1,24 @@
 // Generate operation
-export { createMicrocycleGenerateAgent } from './generate/chain';
-export type { MicrocycleGenerationInput, MicrocycleAgentOutput, MicrocycleAgentDeps } from './generate/types';
+export {
+  createMicrocycleGenerateAgent,
+  MICROCYCLE_SYSTEM_PROMPT,
+  microcycleUserPrompt,
+  MicrocycleGenerationOutputSchema,
+  type MicrocycleGenerationInput,
+  type MicrocycleAgentOutput,
+  type MicrocycleAgentDeps,
+  type MicrocycleGenerationOutput,
+  type MicrocycleGenerationConfig,
+} from './generate';
 
 // Modify operation
-export { createModifyMicrocycleAgent } from './modify/chain';
-export { modifyMicrocycleUserPrompt, MICROCYCLE_MODIFY_SYSTEM_PROMPT } from './modify/prompt';
-export { ModifyMicrocycleOutputSchema } from './modify/types';
-export type { ModifyMicrocycleInput, ModifyMicrocycleOutput, ModifyMicrocycleContext, ModifiedMicrocycleDayOverviews } from './modify/types';
+export {
+  createModifyMicrocycleAgent,
+  MICROCYCLE_MODIFY_SYSTEM_PROMPT,
+  modifyMicrocycleUserPrompt,
+  ModifyMicrocycleOutputSchema,
+  type ModifyMicrocycleInput,
+  type ModifyMicrocycleOutput,
+  type ModifyMicrocycleContext,
+  type ModifiedMicrocycleDayOverviews,
+} from './modify';
