@@ -1,6 +1,6 @@
 import { RunnableLambda } from '@langchain/core/runnables';
 import { initializeModel } from '@/server/agents/base';
-import { type ModificationsAgentInput, type ModificationsResponse } from '../types';
+import { type ModificationsAgentInput, type ModificationsResponse } from './types';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { ModifyWorkoutResult, ModifyWeekResult, ModifyPlanResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';

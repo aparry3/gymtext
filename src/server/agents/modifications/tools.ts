@@ -59,6 +59,7 @@ export interface ModifyPlanParams {
   userId: string;
   changeRequest: string;
 }
+
 /**
  * Factory function to create modification tools with injected dependencies (DI pattern)
  *

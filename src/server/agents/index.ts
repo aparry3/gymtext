@@ -13,9 +13,17 @@ export { createFitnessPlanAgent } from './training/plans';
 // Conversation Agents
 export { type ChatAgentDeps } from './conversation/chat/chain';
 
-// Modification Agents (subagents of chat)
-export { createModificationsAgent, type ModificationsAgentDeps } from './conversation/chat/modifications/chain';
-export { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './conversation/chat/modifications/tools';
+// Modification Agents (standalone agent)
+export {
+  createModificationsAgent,
+  type ModificationsAgentDeps,
+  type ModificationsAgentInput,
+  type ModificationsResponse,
+  createModificationTools,
+  type WorkoutModificationService,
+  type MicrocycleModificationService,
+  type PlanModificationServiceInterface,
+} from './modifications';
 
 // ==========================================
 // Legacy Exports (DEPRECATED - for backward compatibility only)

@@ -4,13 +4,12 @@ import { CHAT_SYSTEM_PROMPT, buildChatUserMessage } from '@/server/agents/conver
 import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileUpdateAgent, ProfileUpdateOutput } from '../../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
-import { ChatInput, ChatOutput, ChatAgentDeps, ModificationsAgentInput, ModificationsResponse } from './types';
-import { type WorkoutModificationService, type MicrocycleModificationService, type PlanModificationServiceInterface } from './modifications/tools';
-import { createModificationsAgent } from './modifications/chain';
+import { ChatInput, ChatOutput, ChatAgentDeps } from './types';
+import { modificationService, type MakeModificationResult } from '@/server/services/orchestration/modificationService';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 
 // Re-export types for backward compatibility
-export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService, PlanModificationServiceInterface };
+export type { ChatAgentDeps };
 
 /**
  * Chat Agent Factory (The Coordinator)
@@ -45,26 +44,18 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     const weekday = getWeekday(today, user.timezone);
     const targetDay = DAY_NAMES[weekday - 1];
 
-    // 2. Create the modifications agent with service dependencies
-    const modificationsAgent = createModificationsAgent({
-      modifyWorkout: deps.modifyWorkout,
-      modifyWeek: deps.modifyWeek,
-      modifyPlan: deps.modifyPlan,
-    });
-
-    // 3. Create the single make_modification wrapper tool
-    // All context is passed via closure - no parameters needed
+    // 2. Create the single make_modification wrapper tool
+    // Calls the ModificationService which orchestrates the modifications agent
     const makeModificationTool = tool(
-      async (): Promise<ModificationsResponse> => {
-        const agentInput: ModificationsAgentInput = {
+      async (): Promise<MakeModificationResult> => {
+        return await modificationService.makeModification({
           user,
           message,
           previousMessages,
           currentWorkout,
           workoutDate: today,
           targetDay,
-        };
-        return await modificationsAgent.invoke(agentInput);
+        });
       },
       {
         name: 'make_modification',
@@ -83,7 +74,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
       }
     );
 
-    // 4. Profile Runnable (The Scribe)
+    // 3. Profile Runnable (The Scribe)
     // Always runs first to capture facts/PRs from the message
     const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
       const currentProfile = input.user.profile || '';
@@ -96,7 +87,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
       });
     });
 
-    // 5. Main Coordinator Runnable
+    // 4. Main Coordinator Runnable
     // Takes the result of the profile update and the original input
     const coordinatorRunnable = RunnableLambda.from(async (stepInput: ChatInput & { profileResult: ProfileUpdateOutput }) => {
       const { profileResult } = stepInput;
@@ -133,12 +124,12 @@ All context (user, message, date, etc.) is automatically provided - no parameter
         console.log(`[CHAT AGENT] Tool call detected: ${toolCall.name}`);
 
         if (toolCall.name === 'make_modification') {
-          // Execute the wrapper tool - it returns ModificationsResponse with messages[]
-          const toolResult = await makeModificationTool.invoke(toolCall.args) as ModificationsResponse;
+          // Execute the wrapper tool - it returns MakeModificationResult from the service
+          const toolResult = await makeModificationTool.invoke(toolCall.args) as MakeModificationResult;
 
-          console.log(`[CHAT AGENT] Modification complete, ${toolResult.messages.length} message(s) returned`);
+          console.log(`[CHAT AGENT] Modification complete, success: ${toolResult.success}, ${toolResult.messages.length} message(s) returned`);
 
-          // Return messages from the modifications agent
+          // Return messages from the modification service
           return {
             messages: toolResult.messages,
             profileUpdated: profileResult.wasUpdated

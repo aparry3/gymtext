@@ -1,4 +1,4 @@
-import type { ModificationsAgentInput } from '../types';
+import type { ModificationsAgentInput } from './types';
 import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
 
 /**

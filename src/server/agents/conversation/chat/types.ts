@@ -2,9 +2,7 @@ import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
-import type { ModifyWeekParams, ModifyWorkoutParams, ModifyPlanParams } from './modifications/tools';
 import { WorkoutInstance } from '@/server/models';
-import type { ModifyWeekResult, ModifyWorkoutResult, ModifyPlanResult } from '@/server/services';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
 
 /**
@@ -59,29 +57,6 @@ export interface ChatAfterParallelInput extends ChatInput {
 export type ChatSubagentInput = ChatAfterParallelInput;
 
 /**
- * Input for the Modifications Agent (simplified, no triage dependency)
- * Contains all context needed to process modification requests
- */
-export interface ModificationsAgentInput {
-  user: UserWithProfile;
-  message: string;
-  previousMessages?: Message[];
-  currentWorkout?: WorkoutInstance;
-  profile?: ProfileUpdateOutput;
-  workoutDate: Date;
-  targetDay: string;
-}
-
-/**
- * Schema for modifications agent output
- */
-export const ModificationsResponseSchema = z.object({
-    messages: z.array(z.string()).describe('array of messages to send (e.g., week update message, workout message)'),
-});
-
-export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
-
-/**
  * Output from chat agent
  */
 export interface ChatOutput {
@@ -91,11 +66,9 @@ export interface ChatOutput {
 }
 
 /**
- * Dependencies for chat agent (includes DI for profile and modification services)
+ * Dependencies for chat agent
+ * Note: Modification services are now handled by ModificationService singleton
  */
 export interface ChatAgentDeps extends AgentDeps {
   saveProfile: (userId: string, profile: string) => Promise<void>;
-  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
-  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
-  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
 }

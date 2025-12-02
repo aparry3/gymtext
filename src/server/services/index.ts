@@ -13,6 +13,7 @@ export { microcycleService } from '@/server/services/training/microcycleService'
 export { onboardingService } from '@/server/services/orchestration/onboardingService';
 export { workoutModificationService } from '@/server/services/orchestration/workoutModificationService';
 export { planModificationService } from '@/server/services/orchestration/planModificationService';
+export { modificationService } from '@/server/services/orchestration/modificationService';
 
 // Also export classes for type definitions when needed
 export type { ChatService } from '@/server/services/messaging/chatService';
@@ -29,3 +30,4 @@ export type { MicrocycleService } from '@/server/services/training/microcycleSer
 export type { OnboardingService } from '@/server/services/orchestration/onboardingService';
 export type { WorkoutModificationService, ModifyWorkoutResult, ModifyWeekResult } from '@/server/services/orchestration/workoutModificationService';
 export type { PlanModificationService, ModifyPlanParams, ModifyPlanResult } from '@/server/services/orchestration/planModificationService';
+export type { ModificationService, MakeModificationParams, MakeModificationResult } from '@/server/services/orchestration/modificationService';
