@@ -3,7 +3,7 @@ import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
 import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
-import { now, DayOfWeek, getDayOfWeek } from '@/shared/utils/date';
+import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
@@ -210,11 +210,7 @@ export class WorkoutModificationService {
 
       // Capture original day overview for today (for comparison after modification)
       // Days array is indexed 0-6 (Mon-Sun)
-      const dayIndexMap: Record<DayOfWeek, number> = {
-        'MONDAY': 0, 'TUESDAY': 1, 'WEDNESDAY': 2, 'THURSDAY': 3,
-        'FRIDAY': 4, 'SATURDAY': 5, 'SUNDAY': 6
-      };
-      const todayDayIndex = dayIndexMap[todayDayOfWeek];
+      const todayDayIndex = DAY_NAMES.indexOf(todayDayOfWeek);
       const originalTodayOverview = microcycle.days[todayDayIndex] || null;
 
       // Use the microcycle modification agent to modify the pattern
@@ -352,11 +348,6 @@ export class WorkoutModificationService {
       };
     }
   }
-
-  /**
-   * Get the day overview field name for a given day of week
-   */
-  private getDayOverviewField(dayOfWeek: string): string { return `${dayOfWeek.toLowerCase()}Overview`; }
 
   /**
    * Map workout theme to session type for database storage
