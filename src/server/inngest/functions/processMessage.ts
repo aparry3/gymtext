@@ -36,6 +36,7 @@ export const processMessageFunction = inngest.createFunction(
 
     // Step 1: Generate response(s) (can be slow - LLM call)
     // Load user fresh in this step to avoid serialization issues
+    // ChatService handles fetching pending messages and splitting context internally
     const messages = await step.run('generate-response', async () => {
       console.log('[Inngest] Loading user and generating response:', userId);
       const user = await userService.getUser(userId);
@@ -44,30 +45,12 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      // Retrieve ALL pending messages for this user that haven't been responded to
-      // This handles the batching of debounced messages
-      const pendingMessages = await messageService.getPendingMessages(userId);
-
-      if (pendingMessages.length === 0) {
-        console.log('[Inngest] No pending messages found (already processed?), skipping');
-        return [];
-      }
-
-      // Aggregate message content
-      // If multiple messages, join them with newlines to provide full context
-      const aggregatedContent = pendingMessages
-        .map(m => m.content)
-        .join('\n\n');
-
-      console.log('[Inngest] Processing batch:', {
-        count: pendingMessages.length,
-        aggregatedContent: aggregatedContent.substring(0, 100) + (aggregatedContent.length > 100 ? '...' : '')
-      });
-
-      const chatMessages = await chatService.handleIncomingMessage(
-        user,
-        aggregatedContent
-      );
+      // ChatService now handles:
+      // - Fetching recent messages (single DB call)
+      // - Splitting into pending vs context
+      // - Aggregating pending message content
+      // - Early return if no pending messages
+      const chatMessages = await chatService.handleIncomingMessage(user);
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;
     });

@@ -8,6 +8,7 @@ import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
+const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '10');
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
@@ -42,62 +43,59 @@ export class ChatService {
   }
 
   /**
-   * Processes an incoming SMS message using the two-agent architecture.
+   * Processes pending inbound SMS messages using the two-agent architecture.
    *
    * @param user - The user object with their profile information
-   * @param message - The incoming SMS message text from the user
-   * @returns A promise that resolves to an array of response messages
+   * @returns A promise that resolves to an array of response messages (empty if no pending messages)
    *
    * @remarks
-   * The method now follows a two-agent pattern:
-   * 1. UserProfileAgent analyzes the message for profile updates
-   * 2. ChatAgent generates a response using the (potentially updated) profile
+   * This method performs a single DB fetch and splits messages into:
+   * - pending: inbound messages after the last outbound (to be processed)
+   * - context: conversation history up to and including the last outbound
    *
    * This architecture ensures:
+   * - No race conditions from multiple DB fetches
    * - Profile information is always current
-   * - No duplicate LLM calls for the same information
    * - Proper acknowledgment of profile updates in responses
    * - Support for multiple messages (e.g., week update + workout message)
    *
    * @example
    * ```typescript
-   * const messages = await chatService.handleIncomingMessage(
-   *   user,
-   *   "I now train 5 days a week at Planet Fitness"
-   * );
-   * // Profile is updated AND response acknowledges the change
+   * const messages = await chatService.handleIncomingMessage(user);
+   * // Returns [] if no pending messages, otherwise generates responses
    * ```
    */
   async handleIncomingMessage(
-    user: UserWithProfile,
-    message: string
+    user: UserWithProfile
   ): Promise<string[]> {
     try {
-      // Get recent conversation context for the user
-      // This retrieves the last 20 messages to ensure we have enough context
-      const previousMessages = await this.messageService.getRecentMessages(user.id, 20);
+      // Single DB fetch: get enough messages for pending + context window
+      // We fetch extra to ensure we have enough context after splitting
+      const allMessages = await this.messageService.getRecentMessages(
+        user.id,
+        CHAT_CONTEXT_MESSAGES + 20
+      );
 
-      // Filter messages for proper context in the debounced flow:
-      // We need to remove ALL trailing inbound messages because they are already included
-      // in the aggregated 'message' parameter passed to this function.
-      // We keep everything up to the last OUTBOUND message.
-      
-      const contextMessages: typeof previousMessages = [];
-      // Iterate backwards to find the split point
-      let foundOutbound = false;
-      for (let i = previousMessages.length - 1; i >= 0; i--) {
-        const msg = previousMessages[i];
-        if (msg.direction === 'outbound') {
-          foundOutbound = true;
-        }
-        
-        // Once we find an outbound message, we keep it and everything before it
-        if (foundOutbound) {
-          contextMessages.unshift(msg);
-        }
-        // If we haven't found an outbound message yet, it means we are seeing
-        // trailing inbound messages which are already in our 'message' payload, so we skip them.
+      // Split into pending (needs response) and context (conversation history)
+      const { pending, context } = this.messageService.splitMessages(allMessages);
+
+      // Early return if no pending messages
+      if (pending.length === 0) {
+        console.log('[ChatService] No pending messages, skipping');
+        return [];
       }
+
+      // Aggregate pending message content
+      const message = pending.map(m => m.content).join('\n\n');
+
+      console.log('[ChatService] Processing pending messages:', {
+        pendingCount: pending.length,
+        contextCount: context.length,
+        aggregatedContent: message.substring(0, 100) + (message.length > 100 ? '...' : '')
+      });
+
+      // Trim context to configured window size
+      const contextMessages = context.slice(-CHAT_CONTEXT_MESSAGES);
 
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
@@ -152,7 +150,6 @@ export class ChatService {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error details:', {
           userId: user.id,
-          message: message.substring(0, 100),
           error: error instanceof Error ? error.stack : error
         });
       }

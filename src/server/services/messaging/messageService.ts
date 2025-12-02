@@ -10,10 +10,7 @@ import { MessageRepository } from '../../repositories/messageRepository';
 import { postgresDb } from '../../connections/postgres/postgres';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../../models/_types';
-import { summaryAgent } from '../../agents/conversation/summary/chain';
 import { UserService } from '../user/userService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
-import { MicrocycleService } from '../training/microcycleService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 
 /**
@@ -106,16 +103,12 @@ export class MessageService {
   private static instance: MessageService;
   private messageRepo: MessageRepository;
   private userService: UserService;
-  private fitnessPlanService: FitnessPlanService;
-  private microcycleService: MicrocycleService;
   private workoutInstanceService: WorkoutInstanceService;
   private circuitBreaker: CircuitBreaker;
 
   private constructor() {
     this.messageRepo = new MessageRepository(postgresDb);
     this.userService = UserService.getInstance();
-    this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.microcycleService = MicrocycleService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
@@ -235,6 +228,32 @@ export class MessageService {
   }
 
   /**
+   * Split messages into pending (to be processed) and context (conversation history).
+   *
+   * Pure function - no DB calls. Used to separate messages that need responses
+   * from messages that serve as conversation context.
+   *
+   * @param messages - Array of messages ordered oldest to newest
+   * @returns Object with pending (inbound after last outbound) and context (up to and including last outbound)
+   */
+  splitMessages(messages: Message[]): { pending: Message[]; context: Message[] } {
+    // Find index of last outbound message
+    let lastOutboundIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].direction === 'outbound') {
+        lastOutboundIndex = i;
+        break;
+      }
+    }
+
+    // Everything after last outbound is pending, everything up to and including is context
+    const context = lastOutboundIndex >= 0 ? messages.slice(0, lastOutboundIndex + 1) : [];
+    const pending = lastOutboundIndex >= 0 ? messages.slice(lastOutboundIndex + 1) : messages;
+
+    return { pending, context };
+  }
+
+  /**
    * Get pending (unanswered) inbound messages for a client
    *
    * Retrieves the tail of inbound messages that have occurred since the last outbound message.
@@ -268,16 +287,6 @@ export class MessageService {
     return pendingMessages;
   }
 
-  /**
-   * Summarize a batch of messages using AI
-   */
-  async summarizeMessages(user: UserWithProfile, messages: Message[]): Promise<string> {
-    // Summarize a batch of messages
-    const messagesText = messages.map(message => `${message.direction === 'inbound' ? 'User' : 'Coach'}: ${message.content}`).join('\n');
-
-    const summary = await summaryAgent.invoke({ user, context: { messages: messagesText } });
-    return summary.value;
-  }
 
   // ==========================================
   // Message Transport & Orchestration Methods
