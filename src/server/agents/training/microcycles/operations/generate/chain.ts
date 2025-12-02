@@ -21,24 +21,33 @@ import type { MicrocycleGenerationInput, MicrocycleAgentOutput, MicrocycleAgentD
  */
 export const createMicrocycleGenerateAgent = (deps?: MicrocycleAgentDeps) => {
   return createRunnableAgent<MicrocycleGenerationInput, MicrocycleAgentOutput>(async (input) => {
-    // Step 1: Create generation runnable (generate-specific)
-    const microcycleGenerationRunnable = createMicrocycleGenerationRunnable({
-      systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
-      agentConfig: {
-        model: 'gpt-5.1'
-      }
-    });
+    try {
+      // Step 1: Create generation runnable (generate-specific)
+      const microcycleGenerationRunnable = createMicrocycleGenerationRunnable({
+        systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
+        agentConfig: {
+          model: 'gpt-5.1'
+        }
+      });
 
-    // Step 2: Create shared post-processing chain
-    const postProcessChain = createMicrocyclePostProcessChain(deps, 'generate');
+      // Step 2: Create shared post-processing chain
+      const postProcessChain = createMicrocyclePostProcessChain(deps, 'generate');
 
-    // Compose the full chain: generation → post-processing
-    const sequence = RunnableSequence.from([
-      microcycleGenerationRunnable,
-      postProcessChain
-    ]);
+      // Compose the full chain: generation → post-processing
+      const sequence = RunnableSequence.from([
+        microcycleGenerationRunnable,
+        postProcessChain
+      ]);
 
-    // Execute the chain
-    return await sequence.invoke(input);
+      // Execute the chain
+      const result = await sequence.invoke(input);
+
+      console.log(`[MicrocycleGenerate] Generated microcycle for week ${input.absoluteWeek}`);
+
+      return result;
+    } catch (error) {
+      console.error('[MicrocycleGenerate] Error generating microcycle:', error);
+      throw error;
+    }
   });
 };

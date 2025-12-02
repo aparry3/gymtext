@@ -44,7 +44,11 @@ export const createModifyMicrocycleAgent = () => {
       })
     ]);
 
-    // Execute the chain
-    return await sequence.invoke(input);
+      // Execute the chain
+      const result = await sequence.invoke(input);
+
+      console.log(`[MicrocycleModify] Modified microcycle for week ${input.weekNumber}`);
+
+      return result;
   });
 };
