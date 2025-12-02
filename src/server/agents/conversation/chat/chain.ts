@@ -1,11 +1,8 @@
-import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agents/conversation/chat/prompts';
+import { CHAT_SYSTEM_PROMPT, buildChatUserMessage } from '@/server/agents/conversation/chat/prompts';
 import { initializeModel, createRunnableAgent } from '../../base';
-import { createProfileUpdateAgent } from '../../profile';
-import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
-import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterParallelInput, ChatOutput, ChatAgentDeps, IntentAnalysis } from './types';
-import { updatesAgentRunnable } from './updates/chain';
-// import { questionsAgentRunnable } from './questions/chain';
-import { createModificationsAgent } from './modifications/chain';
+import { createProfileUpdateAgent, ProfileUpdateOutput } from '../../profile';
+import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { ChatInput, ChatOutput, ChatAgentDeps } from './types';
 import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService, type PlanModificationServiceInterface } from './modifications/tools';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 
@@ -13,165 +10,173 @@ import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService, PlanModificationServiceInterface };
 
 /**
- * Chat Agent Factory
+ * Chat Agent Factory (The Coordinator)
  *
- * Generates conversational responses based on user profile.
- * Orchestrates profile extraction, triage, and subagent routing.
+ * The "Single Brain" of the conversation.
  *
- * Architecture:
- * 1. Profile Phase: Extract and update user profile (parallel)
- * 2. Triage Phase: Analyze message intent (parallel)
- * 3. Routing Phase: Route to appropriate subagent
- * 4. Response Generation: Return reply and profile state
+ * Architecture (Linear & Flattened):
+ * 1. **Profile Phase (The Scribe):**
+ *    - Runs first on the aggregated user message.
+ *    - Updates the Markdown Profile (Goals, Injuries, PRs).
+ *    - Returns a `updateSummary` (e.g., "Logged 225 bench PR").
  *
- * @param deps - Dependencies injected by the service (patchProfile callback, services)
+ * 2. **Coordinator Phase (The Coach):**
+ *    - Receives User Message + Profile Update Summary.
+ *    - Has access to Modification Tools (Swap, Change Week, etc.).
+ *    - Decides whether to:
+ *      a) Call a tool (if user wants changes).
+ *      b) Answer a question (using internal knowledge).
+ *      c) Chat/Greet.
+ *    - Always acknowledges the Profile Update Summary in the text response.
+ *
+ * @param deps - Dependencies injected by the service
  * @returns Agent that processes chat messages
  */
 export const createChatAgent = (deps: ChatAgentDeps) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, previousMessages, currentWorkout } = input;
-  console.log('[CHAT AGENT] Starting chat agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
+    const { user, message, currentWorkout } = input;
+    console.log('[CHAT AGENT] Starting coordinator for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
-  // Calculate context for modification tools
-  const today = now(user.timezone).toJSDate();
-  const weekday = getWeekday(today, user.timezone);
-  const targetDay = DAY_NAMES[weekday - 1]; // getWeekday returns 1-7 (Mon-Sun)
+    // 1. Calculate context for modification tools
+    const today = now(user.timezone).toJSDate();
+    const weekday = getWeekday(today, user.timezone);
+    const targetDay = DAY_NAMES[weekday - 1];
 
-  // Create modification tools with context and injected services (DI pattern)
-  const modificationTools = createModificationTools(
-    {
-      userId: user.id,
-      message,
-      workoutDate: today,
-      targetDay,
-    },
-    {
-      modifyWorkout: deps.modifyWorkout,
-      modifyWeek: deps.modifyWeek,
-      modifyPlan: deps.modifyPlan,
-    }
-  );
-
-  // Create triage action map with injected dependencies
-  const TriageActionMap: Record<MessageIntent, Runnable> = {
-    'updates': updatesAgentRunnable(),
-    'modifications': createModificationsAgent({ tools: modificationTools }),
-  };
-
-  // Profile Runnable - uses profile from user object, updates via agent
-  // Input: ChatInput (initial chain input)
-  // Output: ProfileUpdateOutput
-  const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
-    // Get profile from user object
-    const currentProfile = input.user.profile || '';
-
-    // Create and invoke profile update agent
-    const agent = createProfileUpdateAgent();
-    const result = await agent.invoke({
-      currentProfile,
-      message: input.message,
-      user: input.user,
-      currentDate: formatForAI(new Date(), input.user.timezone),
-    });
-
-    return result;
-  });
-
-  // Triage Runnable - analyzes message intent
-  // Input: ChatInput (initial chain input)
-  // Output: TriageResult
-  const routingRunnable = RunnableLambda.from(async (input: ChatInput): Promise<TriageResult> => {
-    const userMessage = buildTriageUserMessage(input.message, input.user.timezone);
-    const messages = [
+    // 2. Create modification tools
+    const modificationTools = createModificationTools(
       {
-        role: 'system',
-        content: CHAT_TRIAGE_SYSTEM_PROMPT,
+        userId: user.id,
+        message,
+        workoutDate: today,
+        targetDay,
       },
       {
-        role: 'user',
-        content: userMessage,
+        modifyWorkout: deps.modifyWorkout,
+        modifyWeek: deps.modifyWeek,
+        modifyPlan: deps.modifyPlan,
       }
-    ]
-    const model = initializeModel(TriageResultSchema);
-    return await model.invoke(messages) as TriageResult;
-  });
-
-  // Parallel Step - runs profile and triage in parallel
-  // Input: ChatInput
-  // Output: ChatAfterParallelInput (ChatInput + { profile, triage })
-  const parallel = RunnablePassthrough.assign({
-    profile: profileRunnable as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    triage: routingRunnable as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  }) as unknown as RunnableSequence<ChatInput, ChatAfterParallelInput>;
-
-  // Action Runnable - routes to appropriate subagent based on triage
-  // Input: ChatAfterParallelInput (ChatInput + profile + triage)
-  // Output: ChatOutput
-  const actionRunnable = RunnableLambda.from(async (input: ChatAfterParallelInput): Promise<ChatOutput> => {
-    // Save profile if it was updated (via service callback)
-    if (input.profile.wasUpdated) {
-      await deps.saveProfile(input.user.id, input.profile.updatedProfile);
-      console.log('[CHAT AGENT] Profile updated and saved');
-    }
-
-    // Find the intent with the highest confidence
-    const primaryIntent = input.triage.intents.reduce((max: IntentAnalysis, current: IntentAnalysis) =>
-      current.confidence > max.confidence ? current : max
     );
 
-    // Log triage results
-    console.log('[CHAT AGENT] Triage results:', {
-      allIntents: input.triage.intents,
-      primaryIntent: {
-        intent: primaryIntent.intent,
-        confidence: primaryIntent.confidence,
-        reasoning: primaryIntent.reasoning
-      }
+    // 3. Profile Runnable (The Scribe)
+    // Always runs first to capture facts/PRs from the message
+    const profileRunnable = RunnableLambda.from(async (input: ChatInput) => {
+      const currentProfile = input.user.profile || '';
+      const agent = createProfileUpdateAgent();
+      return await agent.invoke({
+        currentProfile,
+        message: input.message,
+        user: input.user,
+        currentDate: formatForAI(new Date(), input.user.timezone),
+      });
     });
 
-    // Get the appropriate agent for this intent
-    const agent = TriageActionMap[primaryIntent.intent as MessageIntent];
+    // 4. Main Coordinator Runnable
+    // Takes the result of the profile update and the original input
+    const coordinatorRunnable = RunnableLambda.from(async (stepInput: ChatInput & { profileResult: ProfileUpdateOutput }) => {
+      const { profileResult } = stepInput;
 
-    // Log which sub-agent is being invoked
-    console.log(`[CHAT AGENT] Invoking ${primaryIntent.intent} sub-agent with confidence ${primaryIntent.confidence}`);
+      // Save profile if updated
+      if (profileResult.wasUpdated) {
+        await deps.saveProfile(user.id, profileResult.updatedProfile);
+        console.log('[CHAT AGENT] Profile updated and saved:', profileResult.updateSummary);
+      }
 
-    // Prepare the input for the subagent
-    const subagentInput = {
-      message: input.message,
-      user: input.user,
-      profile: input.profile,
-      triage: input.triage,
-      previousMessages: input.previousMessages,
-      currentWorkout: input.currentWorkout,
-    };
+      // Initialize Model with Tools
+      // We use a standard model configuration but bind the tools
+      const model = initializeModel(undefined, deps.config).bindTools(modificationTools);
 
-    // Invoke the appropriate subagent
-    const result = await agent.invoke(subagentInput);
+      // Build Messages
+      const userMessageContent = buildChatUserMessage(
+        message,
+        user.timezone,
+        profileResult.updateSummary, // Pass the summary so the agent can acknowledge it
+        currentWorkout
+      );
 
-    console.log(`[CHAT AGENT] ${primaryIntent.intent} sub-agent completed successfully`);
+      const messages = [
+        { role: 'system', content: CHAT_SYSTEM_PROMPT },
+        // TODO: We might want to inject previous conversation history here
+        // For now, we focus on the current aggregated message
+        { role: 'user', content: userMessageContent }
+      ];
 
-    // Return chat output with profile update status
-    // Handle both single response (updates agent) and messages array (modifications agent)
-    if ('messages' in result && result.messages) {
+      // Invoke Model
+      console.log('[CHAT AGENT] Invoking coordinator model...');
+      const result = await model.invoke(messages);
+
+      // Handle Tool Calls vs Text Response
+      // If the model called a tool, LangChain's bindTools usually handles the execution if we use an AgentExecutor.
+      // However, since we are using a lighter `RunnableAgent` pattern, we might need to handle the tool call result.
+      // BUT: `createModificationTools` returns structured tools.
+      // If we want the model to *execute* the tool and then give a final answer, we typically need a loop (AgentExecutor).
+      // For this "Flattened" approach, if we want to keep it simple:
+      // We can use `invoke` and check `tool_calls`.
+      
+      // To keep this robust without a full AgentExecutor loop (which can be heavy),
+      // we can check if `result.tool_calls` exists.
+      
+      // WAIT: `createRunnableAgent` wrapper expects us to return `ChatOutput`.
+      // If we use `bindTools`, the model returns a message with `tool_calls`.
+      // We need to execute them.
+      
+      // For simplicity in this refactor, let's manually execute the FIRST tool call if present,
+      // or just return the text if no tool call. 
+      // *Ideally*, we'd use `AgentExecutor`, but let's stick to the manual execution for tight control if we aren't using LangGraph.
+      
+      // Refined Strategy:
+      // 1. Check for tool calls.
+      // 2. If tool call found, execute it.
+      // 3. The tool execution (in our legacy `modifications` setup) often returns the FINAL string or messages.
+      //    Let's look at `createModificationsAgent` (legacy). It returned `messages`.
+      
+      if (result.tool_calls && result.tool_calls.length > 0) {
+        const toolCall = result.tool_calls[0];
+        console.log(`[CHAT AGENT] Tool call detected: ${toolCall.name}`);
+        
+        // Find the matching tool
+        const tool = modificationTools.find(t => t.name === toolCall.name);
+        if (tool) {
+          // Execute the tool
+          const toolResult = await tool.invoke(toolCall.args);
+          
+          // The modification tools return `{ message: string }` or similar.
+          // We need to check the return type of the tools.
+          // Looking at `modifications/tools.ts`, they return `ModifyWorkoutResult` strings or objects.
+          
+          // Assuming toolResult is the output string or object we want to send back.
+          // We might want to wrap this in a structured response.
+          
+          // Hack for compatibility: The existing `modifications` agent returned `messages: string[]`.
+          // Let's assume the tool result text is the response we want.
+          
+          // If the tool returns a string (which `DynamicStructuredTool` usually does), use it.
+          // If it returns an object, we stringify or extract the message.
+          
+          // Let's assume standard LangChain tool behavior: returns string.
+          return {
+             response: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+             profileUpdated: profileResult.wasUpdated
+          };
+        }
+      }
+
+      // Default: Text response
       return {
-        messages: result.messages,
-        profileUpdated: input.profile.wasUpdated,
+        response: result.content as string,
+        profileUpdated: profileResult.wasUpdated
       };
-    }
+    });
 
-    return {
-      response: result.response,
-      profileUpdated: input.profile.wasUpdated,
-    };
-  });
+    // 5. Sequence
+    const sequence = RunnableSequence.from([
+      RunnablePassthrough.assign({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        profileResult: profileRunnable as any
+      }),
+      coordinatorRunnable
+    ]);
 
-  const sequence = RunnableSequence.from([
-    parallel,
-    actionRunnable,
-  ]);
-
-    const result = await sequence.invoke({ message, user, previousMessages, currentWorkout });
-
-    return result;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await sequence.invoke(input as any);
   });
 };

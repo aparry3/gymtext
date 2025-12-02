@@ -2,14 +2,12 @@ import { UserWithProfile } from '../../models/userModel';
 import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
-import { createReplyAgent } from '../../agents/conversation/reply/chain';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
 import { createWorkoutMessageAgent } from '../../agents/training/workouts/shared/steps/message/chain';
-import { WorkoutInstance, EnhancedWorkoutInstance, WorkoutBlock } from '../../models/workout';
+import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
 import { postgresDb } from '../../connections/postgres/postgres';
-import { now } from '@/shared/utils/date';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../../models/_types';
 import { summaryAgent } from '../../agents/conversation/summary/chain';
@@ -237,6 +235,40 @@ export class MessageService {
   }
 
   /**
+   * Get pending (unanswered) inbound messages for a client
+   *
+   * Retrieves the tail of inbound messages that have occurred since the last outbound message.
+   * Used for batch processing in the debounced chat flow.
+   *
+   * @param clientId - The client ID
+   * @returns Array of pending inbound messages, ordered oldest to newest
+   */
+  async getPendingMessages(clientId: string): Promise<Message[]> {
+    // Get a reasonable batch of recent messages (e.g., last 20)
+    // We assume the user hasn't sent more than 20 messages without a reply
+    const recentMessages = await this.getRecentMessages(clientId, 20);
+
+    const pendingMessages: Message[] = [];
+    
+    // Iterate backwards from the most recent message
+    for (let i = recentMessages.length - 1; i >= 0; i--) {
+      const message = recentMessages[i];
+      
+      // If we hit an outbound message, stop - we've found the break point
+      if (message.direction === 'outbound') {
+        break;
+      }
+      
+      // Collect inbound messages
+      if (message.direction === 'inbound') {
+        pendingMessages.unshift(message); // Add to front to maintain time order
+      }
+    }
+    
+    return pendingMessages;
+  }
+
+  /**
    * Summarize a batch of messages using AI
    */
   async summarizeMessages(user: UserWithProfile, messages: Message[]): Promise<string> {
@@ -254,18 +286,12 @@ export class MessageService {
   /**
    * Ingest an inbound message (async path)
    *
-   * Fast path for webhook acknowledgment with intelligent action-based routing:
+   * Fast path for webhook acknowledgment:
    * 1. Store inbound message
-   * 2. Generate reply using reply agent (chooses one of three actions)
-   * 3. Execute action: resend workout, queue full chat agent, or provide full answer
-   * 4. Return immediate response
+   * 2. Queue processing job via Inngest
+   * 3. Return success
    *
-   * The reply agent chooses exactly one action:
-   * - 'resendWorkout': User wants today's workout sent
-   * - 'fullChatAgent': Pass to full conversation agent (queues Inngest job)
-   * - null: Full answer provided, no further action needed
-   *
-   * @returns IngestMessageResult with optional jobId, action, and response
+   * @returns IngestMessageResult with optional jobId
    */
   public async ingestMessage(params: IngestMessageParams): Promise<IngestMessageResult> {
     const { user, content, from, to, twilioData } = params;
@@ -283,130 +309,31 @@ export class MessageService {
       throw new Error('Failed to store inbound message');
     }
 
-    // Get recent conversation history for context (last 10 messages)
-    const previousMessages = await this.getRecentMessages(user.id, 5);
+    // Always queue the message processing job via Inngest
+    // The Inngest function handles debouncing and batch processing
+    const { ids } = await inngest.send({
+      name: 'message/received',
+      data: {
+        userId: user.id,
+        content,
+        from,
+        to,
+      },
+    });
+    const jobId = ids[0];
 
-    // Fetch current context for the reply agent
-    // 1. Fetch fitness plan
-    const fitnessPlan = await this.fitnessPlanService.getCurrentPlan(user.id);
-    const planContext = fitnessPlan ? {
-      description: fitnessPlan.description ?? null,
-    } : undefined;
-
-    // 2. Fetch current microcycle
-    const currentMicrocycle = await this.microcycleService.getActiveMicrocycle(user.id);
-
-    // 3. Fetch today's workout
-    const nowInUserTz = now(user.timezone);
-    const todayDate = nowInUserTz.startOf('day').toJSDate();
-    const todayWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
-
-    let workoutContext: { description: string | null; reasoning: string | null; blocks: WorkoutBlock[]; formatted?: string } | undefined;
-    if (todayWorkout) {
-      // Parse the workout details
-      let blocks: WorkoutBlock[] = [];
-      let formatted: string | undefined;
-
-      try {
-        const details = typeof todayWorkout.details === 'string'
-          ? JSON.parse(todayWorkout.details as string)
-          : todayWorkout.details;
-
-        // Check for new formatted text (preferred)
-        if (details && typeof details === 'object' && details.formatted && typeof details.formatted === 'string') {
-          formatted = details.formatted;
-          console.log('[MessageService] Using formatted workout text for context');
-        }
-        // Fallback to legacy blocks structure
-        else if (details && typeof details === 'object' && 'blocks' in details) {
-          blocks = details.blocks as WorkoutBlock[];
-          console.log('[MessageService] Using legacy blocks structure for context');
-        }
-      } catch (error) {
-        console.error('[MessageService] Error parsing workout details:', error);
-      }
-
-      workoutContext = {
-        description: (todayWorkout as WorkoutInstance).description || null,
-        reasoning: (todayWorkout as WorkoutInstance).reasoning || null,
-        blocks,
-        formatted,
-      };
-    }
-
-    // Generate reply using the reply agent (with routing decision and context)
-    // If there's a today's workout, provide a method to resend it
-    const agent = createReplyAgent(todayWorkout ? {
-      sendWorkoutMessage: async () => {
-        // Use the todayWorkout we already fetched
-        return await this.sendWorkoutMessage(user, todayWorkout);
-      }
-    } : undefined);
-    const replyResponse = await agent.invoke({
-      user,
-      message: content,
-      previousMessages,
-      currentWorkout: workoutContext,
-      currentMicrocycle: currentMicrocycle || undefined,
-      fitnessPlan: planContext
+    console.log('[MessageService] Message stored and queued:', {
+      userId: user.id,
+      messageId: storedMessage.id,
+      jobId,
     });
 
-    console.log('[MessageService] Reply agent decision:', {
-      action: replyResponse.action,
-      reasoning: replyResponse.reasoning,
-      replyLength: replyResponse.reply.length
-    });
-
-    // Store the outbound response
-    try {
-      await this.storeOutboundMessage(
-        user.id,
-        from, // User's phone number
-        replyResponse.reply,
-        to, // Our Twilio number
-        'twilio', // provider
-        undefined, // providerMessageId
-        { reasoning: replyResponse.reasoning } // metadata with reasoning
-      );
-    } catch (error) {
-      console.error('[MessageService] Failed to store outbound reply:', error);
-      // Don't block the response
-    }
-
-    // Conditionally queue the message processing job via Inngest
-    let jobId: string | undefined;
-    if (replyResponse.action === 'fullChatAgent') {
-      const { ids } = await inngest.send({
-        name: 'message/received',
-        data: {
-          userId: user.id,
-          content,
-          from,
-          to,
-        },
-      });
-      jobId = ids[0];
-
-      console.log('[MessageService] Message queued for full chat agent:', {
-        userId: user.id,
-        jobId,
-      });
-    } else if (replyResponse.action === 'resendWorkout') {
-      console.log('[MessageService] Workout resent, no further processing needed:', {
-        userId: user.id,
-      });
-    } else {
-      console.log('[MessageService] Full answer provided by reply agent, no further action needed:', {
-        userId: user.id,
-      });
-    }
-
-    // Return response with action information
+    // Return simple acknowledgment
     return {
       jobId,
-      ackMessage: replyResponse.reply,
-      action: replyResponse.action,
-      reasoning: replyResponse.reasoning,
+      ackMessage: '', // No immediate reply
+      action: 'fullChatAgent', // Always full agent now
+      reasoning: 'Queued for processing',
     };
   }
 

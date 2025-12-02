@@ -29,7 +29,6 @@ export * from './messaging/planSummary/chain';
 export * from './messaging/planMicrocycleCombined/chain';
 export * from './messaging/updatedMicrocycleMessage/chain';
 export * from './conversation/chat/chain';
-export * from './conversation/reply/chain';
 export * from './conversation/summary/chain';
 export * from './training/microcycles';
 export * from './training/workouts/operations/generate';

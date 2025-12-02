@@ -25,10 +25,14 @@ export const processMessageFunction = inngest.createFunction(
     id: 'process-message',
     name: 'Process Inbound Message',
     retries: 3, // Retry up to 3 times on failure
+    debounce: {
+      period: '10s',
+      key: 'event.data.userId',
+    },
   },
   { event: 'message/received' },
   async ({ event, step }) => {
-    const { userId, content } = event.data;
+    const { userId } = event.data;
 
     // Step 1: Generate response(s) (can be slow - LLM call)
     // Load user fresh in this step to avoid serialization issues
@@ -40,13 +44,42 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
+      // Retrieve ALL pending messages for this user that haven't been responded to
+      // This handles the batching of debounced messages
+      const pendingMessages = await messageService.getPendingMessages(userId);
+
+      if (pendingMessages.length === 0) {
+        console.log('[Inngest] No pending messages found (already processed?), skipping');
+        return [];
+      }
+
+      // Aggregate message content
+      // If multiple messages, join them with newlines to provide full context
+      const aggregatedContent = pendingMessages
+        .map(m => m.content)
+        .join('\n\n');
+
+      console.log('[Inngest] Processing batch:', {
+        count: pendingMessages.length,
+        aggregatedContent: aggregatedContent.substring(0, 100) + (aggregatedContent.length > 100 ? '...' : '')
+      });
+
       const chatMessages = await chatService.handleIncomingMessage(
         user,
-        content
+        aggregatedContent
       );
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;
     });
+
+    // If no messages to send, we're done
+    if (!messages || messages.length === 0) {
+      return {
+        success: true,
+        messageIds: [],
+        messageCount: 0,
+      };
+    }
 
     // Step 2: Send messages sequentially
     // Load user fresh again to avoid serialization issues

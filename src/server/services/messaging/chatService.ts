@@ -1,7 +1,6 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { createChatAgent } from '@/server/agents/conversation/chat/chain';
 import { MessageService } from './messageService';
-import { ConversationFlowBuilder } from '../flows/conversationFlowBuilder';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutModificationService } from '../orchestration/workoutModificationService';
@@ -81,13 +80,30 @@ export class ChatService {
   ): Promise<string[]> {
     try {
       // Get recent conversation context for the user
-      // This retrieves the last 10 messages for the user
-      const previousMessages = await this.messageService.getRecentMessages(user.id, 10);
+      // This retrieves the last 20 messages to ensure we have enough context
+      const previousMessages = await this.messageService.getRecentMessages(user.id, 20);
 
-      // Filter messages for proper context:
-      // - If last message is inbound (user), remove it (duplicate of current message)
-      // - If last message is outbound (reply agent), keep it (needed for context)
-      const contextMessages = ConversationFlowBuilder.filterMessagesForContext(previousMessages);
+      // Filter messages for proper context in the debounced flow:
+      // We need to remove ALL trailing inbound messages because they are already included
+      // in the aggregated 'message' parameter passed to this function.
+      // We keep everything up to the last OUTBOUND message.
+      
+      const contextMessages: typeof previousMessages = [];
+      // Iterate backwards to find the split point
+      let foundOutbound = false;
+      for (let i = previousMessages.length - 1; i >= 0; i--) {
+        const msg = previousMessages[i];
+        if (msg.direction === 'outbound') {
+          foundOutbound = true;
+        }
+        
+        // Once we find an outbound message, we keep it and everything before it
+        if (foundOutbound) {
+          contextMessages.unshift(msg);
+        }
+        // If we haven't found an outbound message yet, it means we are seeing
+        // trailing inbound messages which are already in our 'message' payload, so we skip them.
+      }
 
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());

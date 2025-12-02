@@ -39,6 +39,12 @@ You MUST distinguish between a "Fixed Anchor" and a "Habit".
 - **Temporary:** Travel, sickness, or temporary lack of equipment.
   - MUST use format: \`* **[ACTIVE] Description (Effective: YYYY-MM-DD to YYYY-MM-DD)**\`
 
+## 6. # PROGRESS & RECORDS
+- **Personal Records (PRs):** Max lifts, fastest times, benchmarks.
+  - *Format:* \`- [YYYY-MM-DD] Exercise: Weight/Time (Notes)\`
+- **Milestones:** Significant achievements or consistency streaks.
+  - *Format:* \`- [YYYY-MM-DD] Achievement Description\`
+
 # OUTPUT FORMAT
 Return a valid JSON object:
 {
