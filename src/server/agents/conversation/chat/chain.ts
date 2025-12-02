@@ -83,7 +83,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
 
       // Initialize Model with Tools
       // We use a standard model configuration but bind the tools
-      const model = initializeModel(undefined, deps.config).bindTools(modificationTools);
+      const model = initializeModel(undefined, deps.config, {tools: modificationTools});
 
       // Build Messages
       const userMessageContent = buildChatUserMessage(
