@@ -1,5 +1,5 @@
 import { DayOfWeek, DAY_NAMES } from "@/shared/utils/date";
-import type { MicrocycleGenerationOutput } from '@/server/agents/training/microcycles/steps/generation/types';
+import type { MicrocycleGenerationOutput } from '@/server/agents/training/microcycles';
 
 export const UPDATED_MICROCYCLE_SYSTEM_PROMPT = `
 You are a fitness coach sending a friendly "your week has been updated" message to a client.

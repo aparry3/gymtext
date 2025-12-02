@@ -1,6 +1,6 @@
 import type { AgentDeps } from '@/server/agents/base';
 import type { DayOfWeek } from '@/shared/utils/date';
-import type { MicrocycleGenerationOutput } from '@/server/agents/training/microcycles/steps/generation/types';
+import type { MicrocycleGenerationOutput } from '@/server/agents/training/microcycles';
 import type { UserWithProfile } from '@/server/models/userModel';
 
 /**

@@ -1,21 +1,12 @@
-import type { UserWithProfile } from '@/server/models/userModel';
-
-/**
- * Interface for fitness profile context service (DI)
- */
-export interface FitnessProfileContextService {
-  getContext: (user: UserWithProfile) => Promise<string>;
-}
-
-
-// Re-export step types for convenience
+// Re-export shared types for convenience
 export type {
   FitnessPlanChainContext,
-} from './steps/generation/types';
+  FitnessProfileContextService,
+} from './shared/types';
 
 export type {
   FitnessPlanMessageConfig,
-} from './steps/message/types';
+} from './shared/steps/message/types';
 export type {
   FormattedFitnessPlanConfig,
-} from './steps/formatted/types';
+} from './shared/steps/formatted/types';

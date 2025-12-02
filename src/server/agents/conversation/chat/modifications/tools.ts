@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { type ModifyWorkoutResult, type ModifyWeekResult } from '@/server/services';
+import { type ModifyWorkoutResult, type ModifyWeekResult, type ModifyPlanResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 
 /**
@@ -13,12 +13,17 @@ export interface MicrocycleModificationService {
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
 }
 
+export interface PlanModificationServiceInterface {
+  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
+}
+
 /**
  * Dependencies for modification tools
  */
 export interface ModificationToolDeps {
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
   modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
+  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
 }
 
 /**
@@ -45,6 +50,13 @@ const ModifyWeekSchema = z.object({});
 export interface ModifyWeekParams {
   userId: string;
   targetDay: string;
+  changeRequest: string;
+}
+
+const ModifyPlanSchema = z.object({});
+
+export interface ModifyPlanParams {
+  userId: string;
   changeRequest: string;
 }
 /**
@@ -122,8 +134,46 @@ This intelligently updates the weekly pattern to maintain training balance and m
     }
   );
 
+  // Tool 3: Modify Plan
+  const modifyPlanTool = tool(
+    async (): Promise<ModifyPlanResult> => {
+      return await deps.modifyPlan({
+        userId: context.userId,
+        changeRequest: context.message,
+      });
+    },
+    {
+      name: 'modify_plan',
+      description: `Modify the user's overall fitness plan/program structure.
+
+NOTE: All parameters (userId, changeRequest) are automatically filled from context - no input needed.
+
+Use when the user wants to change their PROGRAM-LEVEL settings:
+- Training frequency changes (e.g., "change from 5 to 6 days a week", "I want to train 4 days instead of 3")
+- Adding/removing fixed schedule items (e.g., "add yoga on Monday/Friday mornings", "I joined a spinning class on Wednesdays")
+- Changing their training split (e.g., "switch to push/pull/legs", "I want an upper/lower split")
+- Adjusting overall goals or focus (e.g., "more cardio", "focus on strength", "add more conditioning")
+- Equipment/facility changes (e.g., "I joined a new gym with more equipment", "I only have dumbbells now")
+
+DO NOT use for day-to-day or single week changes - use modify_week or modify_workout instead.
+This tool is for STRUCTURAL/ARCHITECTURAL changes to the entire training program.
+
+Examples that should use modify_plan:
+- "Can we change to 6 days a week?" → YES (frequency change)
+- "I started yoga on Mondays and Fridays" → YES (adding anchors)
+- "Switch me to a PPL split" → YES (program structure)
+- "I want more cardio overall" → YES (program balance)
+
+Examples that should NOT use modify_plan:
+- "Can I do legs today?" → NO (use modify_week)
+- "Skip today's workout" → NO (use modify_week)`,
+      schema: ModifyPlanSchema,
+    }
+  );
+
   return [
     modifyWorkoutTool,
     modifyWeekTool,
+    modifyPlanTool,
   ];
 };

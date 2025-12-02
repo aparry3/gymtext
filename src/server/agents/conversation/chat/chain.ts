@@ -1,6 +1,4 @@
 import { CHAT_TRIAGE_SYSTEM_PROMPT, buildTriageUserMessage } from '@/server/agents/conversation/chat/prompts';
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
 import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileUpdateAgent } from '../../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence, Runnable } from '@langchain/core/runnables';
@@ -8,11 +6,11 @@ import { MessageIntent, TriageResult, TriageResultSchema, ChatInput, ChatAfterPa
 import { updatesAgentRunnable } from './updates/chain';
 // import { questionsAgentRunnable } from './questions/chain';
 import { createModificationsAgent } from './modifications/chain';
-import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService } from './modifications/tools';
+import { createModificationTools, type WorkoutModificationService, type MicrocycleModificationService, type PlanModificationServiceInterface } from './modifications/tools';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 
 // Re-export types for backward compatibility
-export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService };
+export type { ChatAgentDeps, WorkoutModificationService, MicrocycleModificationService, PlanModificationServiceInterface };
 
 /**
  * Chat Agent Factory
@@ -50,6 +48,7 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     {
       modifyWorkout: deps.modifyWorkout,
       modifyWeek: deps.modifyWeek,
+      modifyPlan: deps.modifyPlan,
     }
   );
 
@@ -175,17 +174,4 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
 
     return result;
   });
-};
-
-/**
- * @deprecated Legacy export for backward compatibility - use createChatAgent instead
- */
-export const chatAgent = async (
-  deps: ChatAgentDeps,
-  user: UserWithProfile,
-  message: string,
-  previousMessages?: Message[],
-) => {
-  const agent = createChatAgent(deps);
-  return agent.invoke({ user, message, previousMessages });
 };
