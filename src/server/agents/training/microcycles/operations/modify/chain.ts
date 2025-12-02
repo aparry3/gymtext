@@ -46,6 +46,8 @@ export const createModifyMicrocycleAgent = () => {
 
     // Execute the chain
     const result =await sequence.invoke(input);
+    console.log(`[MicrocycleModify] Modified microcycle for week ${input.weekNumber}`);
+
     return {
       days: result.microcycle.days,
       description: result.microcycle.overview,

@@ -33,17 +33,18 @@ export interface ModifyFitnessPlanResult {
  */
 export const createModifyFitnessPlanAgent = () => {
   return createRunnableAgent<ModifyFitnessPlanInput, ModifyFitnessPlanResult>(async (input) => {
-    // Step 1: Create modify runnable (modify-specific)
-    const modifyFitnessPlanRunnable = createModifyFitnessPlanRunnable({
-      config: {
-        model: 'gpt-5-mini'
-      }
-    });
+    try {
+      // Step 1: Create modify runnable (modify-specific)
+      const modifyFitnessPlanRunnable = createModifyFitnessPlanRunnable({
+        config: {
+          model: 'gpt-5-mini'
+        }
+      });
 
-    // Step 2: Create formatting agent (reuse from generation)
-    const formattedAgent = createFormattedFitnessPlanAgent({
-      operationName: 'format modified fitness plan',
-    });
+      // Step 2: Create formatting agent (reuse from generation)
+      const formattedAgent = createFormattedFitnessPlanAgent({
+        operationName: 'format modified fitness plan',
+      });
 
 
     // Compose the chain: modify → parallel (formatted + message)
@@ -54,8 +55,8 @@ export const createModifyFitnessPlanAgent = () => {
       })
     ]);
 
-    // Execute the chain
-    const result = await sequence.invoke(input);
+      // Execute the chain
+      const result = await sequence.invoke(input);
 
     // Return the final result
     return {
