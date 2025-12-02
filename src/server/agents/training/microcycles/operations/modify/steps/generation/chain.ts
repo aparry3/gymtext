@@ -12,7 +12,10 @@ export type { ModifyMicrocycleInput } from './types';
  * Takes ModifyMicrocycleInput and produces MicrocycleChainContext (with wasModified)
  */
 export const createModifyMicrocycleRunnable = (deps?: MicrocycleAgentDeps) => {
-  const model = initializeModel(ModifyMicrocycleOutputSchema, deps?.config);
+  const model = initializeModel(ModifyMicrocycleOutputSchema, {
+    ...deps?.config,
+    agentPath: 'training/microcycles/modify/steps/generation'
+  });
 
   return createRunnableAgent<ModifyMicrocycleInput, MicrocycleChainContext & { wasModified: boolean }>(async (input) => {
     const { user, currentMicrocycle, changeRequest, currentDayOfWeek } = input;

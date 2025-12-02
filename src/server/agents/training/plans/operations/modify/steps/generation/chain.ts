@@ -17,7 +17,10 @@ interface ModifyChainContext extends FitnessPlanChainContext {
  * Takes ModifyFitnessPlanInput and produces ModifyChainContext
  */
 export const createModifyFitnessPlanRunnable = (deps?: AgentDeps) => {
-  const model = initializeModel(ModifyFitnessPlanOutputSchema, deps?.config);
+  const model = initializeModel(ModifyFitnessPlanOutputSchema, {
+    ...deps?.config,
+    agentPath: 'training/plans/modify/steps/generation'
+  });
 
   return createRunnableAgent<ModifyFitnessPlanInput, ModifyChainContext>(async (input) => {
     const { user, currentPlan, changeRequest } = input;
