@@ -3,6 +3,7 @@ import { createChatAgent } from '@/server/agents/conversation/chat/chain';
 import { MessageService } from './messageService';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { ModificationService } from '@/server/services/orchestration/modificationService';
 import { userService } from '@/server/services/user/userService';
 import { now } from '@/shared/utils/date';
 
@@ -28,11 +29,13 @@ export class ChatService {
   private messageService: MessageService;
   private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
+  private modificationService: ModificationService;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
     this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
+    this.modificationService = ModificationService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -102,10 +105,10 @@ export class ChatService {
         ? user
         : await userService.getUser(user.id) || user;
 
-      // Create chat agent with simplified dependencies
-      // Note: Modification services are now handled by ModificationService singleton
+      // Create chat agent with dependencies
       const agent = createChatAgent({
         saveProfile: this.fitnessProfileService.saveProfile.bind(this.fitnessProfileService),
+        makeModification: this.modificationService.makeModification.bind(this.modificationService),
       });
 
       // Invoke the agent with user that includes profile

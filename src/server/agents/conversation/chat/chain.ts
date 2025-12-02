@@ -5,7 +5,7 @@ import { initializeModel, createRunnableAgent } from '../../base';
 import { createProfileUpdateAgent, ProfileUpdateOutput } from '../../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { ChatInput, ChatOutput, ChatAgentDeps } from './types';
-import { modificationService, type MakeModificationResult } from '@/server/services/orchestration/modificationService';
+import type { MakeModificationResult } from '@/server/services/orchestration/modificationService';
 import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 
 // Re-export types for backward compatibility
@@ -45,10 +45,10 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     const targetDay = DAY_NAMES[weekday - 1];
 
     // 2. Create the single make_modification wrapper tool
-    // Calls the ModificationService which orchestrates the modifications agent
+    // Calls the injected makeModification dependency which orchestrates the modifications agent
     const makeModificationTool = tool(
       async (): Promise<MakeModificationResult> => {
-        return await modificationService.makeModification({
+        return await deps.makeModification({
           user,
           message,
           previousMessages,

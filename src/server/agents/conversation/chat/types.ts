@@ -4,6 +4,7 @@ import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
+import type { MakeModificationParams, MakeModificationResult } from '@/server/services/orchestration/modificationService';
 
 /**
  * Intent types that the triage agent can identify
@@ -67,8 +68,8 @@ export interface ChatOutput {
 
 /**
  * Dependencies for chat agent
- * Note: Modification services are now handled by ModificationService singleton
  */
 export interface ChatAgentDeps extends AgentDeps {
   saveProfile: (userId: string, profile: string) => Promise<void>;
+  makeModification: (params: MakeModificationParams) => Promise<MakeModificationResult>;
 }
