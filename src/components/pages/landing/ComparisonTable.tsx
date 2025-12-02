@@ -5,7 +5,7 @@ const comparisons = [
   {
     feature: 'Monthly Cost',
     traditional: '$200-400',
-    gymtext: '$9.99',
+    gymtext: '$19.99',
     traditional_bad: true,
   },
   {

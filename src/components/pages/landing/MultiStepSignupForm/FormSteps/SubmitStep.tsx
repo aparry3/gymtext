@@ -52,7 +52,7 @@ export function SubmitStep({ register, errors }: SubmitStepProps) {
       <div className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-2xl font-bold text-foreground">$9.99/month</h3>
+            <h3 className="text-2xl font-bold text-foreground">$19.99/month</h3>
             <p className="text-sm text-muted-foreground">Cancel anytime, no questions asked</p>
           </div>
         </div>
