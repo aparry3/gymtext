@@ -59,6 +59,29 @@ export interface ChatAfterParallelInput extends ChatInput {
 export type ChatSubagentInput = ChatAfterParallelInput;
 
 /**
+ * Input for the Modifications Agent (simplified, no triage dependency)
+ * Contains all context needed to process modification requests
+ */
+export interface ModificationsAgentInput {
+  user: UserWithProfile;
+  message: string;
+  previousMessages?: Message[];
+  currentWorkout?: WorkoutInstance;
+  profile?: ProfileUpdateOutput;
+  workoutDate: Date;
+  targetDay: string;
+}
+
+/**
+ * Schema for modifications agent output
+ */
+export const ModificationsResponseSchema = z.object({
+    messages: z.array(z.string()).describe('array of messages to send (e.g., week update message, workout message)'),
+});
+
+export type ModificationsResponse = z.infer<typeof ModificationsResponseSchema>;
+
+/**
  * Output from chat agent
  */
 export interface ChatOutput {

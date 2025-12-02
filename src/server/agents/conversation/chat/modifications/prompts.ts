@@ -1,4 +1,4 @@
-import type { ChatSubagentInput } from '../types';
+import type { ModificationsAgentInput } from '../types';
 import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
 
 /**
@@ -114,7 +114,7 @@ Tool: modify_plan (changing training split)`;
  * Note: Conversation history is now passed as structured messages in the message array,
  * not concatenated into this prompt.
  */
-export const buildModificationsUserMessage = (input: ChatSubagentInput): string => {
+export const buildModificationsUserMessage = (input: ModificationsAgentInput): string => {
   const { user } = input;
 
   // Get current date/time in user's timezone
