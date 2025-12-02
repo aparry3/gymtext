@@ -61,11 +61,13 @@ The application follows a clean architecture pattern with clear separation of co
    - Validates incoming requests
    - Delegates business logic to services
    - Returns formatted responses
+   - **Stateless**: For onboarding, receives and returns partial profile state via SSE
 
 2. **Services Layer** (`src/server/services/`)
    - Contains all business logic
    - Orchestrates operations between agents and repositories
    - Handles complex workflows and state management
+   - **Pass-Through**: Onboarding services process partial objects without intermediate DB writes
    - Never directly instantiates LLMs - delegates to agents
 
 3. **Agents Layer** (`src/server/agents/`)
@@ -97,7 +99,8 @@ Core tables include:
 - `users` - User accounts and authentication
 - `fitness_profiles` - User fitness data and preferences  
 - `conversations` & `messages` - SMS conversation history
-- `fitness_plans` - Simplified fitness plans with mesocycles array and progress tracking
+- `fitness_plans` - Simplified fitness plans with progress tracking
+- `mesocycles` - Dedicated table for training phases (linked to plans)
 - `microcycles` - Weekly training patterns (generated on-demand)
 - `workout_instances` - Individual workouts with enhanced block structure
 - `subscriptions` - Stripe subscription tracking
@@ -111,10 +114,11 @@ Specialized agents in `src/server/agents/`:
   - Supports multiple models (GPT-4, Gemini 2.0 Flash)
   - Keeps responses concise for SMS format
 - `userProfileAgent` (`profile/chain.ts`) - Extracts and updates user profiles from conversations
+  - **Stateless Operation**: Receives `currentProfile` and `currentUser` partial objects
   - Analyzes messages for fitness information with confidence scoring
-  - Uses `profilePatchTool` for automatic profile updates
+  - Returns *updated* partial objects to the caller (does not write to DB)
   - Supports batch message processing for conversation history
-  - Only updates with high confidence (>0.5 threshold)
+  - Only updates with high confidence (>0.75 threshold)
 
 #### Fitness Planning
 - `generateFitnessPlanAgent` - Creates fitness plans with simplified mesocycle structure
@@ -125,9 +129,10 @@ Specialized agents in `src/server/agents/`:
 
 #### Agent Tools
 - `profilePatchTool` (`tools/profilePatchTool.ts`) - LangChain tool for profile updates
+  - **Pure Function**: Takes partial profile, returns updated partial profile
   - Validates confidence scores before applying updates
   - Tracks which fields were updated and why
-  - Integrates with ProfilePatchService for database persistence
+  - **No Side Effects**: Does not interact with the database
 
 **Important**: Services should use these agents, not instantiate their own LLMs
 
@@ -145,10 +150,10 @@ Required environment variables (see .env.example):
 The chat system uses a two-agent architecture for processing messages:
 
 1. **Profile Extraction Phase** - UserProfileAgent analyzes incoming messages
-   - Extracts fitness-related information with confidence scoring
-   - Updates user profile automatically via profilePatchTool
-   - Only updates when confidence exceeds 0.5 threshold
-   - Returns profile state and update summary
+   - **Input**: User message + Current Partial Profile State (from client)
+   - Extracts fitness-related information with confidence scoring (>0.75)
+   - **Output**: Updated Partial Profile State + Explanation
+   - No database writes occur in this phase
 
 2. **Response Generation Phase** - ChatAgent generates the response
    - Receives updated profile from UserProfileAgent
@@ -162,7 +167,7 @@ This separation ensures:
 - Services don't need to manage LLM instantiation
 - Clean separation of concerns between data extraction and conversation
 
-**Onboarding Chat**: A specialized flow for new users that focuses on profile building through conversation to prepare for SMS-based coaching (see `_claude_docs/chat/CHAT_FEATURE_PRD.md`)
+**Onboarding Chat**: A specialized flow for new users that uses a **pass-through architecture**. The frontend maintains state, sends it to the API, and receives updates via SSE. The database is only updated upon final confirmation.
 
 ### Admin Authentication
 
