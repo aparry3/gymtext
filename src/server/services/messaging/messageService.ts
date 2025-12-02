@@ -236,7 +236,7 @@ export class MessageService {
    * @param messages - Array of messages ordered oldest to newest
    * @returns Object with pending (inbound after last outbound) and context (up to and including last outbound)
    */
-  splitMessages(messages: Message[]): { pending: Message[]; context: Message[] } {
+  splitMessages(messages: Message[], contextMessages: number): { pending: Message[]; context: Message[] } {
     // Find index of last outbound message
     let lastOutboundIndex = -1;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -248,7 +248,7 @@ export class MessageService {
 
     // Everything after last outbound is pending, everything up to and including is context
     const context = lastOutboundIndex >= 0 ? messages.slice(0, lastOutboundIndex + 1) : [];
-    const pending = lastOutboundIndex >= 0 ? messages.slice(lastOutboundIndex + 1) : messages;
+    const pending = lastOutboundIndex >= 0 ? messages.slice(lastOutboundIndex + 1, lastOutboundIndex + 1 + contextMessages) : messages;
 
     return { pending, context };
   }

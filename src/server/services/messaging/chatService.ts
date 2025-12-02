@@ -8,7 +8,7 @@ import { now } from '@/shared/utils/date';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
-const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '10');
+const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '5');
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
@@ -73,11 +73,11 @@ export class ChatService {
       // We fetch extra to ensure we have enough context after splitting
       const allMessages = await this.messageService.getRecentMessages(
         user.id,
-        CHAT_CONTEXT_MESSAGES + 20
+        20
       );
 
       // Split into pending (needs response) and context (conversation history)
-      const { pending, context } = this.messageService.splitMessages(allMessages);
+      const { pending, context } = this.messageService.splitMessages(allMessages, CHAT_CONTEXT_MESSAGES);
 
       // Early return if no pending messages
       if (pending.length === 0) {
@@ -93,9 +93,6 @@ export class ChatService {
         contextCount: context.length,
         aggregatedContent: message.substring(0, 100) + (message.length > 100 ? '...' : '')
       });
-
-      // Trim context to configured window size
-      const contextMessages = context.slice(-CHAT_CONTEXT_MESSAGES);
 
       // Fetch current workout
       const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
@@ -115,7 +112,7 @@ export class ChatService {
       const chatResult = await agent.invoke({
         user: userWithProfile,
         message,
-        previousMessages: contextMessages,
+        previousMessages: context,
         currentWorkout: currentWorkout,
       });
 
