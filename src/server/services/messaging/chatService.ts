@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { createChatAgent } from '@/server/agents/conversation/chat/chain';
+import { createChatAgent } from '@/server/agents/conversation/chain';
 import { MessageService } from './messageService';
 import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';

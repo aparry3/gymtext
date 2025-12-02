@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
-import { CHAT_SYSTEM_PROMPT, buildChatUserMessage } from '@/server/agents/conversation/chat/prompts';
-import { initializeModel, createRunnableAgent } from '../../base';
-import { createProfileUpdateAgent, ProfileUpdateOutput } from '../../profile';
+import { CHAT_SYSTEM_PROMPT, buildChatUserMessage } from '@/server/agents/conversation/prompts';
+import { initializeModel, createRunnableAgent } from '../base';
+import { createProfileUpdateAgent, ProfileUpdateOutput } from '../profile';
 import { RunnableLambda, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { ChatInput, ChatOutput, ChatAgentDeps } from './types';
 import type { MakeModificationResult } from '@/server/services/orchestration/modificationService';
@@ -99,7 +99,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
       }
 
       // Initialize Model with the single make_modification tool
-      const model = initializeModel(undefined, deps.config).bindTools([makeModificationTool]);
+      const model = initializeModel(undefined, deps.config, {tools: [makeModificationTool]});
 
       // Build Messages
       const userMessageContent = buildChatUserMessage(
