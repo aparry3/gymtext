@@ -11,12 +11,12 @@ export type { Agent, AgentDeps, AgentConfig } from './base';
 export { createFitnessPlanAgent } from './training/plans';
 
 // Conversation Agents
-export { type ChatAgentDeps } from './conversation/chat/chain';
+export { type ChatAgentConfig } from './conversation/chain';
 
 // Modification Agents (standalone agent)
 export {
   createModificationsAgent,
-  type ModificationsAgentDeps,
+  type ModificationsAgentConfig,
   type ModificationsAgentInput,
   type ModificationsResponse,
   createModificationTools,
@@ -36,6 +36,6 @@ export * from './messaging/welcomeMessage/chain';
 export * from './messaging/planSummary/chain';
 export * from './messaging/planMicrocycleCombined/chain';
 export * from './messaging/updatedMicrocycleMessage/chain';
-export * from './conversation/chat/chain';
+export * from './conversation/chain';
 export * from './training/microcycles';
 export * from './training/workouts/operations/generate';

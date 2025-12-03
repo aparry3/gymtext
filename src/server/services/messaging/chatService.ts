@@ -1,10 +1,14 @@
+import { z } from 'zod';
+import { tool } from '@langchain/core/tools';
 import { UserWithProfile } from '@/server/models/userModel';
-import { createChatAgent } from '@/server/agents/conversation/chat/chain';
+import { createChatAgent } from '@/server/agents/conversation/chain';
 import { MessageService } from './messageService';
-import { FitnessProfileService } from '../user/fitnessProfileService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { ProfileService } from '@/server/services/orchestration/profileService';
+import { ModificationService } from '@/server/services/orchestration/modificationService';
 import { userService } from '@/server/services/user/userService';
 import { now } from '@/shared/utils/date';
+import type { ToolResult } from '@/server/agents/base';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -13,26 +17,29 @@ const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '5')
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
  *
- * This service orchestrates the two-agent architecture:
- * 1. UserProfileAgent - Extracts and updates profile information
- * 2. ChatAgent - Generates conversational responses
+ * This service orchestrates the chat agent which operates in an agentic loop:
+ * - Agent decides when to call tools (update_profile, make_modification)
+ * - Agent generates a final conversational response
+ * - Tool messages are accumulated and sent after the agent's response
  *
  * The service ensures that:
- * - Profile updates happen automatically when users provide new information
- * - Chat responses acknowledge profile updates when they occur
+ * - Profile updates happen when the agent decides to call update_profile
+ * - Modifications happen when the agent decides to call make_modification
  * - Conversation history and context are properly maintained
  * - SMS length constraints are enforced
  */
 export class ChatService {
   private static instance: ChatService;
   private messageService: MessageService;
-  private fitnessProfileService: FitnessProfileService;
   private workoutInstanceService: WorkoutInstanceService;
+  private profileService: ProfileService;
+  private modificationService: ModificationService;
 
   private constructor() {
     this.messageService = MessageService.getInstance();
-    this.fitnessProfileService = FitnessProfileService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
+    this.profileService = ProfileService.getInstance();
+    this.modificationService = ModificationService.getInstance();
   }
 
   public static getInstance(): ChatService {
@@ -102,13 +109,54 @@ export class ChatService {
         ? user
         : await userService.getUser(user.id) || user;
 
-      // Create chat agent with simplified dependencies
-      // Note: Modification services are now handled by ModificationService singleton
+      // Create tools as thin wrappers around orchestration services
+      const updateProfileTool = tool(
+        async (): Promise<ToolResult> => {
+          return this.profileService.updateProfile(userWithProfile.id, message);
+        },
+        {
+          name: 'update_profile',
+          description: `Record fitness information from the user's message to their profile.
+
+Use this tool when the user shares:
+- Personal records (PRs) or achievements
+- Injuries or physical limitations
+- Goals or preferences
+- Equipment or gym access changes
+- Schedule or availability changes
+
+The tool will analyze the message and update their fitness profile accordingly.
+All context is automatically provided - no parameters needed.`,
+          schema: z.object({}),
+        }
+      );
+
+      const makeModificationTool = tool(
+        async (): Promise<ToolResult> => {
+          return this.modificationService.makeModification(userWithProfile.id, message);
+        },
+        {
+          name: 'make_modification',
+          description: `Make changes to the user's workout, weekly schedule, or training plan.
+
+Use this tool when the user wants to:
+- Change today's workout (swap exercises, different constraints, different equipment)
+- Get a different workout type or muscle group than scheduled
+- Modify their weekly training schedule
+- Make program-level changes (frequency, training splits, overall focus)
+
+This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
+All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
+          schema: z.object({}),
+        }
+      );
+
+      // Create chat agent with tools
       const agent = createChatAgent({
-        saveProfile: this.fitnessProfileService.saveProfile.bind(this.fitnessProfileService),
+        tools: [updateProfileTool, makeModificationTool],
       });
 
-      // Invoke the agent with user that includes profile
+      // Invoke the agent
       const chatResult = await agent.invoke({
         user: userWithProfile,
         message,
@@ -116,27 +164,24 @@ export class ChatService {
         currentWorkout: currentWorkout,
       });
 
-      // Handle both single response and multiple messages
-      let messages: string[];
+      // ChatOutput always returns messages array
+      // Order: [agent's final response, ...tool messages]
+      const { messages } = chatResult;
 
-      if (chatResult.messages && chatResult.messages.length > 0) {
-        // Multiple messages from modifications agent
-        messages = chatResult.messages;
-      } else if (chatResult.response) {
-        // Single response from updates agent or other subagents
-        messages = [chatResult.response];
-      } else {
-        throw new Error('Chat agent returned invalid response');
+      if (!messages || messages.length === 0) {
+        throw new Error('Chat agent returned no messages');
       }
 
       // Enforce SMS length constraints on each message
-      const validatedMessages = messages.map(msg => {
-        const trimmed = msg.trim();
-        if (trimmed.length > SMS_MAX_LENGTH) {
-          return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';
-        }
-        return trimmed;
-      });
+      const validatedMessages = messages
+        .filter(msg => msg && msg.trim())
+        .map(msg => {
+          const trimmed = msg.trim();
+          if (trimmed.length > SMS_MAX_LENGTH) {
+            return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';
+          }
+          return trimmed;
+        });
 
       return validatedMessages;
 

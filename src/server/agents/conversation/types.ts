@@ -1,9 +1,36 @@
 import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
-import type { AgentDeps } from '@/server/agents/base';
+import type { AgentConfig, AgentDeps } from '@/server/agents/base';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
+import type { StructuredToolInterface } from '@langchain/core/tools';
+
+/**
+ * Standardized return type for agent tools/subagents in the agentic loop.
+ * This pattern enables natural conversation flow where tools provide context
+ * for continuation and optionally send messages to the user.
+ */
+export interface AgentToolResult {
+  /** Optional SMS messages to send to user (accumulates across iterations) */
+  messages?: string[];
+  /** Required context for agent continuation (appended to conversation context) */
+  response: string;
+}
+
+/**
+ * Internal state for the agentic loop
+ */
+export interface AgentLoopState {
+  /** Tool messages accumulated across all iterations */
+  accumulatedToolMessages: string[];
+  /** Context built up from tool responses */
+  context: string;
+  /** Current iteration count */
+  iteration: number;
+  /** Whether profile was updated during the conversation */
+  profileUpdated: boolean;
+}
 
 /**
  * Intent types that the triage agent can identify
@@ -41,6 +68,15 @@ export interface ChatInput {
 }
 
 /**
+ * Configuration for chat agent factory
+ * Tools are passed at agent creation time, not invoke time.
+ */
+export interface ChatAgentConfig extends AgentConfig {
+  /** Tools provided by the calling service */
+  tools: StructuredToolInterface[];
+}
+
+/**
  * Input after parallel phase (profile + triage completed)
  * This type represents the complete context available to subagents.
  * All fields from ChatInput flow through, plus profile and triage results.
@@ -58,17 +94,19 @@ export type ChatSubagentInput = ChatAfterParallelInput;
 
 /**
  * Output from chat agent
+ *
+ * Messages are ordered: [agent's final response, ...accumulated tool messages]
+ * The agent's conversational response is sent first, followed by any tool-generated messages.
  */
 export interface ChatOutput {
-  response?: string; // Single response (for backward compatibility)
-  messages?: string[]; // Multiple messages (for modifications that send multiple messages)
+  /** All messages to send to user, in order */
+  messages: string[];
+  /** Whether profile was updated during the conversation */
   profileUpdated: boolean;
 }
 
 /**
  * Dependencies for chat agent
- * Note: Modification services are now handled by ModificationService singleton
+ * @deprecated Tools are now passed in ChatInput. Use AgentConfig directly.
  */
-export interface ChatAgentDeps extends AgentDeps {
-  saveProfile: (userId: string, profile: string) => Promise<void>;
-}
+export type ChatAgentDeps = AgentDeps;
