@@ -1,6 +1,6 @@
 import { WorkoutModificationService } from './workoutModificationService';
 import { PlanModificationService } from './planModificationService';
-import { createModificationsAgent } from '@/server/agents/modifications';
+import { createModificationsAgent, createModificationTools } from '@/server/agents/modifications';
 import { userService } from '../user/userService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { MessageService } from '../messaging/messageService';
@@ -75,13 +75,23 @@ export class ModificationService {
         messageCount: previousMessages.length,
       });
 
-      // Create the modifications agent with service dependencies
-      // TODO: In a future refactor, create tools here instead of passing bound methods
-      const agent = createModificationsAgent({
-        modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
-        modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
-        modifyPlan: this.planModificationService.modifyPlan.bind(this.planModificationService),
-      });
+      // Create modification tools with context and service dependencies
+      const tools = createModificationTools(
+        {
+          userId,
+          message,
+          workoutDate: today,
+          targetDay,
+        },
+        {
+          modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
+          modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
+          modifyPlan: this.planModificationService.modifyPlan.bind(this.planModificationService),
+        }
+      );
+
+      // Create the modifications agent with tools
+      const agent = createModificationsAgent({ tools });
 
       // Invoke the agent
       const result = await agent.invoke({

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
-import type { AgentDeps } from '@/server/agents/base';
+import type { AgentConfig, AgentDeps } from '@/server/agents/base';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
 import type { StructuredToolInterface } from '@langchain/core/tools';
@@ -65,6 +65,13 @@ export interface ChatInput {
   message: string;
   previousMessages?: Message[];
   currentWorkout?: WorkoutInstance;
+}
+
+/**
+ * Configuration for chat agent factory
+ * Tools are passed at agent creation time, not invoke time.
+ */
+export interface ChatAgentConfig extends AgentConfig {
   /** Tools provided by the calling service */
   tools: StructuredToolInterface[];
 }

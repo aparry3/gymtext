@@ -1,9 +1,9 @@
 import { CHAT_SYSTEM_PROMPT, buildChatUserMessage, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
-import { initializeModel, createRunnableAgent, AgentConfig } from '../base';
-import { ChatInput, ChatOutput, ChatAgentDeps, AgentToolResult, AgentLoopState } from './types';
+import { initializeModel, createRunnableAgent } from '../base';
+import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
 
 // Re-export types for backward compatibility
-export type { ChatAgentDeps };
+export type { ChatAgentDeps, ChatAgentConfig };
 
 const MAX_ITERATIONS = 5;
 
@@ -21,21 +21,21 @@ const TOOL_PRIORITY: Record<string, number> = {
  * The conversation coordinator that operates in a loop until generating a final response.
  *
  * Architecture:
- * 1. Agent receives user message, context, and tools from service
+ * 1. Agent receives user message and context; tools are bound at creation time
  * 2. Agent decides to call a tool or respond
  * 3. If tool called: execute, accumulate messages, append response to context, continue loop
  * 4. If no tool: generate final response, exit loop
  * 5. Return [final response, ...accumulated tool messages]
  *
- * Tools are provided by the calling service (ChatService), not created here.
+ * Tools are provided by the calling service (ChatService) via config, not created here.
  * This keeps the agent focused on orchestration, not tool creation.
  *
- * @param config - Optional agent configuration
+ * @param config - Agent configuration including tools
  * @returns Agent that processes chat messages
  */
-export const createChatAgent = (config?: AgentConfig) => {
+export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, currentWorkout, tools } = input;
+    const { user, message, currentWorkout } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
     // Initialize loop state

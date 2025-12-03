@@ -151,16 +151,17 @@ All context (user, message, date, etc.) is automatically provided - no parameter
         }
       );
 
-      // Create chat agent (no deps needed - tools passed via input)
-      const agent = createChatAgent();
+      // Create chat agent with tools
+      const agent = createChatAgent({
+        tools: [updateProfileTool, makeModificationTool],
+      });
 
-      // Invoke the agent with tools
+      // Invoke the agent
       const chatResult = await agent.invoke({
         user: userWithProfile,
         message,
         previousMessages: context,
         currentWorkout: currentWorkout,
-        tools: [updateProfileTool, makeModificationTool],
       });
 
       // ChatOutput always returns messages array

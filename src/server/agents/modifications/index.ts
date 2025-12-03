@@ -1,9 +1,9 @@
 // Types
-export type { ModificationsAgentInput, ModificationsResponse } from './types';
+export type { ModificationsAgentInput, ModificationsResponse, ModificationsAgentConfig } from './types';
 export { ModificationsResponseSchema } from './types';
 
 // Agent factory
-export { createModificationsAgent, type ModificationsAgentDeps } from './chain';
+export { createModificationsAgent } from './chain';
 
 // Tools
 export {

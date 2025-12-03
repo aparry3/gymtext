@@ -3,6 +3,8 @@ import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
+import type { AgentConfig } from '@/server/agents/base';
+import type { StructuredToolInterface } from '@langchain/core/tools';
 
 /**
  * Input for the Modifications Agent
@@ -16,6 +18,15 @@ export interface ModificationsAgentInput {
   profile?: ProfileUpdateOutput;
   workoutDate: Date;
   targetDay: string;
+}
+
+/**
+ * Configuration for modifications agent factory
+ * Tools are passed at agent creation time, not invoke time.
+ */
+export interface ModificationsAgentConfig extends AgentConfig {
+  /** Tools provided by the calling service */
+  tools: StructuredToolInterface[];
 }
 
 /**

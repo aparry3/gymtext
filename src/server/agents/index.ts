@@ -11,12 +11,12 @@ export type { Agent, AgentDeps, AgentConfig } from './base';
 export { createFitnessPlanAgent } from './training/plans';
 
 // Conversation Agents
-export { type ChatAgentDeps } from './conversation/chain';
+export { type ChatAgentConfig } from './conversation/chain';
 
 // Modification Agents (standalone agent)
 export {
   createModificationsAgent,
-  type ModificationsAgentDeps,
+  type ModificationsAgentConfig,
   type ModificationsAgentInput,
   type ModificationsResponse,
   createModificationTools,
