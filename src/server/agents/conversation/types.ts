@@ -4,7 +4,7 @@ import type { Message } from '@/server/models/messageModel';
 import type { AgentDeps } from '@/server/agents/base';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
-import type { MakeModificationParams, MakeModificationResult } from '@/server/services/orchestration/modificationService';
+import type { StructuredToolInterface } from '@langchain/core/tools';
 
 /**
  * Standardized return type for agent tools/subagents in the agentic loop.
@@ -65,6 +65,8 @@ export interface ChatInput {
   message: string;
   previousMessages?: Message[];
   currentWorkout?: WorkoutInstance;
+  /** Tools provided by the calling service */
+  tools: StructuredToolInterface[];
 }
 
 /**
@@ -98,8 +100,6 @@ export interface ChatOutput {
 
 /**
  * Dependencies for chat agent
+ * @deprecated Tools are now passed in ChatInput. Use AgentConfig directly.
  */
-export interface ChatAgentDeps extends AgentDeps {
-  saveProfile: (userId: string, profile: string) => Promise<void>;
-  makeModification: (params: MakeModificationParams) => Promise<MakeModificationResult>;
-}
+export type ChatAgentDeps = AgentDeps;

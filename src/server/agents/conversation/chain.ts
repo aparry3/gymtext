@@ -1,10 +1,6 @@
-import { z } from 'zod';
-import { tool } from '@langchain/core/tools';
 import { CHAT_SYSTEM_PROMPT, buildChatUserMessage, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
-import { initializeModel, createRunnableAgent } from '../base';
-import { createProfileUpdateAgent } from '../profile';
+import { initializeModel, createRunnableAgent, AgentConfig } from '../base';
 import { ChatInput, ChatOutput, ChatAgentDeps, AgentToolResult, AgentLoopState } from './types';
-import { formatForAI, now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 
 // Re-export types for backward compatibility
 export type { ChatAgentDeps };
@@ -25,22 +21,21 @@ const TOOL_PRIORITY: Record<string, number> = {
  * The conversation coordinator that operates in a loop until generating a final response.
  *
  * Architecture:
- * 1. Agent receives user message and context
+ * 1. Agent receives user message, context, and tools from service
  * 2. Agent decides to call a tool or respond
  * 3. If tool called: execute, accumulate messages, append response to context, continue loop
  * 4. If no tool: generate final response, exit loop
  * 5. Return [final response, ...accumulated tool messages]
  *
- * Tools:
- * - `update_profile`: Record fitness information (PRs, injuries, goals)
- * - `make_modification`: Make workout/schedule/program changes
+ * Tools are provided by the calling service (ChatService), not created here.
+ * This keeps the agent focused on orchestration, not tool creation.
  *
- * @param deps - Dependencies injected by the service
+ * @param config - Optional agent configuration
  * @returns Agent that processes chat messages
  */
-export const createChatAgent = (deps: ChatAgentDeps) => {
+export const createChatAgent = (config?: AgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, previousMessages, currentWorkout } = input;
+    const { user, message, currentWorkout, tools } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
     // Initialize loop state
@@ -51,98 +46,8 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
       profileUpdated: false,
     };
 
-    // Track updated profile for passing to subsequent tools
-    let updatedProfile: string | null = null;
-
-    // Calculate context for modifications
-    const today = now(user.timezone).toJSDate();
-    const weekday = getWeekday(today, user.timezone);
-    const targetDay = DAY_NAMES[weekday - 1];
-
-    // Create the update_profile tool
-    const updateProfileTool = tool(
-      async (): Promise<AgentToolResult> => {
-        // Use updated profile if we already updated it this session, otherwise use original
-        const currentProfile = updatedProfile ?? user.profile ?? '';
-        const profileAgent = createProfileUpdateAgent();
-        const result = await profileAgent.invoke({
-          currentProfile,
-          message,
-          user,
-          currentDate: formatForAI(new Date(), user.timezone),
-        });
-
-        // Save profile if updated
-        if (result.wasUpdated) {
-          await deps.saveProfile(user.id, result.updatedProfile);
-          state.profileUpdated = true;
-          // Store updated profile for subsequent tool calls (e.g., make_modification)
-          updatedProfile = result.updatedProfile;
-          // Also update the user object so other tools see the updated profile
-          user.profile = result.updatedProfile;
-          console.log('[CHAT AGENT] Profile updated and saved:', result.updateSummary);
-        }
-
-        return {
-          response: result.wasUpdated
-            ? `Profile updated: ${result.updateSummary}`
-            : 'No profile updates detected from the message.',
-        };
-      },
-      {
-        name: 'update_profile',
-        description: `Record fitness information from the user's message to their profile.
-
-Use this tool when the user shares:
-- Personal records (PRs) or achievements
-- Injuries or physical limitations
-- Goals or preferences
-- Equipment or gym access changes
-- Schedule or availability changes
-
-The tool will analyze the message and update their fitness profile accordingly.
-All context is automatically provided - no parameters needed.`,
-        schema: z.object({}),
-      }
-    );
-
-    // Create the make_modification tool
-    const makeModificationTool = tool(
-      async (): Promise<AgentToolResult> => {
-        const result = await deps.makeModification({
-          user,
-          message,
-          previousMessages,
-          currentWorkout,
-          workoutDate: today,
-          targetDay,
-        });
-
-        return {
-          messages: result.messages,
-          response: result.response,
-        };
-      },
-      {
-        name: 'make_modification',
-        description: `Make changes to the user's workout, weekly schedule, or training plan.
-
-Use this tool when the user wants to:
-- Change today's workout (swap exercises, different constraints, different equipment)
-- Get a different workout type or muscle group than scheduled
-- Modify their weekly training schedule
-- Make program-level changes (frequency, training splits, overall focus)
-
-This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
-All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
-        schema: z.object({}),
-      }
-    );
-
-    const tools = [updateProfileTool, makeModificationTool];
-
-    // Initialize model with tools
-    const model = initializeModel(undefined, deps.config, { tools });
+    // Initialize model with tools provided by service
+    const model = initializeModel(undefined, config, { tools });
 
     // Build initial messages
     const systemMessage = { role: 'system', content: CHAT_SYSTEM_PROMPT };
@@ -200,6 +105,11 @@ All context (user, message, date, etc.) is automatically provided - no parameter
 
             // Track this tool's response
             iterationResponses.push(`[${toolCall.name}]: ${toolResult.response}`);
+
+            // Track if profile was updated (for ChatOutput)
+            if (toolCall.name === 'update_profile' && toolResult.response.includes('Profile updated')) {
+              state.profileUpdated = true;
+            }
 
             // Add tool call to conversation history
             conversationHistory.push({

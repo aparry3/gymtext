@@ -1,56 +1,34 @@
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
-import type { WorkoutInstance } from '@/server/models';
 import { WorkoutModificationService } from './workoutModificationService';
 import { PlanModificationService } from './planModificationService';
 import { createModificationsAgent } from '@/server/agents/modifications';
+import { userService } from '../user/userService';
+import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { MessageService } from '../messaging/messageService';
+import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
+import type { ToolResult } from '@/server/agents/base';
 
 /**
- * Parameters for making a modification via the modifications agent
- */
-export interface MakeModificationParams {
-  user: UserWithProfile;
-  message: string;
-  previousMessages?: Message[];
-  currentWorkout?: WorkoutInstance;
-  workoutDate: Date;
-  targetDay: string;
-}
-
-/**
- * Result from the modification service
- * Conforms to AgentToolResult pattern for use in agentic loop
- */
-export interface MakeModificationResult {
-  success: boolean;
-  messages?: string[];
-  response: string;
-  error?: string;
-}
-
-/**
- * ModificationService
+ * ModificationService - Orchestration service for modifications agent
  *
- * Orchestration service that wraps the modifications agent.
- * Acts as the entry point for all user modification requests.
+ * Handles workout, schedule, and plan modifications via the modifications agent.
+ * Fetches its own context and delegates to specialized sub-services.
  *
- * Responsibilities:
- * - Create and invoke the modifications agent with proper dependencies
- * - Transform agent results into service results
- * - Handle errors gracefully
- *
- * The modifications agent internally chooses which specific modification
- * (workout, week, or plan) to perform based on the user's request.
+ * This is an ORCHESTRATION service - it coordinates agent calls.
+ * For specific modification operations, use WorkoutModificationService or PlanModificationService.
  */
 export class ModificationService {
   private static instance: ModificationService;
 
   private workoutModificationService: WorkoutModificationService;
   private planModificationService: PlanModificationService;
+  private workoutInstanceService: WorkoutInstanceService;
+  private messageService: MessageService;
 
   private constructor() {
     this.workoutModificationService = WorkoutModificationService.getInstance();
     this.planModificationService = PlanModificationService.getInstance();
+    this.workoutInstanceService = WorkoutInstanceService.getInstance();
+    this.messageService = MessageService.getInstance();
   }
 
   public static getInstance(): ModificationService {
@@ -61,26 +39,44 @@ export class ModificationService {
   }
 
   /**
-   * Process a modification request from the user
+   * Process a modification request from a user message
    *
-   * Creates the modifications agent with service dependencies,
-   * invokes it, and returns the result.
+   * Fetches context via entity services, calls the modifications agent,
+   * and returns a standardized ToolResult.
    *
-   * @param params - The modification parameters including user context
-   * @returns Result with success status and messages to send
+   * @param userId - The user's ID
+   * @param message - The user's modification request message
+   * @returns ToolResult with response summary and optional messages
    */
-  public async makeModification(params: MakeModificationParams): Promise<MakeModificationResult> {
-    const { user, message, previousMessages, currentWorkout, workoutDate, targetDay } = params;
-
+  public async makeModification(userId: string, message: string): Promise<ToolResult> {
     console.log('[MODIFICATION_SERVICE] Processing modification request:', {
-      userId: user.id,
+      userId,
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-      targetDay,
-      workoutDate: workoutDate.toISOString(),
     });
 
     try {
+      // Fetch context via entity services
+      const user = await userService.getUser(userId);
+      if (!user) {
+        console.warn('[MODIFICATION_SERVICE] User not found:', userId);
+        return { response: 'User not found.' };
+      }
+
+      const today = now(user.timezone).toJSDate();
+      const weekday = getWeekday(today, user.timezone);
+      const targetDay = DAY_NAMES[weekday - 1];
+      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
+      const previousMessages = await this.messageService.getRecentMessages(userId, 5);
+
+      console.log('[MODIFICATION_SERVICE] Context fetched:', {
+        targetDay,
+        workoutDate: today.toISOString(),
+        hasWorkout: !!currentWorkout,
+        messageCount: previousMessages.length,
+      });
+
       // Create the modifications agent with service dependencies
+      // TODO: In a future refactor, create tools here instead of passing bound methods
       const agent = createModificationsAgent({
         modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
         modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
@@ -93,7 +89,7 @@ export class ModificationService {
         message,
         previousMessages,
         currentWorkout,
-        workoutDate,
+        workoutDate: today,
         targetDay,
       });
 
@@ -103,19 +99,15 @@ export class ModificationService {
       });
 
       return {
-        success: true,
-        messages: result.messages,
         response: result.response,
+        messages: result.messages,
       };
     } catch (error) {
       console.error('[MODIFICATION_SERVICE] Error processing modification:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
       return {
-        success: false,
-        messages: undefined,
         response: `Modification failed: ${errorMessage}`,
-        error: errorMessage,
       };
     }
   }

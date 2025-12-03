@@ -38,6 +38,17 @@ export interface AgentDeps {
 }
 
 /**
+ * Standard tool result type
+ * All tools called by agents should return this
+ */
+export interface ToolResult {
+  /** Summary for the calling agent */
+  response: string;
+  /** SMS messages to send to user (optional) */
+  messages?: string[];
+}
+
+/**
  * Helper to wrap an async function as an Agent
  * Useful for converting legacy agents to the standard interface
  */
