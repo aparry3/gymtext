@@ -11,6 +11,14 @@ export type { ChatAgentDeps };
 
 const MAX_ITERATIONS = 5;
 
+// Tool execution priority (lower = first)
+// Profile updates should happen before modifications so the modification
+// has access to the updated profile (e.g., "I hurt my knee, give me upper body")
+const TOOL_PRIORITY: Record<string, number> = {
+  'update_profile': 1,
+  'make_modification': 2,
+};
+
 /**
  * Chat Agent Factory (Agentic Loop Pattern)
  *
@@ -43,6 +51,9 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
       profileUpdated: false,
     };
 
+    // Track updated profile for passing to subsequent tools
+    let updatedProfile: string | null = null;
+
     // Calculate context for modifications
     const today = now(user.timezone).toJSDate();
     const weekday = getWeekday(today, user.timezone);
@@ -51,7 +62,8 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
     // Create the update_profile tool
     const updateProfileTool = tool(
       async (): Promise<AgentToolResult> => {
-        const currentProfile = user.profile || '';
+        // Use updated profile if we already updated it this session, otherwise use original
+        const currentProfile = updatedProfile ?? user.profile ?? '';
         const profileAgent = createProfileUpdateAgent();
         const result = await profileAgent.invoke({
           currentProfile,
@@ -64,6 +76,10 @@ export const createChatAgent = (deps: ChatAgentDeps) => {
         if (result.wasUpdated) {
           await deps.saveProfile(user.id, result.updatedProfile);
           state.profileUpdated = true;
+          // Store updated profile for subsequent tool calls (e.g., make_modification)
+          updatedProfile = result.updatedProfile;
+          // Also update the user object so other tools see the updated profile
+          user.profile = result.updatedProfile;
           console.log('[CHAT AGENT] Profile updated and saved:', result.updateSummary);
         }
 
@@ -149,53 +165,84 @@ All context (user, message, date, etc.) is automatically provided - no parameter
 
       // Check for tool calls
       if (result.tool_calls && result.tool_calls.length > 0) {
-        const toolCall = result.tool_calls[0];
-        console.log(`[CHAT AGENT] Tool call: ${toolCall.name}`);
+        // Sort tool calls by priority (profile before modification)
+        const sortedToolCalls = [...result.tool_calls].sort(
+          (a, b) => (TOOL_PRIORITY[a.name] ?? 99) - (TOOL_PRIORITY[b.name] ?? 99)
+        );
 
-        // Find and execute the tool
-        const selectedTool = tools.find(t => t.name === toolCall.name);
-        if (!selectedTool) {
-          console.error(`[CHAT AGENT] Tool not found: ${toolCall.name}`);
-          break;
-        }
+        console.log(`[CHAT AGENT] ${sortedToolCalls.length} tool call(s): ${sortedToolCalls.map(tc => tc.name).join(', ')}`);
 
-        try {
-          const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
+        // Track all tool responses for this iteration
+        const iterationResponses: string[] = [];
+        let hasError = false;
 
-          // Accumulate messages if present
-          if (toolResult.messages && toolResult.messages.length > 0) {
-            state.accumulatedToolMessages.push(...toolResult.messages);
-            console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from tool`);
+        // Execute each tool call in priority order
+        for (let i = 0; i < sortedToolCalls.length; i++) {
+          const toolCall = sortedToolCalls[i];
+          const callId = `call_${state.iteration}_${i}`;
+
+          // Find the tool
+          const selectedTool = tools.find(t => t.name === toolCall.name);
+          if (!selectedTool) {
+            console.error(`[CHAT AGENT] Tool not found: ${toolCall.name}`);
+            continue;
           }
 
-          // Update context with tool response
-          state.context = toolResult.response;
+          try {
+            console.log(`[CHAT AGENT] Executing tool: ${toolCall.name}`);
+            const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
 
-          // Add tool call and result to conversation history
-          conversationHistory.push({
-            role: 'assistant',
-            content: '',
-            tool_calls: [{
-              id: `call_${state.iteration}`,
-              type: 'function',
-              function: { name: toolCall.name, arguments: JSON.stringify(toolCall.args) },
-            }],
-          });
-          conversationHistory.push({
-            role: 'tool',
-            content: buildLoopContinuationMessage(toolResult.response),
-            tool_call_id: `call_${state.iteration}`,
-          });
+            // Accumulate messages if present
+            if (toolResult.messages && toolResult.messages.length > 0) {
+              state.accumulatedToolMessages.push(...toolResult.messages);
+              console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from ${toolCall.name}`);
+            }
 
-          console.log(`[CHAT AGENT] Tool complete, continuing loop with context: ${toolResult.response.substring(0, 100)}...`);
-          continue;
-        } catch (error) {
-          console.error(`[CHAT AGENT] Tool error:`, error);
-          state.accumulatedToolMessages.push(
-            "I tried to help but encountered an issue. Please try again!"
-          );
+            // Track this tool's response
+            iterationResponses.push(`[${toolCall.name}]: ${toolResult.response}`);
+
+            // Add tool call to conversation history
+            conversationHistory.push({
+              role: 'assistant',
+              content: '',
+              tool_calls: [{
+                id: callId,
+                type: 'function',
+                function: { name: toolCall.name, arguments: JSON.stringify(toolCall.args) },
+              }],
+            });
+            conversationHistory.push({
+              role: 'tool',
+              content: toolResult.response,
+              tool_call_id: callId,
+            });
+
+            console.log(`[CHAT AGENT] ${toolCall.name} complete: ${toolResult.response.substring(0, 100)}...`);
+          } catch (error) {
+            console.error(`[CHAT AGENT] Tool error (${toolCall.name}):`, error);
+            state.accumulatedToolMessages.push(
+              "I tried to help but encountered an issue. Please try again!"
+            );
+            hasError = true;
+            break;
+          }
+        }
+
+        if (hasError) {
           break;
         }
+
+        // Update context with all tool responses from this iteration
+        state.context = iterationResponses.join('\n');
+
+        // Add continuation message for next iteration
+        conversationHistory.push({
+          role: 'user',
+          content: buildLoopContinuationMessage(state.context),
+        });
+
+        console.log(`[CHAT AGENT] All tools complete, continuing loop`);
+        continue;
       }
 
       // No tool call - this is the final response
