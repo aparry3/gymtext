@@ -19,10 +19,12 @@ export interface MakeModificationParams {
 
 /**
  * Result from the modification service
+ * Conforms to AgentToolResult pattern for use in agentic loop
  */
 export interface MakeModificationResult {
   success: boolean;
-  messages: string[];
+  messages?: string[];
+  response: string;
   error?: string;
 }
 
@@ -96,20 +98,24 @@ export class ModificationService {
       });
 
       console.log('[MODIFICATION_SERVICE] Agent returned:', {
-        messageCount: result.messages.length,
+        messageCount: result.messages?.length ?? 0,
+        response: result.response,
       });
 
       return {
         success: true,
         messages: result.messages,
+        response: result.response,
       };
     } catch (error) {
       console.error('[MODIFICATION_SERVICE] Error processing modification:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
       return {
         success: false,
-        messages: [],
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        messages: undefined,
+        response: `Modification failed: ${errorMessage}`,
+        error: errorMessage,
       };
     }
   }

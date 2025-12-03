@@ -7,6 +7,32 @@ import type { ProfileUpdateOutput } from '@/server/agents/profile';
 import type { MakeModificationParams, MakeModificationResult } from '@/server/services/orchestration/modificationService';
 
 /**
+ * Standardized return type for agent tools/subagents in the agentic loop.
+ * This pattern enables natural conversation flow where tools provide context
+ * for continuation and optionally send messages to the user.
+ */
+export interface AgentToolResult {
+  /** Optional SMS messages to send to user (accumulates across iterations) */
+  messages?: string[];
+  /** Required context for agent continuation (appended to conversation context) */
+  response: string;
+}
+
+/**
+ * Internal state for the agentic loop
+ */
+export interface AgentLoopState {
+  /** Tool messages accumulated across all iterations */
+  accumulatedToolMessages: string[];
+  /** Context built up from tool responses */
+  context: string;
+  /** Current iteration count */
+  iteration: number;
+  /** Whether profile was updated during the conversation */
+  profileUpdated: boolean;
+}
+
+/**
  * Intent types that the triage agent can identify
  */
 export const MessageIntentSchema = z.enum(['updates', 'modifications']);
@@ -59,10 +85,14 @@ export type ChatSubagentInput = ChatAfterParallelInput;
 
 /**
  * Output from chat agent
+ *
+ * Messages are ordered: [agent's final response, ...accumulated tool messages]
+ * The agent's conversational response is sent first, followed by any tool-generated messages.
  */
 export interface ChatOutput {
-  response?: string; // Single response (for backward compatibility)
-  messages?: string[]; // Multiple messages (for modifications that send multiple messages)
+  /** All messages to send to user, in order */
+  messages: string[];
+  /** Whether profile was updated during the conversation */
   profileUpdated: boolean;
 }
 

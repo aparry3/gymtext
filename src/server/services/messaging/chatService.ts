@@ -14,13 +14,14 @@ const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '5')
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
  *
- * This service orchestrates the two-agent architecture:
- * 1. UserProfileAgent - Extracts and updates profile information
- * 2. ChatAgent - Generates conversational responses
+ * This service orchestrates the chat agent which operates in an agentic loop:
+ * - Agent decides when to call tools (update_profile, make_modification)
+ * - Agent generates a final conversational response
+ * - Tool messages are accumulated and sent after the agent's response
  *
  * The service ensures that:
- * - Profile updates happen automatically when users provide new information
- * - Chat responses acknowledge profile updates when they occur
+ * - Profile updates happen when the agent decides to call update_profile
+ * - Modifications happen when the agent decides to call make_modification
  * - Conversation history and context are properly maintained
  * - SMS length constraints are enforced
  */
@@ -119,27 +120,24 @@ export class ChatService {
         currentWorkout: currentWorkout,
       });
 
-      // Handle both single response and multiple messages
-      let messages: string[];
+      // ChatOutput always returns messages array
+      // Order: [agent's final response, ...tool messages]
+      const { messages } = chatResult;
 
-      if (chatResult.messages && chatResult.messages.length > 0) {
-        // Multiple messages from modifications agent
-        messages = chatResult.messages;
-      } else if (chatResult.response) {
-        // Single response from updates agent or other subagents
-        messages = [chatResult.response];
-      } else {
-        throw new Error('Chat agent returned invalid response');
+      if (!messages || messages.length === 0) {
+        throw new Error('Chat agent returned no messages');
       }
 
       // Enforce SMS length constraints on each message
-      const validatedMessages = messages.map(msg => {
-        const trimmed = msg.trim();
-        if (trimmed.length > SMS_MAX_LENGTH) {
-          return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';
-        }
-        return trimmed;
-      });
+      const validatedMessages = messages
+        .filter(msg => msg && msg.trim())
+        .map(msg => {
+          const trimmed = msg.trim();
+          if (trimmed.length > SMS_MAX_LENGTH) {
+            return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';
+          }
+          return trimmed;
+        });
 
       return validatedMessages;
 

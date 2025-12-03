@@ -115,6 +115,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
     if (!toolResult) {
       return {
         messages: ['I tried to make that change but encountered an issue. Please try again or let me know if you need help!'],
+        response: 'Modification failed: No tool was executed',
       };
     }
 
@@ -128,6 +129,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
 
         return {
           messages: toolResult.messages,
+          response: 'Modification applied successfully',
         };
       }
 
@@ -135,6 +137,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
       console.log(`[${agentName}] No messages from tool, using default success message`);
       return {
         messages: ['Done! Your changes have been applied.'],
+        response: 'Modification applied successfully',
       };
     }
 
@@ -145,6 +148,7 @@ export const createModificationsAgent = (deps: ModificationsAgentDeps): Runnable
 
     return {
       messages: [errorMessage],
+      response: `Modification failed: ${toolResult.error || 'Unknown error'}`,
     };
   });
 };
