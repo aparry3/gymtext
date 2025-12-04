@@ -2,6 +2,7 @@ import { createRunnableAgent, initializeModel, type AgentConfig } from '../base'
 import type { ProfileUpdateInput, ProfileUpdateOutput } from './types';
 import { PROFILE_UPDATE_SYSTEM_PROMPT, buildProfileUpdateUserMessage } from './prompts';
 import { ProfileUpdateOutputSchema } from './schema';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**
  * Create the Profile Update Agent
@@ -33,9 +34,10 @@ export function createProfileUpdateAgent(config?: AgentConfig) {
           input.currentDate
         );
 
-        // Invoke the model with system prompt and user message
+        // Invoke the model with system prompt, conversation history, and user message
         const response = await model.invoke([
           { role: 'system', content: PROFILE_UPDATE_SYSTEM_PROMPT },
+          ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
           { role: 'user', content: userMessage },
         ]);
 

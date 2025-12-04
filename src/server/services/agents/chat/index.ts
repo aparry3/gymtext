@@ -93,6 +93,7 @@ export class ChatService {
         {
           userId: userWithProfile.id,
           message,
+          previousMessages: context,
         },
         {
           updateProfile: ProfileService.updateProfile,

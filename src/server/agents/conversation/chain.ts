@@ -1,5 +1,6 @@
 import { CHAT_SYSTEM_PROMPT, buildChatUserMessage, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
 import { initializeModel, createRunnableAgent } from '../base';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
 
 // Re-export types for backward compatibility
@@ -35,7 +36,7 @@ const TOOL_PRIORITY: Record<string, number> = {
  */
 export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, currentWorkout } = input;
+    const { user, message, currentWorkout, previousMessages } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
     // Initialize loop state
@@ -58,7 +59,11 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
     // Conversation history for the loop
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const conversationHistory: any[] = [systemMessage, initialUserMessage];
+    const conversationHistory: any[] = [
+      systemMessage,
+      ...ConversationFlowBuilder.toMessageArray(previousMessages || []),
+      initialUserMessage,
+    ];
 
     // Agentic loop
     while (state.iteration < MAX_ITERATIONS) {
