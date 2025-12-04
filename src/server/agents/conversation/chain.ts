@@ -1,4 +1,4 @@
-import { CHAT_SYSTEM_PROMPT, buildChatUserMessage, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
+import { CHAT_SYSTEM_PROMPT, buildContextMessages, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
 import { initializeModel, createRunnableAgent } from '../base';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
@@ -52,17 +52,21 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
     // Build initial messages
     const systemMessage = { role: 'system', content: CHAT_SYSTEM_PROMPT };
-    const initialUserMessage = {
-      role: 'user',
-      content: buildChatUserMessage(message, user.timezone, currentWorkout),
-    };
+
+    // Build context messages (date, workout, etc.)
+    const contextMessages = buildContextMessages(user.timezone, currentWorkout);
+
+    // Raw user message (no context baked in)
+    const userMessage = { role: 'user', content: message };
 
     // Conversation history for the loop
+    // Order: system -> context -> previous messages -> current user message
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const conversationHistory: any[] = [
       systemMessage,
+      ...contextMessages,
       ...ConversationFlowBuilder.toMessageArray(previousMessages || []),
-      initialUserMessage,
+      userMessage,
     ];
 
     // Agentic loop
