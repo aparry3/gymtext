@@ -4,7 +4,6 @@ import { createModifyFitnessPlanRunnable } from './steps/generation/chain';
 import type { ModifyFitnessPlanInput } from './steps/generation/types';
 import {
   createFormattedFitnessPlanAgent,
-  createFitnessPlanMessageAgent,
 } from '../../shared/steps';
 
 export type { ModifyFitnessPlanInput } from './steps/generation/types';

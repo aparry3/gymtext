@@ -1,15 +1,11 @@
 import { RunnableLambda } from '@langchain/core/runnables';
-import { initializeModel } from '@/server/agents/base';
+import { initializeModel, type ToolResult } from '@/server/agents/base';
 import { type ModificationsAgentInput, type ModificationsResponse, type ModificationsAgentConfig } from './types';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
-import type { ModifyWorkoutResult, ModifyWeekResult, ModifyPlanResult } from '@/server/services';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 // Re-export types for convenience
 export type { ModificationsAgentConfig };
-
-// Union type for all modification results
-type ModificationResult = ModifyWorkoutResult | ModifyWeekResult | ModifyPlanResult;
 
 /**
  * Modifications agent factory - handles workout change and modification requests using tools
@@ -55,8 +51,8 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
     // Call model with tools
     const response = await model.invoke(messages);
 
-    // Track tool result
-    let toolResult: ModificationResult | null = null;
+    // Track tool result - tools return ToolResult { response, messages? }
+    let toolResult: ToolResult | null = null;
 
     // Check if there are tool calls
     if (response.tool_calls && response.tool_calls.length > 0) {
@@ -73,9 +69,8 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
 
         try {
           console.log(`[${agentName}] Executing tool: ${toolCall.name}`, toolCall.args);
-          // Use type assertion to handle union type from modificationTools array
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const result = await (tool as any).invoke(toolCall.args) as ModificationResult;
+          const result = await (tool as any).invoke(toolCall.args) as ToolResult;
           console.log(`[${agentName}] Tool result:`, result);
 
           toolResult = result;
@@ -83,52 +78,43 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
           console.error(`[${agentName}] Error executing tool ${toolCall.name}:`, error);
           // Create an error result
           toolResult = {
-            success: false,
-            messages: [],
-            error: error instanceof Error ? error.message : 'Unknown error',
+            response: `Operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            messages: undefined,
           };
         }
       }
     }
 
-    // Extract messages from tool result
+    // No tool was executed
     if (!toolResult) {
       return {
-        messages: ['I tried to make that change but encountered an issue. Please try again or let me know if you need help!'],
+        messages: [],
         response: 'Modification failed: No tool was executed',
       };
     }
 
-    // If tool execution succeeded
-    if (toolResult.success) {
-      // Use messages from tool result (agents already generated user-friendly messages)
-      if (toolResult.messages && toolResult.messages.length > 0) {
-        console.log(`[${agentName}] Using ${toolResult.messages.length} message(s) from tool:`, {
-          messages: toolResult.messages.map(m => m.substring(0, 100) + (m.length > 100 ? '...' : '')),
-        });
+    // Check for failure (response starts with "Operation failed:")
+    const isFailure = toolResult.response.startsWith('Operation failed:');
 
-        return {
-          messages: toolResult.messages,
-          response: 'Modification applied successfully',
-        };
-      }
-
-      // No messages generated - use default success message
-      console.log(`[${agentName}] No messages from tool, using default success message`);
+    if (isFailure) {
+      console.log(`[${agentName}] Tool failed:`, toolResult.response);
       return {
-        messages: ['Done! Your changes have been applied.'],
-        response: 'Modification applied successfully',
+        messages: [],  // No SMS for failures - conversation agent will craft error message
+        response: toolResult.response,
       };
     }
 
-    // If failed, provide error message
-    const errorMessage = toolResult.error
-      ? `I tried to make that change but ran into an issue: ${toolResult.error}`
-      : 'I tried to make that change but encountered an issue. Please try again or let me know if you need help!';
+    // Success - pass through response and messages directly
+    // response = modification summary for conversation agent to use in acknowledgment
+    // messages = only workout SMS (if any)
+    console.log(`[${agentName}] Tool succeeded:`, {
+      response: toolResult.response,
+      messageCount: toolResult.messages?.length ?? 0,
+    });
 
     return {
-      messages: [errorMessage],
-      response: `Modification failed: ${toolResult.error || 'Unknown error'}`,
+      messages: toolResult.messages || [],  // Only workout SMS if present, empty otherwise
+      response: toolResult.response,  // Modification summary for conversation agent
     };
   });
 };

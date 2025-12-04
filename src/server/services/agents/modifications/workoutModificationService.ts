@@ -330,9 +330,11 @@ export class WorkoutModificationService {
         console.log(`[MODIFY_WEEK] No modifications needed - current plan already satisfies the request`);
 
         // Return success without database update
+        // Empty messages - conversation agent will use modifications field to craft response
         return {
           success: true,
-          messages: ['Your current weekly plan already matches your request. No changes were needed.'],
+          messages: [],
+          modifications: 'No changes needed - your current plan already matches your request',
         };
       }
     } catch (error) {
