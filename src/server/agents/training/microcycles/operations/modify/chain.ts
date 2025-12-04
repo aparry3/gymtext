@@ -45,6 +45,14 @@ export const createModifyMicrocycleAgent = () => {
     ]);
 
     // Execute the chain
-    return await sequence.invoke(input);
+    const result =await sequence.invoke(input);
+    return {
+      days: result.microcycle.days,
+      description: result.microcycle.overview,
+      isDeload: result.microcycle.isDeload,
+      formatted: result.formatted,
+      wasModified: result.wasModified,
+      modifications: result.modifications,
+    };
   });
 };
