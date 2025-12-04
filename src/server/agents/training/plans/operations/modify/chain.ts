@@ -33,7 +33,6 @@ export interface ModifyFitnessPlanResult {
  */
 export const createModifyFitnessPlanAgent = () => {
   return createRunnableAgent<ModifyFitnessPlanInput, ModifyFitnessPlanResult>(async (input) => {
-    try {
       // Step 1: Create modify runnable (modify-specific)
       const modifyFitnessPlanRunnable = createModifyFitnessPlanRunnable({
         config: {
