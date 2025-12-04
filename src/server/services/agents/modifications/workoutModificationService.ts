@@ -201,14 +201,11 @@ export class WorkoutModificationService {
 
       console.log(`[MODIFY_WEEK] Using active microcycle ${microcycle.id} (${new Date(microcycle.startDate).toLocaleDateString()} - ${new Date(microcycle.endDate).toLocaleDateString()})`);
 
-      // Calculate remaining days (today and future days only) in user's timezone
+      // Get current date in user's timezone (needed for workout operations below)
       const today = now(user.timezone).toJSDate();
 
-      // getWeekday returns 0-6 (Mon-Sun), which maps directly to days array index
-      const todayDayOfWeek = getDayOfWeek(today, user.timezone);
-
-      // Capture original day overview for today (for comparison after modification)
-      // Days array is indexed 0-6 (Mon-Sun)
+      // Get today's day of week and index for microcycle days array (0-6, Mon-Sun)
+      const todayDayOfWeek = getDayOfWeek(undefined, user.timezone);
       const todayDayIndex = DAY_NAMES.indexOf(todayDayOfWeek);
       const originalTodayOverview = microcycle.days[todayDayIndex] || null;
 
@@ -222,6 +219,7 @@ export class WorkoutModificationService {
         weekNumber: absoluteWeek,
       });
 
+      console.log(`[MODIFY_WEEK] Microcycle modification result:`, modifyMicrocycleResult);
       // Check if the microcycle was actually modified
       if (modifyMicrocycleResult.wasModified) {
         console.log(`[MODIFY_WEEK] Microcycle was modified - updating database`);
