@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
 import type { ToolResult } from '../shared/types';
+import type { Message } from '@/server/models/messageModel';
 
 /**
  * Dependencies for chat tools (DI pattern)
  * Pass the methods directly, not the full services
  */
 export interface ChatToolDeps {
-  updateProfile: (userId: string, message: string) => Promise<ToolResult>;
-  makeModification: (userId: string, message: string) => Promise<ToolResult>;
+  updateProfile: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
+  makeModification: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
 }
 
 /**
@@ -17,6 +18,7 @@ export interface ChatToolDeps {
 export interface ChatToolContext {
   userId: string;
   message: string;
+  previousMessages?: Message[];
 }
 
 /**
@@ -39,7 +41,7 @@ export const createChatTools = (
   // Tool 1: Update Profile
   const updateProfileTool = tool(
     async (): Promise<ToolResult> => {
-      return deps.updateProfile(context.userId, context.message);
+      return deps.updateProfile(context.userId, context.message, context.previousMessages);
     },
     {
       name: 'update_profile',
@@ -61,7 +63,7 @@ All context is automatically provided - no parameters needed.`,
   // Tool 2: Make Modification
   const makeModificationTool = tool(
     async (): Promise<ToolResult> => {
-      return deps.makeModification(context.userId, context.message);
+      return deps.makeModification(context.userId, context.message, context.previousMessages);
     },
     {
       name: 'make_modification',

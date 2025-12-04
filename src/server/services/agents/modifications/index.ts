@@ -4,9 +4,9 @@ import { createModificationTools } from './tools';
 import { createModificationsAgent } from '@/server/agents/modifications';
 import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { messageService } from '../../messaging/messageService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import type { ToolResult } from '../shared/types';
+import type { Message } from '@/server/models/messageModel';
 
 /**
  * ModificationService - Orchestration service for modifications agent
@@ -26,9 +26,10 @@ export class ModificationService {
    *
    * @param userId - The user's ID
    * @param message - The user's modification request message
+   * @param previousMessages - Optional conversation history for context
    * @returns ToolResult with response summary and optional messages
    */
-  static async makeModification(userId: string, message: string): Promise<ToolResult> {
+  static async makeModification(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
     console.log('[MODIFICATION_SERVICE] Processing modification request:', {
       userId,
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
@@ -46,13 +47,12 @@ export class ModificationService {
       const weekday = getWeekday(today, user.timezone);
       const targetDay = DAY_NAMES[weekday - 1];
       const currentWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
-      const previousMessages = await messageService.getRecentMessages(userId, 5);
 
       console.log('[MODIFICATION_SERVICE] Context fetched:', {
         targetDay,
         workoutDate: today.toISOString(),
         hasWorkout: !!currentWorkout,
-        messageCount: previousMessages.length,
+        messageCount: previousMessages?.length ?? 0,
       });
 
       // Create modification tools with context and service dependencies

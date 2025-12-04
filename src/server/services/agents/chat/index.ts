@@ -10,7 +10,7 @@ import { createChatTools } from './tools';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
-const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '5');
+const CHAT_CONTEXT_MINUTES = parseInt(process.env.CHAT_CONTEXT_MINUTES || '10');
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
@@ -63,7 +63,7 @@ export class ChatService {
       );
 
       // Split into pending (needs response) and context (conversation history)
-      const { pending, context } = messageService.splitMessages(allMessages, CHAT_CONTEXT_MESSAGES);
+      const { pending, context } = messageService.splitMessages(allMessages, CHAT_CONTEXT_MINUTES);
 
       // Early return if no pending messages
       if (pending.length === 0) {
@@ -93,6 +93,7 @@ export class ChatService {
         {
           userId: userWithProfile.id,
           message,
+          previousMessages: context,
         },
         {
           updateProfile: ProfileService.updateProfile,

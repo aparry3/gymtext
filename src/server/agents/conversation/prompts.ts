@@ -1,9 +1,82 @@
 import { formatForAI } from '@/shared/utils/date';
 import { WorkoutInstance } from '@/server/models';
 
+/**
+ * Represents a context message to be inserted at the beginning of the conversation
+ */
+export interface ContextMessage {
+  role: 'user';
+  content: string;
+}
+
+/**
+ * Build the date/timezone context message
+ * @param timezone - User's timezone (IANA format)
+ * @returns Context message with current date information
+ */
+export const buildDateContextMessage = (timezone: string): ContextMessage => {
+  const effectiveTimezone = timezone || 'America/New_York';
+  const now = new Date();
+  const currentDate = formatForAI(now, effectiveTimezone);
+
+  return {
+    role: 'user',
+    content: `[CONTEXT: DATE]
+Today is ${currentDate}.
+User timezone: ${effectiveTimezone}`,
+  };
+};
+
+/**
+ * Build the current workout context message
+ * @param currentWorkout - Today's workout instance (optional)
+ * @returns Context message with workout information
+ */
+export const buildWorkoutContextMessage = (
+  currentWorkout?: WorkoutInstance
+): ContextMessage => {
+  if (!currentWorkout) {
+    return {
+      role: 'user',
+      content: `[CONTEXT: WORKOUT]
+No workout scheduled for today.`,
+    };
+  }
+
+  return {
+    role: 'user',
+    content: `[CONTEXT: WORKOUT]
+Today's scheduled workout: ${currentWorkout.description || currentWorkout.sessionType || 'Custom Workout'}`,
+  };
+};
+
+/**
+ * Build all context messages for the conversation agent
+ * @param timezone - User's timezone
+ * @param currentWorkout - Today's workout instance (optional)
+ * @returns Array of context messages to prepend to conversation
+ */
+export const buildContextMessages = (
+  timezone: string,
+  currentWorkout?: WorkoutInstance
+): ContextMessage[] => {
+  return [
+    buildDateContextMessage(timezone),
+    buildWorkoutContextMessage(currentWorkout),
+  ];
+};
+
 export const CHAT_SYSTEM_PROMPT = `
 You are a dedicated, expert fitness coach for GymText.
 Your role is to assist the user with their fitness journey, modify their workouts, answer questions, and be a supportive partner.
+
+# CONTEXT MESSAGES
+
+Before the conversation history, you will receive context messages marked with [CONTEXT: TYPE]. These provide:
+- **[CONTEXT: DATE]** - Current date and user's timezone
+- **[CONTEXT: WORKOUT]** - Today's scheduled workout (or indication of rest day)
+
+Use this context to provide relevant, timely advice but don't explicitly reference these markers in your responses.
 
 # KEY RESPONSIBILITIES
 
@@ -44,7 +117,11 @@ You operate in a loop until you generate a final text response:
 `;
 
 /**
- * Build the initial user message for the conversation agent
+ * @deprecated Use buildContextMessages() + raw message instead.
+ * This function bakes context into the user message, which leads to duplication
+ * when there are multiple messages back and forth.
+ *
+ * Build the initial user message for the conversation agent (legacy)
  */
 export const buildChatUserMessage = (
   message: string,

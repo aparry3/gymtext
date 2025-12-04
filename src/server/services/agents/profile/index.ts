@@ -3,6 +3,7 @@ import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
 import { formatForAI } from '@/shared/utils/date';
 import type { ToolResult } from '../shared/types';
+import type { Message } from '@/server/models/messageModel';
 
 /**
  * ProfileService - Orchestration service for profile agent
@@ -22,9 +23,10 @@ export class ProfileService {
    *
    * @param userId - The user's ID
    * @param message - The user's message to extract profile info from
+   * @param previousMessages - Optional conversation history for context
    * @returns ToolResult with response summary and optional messages
    */
-  static async updateProfile(userId: string, message: string): Promise<ToolResult> {
+  static async updateProfile(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
     console.log('[PROFILE_SERVICE] Processing profile update:', {
       userId,
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
@@ -47,6 +49,7 @@ export class ProfileService {
         message,
         user,
         currentDate: formatForAI(new Date(), user.timezone),
+        previousMessages,
       });
 
       // Persist via entity service

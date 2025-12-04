@@ -1,4 +1,5 @@
 import type { UserWithProfile } from '../../models/userModel';
+import type { Message } from '../../models/messageModel';
 
 /**
  * Input for the Profile Update Agent
@@ -12,6 +13,8 @@ export interface ProfileUpdateInput {
   user: UserWithProfile;
   /** Current date in ISO format for temporal reasoning */
   currentDate: string;
+  /** Optional conversation history for context */
+  previousMessages?: Message[];
 }
 
 /**

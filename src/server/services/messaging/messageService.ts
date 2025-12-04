@@ -234,9 +234,13 @@ export class MessageService {
    * from messages that serve as conversation context.
    *
    * @param messages - Array of messages ordered oldest to newest
-   * @returns Object with pending (inbound after last outbound) and context (up to and including last outbound)
+   * @param contextMinutes - Time window in minutes for context messages
+   * @returns Object with pending (ALL inbound after last outbound) and context (messages within time window up to last outbound)
    */
-  splitMessages(messages: Message[], contextMessages: number): { pending: Message[]; context: Message[] } {
+  splitMessages(messages: Message[], contextMinutes: number): { pending: Message[]; context: Message[] } {
+    // Calculate time threshold for context messages
+    const cutoffTime = new Date(Date.now() - contextMinutes * 60 * 1000);
+
     // Find index of last outbound message
     let lastOutboundIndex = -1;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -246,9 +250,14 @@ export class MessageService {
       }
     }
 
-    // Everything after last outbound is pending, everything up to and including is context
-    const context = lastOutboundIndex >= 0 ? messages.slice(0, lastOutboundIndex + 1) : [];
-    const pending = lastOutboundIndex >= 0 ? messages.slice(lastOutboundIndex + 1, lastOutboundIndex + 1 + contextMessages) : messages;
+    // Pending: ALL inbound messages after last outbound (no time limit - always include unresponded messages)
+    const pending = lastOutboundIndex >= 0
+      ? messages.slice(lastOutboundIndex + 1)
+      : messages.filter(m => m.direction === 'inbound');
+
+    // Context: Messages up to last outbound, filtered by time window
+    const allContext = lastOutboundIndex >= 0 ? messages.slice(0, lastOutboundIndex + 1) : [];
+    const context = allContext.filter(m => new Date(m.createdAt) >= cutoffTime);
 
     return { pending, context };
   }

@@ -1,5 +1,6 @@
-import { CHAT_SYSTEM_PROMPT, buildChatUserMessage, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
+import { CHAT_SYSTEM_PROMPT, buildContextMessages, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
 import { initializeModel, createRunnableAgent } from '../base';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
 
 // Re-export types for backward compatibility
@@ -35,7 +36,7 @@ const TOOL_PRIORITY: Record<string, number> = {
  */
 export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, currentWorkout } = input;
+    const { user, message, currentWorkout, previousMessages } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
     // Initialize loop state
@@ -51,14 +52,22 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
     // Build initial messages
     const systemMessage = { role: 'system', content: CHAT_SYSTEM_PROMPT };
-    const initialUserMessage = {
-      role: 'user',
-      content: buildChatUserMessage(message, user.timezone, currentWorkout),
-    };
+
+    // Build context messages (date, workout, etc.)
+    const contextMessages = buildContextMessages(user.timezone, currentWorkout);
+
+    // Raw user message (no context baked in)
+    const userMessage = { role: 'user', content: message };
 
     // Conversation history for the loop
+    // Order: system -> context -> previous messages -> current user message
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const conversationHistory: any[] = [systemMessage, initialUserMessage];
+    const conversationHistory: any[] = [
+      systemMessage,
+      ...contextMessages,
+      ...ConversationFlowBuilder.toMessageArray(previousMessages || []),
+      userMessage,
+    ];
 
     // Agentic loop
     while (state.iteration < MAX_ITERATIONS) {
