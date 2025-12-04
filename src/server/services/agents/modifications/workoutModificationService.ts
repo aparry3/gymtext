@@ -1,6 +1,6 @@
-import { UserService } from '../user/userService';
-import { MicrocycleService } from '../training/microcycleService';
-import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { UserService } from '../../user/userService';
+import { MicrocycleService } from '../../training/microcycleService';
+import { WorkoutInstanceService } from '../../training/workoutInstanceService';
 import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
 import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
 import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
@@ -8,8 +8,8 @@ import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
 import { createUpdatedMicrocycleMessageAgent } from '@/server/agents/messaging/updatedMicrocycleMessage/chain';
-import { ProgressService } from '../training/progressService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
+import { ProgressService } from '../../training/progressService';
+import { FitnessPlanService } from '../../training/fitnessPlanService';
 
 /**
  * WorkoutModificationService

@@ -1,7 +1,7 @@
-import { UserService } from '../user/userService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
-import { MicrocycleService } from '../training/microcycleService';
-import { ProgressService } from '../training/progressService';
+import { UserService } from '../../user/userService';
+import { FitnessPlanService } from '../../training/fitnessPlanService';
+import { MicrocycleService } from '../../training/microcycleService';
+import { ProgressService } from '../../training/progressService';
 import { createModifyFitnessPlanAgent } from '@/server/agents/training/plans';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';

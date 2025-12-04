@@ -1,24 +1,38 @@
 import { z } from 'zod';
-import { type ModifyWorkoutResult, type ModifyWeekResult, type ModifyPlanResult } from '@/server/services';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
+import type { ToolResult } from '../shared/types';
+import { toToolResult } from '../shared/utils';
+import type { ModifyWorkoutResult, ModifyWeekResult } from './workoutModificationService';
+import type { ModifyPlanResult } from './planModificationService';
 
 /**
- * Service interfaces for modification tools (DI)
+ * Parameters for modifying a workout
  */
-export interface WorkoutModificationService {
-  modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
-}
-
-export interface MicrocycleModificationService {
-  modifyWeek: (params: ModifyWeekParams) => Promise<ModifyWeekResult>;
-}
-
-export interface PlanModificationServiceInterface {
-  modifyPlan: (params: ModifyPlanParams) => Promise<ModifyPlanResult>;
+export interface ModifyWorkoutParams {
+  userId: string;
+  workoutDate: Date;
+  changeRequest: string;
 }
 
 /**
- * Dependencies for modification tools
+ * Parameters for modifying the weekly pattern
+ */
+export interface ModifyWeekParams {
+  userId: string;
+  targetDay: string;
+  changeRequest: string;
+}
+
+/**
+ * Parameters for modifying the fitness plan
+ */
+export interface ModifyPlanParams {
+  userId: string;
+  changeRequest: string;
+}
+
+/**
+ * Dependencies for modification tools (DI pattern)
  */
 export interface ModificationToolDeps {
   modifyWorkout: (params: ModifyWorkoutParams) => Promise<ModifyWorkoutResult>;
@@ -38,33 +52,16 @@ export interface ModificationToolContext {
 
 // Schema definitions - empty because all params come from context
 const ModifyWorkoutSchema = z.object({});
-
-export interface ModifyWorkoutParams {
-  userId: string;
-  workoutDate: Date;
-  changeRequest: string;
-}
-
 const ModifyWeekSchema = z.object({});
-
-export interface ModifyWeekParams {
-  userId: string;
-  targetDay: string;
-  changeRequest: string;
-}
-
 const ModifyPlanSchema = z.object({});
-
-export interface ModifyPlanParams {
-  userId: string;
-  changeRequest: string;
-}
 
 /**
  * Factory function to create modification tools with injected dependencies (DI pattern)
  *
  * This allows services to be injected rather than directly imported,
  * breaking circular dependencies and improving testability.
+ *
+ * All tools return standardized ToolResult: { response: string, messages?: string[] }
  *
  * @param context - Context from chat (userId, message, workoutDate, targetDay)
  * @param deps - Dependencies including workout and microcycle services
@@ -76,12 +73,13 @@ export const createModificationTools = (
 ): StructuredToolInterface[] => {
   // Tool 1: Modify Workout
   const modifyWorkoutTool = tool(
-    async (): Promise<ModifyWorkoutResult> => {
-      return await deps.modifyWorkout({
+    async (): Promise<ToolResult> => {
+      const result = await deps.modifyWorkout({
         userId: context.userId,
         workoutDate: context.workoutDate,
         changeRequest: context.message,
       });
+      return toToolResult(result);
     },
     {
       name: 'modify_workout',
@@ -103,12 +101,13 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
 
   // Tool 2: Modify Week
   const modifyWeekTool = tool(
-    async (): Promise<ModifyWeekResult> => {
-      return await deps.modifyWeek({
+    async (): Promise<ToolResult> => {
+      const result = await deps.modifyWeek({
         userId: context.userId,
         targetDay: context.targetDay,
         changeRequest: context.message,
       });
+      return toToolResult(result);
     },
     {
       name: 'modify_week',
@@ -125,10 +124,10 @@ Use this for ANY request for a different workout type or muscle group:
 **DEFAULT TO THIS TOOL when user requests a workout change.** Even if they don't explicitly say "instead of" or mention multiple days.
 
 Examples that should use modify_week:
-- "Can I do legs today?" → YES (different muscle group)
-- "Chest workout please" → YES (potentially different from scheduled)
-- "I want to run instead" → YES (different workout type)
-- "Can't make it to gym this week" → YES (multi-day change)
+- "Can I do legs today?" -> YES (different muscle group)
+- "Chest workout please" -> YES (potentially different from scheduled)
+- "I want to run instead" -> YES (different workout type)
+- "Can't make it to gym this week" -> YES (multi-day change)
 
 This intelligently updates the weekly pattern to maintain training balance and muscle group spacing.`,
       schema: ModifyWeekSchema,
@@ -137,11 +136,12 @@ This intelligently updates the weekly pattern to maintain training balance and m
 
   // Tool 3: Modify Plan
   const modifyPlanTool = tool(
-    async (): Promise<ModifyPlanResult> => {
-      return await deps.modifyPlan({
+    async (): Promise<ToolResult> => {
+      const result = await deps.modifyPlan({
         userId: context.userId,
         changeRequest: context.message,
       });
+      return toToolResult(result);
     },
     {
       name: 'modify_plan',
@@ -160,14 +160,14 @@ DO NOT use for day-to-day or single week changes - use modify_week or modify_wor
 This tool is for STRUCTURAL/ARCHITECTURAL changes to the entire training program.
 
 Examples that should use modify_plan:
-- "Can we change to 6 days a week?" → YES (frequency change)
-- "I started yoga on Mondays and Fridays" → YES (adding anchors)
-- "Switch me to a PPL split" → YES (program structure)
-- "I want more cardio overall" → YES (program balance)
+- "Can we change to 6 days a week?" -> YES (frequency change)
+- "I started yoga on Mondays and Fridays" -> YES (adding anchors)
+- "Switch me to a PPL split" -> YES (program structure)
+- "I want more cardio overall" -> YES (program balance)
 
 Examples that should NOT use modify_plan:
-- "Can I do legs today?" → NO (use modify_week)
-- "Skip today's workout" → NO (use modify_week)`,
+- "Can I do legs today?" -> NO (use modify_week)
+- "Skip today's workout" -> NO (use modify_week)`,
       schema: ModifyPlanSchema,
     }
   );

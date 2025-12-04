@@ -1,11 +1,12 @@
-import { WorkoutModificationService } from './workoutModificationService';
-import { PlanModificationService } from './planModificationService';
-import { createModificationsAgent, createModificationTools } from '@/server/agents/modifications';
-import { userService } from '../user/userService';
-import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { MessageService } from '../messaging/messageService';
+import { workoutModificationService } from './workoutModificationService';
+import { planModificationService } from './planModificationService';
+import { createModificationTools } from './tools';
+import { createModificationsAgent } from '@/server/agents/modifications';
+import { userService } from '../../user/userService';
+import { workoutInstanceService } from '../../training/workoutInstanceService';
+import { messageService } from '../../messaging/messageService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
-import type { ToolResult } from '@/server/agents/base';
+import type { ToolResult } from '../shared/types';
 
 /**
  * ModificationService - Orchestration service for modifications agent
@@ -17,27 +18,6 @@ import type { ToolResult } from '@/server/agents/base';
  * For specific modification operations, use WorkoutModificationService or PlanModificationService.
  */
 export class ModificationService {
-  private static instance: ModificationService;
-
-  private workoutModificationService: WorkoutModificationService;
-  private planModificationService: PlanModificationService;
-  private workoutInstanceService: WorkoutInstanceService;
-  private messageService: MessageService;
-
-  private constructor() {
-    this.workoutModificationService = WorkoutModificationService.getInstance();
-    this.planModificationService = PlanModificationService.getInstance();
-    this.workoutInstanceService = WorkoutInstanceService.getInstance();
-    this.messageService = MessageService.getInstance();
-  }
-
-  public static getInstance(): ModificationService {
-    if (!ModificationService.instance) {
-      ModificationService.instance = new ModificationService();
-    }
-    return ModificationService.instance;
-  }
-
   /**
    * Process a modification request from a user message
    *
@@ -48,7 +28,7 @@ export class ModificationService {
    * @param message - The user's modification request message
    * @returns ToolResult with response summary and optional messages
    */
-  public async makeModification(userId: string, message: string): Promise<ToolResult> {
+  static async makeModification(userId: string, message: string): Promise<ToolResult> {
     console.log('[MODIFICATION_SERVICE] Processing modification request:', {
       userId,
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
@@ -65,8 +45,8 @@ export class ModificationService {
       const today = now(user.timezone).toJSDate();
       const weekday = getWeekday(today, user.timezone);
       const targetDay = DAY_NAMES[weekday - 1];
-      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
-      const previousMessages = await this.messageService.getRecentMessages(userId, 5);
+      const currentWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
+      const previousMessages = await messageService.getRecentMessages(userId, 5);
 
       console.log('[MODIFICATION_SERVICE] Context fetched:', {
         targetDay,
@@ -84,9 +64,9 @@ export class ModificationService {
           targetDay,
         },
         {
-          modifyWorkout: this.workoutModificationService.modifyWorkout.bind(this.workoutModificationService),
-          modifyWeek: this.workoutModificationService.modifyWeek.bind(this.workoutModificationService),
-          modifyPlan: this.planModificationService.modifyPlan.bind(this.planModificationService),
+          modifyWorkout: workoutModificationService.modifyWorkout.bind(workoutModificationService),
+          modifyWeek: workoutModificationService.modifyWeek.bind(workoutModificationService),
+          modifyPlan: planModificationService.modifyPlan.bind(planModificationService),
         }
       );
 
@@ -123,5 +103,10 @@ export class ModificationService {
   }
 }
 
-// Export singleton instance
-export const modificationService = ModificationService.getInstance();
+// Re-export sub-services and types for convenience
+export { WorkoutModificationService, workoutModificationService } from './workoutModificationService';
+export type { ModifyWorkoutResult, ModifyWeekResult, ModifyWorkoutParams, ModifyWeekParams } from './workoutModificationService';
+export { PlanModificationService, planModificationService } from './planModificationService';
+export type { ModifyPlanResult, ModifyPlanParams } from './planModificationService';
+export { createModificationTools } from './tools';
+export type { ModificationToolContext, ModificationToolDeps } from './tools';
