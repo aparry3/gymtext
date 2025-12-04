@@ -130,7 +130,7 @@ export class PlanModificationService {
         return {
           success: true,
           wasModified: false,
-          messages: ['Your current plan already matches your request. No changes were needed.'],
+          messages: [],
         };
       }
 
@@ -141,7 +141,6 @@ export class PlanModificationService {
         clientId: userId,
         description: planResult.description,
         formatted: planResult.formatted,
-        message: planResult.message,
         startDate: new Date(),
       });
 
@@ -155,7 +154,6 @@ export class PlanModificationService {
           days: microcycleResult.days,
           description: microcycleResult.description,
           formatted: microcycleResult.formatted,
-          message: microcycleResult.message,
           isDeload: microcycleResult.isDeload,
         });
         console.log(`[MODIFY_PLAN] Updated existing microcycle ${existingMicrocycle.id} and linked to new plan`);
@@ -168,20 +166,11 @@ export class PlanModificationService {
         }
       }
 
-      // 8. Build response messages
-      const messages: string[] = [];
-      if (planResult.message) {
-        messages.push(planResult.message);
-      }
-      if (microcycleResult?.message) {
-        messages.push(microcycleResult.message);
-      }
-
       return {
         success: true,
         wasModified: true,
         modifications: planResult.modifications,
-        messages: messages.length > 0 ? messages : ['Your plan has been updated and your weekly schedule has been adjusted.'],
+        messages: [],
       };
     } catch (error) {
       console.error('[MODIFY_PLAN] Error modifying plan:', error);

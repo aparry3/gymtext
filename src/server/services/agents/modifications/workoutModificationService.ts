@@ -7,7 +7,6 @@ import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
-import { createUpdatedMicrocycleMessageAgent } from '@/server/agents/messaging/updatedMicrocycleMessage/chain';
 import { ProgressService } from '../../training/progressService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
 
@@ -228,17 +227,17 @@ export class WorkoutModificationService {
         console.log(`[MODIFY_WEEK] Microcycle was modified - updating database`);
 
         // Generate specialized "updated week" message using remaining days
-        const updatedMicrocycleMessageAgent = createUpdatedMicrocycleMessageAgent();
-        const microcycleUpdateMessage = await updatedMicrocycleMessageAgent.invoke({
-          modifiedMicrocycle: {
-            overview: modifyMicrocycleResult.description,
-            isDeload: modifyMicrocycleResult.isDeload || false,
-            days: modifyMicrocycleResult.days,
-          },
-          modifications: modifyMicrocycleResult.modifications || 'Updated weekly pattern based on your request',
-          currentWeekday: todayDayOfWeek as DayOfWeek,
-          user,
-        });
+        // const updatedMicrocycleMessageAgent = createUpdatedMicrocycleMessageAgent();
+        // const microcycleUpdateMessage = await updatedMicrocycleMessageAgent.invoke({
+        //   modifiedMicrocycle: {
+        //     overview: modifyMicrocycleResult.description,
+        //     isDeload: modifyMicrocycleResult.isDeload || false,
+        //     days: modifyMicrocycleResult.days,
+        //   },
+        //   modifications: modifyMicrocycleResult.modifications || 'Updated weekly pattern based on your request',
+        //   currentWeekday: todayDayOfWeek as DayOfWeek,
+        //   user,
+        // });
 
         // Update the microcycle with the new pattern (days array from the result)
         await this.microcycleService.updateMicrocycle(
@@ -248,7 +247,7 @@ export class WorkoutModificationService {
             description: modifyMicrocycleResult.description,
             isDeload: modifyMicrocycleResult.isDeload,
             formatted: modifyMicrocycleResult.formatted,
-            message: microcycleUpdateMessage
+            // message: microcycleUpdateMessage
           }
         );
 
@@ -309,9 +308,6 @@ export class WorkoutModificationService {
 
           // Return with both microcycle and workout messages
           const messages: string[] = [];
-          if (microcycleUpdateMessage) {
-            messages.push(microcycleUpdateMessage);
-          }
           if (workoutResult.message) {
             messages.push(workoutResult.message);
           }
@@ -327,7 +323,7 @@ export class WorkoutModificationService {
         // Return success with the modified microcycle message and modifications
         return {
           success: true,
-          messages: microcycleUpdateMessage ? [microcycleUpdateMessage] : [],
+          messages: [],
           modifications: modifyMicrocycleResult.modifications,
         };
       } else {

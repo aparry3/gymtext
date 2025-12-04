@@ -1,9 +1,9 @@
 import { createRunnableAgent } from '@/server/agents/base';
-import { RunnableSequence } from '@langchain/core/runnables';
+import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { createModifyMicrocycleRunnable } from './steps/generation/chain';
 import type { ModifyMicrocycleInput } from './steps/generation/types';
-import { MicrocycleAgentDeps, MicrocycleAgentOutput } from '../../types';
-import { createMicrocyclePostProcessChain } from '../../shared/steps/postprocess';
+import { BaseMicrocycleAgentOutput } from '../../types';
+import { createFormattedMicrocycleAgent } from '../../shared';
 
 export type { ModifyMicrocycleInput } from './steps/generation/types';
 
@@ -21,8 +21,8 @@ export type { ModifyMicrocycleInput } from './steps/generation/types';
  * @param deps - Optional dependencies (config)
  * @returns Agent that modifies microcycle day overviews, formatted markdown, and messages
  */
-export const createModifyMicrocycleAgent = (deps?: MicrocycleAgentDeps) => {
-  return createRunnableAgent<ModifyMicrocycleInput, MicrocycleAgentOutput>(async (input) => {
+export const createModifyMicrocycleAgent = () => {
+  return createRunnableAgent<ModifyMicrocycleInput, BaseMicrocycleAgentOutput>(async (input) => {
     // Step 1: Create modify runnable (modify-specific)
     const modifyMicrocycleRunnable = createModifyMicrocycleRunnable({
       config: {
@@ -31,12 +31,17 @@ export const createModifyMicrocycleAgent = (deps?: MicrocycleAgentDeps) => {
     });
 
     // Step 2: Create shared post-processing chain
-    const postProcessChain = createMicrocyclePostProcessChain(deps, 'modify');
+    const formattedAgent = createFormattedMicrocycleAgent({
+      operationName: `modify formatted microcycle`,
+    });
+
 
     // Compose the full chain: modify → post-processing
     const sequence = RunnableSequence.from([
       modifyMicrocycleRunnable,
-      postProcessChain
+      RunnablePassthrough.assign({
+        formatted: formattedAgent,
+      })
     ]);
 
     // Execute the chain

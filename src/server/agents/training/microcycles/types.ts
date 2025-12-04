@@ -15,15 +15,19 @@ export interface MicrocycleGenerationInput {
 /**
  * Output from microcycle agent
  */
-export interface MicrocycleAgentOutput {
+export interface BaseMicrocycleAgentOutput {
   days: string[];          // Array of 7 day overviews [Monday-Sunday]
   description: string;     // Long-form narrative description of the weekly microcycle
   isDeload: boolean;       // Whether this is a deload week (reduced volume and intensity)
   formatted: string;       // Markdown-formatted weekly overview for frontend display
-  message: string;         // SMS-formatted weekly check-in/breakdown message
   wasModified?: boolean;   // Whether the microcycle was modified (only present for update operations)
   modifications?: string;  // Explanation of changes made (only present for update operations when wasModified is true)
 }
+
+export interface MicrocycleAgentOutput extends BaseMicrocycleAgentOutput {
+  message: string;        // SMS-formatted weekly check-in/breakdown message
+}
+
 
 /**
  * Dependencies for microcycle pattern agent
