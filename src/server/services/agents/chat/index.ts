@@ -1,14 +1,12 @@
-import { z } from 'zod';
-import { tool } from '@langchain/core/tools';
 import { UserWithProfile } from '@/server/models/userModel';
 import { createChatAgent } from '@/server/agents/conversation/chain';
-import { MessageService } from './messageService';
-import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { ProfileService } from '@/server/services/orchestration/profileService';
-import { ModificationService } from '@/server/services/orchestration/modificationService';
-import { userService } from '@/server/services/user/userService';
+import { messageService } from '../../messaging/messageService';
+import { workoutInstanceService } from '../../training/workoutInstanceService';
+import { ProfileService } from '../profile';
+import { ModificationService } from '../modifications';
+import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
-import type { ToolResult } from '@/server/agents/base';
+import { createChatTools } from './tools';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
@@ -29,25 +27,6 @@ const CHAT_CONTEXT_MESSAGES = parseInt(process.env.CHAT_CONTEXT_MESSAGES || '5')
  * - SMS length constraints are enforced
  */
 export class ChatService {
-  private static instance: ChatService;
-  private messageService: MessageService;
-  private workoutInstanceService: WorkoutInstanceService;
-  private profileService: ProfileService;
-  private modificationService: ModificationService;
-
-  private constructor() {
-    this.messageService = MessageService.getInstance();
-    this.workoutInstanceService = WorkoutInstanceService.getInstance();
-    this.profileService = ProfileService.getInstance();
-    this.modificationService = ModificationService.getInstance();
-  }
-
-  public static getInstance(): ChatService {
-    if (!ChatService.instance) {
-      ChatService.instance = new ChatService();
-    }
-    return ChatService.instance;
-  }
 
   /**
    * Processes pending inbound SMS messages using the two-agent architecture.
@@ -68,23 +47,23 @@ export class ChatService {
    *
    * @example
    * ```typescript
-   * const messages = await chatService.handleIncomingMessage(user);
+   * const messages = await ChatService.handleIncomingMessage(user);
    * // Returns [] if no pending messages, otherwise generates responses
    * ```
    */
-  async handleIncomingMessage(
+  static async handleIncomingMessage(
     user: UserWithProfile
   ): Promise<string[]> {
     try {
       // Single DB fetch: get enough messages for pending + context window
       // We fetch extra to ensure we have enough context after splitting
-      const allMessages = await this.messageService.getRecentMessages(
+      const allMessages = await messageService.getRecentMessages(
         user.id,
         20
       );
 
       // Split into pending (needs response) and context (conversation history)
-      const { pending, context } = this.messageService.splitMessages(allMessages, CHAT_CONTEXT_MESSAGES);
+      const { pending, context } = messageService.splitMessages(allMessages, CHAT_CONTEXT_MESSAGES);
 
       // Early return if no pending messages
       if (pending.length === 0) {
@@ -102,58 +81,28 @@ export class ChatService {
       });
 
       // Fetch current workout
-      const currentWorkout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
+      const currentWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
 
       // Fetch user with profile (if not already included)
       const userWithProfile = user.profile !== undefined
         ? user
         : await userService.getUser(user.id) || user;
 
-      // Create tools as thin wrappers around orchestration services
-      const updateProfileTool = tool(
-        async (): Promise<ToolResult> => {
-          return this.profileService.updateProfile(userWithProfile.id, message);
+      // Create tools using the factory function
+      const tools = createChatTools(
+        {
+          userId: userWithProfile.id,
+          message,
         },
         {
-          name: 'update_profile',
-          description: `Record fitness information from the user's message to their profile.
-
-Use this tool when the user shares:
-- Personal records (PRs) or achievements
-- Injuries or physical limitations
-- Goals or preferences
-- Equipment or gym access changes
-- Schedule or availability changes
-
-The tool will analyze the message and update their fitness profile accordingly.
-All context is automatically provided - no parameters needed.`,
-          schema: z.object({}),
-        }
-      );
-
-      const makeModificationTool = tool(
-        async (): Promise<ToolResult> => {
-          return this.modificationService.makeModification(userWithProfile.id, message);
-        },
-        {
-          name: 'make_modification',
-          description: `Make changes to the user's workout, weekly schedule, or training plan.
-
-Use this tool when the user wants to:
-- Change today's workout (swap exercises, different constraints, different equipment)
-- Get a different workout type or muscle group than scheduled
-- Modify their weekly training schedule
-- Make program-level changes (frequency, training splits, overall focus)
-
-This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
-All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
-          schema: z.object({}),
+          updateProfile: ProfileService.updateProfile,
+          makeModification: ModificationService.makeModification,
         }
       );
 
       // Create chat agent with tools
       const agent = createChatAgent({
-        tools: [updateProfileTool, makeModificationTool],
+        tools,
       });
 
       // Invoke the agent
@@ -201,5 +150,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
     }
   }
 }
-// Export singleton instance
-export const chatService = ChatService.getInstance();
+
+// Re-export tools for external use
+export { createChatTools } from './tools';
+export type { ChatToolContext, ChatToolDeps } from './tools';

@@ -17,7 +17,7 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { messageService, chatService } from '@/server/services';
+import { messageService, ChatService } from '@/server/services';
 import { userService } from '@/server/services/user/userService';
 
 export const processMessageFunction = inngest.createFunction(
@@ -50,7 +50,7 @@ export const processMessageFunction = inngest.createFunction(
       // - Splitting into pending vs context
       // - Aggregating pending message content
       // - Early return if no pending messages
-      const chatMessages = await chatService.handleIncomingMessage(user);
+      const chatMessages = await ChatService.handleIncomingMessage(user);
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;
     });

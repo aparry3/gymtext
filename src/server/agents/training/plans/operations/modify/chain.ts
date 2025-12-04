@@ -4,7 +4,6 @@ import { createModifyFitnessPlanRunnable } from './steps/generation/chain';
 import type { ModifyFitnessPlanInput } from './steps/generation/types';
 import {
   createFormattedFitnessPlanAgent,
-  createFitnessPlanMessageAgent,
 } from '../../shared/steps';
 
 export type { ModifyFitnessPlanInput } from './steps/generation/types';
@@ -15,7 +14,6 @@ export type { ModifyFitnessPlanInput } from './steps/generation/types';
 export interface ModifyFitnessPlanResult {
   description: string;
   formatted: string;
-  message: string;
   wasModified: boolean;
   modifications: string;
 }
@@ -47,17 +45,12 @@ export const createModifyFitnessPlanAgent = () => {
       operationName: 'format modified fitness plan',
     });
 
-    // Step 3: Create message agent (reuse from generation)
-    const messageAgent = createFitnessPlanMessageAgent({
-      operationName: 'generate modified plan message'
-    });
 
     // Compose the chain: modify → parallel (formatted + message)
     const sequence = RunnableSequence.from([
       modifyFitnessPlanRunnable,
       RunnablePassthrough.assign({
         formatted: formattedAgent,
-        message: messageAgent
       })
     ]);
 
@@ -68,7 +61,6 @@ export const createModifyFitnessPlanAgent = () => {
     return {
       description: result.fitnessPlan,
       formatted: result.formatted,
-      message: result.message,
       wasModified: result.wasModified,
       modifications: result.modifications,
     };

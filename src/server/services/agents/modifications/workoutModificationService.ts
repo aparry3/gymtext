@@ -1,15 +1,14 @@
-import { UserService } from '../user/userService';
-import { MicrocycleService } from '../training/microcycleService';
-import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { UserService } from '../../user/userService';
+import { MicrocycleService } from '../../training/microcycleService';
+import { WorkoutInstanceService } from '../../training/workoutInstanceService';
 import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
 import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
 import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
-import { createUpdatedMicrocycleMessageAgent } from '@/server/agents/messaging/updatedMicrocycleMessage/chain';
-import { ProgressService } from '../training/progressService';
-import { FitnessPlanService } from '../training/fitnessPlanService';
+import { ProgressService } from '../../training/progressService';
+import { FitnessPlanService } from '../../training/fitnessPlanService';
 
 /**
  * WorkoutModificationService
@@ -202,14 +201,11 @@ export class WorkoutModificationService {
 
       console.log(`[MODIFY_WEEK] Using active microcycle ${microcycle.id} (${new Date(microcycle.startDate).toLocaleDateString()} - ${new Date(microcycle.endDate).toLocaleDateString()})`);
 
-      // Calculate remaining days (today and future days only) in user's timezone
+      // Get current date in user's timezone (needed for workout operations below)
       const today = now(user.timezone).toJSDate();
 
-      // getWeekday returns 0-6 (Mon-Sun), which maps directly to days array index
-      const todayDayOfWeek = getDayOfWeek(today, user.timezone);
-
-      // Capture original day overview for today (for comparison after modification)
-      // Days array is indexed 0-6 (Mon-Sun)
+      // Get today's day of week and index for microcycle days array (0-6, Mon-Sun)
+      const todayDayOfWeek = getDayOfWeek(undefined, user.timezone);
       const todayDayIndex = DAY_NAMES.indexOf(todayDayOfWeek);
       const originalTodayOverview = microcycle.days[todayDayIndex] || null;
 
@@ -223,22 +219,23 @@ export class WorkoutModificationService {
         weekNumber: absoluteWeek,
       });
 
+      console.log(`[MODIFY_WEEK] Microcycle modification result:`, modifyMicrocycleResult);
       // Check if the microcycle was actually modified
       if (modifyMicrocycleResult.wasModified) {
         console.log(`[MODIFY_WEEK] Microcycle was modified - updating database`);
 
         // Generate specialized "updated week" message using remaining days
-        const updatedMicrocycleMessageAgent = createUpdatedMicrocycleMessageAgent();
-        const microcycleUpdateMessage = await updatedMicrocycleMessageAgent.invoke({
-          modifiedMicrocycle: {
-            overview: modifyMicrocycleResult.description,
-            isDeload: modifyMicrocycleResult.isDeload || false,
-            days: modifyMicrocycleResult.days,
-          },
-          modifications: modifyMicrocycleResult.modifications || 'Updated weekly pattern based on your request',
-          currentWeekday: todayDayOfWeek as DayOfWeek,
-          user,
-        });
+        // const updatedMicrocycleMessageAgent = createUpdatedMicrocycleMessageAgent();
+        // const microcycleUpdateMessage = await updatedMicrocycleMessageAgent.invoke({
+        //   modifiedMicrocycle: {
+        //     overview: modifyMicrocycleResult.description,
+        //     isDeload: modifyMicrocycleResult.isDeload || false,
+        //     days: modifyMicrocycleResult.days,
+        //   },
+        //   modifications: modifyMicrocycleResult.modifications || 'Updated weekly pattern based on your request',
+        //   currentWeekday: todayDayOfWeek as DayOfWeek,
+        //   user,
+        // });
 
         // Update the microcycle with the new pattern (days array from the result)
         await this.microcycleService.updateMicrocycle(
@@ -248,7 +245,7 @@ export class WorkoutModificationService {
             description: modifyMicrocycleResult.description,
             isDeload: modifyMicrocycleResult.isDeload,
             formatted: modifyMicrocycleResult.formatted,
-            message: microcycleUpdateMessage
+            // message: microcycleUpdateMessage
           }
         );
 
@@ -309,9 +306,6 @@ export class WorkoutModificationService {
 
           // Return with both microcycle and workout messages
           const messages: string[] = [];
-          if (microcycleUpdateMessage) {
-            messages.push(microcycleUpdateMessage);
-          }
           if (workoutResult.message) {
             messages.push(workoutResult.message);
           }
@@ -327,16 +321,18 @@ export class WorkoutModificationService {
         // Return success with the modified microcycle message and modifications
         return {
           success: true,
-          messages: microcycleUpdateMessage ? [microcycleUpdateMessage] : [],
+          messages: [],
           modifications: modifyMicrocycleResult.modifications,
         };
       } else {
         console.log(`[MODIFY_WEEK] No modifications needed - current plan already satisfies the request`);
 
         // Return success without database update
+        // Empty messages - conversation agent will use modifications field to craft response
         return {
           success: true,
-          messages: ['Your current weekly plan already matches your request. No changes were needed.'],
+          messages: [],
+          modifications: 'No changes needed - your current plan already matches your request',
         };
       }
     } catch (error) {

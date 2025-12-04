@@ -19,11 +19,10 @@ export {
   type ModificationsAgentConfig,
   type ModificationsAgentInput,
   type ModificationsResponse,
-  createModificationTools,
-  type WorkoutModificationService,
-  type MicrocycleModificationService,
-  type PlanModificationServiceInterface,
 } from './modifications';
+
+// Note: Modification tools have been moved to @/server/services/agents/modifications/tools.ts
+// Import createModificationTools and related types from there instead
 
 // ==========================================
 // Legacy Exports (DEPRECATED - for backward compatibility only)

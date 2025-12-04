@@ -1,8 +1,8 @@
-import { userService } from '../user/userService';
-import { fitnessProfileService } from '../user/fitnessProfileService';
+import { userService } from '../../user/userService';
+import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
 import { formatForAI } from '@/shared/utils/date';
-import type { ToolResult } from '@/server/agents/base';
+import type { ToolResult } from '../shared/types';
 
 /**
  * ProfileService - Orchestration service for profile agent
@@ -14,17 +14,6 @@ import type { ToolResult } from '@/server/agents/base';
  * For entity CRUD operations, use FitnessProfileService directly.
  */
 export class ProfileService {
-  private static instance: ProfileService;
-
-  private constructor() {}
-
-  public static getInstance(): ProfileService {
-    if (!ProfileService.instance) {
-      ProfileService.instance = new ProfileService();
-    }
-    return ProfileService.instance;
-  }
-
   /**
    * Update profile from a user message
    *
@@ -35,7 +24,7 @@ export class ProfileService {
    * @param message - The user's message to extract profile info from
    * @returns ToolResult with response summary and optional messages
    */
-  async updateProfile(userId: string, message: string): Promise<ToolResult> {
+  static async updateProfile(userId: string, message: string): Promise<ToolResult> {
     console.log('[PROFILE_SERVICE] Processing profile update:', {
       userId,
       message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
@@ -82,5 +71,3 @@ export class ProfileService {
     }
   }
 }
-
-export const profileService = ProfileService.getInstance();
