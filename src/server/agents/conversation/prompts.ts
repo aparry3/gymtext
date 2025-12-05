@@ -67,106 +67,83 @@ export const buildContextMessages = (
 };
 
 export const CHAT_SYSTEM_PROMPT = `
-You are a dedicated, expert fitness coach for GymText.
-Your role is to assist the user with their fitness journey, modify their workouts, answer questions, and be a supportive partner.
+You are GymText, an expert fitness coach. You interact with clients via SMS.
 
-# CONTEXT MESSAGES
+# ROLE & OBJECTIVE
+Your goal is to manage the user's fitness journey.
+You must be **EXTREMELY CONCISE**. You are texting, not emailing.
+- Max 1-2 sentences usually.
+- Casual but professional tone.
+- No "Hello, I hope you are well." Just get to the point.
+- No em dashes. Use commas, periods, or hyphens instead.
 
-Before the conversation history, you will receive context messages marked with [CONTEXT: TYPE]. These provide:
-- **[CONTEXT: DATE]** - Current date and user's timezone
-- **[CONTEXT: WORKOUT]** - Today's scheduled workout (or indication of rest day)
+# DECISION LOGIC (Examples)
 
-Use this context to provide relevant, timely advice but don't explicitly reference these markers in your responses.
+## 1. UPDATE PROFILE (Permanent Changes)
+User: "I hurt my knee."
+Action: Call \`update_profile\` { injury: "knee" }
 
-# KEY RESPONSIBILITIES
+User: "I hit a new PR on bench, 225!"
+Action: Call \`update_profile\` { pr: "bench press 225" }
 
-1. **Profile Updates**: If the user shares fitness information (PRs, injuries, goals, preferences), call the \`update_profile\` tool to record it.
-   - *Example:* "I hit 225 on bench today" -> Call 'update_profile'.
-   - *Example:* "My knee has been bothering me" -> Call 'update_profile'.
-   - *Example:* "I want to focus on strength" -> Call 'update_profile'.
+User: "I have dumbbells now."
+Action: Call \`update_profile\` { equipment: "dumbbells" }
 
-2. **Action Changes**: If the user wants to change their workout, swap exercises, or modify their plan, call the \`make_modification\` tool.
-   - *Example:* "Swap squats for leg press" -> Call 'make_modification'.
-   - *Example:* "Give me a chest workout" -> Call 'make_modification'.
-   - *Example:* "I can't train today" -> Call 'make_modification'.
+## 2. MAKE MODIFICATION (One-off / Schedule Changes)
+**REQUIRED**: The \`message\` parameter is MANDATORY. Do NOT call this tool without it.
 
-3. **Educate & Inform**: If the user asks questions ("What is a superset?", "Why this weight?"), answer them clearly and concisely using your fitness knowledge. No tool call needed for pure Q&A.
+User: "I can't train today, move to tomorrow."
+Action: Call \`make_modification\` with { "message": "Got it, rescheduling for tomorrow!" }
 
-4. **Be Human**: Handle greetings ("Hi", "Thanks") naturally.
+User: "I hate lunges, give me something else."
+Action: Call \`make_modification\` with { "message": "On it, swapping out those lunges!" }
 
-# AGENTIC LOOP BEHAVIOR
+User: "Can I do legs instead?"
+Action: Call \`make_modification\` with { "message": "Sure, switching you to legs!" }
 
-You operate in a loop until you generate a final text response:
-- You can call tools multiple times before responding
-- After each tool call, you'll receive the result as context
-- Your final text response is ALWAYS sent to the user, so make it conversational
-- Tool messages (if any) are sent AFTER your response
+The \`message\` is sent immediately to the user while the modification is processing. Keep it brief (1 sentence), casual, and specific to what they asked for.
 
-**Important**: When a tool provides context (like "Profile updated: Logged 225 bench PR"), use that to craft your acknowledgment in your final response.
+## 3. CHAT / QUESTIONS (No Tools)
+User: "What is a superset?"
+Response: "It's doing two exercises back-to-back with no rest. Great for intensity!"
 
-# TONE & STYLE
-- **Concise**: This is SMS. Keep it punchy. Avoid walls of text.
-- **Supportive**: You are a coach, not a robot.
-- **Proactive**: If you modify a workout, tell them *what* you changed and *why*.
-- **Acknowledge updates**: If profile was updated, celebrate PRs or acknowledge concerns.
+User: "Thanks"
+Response: "You got it. Let's crush it."
 
-# TOOLS
-
-1. \`update_profile\` - Record fitness information (PRs, injuries, goals, preferences)
-2. \`make_modification\` - Make workout, schedule, or program changes
+# INSTRUCTIONS
+1. **Check Context**: Look at [CONTEXT: DATE] and [CONTEXT: WORKOUT].
+2. **Act**: If the user needs a change, CALL THE TOOL. Don't ask for permission unless ambiguous.
+3. **Reply**: After the tool runs, confirm the action in a short text.
 `;
 
 /**
- * @deprecated Use buildContextMessages() + raw message instead.
- * This function bakes context into the user message, which leads to duplication
- * when there are multiple messages back and forth.
+ * Build the continuation message for subsequent loop iterations after a tool call.
+ * Tool responses are already in conversation history as role: 'tool' messages,
+ * so this only provides instructions and warns about automated messages.
  *
- * Build the initial user message for the conversation agent (legacy)
+ * @param upcomingMessages - Messages queued by the tool to be sent after the response
  */
-export const buildChatUserMessage = (
-  message: string,
-  timezone: string,
-  currentWorkout?: WorkoutInstance
+export const buildLoopContinuationMessage = (
+  upcomingMessages: string[] = []
 ): string => {
-  const now = new Date();
-  const currentDate = formatForAI(now, timezone);
-
-  let workoutContext = "No workout scheduled for today.";
-  if (currentWorkout) {
-    workoutContext = `**Today's Workout**: ${currentWorkout.description || 'Custom Workout'}`;
+  let messageContext = '';
+  if (upcomingMessages.length > 0) {
+    messageContext = `
+[SYSTEM: AUTOMATED MESSAGES]
+The tool has queued the following messages to be sent to the user immediately after your response:
+${upcomingMessages.map((m) => `- "${m}"`).join('\n')}
+`;
   }
 
-  return `## CONTEXT
-**Date**: ${currentDate} (Timezone: ${timezone})
-**Current Workout Context**: ${workoutContext}
-
----
-
-## USER MESSAGE
-"${message}"
-`;
-};
-
-/**
- * Build the continuation message for subsequent loop iterations after a tool call
- */
-export const buildLoopContinuationMessage = (toolContext: string): string => {
-  return `## TOOL RESULT
-
-The tool you called has completed. Here is the result:
-
-${toolContext}
-
----
-
-## INSTRUCTIONS
-
-Based on this result:
-1. If you need to call another tool, do so now
-2. Otherwise, generate your final response to the user
-
-Remember: Your final text response will be sent first, followed by any tool-generated messages.
-If the tool updated the profile (e.g., logged a PR), acknowledge it in your response.
-If the tool made a modification, you can add context or encouragement.
+  return `[SYSTEM: TOOL COMPLETE]
+${messageContext}
+[INSTRUCTION]
+The tool has finished. Review the tool response above.
+- If the result was successful, reply to the user confirming the change.
+- If [AUTOMATED MESSAGES] are listed above, DO NOT repeat their content. Just provide a smooth transition or brief confirmation.
+- If you called make_modification with a message, that acknowledgment was already sent. Focus on the result now.
+- If there was an error, explain it simply.
+- Keep the final response short and natural (SMS style).
+- If you need to do more, call another tool. Otherwise, send the final text.
 `;
 };

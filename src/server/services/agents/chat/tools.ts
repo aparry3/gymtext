@@ -4,6 +4,48 @@ import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
 /**
+ * Creates a tool with a required `message` parameter that gets sent immediately
+ * before the callback executes. This allows the LLM to provide an acknowledgment
+ * message while slow tools are processing.
+ *
+ * @param name - Tool name
+ * @param description - Tool description for the LLM
+ * @param callback - The async function to execute
+ * @param onSendMessage - Callback to send the immediate message
+ * @returns StructuredToolInterface with message handling built-in
+ */
+export function toolWithMessage(
+  name: string,
+  description: string,
+  callback: () => Promise<ToolResult>,
+  onSendMessage: (message: string) => Promise<void>
+): StructuredToolInterface {
+  return tool(
+    async (args: { message: string }): Promise<ToolResult> => {
+      // Send immediate message before execution
+      if (args.message) {
+        try {
+          await onSendMessage(args.message);
+          console.log(`[toolWithMessage] Sent: ${args.message}`);
+        } catch (error) {
+          console.error('[toolWithMessage] Failed to send:', error);
+        }
+      }
+      return callback();
+    },
+    {
+      name,
+      description,
+      schema: z.object({
+        message: z.string().describe(
+          'REQUIRED. Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
+        ),
+      }),
+    }
+  );
+}
+
+/**
  * Dependencies for chat tools (DI pattern)
  * Pass the methods directly, not the full services
  */
@@ -36,7 +78,8 @@ export interface ChatToolContext {
  */
 export const createChatTools = (
   context: ChatToolContext,
-  deps: ChatToolDeps
+  deps: ChatToolDeps,
+  onSendMessage: (message: string) => Promise<void>
 ): StructuredToolInterface[] => {
   // Tool 1: Update Profile
   const updateProfileTool = tool(
@@ -61,13 +104,9 @@ All context is automatically provided - no parameters needed.`,
   );
 
   // Tool 2: Make Modification
-  const makeModificationTool = tool(
-    async (): Promise<ToolResult> => {
-      return deps.makeModification(context.userId, context.message, context.previousMessages);
-    },
-    {
-      name: 'make_modification',
-      description: `Make changes to the user's workout, weekly schedule, or training plan.
+  const makeModificationTool = toolWithMessage(
+    'make_modification',
+    `Make changes to the user's workout, weekly schedule, or training plan.
 
 Use this tool when the user wants to:
 - Change today's workout (swap exercises, different constraints, different equipment)
@@ -77,8 +116,10 @@ Use this tool when the user wants to:
 
 This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
 All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
-      schema: z.object({}),
-    }
+    async (): Promise<ToolResult> => {
+      return deps.makeModification(context.userId, context.message, context.previousMessages);
+    },
+    onSendMessage
   );
 
   return [updateProfileTool, makeModificationTool];

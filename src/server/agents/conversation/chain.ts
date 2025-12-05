@@ -42,7 +42,6 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
     // Initialize loop state
     const state: AgentLoopState = {
       accumulatedToolMessages: [],
-      context: '',
       iteration: 0,
       profileUpdated: false,
     };
@@ -86,8 +85,8 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
         console.log(`[CHAT AGENT] ${sortedToolCalls.length} tool call(s): ${sortedToolCalls.map(tc => tc.name).join(', ')}`);
 
-        // Track all tool responses for this iteration
-        const iterationResponses: string[] = [];
+        // Track messages from tools for this iteration
+        const iterationMessages: string[] = [];
         let hasError = false;
 
         // Execute each tool call in priority order
@@ -104,16 +103,15 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
           try {
             console.log(`[CHAT AGENT] Executing tool: ${toolCall.name}`);
+            // Tool wrappers handle any pre-execution logic (e.g., immediate messages)
             const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
 
             // Accumulate messages if present
             if (toolResult.messages && toolResult.messages.length > 0) {
               state.accumulatedToolMessages.push(...toolResult.messages);
+              iterationMessages.push(...toolResult.messages);
               console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from ${toolCall.name}`);
             }
-
-            // Track this tool's response
-            iterationResponses.push(`[${toolCall.name}]: ${toolResult.response}`);
 
             // Track if profile was updated (for ChatOutput)
             if (toolCall.name === 'update_profile' && toolResult.response.includes('Profile updated')) {
@@ -151,13 +149,10 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
           break;
         }
 
-        // Update context with all tool responses from this iteration
-        state.context = iterationResponses.join('\n');
-
         // Add continuation message for next iteration
         conversationHistory.push({
           role: 'user',
-          content: buildLoopContinuationMessage(state.context),
+          content: buildLoopContinuationMessage(iterationMessages),
         });
 
         console.log(`[CHAT AGENT] All tools complete, continuing loop`);

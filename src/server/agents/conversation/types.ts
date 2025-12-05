@@ -24,8 +24,6 @@ export interface AgentToolResult {
 export interface AgentLoopState {
   /** Tool messages accumulated across all iterations */
   accumulatedToolMessages: string[];
-  /** Context built up from tool responses */
-  context: string;
   /** Current iteration count */
   iteration: number;
   /** Whether profile was updated during the conversation */
