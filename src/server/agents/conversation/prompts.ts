@@ -140,10 +140,11 @@ export const buildChatUserMessage = (
 };
 
 /**
- * Build the continuation message for subsequent loop iterations after a tool call
+ * Build the continuation message for subsequent loop iterations after a tool call.
+ * Tool responses are already in conversation history as role: 'tool' messages,
+ * so this only provides instructions and warns about automated messages.
  */
 export const buildLoopContinuationMessage = (
-  toolContext: string,
   upcomingMessages: string[] = []
 ): string => {
   let messageContext = '';
@@ -155,11 +156,10 @@ ${upcomingMessages.map((m) => `- "${m}"`).join('\n')}
 `;
   }
 
-  return `[SYSTEM: TOOL RESULTS]
-${toolContext}
+  return `[SYSTEM: TOOL COMPLETE]
 ${messageContext}
 [INSTRUCTION]
-The tool has finished.
+The tool has finished. Review the tool response above.
 - If the result was successful, reply to the user confirming the change.
 - If [AUTOMATED MESSAGES] are listed above, DO NOT repeat their content. Just provide a smooth transition or brief confirmation.
 - If there was an error, explain it simply.
