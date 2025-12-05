@@ -76,10 +76,11 @@ Use this tool when the user wants to:
 - Make program-level changes (frequency, training splits, overall focus)
 
 This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
-All context (user, message, date, etc.) is automatically provided.`,
+
+**IMPORTANT**: You MUST provide the "message" parameter. This acknowledgment is sent immediately to the user while the modification is being processed.`,
       schema: z.object({
         message: z.string().describe(
-          'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
+          'REQUIRED. Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
         ),
       }),
     }

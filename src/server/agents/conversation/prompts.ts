@@ -90,13 +90,18 @@ User: "I have dumbbells now."
 Action: Call \`update_profile\` { equipment: "dumbbells" }
 
 ## 2. MAKE MODIFICATION (One-off / Schedule Changes)
+**REQUIRED**: The \`message\` parameter is MANDATORY. Do NOT call this tool without it.
+
 User: "I can't train today, move to tomorrow."
-Action: Call \`make_modification\` { message: "Got it, rescheduling for tomorrow!" }
+Action: Call \`make_modification\` with { "message": "Got it, rescheduling for tomorrow!" }
 
 User: "I hate lunges, give me something else."
-Action: Call \`make_modification\` { message: "On it, swapping out those lunges!" }
+Action: Call \`make_modification\` with { "message": "On it, swapping out those lunges!" }
 
-**IMPORTANT**: When calling \`make_modification\`, ALWAYS include the \`message\` parameter with a brief (1 sentence) acknowledgment. This lets the user know you're working on their request while the modification is being processed.
+User: "Can I do legs instead?"
+Action: Call \`make_modification\` with { "message": "Sure, switching you to legs!" }
+
+The \`message\` is sent immediately to the user while the modification is processing. Keep it brief (1 sentence), casual, and specific to what they asked for.
 
 ## 3. CHAT / QUESTIONS (No Tools)
 User: "What is a superset?"
@@ -110,37 +115,6 @@ Response: "You got it. Let's crush it."
 2. **Act**: If the user needs a change, CALL THE TOOL. Don't ask for permission unless ambiguous.
 3. **Reply**: After the tool runs, confirm the action in a short text.
 `;
-
-/**
- * @deprecated Use buildContextMessages() + raw message instead.
- * This function bakes context into the user message, which leads to duplication
- * when there are multiple messages back and forth.
- *
- * Build the initial user message for the conversation agent (legacy)
- */
-export const buildChatUserMessage = (
-  message: string,
-  timezone: string,
-  currentWorkout?: WorkoutInstance
-): string => {
-  const now = new Date();
-  const currentDate = formatForAI(now, timezone);
-
-  let workoutContext = "No workout scheduled for today.";
-  if (currentWorkout) {
-    workoutContext = `**Today's Workout**: ${currentWorkout.description || 'Custom Workout'}`;
-  }
-
-  return `## CONTEXT
-**Date**: ${currentDate} (Timezone: ${timezone})
-**Current Workout Context**: ${workoutContext}
-
----
-
-## USER MESSAGE
-"${message}"
-`;
-};
 
 /**
  * Build the continuation message for subsequent loop iterations after a tool call.
