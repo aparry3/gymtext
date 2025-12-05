@@ -137,8 +137,8 @@ export class ChatService {
 
       // Enforce SMS length constraints on each message
       const validatedMessages = messages
-        .filter(msg => msg && msg.trim())
-        .map(msg => {
+        .filter((msg: string) => msg && msg.trim())
+        .map((msg: string) => {
           const trimmed = msg.trim();
           if (trimmed.length > SMS_MAX_LENGTH) {
             return trimmed.substring(0, SMS_MAX_LENGTH - 3) + '...';

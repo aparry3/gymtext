@@ -110,4 +110,152 @@ export class MessageRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
   }
+
+  /**
+   * Find all messages with user info for admin view
+   * Supports filtering by direction, status, and search
+   */
+  async findAllWithUserInfo(params: {
+    limit?: number;
+    offset?: number;
+    direction?: 'inbound' | 'outbound';
+    status?: string;
+    search?: string;
+    clientId?: string;
+  }): Promise<{
+    messages: (Message & { userName: string | null; userPhone: string })[];
+    total: number;
+  }> {
+    let query = this.db
+      .selectFrom('messages')
+      .innerJoin('users', 'users.id', 'messages.clientId')
+      .select([
+        'messages.id',
+        'messages.clientId',
+        'messages.conversationId',
+        'messages.direction',
+        'messages.content',
+        'messages.phoneFrom',
+        'messages.phoneTo',
+        'messages.provider',
+        'messages.providerMessageId',
+        'messages.deliveryStatus',
+        'messages.deliveryAttempts',
+        'messages.lastDeliveryAttemptAt',
+        'messages.deliveryError',
+        'messages.metadata',
+        'messages.createdAt',
+        'users.name as userName',
+        'users.phoneNumber as userPhone',
+      ]);
+
+    // Apply filters
+    if (params.clientId) {
+      query = query.where('messages.clientId', '=', params.clientId);
+    }
+    if (params.direction) {
+      query = query.where('messages.direction', '=', params.direction);
+    }
+    if (params.status) {
+      query = query.where('messages.deliveryStatus', '=', params.status);
+    }
+    if (params.search) {
+      query = query.where((eb) =>
+        eb.or([
+          eb('messages.phoneFrom', 'ilike', `%${params.search}%`),
+          eb('messages.phoneTo', 'ilike', `%${params.search}%`),
+          eb('users.name', 'ilike', `%${params.search}%`),
+          eb('users.phoneNumber', 'ilike', `%${params.search}%`),
+        ])
+      );
+    }
+
+    // Get total count with same filters
+    let countQuery = this.db
+      .selectFrom('messages')
+      .innerJoin('users', 'users.id', 'messages.clientId')
+      .select(({ fn }) => fn.count('messages.id').as('count'));
+
+    if (params.clientId) {
+      countQuery = countQuery.where('messages.clientId', '=', params.clientId);
+    }
+    if (params.direction) {
+      countQuery = countQuery.where('messages.direction', '=', params.direction);
+    }
+    if (params.status) {
+      countQuery = countQuery.where('messages.deliveryStatus', '=', params.status);
+    }
+    if (params.search) {
+      countQuery = countQuery.where((eb) =>
+        eb.or([
+          eb('messages.phoneFrom', 'ilike', `%${params.search}%`),
+          eb('messages.phoneTo', 'ilike', `%${params.search}%`),
+          eb('users.name', 'ilike', `%${params.search}%`),
+          eb('users.phoneNumber', 'ilike', `%${params.search}%`),
+        ])
+      );
+    }
+
+    const countResult = await countQuery.executeTakeFirst();
+    const total = Number(countResult?.count ?? 0);
+
+    // Get paginated results
+    const messages = await query
+      .orderBy('messages.createdAt', 'desc')
+      .limit(params.limit || 50)
+      .offset(params.offset || 0)
+      .execute();
+
+    return {
+      messages: messages as (Message & { userName: string | null; userPhone: string })[],
+      total,
+    };
+  }
+
+  /**
+   * Get message statistics for admin view
+   */
+  async getStats(clientId?: string): Promise<{
+    totalMessages: number;
+    inbound: number;
+    outbound: number;
+    pending: number;
+    failed: number;
+  }> {
+    let baseQuery = this.db.selectFrom('messages');
+
+    if (clientId) {
+      baseQuery = baseQuery.where('clientId', '=', clientId);
+    }
+
+    const [total, inbound, outbound, pending, failed] = await Promise.all([
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('direction', '=', 'inbound')
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('direction', '=', 'outbound')
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('deliveryStatus', 'in', ['queued', 'sent'])
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('deliveryStatus', 'in', ['failed', 'undelivered'])
+        .executeTakeFirst(),
+    ]);
+
+    return {
+      totalMessages: Number(total?.count ?? 0),
+      inbound: Number(inbound?.count ?? 0),
+      outbound: Number(outbound?.count ?? 0),
+      pending: Number(pending?.count ?? 0),
+      failed: Number(failed?.count ?? 0),
+    };
+  }
 }

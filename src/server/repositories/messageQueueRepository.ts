@@ -71,6 +71,73 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
+   * Find all pending queue items globally for admin view
+   */
+  async findAllPending(params: {
+    limit?: number;
+    offset?: number;
+    clientId?: string;
+  }): Promise<MessageQueue[]> {
+    let query = this.db
+      .selectFrom('messageQueues')
+      .selectAll()
+      .where('status', '=', 'pending');
+
+    if (params.clientId) {
+      query = query.where('clientId', '=', params.clientId);
+    }
+
+    return await query
+      .orderBy('createdAt', 'desc')
+      .limit(params.limit || 100)
+      .offset(params.offset || 0)
+      .execute();
+  }
+
+  /**
+   * Find all pending queue items with user info for admin view
+   */
+  async findAllPendingWithUserInfo(params: {
+    limit?: number;
+    clientId?: string;
+  }): Promise<(MessageQueue & { userName: string | null; userPhone: string })[]> {
+    let query = this.db
+      .selectFrom('messageQueues')
+      .innerJoin('users', 'users.id', 'messageQueues.clientId')
+      .select([
+        'messageQueues.id',
+        'messageQueues.clientId',
+        'messageQueues.queueName',
+        'messageQueues.sequenceNumber',
+        'messageQueues.messageContent',
+        'messageQueues.mediaUrls',
+        'messageQueues.status',
+        'messageQueues.messageId',
+        'messageQueues.retryCount',
+        'messageQueues.maxRetries',
+        'messageQueues.timeoutMinutes',
+        'messageQueues.errorMessage',
+        'messageQueues.createdAt',
+        'messageQueues.sentAt',
+        'messageQueues.deliveredAt',
+        'users.name as userName',
+        'users.phoneNumber as userPhone',
+      ])
+      .where('messageQueues.status', '=', 'pending');
+
+    if (params.clientId) {
+      query = query.where('messageQueues.clientId', '=', params.clientId);
+    }
+
+    const results = await query
+      .orderBy('messageQueues.createdAt', 'desc')
+      .limit(params.limit || 100)
+      .execute();
+
+    return results as (MessageQueue & { userName: string | null; userPhone: string })[];
+  }
+
+  /**
    * Find the next pending message in a queue
    */
   async findNextPending(

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { userService } from '@/server/services';
-import type { UserFilters, UserSort } from '@/types/admin';
+import type { UserFilters, UserSort } from '@/components/admin/types';
 
 export async function GET(request: Request) {
   try {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminUser } from '@/types/admin';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +19,7 @@ import {
   UserIcon,
   LogOut,
 } from 'lucide-react';
+import { AdminUser } from '@/components/admin/types';
 
 interface UserDashboardProps {
   userId: string;

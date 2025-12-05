@@ -8,7 +8,7 @@ import { UsersTable } from '@/components/admin/UsersTable'
 import { Pagination } from '@/components/ui/pagination'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AdminUser, UserFilters, UserSort } from '@/types/admin'
+import { AdminUser, UserFilters, UserSort } from '@/components/admin/types'
 
 
 function AdminUsersPageContent() {
