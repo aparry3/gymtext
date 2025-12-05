@@ -1,14 +1,19 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
+import { createUserFieldsAgent } from '@/server/agents/profile/user';
 import { formatForAI } from '@/shared/utils/date';
+import { parseLocationToTimezone } from '@/shared/utils/timezone';
 import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
 /**
- * ProfileService - Orchestration service for profile agent
+ * ProfileService - Orchestration service for profile and user field agents
  *
- * Handles profile updates via the profile agent.
+ * Handles profile updates via the profile agent AND user field updates
+ * (timezone, send time, name) via the user fields agent.
+ * Both agents run in parallel for efficiency.
+ *
  * Uses entity services (UserService, FitnessProfileService) for data access.
  *
  * This is an ORCHESTRATION service - it coordinates agent calls.
@@ -16,13 +21,17 @@ import type { Message } from '@/server/models/messageModel';
  */
 export class ProfileService {
   /**
-   * Update profile from a user message
+   * Update profile and user fields from a user message
    *
-   * Fetches context via entity services, calls the profile agent,
+   * Runs both agents in parallel:
+   * 1. Profile agent - updates the fitness profile dossier
+   * 2. User fields agent - extracts timezone, send time, and name changes
+   *
+   * Fetches context via entity services, calls both agents,
    * persists updates, and returns a standardized ToolResult.
    *
    * @param userId - The user's ID
-   * @param message - The user's message to extract profile info from
+   * @param message - The user's message to extract info from
    * @param previousMessages - Optional conversation history for context
    * @returns ToolResult with response summary and optional messages
    */
@@ -41,29 +50,84 @@ export class ProfileService {
       }
 
       const currentProfile = await fitnessProfileService.getCurrentProfile(userId) ?? '';
+      const currentDate = formatForAI(new Date(), user.timezone);
 
-      // Call profile agent
-      const agent = createProfileUpdateAgent();
-      const result = await agent.invoke({
-        currentProfile,
-        message,
-        user,
-        currentDate: formatForAI(new Date(), user.timezone),
-        previousMessages,
-      });
+      // Run BOTH agents in parallel for efficiency
+      const [profileResult, userFieldsResult] = await Promise.all([
+        // Profile agent - updates fitness profile dossier
+        createProfileUpdateAgent().invoke({
+          currentProfile,
+          message,
+          user,
+          currentDate,
+          previousMessages,
+        }),
+        // User fields agent - extracts timezone, send time, name changes
+        createUserFieldsAgent().invoke({
+          message,
+          user,
+          currentDate,
+          previousMessages,
+        }),
+      ]);
 
-      // Persist via entity service
-      if (result.wasUpdated) {
-        await fitnessProfileService.saveProfile(userId, result.updatedProfile);
-        console.log('[PROFILE_SERVICE] Profile updated:', result.updateSummary);
+      // Persist profile updates
+      if (profileResult.wasUpdated) {
+        await fitnessProfileService.saveProfile(userId, profileResult.updatedProfile);
+        console.log('[PROFILE_SERVICE] Profile updated:', profileResult.updateSummary);
       } else {
         console.log('[PROFILE_SERVICE] No profile updates detected');
       }
 
+      // Handle user field updates
+      if (userFieldsResult.hasUpdates) {
+        const userUpdates: { preferredSendHour?: number; timezone?: string; name?: string } = {};
+
+        // Map timezone phrase to IANA using deterministic utility
+        if (userFieldsResult.timezonePhrase) {
+          const iana = parseLocationToTimezone(userFieldsResult.timezonePhrase);
+          if (iana) {
+            userUpdates.timezone = iana;
+            console.log('[PROFILE_SERVICE] Timezone mapped:', {
+              phrase: userFieldsResult.timezonePhrase,
+              iana,
+            });
+          } else {
+            console.warn('[PROFILE_SERVICE] Could not map timezone phrase:', userFieldsResult.timezonePhrase);
+          }
+        }
+
+        if (userFieldsResult.preferredSendHour !== null) {
+          userUpdates.preferredSendHour = userFieldsResult.preferredSendHour;
+        }
+
+        if (userFieldsResult.name) {
+          userUpdates.name = userFieldsResult.name;
+        }
+
+        // Persist user updates if any valid fields
+        if (Object.keys(userUpdates).length > 0) {
+          await userService.updatePreferences(userId, userUpdates);
+          console.log('[PROFILE_SERVICE] User fields updated:', userUpdates);
+        }
+      }
+
+      // Combine summaries for response
+      const summaries: string[] = [];
+      if (profileResult.wasUpdated) {
+        summaries.push(`Profile: ${profileResult.updateSummary}`);
+      }
+      if (userFieldsResult.hasUpdates && Object.keys(userFieldsResult).some(k =>
+        k !== 'hasUpdates' && k !== 'updateSummary' &&
+        userFieldsResult[k as keyof typeof userFieldsResult] !== null
+      )) {
+        summaries.push(`Settings: ${userFieldsResult.updateSummary}`);
+      }
+
       return {
-        response: result.wasUpdated
-          ? `Profile updated: ${result.updateSummary}`
-          : 'No profile updates detected.',
+        response: summaries.length > 0
+          ? summaries.join('; ')
+          : 'No updates detected.',
       };
     } catch (error) {
       console.error('[PROFILE_SERVICE] Error updating profile:', error);
