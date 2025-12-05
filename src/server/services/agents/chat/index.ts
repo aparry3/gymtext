@@ -88,7 +88,18 @@ export class ChatService {
         ? user
         : await userService.getUser(user.id) || user;
 
-      // Create tools using the factory function
+              // Callback for sending immediate messages
+      const onSendMessage = async (immediateMessage: string) => {
+        try {
+          await messageService.sendMessage(userWithProfile, immediateMessage);
+          console.log('[ChatService] Sent immediate message:', immediateMessage);
+        } catch (error) {
+          console.error('[ChatService] Failed to send immediate message:', error);
+          // Don't throw - continue with tool execution
+        }
+      };
+
+      // Create base tools using the factory function
       const tools = createChatTools(
         {
           userId: userWithProfile.id,
@@ -98,24 +109,14 @@ export class ChatService {
         {
           updateProfile: ProfileService.updateProfile,
           makeModification: ModificationService.makeModification,
-        }
+        },
+        onSendMessage,
       );
 
-      // Callback to send immediate messages before slow tool execution
-      const onSendMessage = async (immediateMessage: string) => {
-        try {
-          await messageService.sendMessage(userWithProfile, immediateMessage);
-          console.log('[ChatService] Sent immediate message:', immediateMessage);
-        } catch (error) {
-          console.error('[ChatService] Failed to send immediate message:', error);
-          // Don't throw - let the agent continue with tool execution
-        }
-      };
 
-      // Create chat agent with tools and callback
+      // Create chat agent with wrapped tools
       const agent = createChatAgent({
         tools,
-        onSendMessage,
       });
 
       // Invoke the agent

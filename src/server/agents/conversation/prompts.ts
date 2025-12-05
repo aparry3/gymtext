@@ -122,11 +122,9 @@ Response: "You got it. Let's crush it."
  * so this only provides instructions and warns about automated messages.
  *
  * @param upcomingMessages - Messages queued by the tool to be sent after the response
- * @param immediateMessageSent - Whether an immediate acknowledgment was already sent
  */
 export const buildLoopContinuationMessage = (
-  upcomingMessages: string[] = [],
-  immediateMessageSent: boolean = false
+  upcomingMessages: string[] = []
 ): string => {
   let messageContext = '';
   if (upcomingMessages.length > 0) {
@@ -137,22 +135,13 @@ ${upcomingMessages.map((m) => `- "${m}"`).join('\n')}
 `;
   }
 
-  let ackContext = '';
-  if (immediateMessageSent) {
-    ackContext = `
-[SYSTEM: IMMEDIATE ACK SENT]
-An acknowledgment message was already sent to the user before the tool ran.
-DO NOT repeat the acknowledgment. Focus on the result/outcome only.
-`;
-  }
-
   return `[SYSTEM: TOOL COMPLETE]
-${messageContext}${ackContext}
+${messageContext}
 [INSTRUCTION]
 The tool has finished. Review the tool response above.
 - If the result was successful, reply to the user confirming the change.
 - If [AUTOMATED MESSAGES] are listed above, DO NOT repeat their content. Just provide a smooth transition or brief confirmation.
-- If [IMMEDIATE ACK SENT], an acknowledgment was already sent. Don't repeat it.
+- If you called make_modification with a message, that acknowledgment was already sent. Focus on the result now.
 - If there was an error, explain it simply.
 - Keep the final response short and natural (SMS style).
 - If you need to do more, call another tool. Otherwise, send the final text.

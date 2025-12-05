@@ -34,7 +34,7 @@ const TOOL_PRIORITY: Record<string, number> = {
  * @param config - Agent configuration including tools
  * @returns Agent that processes chat messages
  */
-export const createChatAgent = ({ tools, onSendMessage, ...config }: ChatAgentConfig) => {
+export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
     const { user, message, currentWorkout, previousMessages } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
@@ -45,9 +45,6 @@ export const createChatAgent = ({ tools, onSendMessage, ...config }: ChatAgentCo
       iteration: 0,
       profileUpdated: false,
     };
-
-    // Track if immediate message was sent this iteration
-    let immediateMessageSent = false;
 
     // Initialize model with tools provided by service
     const model = initializeModel(undefined, config, { tools });
@@ -92,9 +89,6 @@ export const createChatAgent = ({ tools, onSendMessage, ...config }: ChatAgentCo
         const iterationMessages: string[] = [];
         let hasError = false;
 
-        // Reset immediate message flag for this iteration
-        immediateMessageSent = false;
-
         // Execute each tool call in priority order
         for (let i = 0; i < sortedToolCalls.length; i++) {
           const toolCall = sortedToolCalls[i];
@@ -108,29 +102,9 @@ export const createChatAgent = ({ tools, onSendMessage, ...config }: ChatAgentCo
           }
 
           try {
-            // Extract message param if present (for immediate acknowledgment)
-            const { message: immediateMessage, ...restArgs } = toolCall.args as { message?: string; [key: string]: unknown };
-
-            // Send immediate message if present and callback configured
-            if (immediateMessage && onSendMessage) {
-              console.log(`[CHAT AGENT] Sending immediate message: ${immediateMessage}`);
-              try {
-                await onSendMessage(immediateMessage);
-                immediateMessageSent = true;
-
-                // Add to conversation history so agent knows it was sent
-                conversationHistory.push({
-                  role: 'assistant',
-                  content: immediateMessage,
-                });
-              } catch (sendError) {
-                console.error(`[CHAT AGENT] Failed to send immediate message:`, sendError);
-                // Continue with tool execution even if message send fails
-              }
-            }
-
             console.log(`[CHAT AGENT] Executing tool: ${toolCall.name}`);
-            const toolResult = await selectedTool.invoke(restArgs) as AgentToolResult;
+            // Tool wrappers handle any pre-execution logic (e.g., immediate messages)
+            const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
 
             // Accumulate messages if present
             if (toolResult.messages && toolResult.messages.length > 0) {
@@ -178,7 +152,7 @@ export const createChatAgent = ({ tools, onSendMessage, ...config }: ChatAgentCo
         // Add continuation message for next iteration
         conversationHistory.push({
           role: 'user',
-          content: buildLoopContinuationMessage(iterationMessages, immediateMessageSent),
+          content: buildLoopContinuationMessage(iterationMessages),
         });
 
         console.log(`[CHAT AGENT] All tools complete, continuing loop`);
