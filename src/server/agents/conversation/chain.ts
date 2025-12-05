@@ -88,6 +88,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
         // Track all tool responses for this iteration
         const iterationResponses: string[] = [];
+        const iterationMessages: string[] = [];
         let hasError = false;
 
         // Execute each tool call in priority order
@@ -109,6 +110,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
             // Accumulate messages if present
             if (toolResult.messages && toolResult.messages.length > 0) {
               state.accumulatedToolMessages.push(...toolResult.messages);
+              iterationMessages.push(...toolResult.messages);
               console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from ${toolCall.name}`);
             }
 
@@ -157,7 +159,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
         // Add continuation message for next iteration
         conversationHistory.push({
           role: 'user',
-          content: buildLoopContinuationMessage(state.context),
+          content: buildLoopContinuationMessage(state.context, iterationMessages),
         });
 
         console.log(`[CHAT AGENT] All tools complete, continuing loop`);
