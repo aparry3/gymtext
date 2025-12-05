@@ -13,6 +13,14 @@ export { createFitnessPlanAgent } from './training/plans';
 // Conversation Agents
 export { type ChatAgentConfig } from './conversation/chain';
 
+// Image Generation Agents
+export {
+  createExerciseImageAgent,
+  type ExerciseImageInput,
+  type ExerciseImageOutput,
+  type ExerciseImageConfig,
+} from './images/exercises';
+
 // Modification Agents (standalone agent)
 export {
   createModificationsAgent,
