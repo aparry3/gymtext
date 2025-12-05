@@ -8,7 +8,7 @@ import type {
   MessageDeliveryStatus,
   MessageDirection,
   MessageProvider,
-} from '@/types/adminMessages';
+} from '@/components/admin/types';
 
 const messageRepo = new MessageRepository();
 const queueRepo = new MessageQueueRepository();

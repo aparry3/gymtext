@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import type { MessageFilters } from '@/types/adminMessages';
+import type { MessageFilters } from './types';
 
 interface MessagesFiltersProps {
   onFiltersChange: (filters: MessageFilters) => void;

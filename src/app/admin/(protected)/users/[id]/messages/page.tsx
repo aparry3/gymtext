@@ -13,7 +13,7 @@ import type {
   AdminMessageItem,
   MessageFilters,
   MessageStats,
-} from '@/types/adminMessages';
+} from '@/components/admin/types';
 
 interface UserMessagesPageProps {
   params: Promise<{ id: string }>;

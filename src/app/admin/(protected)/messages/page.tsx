@@ -12,7 +12,7 @@ import type {
   AdminMessageItem,
   MessageFilters,
   MessageStats,
-} from '@/types/adminMessages';
+} from '@/components/admin/types';
 
 function AdminMessagesPageContent() {
   const searchParams = useSearchParams();

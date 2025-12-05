@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { UserFilters } from '@/types/admin'
+import { UserFilters } from './types'
 
 interface UsersFiltersProps {
   onFiltersChange: (filters: UserFilters) => void

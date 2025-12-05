@@ -8,7 +8,7 @@ import { formatRelative } from '@/shared/utils/date';
 import type {
   AdminMessageItem,
   MessageRowVariant,
-} from '@/types/adminMessages';
+} from './types';
 
 interface MessagesTableProps {
   messages: AdminMessageItem[];

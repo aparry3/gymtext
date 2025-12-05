@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AdminUser, UserSort } from '@/types/admin'
+import { AdminUser, UserSort } from './types'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
