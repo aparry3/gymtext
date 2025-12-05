@@ -76,8 +76,12 @@ Use this tool when the user wants to:
 - Make program-level changes (frequency, training splits, overall focus)
 
 This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
-All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
-      schema: z.object({}),
+All context (user, message, date, etc.) is automatically provided.`,
+      schema: z.object({
+        message: z.string().describe(
+          'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
+        ),
+      }),
     }
   );
 

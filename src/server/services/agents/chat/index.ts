@@ -101,9 +101,21 @@ export class ChatService {
         }
       );
 
-      // Create chat agent with tools
+      // Callback to send immediate messages before slow tool execution
+      const onSendMessage = async (immediateMessage: string) => {
+        try {
+          await messageService.sendMessage(userWithProfile, immediateMessage);
+          console.log('[ChatService] Sent immediate message:', immediateMessage);
+        } catch (error) {
+          console.error('[ChatService] Failed to send immediate message:', error);
+          // Don't throw - let the agent continue with tool execution
+        }
+      };
+
+      // Create chat agent with tools and callback
       const agent = createChatAgent({
         tools,
+        onSendMessage,
       });
 
       // Invoke the agent

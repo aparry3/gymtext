@@ -91,10 +91,12 @@ Action: Call \`update_profile\` { equipment: "dumbbells" }
 
 ## 2. MAKE MODIFICATION (One-off / Schedule Changes)
 User: "I can't train today, move to tomorrow."
-Action: Call \`make_modification\` { type: "reschedule" ... }
+Action: Call \`make_modification\` { message: "Got it, rescheduling for tomorrow!" }
 
 User: "I hate lunges, give me something else."
-Action: Call \`make_modification\` { type: "swap_exercise" ... }
+Action: Call \`make_modification\` { message: "On it, swapping out those lunges!" }
+
+**IMPORTANT**: When calling \`make_modification\`, ALWAYS include the \`message\` parameter with a brief (1 sentence) acknowledgment. This lets the user know you're working on their request while the modification is being processed.
 
 ## 3. CHAT / QUESTIONS (No Tools)
 User: "What is a superset?"
@@ -144,9 +146,13 @@ export const buildChatUserMessage = (
  * Build the continuation message for subsequent loop iterations after a tool call.
  * Tool responses are already in conversation history as role: 'tool' messages,
  * so this only provides instructions and warns about automated messages.
+ *
+ * @param upcomingMessages - Messages queued by the tool to be sent after the response
+ * @param immediateMessageSent - Whether an immediate acknowledgment was already sent
  */
 export const buildLoopContinuationMessage = (
-  upcomingMessages: string[] = []
+  upcomingMessages: string[] = [],
+  immediateMessageSent: boolean = false
 ): string => {
   let messageContext = '';
   if (upcomingMessages.length > 0) {
@@ -157,12 +163,22 @@ ${upcomingMessages.map((m) => `- "${m}"`).join('\n')}
 `;
   }
 
+  let ackContext = '';
+  if (immediateMessageSent) {
+    ackContext = `
+[SYSTEM: IMMEDIATE ACK SENT]
+An acknowledgment message was already sent to the user before the tool ran.
+DO NOT repeat the acknowledgment. Focus on the result/outcome only.
+`;
+  }
+
   return `[SYSTEM: TOOL COMPLETE]
-${messageContext}
+${messageContext}${ackContext}
 [INSTRUCTION]
 The tool has finished. Review the tool response above.
 - If the result was successful, reply to the user confirming the change.
 - If [AUTOMATED MESSAGES] are listed above, DO NOT repeat their content. Just provide a smooth transition or brief confirmation.
+- If [IMMEDIATE ACK SENT], an acknowledgment was already sent. Don't repeat it.
 - If there was an error, explain it simply.
 - Keep the final response short and natural (SMS style).
 - If you need to do more, call another tool. Otherwise, send the final text.

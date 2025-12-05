@@ -66,12 +66,19 @@ export interface ChatInput {
 }
 
 /**
+ * Callback for sending immediate messages before slow tool execution
+ */
+export type SendMessageCallback = (message: string) => Promise<void>;
+
+/**
  * Configuration for chat agent factory
  * Tools are passed at agent creation time, not invoke time.
  */
 export interface ChatAgentConfig extends AgentConfig {
   /** Tools provided by the calling service */
   tools: StructuredToolInterface[];
+  /** Optional callback for sending immediate messages before slow tools */
+  onSendMessage?: SendMessageCallback;
 }
 
 /**
