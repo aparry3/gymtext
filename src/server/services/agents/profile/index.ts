@@ -82,18 +82,20 @@ export class ProfileService {
       if (userFieldsResult.hasUpdates) {
         const userUpdates: { preferredSendHour?: number; timezone?: string; name?: string } = {};
 
-        // Only update fields that have actual values (not null or undefined)
-        // Using != null catches both null and undefined
-        if (userFieldsResult.timezone != null) {
+        // Timezone: !! handles null and empty string
+        if (!!userFieldsResult.timezone) {
           userUpdates.timezone = userFieldsResult.timezone;
           console.log('[PROFILE_SERVICE] Timezone update:', userFieldsResult.timezone);
         }
 
-        if (userFieldsResult.preferredSendHour != null) {
+        // PreferredSendHour: can't use !! because 0 (midnight) is valid
+        // Check for null and -1 sentinel explicitly
+        if (userFieldsResult.preferredSendHour != null && userFieldsResult.preferredSendHour !== -1) {
           userUpdates.preferredSendHour = userFieldsResult.preferredSendHour;
         }
 
-        if (userFieldsResult.name != null) {
+        // Name: !! handles null and empty string
+        if (!!userFieldsResult.name) {
           userUpdates.name = userFieldsResult.name;
         }
 
