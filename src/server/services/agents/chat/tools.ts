@@ -88,16 +88,13 @@ export const createChatTools = (
     },
     {
       name: 'update_profile',
-      description: `Record fitness information from the user's message to their profile.
+      description: `Update the user's profile or personal settings.
 
-Use this tool when the user shares:
-- Personal records (PRs) or achievements
-- Injuries or physical limitations
-- Goals or preferences
-- Equipment or gym access changes
-- Schedule or availability changes
+Use this tool for:
+- **User Settings**: Send time, timezone, name, notification preferences
+- **Fitness Profile**: Injuries, goals, equipment, availability, PRs, achievements
 
-The tool will analyze the message and update their fitness profile accordingly.
+This tool handles WHO THE USER IS and THEIR PREFERENCES - not their workouts.
 All context is automatically provided - no parameters needed.`,
       schema: z.object({}),
     }
@@ -106,15 +103,14 @@ All context is automatically provided - no parameters needed.`,
   // Tool 2: Make Modification
   const makeModificationTool = toolWithMessage(
     'make_modification',
-    `Make changes to the user's workout, weekly schedule, or training plan.
+    `Make changes to the user's workout or training program.
 
-Use this tool when the user wants to:
-- Change today's workout (swap exercises, different constraints, different equipment)
-- Get a different workout type or muscle group than scheduled
-- Modify their weekly training schedule
-- Make program-level changes (frequency, training splits, overall focus)
+Use this tool for:
+- **Today's Workout**: Swap exercises, different constraints, different equipment
+- **Weekly Schedule**: Change workout type, muscle group, or training day
+- **Program-Level**: Frequency, training splits, overall focus
 
-This tool handles ALL modification requests. It will internally determine the appropriate type of change needed.
+This tool handles WORKOUT CONTENT - not user settings like send time, timezone, or name.
 All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
     async (): Promise<ToolResult> => {
       return deps.makeModification(context.userId, context.message, context.previousMessages);
