@@ -219,9 +219,10 @@ export class UserRepository extends BaseRepository {
     return UserModel.fromDbWithProfile(result);
   }
 
-  async updatePreferences(userId: string, preferences: { 
-    preferredSendHour?: number; 
-    timezone?: string; 
+  async updatePreferences(userId: string, preferences: {
+    preferredSendHour?: number;
+    timezone?: string;
+    name?: string;
   }): Promise<UserWithProfile | undefined> {
     return UserModel.fromDb(await this.db
       .updateTable('users')

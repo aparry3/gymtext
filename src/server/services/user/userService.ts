@@ -142,7 +142,7 @@ export class UserService {
     return result;
   }
 
-  async updatePreferences(userId: string, preferences: { preferredSendHour?: number; timezone?: string }): Promise<UserWithProfile> {
+  async updatePreferences(userId: string, preferences: { preferredSendHour?: number; timezone?: string; name?: string }): Promise<UserWithProfile> {
     const result = await this.circuitBreaker.execute(async () => {
       return await this.userRepository.updatePreferences(userId, preferences);
     });
