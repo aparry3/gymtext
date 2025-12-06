@@ -82,17 +82,18 @@ export class ProfileService {
       if (userFieldsResult.hasUpdates) {
         const userUpdates: { preferredSendHour?: number; timezone?: string; name?: string } = {};
 
-        // Use timezone directly from agent (already IANA format from constrained enum)
-        if (userFieldsResult.timezone) {
+        // Only update fields that have actual values (not null or undefined)
+        // Using != null catches both null and undefined
+        if (userFieldsResult.timezone != null) {
           userUpdates.timezone = userFieldsResult.timezone;
           console.log('[PROFILE_SERVICE] Timezone update:', userFieldsResult.timezone);
         }
 
-        if (userFieldsResult.preferredSendHour !== null) {
+        if (userFieldsResult.preferredSendHour != null) {
           userUpdates.preferredSendHour = userFieldsResult.preferredSendHour;
         }
 
-        if (userFieldsResult.name) {
+        if (userFieldsResult.name != null) {
           userUpdates.name = userFieldsResult.name;
         }
 
