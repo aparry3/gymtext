@@ -22,8 +22,10 @@ export function createUserFieldsAgent(config?: AgentConfig) {
   const model = initializeModel(UserFieldsOutputSchema, {
     model: 'gpt-5-nano',
     temperature: 0.3, // Lower temperature for more deterministic extraction
+    agentPath: 'profile/user',
     ...config,
   });
+
 
   return createRunnableAgent<UserFieldsInput, UserFieldsOutput>(
     async (input: UserFieldsInput): Promise<UserFieldsOutput> => {
