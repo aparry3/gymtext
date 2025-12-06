@@ -1,5 +1,6 @@
 import type { Message } from '@/server/models/messageModel';
 import type { UserWithProfile } from '@/server/models/userModel';
+import type { CommonTimezone } from '@/shared/utils/timezone';
 
 /**
  * Input for the User Fields Agent
@@ -26,11 +27,10 @@ export interface UserFieldsInput {
  */
 export interface UserFieldsOutput {
   /**
-   * Raw timezone phrase extracted from message
-   * e.g., "east coast", "PST", "california", "new york"
-   * Will be mapped to IANA timezone via parseLocationToTimezone()
+   * IANA timezone from constrained enum
+   * LLM directly outputs valid timezone based on user's mention
    */
-  timezonePhrase: string | null;
+  timezone: CommonTimezone | null;
 
   /**
    * Inferred preferred send hour (0-23)

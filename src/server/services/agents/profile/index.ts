@@ -3,7 +3,6 @@ import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
 import { createUserFieldsAgent } from '@/server/agents/profile/user';
 import { formatForAI } from '@/shared/utils/date';
-import { parseLocationToTimezone } from '@/shared/utils/timezone';
 import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
@@ -83,18 +82,10 @@ export class ProfileService {
       if (userFieldsResult.hasUpdates) {
         const userUpdates: { preferredSendHour?: number; timezone?: string; name?: string } = {};
 
-        // Map timezone phrase to IANA using deterministic utility
-        if (userFieldsResult.timezonePhrase) {
-          const iana = parseLocationToTimezone(userFieldsResult.timezonePhrase);
-          if (iana) {
-            userUpdates.timezone = iana;
-            console.log('[PROFILE_SERVICE] Timezone mapped:', {
-              phrase: userFieldsResult.timezonePhrase,
-              iana,
-            });
-          } else {
-            console.warn('[PROFILE_SERVICE] Could not map timezone phrase:', userFieldsResult.timezonePhrase);
-          }
+        // Use timezone directly from agent (already IANA format from constrained enum)
+        if (userFieldsResult.timezone) {
+          userUpdates.timezone = userFieldsResult.timezone;
+          console.log('[PROFILE_SERVICE] Timezone update:', userFieldsResult.timezone);
         }
 
         if (userFieldsResult.preferredSendHour !== null) {

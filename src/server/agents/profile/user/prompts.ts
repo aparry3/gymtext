@@ -18,8 +18,45 @@ Look for:
 - Timezone mentions: "my timezone is PST", "I'm on eastern time", "change my timezone to central"
 - City/region mentions: "I'm in Chicago", "Seattle time", "mountain time"
 
-Extract the RAW PHRASE the user used (e.g., "east coast", "PST", "california").
-Do NOT convert to IANA format - just extract what they said.
+Output the matching IANA timezone from this list (or null if no change requested):
+
+**Americas:**
+- America/New_York (Eastern US: New York, Boston, Miami, Atlanta, DC)
+- America/Chicago (Central US: Chicago, Dallas, Houston)
+- America/Denver (Mountain US: Denver, Phoenix, Utah)
+- America/Los_Angeles (Pacific US: LA, San Francisco, Seattle, Portland)
+- America/Toronto (Eastern Canada)
+- America/Vancouver (Pacific Canada)
+- America/Mexico_City (Mexico)
+- America/Sao_Paulo (Brazil)
+
+**Europe:**
+- Europe/London (UK)
+- Europe/Paris (France)
+- Europe/Berlin (Germany)
+- Europe/Madrid (Spain)
+- Europe/Rome (Italy)
+- Europe/Amsterdam (Netherlands)
+- Europe/Stockholm (Sweden)
+- Europe/Moscow (Russia)
+
+**Asia Pacific:**
+- Asia/Tokyo (Japan)
+- Asia/Shanghai (China)
+- Asia/Hong_Kong
+- Asia/Singapore
+- Asia/Seoul (Korea)
+- Asia/Mumbai (India)
+- Asia/Dubai (UAE)
+- Australia/Sydney
+- Australia/Melbourne
+- Pacific/Auckland (New Zealand)
+
+Map common references:
+- "East coast" / "Eastern" / "EST" / "EDT" → America/New_York
+- "Central" / "CST" / "CDT" → America/Chicago
+- "Mountain" / "MST" / "MDT" → America/Denver
+- "West coast" / "Pacific" / "PST" / "PDT" → America/Los_Angeles
 
 ## 2. PREFERRED SEND TIME CHANGES
 Detect when the user wants to change when they receive their daily messages.
@@ -60,7 +97,7 @@ Only extract the NEW name they want, not their current name being referenced.
 ## OUTPUT FORMAT
 
 Return JSON with:
-- timezonePhrase: string | null (raw phrase user said)
+- timezone: string | null (IANA timezone from the list above, e.g., "America/New_York")
 - preferredSendHour: number | null (0-23)
 - name: string | null
 - hasUpdates: boolean

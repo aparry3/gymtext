@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { COMMON_TIMEZONES } from '@/shared/utils/timezone';
 
 /**
  * Zod schema for User Fields Agent output
@@ -8,11 +9,11 @@ import { z } from 'zod';
  */
 export const UserFieldsOutputSchema = z.object({
   /**
-   * Raw timezone phrase extracted from the user's message
-   * Examples: "east coast", "PST", "california", "new york", "pacific time"
-   * Returns null if no timezone/location change was requested
+   * IANA timezone from constrained enum
+   * LLM picks from valid options based on user's location/timezone mention
+   * Returns null if no timezone change was requested
    */
-  timezonePhrase: z.string().nullable(),
+  timezone: z.enum(COMMON_TIMEZONES).nullable(),
 
   /**
    * Inferred preferred send hour (0-23 in 24-hour format)
@@ -37,7 +38,7 @@ export const UserFieldsOutputSchema = z.object({
 
   /**
    * Whether any field updates were detected in the message
-   * True if at least one of timezonePhrase, preferredSendHour, or name is non-null
+   * True if at least one of timezone, preferredSendHour, or name is non-null
    */
   hasUpdates: z.boolean(),
 

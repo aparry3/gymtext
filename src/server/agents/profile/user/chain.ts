@@ -8,7 +8,7 @@ import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlo
  * Create the User Fields Agent
  *
  * This agent extracts user preference updates from messages:
- * - Timezone (as raw phrase, mapped to IANA later)
+ * - Timezone (IANA format from constrained enum)
  * - Preferred send hour (intelligent time inference)
  * - Name changes
  *
@@ -50,14 +50,14 @@ export function createUserFieldsAgent(config?: AgentConfig) {
 
         console.log('[USER FIELDS AGENT] Extraction completed:', {
           hasUpdates: response.hasUpdates,
-          timezonePhrase: response.timezonePhrase,
+          timezone: response.timezone,
           preferredSendHour: response.preferredSendHour,
           name: response.name,
           summary: response.updateSummary,
         });
 
         return {
-          timezonePhrase: response.timezonePhrase,
+          timezone: response.timezone,
           preferredSendHour: response.preferredSendHour,
           name: response.name,
           hasUpdates: response.hasUpdates,
@@ -68,7 +68,7 @@ export function createUserFieldsAgent(config?: AgentConfig) {
 
         // On error, return no updates
         return {
-          timezonePhrase: null,
+          timezone: null,
           preferredSendHour: null,
           name: null,
           hasUpdates: false,
