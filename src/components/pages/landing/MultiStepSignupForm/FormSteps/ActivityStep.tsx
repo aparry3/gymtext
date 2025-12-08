@@ -11,53 +11,53 @@ interface ActivityStepProps {
   watch: UseFormWatch<FormData>;
 }
 
-const activityLevels = [
+const daysPerWeekOptions = [
   {
     value: '3_per_week' as const,
     label: '3 Days Per Week',
-    description: 'Training 3x/week',
+    description: 'I want to train 3x/week',
   },
   {
     value: '4_per_week' as const,
     label: '4 Days Per Week',
-    description: 'Training 4x/week',
+    description: 'I want to train 4x/week',
   },
   {
     value: '5_per_week' as const,
     label: '5 Days Per Week',
-    description: 'Training 5x/week',
+    description: 'I want to train 5x/week',
   },
   {
     value: '6_per_week' as const,
     label: '6 Days Per Week',
-    description: 'Training 6x/week',
+    description: 'I want to train 6x/week',
   },
 ];
 
 export function ActivityStep({ register, setValue, watch, errors }: ActivityStepProps) {
-  const selectedActivity = watch('currentActivity');
+  const selectedDays = watch('desiredDaysPerWeek');
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2 text-foreground">
-          How active are you currently?
+          How many days a week can you exercise?
         </h2>
         <p className="text-muted-foreground">
-          This helps us understand your starting point and set realistic goals.
+          This helps us design a program that fits your schedule.
         </p>
       </div>
 
-      {/* Activity Level Options */}
+      {/* Days Per Week Options */}
       <div className="space-y-3">
-        {activityLevels.map((level) => {
-          const isSelected = selectedActivity === level.value;
+        {daysPerWeekOptions.map((option) => {
+          const isSelected = selectedDays === option.value;
 
           return (
             <button
-              key={level.value}
+              key={option.value}
               type="button"
-              onClick={() => setValue('currentActivity', level.value)}
+              onClick={() => setValue('desiredDaysPerWeek', option.value)}
               className={`
                 w-full p-3 md:p-4 rounded-xl border-2 transition-all text-left cursor-pointer
                 ${
@@ -69,8 +69,8 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold md:text-base text-foreground">{level.label}</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">{level.description}</p>
+                  <h3 className="text-sm font-semibold md:text-base text-foreground">{option.label}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">{option.description}</p>
                 </div>
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
@@ -85,24 +85,24 @@ export function ActivityStep({ register, setValue, watch, errors }: ActivityStep
         })}
       </div>
 
-      {errors.currentActivity && (
-        <p className="text-sm font-medium text-red-600">{errors.currentActivity.message}</p>
+      {errors.desiredDaysPerWeek && (
+        <p className="text-sm font-medium text-red-600">{errors.desiredDaysPerWeek.message}</p>
       )}
 
-      {/* Activity Elaboration */}
+      {/* Availability Elaboration */}
       <div className="pt-4">
         <label className="block text-sm font-medium mb-2 text-foreground">
-          Tell us more about your current activity{' '}
+          Tell us more about your availability{' '}
           <span className="text-muted-foreground font-normal">(Optional)</span>
         </label>
         <textarea
-          {...register('activityElaboration')}
-          placeholder="e.g., I run 3 miles on weekdays, lift weights on weekends..."
+          {...register('availabilityElaboration')}
+          placeholder="e.g., I prefer mornings before work, weekends are flexible..."
           rows={3}
           className="w-full px-4 py-3 rounded-xl bg-white text-foreground border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
-        {errors.activityElaboration && (
-          <p className="mt-1 text-sm font-medium text-red-600">{errors.activityElaboration.message}</p>
+        {errors.availabilityElaboration && (
+          <p className="mt-1 text-sm font-medium text-red-600">{errors.availabilityElaboration.message}</p>
         )}
       </div>
     </div>

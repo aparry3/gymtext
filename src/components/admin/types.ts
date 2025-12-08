@@ -4,6 +4,25 @@ import { User } from '@/server/models/user';
 // Shared Types
 // ============================================
 
+// Signup data from onboarding form
+export interface SignupData {
+  // Formatted text for LLM (backward compatible)
+  fitnessGoals?: string;
+  currentExercise?: string;
+  injuries?: string;
+  environment?: string;
+
+  // Structured data from MultiStepSignupForm (for analytics/reporting)
+  primaryGoals?: ('strength' | 'endurance' | 'weight_loss' | 'general_fitness')[];
+  goalsElaboration?: string;
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  desiredDaysPerWeek?: '3_per_week' | '4_per_week' | '5_per_week' | '6_per_week';
+  availabilityElaboration?: string;
+  trainingLocation?: 'home' | 'commercial_gym' | 'bodyweight';
+  equipment?: string[];
+  acceptedRisks?: boolean;
+}
+
 // Pagination
 export interface Pagination {
   page: number;
@@ -64,6 +83,7 @@ export interface AdminUsersResponse {
 export interface AdminUserDetailResponse {
   user: AdminUser;
   profile: string | null;
+  signupData: SignupData | null;
   recentActivity?: {
     lastMessage?: string;
     lastWorkout?: string;

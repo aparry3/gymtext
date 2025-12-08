@@ -32,21 +32,20 @@ export function formatSignupDataForLLM(data: SignupData): {
     ? `${goalsList}. Additional details: ${data.goalsElaboration.trim()}`
     : goalsList;
 
-  // 2. Current Exercise (Now formatted as History vs Constraints)
-  const activityLevel = data.currentActivity
-    ? getActivityDescription(data.currentActivity)
+  // 2. Desired Availability & Experience
+  const desiredFrequency = data.desiredDaysPerWeek
+    ? getDaysPerWeekDescription(data.desiredDaysPerWeek)
     : '';
   const experienceLevel = data.experienceLevel
     ? `Experience level: ${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}`
     : '';
-  
-  // CRITICAL CHANGE: We frame this as "Historical Context" to prevent the LLM
-  // from interpreting "I run 3x a week" as a "Constraint that must continue."
-  const historyText = `***Historical Routine (Context Only)***:
-  ${experienceLevel}. ${activityLevel}.
-  Past/Current Routine Details: ${data.activityElaboration?.trim() || 'None provided.'}`;
 
-  const currentExercise = historyText; 
+  // Frame as desired availability - what the user WANTS, not what they currently do
+  const availabilityText = `***Desired Availability***:
+  ${experienceLevel}. ${desiredFrequency}.
+  Additional Details: ${data.availabilityElaboration?.trim() || 'None provided.'}`;
+
+  const currentExercise = availabilityText; 
 
   // 3. Environment
   const locationText = data.trainingLocation
@@ -79,14 +78,14 @@ function getGoalDescription(goal: string): string {
   return goalMap[goal] || goal;
 }
 
-function getActivityDescription(activity: string): string {
-  const activityMap: Record<string, string> = {
-    '3_per_week': 'Active 3 times per week',
-    '4_per_week': 'Active 4 times per week',
-    '5_per_week': 'Active 5 times per week',
-    '6_per_week': 'Active 6 times per week',
+function getDaysPerWeekDescription(daysPerWeek: string): string {
+  const daysMap: Record<string, string> = {
+    '3_per_week': 'Wants to train 3 days per week',
+    '4_per_week': 'Wants to train 4 days per week',
+    '5_per_week': 'Wants to train 5 days per week',
+    '6_per_week': 'Wants to train 6 days per week',
   };
-  return activityMap[activity] || activity;
+  return daysMap[daysPerWeek] || daysPerWeek;
 }
 
 function getLocationDescription(location: string): string {
