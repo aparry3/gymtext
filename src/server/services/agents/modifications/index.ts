@@ -71,7 +71,7 @@ export class ModificationService {
       );
 
       // Create the modifications agent with tools
-      const agent = createModificationsAgent({ tools });
+      const agent = createModificationsAgent({ tools, model: 'gpt-5-mini' });
 
       // Invoke the agent
       const result = await agent.invoke({

@@ -21,7 +21,7 @@ export type { ModificationsAgentConfig };
  */
 export const createModificationsAgent = ({ tools, ...config }: ModificationsAgentConfig): RunnableLambda<ModificationsAgentInput, ModificationsResponse> => {
   // Initialize model with tools from config
-  const model = initializeModel(undefined, config.model ? { model: config.model } : { model: 'gpt-5-nano' }, { tools });
+  const model = initializeModel(undefined, config, { tools });
 
   return RunnableLambda.from(async (input: ModificationsAgentInput) => {
     const agentName = 'MODIFICATIONS';
