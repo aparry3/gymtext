@@ -1,5 +1,6 @@
 import { UserModel, CreateUserData, UserWithProfile } from '@/server/models/userModel';
 import { UserRepository } from '@/server/repositories/userRepository';
+import { OnboardingRepository } from '@/server/repositories/onboardingRepository';
 import type { User } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/components/admin/types';
@@ -19,10 +20,12 @@ export interface CreateUserRequest {
 export class UserService {
   private static instance: UserService;
   private userRepository: UserRepository;
+  private onboardingRepository: OnboardingRepository;
   private circuitBreaker: CircuitBreaker;
 
   private constructor() {
     this.userRepository = new UserRepository();
+    this.onboardingRepository = new OnboardingRepository();
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000, // 1 minute
@@ -208,9 +211,13 @@ export class UserService {
 
       const adminUser = this.transformToAdminUser(user);
 
+      // Fetch signup data from onboarding
+      const signupData = await this.onboardingRepository.getSignupData(id);
+
       return {
         user: adminUser,
         profile: user.profile || null,
+        signupData,
         recentActivity: {
           totalMessages: 0,
           totalWorkouts: 0

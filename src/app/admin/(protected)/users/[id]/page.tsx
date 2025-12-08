@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AdminUser } from '@/components/admin/types'
+import { AdminUser, SignupData } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ export default function AdminUserDetailPage() {
   const router = useRouter()
   const [user, setUser] = useState<AdminUser | null>(null)
   const [profile, setProfile] = useState<string | null>(null)
+  const [signupData, setSignupData] = useState<SignupData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSendingWorkout, setIsSendingWorkout] = useState(false)
@@ -43,10 +44,11 @@ export default function AdminUserDetailPage() {
         throw new Error(result.message || 'Failed to fetch user')
       }
 
-      const { user: fetchedUser, profile: fetchedProfile } = result.data
+      const { user: fetchedUser, profile: fetchedProfile, signupData: fetchedSignupData } = result.data
 
       setUser(fetchedUser)
       setProfile(fetchedProfile || null)
+      setSignupData(fetchedSignupData || null)
     } catch (err) {
       setError('Failed to load user')
       console.error('Error fetching user:', err)
@@ -243,9 +245,13 @@ export default function AdminUserDetailPage() {
           </TabsList>
 
           <TabsContent value="profile">
+            {/* Signup Data Section */}
+            {signupData && <SignupDataSection signupData={signupData} />}
+
             {/* Profile Content */}
             {profile ? (
               <Card className="p-6">
+                <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">AI Profile</h3>
                 <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{profile}</pre>
               </Card>
             ) : (
@@ -299,6 +305,101 @@ function EmptyProfileState() {
         <p className="text-muted-foreground">
           This user hasn&apos;t completed their fitness profile yet.
         </p>
+      </div>
+    </Card>
+  )
+}
+
+function SignupDataSection({ signupData }: { signupData: SignupData }) {
+  const formatGoals = (goals?: ('strength' | 'endurance' | 'weight_loss' | 'general_fitness')[]) => {
+    if (!goals || goals.length === 0) return 'Not specified'
+    return goals.map(g => {
+      const labels: Record<string, string> = {
+        strength: 'Strength',
+        endurance: 'Endurance',
+        weight_loss: 'Weight Loss',
+        general_fitness: 'General Fitness'
+      }
+      return labels[g] || g
+    }).join(', ')
+  }
+
+  const formatDays = (days?: string) => {
+    if (!days) return 'Not specified'
+    const labels: Record<string, string> = {
+      '3_per_week': '3 days/week',
+      '4_per_week': '4 days/week',
+      '5_per_week': '5 days/week',
+      '6_per_week': '6 days/week'
+    }
+    return labels[days] || days
+  }
+
+  const formatLocation = (loc?: string) => {
+    if (!loc) return 'Not specified'
+    const labels: Record<string, string> = {
+      home: 'Home',
+      commercial_gym: 'Commercial Gym',
+      bodyweight: 'Bodyweight Only'
+    }
+    return labels[loc] || loc
+  }
+
+  const formatExperience = (level?: string) => {
+    if (!level) return 'Not specified'
+    return level.charAt(0).toUpperCase() + level.slice(1)
+  }
+
+  return (
+    <Card className="p-6 mb-4">
+      <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">Signup Data</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <span className="text-muted-foreground">Primary Goals: </span>
+          <span className="font-medium">{formatGoals(signupData.primaryGoals)}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Experience: </span>
+          <span className="font-medium">{formatExperience(signupData.experienceLevel)}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Days/Week: </span>
+          <span className="font-medium">{formatDays(signupData.desiredDaysPerWeek)}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Location: </span>
+          <span className="font-medium">{formatLocation(signupData.trainingLocation)}</span>
+        </div>
+        {signupData.equipment && signupData.equipment.length > 0 && (
+          <div className="col-span-1 md:col-span-2">
+            <span className="text-muted-foreground">Equipment: </span>
+            <span className="font-medium">{signupData.equipment.join(', ')}</span>
+          </div>
+        )}
+        {signupData.goalsElaboration && (
+          <div className="col-span-1 md:col-span-2">
+            <span className="text-muted-foreground">Goals Detail: </span>
+            <span className="font-medium">{signupData.goalsElaboration}</span>
+          </div>
+        )}
+        {signupData.availabilityElaboration && (
+          <div className="col-span-1 md:col-span-2">
+            <span className="text-muted-foreground">Availability Detail: </span>
+            <span className="font-medium">{signupData.availabilityElaboration}</span>
+          </div>
+        )}
+        {signupData.injuries && (
+          <div className="col-span-1 md:col-span-2">
+            <span className="text-muted-foreground">Injuries/Limitations: </span>
+            <span className="font-medium">{signupData.injuries}</span>
+          </div>
+        )}
+        {signupData.currentExercise && (
+          <div className="col-span-1 md:col-span-2">
+            <span className="text-muted-foreground">Current Exercise: </span>
+            <span className="font-medium">{signupData.currentExercise}</span>
+          </div>
+        )}
       </div>
     </Card>
   )
