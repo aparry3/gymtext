@@ -34,11 +34,11 @@ const formSchema = z.object({
     required_error: 'Please select your experience level',
   }),
 
-  // Activity
-  currentActivity: z.enum(['3_per_week', '4_per_week', '5_per_week', '6_per_week'], {
-    required_error: 'Please select your current activity level',
+  // Desired Training Frequency
+  desiredDaysPerWeek: z.enum(['3_per_week', '4_per_week', '5_per_week', '6_per_week'], {
+    required_error: 'Please select how many days you want to train',
   }),
-  activityElaboration: z.string().optional(),
+  availabilityElaboration: z.string().optional(),
 
   // Preferences
   trainingLocation: z.enum(['home', 'commercial_gym', 'bodyweight'], {
@@ -146,8 +146,8 @@ export function MultiStepSignupForm() {
         primaryGoals: data.primaryGoals,
         goalsElaboration: data.goalsElaboration,
         experienceLevel: data.experienceLevel,
-        currentActivity: data.currentActivity,
-        activityElaboration: data.activityElaboration,
+        desiredDaysPerWeek: data.desiredDaysPerWeek,
+        availabilityElaboration: data.availabilityElaboration,
         trainingLocation: data.trainingLocation,
         equipment: data.equipment,
         injuries: data.injuries,
@@ -310,7 +310,7 @@ function getFieldsForStep(step: number): (keyof FormData)[] {
     case 3:
       return ['experienceLevel'];
     case 4:
-      return ['currentActivity'];
+      return ['desiredDaysPerWeek'];
     case 5:
       return ['trainingLocation', 'equipment'];
     case 6:

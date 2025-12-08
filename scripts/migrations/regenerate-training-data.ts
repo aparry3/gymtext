@@ -1,3 +1,4 @@
+import { Command } from 'commander';
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from '@/server/models';
@@ -26,14 +27,37 @@ import { createProfileUpdateAgent } from '@/server/agents/profile';
  * Safety: Profile generation happens BEFORE deletion, so no data is lost on failure.
  *
  * Usage:
- *   source .env.local && tsx scripts/migrations/regenerate-training-data.ts [--dry-run]
+ *   pnpm migrate:training                    # All users
+ *   pnpm migrate:training -p +15551234567    # Single user by phone
+ *   pnpm migrate:training --dry-run          # Dry run (all users)
+ *   pnpm migrate:training -p +15551234567 --dry-run  # Dry run (single user)
  */
+
+// ============================================================================
+// CLI Configuration
+// ============================================================================
+
+interface MigrationOptions {
+  phone?: string;
+  dryRun?: boolean;
+}
+
+const program = new Command();
+program
+  .name('regenerate-training-data')
+  .description('Full reset & regenerate training data for users')
+  .option('-p, --phone <phone>', 'Target a single user by phone number')
+  .option('--dry-run', 'Run without making database changes')
+  .parse(process.argv);
+
+const opts = program.opts<MigrationOptions>();
+const isDryRun = opts.dryRun ?? false;
+const targetPhone = opts.phone;
 
 // ============================================================================
 // Configuration & Setup
 // ============================================================================
 
-const isDryRun = process.argv.includes('--dry-run');
 const CONCURRENCY_LIMIT = 10; // Process 10 users in parallel at a time
 
 // Database connection
@@ -334,13 +358,23 @@ async function processBatch(users: any[], startIndex: number): Promise<UserProce
 async function regenerateTrainingData() {
   console.log('\nFull Reset: Regenerating Profiles + Plans + Microcycles...');
 
-  // Get all users from database
-  const allUsersRows = await db
-    .selectFrom('users')
-    .selectAll()
-    .execute();
+  // Build query - filter by phone if provided
+  let query = db.selectFrom('users').selectAll();
+  if (targetPhone) {
+    query = query.where('phoneNumber', '=', targetPhone);
+  }
+  const allUsersRows = await query.execute();
 
-  console.log(`Found ${allUsersRows.length} total user(s)`);
+  // Validate phone target
+  if (targetPhone && allUsersRows.length === 0) {
+    console.error(`\n❌ No user found with phone number: ${targetPhone}`);
+    process.exit(1);
+  }
+
+  if (targetPhone) {
+    console.log(`Targeting user with phone: ${targetPhone}`);
+  }
+  console.log(`Found ${allUsersRows.length} user(s) to process`);
   console.log(`Processing in batches of ${CONCURRENCY_LIMIT} users at a time\n`);
 
   // Process users in batches
@@ -387,13 +421,19 @@ async function regenerateTrainingData() {
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Data Migration: Full Reset & Regenerate All Training Data');
+  console.log('Data Migration: Full Reset & Regenerate Training Data');
   console.log('='.repeat(60));
+
+  if (targetPhone) {
+    console.log(`📱 Target: ${targetPhone}`);
+  } else {
+    console.log('📱 Target: All users');
+  }
 
   if (isDryRun) {
     console.log('⚠️  DRY-RUN MODE: No changes will be made to the database\n');
   } else {
-    console.log('⚠️  WARNING: This will DELETE and REGENERATE all profiles, plans, and microcycles!\n');
+    console.log('⚠️  WARNING: This will DELETE and REGENERATE profiles, plans, and microcycles!\n');
   }
 
   try {
