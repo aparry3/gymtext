@@ -25,6 +25,7 @@ export interface FitnessPlan {
   description: string;  // Structured text plan
   formatted?: string | null;
   message?: string | null;
+  structured?: PlanStructure | null;  // Parsed structured plan data
   startDate: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -46,6 +47,7 @@ export class FitnessPlanModel implements FitnessPlan {
   description: string;
   formatted: string | null;
   message: string | null;
+  structured: PlanStructure | null;
   startDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +58,7 @@ export class FitnessPlanModel implements FitnessPlan {
     description: string,
     formatted: string | null,
     message: string | null,
+    structured: PlanStructure | null,
     startDate: Date,
     createdAt: Date,
     updatedAt: Date
@@ -65,6 +68,7 @@ export class FitnessPlanModel implements FitnessPlan {
     this.description = description;
     this.formatted = formatted;
     this.message = message;
+    this.structured = structured;
     this.startDate = startDate;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
@@ -77,6 +81,7 @@ export class FitnessPlanModel implements FitnessPlan {
       description: fitnessPlan.description || '',
       formatted: fitnessPlan.formatted,
       message: fitnessPlan.message,
+      structured: fitnessPlan.structured as PlanStructure | null,
       startDate: new Date(fitnessPlan.startDate as unknown as string | number | Date),
       createdAt: new Date(fitnessPlan.createdAt as unknown as string | number | Date),
       updatedAt: new Date(fitnessPlan.updatedAt as unknown as string | number | Date),
@@ -92,6 +97,7 @@ export class FitnessPlanModel implements FitnessPlan {
       description: fitnessPlanOverview.description,
       formatted: fitnessPlanOverview.formatted,
       message: fitnessPlanOverview.message || null,
+      structured: fitnessPlanOverview.structure || null,
       startDate: new Date(),
     };
   }

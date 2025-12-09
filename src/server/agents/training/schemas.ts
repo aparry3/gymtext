@@ -64,6 +64,9 @@ export const WorkoutStructureSchema = z.object({
 });
 
 export type WorkoutStructure = z.infer<typeof WorkoutStructureSchema>;
+export type WorkoutActivity = z.infer<typeof WorkoutActivitySchema>;
+export type WorkoutSection = z.infer<typeof WorkoutSectionSchema>;
+export type Intensity = z.infer<typeof IntensitySchema>;
 
 
 /**

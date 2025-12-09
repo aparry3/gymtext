@@ -27,6 +27,7 @@ export class MicrocycleRepository {
         isDeload: microcycle.isDeload,
         formatted: microcycle.formatted,
         message: microcycle.message,
+        structured: microcycle.structured ? JSON.stringify(microcycle.structured) : null,
         startDate: microcycle.startDate,
         endDate: microcycle.endDate,
         isActive: microcycle.isActive,
@@ -97,6 +98,9 @@ export class MicrocycleRepository {
     }
     if (updates.message !== undefined) {
       updateData.message = updates.message;
+    }
+    if (updates.structured !== undefined) {
+      updateData.structured = updates.structured ? JSON.stringify(updates.structured) : null;
     }
     if (updates.isActive !== undefined) {
       updateData.isActive = updates.isActive;

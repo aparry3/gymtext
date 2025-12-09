@@ -21,6 +21,7 @@ export class FitnessPlanRepository extends BaseRepository {
         description: fitnessPlan.description,
         formatted: fitnessPlan.formatted,
         message: fitnessPlan.message,
+        structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
         startDate: fitnessPlan.startDate,
       })
       .returningAll()

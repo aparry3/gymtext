@@ -152,7 +152,7 @@ export class WorkoutInstanceService {
       // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
       // Use AI agent to generate workout with message
-      const { formatted, message, description } = await createWorkoutGenerateAgent().invoke({
+      const { formatted, message, description, structure } = await createWorkoutGenerateAgent().invoke({
         user,
         date: targetDate.toJSDate(),
         dayOverview, // Pass the string overview instead of pattern object
@@ -179,6 +179,7 @@ export class WorkoutInstanceService {
         details: JSON.parse(JSON.stringify(details)),
         description,
         message,
+        structured: structure,
         completedAt: null,
         createdAt: new Date(),
         updatedAt: new Date()

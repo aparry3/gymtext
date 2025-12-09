@@ -4,6 +4,7 @@ import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
 import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles';
+import type { MicrocycleStructure } from '@/server/agents/training/schemas';
 
 // Backwards-compatible alias
 const createMicrocycleAgent = createMicrocycleGenerateAgent;
@@ -129,7 +130,7 @@ export class MicrocycleService {
     }
 
     // Generate microcycle using AI agent with plan text + user profile + week number
-    const { days, description, formatted, isDeload, message } = await this.generateMicrocyclePattern(
+    const { days, description, formatted, isDeload, message, structure } = await this.generateMicrocyclePattern(
       plan.description,
       user.profile || '',
       progress.absoluteWeek,
@@ -146,6 +147,7 @@ export class MicrocycleService {
       isDeload,
       formatted,
       message,
+      structured: structure,
       startDate: progress.weekStartDate,
       endDate: progress.weekEndDate,
       isActive: false, // No longer using isActive flag - we query by dates instead
@@ -170,6 +172,7 @@ export class MicrocycleService {
     isDeload: boolean;
     formatted: string;
     message: string;
+    structure?: MicrocycleStructure;
   }> {
     try {
       // Use AI agent to generate the microcycle

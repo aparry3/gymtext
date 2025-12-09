@@ -1,4 +1,5 @@
 import { Microcycles } from '@/server/models/_types';
+import type { MicrocycleStructure } from '@/server/agents/training/schemas';
 
 // Re-export schema types
 export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
@@ -21,6 +22,7 @@ export interface Microcycle {
   isDeload: boolean;
   formatted?: string | null;
   message?: string | null;
+  structured?: MicrocycleStructure | null;  // Parsed structured microcycle data
   startDate: Date;
   endDate: Date;
   isActive: boolean;
@@ -40,6 +42,7 @@ export class MicrocycleModel {
       isDeload: (row.isDeload as unknown as boolean) ?? false,
       formatted: (row.formatted as unknown as string | null) ?? null,
       message: (row.message as unknown as string | null) ?? null,
+      structured: row.structured as MicrocycleStructure | null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
       endDate: new Date(row.endDate as unknown as string | number | Date),
       isActive: (row.isActive as unknown as boolean) ?? true,
@@ -64,6 +67,8 @@ export class MicrocycleModel {
       formatted: microcycle.formatted as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       message: microcycle.message as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      structured: microcycle.structured as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       startDate: microcycle.startDate as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

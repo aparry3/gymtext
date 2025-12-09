@@ -9,12 +9,15 @@ export class WorkoutInstanceRepository extends BaseRepository {
    * Create a new workout instance
    */
   async create(data: NewWorkoutInstance): Promise<WorkoutInstance> {
-    // Ensure details field is properly serialized for JSONB column
+    // Ensure details and structured fields are properly serialized for JSONB columns
     const serializedData = {
       ...data,
       details: typeof data.details === 'string'
         ? data.details
-        : JSON.stringify(data.details)
+        : JSON.stringify(data.details),
+      structured: data.structured
+        ? (typeof data.structured === 'string' ? data.structured : JSON.stringify(data.structured))
+        : null
     };
 
     const result = await this.db
@@ -160,6 +163,12 @@ export class WorkoutInstanceRepository extends BaseRepository {
       updateData.details = typeof data.details === 'string'
         ? data.details
         : JSON.stringify(data.details);
+    }
+
+    if (data.structured !== undefined) {
+      updateData.structured = data.structured
+        ? (typeof data.structured === 'string' ? data.structured : JSON.stringify(data.structured))
+        : null;
     }
 
     const result = await this.db
