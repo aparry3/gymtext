@@ -100,13 +100,22 @@ Each exercise line must follow this pattern:
 
 - Short Name: sets x reps
 OR
+- Short Name: rep1/rep2/rep3/...  (for variable reps per set)
+OR
 - Short Name: time
 
 Rules:
 - Use a very short, clear name.
-- Sets x reps:
+- Sets x reps (when all sets have the same rep target):
   - "4x8–10 @ RIR 4–5" → "4x8-10"
   - Replace any range dash with a simple hyphen: 8–10 → 8-10.
+- Variable reps per set (pyramids, waves, descending sets, etc.):
+  - When reps vary by set (e.g., "5 / 5 / 4 / 4 / 3" or "5, 5, 4, 4, 3"), use slash notation WITHOUT a sets prefix:
+    - "Reps: 5 / 5 / 4 / 4 / 3" → "5/5/4/4/3"
+    - "5, 5, 4, 4, 3 reps" → "5/5/4/4/3"
+    - "8, 6, 4, 2 reps" → "8/6/4/2"
+  - Do NOT convert variable reps to sets x reps format.
+  - The number of rep values indicates the number of sets (5 values = 5 sets).
 - Time:
   - Use "m" for minutes with no space:
     - 5 minutes → "5m"
@@ -136,6 +145,8 @@ Examples:
 - "Seated Dumbbell Overhead Press – 3x8–10" → "- Seated DB OHP: 3x8-10"
 - "Romanian Deadlift – 3x8" → "- BB RDL: 3x8"
 - "Single-leg leg press – 3x10 each side" → "- SL Leg Press: 3x10/side"
+- "Barbell Bench Press – Reps: 5 / 5 / 4 / 4 / 3" → "- BB Bench Press: 5/5/4/4/3"
+- "Squat – 8, 6, 4, 2 reps" → "- Squat: 8/6/4/2"
 
 If a longer name can be shortened without confusion, shorten it:
 - Prefer "Lat Pulldown" over "Wide-Grip Lat Pulldown with Cable Machine".
@@ -179,6 +190,7 @@ Example:
 - "Incline Dumbbell Press – 3x10–12" → "- Incline DB Press: 3x10-12"
 - "Seated Dumbbell Overhead Press – 3x8–10" → "- Seated DB OHP: 3x8-10"
 - "Cable Chest Fly – 3x12–15" → "- Cable Chest Fly: 3x12-15"
+- "Barbell Bench Press – 5 sets, Reps: 5 / 5 / 4 / 4 / 3 @ RPE 7-8" → "- BB Bench Press: 5/5/4/4/3"
 
 Ignore nested bullets for tempo, rest, and cues; only keep the exercise name and its set/rep prescription.
 
