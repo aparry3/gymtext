@@ -24,13 +24,15 @@ interface PlanData {
 }
 
 interface MicrocycleData {
-  days?: Array<{
-    day: string;
-    focus: string;
-    activityType: string;
-    isRest: boolean;
-  }>;
   weekNumber?: number;
+  structured?: {
+    days?: Array<{
+      day: string;
+      focus: string;
+      activityType: string;
+      isRest: boolean;
+    }>;
+  };
 }
 
 export function UserPlanView({ userId }: UserPlanViewProps) {
@@ -92,8 +94,8 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
   // Get structured data or fall back to empty
   const structure = plan?.structure;
 
-  // Build weekly rhythm from microcycle or plan schedule template
-  const weeklyDays = microcycle?.days?.map((d) => ({
+  // Build weekly rhythm from microcycle structured data or plan schedule template
+  const weeklyDays = microcycle?.structured?.days?.map((d) => ({
     day: d.day,
     focus: d.focus || (d.isRest ? 'Rest' : d.activityType),
     isRest: d.isRest,
@@ -137,16 +139,6 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
           <ConditioningCard guidelines={structure?.conditioning} />
         </div>
       </div>
-
-      {/* Fallback: Show formatted markdown if no structured data */}
-      {!structure && plan?.formatted && (
-        <div className="mt-6 p-6 bg-muted/30 rounded-lg">
-          <h3 className="font-semibold mb-4">Plan Details</h3>
-          <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
-            {plan.formatted}
-          </pre>
-        </div>
-      )}
     </div>
   );
 }

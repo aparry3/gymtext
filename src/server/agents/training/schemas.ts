@@ -45,8 +45,8 @@ export const WorkoutSectionSchema = z.object({
 });
 
 export const WorkoutStructureSchema = z.object({
-  title: z.string(),
-  focus: z.string().default(''),
+  title: z.string().describe("Concise workout name, 2-4 words max (e.g. 'Pull A', 'Upper Strength', 'Leg Day')"),
+  focus: z.string().describe("Brief focus area, 1-3 words (e.g. 'Back & Biceps', 'Quads', 'Push')").default(''),
   description: z.string().default(''),
 
   // Optional flair

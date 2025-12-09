@@ -25,6 +25,12 @@ interface WorkoutData {
   structure?: WorkoutStructure;
 }
 
+interface DayFocus {
+  focus: string;
+  activityType: string;
+  isRest: boolean;
+}
+
 interface DashboardData {
   todayWorkout: WorkoutData | null;
   tomorrowWorkout: WorkoutData | null;
@@ -33,6 +39,8 @@ interface DashboardData {
   weekNumber: number;
   programPhase: string;
   quote?: { text: string; author: string };
+  todayFocus?: DayFocus;
+  tomorrowFocus?: DayFocus;
 }
 
 // Get day label from date
@@ -94,23 +102,53 @@ export function UserDashboard({ userId }: UserDashboardProps) {
         }
       }
 
-      // Fetch current microcycle for week number
+      // Fetch current microcycle for week number and day focus
+      let todayFocus: DayFocus | undefined;
+      let tomorrowFocus: DayFocus | undefined;
+
       const microcycleResponse = await fetch(`/api/users/${userId}/microcycle?absoluteWeek=${weekNumber}`);
       if (microcycleResponse.ok) {
         const microcycleData = await microcycleResponse.json();
         if (microcycleData.data?.weekNumber) {
           weekNumber = microcycleData.data.weekNumber;
         }
+
+        // Extract today's and tomorrow's focus from microcycle days
+        const days = microcycleData.data?.structured?.days || [];
+        if (days.length > 0) {
+          const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+          const tomorrowDayName = tomorrow.toLocaleDateString('en-US', { weekday: 'long' });
+
+          const todayDayInfo = days.find((d: { day: string }) => d.day === todayDayName);
+          const tomorrowDayInfo = days.find((d: { day: string }) => d.day === tomorrowDayName);
+
+          if (todayDayInfo) {
+            todayFocus = {
+              focus: todayDayInfo.focus,
+              activityType: todayDayInfo.activityType,
+              isRest: todayDayInfo.isRest,
+            };
+          }
+          if (tomorrowDayInfo) {
+            tomorrowFocus = {
+              focus: tomorrowDayInfo.focus,
+              activityType: tomorrowDayInfo.activityType,
+              isRest: tomorrowDayInfo.isRest,
+            };
+          }
+        }
       }
 
       setDashboardData({
         todayWorkout,
         tomorrowWorkout,
-        isRestDayToday: todayWorkout?.sessionType === 'rest' || !todayWorkout,
-        isRestDayTomorrow: tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout,
+        isRestDayToday: todayFocus?.isRest ?? (todayWorkout?.sessionType === 'rest' || !todayWorkout),
+        isRestDayTomorrow: tomorrowFocus?.isRest ?? (tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout),
         weekNumber,
         programPhase,
         quote: todayWorkout?.structure?.quote,
+        todayFocus,
+        tomorrowFocus,
       });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -182,8 +220,8 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           <div className="lg:col-span-2">
             <TodaysMissionCard
               dayLabel={dayLabel}
-              workoutTitle={dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayWorkout?.goal || 'Today\'s Workout'}
-              workoutFocus={dashboardData?.todayWorkout?.structure?.focus}
+              workoutTitle={dashboardData?.todayFocus?.focus || dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayWorkout?.goal || 'Workout'}
+              workoutFocus={dashboardData?.todayFocus?.activityType || dashboardData?.todayWorkout?.structure?.focus}
               isRestDay={dashboardData?.isRestDayToday}
               onStartWorkout={handleStartWorkout}
             />
@@ -192,8 +230,8 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           {/* Sidebar cards */}
           <div className="space-y-4">
             <TomorrowPreviewCard
-              title={dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowWorkout?.goal || undefined}
-              focus={dashboardData?.tomorrowWorkout?.structure?.focus}
+              title={dashboardData?.tomorrowFocus?.focus || dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowWorkout?.goal || undefined}
+              focus={dashboardData?.tomorrowFocus?.activityType || dashboardData?.tomorrowWorkout?.structure?.focus}
               description={dashboardData?.tomorrowWorkout?.structure?.description}
               isRestDay={dashboardData?.isRestDayTomorrow}
             />

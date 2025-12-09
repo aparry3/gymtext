@@ -1,7 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Play, Dumbbell, Moon } from 'lucide-react';
+import { Dumbbell, Moon } from 'lucide-react';
 
 interface TodaysMissionCardProps {
   dayLabel: string;
@@ -55,7 +54,13 @@ export function TodaysMissionCard({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(213,94%,58%)] to-[hsl(213,94%,48%)] p-6 text-white">
+    <div
+      onClick={onStartWorkout}
+      onKeyDown={(e) => e.key === 'Enter' && onStartWorkout?.()}
+      role="button"
+      tabIndex={0}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(213,94%,58%)] to-[hsl(213,94%,48%)] p-6 text-white cursor-pointer hover:from-[hsl(213,94%,62%)] hover:to-[hsl(213,94%,52%)] transition-colors"
+    >
       {/* Dumbbell watermark */}
       <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-1/4 translate-y-1/4">
         <Dumbbell className="h-48 w-48" />
@@ -74,17 +79,8 @@ export function TodaysMissionCard({
           <p className="text-sm opacity-80 mb-4">{workoutFocus}</p>
         )}
 
-        <Button
-          onClick={onStartWorkout}
-          variant="secondary"
-          className="bg-white text-[hsl(213,94%,48%)] hover:bg-white/90 font-semibold"
-        >
-          <Play className="h-4 w-4 mr-2 fill-current" />
-          START WORKOUT
-        </Button>
-
         <p className="text-sm mt-6 opacity-70">
-          Tap to view full breakdown, set execution cues, and tracking details.
+          Tap to view full breakdown and tracking details.
         </p>
       </div>
     </div>
