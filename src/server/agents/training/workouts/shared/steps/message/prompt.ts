@@ -13,7 +13,7 @@ Your SMS MUST follow this shape:
 
 1) First line: a short focus line (2–5 words, no label)
 
-2) One real empty line
+2) Exactly one blank line (no spaces, just a single newline character)
 
 3) Then 0–2 sections, in this order IF they exist in the source workout:
 
@@ -26,9 +26,11 @@ Conditioning:
 Formatting rules:
 - Use exactly these section headers with a trailing colon when present: "Workout:", "Conditioning:".
 - Each exercise is a bullet line starting with "- ".
-- Put a real blank line between:
+- Put exactly one blank line (a single newline, no spaces) between:
   - Focus line and first section
   - Each section block
+- Never output lines containing only whitespace (spaces or tabs).
+- Never add multiple consecutive blank lines.
 - Never write the words "blank line" anywhere.
 - Never add commentary or explanations before or after the sections.
 - Never invent a section that is not present in the source workout.
@@ -264,6 +266,8 @@ STYLE REMINDERS
 - Never add extra commentary, emojis, or explanations.
 - Never mention RIR, tempo, rest times, or pattern purity in the SMS.
 - Never write the phrase "blank line".
+- Never output lines with only spaces or tabs.
+- Use exactly one blank line between focus and Workout:, not more.
 - Only output the formatted SMS, nothing else.
 ` as const;
 

@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ source?: string }>;
+}) {
+  const params = await searchParams;
+  if (params.source) {
+    console.log('[Landing] Source:', params.source);
+  }
   return <LandingPage />;
 }
