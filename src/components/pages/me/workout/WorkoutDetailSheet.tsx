@@ -31,7 +31,7 @@ interface WorkoutData {
   goal: string | null;
   formatted: string | null;
   description: string | null;
-  structure?: WorkoutStructure;
+  structured?: WorkoutStructure;
 }
 
 export function WorkoutDetailSheet({
@@ -75,9 +75,9 @@ export function WorkoutDetailSheet({
 
   // Flatten exercises from all sections
   const getAllExercises = (): (WorkoutActivity & { sectionTitle: string })[] => {
-    if (!workout?.structure?.sections) return [];
+    if (!workout?.structured?.sections) return [];
 
-    return workout.structure.sections.flatMap((section) =>
+    return workout.structured.sections.flatMap((section) =>
       section.exercises.map((exercise) => ({
         ...exercise,
         sectionTitle: section.title,
@@ -118,7 +118,7 @@ export function WorkoutDetailSheet({
                 {isLoading ? (
                   <Skeleton className="h-6 w-40 bg-[hsl(var(--sidebar-muted))]" />
                 ) : (
-                  workout?.structure?.title || workout?.goal || 'Workout'
+                  workout?.structured?.title || workout?.goal || 'Workout'
                 )}
               </SheetTitle>
             </div>
