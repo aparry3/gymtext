@@ -1,4 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
+import type { WorkoutStructure } from '@/server/agents/training/schemas';
 
 /**
  * Base input for all workout operations
@@ -26,4 +27,5 @@ export interface WorkoutChainResult {
   formatted: string;
   message: string;
   description: string;
+  structure?: WorkoutStructure;
 }

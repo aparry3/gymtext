@@ -4,6 +4,7 @@ import {
   createWorkoutGenerationRunnable,
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
+  createStructuredWorkoutAgent,
   type WorkoutChainResult,
 } from '../../shared';
 import type { WorkoutGenerateAgentDeps } from './types';
@@ -42,12 +43,19 @@ export const createWorkoutGenerateAgent = (deps?: WorkoutGenerateAgentDeps) => {
       agentConfig: deps?.config
     });
 
-    // Compose the full chain: generation → parallel (formatted + message)
+    // Step 2c: Create structured agent (shared step)
+    const structuredAgent = createStructuredWorkoutAgent({
+      operationName: 'generate workout',
+      agentConfig: deps?.config
+    });
+
+    // Compose the full chain: generation → parallel (formatted + message + structure)
     const sequence = RunnableSequence.from([
       generationRunnable,
       RunnablePassthrough.assign({
         formatted: formattedAgent,
         message: messageAgent,
+        structure: structuredAgent,
       })
     ]);
 
@@ -66,6 +74,7 @@ export const createWorkoutGenerateAgent = (deps?: WorkoutGenerateAgentDeps) => {
           formatted: result.formatted,
           message: result.message,
           description: result.description,
+          structure: result.structure,
         };
       } catch (error) {
         console.error(`[generate workout] Error on attempt ${attempt + 1}:`, error);

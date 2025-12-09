@@ -2,6 +2,7 @@ import type { FitnessPlans } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 import { _FitnessPlanSchema } from './schema';
 import { UserWithProfile } from '../userModel';
+import type { PlanStructure } from '@/server/agents/training/schemas';
 
 export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;
@@ -36,6 +37,7 @@ export interface FitnessPlanOverview {
   description: string;  // Structured text plan
   formatted: string;    // Markdown-formatted plan for frontend display
   message?: string;     // SMS-friendly summary
+  structure?: PlanStructure; // Structured plan data
 }
 
 export class FitnessPlanModel implements FitnessPlan {

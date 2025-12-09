@@ -1,5 +1,6 @@
 import { createFormattedMicrocycleAgent } from '../formatted/chain';
 import { createMicrocycleMessageAgent } from '../message/chain';
+import { createStructuredMicrocycleAgent } from '../structured/chain';
 import type { MicrocycleChainContext } from '../../types';
 import type { MicrocycleAgentOutput, MicrocycleAgentDeps } from '../../../types';
 import { DAY_NAMES } from '@/shared/utils/date';
@@ -16,9 +17,10 @@ const validateDays = (days: string[]): boolean => {
  * Shared Post-Processing Chain
  *
  * Takes MicrocycleChainContext from any first step (generate or update) and:
- * 1. Generates formatted markdown (parallel with message)
- * 2. Generates SMS message (parallel with formatted)
- * 3. Validates all 7 days are present
+ * 1. Generates formatted markdown (parallel with message and structure)
+ * 2. Generates SMS message (parallel with formatted and structure)
+ * 3. Generates structured data (parallel with formatted and message)
+ * 4. Validates all 7 days are present
  *
  * @param deps - Optional dependencies (config)
  * @param operationName - Name of the operation for logging (e.g., "generate", "update")
@@ -52,16 +54,29 @@ export const createMicrocyclePostProcessChain = (
           operationName: `${operationName} microcycle message`
         });
 
-        // Execute parallel processing: formatted + message
-        const [formatted, message] = await Promise.all([
+        // Step 3: Create structured agent
+        const structuredAgent = createStructuredMicrocycleAgent({
+          agentConfig: deps?.config,
+          operationName: `${operationName} structured microcycle`
+        });
+
+        // Execute parallel processing: formatted + message + structure
+        const [formatted, message, structure] = await Promise.all([
           formattedAgent.invoke(input),
-          messageAgent.invoke(input)
+          messageAgent.invoke(input),
+          structuredAgent.invoke({
+            overview: input.microcycle.overview,
+            days: input.microcycle.days,
+            absoluteWeek: input.absoluteWeek,
+            isDeload: input.isDeload
+          })
         ]);
 
         const result = {
           ...input,
           formatted,
-          message
+          message,
+          structure
         };
 
         // Validate that all 7 days are present and non-empty
@@ -86,7 +101,8 @@ export const createMicrocyclePostProcessChain = (
           description: result.microcycle.overview,
           isDeload: result.microcycle.isDeload,
           formatted: result.formatted,
-          message: result.message
+          message: result.message,
+          structure: result.structure
         };
 
         // Propagate wasModified if present (only for update operations)

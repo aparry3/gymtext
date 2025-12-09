@@ -4,7 +4,9 @@ import { createModifyFitnessPlanRunnable } from './steps/generation/chain';
 import type { ModifyFitnessPlanInput } from './steps/generation/types';
 import {
   createFormattedFitnessPlanAgent,
+  createStructuredPlanAgent,
 } from '../../shared/steps';
+import type { PlanStructure } from '@/server/agents/training/schemas';
 
 export type { ModifyFitnessPlanInput } from './steps/generation/types';
 
@@ -16,6 +18,7 @@ export interface ModifyFitnessPlanResult {
   formatted: string;
   wasModified: boolean;
   modifications: string;
+  structure?: PlanStructure;
 }
 
 /**
@@ -45,12 +48,17 @@ export const createModifyFitnessPlanAgent = () => {
       operationName: 'format modified fitness plan',
     });
 
+    // Step 3: Create structured agent
+    const structuredAgent = createStructuredPlanAgent({
+      operationName: 'structured modified plan'
+    });
 
-    // Compose the chain: modify → parallel (formatted + message)
+    // Compose the chain: modify → parallel (formatted + structure)
     const sequence = RunnableSequence.from([
       modifyFitnessPlanRunnable,
       RunnablePassthrough.assign({
         formatted: formattedAgent,
+        structure: structuredAgent,
       })
     ]);
 
@@ -63,6 +71,7 @@ export const createModifyFitnessPlanAgent = () => {
       formatted: result.formatted,
       wasModified: result.wasModified,
       modifications: result.modifications,
+      structure: result.structure,
     };
   });
 };

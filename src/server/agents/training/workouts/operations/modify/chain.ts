@@ -3,6 +3,7 @@ import { RunnableSequence, RunnablePassthrough } from '@langchain/core/runnables
 import {
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
+  createStructuredWorkoutAgent,
 } from '../../shared';
 import { createModifyWorkoutGenerationRunnable } from './steps/generation/chain';
 import type { ModifyWorkoutInput, ModifyWorkoutAgentDeps, ModifyWorkoutOutput } from './types';
@@ -49,12 +50,19 @@ export const createModifyWorkoutAgent = (deps?: ModifyWorkoutAgentDeps) => {
       agentConfig: deps?.config
     });
 
-    // Compose the full chain: generation → parallel (formatted + message)
+    // Step 2c: Create structured agent (shared step)
+    const structuredAgent = createStructuredWorkoutAgent({
+      operationName: 'modify workout',
+      agentConfig: deps?.config
+    });
+
+    // Compose the full chain: generation → parallel (formatted + message + structure)
     const sequence = RunnableSequence.from([
       generationRunnable,
       RunnablePassthrough.assign({
         formatted: formattedAgent,
         message: messageAgent,
+        structure: structuredAgent,
       })
     ]);
 
@@ -74,6 +82,7 @@ export const createModifyWorkoutAgent = (deps?: ModifyWorkoutAgentDeps) => {
           description: result.description,
           modifications: result.modifications,
           wasModified: result.wasModified,
+          structure: result.structure,
         };
       } catch (error) {
         console.error(`[modify workout] Error on attempt ${attempt + 1}:`, error);

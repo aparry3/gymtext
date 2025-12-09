@@ -16,3 +16,11 @@ export type { MicrocycleMessageConfig } from './message/types';
 
 // Post-processing step (shared between operations)
 export { createMicrocyclePostProcessChain } from './postprocess';
+
+// Structured step (shared across all microcycle operations)
+export {
+  STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
+  structuredMicrocycleUserPrompt,
+} from './structured/prompt';
+export { createStructuredMicrocycleAgent } from './structured/chain';
+export type { StructuredMicrocycleConfig, StructuredMicrocycleOutput } from './structured/types';

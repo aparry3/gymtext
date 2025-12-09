@@ -5,6 +5,7 @@ import { createFitnessPlanGenerationRunnable } from './steps/generation/chain';
 import {
   createFitnessPlanMessageAgent,
   createFormattedFitnessPlanAgent,
+  createStructuredPlanAgent,
 } from '../../shared/steps';
 
 /**
@@ -40,12 +41,18 @@ export const createFitnessPlanGenerateAgent = () => {
         operationName: 'generate plan message'
       });
 
-      // Compose the chain: structured generation → parallel (formatted + message)
+      // Step 4: Create structured agent
+      const structuredAgent = createStructuredPlanAgent({
+        operationName: 'structured plan'
+      });
+
+      // Compose the chain: structured generation → parallel (formatted + message + structure)
       const sequence = RunnableSequence.from([
         fitnessPlanGenerationRunnable,
         RunnablePassthrough.assign({
           formatted: formattedAgent,
-          message: messageAgent
+          message: messageAgent,
+          structure: structuredAgent
         })
       ]);
 
@@ -58,7 +65,8 @@ export const createFitnessPlanGenerateAgent = () => {
       const finalResult: FitnessPlanOverview = {
         description: result.fitnessPlan,
         formatted: result.formatted,
-        message: result.message
+        message: result.message,
+        structure: result.structure
       };
 
       console.log(`[FitnessPlan] Generated fitness plan for user ${user.id}`);

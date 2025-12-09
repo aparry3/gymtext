@@ -1,4 +1,5 @@
 import type { AgentDeps } from '@/server/agents/base';
+import type { MicrocycleStructure } from '@/server/agents/training/schemas';
 
 /**
  * Input for microcycle generation agent
@@ -26,6 +27,7 @@ export interface BaseMicrocycleAgentOutput {
 
 export interface MicrocycleAgentOutput extends BaseMicrocycleAgentOutput {
   message: string;        // SMS-formatted weekly check-in/breakdown message
+  structure?: MicrocycleStructure; // Structured microcycle data
 }
 
 
