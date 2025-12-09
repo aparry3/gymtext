@@ -27,7 +27,7 @@ export const createFitnessPlanGenerateAgent = () => {
       // Step 1: Create generation runnable (with structured output)
       const fitnessPlanGenerationRunnable = createFitnessPlanGenerationRunnable({
         agentConfig: {
-          model: 'gpt-5-mini',
+          model: 'gpt-5.1',
         }
       });
 

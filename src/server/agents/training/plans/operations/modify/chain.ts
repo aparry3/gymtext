@@ -39,7 +39,7 @@ export const createModifyFitnessPlanAgent = () => {
     // Step 1: Create modify runnable (modify-specific)
     const modifyFitnessPlanRunnable = createModifyFitnessPlanRunnable({
       config: {
-        model: 'gpt-5-mini'
+        model: 'gpt-5.1'
       }
     });
 
