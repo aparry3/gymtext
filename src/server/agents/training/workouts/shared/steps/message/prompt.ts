@@ -15,10 +15,7 @@ Your SMS MUST follow this shape:
 
 2) One real empty line
 
-3) Then 0–4 sections, in this order IF they exist in the source workout:
-
-Warmup:
-- ...
+3) Then 0–2 sections, in this order IF they exist in the source workout:
 
 Workout:
 - ...
@@ -26,11 +23,8 @@ Workout:
 Conditioning:
 - ...
 
-Cooldown:
-- ...
-
 Formatting rules:
-- Use exactly these section headers with a trailing colon when present: "Warmup:", "Workout:", "Conditioning:", "Cooldown:".
+- Use exactly these section headers with a trailing colon when present: "Workout:", "Conditioning:".
 - Each exercise is a bullet line starting with "- ".
 - Put a real blank line between:
   - Focus line and first section
@@ -40,9 +34,8 @@ Formatting rules:
 - Never invent a section that is not present in the source workout.
 
 Section existence:
-- If the input has NO warmup, omit the "Warmup:" section entirely.
+- ALWAYS omit warmup and cooldown from the SMS - only include Workout and Conditioning sections.
 - If the input has NO conditioning/cardio, omit the "Conditioning:" section entirely.
-- If the input has NO cooldown, omit the "Cooldown:" section entirely.
 - Almost every workout will have a main lifting block; that should go under "Workout:".
 
 =====================================================
@@ -155,28 +148,6 @@ If a longer name can be shortened without confusion, shorten it:
 Always favor the shortest name that a reasonably trained lifter would immediately recognize.
 
 =====================================================
-WARMUP RULES (ONLY IF PRESENT)
-=====================================================
-
-If the input includes a warmup section:
-- Add a "Warmup:" header.
-- Select 3–5 key drills, prioritizing:
-  - 1 light cardio line (bike, walk, row, etc.)
-  - 2–4 activation/mobility drills relevant to the day.
-
-Conversions:
-- "5 min easy bike or treadmill walk" → choose one modality → "Bike: 5m" or "Walk: 5m".
-- "Band Push-Aparts – 2x15 (light, scapular squeeze)" → "Band Pull-Aparts: 2x15".
-- "Push-Up Plus – 2x8" → "Push-Up: 2x8-10".
-- Long mobility descriptions (multiple example stretches) → one concise line such as:
-  - "Chest Stretch: 2x30s"
-  - "Hip Stretch: 2x30s"
-
-Deduplicate similar drills; only one line per movement.
-
-If there is no warmup in the source, omit the "Warmup:" section.
-
-=====================================================
 WORKOUT RULES (MAIN LIFTS)
 =====================================================
 
@@ -262,26 +233,6 @@ Ignore:
 - Injury-specific logic ("if shin symptoms are present, avoid running").
 
 If there is no conditioning in the source, omit the "Conditioning:" section.
-
-=====================================================
-COOLDOWN RULES (ONLY IF PRESENT)
-=====================================================
-
-If the input includes a cooldown:
-
-- Add a "Cooldown:" header.
-- Select 1–3 concise cooldown items:
-  - 1 light movement (walk, easy bike)
-  - 1–2 stretch/mobility lines.
-
-Examples:
-- "3 minutes easy walk" → "- Walk: 3m"
-- "Chest/Shoulder Mobility: 2–3 stretches x 30–40 seconds each (doorway pec stretch, cross-body shoulder stretch, lat stretch)" →
-  "- Chest Stretch: 2x30s"
-
-Summarize multiple example stretches into a single short line.
-
-If there is no cooldown in the source, omit the "Cooldown:" section.
 
 =====================================================
 STYLE REMINDERS
