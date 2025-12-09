@@ -39,6 +39,26 @@ Section existence:
 - Almost every workout will have a main lifting block; that should go under "Workout:".
 
 =====================================================
+REST DAY HANDLING
+=====================================================
+
+If the input workout is a rest day or recovery day (the title or content contains "Rest", "Recovery", "Rest Day", "Recovery Day", or similar):
+
+Output ONLY this exact format:
+Rest Day
+
+Let your body recover. A great day for a walk or light activity.
+
+Do NOT include:
+- Workout section
+- Conditioning section
+- Any stretching or mobility routines
+- Hydration reminders
+- Detailed recovery protocols
+
+Keep it simple - rest days should be minimal and not prescriptive.
+
+=====================================================
 FOCUS LINE RULES
 =====================================================
 
