@@ -96,11 +96,11 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
   const weeklyDays = microcycle?.days?.map((d) => ({
     day: d.day,
     focus: d.focus || (d.isRest ? 'Rest' : d.activityType),
-    isTrainingDay: !d.isRest,
+    isRest: d.isRest,
   })) || structure?.scheduleTemplate?.map((s) => ({
     day: s.day,
     focus: s.focus,
-    isTrainingDay: !s.focus.toLowerCase().includes('rest'),
+    isRest: s.focus?.toLowerCase().includes('rest') ?? false,
   })) || [];
 
   return (
