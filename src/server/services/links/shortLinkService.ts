@@ -108,7 +108,7 @@ export class ShortLinkService {
     workoutId: string,
     options?: CreateShortLinkOptions
   ): Promise<ShortLink> {
-    const targetPath = `/me/program/workouts/${workoutId}`;
+    const targetPath = `/me?workout=${workoutId}`;
     return this.createShortLink(userId, targetPath, options);
   }
 

@@ -14,6 +14,7 @@ import type { WorkoutStructure } from '@/server/agents/training/schemas';
 
 interface UserDashboardProps {
   userId: string;
+  initialWorkoutId?: string;
 }
 
 interface WorkoutData {
@@ -53,12 +54,12 @@ function formatDateForApi(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-export function UserDashboard({ userId }: UserDashboardProps) {
+export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [workoutSheetOpen, setWorkoutSheetOpen] = useState(false);
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
+  const [workoutSheetOpen, setWorkoutSheetOpen] = useState(!!initialWorkoutId);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(initialWorkoutId || null);
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
