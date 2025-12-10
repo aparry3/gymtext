@@ -1,12 +1,11 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SectionAccordionProps {
@@ -27,28 +26,32 @@ export function SectionAccordion({
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
-        <button
-          className={cn(
-            'w-full flex items-center justify-between p-3 rounded-lg transition-colors',
-            'bg-[hsl(var(--sidebar-muted))] hover:bg-[hsl(var(--sidebar-muted))]/80',
-            'text-[hsl(var(--sidebar-foreground))]'
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">{title}</span>
-            <Badge
-              variant="secondary"
-              className="text-xs bg-[hsl(var(--sidebar-accent))]/20 text-[hsl(var(--sidebar-accent))]"
-            >
-              {exerciseCount}
-            </Badge>
-          </div>
-          <ChevronDown
+        <button className="w-full flex items-center gap-3 py-2 text-[hsl(var(--sidebar-foreground))]">
+          {/* Chevron in rounded box */}
+          <div
             className={cn(
-              'h-5 w-5 text-muted-foreground transition-transform',
-              isOpen && 'rotate-180'
+              'flex items-center justify-center w-8 h-8 rounded-lg border transition-colors',
+              isOpen
+                ? 'bg-[hsl(var(--sidebar-accent))] border-[hsl(var(--sidebar-accent))]'
+                : 'bg-transparent border-[hsl(var(--sidebar-border))]'
             )}
-          />
+          >
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4 text-white" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+
+          {/* Title */}
+          <span className="text-sm font-medium uppercase tracking-wide">
+            {title}
+          </span>
+
+          {/* Count badge */}
+          <span className="flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-medium rounded-full bg-[hsl(var(--sidebar-muted))] text-muted-foreground">
+            {exerciseCount}
+          </span>
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
