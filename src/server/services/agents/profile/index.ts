@@ -1,8 +1,10 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
+import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { createProfileUpdateAgent } from '@/server/agents/profile';
 import { createUserFieldsAgent } from '@/server/agents/profile/user';
-import { formatForAI } from '@/shared/utils/date';
+import { formatForAI, now } from '@/shared/utils/date';
+import { inngest } from '@/server/connections/inngest/client';
 import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
@@ -103,6 +105,28 @@ export class ProfileService {
         if (Object.keys(userUpdates).length > 0) {
           await userService.updatePreferences(userId, userUpdates);
           console.log('[PROFILE_SERVICE] User fields updated:', userUpdates);
+
+          // Check if time-related fields changed - ensure user has today's workout
+          if (userUpdates.timezone !== undefined || userUpdates.preferredSendHour !== undefined) {
+            const newTimezone = userUpdates.timezone ?? user.timezone;
+            const currentTime = now(newTimezone);
+
+            // Check if workout already exists for today (prevents duplicates)
+            const todayStart = currentTime.startOf('day').toJSDate();
+            const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayStart);
+
+            if (!existingWorkout) {
+              // No workout exists - trigger immediate send via Inngest
+              await inngest.send({
+                name: 'workout/scheduled',
+                data: {
+                  userId,
+                  targetDate: currentTime.startOf('day').toISO(),
+                },
+              });
+              console.log('[PROFILE_SERVICE] Triggered immediate workout for missed send time');
+            }
+          }
         }
       }
 
