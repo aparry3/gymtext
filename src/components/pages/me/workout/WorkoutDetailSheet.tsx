@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -14,6 +14,7 @@ import { List, FileText, X } from 'lucide-react';
 import { ExerciseAccordionCard } from './ExerciseAccordionCard';
 import { ExerciseExpandedView } from './ExerciseExpandedView';
 import { WorkoutTextView } from './WorkoutTextView';
+import { SectionAccordion } from './SectionAccordion';
 import type { WorkoutStructure, WorkoutActivity } from '@/server/agents/training/schemas';
 
 interface WorkoutDetailSheetProps {
@@ -34,6 +35,12 @@ interface WorkoutData {
   structured?: WorkoutStructure;
 }
 
+// Determine if a section should be collapsed by default based on title
+const shouldCollapseByDefault = (title: string): boolean => {
+  const lower = title.toLowerCase();
+  return lower.includes('warm') || lower.includes('cool');
+};
+
 export function WorkoutDetailSheet({
   open,
   onClose,
@@ -44,6 +51,7 @@ export function WorkoutDetailSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [workout, setWorkout] = useState<WorkoutData | null>(null);
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
   // Fetch workout details when sheet opens
   useEffect(() => {
@@ -66,6 +74,19 @@ export function WorkoutDetailSheet({
     }
   }, [open, workoutId, userId]);
 
+  // Initialize expanded sections when workout data loads
+  useEffect(() => {
+    if (workout?.structured?.sections) {
+      const initialExpanded = new Set<number>();
+      workout.structured.sections.forEach((section, idx) => {
+        if (!shouldCollapseByDefault(section.title)) {
+          initialExpanded.add(idx);
+        }
+      });
+      setExpandedSections(initialExpanded);
+    }
+  }, [workout]);
+
   // Reset state when sheet closes
   useEffect(() => {
     if (!open) {
@@ -73,19 +94,12 @@ export function WorkoutDetailSheet({
     }
   }, [open]);
 
-  // Flatten exercises from all sections
-  const getAllExercises = (): (WorkoutActivity & { sectionTitle: string })[] => {
-    if (!workout?.structured?.sections) return [];
+  const sections = workout?.structured?.sections || [];
 
-    return workout.structured.sections.flatMap((section) =>
-      section.exercises.map((exercise) => ({
-        ...exercise,
-        sectionTitle: section.title,
-      }))
-    );
-  };
-
-  const exercises = getAllExercises();
+  // Check if there are any exercises across all sections
+  const hasExercises = useMemo(() => {
+    return sections.some((section) => section.exercises.length > 0);
+  }, [sections]);
 
   // Format sets x reps for display
   const formatSetsReps = (exercise: WorkoutActivity): string => {
@@ -101,13 +115,31 @@ export function WorkoutDetailSheet({
     return '';
   };
 
+  const toggleSection = (sectionIdx: number) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionIdx)) {
+        next.delete(sectionIdx);
+      } else {
+        next.add(sectionIdx);
+      }
+      return next;
+    });
+  };
+
+  // Create a unique key for exercises that combines section and exercise index
+  const getExerciseKey = (sectionIdx: number, exerciseIdx: number, exercise: WorkoutActivity) => {
+    return exercise.id || `${sectionIdx}-${exerciseIdx}`;
+  };
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-lg p-0 flex flex-col bg-[hsl(var(--sidebar-bg))] text-[hsl(var(--sidebar-foreground))] border-l-0"
+        hideCloseButton
       >
-        {/* Custom header (we override the default close button) */}
+        {/* Custom header */}
         <SheetHeader className="p-4 border-b border-[hsl(var(--sidebar-border))] flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -167,39 +199,54 @@ export function WorkoutDetailSheet({
               </div>
 
               <TabsContent value="breakdown" className="flex-1 p-4 pt-2 mt-0">
-                {exercises.length === 0 ? (
+                {!hasExercises ? (
                   <div className="text-center py-8 text-[hsl(var(--sidebar-foreground))]/60">
                     <p>No structured breakdown available.</p>
                     <p className="text-sm mt-1">Try the Text View instead.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {exercises.map((exercise, index) => (
-                      <ExerciseAccordionCard
-                        key={exercise.id || index}
-                        number={index + 1}
-                        name={exercise.name}
-                        setsReps={formatSetsReps(exercise)}
-                        tags={exercise.tags}
-                        isOpen={expandedExercise === (exercise.id || String(index))}
-                        onToggle={() =>
-                          setExpandedExercise(
-                            expandedExercise === (exercise.id || String(index))
-                              ? null
-                              : exercise.id || String(index)
-                          )
-                        }
-                      >
-                        <ExerciseExpandedView
-                          tags={exercise.tags}
-                          sets={exercise.sets}
-                          reps={exercise.reps}
-                          rest={exercise.rest}
-                          intensity={exercise.intensity}
-                          notes={exercise.notes}
-                        />
-                      </ExerciseAccordionCard>
-                    ))}
+                  <div className="space-y-4">
+                    {sections.map((section, sectionIdx) => {
+                      if (section.exercises.length === 0) return null;
+
+                      return (
+                        <SectionAccordion
+                          key={sectionIdx}
+                          title={section.title}
+                          exerciseCount={section.exercises.length}
+                          isOpen={expandedSections.has(sectionIdx)}
+                          onToggle={() => toggleSection(sectionIdx)}
+                        >
+                          {section.exercises.map((exercise, exerciseIdx) => {
+                            const exerciseKey = getExerciseKey(sectionIdx, exerciseIdx, exercise);
+                            return (
+                              <ExerciseAccordionCard
+                                key={exerciseKey}
+                                number={exerciseIdx + 1}
+                                name={exercise.name}
+                                setsReps={formatSetsReps(exercise)}
+                                tags={exercise.tags}
+                                isOpen={expandedExercise === exerciseKey}
+                                onToggle={() =>
+                                  setExpandedExercise(
+                                    expandedExercise === exerciseKey ? null : exerciseKey
+                                  )
+                                }
+                              >
+                                <ExerciseExpandedView
+                                  tags={exercise.tags}
+                                  sets={exercise.sets}
+                                  reps={exercise.reps}
+                                  rest={exercise.rest}
+                                  intensity={exercise.intensity}
+                                  notes={exercise.notes}
+                                />
+                              </ExerciseAccordionCard>
+                            );
+                          })}
+                        </SectionAccordion>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -214,16 +261,6 @@ export function WorkoutDetailSheet({
               </TabsContent>
             </Tabs>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-[hsl(var(--sidebar-border))] flex-shrink-0">
-          <Button
-            onClick={onClose}
-            className="w-full bg-[hsl(var(--sidebar-accent))] hover:bg-[hsl(var(--sidebar-accent))]/90 text-white"
-          >
-            Close Details
-          </Button>
         </div>
       </SheetContent>
     </Sheet>
