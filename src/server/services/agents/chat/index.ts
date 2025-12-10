@@ -7,10 +7,61 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
+import type { ToolResult } from '../shared/types';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
 const CHAT_CONTEXT_MINUTES = parseInt(process.env.CHAT_CONTEXT_MINUTES || '10');
+
+/**
+ * Get or generate today's workout for a user.
+ * Returns a ToolResult with the workout message in the messages array.
+ */
+async function getWorkoutForToday(userId: string, timezone: string): Promise<ToolResult> {
+  try {
+    const today = now(timezone);
+    const todayDate = today.toJSDate();
+
+    // Check if workout already exists
+    const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayDate);
+
+    if (existingWorkout) {
+      // Workout exists - return its message
+      console.log('[ChatService] Existing workout found for today');
+      return {
+        response: `Workout found for today: ${existingWorkout.description || existingWorkout.sessionType}`,
+        messages: existingWorkout.message ? [existingWorkout.message] : undefined,
+      };
+    }
+
+    // No workout - need to generate one
+    // Fetch user with profile for generation
+    const user = await userService.getUser(userId);
+    if (!user) {
+      return { response: 'User not found.' };
+    }
+
+    // Generate the workout
+    console.log('[ChatService] Generating workout for today');
+    const generatedWorkout = await workoutInstanceService.generateWorkoutForDate(user, today);
+
+    if (!generatedWorkout) {
+      return {
+        response: 'Could not generate workout. This might be a rest day based on the training plan, or the user may not have a fitness plan yet.',
+      };
+    }
+
+    return {
+      response: `Generated workout for today: ${generatedWorkout.description || generatedWorkout.sessionType}`,
+      messages: generatedWorkout.message ? [generatedWorkout.message] : undefined,
+    };
+  } catch (error) {
+    console.error('[ChatService] Error getting/generating workout:', error);
+    return {
+      response: `Failed to get workout: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
 
 /**
  * ChatService handles incoming SMS messages and generates AI-powered responses.
@@ -105,10 +156,12 @@ export class ChatService {
           userId: userWithProfile.id,
           message,
           previousMessages: context,
+          timezone: userWithProfile.timezone,
         },
         {
           updateProfile: ProfileService.updateProfile,
           makeModification: ModificationService.makeModification,
+          getWorkout: getWorkoutForToday,
         },
         onSendMessage,
       );

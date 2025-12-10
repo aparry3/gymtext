@@ -52,6 +52,7 @@ export function toolWithMessage(
 export interface ChatToolDeps {
   updateProfile: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
   makeModification: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
+  getWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
 }
 
 /**
@@ -61,6 +62,7 @@ export interface ChatToolContext {
   userId: string;
   message: string;
   previousMessages?: Message[];
+  timezone: string;
 }
 
 /**
@@ -118,5 +120,32 @@ All context (user, message, date, etc.) is automatically provided - no parameter
     onSendMessage
   );
 
-  return [updateProfileTool, makeModificationTool];
+  // Tool 3: Get Workout
+  const getWorkoutTool = tool(
+    async (): Promise<ToolResult> => {
+      return deps.getWorkout(context.userId, context.timezone);
+    },
+    {
+      name: 'get_workout',
+      description: `Get the user's workout for today.
+
+Use this tool when the user asks about their workout for today, such as:
+- "What's my workout today?"
+- "What am I doing today?"
+- "Send me my workout"
+- "What exercises do I have?"
+
+This tool will:
+1. Check if a workout already exists for today
+2. If not, generate one based on their fitness plan
+3. Return the full workout details and send the workout message
+
+IMPORTANT: Only use this for TODAY's workout. Do not use for future dates.
+If [CONTEXT: WORKOUT] says "No workout scheduled", use this tool to generate it.
+All context is automatically provided - no parameters needed.`,
+      schema: z.object({}),
+    }
+  );
+
+  return [updateProfileTool, makeModificationTool, getWorkoutTool];
 };

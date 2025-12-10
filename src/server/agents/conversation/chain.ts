@@ -13,7 +13,8 @@ const MAX_ITERATIONS = 5;
 // has access to the updated profile (e.g., "I hurt my knee, give me upper body")
 const TOOL_PRIORITY: Record<string, number> = {
   'update_profile': 1,
-  'make_modification': 2,
+  'get_workout': 2,
+  'make_modification': 3,
 };
 
 /**
