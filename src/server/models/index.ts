@@ -29,5 +29,8 @@ export type {
 export type { Microcycle } from './microcycle';
 export type { MicrocyclePattern, MicrocycleGenerationOutput } from './microcycle/schema';
 
+// PageVisit types
+export type { PageVisit, NewPageVisit } from './pageVisit';
+
 // Re-export database types from _types
 export * from './_types';
