@@ -107,7 +107,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
             ref.current = element
           }
         }}
-        className={`absolute z-50 min-w-[8rem] rounded-md border bg-popover p-4 text-popover-foreground shadow-md ${sideClasses[side]} ${alignClasses[align]} ${className}`}
+        className={`absolute z-50 min-w-[8rem] rounded-md border bg-white p-4 text-foreground shadow-md ${sideClasses[side]} ${alignClasses[align]} ${className}`}
         {...props}
       >
         {children}

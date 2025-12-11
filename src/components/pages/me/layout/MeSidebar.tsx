@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   Dumbbell,
+  ArrowLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,12 +26,18 @@ interface MeSidebarProps {
     name: string;
     programType?: string;
   };
+  /** Base path for navigation links (default: '/me') */
+  basePath?: string;
+  /** Whether this is an admin viewing a user's dashboard */
+  isAdminView?: boolean;
+  /** URL to return to when in admin view */
+  adminBackUrl?: string;
 }
 
-const navItems = [
-  { href: '/me', label: 'Dashboard', icon: Home },
-  { href: '/me/plan', label: 'My Plan', icon: BookOpen },
-  { href: '/me/profile', label: 'Profile', icon: User },
+const getNavItems = (basePath: string) => [
+  { href: basePath, label: 'Dashboard', icon: Home },
+  { href: `${basePath}/plan`, label: 'My Plan', icon: BookOpen },
+  { href: `${basePath}/profile`, label: 'Profile', icon: User },
 ];
 
 function NavItem({
@@ -68,12 +75,19 @@ function SidebarContent({
   currentPath,
   onLogout,
   onNavClick,
+  basePath = '/me',
+  isAdminView = false,
+  adminBackUrl,
 }: {
   user: MeSidebarProps['user'];
   currentPath: string;
   onLogout: () => void;
   onNavClick?: () => void;
+  basePath?: string;
+  isAdminView?: boolean;
+  adminBackUrl?: string;
 }) {
+  const navItems = getNavItems(basePath);
   const initials = user.name
     ?.split(' ')
     .map((n) => n[0])
@@ -84,7 +98,7 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-[hsl(var(--sidebar-border))]">
-        <Link href="/me" className="flex items-center gap-2" onClick={onNavClick}>
+        <Link href={basePath} className="flex items-center gap-2" onClick={onNavClick}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--sidebar-accent))]">
             <Dumbbell className="h-4 w-4 text-white" />
           </div>
@@ -94,6 +108,15 @@ function SidebarContent({
         </Link>
       </div>
 
+      {/* Admin View Banner */}
+      {isAdminView && (
+        <div className="px-4 py-2 bg-amber-500/20 border-b border-amber-500/30">
+          <p className="text-xs font-medium text-amber-200 text-center">
+            Viewing as: {user.name}
+          </p>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
@@ -101,8 +124,8 @@ function SidebarContent({
             key={item.href}
             {...item}
             isActive={
-              item.href === '/me'
-                ? currentPath === '/me'
+              item.href === basePath
+                ? currentPath === basePath
                 : currentPath.startsWith(item.href)
             }
             onClick={onNavClick}
@@ -129,26 +152,40 @@ function SidebarContent({
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLogout}
-          className="w-full justify-start gap-2 text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
+        {isAdminView && adminBackUrl ? (
+          <Link href={adminBackUrl}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Admin
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLogout}
+            className="w-full justify-start gap-2 text-[hsl(var(--sidebar-foreground))]/70 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
-export function MeSidebar({ user }: MeSidebarProps) {
+export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBackUrl }: MeSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
+    if (isAdminView) return; // Don't logout when in admin view
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       router.push('/me/login');
@@ -181,6 +218,9 @@ export function MeSidebar({ user }: MeSidebarProps) {
               currentPath={pathname}
               onLogout={handleLogout}
               onNavClick={() => setMobileOpen(false)}
+              basePath={basePath}
+              isAdminView={isAdminView}
+              adminBackUrl={adminBackUrl}
             />
           </SheetContent>
         </Sheet>
@@ -200,6 +240,9 @@ export function MeSidebar({ user }: MeSidebarProps) {
           user={user}
           currentPath={pathname}
           onLogout={handleLogout}
+          basePath={basePath}
+          isAdminView={isAdminView}
+          adminBackUrl={adminBackUrl}
         />
       </aside>
     </>
