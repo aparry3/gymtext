@@ -27,7 +27,7 @@ export const createWorkoutGenerateAgent = (deps?: WorkoutGenerateAgentDeps) => {
   return createRunnableAgent<WorkoutGenerateInput, WorkoutChainResult>(async (input) => {
     // Step 1: Create generation runnable (generate-specific)
     const generationRunnable = createWorkoutGenerationRunnable({
-      agentConfig: { model: 'gpt-5-mini' }
+      agentConfig: { model: 'gpt-5.1' }
     });
 
     // Step 2a: Create formatted workout agent (shared step)

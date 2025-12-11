@@ -49,7 +49,7 @@ export function ExerciseAccordionCard({
 
               {/* Exercise name and details */}
               <div className="min-w-0">
-                <h4 className="font-semibold text-foreground truncate">{name}</h4>
+                <h4 className={cn("font-semibold text-foreground", !isOpen && "truncate")}>{name}</h4>
 
                 {/* Collapsed view: sets x reps + tags */}
                 {!isOpen && (
