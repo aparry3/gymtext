@@ -246,6 +246,21 @@ export function LandingPage() {
               <span>•</span>
               <span>Cancel anytime</span>
             </div>
+            <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+              <a
+                href="/terms"
+                className="text-muted-foreground transition-colors hover:text-primary"
+              >
+                Terms & Conditions
+              </a>
+              <span className="text-muted-foreground">•</span>
+              <a
+                href="/privacy"
+                className="text-muted-foreground transition-colors hover:text-primary"
+              >
+                Privacy Policy
+              </a>
+            </div>
           </div>
         </div>
       </footer>
