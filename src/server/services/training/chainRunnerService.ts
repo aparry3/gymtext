@@ -1,8 +1,7 @@
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
+import { MicrocycleService } from '@/server/services/training/microcycleService';
+import { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
 import { UserService } from '@/server/services/user/userService';
-import { postgresDb } from '@/server/connections/postgres/postgres';
 
 // Fitness Plan agents
 import { createFitnessPlanGenerateAgent } from '@/server/agents/training/plans/operations/generate/chain';
@@ -53,15 +52,15 @@ export interface ChainRunResult<T> {
  */
 export class ChainRunnerService {
   private static instance: ChainRunnerService;
-  private fitnessPlanRepo: FitnessPlanRepository;
-  private microcycleRepo: MicrocycleRepository;
-  private workoutRepo: WorkoutInstanceRepository;
+  private fitnessPlanService: FitnessPlanService;
+  private microcycleService: MicrocycleService;
+  private workoutService: WorkoutInstanceService;
   private userService: UserService;
 
   private constructor() {
-    this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
-    this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
+    this.fitnessPlanService = FitnessPlanService.getInstance();
+    this.microcycleService = MicrocycleService.getInstance();
+    this.workoutService = WorkoutInstanceService.getInstance();
     this.userService = UserService.getInstance();
   }
 
@@ -86,7 +85,7 @@ export class ChainRunnerService {
     const startTime = Date.now();
 
     // Fetch the plan
-    const plan = await this.fitnessPlanRepo.getFitnessPlan(planId);
+    const plan = await this.fitnessPlanService.getPlanById(planId);
     if (!plan) {
       throw new Error(`Fitness plan not found: ${planId}`);
     }
@@ -133,7 +132,7 @@ export class ChainRunnerService {
     const agent = createFitnessPlanGenerateAgent();
     const result = await agent(user);
 
-    const updated = await this.fitnessPlanRepo.updateFitnessPlan(plan.id!, {
+    const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       description: result.description,
       formatted: result.formatted,
       message: result.message,
@@ -153,7 +152,7 @@ export class ChainRunnerService {
     const agent = createStructuredPlanAgent({ operationName: 'chain-runner structured' });
     const structure = await agent.invoke({ fitnessPlan: plan.description });
 
-    const updated = await this.fitnessPlanRepo.updateFitnessPlan(plan.id!, {
+    const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       structured: structure,
     });
 
@@ -172,7 +171,7 @@ export class ChainRunnerService {
     });
     const formatted = await agent.invoke({ fitnessPlan: plan.description, user: {} as UserWithProfile });
 
-    const updated = await this.fitnessPlanRepo.updateFitnessPlan(plan.id!, {
+    const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       formatted,
     });
 
@@ -194,7 +193,7 @@ export class ChainRunnerService {
     });
     const message = await agent.invoke({ fitnessPlan: plan.description, user });
 
-    const updated = await this.fitnessPlanRepo.updateFitnessPlan(plan.id!, {
+    const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       message,
     });
 
@@ -219,7 +218,7 @@ export class ChainRunnerService {
     const startTime = Date.now();
 
     // Fetch the microcycle
-    const microcycle = await this.microcycleRepo.getMicrocycleById(microcycleId);
+    const microcycle = await this.microcycleService.getMicrocycleById(microcycleId);
     if (!microcycle) {
       throw new Error(`Microcycle not found: ${microcycleId}`);
     }
@@ -231,7 +230,7 @@ export class ChainRunnerService {
     }
 
     // Fetch the associated plan for full regeneration
-    const plan = await this.fitnessPlanRepo.getFitnessPlan(microcycle.fitnessPlanId);
+    const plan = await this.fitnessPlanService.getPlanById(microcycle.fitnessPlanId);
     if (!plan) {
       throw new Error(`Fitness plan not found: ${microcycle.fitnessPlanId}`);
     }
@@ -278,7 +277,7 @@ export class ChainRunnerService {
       isDeload: microcycle.isDeload,
     });
 
-    const updated = await this.microcycleRepo.updateMicrocycle(microcycle.id, {
+    const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       days: result.days,
       description: result.description,
       isDeload: result.isDeload,
@@ -308,7 +307,7 @@ export class ChainRunnerService {
       isDeload: microcycle.isDeload,
     });
 
-    const updated = await this.microcycleRepo.updateMicrocycle(microcycle.id, {
+    const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       structured: structure,
     });
 
@@ -339,7 +338,7 @@ export class ChainRunnerService {
       isDeload: microcycle.isDeload,
     });
 
-    const updated = await this.microcycleRepo.updateMicrocycle(microcycle.id, {
+    const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       formatted,
     });
 
@@ -370,7 +369,7 @@ export class ChainRunnerService {
       isDeload: microcycle.isDeload,
     });
 
-    const updated = await this.microcycleRepo.updateMicrocycle(microcycle.id, {
+    const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       message,
     });
 
@@ -395,7 +394,7 @@ export class ChainRunnerService {
     const startTime = Date.now();
 
     // Fetch the workout
-    const workout = await this.workoutRepo.getWorkoutById(workoutId);
+    const workout = await this.workoutService.getWorkoutByIdInternal(workoutId);
     if (!workout) {
       throw new Error(`Workout not found: ${workoutId}`);
     }
@@ -409,7 +408,7 @@ export class ChainRunnerService {
     // Fetch microcycle for full regeneration
     let microcycle: Microcycle | null = null;
     if (workout.microcycleId) {
-      microcycle = await this.microcycleRepo.getMicrocycleById(workout.microcycleId);
+      microcycle = await this.microcycleService.getMicrocycleById(workout.microcycleId);
     }
 
     let updatedWorkout: WorkoutInstance;
@@ -471,7 +470,7 @@ export class ChainRunnerService {
       ? JSON.parse(workout.details)
       : workout.details || {};
 
-    const updated = await this.workoutRepo.update(workout.id, {
+    const updated = await this.workoutService.updateWorkout(workout.id, {
       description: result.description,
       message: result.message,
       structured: result.structure,
@@ -500,7 +499,7 @@ export class ChainRunnerService {
     });
     const structure = await agent.invoke({ description: workout.description });
 
-    const updated = await this.workoutRepo.update(workout.id, {
+    const updated = await this.workoutService.updateWorkout(workout.id, {
       structured: structure,
     });
 
@@ -536,7 +535,7 @@ export class ChainRunnerService {
       ? JSON.parse(workout.details)
       : workout.details || {};
 
-    const updated = await this.workoutRepo.update(workout.id, {
+    const updated = await this.workoutService.updateWorkout(workout.id, {
       details: {
         ...existingDetails,
         formatted,
@@ -562,7 +561,7 @@ export class ChainRunnerService {
     });
     const message = await agent.invoke({ description: workout.description });
 
-    const updated = await this.workoutRepo.update(workout.id, {
+    const updated = await this.workoutService.updateWorkout(workout.id, {
       message,
     });
 

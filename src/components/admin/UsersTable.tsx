@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AdminUser, UserSort } from './types'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -127,6 +127,7 @@ interface UserRowProps {
 }
 
 function UserRow({ user }: UserRowProps) {
+  const router = useRouter()
   const initials = user.name
     ?.split(' ')
     .map(n => n[0])
@@ -142,72 +143,77 @@ function UserRow({ user }: UserRowProps) {
     return phone
   }
 
+  const handleRowClick = () => {
+    router.push(`/admin/users/${user.id}`)
+  }
+
   return (
-    <Link href={`/admin/users/${user.id}`} className="contents">
-      <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200 cursor-pointer">
-        <td className="p-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="hidden md:flex">
-              <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="font-medium">{user.name || 'Unnamed User'}</div>
-              <div className="text-sm text-muted-foreground hidden md:block">
-                {user.id.slice(0, 8)}...
-              </div>
+    <tr
+      className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200 cursor-pointer"
+      onClick={handleRowClick}
+    >
+      <td className="p-4">
+        <div className="flex items-center gap-3">
+          <Avatar className="hidden md:flex">
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{user.name || 'Unnamed User'}</div>
+            <div className="text-sm text-muted-foreground hidden md:block">
+              {user.id.slice(0, 8)}...
             </div>
           </div>
-        </td>
+        </div>
+      </td>
 
-        <td className="p-4">
-          <div className="space-y-1">
-            <div className="text-sm hidden md:block">
-              {user.email ? user.email : (
-                <span className="text-muted-foreground">No email</span>
-              )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {formatPhone(user.phoneNumber)}
-            </div>
-          </div>
-        </td>
-
-        <td className="hidden md:table-cell p-4">
-          <div className="flex flex-wrap gap-2">
-            {user.age && (
-              <Badge variant="outline" className="text-xs">
-                {user.age}y
-              </Badge>
-            )}
-            {user.gender && (
-              <Badge variant="outline" className="text-xs">
-                {user.gender}
-              </Badge>
-            )}
-            {user.timezone && (
-              <Badge variant="outline" className="text-xs">
-                {user.timezone}
-              </Badge>
+      <td className="p-4">
+        <div className="space-y-1">
+          <div className="text-sm hidden md:block">
+            {user.email ? user.email : (
+              <span className="text-muted-foreground">No email</span>
             )}
           </div>
-        </td>
-
-        <td className="hidden md:table-cell p-4">
           <div className="text-sm text-muted-foreground">
-            {formatRelative(user.createdAt)}
+            {formatPhone(user.phoneNumber)}
           </div>
-        </td>
+        </div>
+      </td>
 
-        <td className="hidden md:table-cell p-4">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <Eye className="h-4 w-4" />
-            View
-          </Button>
-        </td>
-      </tr>
-    </Link>
+      <td className="hidden md:table-cell p-4">
+        <div className="flex flex-wrap gap-2">
+          {user.age && (
+            <Badge variant="outline" className="text-xs">
+              {user.age}y
+            </Badge>
+          )}
+          {user.gender && (
+            <Badge variant="outline" className="text-xs">
+              {user.gender}
+            </Badge>
+          )}
+          {user.timezone && (
+            <Badge variant="outline" className="text-xs">
+              {user.timezone}
+            </Badge>
+          )}
+        </div>
+      </td>
+
+      <td className="hidden md:table-cell p-4">
+        <div className="text-sm text-muted-foreground">
+          {formatRelative(user.createdAt)}
+        </div>
+      </td>
+
+      <td className="hidden md:table-cell p-4">
+        <Button variant="ghost" size="sm" className="gap-2">
+          <Eye className="h-4 w-4" />
+          View
+        </Button>
+      </td>
+    </tr>
   )
 }
 

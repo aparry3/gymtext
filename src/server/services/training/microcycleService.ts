@@ -95,13 +95,20 @@ export class MicrocycleService {
   }
 
   /**
+   * Get a microcycle by ID
+   */
+  public async getMicrocycleById(microcycleId: string): Promise<Microcycle | null> {
+    return await this.microcycleRepo.getMicrocycleById(microcycleId);
+  }
+
+  /**
    * Update a microcycle's days array
    */
   public async updateMicrocycleDays(
     microcycleId: string,
     days: string[]
-  ): Promise<void> {
-    await this.microcycleRepo.updateMicrocycle(microcycleId, { days });
+  ): Promise<Microcycle | null> {
+    return await this.microcycleRepo.updateMicrocycle(microcycleId, { days });
   }
 
   /**
@@ -110,8 +117,8 @@ export class MicrocycleService {
   public async updateMicrocycle(
     microcycleId: string,
     microcycle: Partial<Microcycle>
-  ): Promise<void> {
-    await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
+  ): Promise<Microcycle | null> {
+    return await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
   }
 
   /**
