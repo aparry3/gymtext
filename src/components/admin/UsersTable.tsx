@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AdminUser, UserSort } from './types'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -70,16 +70,16 @@ export function UsersTable({
                   onSort={handleSort}
                 />
               </th>
-              <th className="p-4 text-left">Details</th>
-              <th className="p-4 text-left">
-                <SortableHeader 
-                  label="Created" 
-                  field="createdAt" 
+              <th className="hidden md:table-cell p-4 text-left">Details</th>
+              <th className="hidden md:table-cell p-4 text-left">
+                <SortableHeader
+                  label="Created"
+                  field="createdAt"
                   currentSort={sort}
                   onSort={handleSort}
                 />
               </th>
-              <th className="p-4 text-left">Actions</th>
+              <th className="hidden md:table-cell p-4 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -127,6 +127,7 @@ interface UserRowProps {
 }
 
 function UserRow({ user }: UserRowProps) {
+  const router = useRouter()
   const initials = user.name
     ?.split(' ')
     .map(n => n[0])
@@ -142,18 +143,25 @@ function UserRow({ user }: UserRowProps) {
     return phone
   }
 
+  const handleRowClick = () => {
+    router.push(`/admin/users/${user.id}`)
+  }
+
   return (
-    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200">
+    <tr
+      className="border-b border-gray-50 hover:bg-gray-50/50 transition-all duration-200 cursor-pointer"
+      onClick={handleRowClick}
+    >
       <td className="p-4">
         <div className="flex items-center gap-3">
-          <Avatar>
+          <Avatar className="hidden md:flex">
             <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div>
             <div className="font-medium">{user.name || 'Unnamed User'}</div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground hidden md:block">
               {user.id.slice(0, 8)}...
             </div>
           </div>
@@ -162,7 +170,7 @@ function UserRow({ user }: UserRowProps) {
 
       <td className="p-4">
         <div className="space-y-1">
-          <div className="text-sm">
+          <div className="text-sm hidden md:block">
             {user.email ? user.email : (
               <span className="text-muted-foreground">No email</span>
             )}
@@ -173,7 +181,7 @@ function UserRow({ user }: UserRowProps) {
         </div>
       </td>
 
-      <td className="p-4">
+      <td className="hidden md:table-cell p-4">
         <div className="flex flex-wrap gap-2">
           {user.age && (
             <Badge variant="outline" className="text-xs">
@@ -193,19 +201,17 @@ function UserRow({ user }: UserRowProps) {
         </div>
       </td>
 
-      <td className="p-4">
+      <td className="hidden md:table-cell p-4">
         <div className="text-sm text-muted-foreground">
           {formatRelative(user.createdAt)}
         </div>
       </td>
-      
-      <td className="p-4">
-        <Link href={`/admin/users/${user.id}`}>
-          <Button variant="ghost" size="sm" className="gap-2">
-            <Eye className="h-4 w-4" />
-            View
-          </Button>
-        </Link>
+
+      <td className="hidden md:table-cell p-4">
+        <Button variant="ghost" size="sm" className="gap-2">
+          <Eye className="h-4 w-4" />
+          View
+        </Button>
       </td>
     </tr>
   )
@@ -220,9 +226,9 @@ function UsersTableSkeleton() {
             <tr className="border-b border-gray-100">
               <th className="p-4 text-left">User</th>
               <th className="p-4 text-left">Contact</th>
-              <th className="p-4 text-left">Details</th>
-              <th className="p-4 text-left">Created</th>
-              <th className="p-4 text-left">Actions</th>
+              <th className="hidden md:table-cell p-4 text-left">Details</th>
+              <th className="hidden md:table-cell p-4 text-left">Created</th>
+              <th className="hidden md:table-cell p-4 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -243,16 +249,16 @@ function UsersTableSkeleton() {
                     <Skeleton className="h-3 w-28" />
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="hidden md:table-cell p-4">
                   <div className="flex gap-2">
                     <Skeleton className="h-5 w-12" />
                     <Skeleton className="h-5 w-16" />
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="hidden md:table-cell p-4">
                   <Skeleton className="h-4 w-20" />
                 </td>
-                <td className="p-4">
+                <td className="hidden md:table-cell p-4">
                   <Skeleton className="h-8 w-16" />
                 </td>
               </tr>

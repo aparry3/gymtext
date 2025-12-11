@@ -73,4 +73,39 @@ export class FitnessPlanRepository extends BaseRepository {
 
     return results.map(FitnessPlanModel.fromDB);
   }
+
+  /**
+   * Update a fitness plan
+   */
+  async updateFitnessPlan(
+    id: string,
+    updates: Partial<Pick<FitnessPlan, 'description' | 'formatted' | 'message' | 'structured'>>
+  ): Promise<FitnessPlan | null> {
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (updates.description !== undefined) {
+      updateData.description = updates.description;
+    }
+    if (updates.formatted !== undefined) {
+      updateData.formatted = updates.formatted;
+    }
+    if (updates.message !== undefined) {
+      updateData.message = updates.message;
+    }
+    if (updates.structured !== undefined) {
+      updateData.structured = updates.structured ? JSON.stringify(updates.structured) : null;
+    }
+
+    const result = await this.db
+      .updateTable('fitnessPlans')
+      .set(updateData)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+
+    if (!result) return null;
+    return FitnessPlanModel.fromDB(result);
+  }
 }

@@ -60,6 +60,14 @@ export class WorkoutInstanceService {
   }
 
   /**
+   * Get a workout by ID without authorization check
+   * For internal service-to-service use only
+   */
+  public async getWorkoutByIdInternal(workoutId: string): Promise<WorkoutInstance | undefined> {
+    return await this.workoutRepo.getWorkoutById(workoutId);
+  }
+
+  /**
    * Get a workout by user ID and date
    */
   public async getWorkoutByUserIdAndDate(userId: string, date: Date) {

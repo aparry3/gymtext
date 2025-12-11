@@ -64,6 +64,16 @@ export class FitnessPlanService {
   public async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
     return await this.fitnessPlanRepo.getPlanHistory(userId);
   }
+
+  /**
+   * Update a fitness plan's AI-generated fields
+   */
+  public async updateFitnessPlan(
+    planId: string,
+    updates: Partial<Pick<FitnessPlan, 'description' | 'formatted' | 'message' | 'structured'>>
+  ): Promise<FitnessPlan | null> {
+    return await this.fitnessPlanRepo.updateFitnessPlan(planId, updates);
+  }
 }
 
 // Export singleton instance

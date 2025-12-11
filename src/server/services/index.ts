@@ -49,3 +49,7 @@ export type { OnboardingDataService } from './user/onboardingDataService';
 export { messageService } from './messaging/messageService';
 
 export type { MessageService } from './messaging/messageService';
+
+// Chain runner service for testing/improving AI outputs
+export { ChainRunnerService } from './training/chainRunnerService';
+export type { ChainOperation, ChainRunResult } from './training/chainRunnerService';
