@@ -140,7 +140,7 @@ export function WorkoutDetailSheet({
         hideCloseButton
       >
         {/* Custom header */}
-        <SheetHeader className="p-4 border-b border-[hsl(var(--sidebar-border))] flex-shrink-0">
+        <SheetHeader className="p-4 border-b border-[hsl(var(--sidebar-border))] flex-shrink-0 text-left">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-[hsl(var(--sidebar-accent))] uppercase tracking-wide">
