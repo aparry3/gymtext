@@ -1,5 +1,6 @@
 import { formatForAI } from '@/shared/utils/date';
 import { WorkoutInstance } from '@/server/models';
+import type { ToolType } from '@/server/agents/base';
 
 /**
  * Represents a context message to be inserted at the beginning of the conversation
@@ -167,31 +168,47 @@ Response: "You got it. Let's crush it."
 /**
  * Build the continuation message for subsequent loop iterations after a tool call.
  * Tool responses are already in conversation history as role: 'tool' messages,
- * so this only provides instructions and warns about automated messages.
+ * so this provides type-aware instructions and warns about automated messages.
  *
+ * @param toolType - Type of tool that was called ('query' or 'action')
  * @param upcomingMessages - Messages queued by the tool to be sent after the response
  */
 export const buildLoopContinuationMessage = (
+  toolType: ToolType,
   upcomingMessages: string[] = []
 ): string => {
   let messageContext = '';
   if (upcomingMessages.length > 0) {
     messageContext = `
-[SYSTEM: AUTOMATED MESSAGES]
-The tool has queued the following messages to be sent to the user immediately after your response:
-${upcomingMessages.map((m) => `- "${m}"`).join('\n')}
+[AUTOMATED MESSAGES]
+The following messages will be sent to the user immediately after your response:
+${upcomingMessages.map((m) => `- "${m.substring(0, 100)}${m.length > 100 ? '...' : ''}"`).join('\n')}
 `;
   }
 
-  return `[SYSTEM: TOOL COMPLETE]
+  if (toolType === 'query') {
+    // QUERY tool - user asked for information
+    return `[SYSTEM: TOOL COMPLETE - QUERY]
 ${messageContext}
 [INSTRUCTION]
-The tool has finished. Review the tool response above.
-- If the result was successful, reply to the user confirming the change.
-- If [AUTOMATED MESSAGES] are listed above, DO NOT repeat their content. Just provide a smooth transition or brief confirmation.
-- If you called make_modification with a message, that acknowledgment was already sent. Focus on the result now.
+The user asked a question and you retrieved the answer.
+- Provide a brief, natural intro to the information (e.g., "Here's your workout for today:" or "Today you've got [type]:")
+- DO NOT say "Done" or "Complete" - this was a question, not a request for action
+- If [AUTOMATED MESSAGES] are listed, they contain the detailed response. Just provide a smooth lead-in.
 - If there was an error, explain it simply.
-- Keep the final response short and natural (SMS style).
-- If you need to do more, call another tool. Otherwise, send the final text.
+- Keep it conversational and SMS-style (1-2 sentences max).
+`;
+  }
+
+  // ACTION tool - user requested a change
+  return `[SYSTEM: TOOL COMPLETE - ACTION]
+${messageContext}
+[INSTRUCTION]
+The user requested a change and it has been processed.
+- Briefly confirm what was done in a natural way
+- If [AUTOMATED MESSAGES] are listed, DO NOT repeat their content. Just provide a brief confirmation.
+- If you called make_modification with a message, that acknowledgment was already sent. Focus on the result now.
+- If the action failed, explain the issue simply.
+- Keep it conversational and SMS-style (1-2 sentences max).
 `;
 };

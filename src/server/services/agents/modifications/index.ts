@@ -40,7 +40,7 @@ export class ModificationService {
       const user = await userService.getUser(userId);
       if (!user) {
         console.warn('[MODIFICATION_SERVICE] User not found:', userId);
-        return { response: 'User not found.' };
+        return { toolType: 'action', response: 'User not found.' };
       }
 
       const today = now(user.timezone).toJSDate();
@@ -89,6 +89,7 @@ export class ModificationService {
       });
 
       return {
+        toolType: 'action',
         response: result.response,
         messages: result.messages,
       };
@@ -97,6 +98,7 @@ export class ModificationService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
       return {
+        toolType: 'action',
         response: `Modification failed: ${errorMessage}`,
       };
     }

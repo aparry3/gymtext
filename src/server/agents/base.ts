@@ -39,10 +39,19 @@ export interface AgentDeps {
 }
 
 /**
+ * Tool types for contextual response generation
+ * - 'query': User asked for information (e.g., "What's my workout?")
+ * - 'action': User requested a change (e.g., "Record my injury")
+ */
+export type ToolType = 'query' | 'action';
+
+/**
  * Standard tool result type
  * All tools called by agents should return this
  */
 export interface ToolResult {
+  /** Type of tool for contextual response generation */
+  toolType: ToolType;
   /** Summary for the calling agent */
   response: string;
   /** SMS messages to send to user (optional) */

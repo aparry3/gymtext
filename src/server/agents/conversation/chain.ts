@@ -1,5 +1,5 @@
 import { CHAT_SYSTEM_PROMPT, buildContextMessages, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
-import { initializeModel, createRunnableAgent } from '../base';
+import { initializeModel, createRunnableAgent, type ToolType } from '../base';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
 
@@ -89,6 +89,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
         // Track messages from tools for this iteration
         const iterationMessages: string[] = [];
         let hasError = false;
+        let lastToolType: ToolType = 'action'; // Track for continuation message
 
         // Execute each tool call in priority order
         for (let i = 0; i < sortedToolCalls.length; i++) {
@@ -106,6 +107,9 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
             console.log(`[CHAT AGENT] Executing tool: ${toolCall.name}`);
             // Tool wrappers handle any pre-execution logic (e.g., immediate messages)
             const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
+
+            // Track tool type for continuation message (last tool's type is used)
+            lastToolType = toolResult.toolType || 'action';
 
             // Accumulate messages if present
             if (toolResult.messages && toolResult.messages.length > 0) {
@@ -153,7 +157,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
         // Add continuation message for next iteration
         conversationHistory.push({
           role: 'user',
-          content: buildLoopContinuationMessage(iterationMessages),
+          content: buildLoopContinuationMessage(lastToolType, iterationMessages),
         });
 
         console.log(`[CHAT AGENT] All tools complete, continuing loop`);

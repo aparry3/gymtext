@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { Message } from '@/server/models/messageModel';
-import type { AgentConfig, AgentDeps } from '@/server/agents/base';
+import type { AgentConfig, AgentDeps, ToolType } from '@/server/agents/base';
 import { WorkoutInstance } from '@/server/models';
 import type { ProfileUpdateOutput } from '@/server/agents/profile';
 import type { StructuredToolInterface } from '@langchain/core/tools';
@@ -12,6 +12,8 @@ import type { StructuredToolInterface } from '@langchain/core/tools';
  * for continuation and optionally send messages to the user.
  */
 export interface AgentToolResult {
+  /** Type of tool for contextual response generation */
+  toolType: ToolType;
   /** Optional SMS messages to send to user (accumulates across iterations) */
   messages?: string[];
   /** Required context for agent continuation (appended to conversation context) */

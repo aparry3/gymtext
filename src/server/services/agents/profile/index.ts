@@ -47,7 +47,7 @@ export class ProfileService {
       const user = await userService.getUser(userId);
       if (!user) {
         console.warn('[PROFILE_SERVICE] User not found:', userId);
-        return { response: 'User not found.' };
+        return { toolType: 'action', response: 'User not found.' };
       }
 
       const currentProfile = await fitnessProfileService.getCurrentProfile(userId) ?? '';
@@ -143,6 +143,7 @@ export class ProfileService {
       }
 
       return {
+        toolType: 'action',
         response: summaries.length > 0
           ? summaries.join('; ')
           : 'No updates detected.',
@@ -151,6 +152,7 @@ export class ProfileService {
       console.error('[PROFILE_SERVICE] Error updating profile:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
+        toolType: 'action',
         response: `Profile update failed: ${errorMessage}`,
       };
     }

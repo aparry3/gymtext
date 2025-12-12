@@ -3,6 +3,7 @@
  */
 
 import type { ToolResult } from './types';
+import type { ToolType } from '@/server/agents/base';
 
 /**
  * Result interface that domain services can return
@@ -22,16 +23,19 @@ export interface DomainResult {
  * into the standard ToolResult format that agents expect.
  *
  * @param result - Domain-specific result with success, messages, error, and modifications
+ * @param toolType - Type of tool ('query' or 'action'), defaults to 'action'
  * @returns Standard ToolResult with response and optional messages
  */
-export function toToolResult<T extends DomainResult>(result: T): ToolResult {
+export function toToolResult<T extends DomainResult>(result: T, toolType: ToolType = 'action'): ToolResult {
   if (!result.success) {
     return {
+      toolType,
       response: `Operation failed: ${result.error || 'Unknown error'}`,
       messages: result.messages?.length ? result.messages : undefined,
     };
   }
   return {
+    toolType,
     response: result.modifications
       ? `Operation completed: ${result.modifications}`
       : 'Operation completed successfully',

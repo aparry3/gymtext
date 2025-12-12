@@ -78,6 +78,7 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
           console.error(`[${agentName}] Error executing tool ${toolCall.name}:`, error);
           // Create an error result
           toolResult = {
+            toolType: 'action',
             response: `Operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
             messages: undefined,
           };
@@ -88,6 +89,7 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
     // No tool was executed
     if (!toolResult) {
       return {
+        toolType: 'action',
         messages: [],
         response: 'Modification failed: No tool was executed',
       };
@@ -99,6 +101,7 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
     if (isFailure) {
       console.log(`[${agentName}] Tool failed:`, toolResult.response);
       return {
+        toolType: 'action',
         messages: [],  // No SMS for failures - conversation agent will craft error message
         response: toolResult.response,
       };
@@ -113,6 +116,7 @@ export const createModificationsAgent = ({ tools, ...config }: ModificationsAgen
     });
 
     return {
+      toolType: 'action',
       messages: toolResult.messages || [],  // Only workout SMS if present, empty otherwise
       response: toolResult.response,  // Modification summary for conversation agent
     };

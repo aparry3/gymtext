@@ -29,7 +29,8 @@ async function getWorkoutForToday(userId: string, timezone: string): Promise<Too
       // Workout exists - return its message
       console.log('[ChatService] Existing workout found for today');
       return {
-        response: `Workout found for today: ${existingWorkout.description || existingWorkout.sessionType}`,
+        toolType: 'query',
+        response: `User's workout for today: ${existingWorkout.sessionType || 'Workout'} - ${existingWorkout.description || 'Custom workout'}`,
         messages: existingWorkout.message ? [existingWorkout.message] : undefined,
       };
     }
@@ -38,7 +39,7 @@ async function getWorkoutForToday(userId: string, timezone: string): Promise<Too
     // Fetch user with profile for generation
     const user = await userService.getUser(userId);
     if (!user) {
-      return { response: 'User not found.' };
+      return { toolType: 'query', response: 'User not found.' };
     }
 
     // Generate the workout
@@ -47,17 +48,20 @@ async function getWorkoutForToday(userId: string, timezone: string): Promise<Too
 
     if (!generatedWorkout) {
       return {
-        response: 'Could not generate workout. This might be a rest day based on the training plan, or the user may not have a fitness plan yet.',
+        toolType: 'query',
+        response: 'No workout scheduled for today. This could be a rest day based on the training plan, or the user may not have a fitness plan yet.',
       };
     }
 
     return {
-      response: `Generated workout for today: ${generatedWorkout.description || generatedWorkout.sessionType}`,
+      toolType: 'query',
+      response: `User's workout for today: ${generatedWorkout.sessionType || 'Workout'} - ${generatedWorkout.description || 'Custom workout'}`,
       messages: generatedWorkout.message ? [generatedWorkout.message] : undefined,
     };
   } catch (error) {
     console.error('[ChatService] Error getting/generating workout:', error);
     return {
+      toolType: 'query',
       response: `Failed to get workout: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
