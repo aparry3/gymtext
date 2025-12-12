@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fitnessPlanService } from '@/server/services';
+import { fitnessPlanService, progressService } from '@/server/services';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -54,9 +54,16 @@ export async function GET(
       );
     }
 
+    // Calculate current absoluteWeek based on plan start date
+    const progress = await progressService.getCurrentProgress(fitnessPlan);
+    const absoluteWeek = progress?.absoluteWeek ?? 1;
+
     return NextResponse.json({
       success: true,
-      data: fitnessPlan,
+      data: {
+        ...fitnessPlan,
+        absoluteWeek,
+      },
     });
   } catch (error) {
     console.error('Error fetching fitness plan:', error);

@@ -46,15 +46,17 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
       setIsLoading(true);
       setError(null);
 
-      // Fetch fitness plan
+      // Fetch fitness plan (includes absoluteWeek)
+      let absoluteWeek = 1;
       const planResponse = await fetch(`/api/users/${userId}/fitness-plan`);
       if (planResponse.ok) {
         const planData = await planResponse.json();
         setPlan(planData.data);
+        absoluteWeek = planData.data.absoluteWeek || 1;
       }
 
-      // Fetch current microcycle for weekly rhythm
-      const microcycleResponse = await fetch(`/api/users/${userId}/microcycle?absoluteWeek=1`);
+      // Fetch current microcycle for weekly rhythm using dynamic absoluteWeek
+      const microcycleResponse = await fetch(`/api/users/${userId}/microcycle?absoluteWeek=${absoluteWeek}`);
       if (microcycleResponse.ok) {
         const microcycleData = await microcycleResponse.json();
         setMicrocycle(microcycleData.data);

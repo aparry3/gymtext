@@ -74,9 +74,9 @@ export class ProgressService {
     }
 
     // Query for existing microcycle by date or absolute week
+    // Note: queries by clientId only, not fitnessPlanId, to handle plan modifications
     let microcycle = await this.microcycleService.getMicrocycleByDate(
       plan.clientId,
-      plan.id,
       targetDate
     );
 
@@ -84,7 +84,6 @@ export class ProgressService {
     if (!microcycle) {
       microcycle = await this.microcycleService.getMicrocycleByAbsoluteWeek(
         plan.clientId,
-        plan.id,
         absoluteWeek
       );
     }

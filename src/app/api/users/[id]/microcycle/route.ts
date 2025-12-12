@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { microcycleService, fitnessPlanService } from '@/server/services'
+import { microcycleService } from '@/server/services'
 import { checkAuthorization } from '@/server/utils/authMiddleware'
 
 /**
@@ -13,6 +13,9 @@ import { checkAuthorization } from '@/server/utils/authMiddleware'
  * Authorization:
  * - Admin can access any user
  * - Regular user can only access their own data
+ *
+ * Note: Queries by clientId + absoluteWeek only (not fitnessPlanId)
+ * to handle plan modifications gracefully
  */
 export async function GET(
   request: NextRequest,
@@ -56,16 +59,8 @@ export async function GET(
       )
     }
 
-    // Get the user's current plan
-    const plan = await fitnessPlanService.getCurrentPlan(userId)
-    if (!plan || !plan.id) {
-      return NextResponse.json(
-        { success: false, message: 'No fitness plan found for user' },
-        { status: 404 }
-      )
-    }
-
-    const microcycle = await microcycleService.getMicrocycleByAbsoluteWeek(userId, plan.id, absoluteWeek)
+    // Query by clientId + absoluteWeek only (not fitnessPlanId)
+    const microcycle = await microcycleService.getMicrocycleByAbsoluteWeek(userId, absoluteWeek)
 
     if (!microcycle) {
       return NextResponse.json(

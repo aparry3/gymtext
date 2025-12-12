@@ -73,25 +73,25 @@ export class MicrocycleService {
 
   /**
    * Get microcycle by absolute week number
+   * Queries by clientId + absoluteWeek only (not fitnessPlanId)
    */
   public async getMicrocycleByAbsoluteWeek(
     clientId: string,
-    fitnessPlanId: string,
     absoluteWeek: number
   ): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(clientId, fitnessPlanId, absoluteWeek);
+    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(clientId, absoluteWeek);
   }
 
   /**
    * Get microcycle for a specific date
    * Used for date-based progress tracking - finds the microcycle that contains the target date
+   * Queries by clientId + date range only (not fitnessPlanId)
    */
   public async getMicrocycleByDate(
     clientId: string,
-    fitnessPlanId: string,
     targetDate: Date
   ): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByDate(clientId, fitnessPlanId, targetDate);
+    return await this.microcycleRepo.getMicrocycleByDate(clientId, targetDate);
   }
 
   /**

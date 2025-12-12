@@ -54,18 +54,19 @@ export class MicrocycleRepository {
 
   /**
    * Get microcycle by absolute week number
+   * Queries by clientId + absoluteWeek only (not fitnessPlanId)
+   * Returns most recently updated if duplicates exist
    */
   async getMicrocycleByAbsoluteWeek(
     clientId: string,
-    fitnessPlanId: string,
     absoluteWeek: number
   ): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('fitnessPlanId', '=', fitnessPlanId)
       .where('absoluteWeek', '=', absoluteWeek)
+      .orderBy('updatedAt', 'desc')
       .executeTakeFirst();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,19 +186,20 @@ export class MicrocycleRepository {
   /**
    * Get microcycle for a specific date
    * Used for date-based progress tracking - finds the microcycle that contains the target date
+   * Queries by clientId + date range only (not fitnessPlanId)
+   * Returns most recently updated if duplicates exist
    */
   async getMicrocycleByDate(
     clientId: string,
-    fitnessPlanId: string,
     targetDate: Date
   ): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('fitnessPlanId', '=', fitnessPlanId)
       .where('startDate', '<=', targetDate)
       .where('endDate', '>=', targetDate)
+      .orderBy('updatedAt', 'desc')
       .executeTakeFirst();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

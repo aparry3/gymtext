@@ -91,10 +91,10 @@ export class PlanModificationService {
       }
 
       // 3. Get existing microcycle BEFORE modifications (needed for parallel execution)
+      // Note: queries by clientId only, not fitnessPlanId, to handle plan modifications
       const today = now(user.timezone);
       const existingMicrocycle = await this.microcycleService.getMicrocycleByDate(
         userId,
-        currentPlan.id!,
         today.toJSDate()
       );
 

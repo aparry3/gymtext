@@ -90,7 +90,7 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       const todayWorkout = workouts.find((w) => w.date.startsWith(todayStr)) || null;
       const tomorrowWorkout = workouts.find((w) => w.date.startsWith(tomorrowStr)) || null;
 
-      // Fetch fitness plan for program info
+      // Fetch fitness plan for program info and current week
       const planResponse = await fetch(`/api/users/${userId}/fitness-plan`);
       let programPhase = 'Strength + Lean Build Phase';
       let weekNumber = 1;
@@ -100,6 +100,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         if (planData.data) {
           // Try to extract phase from plan name or description
           programPhase = planData.data.structure?.name || programPhase;
+          // Use dynamic absoluteWeek from the API
+          weekNumber = planData.data.absoluteWeek || 1;
         }
       }
 
