@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,8 @@ import {
   User,
   LogOut,
   Menu,
-  Dumbbell,
   ArrowLeft,
+  ChevronLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -96,16 +97,31 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {/* Logo with close button for mobile */}
       <div className="p-6 border-b border-[hsl(var(--sidebar-border))]">
-        <Link href={basePath} className="flex items-center gap-2" onClick={onNavClick}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--sidebar-accent))]">
-            <Dumbbell className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-[hsl(var(--sidebar-foreground))]">
-            GYMTEXT
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Close button - only shown in mobile sheet */}
+          {onNavClick && (
+            <button
+              onClick={onNavClick}
+              className="p-1 -ml-1 text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))] rounded"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          <Link href={basePath} className="flex items-center gap-2" onClick={onNavClick}>
+            <Image
+              src="/IconBG.png"
+              alt="GymText"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
+            <span className="text-lg font-bold text-[hsl(var(--sidebar-foreground))]">
+              GYMTEXT
+            </span>
+          </Link>
+        </div>
       </div>
 
       {/* Admin View Banner */}
@@ -211,6 +227,7 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
           </SheetTrigger>
           <SheetContent
             side="left"
+            hideCloseButton
             className="w-64 p-0 bg-[hsl(var(--sidebar-bg))] border-[hsl(var(--sidebar-border))]"
           >
             <SidebarContent
@@ -225,9 +242,13 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
           </SheetContent>
         </Sheet>
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(var(--sidebar-accent))]">
-            <Dumbbell className="h-3.5 w-3.5 text-white" />
-          </div>
+          <Image
+            src="/IconBG.png"
+            alt="GymText"
+            width={28}
+            height={28}
+            className="rounded-lg"
+          />
           <span className="text-base font-bold text-[hsl(var(--sidebar-foreground))]">
             GYMTEXT
           </span>
