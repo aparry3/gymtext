@@ -44,11 +44,11 @@ Strictly NO emojis. Use standard Markdown headers and lists.
 # [Day Name] - [Focus Title]
 *[One sentence motivational overview]*
 
-## Warm-Up
+## Warmup
 * [Movement] - [Duration/Reps]
 * [Movement] - [Duration/Reps]
 
-## The Workout
+## Workout
 **1. Exercise Name**
 * **Sets:** X
 * **Reps:** Y
@@ -58,7 +58,7 @@ Strictly NO emojis. Use standard Markdown headers and lists.
 
 **(Repeat for other exercises...)**
 
-## Cool Down
+## Cooldown
 * [Activity/Stretch]
 
 *(If Double Session, repeat the block for PM)*

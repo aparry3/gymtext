@@ -10,7 +10,7 @@ EXTRACTION RULES:
    - DO NOT include prefixes like "Session Type:", "Focus:", etc.
    - DO NOT include long muscle group lists in the title
 2. Identify focus as a brief phrase (1-3 words). Examples: "Back & Biceps", "Quads", "Push Muscles"
-3. Parse each section (Warm-Up, Main Workout, Conditioning, Cool Down) into the sections array
+3. Parse each section (Warmup, Main Workout, Conditioning, Cooldown) into the sections array
 4. For each exercise in a section, extract:
    - id: Generate a unique short id (e.g., "ex1", "ex2")
    - name: The exercise name (e.g., "Back Squat", "Zone 2 Run")
