@@ -16,6 +16,7 @@ export const createStructuredWorkoutAgent = (config?: StructuredWorkoutConfig) =
   // Initialize model WITH schema for structured output
   const model = initializeModel(WorkoutStructureSchema, {
     model: 'gpt-5-nano',
+    maxTokens: 32000,
     ...config?.agentConfig
   });
 
