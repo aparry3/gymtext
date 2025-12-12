@@ -24,7 +24,7 @@ interface PlanData {
 }
 
 interface MicrocycleData {
-  weekNumber?: number;
+  absoluteWeek?: number;
   structured?: {
     days?: Array<{
       day: string;
@@ -46,17 +46,15 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
       setIsLoading(true);
       setError(null);
 
-      // Fetch fitness plan (includes absoluteWeek)
-      let absoluteWeek = 1;
+      // Fetch fitness plan
       const planResponse = await fetch(`/api/users/${userId}/fitness-plan`);
       if (planResponse.ok) {
         const planData = await planResponse.json();
         setPlan(planData.data);
-        absoluteWeek = planData.data.absoluteWeek || 1;
       }
 
-      // Fetch current microcycle for weekly rhythm using dynamic absoluteWeek
-      const microcycleResponse = await fetch(`/api/users/${userId}/microcycle?absoluteWeek=${absoluteWeek}`);
+      // Fetch current microcycle (API defaults to current week using user's timezone)
+      const microcycleResponse = await fetch(`/api/users/${userId}/microcycle`);
       if (microcycleResponse.ok) {
         const microcycleData = await microcycleResponse.json();
         setMicrocycle(microcycleData.data);
@@ -115,7 +113,7 @@ export function UserPlanView({ userId }: UserPlanViewProps) {
         subtitle={structure?.name || 'Your Fitness Plan'}
         status={{
           label: 'Active',
-          weekNumber: microcycle?.weekNumber || 1,
+          weekNumber: microcycle?.absoluteWeek || 1,
         }}
       />
 
