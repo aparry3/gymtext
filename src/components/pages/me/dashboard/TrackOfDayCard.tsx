@@ -1,8 +1,5 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-import { Music } from 'lucide-react';
-
 interface TrackOfDayCardProps {
   title?: string;
   subtitle?: string;
@@ -25,15 +22,15 @@ export function TrackOfDayCard({
 }: TrackOfDayCardProps) {
   if (isLoading) {
     return (
-      <Card className="p-4 bg-[hsl(143,85%,42%)] text-white animate-pulse">
+      <div className="rounded-2xl p-4 bg-[#1DB954] text-white animate-pulse shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-white/20 rounded-full" />
+          <div className="h-8 w-8 bg-white/20 rounded-full" />
           <div className="space-y-2">
             <div className="h-4 w-24 bg-white/20 rounded" />
             <div className="h-3 w-32 bg-white/20 rounded" />
           </div>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -44,17 +41,19 @@ export function TrackOfDayCard({
       rel="noopener noreferrer"
       className="block"
     >
-      <Card className="p-4 bg-[hsl(143,85%,42%)] text-white hover:bg-[hsl(143,85%,38%)] transition-colors cursor-pointer">
+      <div className="rounded-2xl p-4 bg-[#1DB954] text-white hover:bg-[#1aa34a] transition-colors cursor-pointer shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-            <Music className="h-5 w-5" />
-          </div>
+          <img
+            src="/spotify-logo-white.svg"
+            alt="Spotify"
+            className="h-8 w-8"
+          />
           <div>
             <p className="font-semibold">{title}</p>
             <p className="text-sm opacity-80">{subtitle}</p>
           </div>
         </div>
-      </Card>
+      </div>
     </a>
   );
 }
