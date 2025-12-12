@@ -66,7 +66,7 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Fetch workouts for today and tomorrow (API uses user's timezone)
+      // Fetch recent workouts (ordered by date DESC)
       const workoutsResponse = await fetch(`/api/users/${userId}/workouts`);
 
       if (!workoutsResponse.ok) {
@@ -76,9 +76,14 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       const workoutsData = await workoutsResponse.json();
       const workouts: WorkoutData[] = workoutsData.data || [];
 
-      // Find today's and tomorrow's workout by index (API returns today first, then tomorrow)
-      const todayWorkout = workouts[0] || null;
-      const tomorrowWorkout = workouts[1] || null;
+      // Use browser timezone for date comparison
+      // toLocaleDateString('en-CA') gives YYYY-MM-DD in local timezone
+      const todayStr = today.toLocaleDateString('en-CA');
+      const tomorrowStr = tomorrow.toLocaleDateString('en-CA');
+
+      // Find today's and tomorrow's workout by comparing dates
+      const todayWorkout = workouts.find(w => w.date.startsWith(todayStr)) || null;
+      const tomorrowWorkout = workouts.find(w => w.date.startsWith(tomorrowStr)) || null;
 
       // Fetch fitness plan for program info
       const planResponse = await fetch(`/api/users/${userId}/fitness-plan`);

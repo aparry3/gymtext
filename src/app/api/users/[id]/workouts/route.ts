@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { workoutInstanceService, userService } from '@/server/services';
+import { workoutInstanceService } from '@/server/services';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
-import { startOfDay, endOfDay, addDays } from '@/shared/utils/date';
 
 /**
  * GET /api/users/[id]/workouts
@@ -9,12 +8,12 @@ import { startOfDay, endOfDay, addDays } from '@/shared/utils/date';
  * Get user's workouts
  *
  * Query params:
- * - limit: number (default 10, used for recent workouts)
+ * - limit: number (default 10) - returns N most recent workouts by date DESC
  * - startDate: ISO date string (optional, for date range filter)
  * - endDate: ISO date string (optional, for date range filter)
  *
- * If no date params provided, returns today's and tomorrow's workouts
- * using the user's timezone from their profile
+ * Default behavior: Returns recent workouts ordered by date descending.
+ * Frontend determines "today" / "tomorrow" using browser timezone.
  *
  * Authorization:
  * - Admin can access any user
@@ -52,7 +51,7 @@ export async function GET(
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
 
-    // If filtering by date range (for microcycle week view)
+    // If filtering by date range
     if (startDateParam && endDateParam) {
       const startDate = new Date(startDateParam);
       const endDate = new Date(endDateParam);
@@ -70,28 +69,7 @@ export async function GET(
       }
     }
 
-    // If no date params, default to today + tomorrow in user's timezone
-    if (!startDateParam && !endDateParam) {
-      const user = await userService.getUser(requestedUserId);
-      const timezone = user?.timezone || 'America/New_York';
-
-      const now = new Date();
-      const todayStart = startOfDay(now, timezone);
-      const tomorrowEnd = endOfDay(addDays(now, 1, timezone), timezone);
-
-      const workouts = await workoutInstanceService.getWorkoutsByDateRange(
-        requestedUserId,
-        todayStart,
-        tomorrowEnd
-      );
-
-      return NextResponse.json({
-        success: true,
-        data: workouts,
-      });
-    }
-
-    // Fallback: get recent workouts
+    // Default: return recent workouts by date DESC
     const workouts = await workoutInstanceService.getRecentWorkouts(
       requestedUserId,
       limit
