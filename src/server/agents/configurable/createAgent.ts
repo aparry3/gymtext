@@ -1,0 +1,148 @@
+import type { ZodSchema } from 'zod';
+import { initializeModel } from '../base';
+import type {
+  AgentDefinition,
+  ModelConfig,
+  ConfigurableAgent,
+  InferSchemaOutput,
+  AgentComposedOutput,
+  SubAgentBatch,
+} from './types';
+import { buildMessages } from './utils';
+import { executeSubAgents } from './subAgentExecutor';
+import { executeToolLoop } from './toolExecutor';
+
+/**
+ * Create a configurable agent from a definition and model config
+ *
+ * This factory function creates agents declaratively, supporting:
+ * - Structured output via Zod schemas
+ * - Dynamic user prompts via functions
+ * - Pre-computed context messages
+ * - Tool-based agents with agentic loops
+ * - Composed agents with parallel/sequential subAgents
+ *
+ * @param definition - The agent's declarative configuration
+ * @param config - Optional model configuration
+ * @returns A ConfigurableAgent that can be invoked
+ *
+ * @example
+ * ```typescript
+ * // Simple agent with schema
+ * const messageAgent = createAgent({
+ *   name: 'workout-message',
+ *   systemPrompt: SYSTEM_PROMPT,
+ *   userPrompt: (input) => buildPrompt(input),
+ *   schema: MessageSchema,
+ * }, { model: 'gpt-5-nano' });
+ *
+ * // Composed agent with subAgents
+ * const workoutAgent = createAgent({
+ *   name: 'workout',
+ *   systemPrompt: SYSTEM_PROMPT,
+ *   userPrompt: (input) => buildPrompt(input),
+ *   context: [profileContext, historyContext],
+ *   subAgents: [
+ *     { structured: structuredAgent, message: messageAgent },
+ *     { validation: validationAgent }
+ *   ]
+ * }, { model: 'gpt-5.1' });
+ * ```
+ */
+export function createAgent<
+  TInput,
+  TSchema extends ZodSchema | undefined = undefined,
+  TSubAgents extends SubAgentBatch[] | undefined = undefined
+>(
+  definition: AgentDefinition<TInput, TSchema>,
+  config?: ModelConfig
+): ConfigurableAgent<TInput, AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> {
+
+  const {
+    name,
+    systemPrompt,
+    userPrompt,
+    context = [],
+    tools,
+    schema,
+    subAgents = [],
+  } = definition;
+
+  const { maxIterations = 5 } = config || {};
+
+  // Determine if this is a tool-based agent
+  const isToolAgent = tools && tools.length > 0;
+
+  // Initialize the model appropriately
+  // Tools and schema are mutually exclusive - tools take precedence
+  const model = isToolAgent
+    ? initializeModel(undefined, config, { tools })
+    : initializeModel(schema, config);
+
+  const invoke = async (input: TInput): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+    const startTime = Date.now();
+    console.log(`[${name}] Starting execution`);
+
+    try {
+      // Evaluate userPrompt if it's a function
+      const evaluatedUserPrompt = typeof userPrompt === 'function'
+        ? userPrompt(input)
+        : userPrompt;
+
+      // Build messages with context
+      const messages = buildMessages({
+        systemPrompt,
+        userPrompt: evaluatedUserPrompt,
+        context,
+      });
+
+      // Execute main agent
+      let mainResult: InferSchemaOutput<TSchema>;
+
+      if (isToolAgent) {
+        const toolResult = await executeToolLoop({
+          model,
+          messages,
+          tools: tools!,
+          name,
+          maxIterations,
+        });
+        mainResult = toolResult.response as InferSchemaOutput<TSchema>;
+      } else {
+        mainResult = await model.invoke(messages) as InferSchemaOutput<TSchema>;
+      }
+
+      console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms`);
+
+      // If no subAgents, return main result wrapped in response
+      if (!subAgents || subAgents.length === 0) {
+        return { response: mainResult } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
+      }
+
+      // Execute subAgents
+      const subAgentResults = await executeSubAgents({
+        batches: subAgents,
+        input,
+        previousResults: { response: mainResult },
+        parentName: name,
+      });
+
+      console.log(`[${name}] Total execution time: ${Date.now() - startTime}ms`);
+
+      // Combine main result with subAgent results
+      return {
+        response: mainResult,
+        ...subAgentResults,
+      } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
+
+    } catch (error) {
+      console.error(`[${name}] Execution failed:`, error);
+      throw error;
+    }
+  };
+
+  return {
+    invoke,
+    name,
+  };
+}

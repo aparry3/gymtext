@@ -1,5 +1,20 @@
 // ==========================================
-// Agent Factory Exports (NEW STANDARDIZED PATTERN)
+// Configurable Agent System (RECOMMENDED)
+// ==========================================
+// Use createAgent for declarative, composable agent definitions
+export { createAgent } from './configurable';
+export type {
+  AgentDefinition,
+  ModelConfig,
+  ConfigurableAgent,
+  SubAgentBatch,
+  ModelId,
+  InferSchemaOutput,
+  AgentComposedOutput,
+} from './configurable';
+
+// ==========================================
+// Agent Factory Exports (LEGACY PATTERN)
 // ==========================================
 // Use these factory functions to create agents with dependency injection
 
