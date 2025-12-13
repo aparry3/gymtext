@@ -179,7 +179,6 @@ export class WorkoutInstanceService {
       // Convert to database format
       const workout: NewWorkoutInstance = {
         clientId: user.id,
-        fitnessPlanId: microcycle.fitnessPlanId,
         microcycleId: microcycle.id,
         date: targetDate.toJSDate(),
         sessionType: 'workout', // Use generic session type since we don't have theme from day overview

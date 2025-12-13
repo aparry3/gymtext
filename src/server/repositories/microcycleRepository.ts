@@ -20,7 +20,6 @@ export class MicrocycleRepository {
       .values({
         id: uuidv4(),
         clientId: microcycle.clientId,
-        fitnessPlanId: microcycle.fitnessPlanId,
         absoluteWeek: microcycle.absoluteWeek,
         days: microcycle.days,
         description: microcycle.description,
@@ -206,18 +205,4 @@ export class MicrocycleRepository {
     return result ? MicrocycleModel.fromDB(result as any) : null;
   }
 
-  /**
-   * Get all microcycles for a fitness plan
-   */
-  async getMicrocyclesByPlanId(fitnessPlanId: string): Promise<Microcycle[]> {
-    const results = await this.db
-      .selectFrom('microcycles')
-      .selectAll()
-      .where('fitnessPlanId', '=', fitnessPlanId)
-      .orderBy('absoluteWeek', 'asc')
-      .execute();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((r) => MicrocycleModel.fromDB(r as any));
-  }
 }

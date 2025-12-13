@@ -148,15 +148,14 @@ export class PlanModificationService {
 
       // 7. Update or create microcycle
       if (microcycleResult && existingMicrocycle) {
-        // Update existing microcycle with modified data + link to new plan
+        // Update existing microcycle with modified data
         await this.microcycleService.updateMicrocycle(existingMicrocycle.id!, {
-          fitnessPlanId: newPlan.id!,
           days: microcycleResult.days,
           description: microcycleResult.description,
           formatted: microcycleResult.formatted,
           isDeload: microcycleResult.isDeload,
         });
-        console.log(`[MODIFY_PLAN] Updated existing microcycle ${existingMicrocycle.id} and linked to new plan`);
+        console.log(`[MODIFY_PLAN] Updated existing microcycle ${existingMicrocycle.id}`);
       } else {
         // No existing microcycle - create new one
         const progress = await this.progressService.getProgressForDate(newPlan, today.toJSDate(), user.timezone);

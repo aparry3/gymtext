@@ -229,10 +229,10 @@ export class ChainRunnerService {
       throw new Error(`User not found: ${microcycle.clientId}`);
     }
 
-    // Fetch the associated plan for full regeneration
-    const plan = await this.fitnessPlanService.getPlanById(microcycle.fitnessPlanId);
+    // Fetch the user's current plan for full regeneration
+    const plan = await this.fitnessPlanService.getCurrentPlan(microcycle.clientId);
     if (!plan) {
-      throw new Error(`Fitness plan not found: ${microcycle.fitnessPlanId}`);
+      throw new Error(`No active fitness plan found for client: ${microcycle.clientId}`);
     }
 
     let updatedMicrocycle: Microcycle;

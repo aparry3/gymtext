@@ -89,7 +89,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .select([
         'workoutInstances.id',
         'workoutInstances.clientId',
-        'workoutInstances.fitnessPlanId',
         'workoutInstances.microcycleId',
         'workoutInstances.date',
         'workoutInstances.sessionType',
@@ -251,7 +250,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .select([
         'workoutInstances.id',
         'workoutInstances.clientId',
-        'workoutInstances.fitnessPlanId',
         'workoutInstances.microcycleId',
         'workoutInstances.date',
         'workoutInstances.sessionType',

@@ -292,7 +292,6 @@ export class WorkoutModificationService {
             // Create new workout
             await this.workoutInstanceService.createWorkout({
               clientId: userId,
-              fitnessPlanId: plan.id!,
               microcycleId: microcycle.id,
               date: today,
               sessionType: this.mapThemeToSessionType(theme),

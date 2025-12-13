@@ -147,7 +147,6 @@ export class MicrocycleService {
     // Create new microcycle
     const microcycle = await this.microcycleRepo.createMicrocycle({
       clientId,
-      fitnessPlanId: plan.id!,
       absoluteWeek: progress.absoluteWeek,
       days,
       description,
@@ -209,13 +208,6 @@ export class MicrocycleService {
       startDate: startOfWeek(currentDate, timezone),
       endDate: endOfWeek(currentDate, timezone),
     };
-  }
-
-  /**
-   * Get all microcycles for a fitness plan
-   */
-  public async getMicrocyclesByPlanId(fitnessPlanId: string): Promise<Microcycle[]> {
-    return await this.microcycleRepo.getMicrocyclesByPlanId(fitnessPlanId);
   }
 }
 
