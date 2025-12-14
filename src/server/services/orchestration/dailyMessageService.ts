@@ -145,9 +145,10 @@ export class DailyMessageService {
         workoutMessage = workout.message;
       } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
         // Fallback: Generate message if needed (shouldn't happen in production)
-        const { createWorkoutMessageAgent } = await import('@/server/agents/training/workouts/shared/steps/message/chain');
+        const { createWorkoutMessageAgent } = await import('@/server/agents/training/workouts');
         const messageAgent = createWorkoutMessageAgent({ operationName: 'fallback message' });
-        workoutMessage = await messageAgent.invoke({ description: workout.description });
+        const result = await messageAgent.invoke({ response: workout.description });
+        workoutMessage = result.response;
       } else {
         throw new Error('Workout missing required fields for message generation');
       }

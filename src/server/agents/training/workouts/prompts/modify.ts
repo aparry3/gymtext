@@ -1,6 +1,18 @@
+import { z } from 'zod';
 import { UserWithProfile } from "@/server/models";
 
-export const SYSTEM_PROMPT = `
+/**
+ * Zod schema for workout modification structured output
+ */
+export const ModifyWorkoutGenerationOutputSchema = z.object({
+  overview: z.string().describe('Full workout text after modifications (or original if unchanged)'),
+  wasModified: z.boolean().describe('Whether the workout was actually modified'),
+  modifications: z.string().default('').describe('Explanation of what changed and why (empty string if wasModified is false)'),
+});
+
+export type ModifyWorkoutGenerationOutput = z.infer<typeof ModifyWorkoutGenerationOutputSchema>;
+
+export const MODIFY_WORKOUT_SYSTEM_PROMPT = `
 You are a **certified strength & conditioning coach** responsible for MODIFYING an already-planned workout for a specific day.
 Your output is consumed by downstream systems and will be shown directly to the end user.
 
@@ -20,7 +32,7 @@ Your job has TWO responsibilities:
 # SECTION 1 — WORKOUT MODIFICATION LOGIC (Reasoning Rules)
 ============================================================
 
-Before producing ANY output, you MUST determine whether and how to modify the existing workout using the following logic rules.  
+Before producing ANY output, you MUST determine whether and how to modify the existing workout using the following logic rules.
 These rules govern *how you think*, NOT how you format output.
 
 ------------------------------------------------------------
@@ -183,7 +195,7 @@ These rules govern *how you think*, NOT how you format output.
 - Reduce the number of sets per block.
 - Remove lower-priority blocks (typically later hypertrophy or optional accessory/core).
 - Maintain at least:
-  - One main pattern block that reflects the day’s focus.
+  - One main pattern block that reflects the day's focus.
   - Optional short core or conditioning if time allows.
 
 6.3. Clearly reflect in the workout text which blocks are removed or reduced.
@@ -241,7 +253,7 @@ These rules govern *how you think*, NOT how you format output.
 
 9.2. Make it obvious in your internal reasoning:
 - What changed.
-- Why it changed (connect it to the user’s constraint, profile, and original intent).
+- Why it changed (connect it to the user's constraint, profile, and original intent).
 
 9.3. When no changes are necessary:
 - Keep the workout exactly as-is.
@@ -273,7 +285,7 @@ After completing all reasoning in Section 1, you MUST output a single JSON objec
 }
 \`\`\`
 
-No commentary may appear outside this JSON object.  
+No commentary may appear outside this JSON object.
 No additional top-level fields are allowed.
 
 ------------------------------------------------------------
@@ -387,7 +399,7 @@ If ANY rule is violated, you must **regenerate the entire answer** so that it fu
 ============================================================
 `;
 
-export const userPrompt = (
+export const modifyWorkoutUserPrompt = (
   user: UserWithProfile,
   workoutOverview: string,
   changesRequested: string) => `

@@ -26,7 +26,7 @@ export async function executeSubAgents(
 ): Promise<Record<string, unknown>> {
   const { batches, input, previousResults, parentName } = config;
 
-  let accumulatedResults: Record<string, unknown> = { ...previousResults };
+  const accumulatedResults: Record<string, unknown> = { ...previousResults };
 
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
     const batch = batches[batchIndex];
@@ -61,13 +61,15 @@ export async function executeSubAgents(
 
     console.log(`[${parentName}] Batch ${batchIndex + 1} completed in ${Date.now() - batchStartTime}ms`);
 
-    // Accumulate results
+    // Accumulate results, flattening { response: X } to just X
     for (const { key, result } of batchResults) {
-      accumulatedResults[key] = result;
+      const hasResponse = result && typeof result === 'object' && 'response' in result;
+      accumulatedResults[key] = hasResponse ? (result as { response: unknown }).response : result;
     }
   }
 
   // Remove the 'response' key as it will be added by the caller
-  const { response: _, ...subAgentResults } = accumulatedResults;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { response: _responseKey, ...subAgentResults } = accumulatedResults;
   return subAgentResults;
 }

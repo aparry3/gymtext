@@ -20,12 +20,12 @@ import {
 } from '@/server/agents/training/microcycles/shared/steps';
 
 // Workout agents
-import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts/operations/generate/chain';
 import {
+  createWorkoutGenerateAgent,
   createStructuredWorkoutAgent,
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
-} from '@/server/agents/training/workouts/shared/steps';
+} from '@/server/agents/training/workouts';
 
 // Types
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -421,7 +421,7 @@ export class ChainRunnerService {
         updatedWorkout = await this.runWorkoutStructuredChain(workout);
         break;
       case 'formatted':
-        updatedWorkout = await this.runWorkoutFormattedChain(workout, user);
+        updatedWorkout = await this.runWorkoutFormattedChain(workout);
         break;
       case 'message':
         updatedWorkout = await this.runWorkoutMessageChain(workout);
@@ -471,7 +471,7 @@ export class ChainRunnerService {
       : workout.details || {};
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
-      description: result.description,
+      description: result.response,
       message: result.message,
       structured: result.structure,
       details: {
@@ -497,7 +497,8 @@ export class ChainRunnerService {
     const agent = createStructuredWorkoutAgent({
       operationName: 'chain-runner structured',
     });
-    const structure = await agent.invoke({ description: workout.description });
+    const result = await agent.invoke({ response: workout.description });
+    const structure = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
       structured: structure,
@@ -511,8 +512,7 @@ export class ChainRunnerService {
   }
 
   private async runWorkoutFormattedChain(
-    workout: WorkoutInstance,
-    user: UserWithProfile
+    workout: WorkoutInstance
   ): Promise<WorkoutInstance> {
     console.log(`[ChainRunner] Running formatted chain for workout ${workout.id}`);
 
@@ -524,11 +524,10 @@ export class ChainRunnerService {
       includeModifications: false,
       operationName: 'chain-runner formatted',
     });
-    const formatted = await agent.invoke({
-      description: workout.description,
-      user,
-      date: new Date(workout.date),
+    const result = await agent.invoke({
+      response: workout.description,
     });
+    const formatted = result.response;
 
     // Parse existing details to preserve other fields
     const existingDetails = typeof workout.details === 'string'
@@ -559,7 +558,8 @@ export class ChainRunnerService {
     const agent = createWorkoutMessageAgent({
       operationName: 'chain-runner message',
     });
-    const message = await agent.invoke({ description: workout.description });
+    const result = await agent.invoke({ response: workout.description });
+    const message = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
       message,

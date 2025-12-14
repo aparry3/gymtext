@@ -1,11 +1,10 @@
 import { UserService } from '../../user/userService';
 import { MicrocycleService } from '../../training/microcycleService';
 import { WorkoutInstanceService } from '../../training/workoutInstanceService';
-import { createModifyWorkoutAgent } from '@/server/agents/training/workouts/operations/modify';
-import { createWorkoutGenerateAgent, type WorkoutGenerateInput } from '@/server/agents/training/workouts/operations/generate';
+import { createModifyWorkoutAgent, type ModifyWorkoutOutput } from '@/server/agents/training/workouts';
+import { createWorkoutGenerateAgent, type WorkoutGenerateInput, type WorkoutGenerateOutput } from '@/server/agents/training/workouts';
 import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import { WorkoutChainResult } from '@/server/agents/training/workouts/shared';
 import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
 import { ProgressService } from '../../training/progressService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
@@ -32,7 +31,7 @@ export interface ModifyWorkoutParams {
 
 export interface ModifyWorkoutResult {
   success: boolean;
-  workout?: WorkoutChainResult;
+  workout?: ModifyWorkoutOutput;
   modifications?: string;
   messages: string[];
   error?: string;
@@ -46,7 +45,7 @@ export interface ModifyWeekParams {
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: WorkoutChainResult;
+  workout?: WorkoutGenerateOutput;
   modifiedDays?: number;
   modifications?: string;
   messages: string[];
@@ -132,7 +131,7 @@ export class WorkoutModificationService {
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
-        description: result.description,
+        description: result.response.overview,
         message: result.message,
         details,
       });
@@ -140,7 +139,7 @@ export class WorkoutModificationService {
       return {
         success: true,
         workout: result,
-        modifications: result.modifications,
+        modifications: result.response.modifications,
         messages: result.message ? [result.message] : [],
       };
     } catch (error) {
@@ -282,7 +281,7 @@ export class WorkoutModificationService {
             // Update existing workout
             await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
               details,
-              description: workoutResult.description,
+              description: workoutResult.response,
               message: workoutResult.message,
               goal: theme,
               sessionType: this.mapThemeToSessionType(theme),
@@ -297,7 +296,7 @@ export class WorkoutModificationService {
               sessionType: this.mapThemeToSessionType(theme),
               goal: theme,
               details,
-              description: workoutResult.description,
+              description: workoutResult.response,
               message: workoutResult.message,
             });
             console.log(`[MODIFY_WEEK] Created new workout for today`);

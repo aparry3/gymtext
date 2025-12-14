@@ -60,4 +60,4 @@ export * from './messaging/planMicrocycleCombined/chain';
 export * from './messaging/updatedMicrocycleMessage/chain';
 export * from './conversation/chain';
 export * from './training/microcycles';
-export * from './training/workouts/operations/generate';
+export * from './training/workouts';
