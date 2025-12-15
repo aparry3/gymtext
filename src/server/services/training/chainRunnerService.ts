@@ -4,12 +4,12 @@ import { WorkoutInstanceService } from '@/server/services/training/workoutInstan
 import { UserService } from '@/server/services/user/userService';
 
 // Fitness Plan agents
-import { createFitnessPlanGenerateAgent } from '@/server/agents/training/plans/operations/generate/chain';
 import {
+  createFitnessPlanGenerateAgent,
   createStructuredPlanAgent,
   createFormattedFitnessPlanAgent,
   createFitnessPlanMessageAgent,
-} from '@/server/agents/training/plans/shared/steps';
+} from '@/server/agents/training/plans';
 
 // Microcycle agents
 import {
@@ -150,7 +150,14 @@ export class ChainRunnerService {
     console.log(`[ChainRunner] Running structured chain for plan ${plan.id}`);
 
     const agent = createStructuredPlanAgent({ operationName: 'chain-runner structured' });
-    const structure = await agent.invoke({ fitnessPlan: plan.description });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+    });
+
+    const result = await agent.invoke(inputJson);
+    const structure = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       structured: structure,
@@ -169,7 +176,14 @@ export class ChainRunnerService {
     const agent = createFormattedFitnessPlanAgent({
       operationName: 'chain-runner formatted',
     });
-    const formatted = await agent.invoke({ fitnessPlan: plan.description, user: {} as UserWithProfile });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+    });
+
+    const result = await agent.invoke(inputJson);
+    const formatted = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       formatted,
@@ -191,7 +205,15 @@ export class ChainRunnerService {
     const agent = createFitnessPlanMessageAgent({
       operationName: 'chain-runner message',
     });
-    const message = await agent.invoke({ fitnessPlan: plan.description, user });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+      user,
+    });
+
+    const result = await agent.invoke(inputJson);
+    const message = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       message,

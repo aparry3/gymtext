@@ -1,4 +1,4 @@
-import { UserWithProfile } from "@/server/models/userModel";
+import { UserWithProfile } from '@/server/models/userModel';
 
 export const FITNESS_PLAN_SYSTEM_PROMPT = `
 You are an expert **Strength & Conditioning Periodization Architect**.
