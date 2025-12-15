@@ -519,10 +519,8 @@ export class MessageService {
           operationName: 'fallback message'
         });
 
-        // Invoke with runtime context
-        const result = await messageAgent.invoke({
-          response: workout.description,
-        });
+        // Invoke with workout description string
+        const result = await messageAgent.invoke(workout.description);
         message = result.response;
 
         // Save generated message for future use

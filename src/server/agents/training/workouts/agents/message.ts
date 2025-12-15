@@ -1,6 +1,6 @@
 import { createAgent, type ConfigurableAgent } from '@/server/agents/configurable';
 import { WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT, workoutSmsUserPrompt } from '../prompts';
-import type { WorkoutMessageConfig, WorkoutMessageInput } from '../types';
+import type { WorkoutMessageConfig } from '../types';
 
 /**
  * Workout Message Agent Factory
@@ -13,10 +13,10 @@ import type { WorkoutMessageConfig, WorkoutMessageInput } from '../types';
  */
 export const createWorkoutMessageAgent = (
   config?: WorkoutMessageConfig
-): ConfigurableAgent<WorkoutMessageInput, { response: string }> => {
+): ConfigurableAgent<{ response: string }> => {
   return createAgent({
     name: `workout-message-${config?.operationName || 'default'}`,
     systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-    userPrompt: (input: WorkoutMessageInput) => workoutSmsUserPrompt(input.response),
+    userPrompt: (input: string) => workoutSmsUserPrompt(input),
   }, { model: 'gpt-5-nano', ...config?.agentConfig });
 };

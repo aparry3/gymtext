@@ -17,46 +17,49 @@ import { executeToolLoop } from './toolExecutor';
  *
  * This factory function creates agents declaratively, supporting:
  * - Structured output via Zod schemas
- * - Dynamic user prompts via functions
+ * - Optional userPrompt transformer for input strings
  * - Pre-computed context messages
  * - Tool-based agents with agentic loops
  * - Composed agents with parallel/sequential subAgents
  *
  * @param definition - The agent's declarative configuration
  * @param config - Optional model configuration
- * @returns A ConfigurableAgent that can be invoked
+ * @returns A ConfigurableAgent that can be invoked with a string
  *
  * @example
  * ```typescript
- * // Simple agent with schema
+ * // Agent with context (userPrompt undefined - input IS the message)
  * const messageAgent = createAgent({
  *   name: 'workout-message',
  *   systemPrompt: SYSTEM_PROMPT,
- *   userPrompt: (input) => buildPrompt(input),
+ *   context: [`<Profile>${user.profile}</Profile>`],
  *   schema: MessageSchema,
  * }, { model: 'gpt-5-nano' });
  *
- * // Composed agent with subAgents
+ * await messageAgent.invoke('Generate a motivational workout message');
+ *
+ * // Agent with userPrompt transformer
  * const workoutAgent = createAgent({
  *   name: 'workout',
  *   systemPrompt: SYSTEM_PROMPT,
- *   userPrompt: (input) => buildPrompt(input),
+ *   userPrompt: (input) => `Create workout based on: ${input}`,
  *   context: [profileContext, historyContext],
  *   subAgents: [
  *     { structured: structuredAgent, message: messageAgent },
  *     { validation: validationAgent }
  *   ]
  * }, { model: 'gpt-5.1' });
+ *
+ * await workoutAgent.invoke('upper body strength');
  * ```
  */
 export function createAgent<
-  TInput,
   TSchema extends ZodSchema | undefined = undefined,
   TSubAgents extends SubAgentBatch[] | undefined = undefined
 >(
-  definition: AgentDefinition<TInput, TSchema>,
+  definition: AgentDefinition<TSchema>,
   config?: ModelConfig
-): ConfigurableAgent<TInput, AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> {
+): ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> {
 
   const {
     name,
@@ -79,15 +82,13 @@ export function createAgent<
     ? initializeModel(undefined, config, { tools })
     : initializeModel(schema, config);
 
-  const invoke = async (input: TInput): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+  const invoke = async (input: string): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
     const startTime = Date.now();
     console.log(`[${name}] Starting execution`);
 
     try {
-      // Evaluate userPrompt if it's a function
-      const evaluatedUserPrompt = typeof userPrompt === 'function'
-        ? userPrompt(input)
-        : userPrompt;
+      // If userPrompt transformer is provided, use it; otherwise input IS the user message
+      const evaluatedUserPrompt = userPrompt ? userPrompt(input) : input;
 
       // Build messages with context
       const messages = buildMessages({
@@ -119,10 +120,15 @@ export function createAgent<
         return { response: mainResult } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
       }
 
-      // Execute subAgents
+      // Execute subAgents with the main response as their input
+      // Convert mainResult to string if needed for subAgent invocation
+      const responseString = typeof mainResult === 'string'
+        ? mainResult
+        : JSON.stringify(mainResult);
+
       const subAgentResults = await executeSubAgents({
         batches: subAgents,
-        input,
+        input: responseString,
         previousResults: { response: mainResult },
         parentName: name,
       });

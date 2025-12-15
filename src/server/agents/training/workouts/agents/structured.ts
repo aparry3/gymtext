@@ -1,7 +1,7 @@
 import { createAgent, type ConfigurableAgent } from '@/server/agents/configurable';
 import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/agents/training/schemas';
 import { STRUCTURED_WORKOUT_SYSTEM_PROMPT, structuredWorkoutUserPrompt } from '../prompts';
-import type { StructuredWorkoutConfig, StructuredWorkoutInput } from '../types';
+import type { StructuredWorkoutConfig } from '../types';
 
 /**
  * Structured Workout Agent Factory
@@ -14,11 +14,11 @@ import type { StructuredWorkoutConfig, StructuredWorkoutInput } from '../types';
  */
 export const createStructuredWorkoutAgent = (
   config?: StructuredWorkoutConfig
-): ConfigurableAgent<StructuredWorkoutInput, { response: WorkoutStructure }> => {
+): ConfigurableAgent<{ response: WorkoutStructure }> => {
   return createAgent({
     name: `structured-workout-${config?.operationName || 'default'}`,
     systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-    userPrompt: (input: StructuredWorkoutInput) => structuredWorkoutUserPrompt(input.response),
+    userPrompt: (input: string) => structuredWorkoutUserPrompt(input),
     schema: WorkoutStructureSchema,
   }, { model: 'gpt-5-nano', maxTokens: 32000, ...config?.agentConfig });
 };

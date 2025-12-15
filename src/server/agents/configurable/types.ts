@@ -14,9 +14,11 @@ export type ModelId =
 
 /**
  * The configurable agent interface
+ * invoke always takes a string - the string is either used directly as the user message
+ * or passed to userPrompt transformer if defined
  */
-export interface ConfigurableAgent<TInput, TOutput> {
-  invoke(input: TInput): Promise<TOutput>;
+export interface ConfigurableAgent<TOutput> {
+  invoke(input: string): Promise<TOutput>;
   /** The agent's name for logging */
   name: string;
 }
@@ -26,23 +28,24 @@ export interface ConfigurableAgent<TInput, TOutput> {
  * Key becomes the property name in the result
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SubAgentBatch = Record<string, ConfigurableAgent<any, any>>;
+export type SubAgentBatch = Record<string, ConfigurableAgent<any>>;
 
 /**
  * Agent definition - the declarative configuration
  */
-export interface AgentDefinition<
-  TInput,
-  TSchema extends ZodSchema | undefined = undefined
-> {
+export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefined> {
   /** Identifier for logging and debugging */
   name: string;
 
   /** Static system prompt instructions */
   systemPrompt: string;
 
-  /** Dynamic user prompt - can be a function receiving input */
-  userPrompt: string | ((input: TInput) => string);
+  /**
+   * Optional transformer for the input string.
+   * - If provided: transforms the input string into the user message
+   * - If undefined: the input string IS the user message directly
+   */
+  userPrompt?: (input: string) => string;
 
   /** Context messages injected between system and user prompts (pre-computed strings) */
   context?: string[];
@@ -79,7 +82,7 @@ export type InferSchemaOutput<TSchema extends ZodSchema | undefined> =
  * Helper type to extract outputs from a SubAgentBatch
  */
 type ExtractSubAgentOutputs<T extends SubAgentBatch> = {
-  [K in keyof T]: T[K] extends ConfigurableAgent<unknown, infer O> ? O : never;
+  [K in keyof T]: T[K] extends ConfigurableAgent<infer O> ? O : never;
 };
 
 /**

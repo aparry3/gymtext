@@ -497,7 +497,7 @@ export class ChainRunnerService {
     const agent = createStructuredWorkoutAgent({
       operationName: 'chain-runner structured',
     });
-    const result = await agent.invoke({ response: workout.description });
+    const result = await agent.invoke(workout.description);
     const structure = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
@@ -524,9 +524,7 @@ export class ChainRunnerService {
       includeModifications: false,
       operationName: 'chain-runner formatted',
     });
-    const result = await agent.invoke({
-      response: workout.description,
-    });
+    const result = await agent.invoke(workout.description);
     const formatted = result.response;
 
     // Parse existing details to preserve other fields
@@ -558,7 +556,7 @@ export class ChainRunnerService {
     const agent = createWorkoutMessageAgent({
       operationName: 'chain-runner message',
     });
-    const result = await agent.invoke({ response: workout.description });
+    const result = await agent.invoke(workout.description);
     const message = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {

@@ -147,7 +147,7 @@ export class DailyMessageService {
         // Fallback: Generate message if needed (shouldn't happen in production)
         const { createWorkoutMessageAgent } = await import('@/server/agents/training/workouts');
         const messageAgent = createWorkoutMessageAgent({ operationName: 'fallback message' });
-        const result = await messageAgent.invoke({ response: workout.description });
+        const result = await messageAgent.invoke(workout.description);
         workoutMessage = result.response;
       } else {
         throw new Error('Workout missing required fields for message generation');

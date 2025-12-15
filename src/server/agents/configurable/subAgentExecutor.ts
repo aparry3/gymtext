@@ -5,7 +5,8 @@ import type { SubAgentBatch, ConfigurableAgent } from './types';
  */
 export interface SubAgentExecutorConfig {
   batches: SubAgentBatch[];
-  input: unknown;
+  /** String input passed to each subAgent (typically parent agent's response) */
+  input: string;
   previousResults: Record<string, unknown>;
   parentName: string;
 }
@@ -34,22 +35,17 @@ export async function executeSubAgents(
 
     console.log(`[${parentName}] Executing batch ${batchIndex + 1}/${batches.length}: [${batchKeys.join(', ')}]`);
 
-    // Prepare input for this batch - combine original input with accumulated results
-    const batchInput = {
-      ...(typeof input === 'object' && input !== null ? input : {}),
-      ...accumulatedResults,
-    };
-
     const batchStartTime = Date.now();
 
     // Execute all agents in this batch in parallel (fail fast)
+    // Each agent receives the string input (parent's response)
     const batchPromises = batchKeys.map(async (key) => {
-      const agent = batch[key] as ConfigurableAgent<typeof batchInput, unknown>;
+      const agent = batch[key] as ConfigurableAgent<unknown>;
       const startTime = Date.now();
 
       console.log(`[${parentName}:${key}] Starting`);
 
-      const result = await agent.invoke(batchInput);
+      const result = await agent.invoke(input);
 
       console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms`);
 

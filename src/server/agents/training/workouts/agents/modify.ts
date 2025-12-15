@@ -1,4 +1,4 @@
-import { createAgent, type ConfigurableAgent, type SubAgentBatch } from '@/server/agents/configurable';
+import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
 import { WorkoutStructureSchema } from '@/server/agents/training/schemas';
 import {
   buildFormattedWorkoutSystemPrompt,
@@ -8,67 +8,85 @@ import {
   STRUCTURED_WORKOUT_SYSTEM_PROMPT,
   structuredWorkoutUserPrompt,
   MODIFY_WORKOUT_SYSTEM_PROMPT,
-  modifyWorkoutUserPrompt,
   ModifyWorkoutGenerationOutputSchema,
 } from '../prompts';
 import type { ModifyWorkoutInput, ModifyWorkoutOutput, ModifyWorkoutAgentDeps } from '../types';
 
-// Type for the modify response that subAgents receive
-interface ModifySubAgentInput {
-  response: {
-    overview: string;
-    wasModified: boolean;
-    modifications: string;
-  };
-}
+/**
+ * Helper to extract overview from the modify response JSON string
+ */
+const extractOverview = (jsonString: string): string => {
+  try {
+    const parsed = JSON.parse(jsonString);
+    return parsed.overview || jsonString;
+  } catch {
+    return jsonString;
+  }
+};
 
 /**
- * Workout Modification Agent Factory
+ * Modify an existing workout based on user constraints
  *
- * Modifies an existing workout based on user constraints using the configurable agent pattern:
+ * Uses the configurable agent pattern:
  * 1. Main agent generates modified workout with structured output
  * 2. SubAgents run in parallel: formatted, message, structure (extracting overview)
  *
+ * @param input - Workout modification input (user, date, workout, changeRequest)
  * @param deps - Optional dependencies (config)
- * @returns ConfigurableAgent that modifies workouts
+ * @returns ModifyWorkoutOutput with response, formatted, message, and structure
  */
-export const createModifyWorkoutAgent = (
+export const modifyWorkout = async (
+  input: ModifyWorkoutInput,
   deps?: ModifyWorkoutAgentDeps
-): ConfigurableAgent<ModifyWorkoutInput, ModifyWorkoutOutput> => {
+): Promise<ModifyWorkoutOutput> => {
 
-  // SubAgents that extract overview from structured response
+  // SubAgents that extract overview from structured JSON response
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createAgent<ModifySubAgentInput, undefined>({
+      formatted: createAgent({
         name: 'formatted-modify',
         systemPrompt: buildFormattedWorkoutSystemPrompt(true),
-        userPrompt: (input) => createFormattedWorkoutUserPrompt(input.response.overview, true),
+        userPrompt: (jsonInput: string) => createFormattedWorkoutUserPrompt(extractOverview(jsonInput), true),
       }, deps?.config),
 
-      message: createAgent<ModifySubAgentInput, undefined>({
+      message: createAgent({
         name: 'message-modify',
         systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-        userPrompt: (input) => workoutSmsUserPrompt(input.response.overview),
+        userPrompt: (jsonInput: string) => workoutSmsUserPrompt(extractOverview(jsonInput)),
       }, { model: 'gpt-5-nano', ...deps?.config }),
 
-      structure: createAgent<ModifySubAgentInput, typeof WorkoutStructureSchema>({
+      structure: createAgent({
         name: 'structure-modify',
         systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-        userPrompt: (input) => structuredWorkoutUserPrompt(input.response.overview),
+        userPrompt: (jsonInput: string) => structuredWorkoutUserPrompt(extractOverview(jsonInput)),
         schema: WorkoutStructureSchema,
       }, { model: 'gpt-5-nano', maxTokens: 32000, ...deps?.config }),
     },
   ];
 
-  return createAgent({
+  const agent = createAgent({
     name: 'workout-modify',
     systemPrompt: MODIFY_WORKOUT_SYSTEM_PROMPT,
-    userPrompt: (input: ModifyWorkoutInput) => modifyWorkoutUserPrompt(
-      input.user,
-      input.workout.description!,
-      input.changeRequest
-    ),
+    context: [
+      `<WorkoutOverview>${input.workout.description || ''}</WorkoutOverview>`,
+      input.user.profile ? `<Fitness Profile>${input.user.profile.trim()}</Fitness Profile>` : '',
+      `<ChangesRequested>${input.changeRequest}</ChangesRequested>`,
+    ].filter(Boolean),
     schema: ModifyWorkoutGenerationOutputSchema,
     subAgents,
-  }, { model: 'gpt-5-mini', ...deps?.config }) as ConfigurableAgent<ModifyWorkoutInput, ModifyWorkoutOutput>;
+  }, { model: 'gpt-5-mini', ...deps?.config });
+
+  return agent.invoke(`Using the workout overview, fitness profile, and requested changes from the context, decide whether the workout needs to be modified.
+- Follow the reasoning and modification rules from the system instructions.
+- Preserve the original training intent and structure as much as possible.
+- Apply substitutions or adjustments only when needed based on the user's request and profile.`) as Promise<ModifyWorkoutOutput>;
 };
+
+/**
+ * @deprecated Use modifyWorkout() instead
+ * Factory function maintained for backward compatibility
+ */
+export const createModifyWorkoutAgent = (deps?: ModifyWorkoutAgentDeps) => ({
+  name: 'workout-modify',
+  invoke: (input: ModifyWorkoutInput) => modifyWorkout(input, deps),
+});

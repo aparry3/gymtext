@@ -1,6 +1,6 @@
 import { createAgent, type ConfigurableAgent } from '@/server/agents/configurable';
 import { buildFormattedWorkoutSystemPrompt, createFormattedWorkoutUserPrompt } from '../prompts';
-import type { FormattedWorkoutConfig, FormattedWorkoutInput } from '../types';
+import type { FormattedWorkoutConfig } from '../types';
 
 /**
  * Formatted Workout Agent Factory
@@ -13,12 +13,12 @@ import type { FormattedWorkoutConfig, FormattedWorkoutInput } from '../types';
  */
 export const createFormattedWorkoutAgent = (
   config: FormattedWorkoutConfig
-): ConfigurableAgent<FormattedWorkoutInput, { response: string }> => {
+): ConfigurableAgent<{ response: string }> => {
   return createAgent({
     name: `formatted-workout-${config.operationName || 'default'}`,
     systemPrompt: buildFormattedWorkoutSystemPrompt(config.includeModifications),
-    userPrompt: (input: FormattedWorkoutInput) => createFormattedWorkoutUserPrompt(
-      input.response,
+    userPrompt: (input: string) => createFormattedWorkoutUserPrompt(
+      input,
       config.includeModifications
     ),
   }, config.agentConfig);

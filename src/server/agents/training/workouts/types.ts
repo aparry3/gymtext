@@ -18,14 +18,6 @@ export interface BaseWorkoutChainInput {
   date: Date;
 }
 
-/**
- * Input that subAgents receive from parent agent
- * The parent's output is passed as `response`
- */
-export interface WorkoutSubAgentInput {
-  response: string;
-}
-
 // =============================================================================
 // Generate Operation Types
 // =============================================================================
@@ -99,7 +91,7 @@ export interface ModifyWorkoutAgentDeps {
 export type WorkoutModifyResult = ModifyWorkoutOutput;
 
 // =============================================================================
-// Formatted Step Types
+// Shared Step Agent Config Types
 // =============================================================================
 
 /**
@@ -112,22 +104,6 @@ export interface FormattedWorkoutConfig {
 }
 
 /**
- * Input for formatted workout agent (as subAgent)
- */
-export interface FormattedWorkoutInput {
-  response: string;
-}
-
-/**
- * Output from formatted workout agent
- */
-export type FormattedWorkoutOutput = string;
-
-// =============================================================================
-// Message Step Types
-// =============================================================================
-
-/**
  * Configuration for workout message agent
  */
 export interface WorkoutMessageConfig {
@@ -136,60 +112,9 @@ export interface WorkoutMessageConfig {
 }
 
 /**
- * Input for workout message agent (as subAgent)
- */
-export interface WorkoutMessageInput {
-  response: string;
-}
-
-/**
- * Output from workout message agent
- */
-export type WorkoutMessageOutput = string;
-
-// =============================================================================
-// Structured Step Types
-// =============================================================================
-
-/**
  * Configuration for structured workout agent
  */
 export interface StructuredWorkoutConfig {
   operationName?: string;
   agentConfig?: ModelConfig;
-}
-
-/**
- * Input for structured workout agent (as subAgent)
- */
-export interface StructuredWorkoutInput {
-  response: string;
-}
-
-/**
- * Output from structured workout agent
- */
-export type StructuredWorkoutOutput = WorkoutStructure;
-
-// =============================================================================
-// Legacy Types (deprecated)
-// =============================================================================
-
-/**
- * @deprecated Use WorkoutSubAgentInput instead
- */
-export interface WorkoutChainContext extends BaseWorkoutChainInput {
-  description: string;
-  wasModified?: boolean;
-  modifications?: string;
-}
-
-/**
- * @deprecated Use WorkoutGenerateResult or WorkoutModifyResult instead
- */
-export interface WorkoutChainResult {
-  formatted: string;
-  message: string;
-  description: string;
-  structure?: WorkoutStructure;
 }
