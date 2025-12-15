@@ -1,5 +1,23 @@
+import { z } from 'zod';
 import type { Microcycle } from '@/server/models/microcycle';
 import { DAY_NAMES, DayOfWeek } from '@/shared/utils/date';
+import { MicrocycleGenerationOutputSchema } from './generate';
+
+/**
+ * Schema for microcycle modification output - extends base schema with wasModified flag and modifications explanation
+ */
+export const ModifyMicrocycleOutputSchema = MicrocycleGenerationOutputSchema.extend({
+  wasModified: z.boolean().describe(
+    'Whether the microcycle was actually modified in response to the change request. ' +
+    'False if the current plan already satisfies the request or no changes were needed.'
+  ),
+  modifications: z.string().default('').describe(
+    'Explanation of what changed and why (empty string if wasModified is false). ' +
+    'When wasModified is true, describe specific changes made to the weekly pattern.'
+  )
+});
+
+export type ModifyMicrocycleOutput = z.infer<typeof ModifyMicrocycleOutputSchema>;
 
 export const MICROCYCLE_MODIFY_SYSTEM_PROMPT = `
 You are an expert Strength & Conditioning Programming Manager specializing in **Adaptive Periodization**.
@@ -99,16 +117,9 @@ Conditioning: [Details or 'None']"
 - Losing the "User Anchor" (e.g., Yoga Class) defined in the original plan.
 `;
 
-interface ModifyMicrocycleUserPromptParams {
-  fitnessProfile: string;
-  currentMicrocycle: Microcycle;
-  changeRequest: string;
-  currentDayOfWeek: DayOfWeek;
-}
-
 const formatCurrentWeekFromRecord = (microcycle: Microcycle) => {
   const days = microcycle.days ?? [];
-  const overview = microcycle.description ?? "";
+  const overview = microcycle.description ?? '';
 
   return `
 <CurrentMicrocycleState>
@@ -117,13 +128,20 @@ const formatCurrentWeekFromRecord = (microcycle: Microcycle) => {
 ${DAY_NAMES
   .map(
     (name, i) => `    <Day index="${i}" name="${name}">
-${days[i] ?? "Session Type: Rest\nFocus: Recovery"}
+${days[i] ?? 'Session Type: Rest\nFocus: Recovery'}
     </Day>`,
   )
   .join('\n')}
   </Schedule>
 </CurrentMicrocycleState>`.trim();
 };
+
+interface ModifyMicrocycleUserPromptParams {
+  fitnessProfile: string;
+  currentMicrocycle: Microcycle;
+  changeRequest: string;
+  currentDayOfWeek: DayOfWeek;
+}
 
 export const modifyMicrocycleUserPrompt = ({
   fitnessProfile,

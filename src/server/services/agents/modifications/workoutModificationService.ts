@@ -5,7 +5,7 @@ import { createModifyWorkoutAgent, type ModifyWorkoutOutput } from '@/server/age
 import { createWorkoutGenerateAgent, type WorkoutGenerateInput, type WorkoutGenerateOutput } from '@/server/agents/training/workouts';
 import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles/operations/modify/chain';
+import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles';
 import { ProgressService } from '../../training/progressService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
 

@@ -1,12 +1,22 @@
-import type { AgentDeps } from '@/server/agents/base';
+import type { ModelConfig } from '@/server/agents/configurable';
 import type { MicrocycleStructure } from '@/server/agents/training/schemas';
+import type { Microcycle } from '@/server/models/microcycle';
+import type { UserWithProfile } from '@/server/models/userModel';
+import type { DayOfWeek } from '@/shared/utils/date';
+
+// Re-export for convenience
+export type { MicrocycleStructure };
+
+// =============================================================================
+// Generate Operation Types
+// =============================================================================
 
 /**
  * Input for microcycle generation agent
  *
  * Uses the fitness plan text and user profile to generate a weekly pattern
  */
-export interface MicrocycleGenerationInput {
+export interface MicrocycleGenerateInput {
   planText: string;        // Full fitness plan description
   userProfile: string;     // User's markdown profile
   absoluteWeek: number;    // Week number from plan start (1-indexed)
@@ -14,7 +24,75 @@ export interface MicrocycleGenerationInput {
 }
 
 /**
- * Output from microcycle agent
+ * Output from microcycle generation (flattened subAgent results)
+ */
+export interface MicrocycleGenerateOutput {
+  response: {
+    overview: string;
+    days: string[];
+    isDeload: boolean;
+  };
+  formatted: string;
+  message: string;
+  structure: MicrocycleStructure;
+}
+
+/**
+ * Dependencies for microcycle generate agent
+ */
+export interface MicrocycleGenerateAgentDeps {
+  config?: ModelConfig;
+}
+
+// Legacy type aliases for backward compatibility
+export type MicrocycleGenerationInput = MicrocycleGenerateInput;
+export type MicrocycleAgentDeps = MicrocycleGenerateAgentDeps;
+
+// =============================================================================
+// Modify Operation Types
+// =============================================================================
+
+/**
+ * Input for microcycle modification
+ */
+export interface ModifyMicrocycleInput {
+  user: UserWithProfile;
+  currentMicrocycle: Microcycle;
+  changeRequest: string;
+  currentDayOfWeek: DayOfWeek;
+  weekNumber: number;
+}
+
+/**
+ * Output from microcycle modification (flattened subAgent results)
+ */
+export interface ModifyMicrocycleOutput {
+  response: {
+    overview: string;
+    days: string[];
+    isDeload: boolean;
+    wasModified: boolean;
+    modifications: string;
+  };
+  formatted: string;
+  message: string;
+  structure: MicrocycleStructure;
+}
+
+/**
+ * Dependencies for microcycle modify agent
+ */
+export interface ModifyMicrocycleAgentDeps {
+  config?: ModelConfig;
+}
+
+// =============================================================================
+// Legacy Output Types (for backward compatibility with services)
+// =============================================================================
+
+/**
+ * @deprecated Use MicrocycleGenerateOutput instead
+ * Legacy output format maintained for service layer compatibility
  */
 export interface BaseMicrocycleAgentOutput {
   days: string[];          // Array of 7 day overviews [Monday-Sunday]
@@ -25,17 +103,10 @@ export interface BaseMicrocycleAgentOutput {
   modifications?: string;  // Explanation of changes made (only present for update operations when wasModified is true)
 }
 
+/**
+ * @deprecated Use MicrocycleGenerateOutput instead
+ */
 export interface MicrocycleAgentOutput extends BaseMicrocycleAgentOutput {
   message: string;        // SMS-formatted weekly check-in/breakdown message
   structure?: MicrocycleStructure; // Structured microcycle data
-}
-
-
-/**
- * Dependencies for microcycle pattern agent
- * Currently extends only base AgentDeps (config), but allows for future extension
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface MicrocycleAgentDeps extends AgentDeps {
-  // Future: Could add pattern templates or progressive overload strategies
 }

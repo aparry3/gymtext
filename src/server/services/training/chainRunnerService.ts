@@ -12,12 +12,12 @@ import {
 } from '@/server/agents/training/plans/shared/steps';
 
 // Microcycle agents
-import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles/operations/generate/chain';
 import {
+  createMicrocycleGenerateAgent,
   createStructuredMicrocycleAgent,
   createFormattedMicrocycleAgent,
   createMicrocycleMessageAgent,
-} from '@/server/agents/training/microcycles/shared/steps';
+} from '@/server/agents/training/microcycles';
 
 // Workout agents
 import {
@@ -300,12 +300,16 @@ export class ChainRunnerService {
       operationName: 'chain-runner structured',
     });
 
-    const structure = await agent.invoke({
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
       overview: microcycle.description || '',
       days: microcycle.days,
       absoluteWeek: microcycle.absoluteWeek,
       isDeload: microcycle.isDeload,
     });
+
+    const result = await agent.invoke(inputJson);
+    const structure = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       structured: structure,
@@ -323,20 +327,19 @@ export class ChainRunnerService {
 
     const agent = createFormattedMicrocycleAgent({
       operationName: 'chain-runner formatted',
+      weekNumber: microcycle.absoluteWeek,
     });
 
-    // MicrocycleChainContext expects { microcycle: MicrocycleGenerationOutput, absoluteWeek, ... }
-    const formatted = await agent.invoke({
-      microcycle: {
-        overview: microcycle.description || '',
-        days: microcycle.days,
-        isDeload: microcycle.isDeload,
-      },
-      absoluteWeek: microcycle.absoluteWeek,
-      planText: '', // Not needed for formatting
-      userProfile: '', // Not needed for formatting
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      overview: microcycle.description || '',
+      days: microcycle.days,
       isDeload: microcycle.isDeload,
+      absoluteWeek: microcycle.absoluteWeek,
     });
+
+    const result = await agent.invoke(inputJson);
+    const formatted = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       formatted,
@@ -356,18 +359,15 @@ export class ChainRunnerService {
       operationName: 'chain-runner message',
     });
 
-    // MicrocycleChainContext expects { microcycle: MicrocycleGenerationOutput, ... }
-    const message = await agent.invoke({
-      microcycle: {
-        overview: microcycle.description || '',
-        days: microcycle.days,
-        isDeload: microcycle.isDeload,
-      },
-      absoluteWeek: microcycle.absoluteWeek,
-      planText: '', // Not needed for message
-      userProfile: '', // Not needed for message
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      overview: microcycle.description || '',
+      days: microcycle.days,
       isDeload: microcycle.isDeload,
     });
+
+    const result = await agent.invoke(inputJson);
+    const message = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       message,

@@ -1,4 +1,4 @@
-import type { MicrocycleGenerationOutput } from '../../types';
+import type { MicrocycleGenerationOutput } from './generate';
 
 /**
  * System prompt for formatted microcycle agent

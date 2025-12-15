@@ -1,5 +1,5 @@
 import { DAY_NAMES } from '@/shared/utils/date';
-import type { MicrocycleGenerationOutput } from '../../types';
+import type { MicrocycleGenerationOutput } from './generate';
 
 // System prompt for generating SMS message from structured pattern
 export const MICROCYCLE_MESSAGE_SYSTEM_PROMPT = `
