@@ -209,6 +209,44 @@ export class MicrocycleService {
       endDate: endOfWeek(currentDate, timezone),
     };
   }
+
+  /**
+   * Delete a microcycle and all associated workouts
+   * Returns the count of deleted workouts along with success status
+   */
+  public async deleteMicrocycleWithWorkouts(
+    microcycleId: string
+  ): Promise<{ deleted: boolean; deletedWorkoutsCount: number }> {
+    // First, get the microcycle to verify it exists and get clientId
+    const microcycle = await this.microcycleRepo.getMicrocycleById(microcycleId);
+
+    if (!microcycle) {
+      return { deleted: false, deletedWorkoutsCount: 0 };
+    }
+
+    // Import workoutInstanceService dynamically to avoid circular dependency
+    const { workoutInstanceService } = await import('./workoutInstanceService');
+
+    // Get all workouts for this microcycle
+    const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(
+      microcycle.clientId,
+      microcycleId
+    );
+
+    // Delete all associated workouts first
+    let deletedWorkoutsCount = 0;
+    for (const workout of workouts) {
+      const deleted = await workoutInstanceService.deleteWorkout(workout.id, microcycle.clientId);
+      if (deleted) {
+        deletedWorkoutsCount++;
+      }
+    }
+
+    // Then delete the microcycle
+    const deleted = await this.microcycleRepo.deleteMicrocycle(microcycleId);
+
+    return { deleted, deletedWorkoutsCount };
+  }
 }
 
 // Export singleton instance

@@ -108,4 +108,16 @@ export class FitnessPlanRepository extends BaseRepository {
     if (!result) return null;
     return FitnessPlanModel.fromDB(result);
   }
+
+  /**
+   * Delete a fitness plan by ID
+   */
+  async deleteFitnessPlan(id: string): Promise<boolean> {
+    const result = await this.db
+      .deleteFrom('fitnessPlans')
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
+  }
 }

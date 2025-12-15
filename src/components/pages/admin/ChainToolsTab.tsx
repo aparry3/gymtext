@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChainRunButton } from './ChainRunButton'
+import { Button } from '@/components/ui/button'
+import { ChainRunButton, type EntityType } from './ChainRunButton'
 import { parseDate, formatDate } from '@/shared/utils/date'
 
 interface FitnessPlan {
@@ -51,6 +52,7 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
   const [workouts, setWorkouts] = useState<WorkoutInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -119,6 +121,36 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
     fetchData()
   }
 
+  const handleDelete = async (entityType: EntityType, entityId: string, entityName: string) => {
+    const confirmMessage = entityType === 'microcycle'
+      ? `Delete ${entityName}? This will also delete all workouts in this microcycle.`
+      : `Delete ${entityName}?`
+
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    setDeletingId(entityId)
+
+    try {
+      const apiPath = getDeleteApiPath(entityType, entityId)
+      const response = await fetch(apiPath, { method: 'DELETE' })
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to delete')
+      }
+
+      // Refresh data after successful deletion
+      fetchData()
+    } catch (err) {
+      console.error('Error deleting:', err)
+      alert(err instanceof Error ? err.message : 'Failed to delete')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   if (isLoading) {
     return <ChainToolsSkeleton />
   }
@@ -150,11 +182,22 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
               <StatusBadge label="Message" hasValue={!!fitnessPlan.message} />
               <StatusBadge label="Structured" hasValue={!!fitnessPlan.structured} />
             </div>
-            <ChainRunButton
-              entityType="fitness-plan"
-              entityId={fitnessPlan.id}
-              onSuccess={handleSuccess}
-            />
+            <div className="flex items-center gap-2">
+              <ChainRunButton
+                entityType="fitness-plan"
+                entityId={fitnessPlan.id}
+                onSuccess={handleSuccess}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete('fitness-plan', fitnessPlan.id, 'this fitness plan')}
+                disabled={deletingId === fitnessPlan.id}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <TrashIcon className={`h-4 w-4 ${deletingId === fitnessPlan.id ? 'animate-pulse' : ''}`} />
+              </Button>
+            </div>
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">No fitness plan found</p>
@@ -187,11 +230,22 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                   <StatusBadge label="Message" hasValue={!!microcycle.message} />
                   <StatusBadge label="Structured" hasValue={!!microcycle.structured} />
                 </div>
-                <ChainRunButton
-                  entityType="microcycle"
-                  entityId={microcycle.id}
-                  onSuccess={handleSuccess}
-                />
+                <div className="flex items-center gap-2">
+                  <ChainRunButton
+                    entityType="microcycle"
+                    entityId={microcycle.id}
+                    onSuccess={handleSuccess}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete('microcycle', microcycle.id, `Week ${microcycle.absoluteWeek}`)}
+                    disabled={deletingId === microcycle.id}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <TrashIcon className={`h-4 w-4 ${deletingId === microcycle.id ? 'animate-pulse' : ''}`} />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -227,11 +281,22 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                   <StatusBadge label="Message" hasValue={!!workout.message} />
                   <StatusBadge label="Structured" hasValue={!!workout.structured} />
                 </div>
-                <ChainRunButton
-                  entityType="workout"
-                  entityId={workout.id}
-                  onSuccess={handleSuccess}
-                />
+                <div className="flex items-center gap-2">
+                  <ChainRunButton
+                    entityType="workout"
+                    entityId={workout.id}
+                    onSuccess={handleSuccess}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete('workout', workout.id, `workout on ${formatDate(workout.date)}`)}
+                    disabled={deletingId === workout.id}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <TrashIcon className={`h-4 w-4 ${deletingId === workout.id ? 'animate-pulse' : ''}`} />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -253,6 +318,34 @@ function StatusBadge({ label, hasValue }: { label: string; hasValue: boolean }) 
     </Badge>
   )
 }
+
+function getDeleteApiPath(entityType: EntityType, entityId: string): string {
+  switch (entityType) {
+    case 'fitness-plan':
+      return `/api/admin/chains/fitness-plans/${entityId}`
+    case 'microcycle':
+      return `/api/admin/chains/microcycles/${entityId}`
+    case 'workout':
+      return `/api/admin/chains/workouts/${entityId}`
+  }
+}
+
+const TrashIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+    />
+  </svg>
+)
 
 function ChainToolsSkeleton() {
   return (

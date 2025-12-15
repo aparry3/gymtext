@@ -255,6 +255,13 @@ export class WorkoutInstanceService {
     // Delete the workout
     return await this.workoutRepo.delete(workoutId);
   }
+
+  /**
+   * Get workouts by microcycle ID
+   */
+  public async getWorkoutsByMicrocycle(userId: string, microcycleId: string): Promise<WorkoutInstance[]> {
+    return await this.workoutRepo.getWorkoutsByMicrocycle(userId, microcycleId);
+  }
 }
 
 // Export singleton instance
