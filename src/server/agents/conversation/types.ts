@@ -65,6 +65,8 @@ export interface ChatInput {
   message: string;
   previousMessages?: Message[];
   currentWorkout?: WorkoutInstance;
+  /** Result from automatic profile update (if any changes were made) */
+  profileUpdateResult?: string;
 }
 
 /**

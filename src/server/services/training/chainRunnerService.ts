@@ -4,28 +4,28 @@ import { WorkoutInstanceService } from '@/server/services/training/workoutInstan
 import { UserService } from '@/server/services/user/userService';
 
 // Fitness Plan agents
-import { createFitnessPlanGenerateAgent } from '@/server/agents/training/plans/operations/generate/chain';
 import {
+  createFitnessPlanGenerateAgent,
   createStructuredPlanAgent,
   createFormattedFitnessPlanAgent,
   createFitnessPlanMessageAgent,
-} from '@/server/agents/training/plans/shared/steps';
+} from '@/server/agents/training/plans';
 
 // Microcycle agents
-import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles/operations/generate/chain';
 import {
+  createMicrocycleGenerateAgent,
   createStructuredMicrocycleAgent,
   createFormattedMicrocycleAgent,
   createMicrocycleMessageAgent,
-} from '@/server/agents/training/microcycles/shared/steps';
+} from '@/server/agents/training/microcycles';
 
 // Workout agents
-import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts/operations/generate/chain';
 import {
+  createWorkoutGenerateAgent,
   createStructuredWorkoutAgent,
   createFormattedWorkoutAgent,
   createWorkoutMessageAgent,
-} from '@/server/agents/training/workouts/shared/steps';
+} from '@/server/agents/training/workouts';
 
 // Types
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -150,7 +150,14 @@ export class ChainRunnerService {
     console.log(`[ChainRunner] Running structured chain for plan ${plan.id}`);
 
     const agent = createStructuredPlanAgent({ operationName: 'chain-runner structured' });
-    const structure = await agent.invoke({ fitnessPlan: plan.description });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+    });
+
+    const result = await agent.invoke(inputJson);
+    const structure = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       structured: structure,
@@ -169,7 +176,14 @@ export class ChainRunnerService {
     const agent = createFormattedFitnessPlanAgent({
       operationName: 'chain-runner formatted',
     });
-    const formatted = await agent.invoke({ fitnessPlan: plan.description, user: {} as UserWithProfile });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+    });
+
+    const result = await agent.invoke(inputJson);
+    const formatted = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       formatted,
@@ -191,7 +205,15 @@ export class ChainRunnerService {
     const agent = createFitnessPlanMessageAgent({
       operationName: 'chain-runner message',
     });
-    const message = await agent.invoke({ fitnessPlan: plan.description, user });
+
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      description: plan.description || '',
+      user,
+    });
+
+    const result = await agent.invoke(inputJson);
+    const message = result.response;
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       message,
@@ -300,12 +322,16 @@ export class ChainRunnerService {
       operationName: 'chain-runner structured',
     });
 
-    const structure = await agent.invoke({
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
       overview: microcycle.description || '',
       days: microcycle.days,
       absoluteWeek: microcycle.absoluteWeek,
       isDeload: microcycle.isDeload,
     });
+
+    const result = await agent.invoke(inputJson);
+    const structure = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       structured: structure,
@@ -323,20 +349,19 @@ export class ChainRunnerService {
 
     const agent = createFormattedMicrocycleAgent({
       operationName: 'chain-runner formatted',
+      weekNumber: microcycle.absoluteWeek,
     });
 
-    // MicrocycleChainContext expects { microcycle: MicrocycleGenerationOutput, absoluteWeek, ... }
-    const formatted = await agent.invoke({
-      microcycle: {
-        overview: microcycle.description || '',
-        days: microcycle.days,
-        isDeload: microcycle.isDeload,
-      },
-      absoluteWeek: microcycle.absoluteWeek,
-      planText: '', // Not needed for formatting
-      userProfile: '', // Not needed for formatting
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      overview: microcycle.description || '',
+      days: microcycle.days,
       isDeload: microcycle.isDeload,
+      absoluteWeek: microcycle.absoluteWeek,
     });
+
+    const result = await agent.invoke(inputJson);
+    const formatted = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       formatted,
@@ -356,18 +381,15 @@ export class ChainRunnerService {
       operationName: 'chain-runner message',
     });
 
-    // MicrocycleChainContext expects { microcycle: MicrocycleGenerationOutput, ... }
-    const message = await agent.invoke({
-      microcycle: {
-        overview: microcycle.description || '',
-        days: microcycle.days,
-        isDeload: microcycle.isDeload,
-      },
-      absoluteWeek: microcycle.absoluteWeek,
-      planText: '', // Not needed for message
-      userProfile: '', // Not needed for message
+    // New configurable agents expect JSON string input
+    const inputJson = JSON.stringify({
+      overview: microcycle.description || '',
+      days: microcycle.days,
       isDeload: microcycle.isDeload,
     });
+
+    const result = await agent.invoke(inputJson);
+    const message = result.response;
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       message,
@@ -421,7 +443,7 @@ export class ChainRunnerService {
         updatedWorkout = await this.runWorkoutStructuredChain(workout);
         break;
       case 'formatted':
-        updatedWorkout = await this.runWorkoutFormattedChain(workout, user);
+        updatedWorkout = await this.runWorkoutFormattedChain(workout);
         break;
       case 'message':
         updatedWorkout = await this.runWorkoutMessageChain(workout);
@@ -471,7 +493,7 @@ export class ChainRunnerService {
       : workout.details || {};
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
-      description: result.description,
+      description: result.response,
       message: result.message,
       structured: result.structure,
       details: {
@@ -497,7 +519,8 @@ export class ChainRunnerService {
     const agent = createStructuredWorkoutAgent({
       operationName: 'chain-runner structured',
     });
-    const structure = await agent.invoke({ description: workout.description });
+    const result = await agent.invoke(workout.description);
+    const structure = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
       structured: structure,
@@ -511,8 +534,7 @@ export class ChainRunnerService {
   }
 
   private async runWorkoutFormattedChain(
-    workout: WorkoutInstance,
-    user: UserWithProfile
+    workout: WorkoutInstance
   ): Promise<WorkoutInstance> {
     console.log(`[ChainRunner] Running formatted chain for workout ${workout.id}`);
 
@@ -524,11 +546,8 @@ export class ChainRunnerService {
       includeModifications: false,
       operationName: 'chain-runner formatted',
     });
-    const formatted = await agent.invoke({
-      description: workout.description,
-      user,
-      date: new Date(workout.date),
-    });
+    const result = await agent.invoke(workout.description);
+    const formatted = result.response;
 
     // Parse existing details to preserve other fields
     const existingDetails = typeof workout.details === 'string'
@@ -559,7 +578,8 @@ export class ChainRunnerService {
     const agent = createWorkoutMessageAgent({
       operationName: 'chain-runner message',
     });
-    const message = await agent.invoke({ description: workout.description });
+    const result = await agent.invoke(workout.description);
+    const message = result.response;
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
       message,

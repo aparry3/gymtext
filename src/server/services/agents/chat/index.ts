@@ -71,12 +71,14 @@ async function getWorkoutForToday(userId: string, timezone: string): Promise<Too
  * ChatService handles incoming SMS messages and generates AI-powered responses.
  *
  * This service orchestrates the chat agent which operates in an agentic loop:
- * - Agent decides when to call tools (update_profile, make_modification)
+ * - Profile updates happen FIRST on every message (automatically)
+ * - Agent decides when to call tools (make_modification, get_workout)
  * - Agent generates a final conversational response
  * - Tool messages are accumulated and sent after the agent's response
  *
  * The service ensures that:
- * - Profile updates happen when the agent decides to call update_profile
+ * - Profile updates happen automatically before any tools run
+ * - ChatAgent receives context about profile changes for acknowledgment
  * - Modifications happen when the agent decides to call make_modification
  * - Conversation history and context are properly maintained
  * - SMS length constraints are enforced
@@ -154,7 +156,21 @@ export class ChatService {
         }
       };
 
+      // 1. Always update profile FIRST
+      // This ensures profile is current before any modification tools run
+      const profileResult = await ProfileService.updateProfile(
+        userWithProfile.id,
+        message,
+        context
+      );
+
+      const profileUpdated = profileResult.response !== 'No updates detected.';
+      if (profileUpdated) {
+        console.log('[ChatService] Profile update:', profileResult.response);
+      }
+
       // Create base tools using the factory function
+      // Note: update_profile tool removed since profile updates now happen automatically
       const tools = createChatTools(
         {
           userId: userWithProfile.id,
@@ -163,7 +179,6 @@ export class ChatService {
           timezone: userWithProfile.timezone,
         },
         {
-          updateProfile: ProfileService.updateProfile,
           makeModification: ModificationService.makeModification,
           getWorkout: getWorkoutForToday,
         },
@@ -176,12 +191,13 @@ export class ChatService {
         tools,
       });
 
-      // Invoke the agent
+      // 2. Invoke the chat agent with profile update context
       const chatResult = await agent.invoke({
         user: userWithProfile,
         message,
         previousMessages: context,
         currentWorkout: currentWorkout,
+        profileUpdateResult: profileUpdated ? profileResult.response : undefined,
       });
 
       // ChatOutput always returns messages array

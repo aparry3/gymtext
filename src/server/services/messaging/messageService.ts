@@ -3,7 +3,7 @@ import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageAgent } from '../../agents/training/workouts/shared/steps/message/chain';
+import { createWorkoutMessageAgent } from '../../agents/training/workouts';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -519,10 +519,9 @@ export class MessageService {
           operationName: 'fallback message'
         });
 
-        // Invoke with runtime context
-        message = await messageAgent.invoke({
-          description: workout.description,
-        });
+        // Invoke with workout description string
+        const result = await messageAgent.invoke(workout.description);
+        message = result.response;
 
         // Save generated message for future use
         if ('id' in workout && workout.id) {

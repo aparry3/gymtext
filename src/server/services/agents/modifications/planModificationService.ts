@@ -1,12 +1,10 @@
 import { UserService } from '../../user/userService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
-import { MicrocycleService } from '../../training/microcycleService';
-import { ProgressService } from '../../training/progressService';
 import { createModifyFitnessPlanAgent } from '@/server/agents/training/plans';
-import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, getDayOfWeek } from '@/shared/utils/date';
+import { WorkoutModificationService } from './workoutModificationService';
 
 /**
  * PlanModificationService
@@ -15,12 +13,12 @@ import { now, getDayOfWeek } from '@/shared/utils/date';
  *
  * Responsibilities:
  * - Modify fitness plans based on user change requests
- * - Modify (not regenerate) the current microcycle to preserve completed workouts
+ * - Delegate week/microcycle/workout modifications to WorkoutModificationService
  * - Handle AI agent interactions for plan modifications
- * - Run plan and microcycle modifications in parallel for faster response
+ * - Run plan and week modifications in parallel for faster response
  *
- * This service follows the orchestration pattern (like WorkoutModificationService)
- * and coordinates between plan, microcycle, and progress services.
+ * This service follows the orchestration pattern and coordinates with
+ * WorkoutModificationService for microcycle and workout updates.
  */
 
 export interface ModifyPlanParams {
@@ -40,16 +38,14 @@ export class PlanModificationService {
   private static instance: PlanModificationService;
   private userService: UserService;
   private fitnessPlanService: FitnessPlanService;
-  private microcycleService: MicrocycleService;
-  private progressService: ProgressService;
   private fitnessPlanRepo: FitnessPlanRepository;
+  private workoutModificationService: WorkoutModificationService;
 
   private constructor() {
     this.userService = UserService.getInstance();
     this.fitnessPlanService = FitnessPlanService.getInstance();
-    this.microcycleService = MicrocycleService.getInstance();
-    this.progressService = ProgressService.getInstance();
     this.fitnessPlanRepo = new FitnessPlanRepository(postgresDb);
+    this.workoutModificationService = WorkoutModificationService.getInstance();
   }
 
   public static getInstance(): PlanModificationService {
@@ -90,38 +86,29 @@ export class PlanModificationService {
         };
       }
 
-      // 3. Get existing microcycle BEFORE modifications (needed for parallel execution)
-      // Note: queries by clientId only, not fitnessPlanId, to handle plan modifications
+      // 3. Get today's date for week modification
       const today = now(user.timezone);
-      const existingMicrocycle = await this.microcycleService.getMicrocycleByDate(
-        userId,
-        today.toJSDate()
-      );
-
-      // 4. Run plan and microcycle modifications in PARALLEL
-      const modifyPlanAgent = createModifyFitnessPlanAgent();
-      const modifyMicrocycleAgent = createModifyMicrocycleAgent();
       const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
 
-      console.log('[MODIFY_PLAN] Running plan and microcycle modifications in parallel');
+      // 4. Run plan and week modifications in PARALLEL
+      // modifyWeek handles microcycle modification AND workout generation
+      const modifyPlanAgent = createModifyFitnessPlanAgent();
 
-      const [planResult, microcycleResult] = await Promise.all([
+      console.log('[MODIFY_PLAN] Running plan and week modifications in parallel');
+
+      const [planResult, weekResult] = await Promise.all([
         // Modify plan
         modifyPlanAgent.invoke({
           user,
           currentPlan,
           changeRequest,
         }),
-        // Modify microcycle (only if exists)
-        existingMicrocycle
-          ? modifyMicrocycleAgent.invoke({
-              user,
-              currentMicrocycle: existingMicrocycle,
-              changeRequest, // Use original user request
-              currentDayOfWeek,
-              weekNumber: existingMicrocycle.absoluteWeek,
-            })
-          : Promise.resolve(null),
+        // Modify week (handles microcycle + workout)
+        this.workoutModificationService.modifyWeek({
+          userId,
+          targetDay: currentDayOfWeek,
+          changeRequest,
+        }),
       ]);
 
       // 5. Check if plan was actually modified
@@ -146,30 +133,18 @@ export class PlanModificationService {
 
       console.log(`[MODIFY_PLAN] Saved new plan version ${newPlan.id}`);
 
-      // 7. Update or create microcycle
-      if (microcycleResult && existingMicrocycle) {
-        // Update existing microcycle with modified data
-        await this.microcycleService.updateMicrocycle(existingMicrocycle.id!, {
-          days: microcycleResult.days,
-          description: microcycleResult.description,
-          formatted: microcycleResult.formatted,
-          isDeload: microcycleResult.isDeload,
-        });
-        console.log(`[MODIFY_PLAN] Updated existing microcycle ${existingMicrocycle.id}`);
-      } else {
-        // No existing microcycle - create new one
-        const progress = await this.progressService.getProgressForDate(newPlan, today.toJSDate(), user.timezone);
-        if (progress) {
-          const newMicrocycle = await this.microcycleService.createMicrocycleFromProgress(userId, newPlan, progress);
-          console.log(`[MODIFY_PLAN] Created new microcycle ${newMicrocycle.id} for week ${progress.absoluteWeek}`);
-        }
+      // Week modification (microcycle + workout) was handled in parallel by modifyWeek
+      if (weekResult.success) {
+        console.log(`[MODIFY_PLAN] Week modification completed successfully`);
+      } else if (weekResult.error) {
+        console.warn(`[MODIFY_PLAN] Week modification had issues: ${weekResult.error}`);
       }
 
       return {
         success: true,
         wasModified: true,
         modifications: planResult.modifications,
-        messages: [],
+        messages: weekResult.messages || [],
       };
     } catch (error) {
       console.error('[MODIFY_PLAN] Error modifying plan:', error);

@@ -74,6 +74,13 @@ export class FitnessPlanService {
   ): Promise<FitnessPlan | null> {
     return await this.fitnessPlanRepo.updateFitnessPlan(planId, updates);
   }
+
+  /**
+   * Delete a fitness plan by ID
+   */
+  public async deleteFitnessPlan(planId: string): Promise<boolean> {
+    return await this.fitnessPlanRepo.deleteFitnessPlan(planId);
+  }
 }
 
 // Export singleton instance

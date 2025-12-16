@@ -1,12 +1,87 @@
-// Re-export shared types for convenience
-export type {
-  FitnessPlanChainContext,
-  FitnessProfileContextService,
-} from './shared/types';
+import type { ModelConfig } from '@/server/agents/configurable';
+import type { PlanStructure } from '@/server/agents/training/schemas';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
+import type { UserWithProfile } from '@/server/models/userModel';
 
-export type {
-  FitnessPlanMessageConfig,
-} from './shared/steps/message/types';
-export type {
-  FormattedFitnessPlanConfig,
-} from './shared/steps/formatted/types';
+// Re-export for convenience
+export type { PlanStructure };
+
+// =============================================================================
+// Generate Operation Types
+// =============================================================================
+
+/**
+ * Input for fitness plan generation
+ */
+export interface FitnessPlanGenerateInput {
+  user: UserWithProfile;
+}
+
+/**
+ * Output from fitness plan generation (flattened subAgent results)
+ */
+export interface FitnessPlanGenerateOutput {
+  response: string;       // Main plan description
+  formatted: string;      // Formatted markdown
+  message: string;        // SMS message
+  structure: PlanStructure;
+}
+
+/**
+ * Dependencies for fitness plan generate agent
+ */
+export interface FitnessPlanGenerateAgentDeps {
+  config?: ModelConfig;
+}
+
+// =============================================================================
+// Modify Operation Types
+// =============================================================================
+
+/**
+ * Input for fitness plan modification
+ */
+export interface ModifyFitnessPlanInput {
+  user: UserWithProfile;
+  currentPlan: FitnessPlan;
+  changeRequest: string;
+}
+
+/**
+ * Output from fitness plan modification (flattened subAgent results)
+ */
+export interface ModifyFitnessPlanOutput {
+  response: {
+    description: string;
+    wasModified: boolean;
+    modifications: string;
+  };
+  formatted: string;
+  structure: PlanStructure;
+}
+
+/**
+ * Dependencies for fitness plan modify agent
+ */
+export interface ModifyFitnessPlanAgentDeps {
+  config?: ModelConfig;
+}
+
+// =============================================================================
+// Legacy Types (for backward compatibility with services)
+// =============================================================================
+
+/**
+ * @deprecated Use FitnessPlanGenerateOutput instead
+ */
+export interface FitnessPlanChainContext {
+  user: UserWithProfile;
+  fitnessPlan: string;
+}
+
+/**
+ * @deprecated Use FitnessPlanGenerateAgentDeps instead
+ */
+export interface FitnessProfileContextService {
+  config?: ModelConfig;
+}

@@ -1,8 +1,8 @@
-// Operations (generate, modify)
-export * from './operations';
-
-// Shared utilities and steps
-export * from './shared';
-
 // Types
 export * from './types';
+
+// Agents (main operations and sub-agent factories)
+export * from './agents';
+
+// Prompts (for advanced usage and testing)
+export * from './prompts';

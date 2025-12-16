@@ -121,12 +121,15 @@ export class ProgressService {
   /**
    * Get or create microcycle for a specific date
    * This is the main entry point for ensuring a user has a microcycle for any given week
+   *
+   * @param forceCreate - When true, always creates new microcycle (for re-onboarding)
    */
   public async getOrCreateMicrocycleForDate(
     userId: string,
     plan: FitnessPlan,
     targetDate: Date,
-    timezone: string = 'America/New_York'
+    timezone: string = 'America/New_York',
+    forceCreate: boolean = false
   ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }> {
     // Calculate progress for the target date
     const progress = await this.getProgressForDate(plan, targetDate, timezone);
@@ -134,12 +137,12 @@ export class ProgressService {
       throw new Error(`Could not calculate progress for date ${targetDate}`);
     }
 
-    // If microcycle already exists, return it
-    if (progress.microcycle) {
+    // If microcycle already exists and not forcing creation, return it
+    if (progress.microcycle && !forceCreate) {
       return { microcycle: progress.microcycle, progress, wasCreated: false };
     }
 
-    // Microcycle doesn't exist - create it using MicrocycleService
+    // Microcycle doesn't exist (or forceCreate=true) - create it using MicrocycleService
     const microcycle = await this.microcycleService.createMicrocycleFromProgress(
       userId,
       plan,

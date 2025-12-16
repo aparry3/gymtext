@@ -8,6 +8,10 @@
  * - If data exists, returns it immediately (cached by Inngest)
  * - If not, creates it via LLM
  *
+ * When forceCreate=true (for re-onboarding subscribed users):
+ * - Always creates new profile, plan, microcycle, workout
+ * - Old data is preserved for history
+ *
  * This makes the flow idempotent - running multiple times produces same result.
  *
  * Data Flow:
@@ -36,7 +40,7 @@ export const onboardUserFunction = inngest.createFunction(
   },
   { event: 'user/onboarding.requested' },
   async ({ event, step }) => {
-    const { userId } = event.data;
+    const { userId, forceCreate = false } = event.data;
 
     try {
       // Mark as started
@@ -50,23 +54,27 @@ export const onboardUserFunction = inngest.createFunction(
       ) as unknown as { user: UserWithProfile; signupData: SignupData };
 
       // Step 2: Get or create profile (returns updated user)
+      // forceCreate=true will always create new profile even if one exists
       const { user } = await step.run('step-2-profile', () =>
-        onboardingSteps.getOrCreateProfile(initialUser, signupData)
+        onboardingSteps.getOrCreateProfile(initialUser, signupData, forceCreate)
       ) as unknown as { user: UserWithProfile; wasCreated: boolean };
 
       // Step 3: Get or create plan (uses user with profile)
+      // forceCreate=true will always create new plan even if one exists
       const { plan } = await step.run('step-3-plan', () =>
-        onboardingSteps.getOrCreatePlan(user)
+        onboardingSteps.getOrCreatePlan(user, forceCreate)
       ) as unknown as { plan: FitnessPlan; wasCreated: boolean };
 
       // Step 4: Get or create microcycle (needs plan)
+      // forceCreate=true will always create new microcycle even if one exists
       const { microcycle } = await step.run('step-4-microcycle', () =>
-        onboardingSteps.getOrCreateMicrocycle(user, plan)
+        onboardingSteps.getOrCreateMicrocycle(user, plan, forceCreate)
       ) as unknown as { microcycle: Microcycle; wasCreated: boolean };
 
       // Step 5: Get or create workout (needs microcycle)
+      // forceCreate=true will always create new workout even if one exists
       await step.run('step-5-workout', () =>
-        onboardingSteps.getOrCreateWorkout(user, microcycle)
+        onboardingSteps.getOrCreateWorkout(user, microcycle, forceCreate)
       );
 
       // Step 6: Mark completed
