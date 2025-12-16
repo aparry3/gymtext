@@ -52,4 +52,4 @@ export type { MessageService } from './messaging/messageService';
 
 // Chain runner service for testing/improving AI outputs
 export { ChainRunnerService } from './training/chainRunnerService';
-export type { ChainOperation, ChainRunResult } from './training/chainRunnerService';
+export type { ChainOperation, ChainRunResult, ProfileRegenerationResult } from './training/chainRunnerService';

@@ -23,10 +23,5 @@ export function createEmptyProfile(user?: Partial<User>): string {
   }
   sections.push(identityLines.join('\n'));
 
-  // Empty placeholder sections
-  sections.push('# GOALS\n_No goals set yet_');
-  sections.push('# AVAILABILITY\n_No availability information yet_');
-  sections.push('# EQUIPMENT\n_No equipment information yet_');
-
   return sections.join('\n\n');
 }

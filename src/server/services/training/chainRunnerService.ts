@@ -2,6 +2,8 @@ import { FitnessPlanService } from '@/server/services/training/fitnessPlanServic
 import { MicrocycleService } from '@/server/services/training/microcycleService';
 import { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
 import { UserService } from '@/server/services/user/userService';
+import { FitnessProfileService } from '@/server/services/user/fitnessProfileService';
+import { OnboardingRepository } from '@/server/repositories/onboardingRepository';
 
 // Fitness Plan agents
 import {
@@ -42,6 +44,12 @@ export interface ChainRunResult<T> {
   operation: ChainOperation;
 }
 
+export interface ProfileRegenerationResult {
+  success: boolean;
+  profile: string;
+  executionTimeMs: number;
+}
+
 /**
  * Chain Runner Service
  *
@@ -56,12 +64,16 @@ export class ChainRunnerService {
   private microcycleService: MicrocycleService;
   private workoutService: WorkoutInstanceService;
   private userService: UserService;
+  private fitnessProfileService: FitnessProfileService;
+  private onboardingRepository: OnboardingRepository;
 
   private constructor() {
     this.fitnessPlanService = FitnessPlanService.getInstance();
     this.microcycleService = MicrocycleService.getInstance();
     this.workoutService = WorkoutInstanceService.getInstance();
     this.userService = UserService.getInstance();
+    this.fitnessProfileService = FitnessProfileService.getInstance();
+    this.onboardingRepository = new OnboardingRepository();
   }
 
   public static getInstance(): ChainRunnerService {
@@ -69,6 +81,47 @@ export class ChainRunnerService {
       ChainRunnerService.instance = new ChainRunnerService();
     }
     return ChainRunnerService.instance;
+  }
+
+  // ============================================
+  // PROFILE OPERATIONS
+  // ============================================
+
+  /**
+   * Regenerate a user's profile from their signup data
+   * Creates a new profile from scratch using the ProfileUpdateAgent
+   */
+  async runProfileRegeneration(userId: string): Promise<ProfileRegenerationResult> {
+    const startTime = Date.now();
+
+    console.log(`[ChainRunner] Regenerating profile for user ${userId}`);
+
+    // Fetch the user with profile
+    const user = await this.userService.getUser(userId);
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
+    }
+
+    // Fetch signup data
+    const signupData = await this.onboardingRepository.getSignupData(userId);
+    if (!signupData) {
+      throw new Error(`No signup data found for user: ${userId}`);
+    }
+
+    // Regenerate profile from signup data
+    const profile = await this.fitnessProfileService.createFitnessProfile(user, signupData);
+
+    if (!profile) {
+      throw new Error(`Failed to regenerate profile for user: ${userId}`);
+    }
+
+    console.log(`[ChainRunner] Profile regenerated for user ${userId}`);
+
+    return {
+      success: true,
+      profile,
+      executionTimeMs: Date.now() - startTime,
+    };
   }
 
   // ============================================

@@ -53,16 +53,28 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [hasProfile, setHasProfile] = useState(false)
+  const [isRegeneratingProfile, setIsRegeneratingProfile] = useState(false)
+  const [profileExecutionTime, setProfileExecutionTime] = useState<number | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const [planResponse, workoutsResponse] = await Promise.all([
+      const [planResponse, workoutsResponse, userResponse] = await Promise.all([
         fetch(`/api/users/${userId}/fitness-plan`),
-        fetch(`/api/users/${userId}/workouts?limit=10`)
+        fetch(`/api/users/${userId}/workouts?limit=10`),
+        fetch(`/api/admin/users/${userId}`)
       ])
+
+      // Handle user response to check profile status
+      if (userResponse.ok) {
+        const userResult = await userResponse.json()
+        if (userResult.success && userResult.data) {
+          setHasProfile(!!userResult.data.profile)
+        }
+      }
 
       // Handle fitness plan response
       if (planResponse.ok) {
@@ -121,6 +133,40 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
     fetchData()
   }
 
+  const handleRegenerateProfile = async () => {
+    if (!window.confirm('Regenerate this user\'s profile from signup data? This will replace the current profile.')) {
+      return
+    }
+
+    setIsRegeneratingProfile(true)
+    setProfileExecutionTime(null)
+
+    try {
+      const response = await fetch(`/api/admin/chains/profiles/${userId}/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to regenerate profile')
+      }
+
+      setProfileExecutionTime(result.executionTimeMs)
+      setHasProfile(true)
+      // Refresh data after successful regeneration
+      fetchData()
+    } catch (err) {
+      console.error('Error regenerating profile:', err)
+      alert(err instanceof Error ? err.message : 'Failed to regenerate profile')
+    } finally {
+      setIsRegeneratingProfile(false)
+    }
+  }
+
   const handleDelete = async (entityType: EntityType, entityId: string, entityName: string) => {
     const confirmMessage = entityType === 'microcycle'
       ? `Delete ${entityName}? This will also delete all workouts in this microcycle.`
@@ -165,6 +211,37 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Profile Section */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">
+          Profile
+        </h3>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge label="Profile" hasValue={hasProfile} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateProfile}
+              disabled={isRegeneratingProfile}
+            >
+              <RefreshIcon className={`h-4 w-4 mr-2 ${isRegeneratingProfile ? 'animate-spin' : ''}`} />
+              {isRegeneratingProfile ? 'Regenerating...' : 'Regenerate Profile'}
+            </Button>
+            {profileExecutionTime !== null && (
+              <span className="text-xs text-muted-foreground">
+                {(profileExecutionTime / 1000).toFixed(1)}s
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Regenerates profile from signup data (clean slate)
+          </p>
+        </div>
+      </Card>
+
       {/* Fitness Plan Section */}
       <Card className="p-6">
         <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">
@@ -347,9 +424,33 @@ const TrashIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const RefreshIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+    />
+  </svg>
+)
+
 function ChainToolsSkeleton() {
   return (
     <div className="space-y-6">
+      <Card className="p-6">
+        <Skeleton className="h-5 w-20 mb-4" />
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-9 w-40" />
+        </div>
+      </Card>
       <Card className="p-6">
         <Skeleton className="h-5 w-32 mb-4" />
         <div className="space-y-3">
