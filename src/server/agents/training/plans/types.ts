@@ -22,7 +22,6 @@ export interface FitnessPlanGenerateInput {
  */
 export interface FitnessPlanGenerateOutput {
   response: string;       // Main plan description
-  formatted: string;      // Formatted markdown
   message: string;        // SMS message
   structure: PlanStructure;
 }
@@ -56,7 +55,6 @@ export interface ModifyFitnessPlanOutput {
     wasModified: boolean;
     modifications: string;
   };
-  formatted: string;
   structure: PlanStructure;
 }
 

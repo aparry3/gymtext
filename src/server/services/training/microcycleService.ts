@@ -137,7 +137,7 @@ export class MicrocycleService {
     }
 
     // Generate microcycle using AI agent with plan text + user profile + week number
-    const { days, description, formatted, isDeload, message, structure } = await this.generateMicrocyclePattern(
+    const { days, description, isDeload, message, structure } = await this.generateMicrocyclePattern(
       plan.description,
       user.profile || '',
       progress.absoluteWeek,
@@ -151,7 +151,6 @@ export class MicrocycleService {
       days,
       description,
       isDeload,
-      formatted,
       message,
       structured: structure,
       startDate: progress.weekStartDate,
@@ -176,7 +175,6 @@ export class MicrocycleService {
     days: string[];
     description: string;
     isDeload: boolean;
-    formatted: string;
     message: string;
     structure?: MicrocycleStructure;
   }> {

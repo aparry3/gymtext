@@ -4,8 +4,6 @@ import {
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
   modifyFitnessPlanUserPrompt,
   ModifyFitnessPlanOutputSchema,
-  buildFormattedFitnessPlanSystemPrompt,
-  createFormattedFitnessPlanUserPrompt,
   STRUCTURED_PLAN_SYSTEM_PROMPT,
   structuredPlanUserPrompt,
 } from '../prompts';
@@ -32,11 +30,11 @@ const extractPlanDescription = (jsonString: string): string => {
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates modified plan with structured output
- * 2. SubAgents run in parallel: formatted, structure (extracting description from JSON)
+ * 2. SubAgents run in parallel: structure (extracting description from JSON)
  *
  * @param input - Fitness plan modification input (user, currentPlan, changeRequest)
  * @param deps - Optional dependencies (config)
- * @returns ModifyFitnessPlanOutput with response, formatted, and structure
+ * @returns ModifyFitnessPlanOutput with response and structure
  */
 export const modifyFitnessPlan = async (
   input: ModifyFitnessPlanInput,
@@ -45,12 +43,6 @@ export const modifyFitnessPlan = async (
   // SubAgents that extract description from structured JSON response
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createAgent({
-        name: 'formatted-modify',
-        systemPrompt: buildFormattedFitnessPlanSystemPrompt(),
-        userPrompt: (jsonInput: string) => createFormattedFitnessPlanUserPrompt(extractPlanDescription(jsonInput)),
-      }, deps?.config),
-
       structure: createAgent({
         name: 'structure-modify',
         systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
@@ -93,7 +85,6 @@ export const createModifyFitnessPlanAgent = (deps?: ModifyFitnessPlanAgentDeps) 
     // Map new output format to legacy format
     return {
       description: result.response.description,
-      formatted: result.formatted,
       wasModified: result.response.wasModified,
       modifications: result.response.modifications,
       structure: result.structure,

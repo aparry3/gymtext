@@ -4,7 +4,6 @@ import {
   MICROCYCLE_SYSTEM_PROMPT,
   MicrocycleGenerationOutputSchema,
 } from '../prompts';
-import { createFormattedMicrocycleAgent } from './formatted';
 import { createMicrocycleMessageAgent } from './message';
 import { createStructuredMicrocycleAgent } from './structured';
 import type {
@@ -27,13 +26,13 @@ const validateDays = (days: string[]): boolean => {
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates structured output with overview, isDeload, and days array
- * 2. SubAgents run in parallel: formatted, message, structure
+ * 2. SubAgents run in parallel: message, structure
  *
  * Includes retry logic (MAX_RETRIES = 3) with validation to ensure all 7 days are generated.
  *
  * @param input - Microcycle generation input (planText, userProfile, absoluteWeek, isDeload)
  * @param deps - Optional dependencies (config)
- * @returns MicrocycleGenerateOutput with response, formatted, message, and structure
+ * @returns MicrocycleGenerateOutput with response, message, and structure
  */
 export const generateMicrocycle = async (
   input: MicrocycleGenerateInput,
@@ -44,11 +43,6 @@ export const generateMicrocycle = async (
   // Create subAgents - all in one batch for parallel execution
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createFormattedMicrocycleAgent({
-        operationName: 'generate',
-        weekNumber: absoluteWeek,
-        agentConfig: deps?.config,
-      }),
       message: createMicrocycleMessageAgent({
         operationName: 'generate',
         agentConfig: deps?.config,
@@ -99,7 +93,7 @@ export const generateMicrocycle = async (
         );
       }
 
-      console.log(`[microcycle-generate] Successfully generated day overviews, formatted markdown, and message for week ${absoluteWeek}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
+      console.log(`[microcycle-generate] Successfully generated day overviews and message for week ${absoluteWeek}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
 
       return result;
     } catch (error) {
@@ -134,7 +128,6 @@ export const createMicrocycleGenerateAgent = (deps?: MicrocycleGenerateAgentDeps
       days: result.response.days,
       description: result.response.overview,
       isDeload: result.response.isDeload,
-      formatted: result.formatted,
       message: result.message,
       structure: result.structure,
     };

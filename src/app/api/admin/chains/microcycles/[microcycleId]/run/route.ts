@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ChainRunnerService, type ChainOperation } from '@/server/services';
 
-const VALID_OPERATIONS: ChainOperation[] = ['full', 'structured', 'formatted', 'message'];
+const VALID_OPERATIONS: ChainOperation[] = ['full', 'structured', 'message'];
 
 export async function POST(
   request: Request,

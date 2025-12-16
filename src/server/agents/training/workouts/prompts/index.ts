@@ -9,9 +9,6 @@ export {
   type ModifyWorkoutGenerationOutput,
 } from './modify';
 
-// Formatted workout prompts
-export { buildFormattedWorkoutSystemPrompt, createFormattedWorkoutUserPrompt } from './formatted';
-
 // Message (SMS) prompts
 export { WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT, workoutSmsUserPrompt } from './message';
 

@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
-import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
+import { StructuredPlanRenderer } from '@/components/pages/shared/StructuredPlanRenderer'
+import type { PlanStructure } from '@/server/agents/training/schemas'
 import { getStepName, getProgressPercentage, TOTAL_STEPS } from '@/shared/constants/onboarding'
 
 interface FitnessPlan {
   id: string
   description: string | null
-  formatted: string | null
+  structured: PlanStructure | null
   message: string | null
   startDate: Date
 }
@@ -159,8 +160,8 @@ interface ProgramSummaryCardProps {
 }
 
 function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
-  // If formatted view is available, use it
-  if (fitnessPlan.formatted) {
+  // If structured view is available, use it
+  if (fitnessPlan.structured) {
     return (
       <Card className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -175,7 +176,7 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
             </div>
           </div>
         </div>
-        <WorkoutMarkdownRenderer content={fitnessPlan.formatted} />
+        <StructuredPlanRenderer structure={fitnessPlan.structured} showHeader={false} />
       </Card>
     )
   }

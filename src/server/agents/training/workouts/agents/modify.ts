@@ -1,8 +1,6 @@
 import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
 import { WorkoutStructureSchema } from '@/server/agents/training/schemas';
 import {
-  buildFormattedWorkoutSystemPrompt,
-  createFormattedWorkoutUserPrompt,
   WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
   workoutSmsUserPrompt,
   STRUCTURED_WORKOUT_SYSTEM_PROMPT,
@@ -29,11 +27,11 @@ const extractOverview = (jsonString: string): string => {
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates modified workout with structured output
- * 2. SubAgents run in parallel: formatted, message, structure (extracting overview)
+ * 2. SubAgents run in parallel: message, structure (extracting overview)
  *
  * @param input - Workout modification input (user, date, workout, changeRequest)
  * @param deps - Optional dependencies (config)
- * @returns ModifyWorkoutOutput with response, formatted, message, and structure
+ * @returns ModifyWorkoutOutput with response, message, and structure
  */
 export const modifyWorkout = async (
   input: ModifyWorkoutInput,
@@ -43,12 +41,6 @@ export const modifyWorkout = async (
   // SubAgents that extract overview from structured JSON response
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createAgent({
-        name: 'formatted-modify',
-        systemPrompt: buildFormattedWorkoutSystemPrompt(true),
-        userPrompt: (jsonInput: string) => createFormattedWorkoutUserPrompt(extractOverview(jsonInput), true),
-      }, deps?.config),
-
       message: createAgent({
         name: 'message-modify',
         systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,

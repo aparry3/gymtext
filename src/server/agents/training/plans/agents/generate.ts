@@ -3,7 +3,6 @@ import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
 } from '../prompts';
-import { createFormattedFitnessPlanAgent } from './formatted';
 import { createFitnessPlanMessageAgent } from './message';
 import { createStructuredPlanAgent } from './structured';
 import type {
@@ -17,11 +16,11 @@ import type {
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates structured text plan with split, deload rules, progression model
- * 2. SubAgents run in parallel: formatted, message, structure
+ * 2. SubAgents run in parallel: message, structure
  *
  * @param input - Fitness plan generation input (user)
  * @param deps - Optional dependencies (config)
- * @returns FitnessPlanGenerateOutput with response, formatted, message, and structure
+ * @returns FitnessPlanGenerateOutput with response, message, and structure
  */
 export const generateFitnessPlan = async (
   input: FitnessPlanGenerateInput,
@@ -32,10 +31,6 @@ export const generateFitnessPlan = async (
   // Create subAgents - all in one batch for parallel execution
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createFormattedFitnessPlanAgent({
-        operationName: 'generate',
-        agentConfig: deps?.config,
-      }),
       message: createFitnessPlanMessageAgent({
         operationName: 'generate',
         agentConfig: deps?.config,
@@ -74,7 +69,6 @@ export const createFitnessPlanGenerateAgent = (deps?: FitnessPlanGenerateAgentDe
     // Map new output format to legacy format
     return {
       description: result.response,
-      formatted: result.formatted,
       message: result.message,
       structure: result.structure,
     };

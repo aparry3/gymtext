@@ -1,5 +1,4 @@
 import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
-import { createFormattedWorkoutAgent } from './formatted';
 import { createWorkoutMessageAgent } from './message';
 import { createStructuredWorkoutAgent } from './structured';
 import { DAILY_WORKOUT_SYSTEM_PROMPT } from '../prompts';
@@ -10,11 +9,11 @@ import type { WorkoutGenerateInput, WorkoutGenerateOutput, WorkoutGenerateAgentD
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates long-form workout description
- * 2. SubAgents run in parallel: formatted, message, structure
+ * 2. SubAgents run in parallel: message, structure
  *
  * @param input - Workout generation input (user, date, dayOverview, isDeload)
  * @param deps - Optional dependencies (config)
- * @returns WorkoutGenerateOutput with response, formatted, message, and structure
+ * @returns WorkoutGenerateOutput with response, message, and structure
  */
 export const generateWorkout = async (
   input: WorkoutGenerateInput,
@@ -24,11 +23,6 @@ export const generateWorkout = async (
   // Create subAgents - all in one batch for parallel execution
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createFormattedWorkoutAgent({
-        includeModifications: false,
-        operationName: 'generate',
-        agentConfig: deps?.config,
-      }),
       message: createWorkoutMessageAgent({
         operationName: 'generate',
         agentConfig: deps?.config,

@@ -30,7 +30,6 @@ interface WorkoutData {
   date: string;
   sessionType: string;
   goal: string | null;
-  formatted: string | null;
   description: string | null;
   structured?: WorkoutStructure;
 }
@@ -254,7 +253,6 @@ export function WorkoutDetailSheet({
               <TabsContent value="text" className="flex-1 p-4 pt-2 mt-0">
                 <div className="bg-[hsl(var(--sidebar-muted))] rounded-lg p-4">
                   <WorkoutTextView
-                    formatted={workout?.formatted || undefined}
                     description={workout?.description || undefined}
                   />
                 </div>

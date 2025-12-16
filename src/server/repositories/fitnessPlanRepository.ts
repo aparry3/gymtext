@@ -19,7 +19,6 @@ export class FitnessPlanRepository extends BaseRepository {
       .values({
         clientId: fitnessPlan.clientId,
         description: fitnessPlan.description,
-        formatted: fitnessPlan.formatted,
         message: fitnessPlan.message,
         structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
         startDate: fitnessPlan.startDate,
@@ -79,7 +78,7 @@ export class FitnessPlanRepository extends BaseRepository {
    */
   async updateFitnessPlan(
     id: string,
-    updates: Partial<Pick<FitnessPlan, 'description' | 'formatted' | 'message' | 'structured'>>
+    updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
   ): Promise<FitnessPlan | null> {
     const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
@@ -87,9 +86,6 @@ export class FitnessPlanRepository extends BaseRepository {
 
     if (updates.description !== undefined) {
       updateData.description = updates.description;
-    }
-    if (updates.formatted !== undefined) {
-      updateData.formatted = updates.formatted;
     }
     if (updates.message !== undefined) {
       updateData.message = updates.message;

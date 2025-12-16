@@ -11,12 +11,6 @@ export {
   ModifyFitnessPlanOutputSchema,
 } from './modify';
 
-// Formatted prompts
-export {
-  buildFormattedFitnessPlanSystemPrompt,
-  createFormattedFitnessPlanUserPrompt,
-} from './formatted';
-
 // Message prompts
 export {
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,

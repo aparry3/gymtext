@@ -18,7 +18,6 @@ interface UserPlanViewProps {
 
 interface PlanData {
   description: string | null;
-  formatted: string | null;
   structure?: PlanStructure;
   startDate: string;
 }

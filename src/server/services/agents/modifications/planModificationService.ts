@@ -127,7 +127,7 @@ export class PlanModificationService {
       const newPlan = await this.fitnessPlanRepo.insertFitnessPlan({
         clientId: userId,
         description: planResult.description,
-        formatted: planResult.formatted,
+        structured: planResult.structure,
         startDate: new Date(),
       });
 

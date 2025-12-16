@@ -44,7 +44,7 @@ Select the split based strictly on the user's available days/week and goal.
   - *Structure:* Day 1 (Chest/Tri), Day 2 (Back/Bi), Day 4 (Legs), Day 5 (Shoulders/Abs).
 
 ## 5 DAYS / WEEK (Volume & Specialization)
-- **Strategy A (Athletics/Strength): Hybrid Split (Upper/Lower + PPL).**
+- **Strategy A (Athletics/Strength): Hybrid Split (Upper/Lower + PPL OR PPL + Upper/Lower).**
   - *Logic:* Hits muscles ~1.5-2x/week. Ideal for DUP (Daily Undulating Periodization).
   - *Structure:* Days 1-2 (Strength/Power), Days 4-6 (Hypertrophy PPL).
 - **Strategy B (Maximum Hypertrophy): The "Bro Split" (Classic Body Part).**

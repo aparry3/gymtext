@@ -16,7 +16,8 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
-import { WorkoutMarkdownRenderer } from './WorkoutMarkdownRenderer'
+import { StructuredMicrocycleRenderer } from './StructuredMicrocycleRenderer'
+import type { MicrocycleStructure } from '@/server/agents/training/schemas'
 
 interface DayPattern {
   day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
@@ -32,7 +33,7 @@ interface Microcycle {
     weekIndex: number
     days: DayPattern[]
   }
-  formatted?: string | null
+  structured?: MicrocycleStructure | null
   description?: string | null
   isDeload?: boolean
   message?: string | null
@@ -213,23 +214,23 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
           {/* Microcycle Header */}
           <MicrocycleHeader microcycle={microcycle} />
 
-          {/* Formatted Microcycle Overview (new format) */}
-          {microcycle.formatted && (
+          {/* Structured Microcycle Overview */}
+          {microcycle.structured && (
             <Card className="p-6">
-              <WorkoutMarkdownRenderer content={microcycle.formatted} />
+              <StructuredMicrocycleRenderer structure={microcycle.structured} showHeader={false} />
             </Card>
           )}
 
           {/* Legacy: Microcycle Description (old format) */}
-          {!microcycle.formatted && microcycleDescription && (
+          {!microcycle.structured && microcycleDescription && (
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-3">Week Overview</h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{microcycleDescription}</p>
             </Card>
           )}
 
-          {/* Legacy: Day Cards (old format - only shown if no formatted content) */}
-          {!microcycle.formatted && microcycle.pattern && (
+          {/* Legacy: Day Cards (old format - only shown if no structured content) */}
+          {!microcycle.structured && microcycle.pattern && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Training Schedule</h3>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

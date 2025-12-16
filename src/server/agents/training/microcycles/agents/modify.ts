@@ -5,8 +5,6 @@ import {
   MICROCYCLE_MODIFY_SYSTEM_PROMPT,
   modifyMicrocycleUserPrompt,
   ModifyMicrocycleOutputSchema,
-  buildFormattedMicrocycleSystemPrompt,
-  createFormattedMicrocycleUserPrompt,
   MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
   microcycleMessageUserPrompt,
   STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
@@ -54,13 +52,13 @@ const extractMicrocycleData = (jsonString: string): MicrocycleGenerationOutput &
  *
  * Uses the configurable agent pattern:
  * 1. Main agent generates modified microcycle with structured output
- * 2. SubAgents run in parallel: formatted, message, structure (extracting data from JSON)
+ * 2. SubAgents run in parallel: message, structure (extracting data from JSON)
  *
  * Includes retry logic (MAX_RETRIES = 3) with validation to ensure all 7 days are present.
  *
  * @param input - Microcycle modification input (user, currentMicrocycle, changeRequest, currentDayOfWeek, weekNumber)
  * @param deps - Optional dependencies (config)
- * @returns ModifyMicrocycleOutput with response, formatted, message, and structure
+ * @returns ModifyMicrocycleOutput with response, message, and structure
  */
 export const modifyMicrocycle = async (
   input: ModifyMicrocycleInput,
@@ -71,15 +69,6 @@ export const modifyMicrocycle = async (
   // SubAgents that extract data from structured JSON response
   const subAgents: SubAgentBatch[] = [
     {
-      formatted: createAgent({
-        name: 'formatted-modify',
-        systemPrompt: buildFormattedMicrocycleSystemPrompt(),
-        userPrompt: (jsonInput: string) => {
-          const data = extractMicrocycleData(jsonInput);
-          return createFormattedMicrocycleUserPrompt(data, weekNumber);
-        },
-      }, deps?.config),
-
       message: createAgent({
         name: 'message-modify',
         systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
@@ -146,7 +135,7 @@ export const modifyMicrocycle = async (
         );
       }
 
-      console.log(`[microcycle-modify] Successfully modified day overviews, formatted markdown, and message for week ${weekNumber}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
+      console.log(`[microcycle-modify] Successfully modified day overviews and message for week ${weekNumber}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
 
       return result;
     } catch (error) {
@@ -181,7 +170,6 @@ export const createModifyMicrocycleAgent = (deps?: ModifyMicrocycleAgentDeps) =>
       days: result.response.days,
       description: result.response.overview,
       isDeload: result.response.isDeload,
-      formatted: result.formatted,
       message: result.message,
       structure: result.structure,
       wasModified: result.response.wasModified,

@@ -13,8 +13,8 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
  *
  * Stores:
  * - description: Structured text plan (contains split, frequency, goals, deload rules, etc.)
- * - formatted: Markdown-formatted plan for frontend display
  * - message: Brief summary for SMS (optional)
+ * - structured: Parsed structured plan data for UI rendering
  *
  * Plans are ongoing by default - no fixed duration.
  * All versions are kept (query latest by created_at).
@@ -23,7 +23,6 @@ export interface FitnessPlan {
   id?: string;
   clientId: string;
   description: string;  // Structured text plan
-  formatted?: string | null;
   message?: string | null;
   structured?: PlanStructure | null;  // Parsed structured plan data
   startDate: Date;
@@ -36,7 +35,6 @@ export interface FitnessPlan {
  */
 export interface FitnessPlanOverview {
   description: string;  // Structured text plan
-  formatted: string;    // Markdown-formatted plan for frontend display
   message?: string;     // SMS-friendly summary
   structure?: PlanStructure; // Structured plan data
 }
@@ -45,7 +43,6 @@ export class FitnessPlanModel implements FitnessPlan {
   id: string;
   clientId: string;
   description: string;
-  formatted: string | null;
   message: string | null;
   structured: PlanStructure | null;
   startDate: Date;
@@ -56,7 +53,6 @@ export class FitnessPlanModel implements FitnessPlan {
     id: string,
     clientId: string,
     description: string,
-    formatted: string | null,
     message: string | null,
     structured: PlanStructure | null,
     startDate: Date,
@@ -66,7 +62,6 @@ export class FitnessPlanModel implements FitnessPlan {
     this.id = id;
     this.clientId = clientId;
     this.description = description;
-    this.formatted = formatted;
     this.message = message;
     this.structured = structured;
     this.startDate = startDate;
@@ -79,7 +74,6 @@ export class FitnessPlanModel implements FitnessPlan {
       id: fitnessPlan.id,
       clientId: fitnessPlan.clientId,
       description: fitnessPlan.description || '',
-      formatted: fitnessPlan.formatted,
       message: fitnessPlan.message,
       structured: fitnessPlan.structured as PlanStructure | null,
       startDate: new Date(fitnessPlan.startDate as unknown as string | number | Date),
@@ -95,7 +89,6 @@ export class FitnessPlanModel implements FitnessPlan {
     return {
       clientId: user.id,
       description: fitnessPlanOverview.description,
-      formatted: fitnessPlanOverview.formatted,
       message: fitnessPlanOverview.message || null,
       structured: fitnessPlanOverview.structure || null,
       startDate: new Date(),

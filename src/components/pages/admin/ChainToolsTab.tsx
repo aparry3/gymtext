@@ -11,7 +11,6 @@ import { parseDate, formatDate } from '@/shared/utils/date'
 interface FitnessPlan {
   id: string
   description: string | null
-  formatted: string | null
   message: string | null
   structured: unknown | null
   startDate: Date
@@ -23,7 +22,6 @@ interface Microcycle {
   absoluteWeek: number
   days: string[]
   description: string | null
-  formatted: string | null
   message: string | null
   structured: unknown | null
   isDeload: boolean
@@ -39,7 +37,6 @@ interface WorkoutInstance {
   description: string | null
   message: string | null
   structured: unknown | null
-  details: { formatted?: string } | null
 }
 
 interface ChainToolsTabProps {
@@ -255,7 +252,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
             </div>
             <div className="flex flex-wrap gap-2">
               <StatusBadge label="Description" hasValue={!!fitnessPlan.description} />
-              <StatusBadge label="Formatted" hasValue={!!fitnessPlan.formatted} />
               <StatusBadge label="Message" hasValue={!!fitnessPlan.message} />
               <StatusBadge label="Structured" hasValue={!!fitnessPlan.structured} />
             </div>
@@ -303,7 +299,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                 <div className="flex flex-wrap gap-2">
                   <StatusBadge label="Days" hasValue={microcycle.days?.length === 7} />
                   <StatusBadge label="Description" hasValue={!!microcycle.description} />
-                  <StatusBadge label="Formatted" hasValue={!!microcycle.formatted} />
                   <StatusBadge label="Message" hasValue={!!microcycle.message} />
                   <StatusBadge label="Structured" hasValue={!!microcycle.structured} />
                 </div>
@@ -354,7 +349,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusBadge label="Description" hasValue={!!workout.description} />
-                  <StatusBadge label="Formatted" hasValue={!!workout.details?.formatted} />
                   <StatusBadge label="Message" hasValue={!!workout.message} />
                   <StatusBadge label="Structured" hasValue={!!workout.structured} />
                 </div>

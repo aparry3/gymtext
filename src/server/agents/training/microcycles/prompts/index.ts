@@ -13,12 +13,6 @@ export {
   ModifyMicrocycleOutputSchema,
 } from './modify';
 
-// Formatted prompts
-export {
-  buildFormattedMicrocycleSystemPrompt,
-  createFormattedMicrocycleUserPrompt,
-} from './formatted';
-
 // Message prompts
 export {
   MICROCYCLE_MESSAGE_SYSTEM_PROMPT,

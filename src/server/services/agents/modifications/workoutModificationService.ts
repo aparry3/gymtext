@@ -119,20 +119,19 @@ export class WorkoutModificationService {
         changeRequest,
       });
 
-      // Extract theme from markdown title (first # line) or use default
-      const themeMatch = result.formatted.match(/^#\s+(.+)$/m);
-      const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
+      // Extract theme from structured data or use default
+      const theme = result.structure?.title || 'Workout';
 
-      // Store formatted text in details.formatted
+      // Store theme in details
       const details = {
-        formatted: result.formatted,  // Store the formatted markdown text
-        theme,                       // Keep theme for quick access
+        theme,  // Keep theme for quick access
       };
 
       // Update the workout in the database
       await this.workoutInstanceService.updateWorkout(existingWorkout.id, {
         description: result.response.overview,
         message: result.message,
+        structured: result.structure,
         details,
       });
 
@@ -243,7 +242,7 @@ export class WorkoutModificationService {
             days: modifyMicrocycleResult.days,
             description: modifyMicrocycleResult.description,
             isDeload: modifyMicrocycleResult.isDeload,
-            formatted: modifyMicrocycleResult.formatted,
+            structured: modifyMicrocycleResult.structure,
             // message: microcycleUpdateMessage
           }
         );
@@ -264,13 +263,11 @@ export class WorkoutModificationService {
 
           const workoutResult = await workoutGenerateAgent.invoke(workoutInput);
 
-          // Extract theme from formatted markdown (first # line)
-          const themeMatch = workoutResult.formatted.match(/^#\s+(.+)$/m);
-          const theme = themeMatch ? themeMatch[1].trim() : 'Workout';
+          // Extract theme from structured data or use default
+          const theme = workoutResult.structure?.title || 'Workout';
 
-          // Store formatted text and theme in details
+          // Store theme in details
           const details = {
-            formatted: workoutResult.formatted,
             theme,
           };
 
@@ -283,6 +280,7 @@ export class WorkoutModificationService {
               details,
               description: workoutResult.response,
               message: workoutResult.message,
+              structured: workoutResult.structure,
               goal: theme,
               sessionType: this.mapThemeToSessionType(theme),
             });
@@ -298,6 +296,7 @@ export class WorkoutModificationService {
               details,
               description: workoutResult.response,
               message: workoutResult.message,
+              structured: workoutResult.structure,
             });
             console.log(`[MODIFY_WEEK] Created new workout for today`);
           }

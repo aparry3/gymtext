@@ -16,13 +16,14 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
-import { WorkoutMarkdownRenderer } from '@/components/pages/shared/WorkoutMarkdownRenderer'
+import { StructuredPlanRenderer } from '@/components/pages/shared/StructuredPlanRenderer'
+import type { PlanStructure } from '@/server/agents/training/schemas'
 
 interface Mesocycle {
   id: string
   mesocycleIndex: number
   description: string | null
-  formatted: string | null
+  structured: PlanStructure | null
   microcycles: string[]
   startWeek: number
   durationWeeks: number
@@ -51,7 +52,6 @@ interface Microcycle {
   sundayOverview?: string | null
   description?: string | null
   isDeload: boolean
-  formatted?: string | null
   message?: string | null
   startDate: Date
   endDate: Date
@@ -240,8 +240,8 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
     }
   }
 
-  // If formatted view is available, use it
-  if (mesocycle.formatted) {
+  // If structured view is available, use it
+  if (mesocycle.structured) {
     return (
       <div className="space-y-6">
         <div className="flex items-start justify-between mb-4">
@@ -258,7 +258,7 @@ function MesocycleHeader({ mesocycle, index, total, isCurrent }: MesocycleHeader
           </div>
         </div>
         <Card className="p-6">
-          <WorkoutMarkdownRenderer content={mesocycle.formatted} />
+          <StructuredPlanRenderer structure={mesocycle.structured} showHeader={false} />
         </Card>
       </div>
     )

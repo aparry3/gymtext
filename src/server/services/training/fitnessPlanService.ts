@@ -70,7 +70,7 @@ export class FitnessPlanService {
    */
   public async updateFitnessPlan(
     planId: string,
-    updates: Partial<Pick<FitnessPlan, 'description' | 'formatted' | 'message' | 'structured'>>
+    updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
   ): Promise<FitnessPlan | null> {
     return await this.fitnessPlanRepo.updateFitnessPlan(planId, updates);
   }

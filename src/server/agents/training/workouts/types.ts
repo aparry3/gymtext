@@ -37,7 +37,6 @@ export interface WorkoutGenerateInput {
  */
 export interface WorkoutGenerateOutput {
   response: string;
-  formatted: string;
   message: string;
   structure: WorkoutStructure;
 }
@@ -75,7 +74,6 @@ export interface ModifyWorkoutOutput {
     wasModified: boolean;
     modifications: string;
   };
-  formatted: string;
   message: string;
   structure: WorkoutStructure;
 }
@@ -93,15 +91,6 @@ export type WorkoutModifyResult = ModifyWorkoutOutput;
 // =============================================================================
 // Shared Step Agent Config Types
 // =============================================================================
-
-/**
- * Configuration for formatted workout agent
- */
-export interface FormattedWorkoutConfig {
-  includeModifications?: boolean;
-  operationName: string;
-  agentConfig?: ModelConfig;
-}
 
 /**
  * Configuration for workout message agent

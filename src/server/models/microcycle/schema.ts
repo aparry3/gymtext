@@ -23,13 +23,12 @@ export const _MicrocycleGenerationSchema = z.object({
 export type MicrocycleGenerationOutput = z.infer<typeof _MicrocycleGenerationSchema>;
 
 /**
- * Full microcycle pattern including formatted output
+ * Full microcycle pattern
  */
 export interface MicrocyclePattern {
   overview: string;
   isDeload: boolean;
   days: string[];
-  formatted?: string;
   message?: string;
 }
 
