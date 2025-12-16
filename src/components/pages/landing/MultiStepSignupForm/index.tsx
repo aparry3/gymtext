@@ -168,10 +168,10 @@ export function MultiStepSignupForm() {
         throw new Error(errorData.message || 'Failed to create account');
       }
 
-      const { checkoutUrl } = await response.json();
+      const { checkoutUrl, redirectUrl } = await response.json();
 
-      // Redirect to Stripe checkout
-      window.location.href = checkoutUrl;
+      // Redirect to Stripe checkout or /me for subscribed users
+      window.location.href = checkoutUrl || redirectUrl;
     } catch (error) {
       console.error('Error preparing signup:', error);
       setErrorMessage(

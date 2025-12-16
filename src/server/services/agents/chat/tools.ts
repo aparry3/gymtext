@@ -48,9 +48,9 @@ export function toolWithMessage(
 /**
  * Dependencies for chat tools (DI pattern)
  * Pass the methods directly, not the full services
+ * Note: updateProfile removed - now runs automatically before agent
  */
 export interface ChatToolDeps {
-  updateProfile: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
   makeModification: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
   getWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
 }
@@ -69,13 +69,16 @@ export interface ChatToolContext {
  * Factory function to create chat tools with injected dependencies
  *
  * Creates tools that the chat agent can use:
- * - update_profile: Record fitness information to user's profile
  * - make_modification: Make changes to workouts, schedules, or plans
+ * - get_workout: Get or generate today's workout
+ *
+ * Note: Profile updates now happen automatically before the agent runs,
+ * so update_profile is no longer a tool.
  *
  * All tools return standardized ToolResult: { response: string, messages?: string[] }
  *
  * @param context - Context from chat (userId, message)
- * @param deps - Dependencies (updateProfile, makeModification methods)
+ * @param deps - Dependencies (makeModification, getWorkout methods)
  * @returns Array of LangChain tools
  */
 export const createChatTools = (
@@ -83,26 +86,7 @@ export const createChatTools = (
   deps: ChatToolDeps,
   onSendMessage: (message: string) => Promise<void>
 ): StructuredToolInterface[] => {
-  // Tool 1: Update Profile
-  const updateProfileTool = tool(
-    async (): Promise<ToolResult> => {
-      return deps.updateProfile(context.userId, context.message, context.previousMessages);
-    },
-    {
-      name: 'update_profile',
-      description: `Update the user's profile or personal settings.
-
-Use this tool for:
-- **User Settings**: Send time, timezone, name, notification preferences
-- **Fitness Profile**: Injuries, goals, equipment, availability, PRs, achievements
-
-This tool handles WHO THE USER IS and THEIR PREFERENCES - not their workouts.
-All context is automatically provided - no parameters needed.`,
-      schema: z.object({}),
-    }
-  );
-
-  // Tool 2: Make Modification
+  // Tool 1: Make Modification
   const makeModificationTool = toolWithMessage(
     'make_modification',
     `Make changes to the user's workout or training program.
@@ -120,7 +104,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
     onSendMessage
   );
 
-  // Tool 3: Get Workout
+  // Tool 2: Get Workout
   const getWorkoutTool = tool(
     async (): Promise<ToolResult> => {
       return deps.getWorkout(context.userId, context.timezone);
@@ -147,5 +131,5 @@ All context is automatically provided - no parameters needed.`,
     }
   );
 
-  return [updateProfileTool, makeModificationTool, getWorkoutTool];
+  return [makeModificationTool, getWorkoutTool];
 };

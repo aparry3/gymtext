@@ -5,6 +5,11 @@
  * Each step uses a "get or create" pattern - checks if data exists,
  * returns it if so, otherwise creates via LLM.
  *
+ * When forceCreate=true (for re-onboarding subscribed users):
+ * - Skips the "get existing" check
+ * - Always creates new data
+ * - Old data is preserved for history
+ *
  * This makes the onboarding flow:
  * - Truly idempotent - running multiple times produces same result
  * - Resumable - if data exists, it's returned without re-creation
@@ -77,15 +82,24 @@ export const onboardingSteps = {
   /**
    * Step 2: Get or create fitness profile
    * Returns updated user with profile for subsequent steps
+   *
+   * @param forceCreate - When true, always creates new profile (for re-onboarding)
    */
-  async getOrCreateProfile(user: UserWithProfile, signupData: SignupData): Promise<ProfileResult> {
-    const existingProfile = await fitnessProfileService.getCurrentProfile(user.id);
-    if (existingProfile) {
-      console.log(`[Onboarding] Step 2: Profile already exists for ${user.id}`);
-      return { user, wasCreated: false };
+  async getOrCreateProfile(
+    user: UserWithProfile,
+    signupData: SignupData,
+    forceCreate = false
+  ): Promise<ProfileResult> {
+    // Only check for existing profile if not forcing creation
+    if (!forceCreate) {
+      const existingProfile = await fitnessProfileService.getCurrentProfile(user.id);
+      if (existingProfile) {
+        console.log(`[Onboarding] Step 2: Profile already exists for ${user.id}`);
+        return { user, wasCreated: false };
+      }
     }
 
-    console.log(`[Onboarding] Step 2: Creating profile for ${user.id} (LLM)`);
+    console.log(`[Onboarding] Step 2: Creating profile for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
     await fitnessProfileService.createFitnessProfile(user, signupData);
 
     // Re-fetch user to get updated profile
@@ -99,15 +113,20 @@ export const onboardingSteps = {
 
   /**
    * Step 3: Get or create fitness plan
+   *
+   * @param forceCreate - When true, always creates new plan (for re-onboarding)
    */
-  async getOrCreatePlan(user: UserWithProfile): Promise<PlanResult> {
-    const existingPlan = await fitnessPlanService.getCurrentPlan(user.id);
-    if (existingPlan) {
-      console.log(`[Onboarding] Step 3: Plan already exists for ${user.id}`);
-      return { plan: existingPlan, wasCreated: false };
+  async getOrCreatePlan(user: UserWithProfile, forceCreate = false): Promise<PlanResult> {
+    // Only check for existing plan if not forcing creation
+    if (!forceCreate) {
+      const existingPlan = await fitnessPlanService.getCurrentPlan(user.id);
+      if (existingPlan) {
+        console.log(`[Onboarding] Step 3: Plan already exists for ${user.id}`);
+        return { plan: existingPlan, wasCreated: false };
+      }
     }
 
-    console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)`);
+    console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
     const plan = await fitnessPlanService.createFitnessPlan(user);
     return { plan, wasCreated: true };
   },
@@ -115,38 +134,54 @@ export const onboardingSteps = {
   /**
    * Step 4: Get or create microcycle
    * Needs plan for week calculation
+   *
+   * @param forceCreate - When true, always creates new microcycle (for re-onboarding)
    */
-  async getOrCreateMicrocycle(user: UserWithProfile, plan: FitnessPlan): Promise<MicrocycleResult> {
+  async getOrCreateMicrocycle(
+    user: UserWithProfile,
+    plan: FitnessPlan,
+    forceCreate = false
+  ): Promise<MicrocycleResult> {
     const currentDate = now(user.timezone).toJSDate();
     const { microcycle, wasCreated } = await progressService.getOrCreateMicrocycleForDate(
       user.id,
       plan,
       currentDate,
-      user.timezone
+      user.timezone,
+      forceCreate
     );
 
     if (!microcycle) {
       throw new Error(`Could not get/create microcycle for user ${user.id}`);
     }
 
-    console.log(`[Onboarding] Step 4: Microcycle ${wasCreated ? 'created' : 'already exists'} for ${user.id}`);
+    console.log(`[Onboarding] Step 4: Microcycle ${wasCreated ? 'created' : 'already exists'} for ${user.id}${forceCreate ? ' [forceCreate]' : ''}`);
     return { microcycle, wasCreated };
   },
 
   /**
    * Step 5: Get or create workout
    * Needs microcycle for day pattern and isDeload flag
+   *
+   * @param forceCreate - When true, always creates new workout (for re-onboarding)
    */
-  async getOrCreateWorkout(user: UserWithProfile, microcycle: Microcycle): Promise<WorkoutResult> {
+  async getOrCreateWorkout(
+    user: UserWithProfile,
+    microcycle: Microcycle,
+    forceCreate = false
+  ): Promise<WorkoutResult> {
     const targetDate = now(user.timezone).startOf('day');
 
-    const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate.toJSDate());
-    if (existingWorkout) {
-      console.log(`[Onboarding] Step 5: Workout already exists for ${user.id}`);
-      return { workout: existingWorkout, wasCreated: false };
+    // Only check for existing workout if not forcing creation
+    if (!forceCreate) {
+      const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate.toJSDate());
+      if (existingWorkout) {
+        console.log(`[Onboarding] Step 5: Workout already exists for ${user.id}`);
+        return { workout: existingWorkout, wasCreated: false };
+      }
     }
 
-    console.log(`[Onboarding] Step 5: Creating workout for ${user.id} (LLM)`);
+    console.log(`[Onboarding] Step 5: Creating workout for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
     const workout = await workoutInstanceService.generateWorkoutForDate(user, targetDate, microcycle);
     if (!workout) {
       throw new Error(`Failed to generate workout for user ${user.id}`);

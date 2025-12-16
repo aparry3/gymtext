@@ -9,12 +9,10 @@ export type { ChatAgentDeps, ChatAgentConfig };
 const MAX_ITERATIONS = 5;
 
 // Tool execution priority (lower = first)
-// Profile updates should happen before modifications so the modification
-// has access to the updated profile (e.g., "I hurt my knee, give me upper body")
+// Note: update_profile is no longer a tool - it runs automatically before the agent
 const TOOL_PRIORITY: Record<string, number> = {
-  'update_profile': 1,
-  'get_workout': 2,
-  'make_modification': 3,
+  'get_workout': 1,
+  'make_modification': 2,
 };
 
 /**
@@ -37,7 +35,7 @@ const TOOL_PRIORITY: Record<string, number> = {
  */
 export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, currentWorkout, previousMessages } = input;
+    const { user, message, currentWorkout, previousMessages, profileUpdateResult } = input;
     console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
     // Initialize loop state
@@ -55,6 +53,18 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
 
     // Build context messages (date, workout, etc.)
     const contextMessages = buildContextMessages(user.timezone, currentWorkout);
+
+    // Add profile update context if present (profile was updated before agent ran)
+    if (profileUpdateResult) {
+      contextMessages.push({
+        role: 'user',
+        content: `[CONTEXT: PROFILE UPDATE]
+Profile was just updated: ${profileUpdateResult}
+Acknowledge this update naturally in your response.`,
+      });
+      // Mark profile as updated in state
+      state.profileUpdated = true;
+    }
 
     // Raw user message (no context baked in)
     const userMessage = { role: 'user', content: message };
@@ -91,6 +101,7 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
         let hasError = false;
         let lastToolType: ToolType = 'action'; // Track for continuation message
 
+        console.log('[CHAT AGENT] Sorted tool calls:', sortedToolCalls);
         // Execute each tool call in priority order
         for (let i = 0; i < sortedToolCalls.length; i++) {
           const toolCall = sortedToolCalls[i];
@@ -116,11 +127,6 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
               state.accumulatedToolMessages.push(...toolResult.messages);
               iterationMessages.push(...toolResult.messages);
               console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from ${toolCall.name}`);
-            }
-
-            // Track if profile was updated (for ChatOutput)
-            if (toolCall.name === 'update_profile' && toolResult.response.includes('Profile updated')) {
-              state.profileUpdated = true;
             }
 
             // Add tool call to conversation history
