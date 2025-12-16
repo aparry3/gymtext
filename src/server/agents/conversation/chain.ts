@@ -28,19 +28,12 @@ export type { ChatAgentDeps, ChatAgentConfig };
 export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
   return {
     invoke: async (input: ChatInput): Promise<ChatOutput> => {
-      const { user, message, currentWorkout, previousMessages, profileUpdateResult } = input;
+      const { user, message, currentWorkout, previousMessages } = input;
       console.log('[CHAT AGENT] Starting with configurable agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
       // Build context strings from context messages
       const contextMessages = buildContextMessages(user.timezone, currentWorkout);
       const context: string[] = contextMessages.map(m => m.content);
-
-      // Add profile update context if present (profile was updated before agent ran)
-      if (profileUpdateResult) {
-        context.push(`[CONTEXT: PROFILE UPDATE]
-Profile was just updated: ${profileUpdateResult}
-Acknowledge this update naturally in your response.`);
-      }
 
       // Convert previous messages to Message format for the configurable agent
       const previousMsgs: Message[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
@@ -69,7 +62,7 @@ Acknowledge this update naturally in your response.`);
 
       return {
         messages,
-        profileUpdated: !!profileUpdateResult,
+        profileUpdated: false, // Profile updates are now handled by the update_profile tool
       };
     }
   };

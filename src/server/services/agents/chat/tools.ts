@@ -48,11 +48,11 @@ export function toolWithMessage(
 /**
  * Dependencies for chat tools (DI pattern)
  * Pass the methods directly, not the full services
- * Note: updateProfile removed - now runs automatically before agent
  */
 export interface ChatToolDeps {
   makeModification: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
   getWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
+  updateProfile: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
 }
 
 /**
@@ -69,16 +69,14 @@ export interface ChatToolContext {
  * Factory function to create chat tools with injected dependencies
  *
  * Creates tools that the chat agent can use:
- * - make_modification: Make changes to workouts, schedules, or plans
- * - get_workout: Get or generate today's workout
- *
- * Note: Profile updates now happen automatically before the agent runs,
- * so update_profile is no longer a tool.
+ * - update_profile: Record permanent user preferences and profile information (Priority 1)
+ * - get_workout: Get or generate today's workout (Priority 2)
+ * - make_modification: Make changes to workouts, schedules, or plans (Priority 3)
  *
  * All tools return standardized ToolResult: { response: string, messages?: string[] }
  *
  * @param context - Context from chat (userId, message)
- * @param deps - Dependencies (makeModification, getWorkout methods)
+ * @param deps - Dependencies (updateProfile, makeModification, getWorkout methods)
  * @returns Array of LangChain tools
  */
 export const createChatTools = (
@@ -86,7 +84,34 @@ export const createChatTools = (
   deps: ChatToolDeps,
   onSendMessage: (message: string) => Promise<void>
 ): StructuredToolInterface[] => {
-  // Tool 1: Make Modification
+  // Tool 1: Update Profile (Priority 1 - runs first when called with other tools)
+  const updateProfileTool = tool(
+    async (): Promise<ToolResult> => {
+      return deps.updateProfile(context.userId, context.message, context.previousMessages);
+    },
+    {
+      name: 'update_profile',
+      description: `Record permanent user preferences and profile information.
+
+Use this tool when the user shares PERMANENT information:
+- **Preferences**: "I like starting with legs", "I prefer barbells", "I hate lunges"
+- **Constraints/Injuries**: "I hurt my knee", "I have a bad shoulder"
+- **Schedule preferences**: "I prefer runs on Tuesdays", "I like morning workouts"
+- **Goals**: "I want to lose 10lbs", "training for a marathon"
+- **Equipment/Location**: "I go to Planet Fitness", "I have a home gym"
+- **Settings**: timezone, send time, or name changes
+
+DO NOT use for one-time requests ("switch today to legs") or questions.
+
+IMPORTANT: If user wants BOTH a preference AND a workout change, call BOTH tools.
+Example: "Add runs to my plan on Tues/Thurs" -> update_profile (preference) + make_modification (plan change)
+
+All context is automatically provided - no parameters needed.`,
+      schema: z.object({}),
+    }
+  );
+
+  // Tool 2: Make Modification
   const makeModificationTool = toolWithMessage(
     'make_modification',
     `Make changes to the user's workout or training program.
@@ -104,7 +129,7 @@ All context (user, message, date, etc.) is automatically provided - no parameter
     onSendMessage
   );
 
-  // Tool 2: Get Workout
+  // Tool 3: Get Workout
   const getWorkoutTool = tool(
     async (): Promise<ToolResult> => {
       return deps.getWorkout(context.userId, context.timezone);
@@ -131,5 +156,5 @@ All context is automatically provided - no parameters needed.`,
     }
   );
 
-  return [makeModificationTool, getWorkoutTool];
+  return [updateProfileTool, makeModificationTool, getWorkoutTool];
 };
