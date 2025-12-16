@@ -160,28 +160,6 @@ interface ProgramSummaryCardProps {
 }
 
 function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
-  // If structured view is available, use it
-  if (fitnessPlan.structured) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold mb-2">Program Overview</h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              {fitnessPlan.startDate && (
-                <Badge variant="outline">
-                  Started {new Date(fitnessPlan.startDate).toLocaleDateString()}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-        <StructuredPlanRenderer structure={fitnessPlan.structured} showHeader={false} />
-      </Card>
-    )
-  }
-
-  // Fallback to description view
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-4">
@@ -196,11 +174,10 @@ function ProgramSummaryCard({ fitnessPlan }: ProgramSummaryCardProps) {
           </div>
         </div>
       </div>
-
-      {fitnessPlan.description && (
-        <div className="mb-4">
-          <p className="text-muted-foreground whitespace-pre-wrap">{fitnessPlan.description}</p>
-        </div>
+      {fitnessPlan.structured ? (
+        <StructuredPlanRenderer structure={fitnessPlan.structured} showHeader={false} />
+      ) : (
+        <p className="text-muted-foreground">No structured plan data available</p>
       )}
     </Card>
   )
