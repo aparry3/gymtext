@@ -50,6 +50,9 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
   /** Context messages injected between system and user prompts (pre-computed strings) */
   context?: string[];
 
+  /** Previous conversation messages (placed after context, before user prompt) */
+  previousMessages?: Message[];
+
   /** LangChain tools available to this agent */
   tools?: StructuredToolInterface[];
 
@@ -88,13 +91,14 @@ type ExtractSubAgentOutputs<T extends SubAgentBatch> = {
 /**
  * Combined output from main agent + subAgents
  * Response contains main agent output, plus all subAgent outputs by key
+ * For tool-based agents, also includes accumulated messages from tool execution
  */
 export type AgentComposedOutput<
   TMainOutput,
   TSubAgents extends SubAgentBatch[] | undefined
 > = TSubAgents extends SubAgentBatch[]
-  ? { response: TMainOutput } & UnionToIntersection<ExtractSubAgentOutputs<TSubAgents[number]>>
-  : { response: TMainOutput };
+  ? { response: TMainOutput; messages?: string[] } & UnionToIntersection<ExtractSubAgentOutputs<TSubAgents[number]>>
+  : { response: TMainOutput; messages?: string[] };
 
 /**
  * Helper type to convert union to intersection

@@ -1,28 +1,20 @@
-import { CHAT_SYSTEM_PROMPT, buildContextMessages, buildLoopContinuationMessage } from '@/server/agents/conversation/prompts';
-import { initializeModel, createRunnableAgent, type ToolType } from '../base';
+import { CHAT_SYSTEM_PROMPT, buildContextMessages } from '@/server/agents/conversation/prompts';
+import { createAgent, type Message } from '@/server/agents/configurable';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig, AgentToolResult, AgentLoopState } from './types';
+import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig } from './types';
 
 // Re-export types for backward compatibility
 export type { ChatAgentDeps, ChatAgentConfig };
 
-const MAX_ITERATIONS = 5;
-
-// Tool execution priority (lower = first)
-// Note: update_profile is no longer a tool - it runs automatically before the agent
-const TOOL_PRIORITY: Record<string, number> = {
-  'get_workout': 1,
-  'make_modification': 2,
-};
-
 /**
- * Chat Agent Factory (Agentic Loop Pattern)
+ * Chat Agent Factory (Configurable Agent Pattern)
  *
- * The conversation coordinator that operates in a loop until generating a final response.
+ * The conversation coordinator that uses the configurable agent architecture
+ * with tool-based agentic loop.
  *
  * Architecture:
  * 1. Agent receives user message and context; tools are bound at creation time
- * 2. Agent decides to call a tool or respond
+ * 2. Agent decides to call a tool or respond via executeToolLoop
  * 3. If tool called: execute, accumulate messages, append response to context, continue loop
  * 4. If no tool: generate final response, exit loop
  * 5. Return [final response, ...accumulated tool messages]
@@ -34,166 +26,51 @@ const TOOL_PRIORITY: Record<string, number> = {
  * @returns Agent that processes chat messages
  */
 export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
-  return createRunnableAgent<ChatInput, ChatOutput>(async (input) => {
-    const { user, message, currentWorkout, previousMessages, profileUpdateResult } = input;
-    console.log('[CHAT AGENT] Starting agentic loop for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
+  return {
+    invoke: async (input: ChatInput): Promise<ChatOutput> => {
+      const { user, message, currentWorkout, previousMessages, profileUpdateResult } = input;
+      console.log('[CHAT AGENT] Starting with configurable agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
-    // Initialize loop state
-    const state: AgentLoopState = {
-      accumulatedToolMessages: [],
-      iteration: 0,
-      profileUpdated: false,
-    };
+      // Build context strings from context messages
+      const contextMessages = buildContextMessages(user.timezone, currentWorkout);
+      const context: string[] = contextMessages.map(m => m.content);
 
-    // Initialize model with tools provided by service
-    const model = initializeModel(undefined, config, { tools });
-
-    // Build initial messages
-    const systemMessage = { role: 'system', content: CHAT_SYSTEM_PROMPT };
-
-    // Build context messages (date, workout, etc.)
-    const contextMessages = buildContextMessages(user.timezone, currentWorkout);
-
-    // Add profile update context if present (profile was updated before agent ran)
-    if (profileUpdateResult) {
-      contextMessages.push({
-        role: 'user',
-        content: `[CONTEXT: PROFILE UPDATE]
+      // Add profile update context if present (profile was updated before agent ran)
+      if (profileUpdateResult) {
+        context.push(`[CONTEXT: PROFILE UPDATE]
 Profile was just updated: ${profileUpdateResult}
-Acknowledge this update naturally in your response.`,
-      });
-      // Mark profile as updated in state
-      state.profileUpdated = true;
-    }
-
-    // Raw user message (no context baked in)
-    const userMessage = { role: 'user', content: message };
-
-    // Conversation history for the loop
-    // Order: system -> context -> previous messages -> current user message
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const conversationHistory: any[] = [
-      systemMessage,
-      ...contextMessages,
-      ...ConversationFlowBuilder.toMessageArray(previousMessages || []),
-      userMessage,
-    ];
-
-    // Agentic loop
-    while (state.iteration < MAX_ITERATIONS) {
-      state.iteration++;
-      console.log(`[CHAT AGENT] Iteration ${state.iteration}`);
-
-      // Invoke model
-      const result = await model.invoke(conversationHistory);
-
-      // Check for tool calls
-      if (result.tool_calls && result.tool_calls.length > 0) {
-        // Sort tool calls by priority (profile before modification)
-        const sortedToolCalls = [...result.tool_calls].sort(
-          (a, b) => (TOOL_PRIORITY[a.name] ?? 99) - (TOOL_PRIORITY[b.name] ?? 99)
-        );
-
-        console.log(`[CHAT AGENT] ${sortedToolCalls.length} tool call(s): ${sortedToolCalls.map(tc => tc.name).join(', ')}`);
-
-        // Track messages from tools for this iteration
-        const iterationMessages: string[] = [];
-        let hasError = false;
-        let lastToolType: ToolType = 'action'; // Track for continuation message
-
-        console.log('[CHAT AGENT] Sorted tool calls:', sortedToolCalls);
-        // Execute each tool call in priority order
-        for (let i = 0; i < sortedToolCalls.length; i++) {
-          const toolCall = sortedToolCalls[i];
-          const callId = `call_${state.iteration}_${i}`;
-
-          // Find the tool
-          const selectedTool = tools.find(t => t.name === toolCall.name);
-          if (!selectedTool) {
-            console.error(`[CHAT AGENT] Tool not found: ${toolCall.name}`);
-            continue;
-          }
-
-          try {
-            console.log(`[CHAT AGENT] Executing tool: ${toolCall.name}`);
-            // Tool wrappers handle any pre-execution logic (e.g., immediate messages)
-            const toolResult = await selectedTool.invoke(toolCall.args) as AgentToolResult;
-
-            // Track tool type for continuation message (last tool's type is used)
-            lastToolType = toolResult.toolType || 'action';
-
-            // Accumulate messages if present
-            if (toolResult.messages && toolResult.messages.length > 0) {
-              state.accumulatedToolMessages.push(...toolResult.messages);
-              iterationMessages.push(...toolResult.messages);
-              console.log(`[CHAT AGENT] Accumulated ${toolResult.messages.length} message(s) from ${toolCall.name}`);
-            }
-
-            // Add tool call to conversation history
-            conversationHistory.push({
-              role: 'assistant',
-              content: '',
-              tool_calls: [{
-                id: callId,
-                type: 'function',
-                function: { name: toolCall.name, arguments: JSON.stringify(toolCall.args) },
-              }],
-            });
-            conversationHistory.push({
-              role: 'tool',
-              content: toolResult.response,
-              tool_call_id: callId,
-            });
-
-            console.log(`[CHAT AGENT] ${toolCall.name} complete: ${toolResult.response.substring(0, 100)}...`);
-          } catch (error) {
-            console.error(`[CHAT AGENT] Tool error (${toolCall.name}):`, error);
-            state.accumulatedToolMessages.push(
-              "I tried to help but encountered an issue. Please try again!"
-            );
-            hasError = true;
-            break;
-          }
-        }
-
-        if (hasError) {
-          break;
-        }
-
-        // Add continuation message for next iteration
-        conversationHistory.push({
-          role: 'user',
-          content: buildLoopContinuationMessage(lastToolType, iterationMessages),
-        });
-
-        console.log(`[CHAT AGENT] All tools complete, continuing loop`);
-        continue;
+Acknowledge this update naturally in your response.`);
       }
 
-      // No tool call - this is the final response
-      const finalResponse = result.content as string;
-      console.log(`[CHAT AGENT] Final response generated after ${state.iteration} iteration(s)`);
+      // Convert previous messages to Message format for the configurable agent
+      const previousMsgs: Message[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
 
-      // Return: [final response, ...tool messages]
-      const messages = [finalResponse, ...state.accumulatedToolMessages].filter(m => m && m.trim());
+      // Create agent with configurable agent factory
+      const agent = createAgent({
+        name: 'conversation',
+        systemPrompt: CHAT_SYSTEM_PROMPT,
+        context,
+        previousMessages: previousMsgs,
+        tools,
+      }, config);
+
+      // Invoke the agent with the user's message
+      const result = await agent.invoke(message);
+
+      console.log(`[CHAT AGENT] Completed with response length: ${result.response.length}, accumulated messages: ${result.messages?.length || 0}`);
+
+      // Map to ChatOutput format
+      // Order: [agent's final response, ...accumulated tool messages]
+      const messages = [result.response, ...(result.messages || [])].filter(m => m && m.trim());
 
       return {
         messages,
-        profileUpdated: state.profileUpdated,
+        profileUpdated: !!profileUpdateResult,
       };
     }
-
-    // Safety: max iterations reached
-    console.warn(`[CHAT AGENT] Max iterations (${MAX_ITERATIONS}) reached`);
-
-    // Return accumulated messages or fallback
-    const messages = state.accumulatedToolMessages.length > 0
-      ? state.accumulatedToolMessages
-      : ["I'm here to help! What would you like to know about your workout?"];
-
-    return {
-      messages,
-      profileUpdated: state.profileUpdated,
-    };
-  });
+  };
 };

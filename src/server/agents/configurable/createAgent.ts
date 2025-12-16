@@ -66,6 +66,7 @@ export function createAgent<
     systemPrompt,
     userPrompt,
     context = [],
+    previousMessages = [],
     tools,
     schema,
     subAgents = [],
@@ -90,15 +91,17 @@ export function createAgent<
       // If userPrompt transformer is provided, use it; otherwise input IS the user message
       const evaluatedUserPrompt = userPrompt ? userPrompt(input) : input;
 
-      // Build messages with context
+      // Build messages with context and previous conversation history
       const messages = buildMessages({
         systemPrompt,
         userPrompt: evaluatedUserPrompt,
         context,
+        previousMessages,
       });
 
       // Execute main agent
       let mainResult: InferSchemaOutput<TSchema>;
+      let accumulatedMessages: string[] = [];
 
       if (isToolAgent) {
         const toolResult = await executeToolLoop({
@@ -109,15 +112,19 @@ export function createAgent<
           maxIterations,
         });
         mainResult = toolResult.response as InferSchemaOutput<TSchema>;
+        accumulatedMessages = toolResult.messages;
       } else {
         mainResult = await model.invoke(messages) as InferSchemaOutput<TSchema>;
       }
 
       console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms`);
 
-      // If no subAgents, return main result wrapped in response
+      // If no subAgents, return main result wrapped in response (with messages if any)
       if (!subAgents || subAgents.length === 0) {
-        return { response: mainResult } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
+        return {
+          response: mainResult,
+          ...(accumulatedMessages.length > 0 ? { messages: accumulatedMessages } : {}),
+        } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
       }
 
       // Execute subAgents with the main response as their input
@@ -135,9 +142,10 @@ export function createAgent<
 
       console.log(`[${name}] Total execution time: ${Date.now() - startTime}ms`);
 
-      // Combine main result with subAgent results
+      // Combine main result with subAgent results (and messages if any)
       return {
         response: mainResult,
+        ...(accumulatedMessages.length > 0 ? { messages: accumulatedMessages } : {}),
         ...subAgentResults,
       } as AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>;
 
