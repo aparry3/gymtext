@@ -1,7 +1,8 @@
-import { CHAT_SYSTEM_PROMPT, buildContextMessages } from '@/server/agents/conversation/prompts';
+import { CHAT_SYSTEM_PROMPT } from '@/server/agents/conversation/prompts';
 import { createAgent, type Message } from '@/server/agents/configurable';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { ChatInput, ChatOutput, ChatAgentDeps, ChatAgentConfig } from './types';
+import { buildDateContext, buildWorkoutContext } from '@/server/services/context';
 
 // Re-export types for backward compatibility
 export type { ChatAgentDeps, ChatAgentConfig };
@@ -31,9 +32,11 @@ export const createChatAgent = ({ tools, ...config }: ChatAgentConfig) => {
       const { user, message, currentWorkout, previousMessages } = input;
       console.log('[CHAT AGENT] Starting with configurable agent for message:', message.substring(0, 50) + (message.length > 50 ? '...' : ''));
 
-      // Build context strings from context messages
-      const contextMessages = buildContextMessages(user.timezone, currentWorkout);
-      const context: string[] = contextMessages.map(m => m.content);
+      // Build context using standardized builders
+      const context = [
+        buildDateContext(user.timezone, undefined),
+        buildWorkoutContext(currentWorkout),
+      ].filter(ctx => ctx.trim().length > 0);
 
       // Convert previous messages to Message format for the configurable agent
       const previousMsgs: Message[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])

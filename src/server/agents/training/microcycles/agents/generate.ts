@@ -11,6 +11,11 @@ import type {
   MicrocycleGenerateOutput,
   MicrocycleGenerateAgentDeps,
 } from '../types';
+import {
+  buildUserProfileContext,
+  buildFitnessPlanContext,
+  buildTrainingMetaContext,
+} from '@/server/services/context';
 
 const MAX_RETRIES = 3;
 
@@ -54,14 +59,17 @@ export const generateMicrocycle = async (
     },
   ];
 
+  // Build context using standardized builders
+  const context = [
+    buildFitnessPlanContext(input.planText),
+    buildUserProfileContext(input.userProfile),
+    buildTrainingMetaContext({ absoluteWeek }),
+  ].filter(ctx => ctx.trim().length > 0);
+
   const agent = createAgent({
     name: 'microcycle-generate',
     systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
-    context: [
-      `<FitnessPlan>${input.planText}</FitnessPlan>`,
-      `<ClientProfile>${input.userProfile || 'No additional user notes'}</ClientProfile>`,
-      `<Context>Current Week: ${absoluteWeek}</Context>`,
-    ],
+    context,
     schema: MicrocycleGenerationOutputSchema,
     subAgents,
   }, { model: 'gpt-5.1', ...deps?.config });

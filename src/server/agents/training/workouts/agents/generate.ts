@@ -3,6 +3,11 @@ import { createWorkoutMessageAgent } from './message';
 import { createStructuredWorkoutAgent } from './structured';
 import { DAILY_WORKOUT_SYSTEM_PROMPT } from '../prompts';
 import type { WorkoutGenerateInput, WorkoutGenerateOutput, WorkoutGenerateAgentDeps } from '../types';
+import {
+  buildUserProfileContext,
+  buildDayOverviewContext,
+  buildTrainingMetaContext,
+} from '@/server/services/context';
 
 /**
  * Generate a personalized workout
@@ -34,14 +39,17 @@ export const generateWorkout = async (
     },
   ];
 
+  // Build context using standardized builders
+  const context = [
+    buildUserProfileContext(input.user.profile),
+    buildDayOverviewContext(input.dayOverview),
+    buildTrainingMetaContext({ isDeload: input.isDeload }),
+  ].filter(ctx => ctx.trim().length > 0);
+
   const agent = createAgent({
     name: 'workout-generate',
     systemPrompt: DAILY_WORKOUT_SYSTEM_PROMPT,
-    context: [
-      `<UserProfile>${input.user.profile || ''}</UserProfile>`,
-      `<DayInstruction>${input.dayOverview}</DayInstruction>`,
-      `<Context>Is Deload Week: ${input.isDeload ?? false}</Context>`,
-    ],
+    context,
     subAgents,
   }, { model: 'gpt-5.1', ...deps?.config });
 
