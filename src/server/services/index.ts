@@ -50,6 +50,14 @@ export { messageService } from './messaging/messageService';
 
 export type { MessageService } from './messaging/messageService';
 
+export { subscriptionService } from './subscription/subscriptionService';
+
+export type {
+  SubscriptionService,
+  CancelResult,
+  ReactivateResult,
+} from './subscription/subscriptionService';
+
 // Chain runner service for testing/improving AI outputs
 export { ChainRunnerService } from './training/chainRunnerService';
 export type { ChainOperation, ChainRunResult, ProfileRegenerationResult } from './training/chainRunnerService';

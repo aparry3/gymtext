@@ -236,11 +236,12 @@ export class UserRepository extends BaseRepository {
   }
 
   async findUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
-    // This query finds all users whose local preferred hour matches the current UTC hour
+    // This query finds all users with active subscriptions whose local preferred hour matches
+    // Only users with status='active' receive messages (excludes 'cancel_pending' and 'canceled')
     const users = await this.db
       .selectFrom('users')
-      // .leftJoin('subscriptions', 'users.id', 'subscriptions.userId')
-      // .where('subscriptions.status', '=', 'active')
+      .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
+      .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();
 
@@ -270,9 +271,12 @@ export class UserRepository extends BaseRepository {
       return [];
     }
 
-    // Query users in the specified timezones
+    // Query users with active subscriptions in the specified timezones
+    // Only users with status='active' receive messages (excludes 'cancel_pending' and 'canceled')
     const users = await this.db
       .selectFrom('users')
+      .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
+      .where('subscriptions.status', '=', 'active')
       .where('timezone', 'in', timezones)
       .selectAll('users')
       .execute();
