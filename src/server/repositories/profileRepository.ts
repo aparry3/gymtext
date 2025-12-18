@@ -1,9 +1,18 @@
 import { BaseRepository } from './baseRepository';
 import type { Profiles } from '../models/_types';
 import type { Selectable, Insertable } from 'kysely';
+import type { StructuredProfile } from '@/server/agents/profile';
 
 export type Profile = Selectable<Profiles>;
 export type NewProfile = Insertable<Profiles>;
+
+/**
+ * Profile with typed structured data
+ * The database stores structured as JSONB, this interface casts it to the correct type
+ */
+export interface ProfileWithStructured extends Omit<Profile, 'structured'> {
+  structured: StructuredProfile | null;
+}
 
 /**
  * ProfileRepository - Data access layer for Markdown-based fitness profiles
@@ -180,5 +189,63 @@ export class ProfileRepository extends BaseRepository {
   async hasProfile(clientId: string): Promise<boolean> {
     const count = await this.countProfileUpdates(clientId);
     return count > 0;
+  }
+
+  // ============================================
+  // Structured Profile Methods
+  // ============================================
+
+  /**
+   * Create a new profile entry with structured data
+   * Convenience method that handles JSONB serialization
+   *
+   * @param clientId - UUID of the user
+   * @param profileMarkdown - Markdown-formatted profile text
+   * @param structured - Structured profile data (or null)
+   * @returns Created profile record
+   */
+  async createProfileWithStructured(
+    clientId: string,
+    profileMarkdown: string,
+    structured: StructuredProfile | null
+  ): Promise<Profile> {
+    const result = await this.db
+      .insertInto('profiles')
+      .values({
+        clientId,
+        profile: profileMarkdown,
+        structured: structured ? JSON.stringify(structured) : null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return result;
+  }
+
+  /**
+   * Get the current profile with typed structured data
+   *
+   * @param clientId - UUID of the user
+   * @returns Most recent profile with typed structured field, or undefined
+   */
+  async getCurrentProfileWithStructured(clientId: string): Promise<ProfileWithStructured | undefined> {
+    const profile = await this.getCurrentProfile(clientId);
+    if (!profile) return undefined;
+
+    return {
+      ...profile,
+      structured: profile.structured as StructuredProfile | null,
+    };
+  }
+
+  /**
+   * Get the current structured profile data only
+   *
+   * @param clientId - UUID of the user
+   * @returns Structured profile data or null if not available
+   */
+  async getCurrentStructuredProfile(clientId: string): Promise<StructuredProfile | null> {
+    const profile = await this.getCurrentProfileWithStructured(clientId);
+    return profile?.structured ?? null;
   }
 }

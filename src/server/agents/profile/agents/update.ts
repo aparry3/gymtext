@@ -1,11 +1,11 @@
-import { createRunnableAgent, initializeModel, type AgentConfig } from '../base';
-import type { ProfileUpdateInput, ProfileUpdateOutput } from './types';
-import { PROFILE_UPDATE_SYSTEM_PROMPT, buildProfileUpdateUserMessage } from './prompts';
-import { ProfileUpdateOutputSchema } from './schema';
+import { createAgent, type Message, type ModelConfig } from '../../configurable';
+import type { ProfileUpdateInput, ProfileUpdateOutput } from '../types';
+import { PROFILE_UPDATE_SYSTEM_PROMPT, buildProfileUpdateUserMessage } from '../prompts';
+import { ProfileUpdateOutputSchema } from '../schemas';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 
 /**
- * Create the Profile Update Agent
+ * Create the Profile Update Agent (Configurable Agent Pattern)
  *
  * This agent maintains the user's fitness profile as a "Living Dossier" in Markdown format.
  * It handles all profile updates, date conversions, and lazy pruning of expired constraints.
@@ -13,12 +13,9 @@ import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlo
  * @param config - Optional agent configuration (model, temperature, etc.)
  * @returns Agent that processes profile updates
  */
-export function createProfileUpdateAgent(config?: AgentConfig) {
-  // Initialize model with structured output (returns JSON matching ProfileUpdateOutputSchema)
-  const model = initializeModel(ProfileUpdateOutputSchema, config);
-
-  return createRunnableAgent<ProfileUpdateInput, ProfileUpdateOutput>(
-    async (input: ProfileUpdateInput): Promise<ProfileUpdateOutput> => {
+export const createProfileUpdateAgent = (config?: ModelConfig) => {
+  return {
+    invoke: async (input: ProfileUpdateInput): Promise<ProfileUpdateOutput> => {
       try {
         console.log('[PROFILE UPDATE AGENT] Processing update:', {
           hasCurrentProfile: !!input.currentProfile,
@@ -26,31 +23,42 @@ export function createProfileUpdateAgent(config?: AgentConfig) {
           currentDate: input.currentDate,
         });
 
+        // Convert previous messages to Message format for the configurable agent
+        const previousMsgs: Message[] = ConversationFlowBuilder.toMessageArray(input.previousMessages || [])
+          .map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }));
+
         // Build the user message with all context
-        const userMessage = buildProfileUpdateUserMessage(
+        const userPrompt = buildProfileUpdateUserMessage(
           input.currentProfile,
           input.message,
           input.user,
           input.currentDate
         );
 
-        // Invoke the model with system prompt, conversation history, and user message
-        const response = await model.invoke([
-          { role: 'system', content: PROFILE_UPDATE_SYSTEM_PROMPT },
-          ...ConversationFlowBuilder.toMessageArray(input.previousMessages || []),
-          { role: 'user', content: userMessage },
-        ]);
+        // Create agent with configurable agent factory
+        const agent = createAgent({
+          name: 'profile-update',
+          systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+          previousMessages: previousMsgs,
+          schema: ProfileUpdateOutputSchema,
+        }, config);
+
+        // Invoke the agent with the user prompt
+        const result = await agent.invoke(userPrompt);
 
         console.log('[PROFILE UPDATE AGENT] Update completed:', {
-          wasUpdated: response.wasUpdated,
-          summary: response.updateSummary,
-          profileLength: response.updatedProfile?.length || 0,
+          wasUpdated: result.response.wasUpdated,
+          summary: result.response.updateSummary,
+          profileLength: result.response.updatedProfile?.length || 0,
         });
 
         return {
-          updatedProfile: response.updatedProfile,
-          wasUpdated: response.wasUpdated,
-          updateSummary: response.updateSummary || '',
+          updatedProfile: result.response.updatedProfile,
+          wasUpdated: result.response.wasUpdated,
+          updateSummary: result.response.updateSummary || '',
         };
       } catch (error) {
         console.error('[PROFILE UPDATE AGENT] Error:', error);
@@ -63,8 +71,8 @@ export function createProfileUpdateAgent(config?: AgentConfig) {
         };
       }
     }
-  );
-}
+  };
+};
 
 /**
  * Convenience function to invoke the profile update agent
@@ -75,7 +83,7 @@ export function createProfileUpdateAgent(config?: AgentConfig) {
  */
 export async function updateProfile(
   input: ProfileUpdateInput,
-  config?: AgentConfig
+  config?: ModelConfig
 ): Promise<ProfileUpdateOutput> {
   const agent = createProfileUpdateAgent(config);
   return await agent.invoke(input);

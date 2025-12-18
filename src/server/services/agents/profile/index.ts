@@ -1,8 +1,7 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { createProfileUpdateAgent } from '@/server/agents/profile';
-import { createUserFieldsAgent } from '@/server/agents/profile/user';
+import { createProfileUpdateAgent, createStructuredProfileAgent, createUserFieldsAgent } from '@/server/agents/profile';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import type { ToolResult } from '../shared/types';
@@ -72,10 +71,26 @@ export class ProfileService {
         }),
       ]);
 
-      // Persist profile updates
+      // Persist profile updates with structured data extraction
       if (profileResult.wasUpdated) {
-        await fitnessProfileService.saveProfile(userId, profileResult.updatedProfile);
-        console.log('[PROFILE_SERVICE] Profile updated:', profileResult.updateSummary);
+        // Extract structured data from the updated dossier
+        const structuredResult = await createStructuredProfileAgent().invoke({
+          dossierText: profileResult.updatedProfile,
+          currentDate,
+        });
+
+        // Save both dossier and structured data together
+        await fitnessProfileService.saveProfileWithStructured(
+          userId,
+          profileResult.updatedProfile,
+          structuredResult.success ? structuredResult.structured : null
+        );
+
+        console.log('[PROFILE_SERVICE] Profile updated with structured data:', {
+          summary: profileResult.updateSummary,
+          structuredSuccess: structuredResult.success,
+          goalsCount: structuredResult.structured.goals.length,
+        });
       } else {
         console.log('[PROFILE_SERVICE] No profile updates detected');
       }

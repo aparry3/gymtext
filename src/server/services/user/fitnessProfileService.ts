@@ -14,7 +14,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createProfileUpdateAgent } from '@/server/agents/profile';
+import { createProfileUpdateAgent, type StructuredProfile } from '@/server/agents/profile';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
@@ -154,6 +154,42 @@ export class FitnessProfileService {
    */
   async getProfileHistory(userId: string, limit: number = 10) {
     return await this.profileRepository.getProfileHistory(userId, limit);
+  }
+
+  // ============================================
+  // Structured Profile Methods
+  // ============================================
+
+  /**
+   * Save updated profile with structured data
+   * Creates new row in profiles table for history tracking
+   *
+   * @param userId - UUID of the user
+   * @param profile - Complete profile text (Markdown)
+   * @param structured - Structured profile data (or null)
+   */
+  async saveProfileWithStructured(
+    userId: string,
+    profile: string,
+    structured: StructuredProfile | null
+  ): Promise<void> {
+    try {
+      await this.profileRepository.createProfileWithStructured(userId, profile, structured);
+      console.log(`[FitnessProfileService] Saved profile with structured data for user ${userId}`);
+    } catch (error) {
+      console.error(`[FitnessProfileService] Error saving profile for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current structured profile data
+   *
+   * @param userId - UUID of the user
+   * @returns Structured profile data or null if not available
+   */
+  async getCurrentStructuredProfile(userId: string): Promise<StructuredProfile | null> {
+    return await this.profileRepository.getCurrentStructuredProfile(userId);
   }
 }
 

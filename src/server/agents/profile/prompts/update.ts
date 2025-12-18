@@ -1,4 +1,4 @@
-import type { UserWithProfile } from '../../models/userModel';
+import type { UserWithProfile } from '@/server/models/userModel';
 
 export const PROFILE_UPDATE_SYSTEM_PROMPT = `
 You are the Profile Manager for GymText. Your goal is to maintain a "Living Dossier" of the user's fitness context.
