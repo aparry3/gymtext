@@ -103,14 +103,21 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         console.log(`[Stripe Webhook] Subscription updated:`, subscription.id);
 
+        // Determine local status based on Stripe status and cancel_at_period_end
+        // If Stripe status is 'active' but cancel_at_period_end is true, use 'cancel_pending'
+        let localStatus: string = subscription.status;
+        if (subscription.status === 'active' && subscription.cancel_at_period_end) {
+          localStatus = 'cancel_pending';
+        }
+
         // Update subscription record
         await subscriptionRepo.updateByStripeId(subscription.id, {
-          status: subscription.status,
+          status: localStatus,
           currentPeriodStart: new Date(subscription.current_period_start * 1000),
           currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         });
 
-        console.log(`[Stripe Webhook] Subscription ${subscription.id} updated to status: ${subscription.status}`);
+        console.log(`[Stripe Webhook] Subscription ${subscription.id} updated to status: ${localStatus} (Stripe: ${subscription.status}, cancel_at_period_end: ${subscription.cancel_at_period_end})`);
         break;
       }
 

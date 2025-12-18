@@ -114,4 +114,44 @@ export class SubscriptionRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
   }
+
+  /**
+   * Schedule subscription for cancellation at period end
+   * Sets status to 'cancel_pending' - messages will stop immediately
+   */
+  async scheduleCancellation(stripeSubscriptionId: string): Promise<Subscription> {
+    return await this.db
+      .updateTable('subscriptions')
+      .set({ status: 'cancel_pending' })
+      .where('stripeSubscriptionId', '=', stripeSubscriptionId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Reactivate subscription (clear pending cancellation)
+   * Sets status back to 'active'
+   */
+  async reactivate(stripeSubscriptionId: string): Promise<Subscription> {
+    return await this.db
+      .updateTable('subscriptions')
+      .set({ status: 'active' })
+      .where('stripeSubscriptionId', '=', stripeSubscriptionId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Find active subscription eligible for messaging
+   * Only returns subscriptions with status 'active' (excludes 'cancel_pending')
+   */
+  async findActiveForMessaging(clientId: string): Promise<Subscription | null> {
+    return await this.db
+      .selectFrom('subscriptions')
+      .selectAll()
+      .where('clientId', '=', clientId)
+      .where('status', '=', 'active')
+      .orderBy('createdAt', 'desc')
+      .executeTakeFirst() ?? null;
+  }
 }
