@@ -1,11 +1,11 @@
 import { UserService } from '../../user/userService';
 import { MicrocycleService } from '../../training/microcycleService';
 import { WorkoutInstanceService } from '../../training/workoutInstanceService';
-import { createModifyWorkoutAgent, type ModifyWorkoutOutput } from '@/server/agents/training/workouts';
-import { createWorkoutGenerateAgent, type WorkoutGenerateInput, type WorkoutGenerateOutput } from '@/server/agents/training/workouts';
+import { workoutAgentService, microcycleAgentService } from '../training';
+import type { ModifyWorkoutOutput } from '@/server/agents/training/workouts';
+import type { WorkoutGenerateOutput } from '@/server/agents/training/workouts';
 import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import { createModifyMicrocycleAgent } from '@/server/agents/training/microcycles';
 import { ProgressService } from '../../training/progressService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
 
@@ -111,13 +111,12 @@ export class WorkoutModificationService {
       }
 
 
-      // Use the workout modification agent to modify the workout
-      const result = await createModifyWorkoutAgent().invoke({
-        workout: existingWorkout,
+      // Use the workout agent service to modify the workout
+      const result = await workoutAgentService.modifyWorkout(
         user,
-        date: existingWorkout.date as Date,
-        changeRequest,
-      });
+        existingWorkout,
+        changeRequest
+      );
 
       // Extract theme from structured data or use default
       const theme = result.structure?.title || 'Workout';
@@ -207,15 +206,14 @@ export class WorkoutModificationService {
       const todayDayIndex = DAY_NAMES.indexOf(todayDayOfWeek);
       const originalTodayOverview = microcycle.days[todayDayIndex] || null;
 
-      // Use the microcycle modification agent to modify the pattern
-      const modifyMicrocycleAgent = createModifyMicrocycleAgent();
-      const modifyMicrocycleResult = await modifyMicrocycleAgent.invoke({
-        currentMicrocycle: microcycle,
+      // Use the microcycle agent service to modify the pattern
+      const modifyMicrocycleResult = await microcycleAgentService.modifyMicrocycle(
         user,
+        microcycle,
         changeRequest,
-        currentDayOfWeek: todayDayOfWeek as DayOfWeek,
-        weekNumber: absoluteWeek,
-      });
+        todayDayOfWeek as DayOfWeek,
+        absoluteWeek
+      );
 
       console.log(`[MODIFY_WEEK] Microcycle modification result:`, modifyMicrocycleResult);
       // Check if the microcycle was actually modified
@@ -252,16 +250,12 @@ export class WorkoutModificationService {
 
         if (originalTodayOverview !== newTodayOverview) {
 
-          // Generate new workout for today
-          const workoutGenerateAgent = createWorkoutGenerateAgent();
-          const workoutInput: WorkoutGenerateInput = {
+          // Generate new workout for today using workout agent service
+          const workoutResult = await workoutAgentService.generateWorkout(
             user,
-            date: today,
-            dayOverview: newTodayOverview || '',
-            isDeload: modifyMicrocycleResult.isDeload || false,
-          };
-
-          const workoutResult = await workoutGenerateAgent.invoke(workoutInput);
+            newTodayOverview || '',
+            modifyMicrocycleResult.isDeload || false
+          );
 
           // Extract theme from structured data or use default
           const theme = workoutResult.structure?.title || 'Workout';

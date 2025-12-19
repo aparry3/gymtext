@@ -5,23 +5,27 @@ import { UserService } from '@/server/services/user/userService';
 import { FitnessProfileService } from '@/server/services/user/fitnessProfileService';
 import { OnboardingRepository } from '@/server/repositories/onboardingRepository';
 
-// Fitness Plan agents
+// Agent services for full chain operations
 import {
-  createFitnessPlanGenerateAgent,
+  workoutAgentService,
+  microcycleAgentService,
+  fitnessPlanAgentService,
+} from '@/server/services/agents/training';
+
+// Fitness Plan sub-agents (for individual chain operations)
+import {
   createStructuredPlanAgent,
   createFitnessPlanMessageAgent,
 } from '@/server/agents/training/plans';
 
-// Microcycle agents
+// Microcycle sub-agents (for individual chain operations)
 import {
-  createMicrocycleGenerateAgent,
   createStructuredMicrocycleAgent,
   createMicrocycleMessageAgent,
 } from '@/server/agents/training/microcycles';
 
-// Workout agents
+// Workout sub-agents (for individual chain operations)
 import {
-  createWorkoutGenerateAgent,
   createStructuredWorkoutAgent,
   createWorkoutMessageAgent,
 } from '@/server/agents/training/workouts';
@@ -176,8 +180,8 @@ export class ChainRunnerService {
   ): Promise<FitnessPlan> {
     console.log(`[ChainRunner] Running full fitness plan chain for plan ${plan.id}`);
 
-    const agent = createFitnessPlanGenerateAgent();
-    const result = await agent(user);
+    // Use fitness plan agent service for full chain
+    const result = await fitnessPlanAgentService.generateFitnessPlan(user);
 
     const updated = await this.fitnessPlanService.updateFitnessPlan(plan.id!, {
       description: result.description,
@@ -308,13 +312,13 @@ export class ChainRunnerService {
   ): Promise<Microcycle> {
     console.log(`[ChainRunner] Running full microcycle chain for microcycle ${microcycle.id}`);
 
-    const agent = createMicrocycleGenerateAgent();
-    const result = await agent.invoke({
-      planText: plan.description,
-      userProfile: user.profile || '',
-      absoluteWeek: microcycle.absoluteWeek,
-      isDeload: microcycle.isDeload,
-    });
+    // Use microcycle agent service for full chain
+    const result = await microcycleAgentService.generateMicrocycle(
+      user,
+      plan.description,
+      microcycle.absoluteWeek,
+      microcycle.isDeload
+    );
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {
       days: result.days,
@@ -462,13 +466,12 @@ export class ChainRunnerService {
       }
     }
 
-    const agent = createWorkoutGenerateAgent();
-    const result = await agent.invoke({
+    // Use workout agent service for full chain
+    const result = await workoutAgentService.generateWorkout(
       user,
-      date: new Date(workout.date),
       dayOverview,
-      isDeload: microcycle?.isDeload || false,
-    });
+      microcycle?.isDeload || false
+    );
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
       description: result.response,

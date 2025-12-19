@@ -3,11 +3,9 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
-import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles';
+import { microcycleAgentService } from '@/server/services/agents/training';
 import type { MicrocycleStructure } from '@/server/agents/training/schemas';
-
-// Backwards-compatible alias
-const createMicrocycleAgent = createMicrocycleGenerateAgent;
+import type { UserWithProfile } from '@/server/models/userModel';
 import type { ProgressInfo } from './progressService';
 import { UserService } from '../user/userService';
 
@@ -136,10 +134,10 @@ export class MicrocycleService {
       throw new Error(`Client not found: ${clientId}`);
     }
 
-    // Generate microcycle using AI agent with plan text + user profile + week number
+    // Generate microcycle using AI agent service
     const { days, description, isDeload, message, structure } = await this.generateMicrocyclePattern(
+      user,
       plan.description,
-      user.profile || '',
       progress.absoluteWeek,
       progress.isDeload  // Pass the calculated isDeload from progress
     );
@@ -163,12 +161,12 @@ export class MicrocycleService {
   }
 
   /**
-   * Generate a microcycle using AI agent
+   * Generate a microcycle using AI agent service
    * Uses fitness plan text and user profile to generate day descriptions
    */
   private async generateMicrocyclePattern(
+    user: UserWithProfile,
     planText: string,
-    userProfile: string,
     absoluteWeek: number,
     isDeloadFromProgress: boolean
   ): Promise<{
@@ -179,14 +177,13 @@ export class MicrocycleService {
     structure?: MicrocycleStructure;
   }> {
     try {
-      // Use AI agent to generate the microcycle
-      const agent = createMicrocycleAgent();
-      const result = await agent.invoke({
+      // Use AI agent service to generate the microcycle
+      const result = await microcycleAgentService.generateMicrocycle(
+        user,
         planText,
-        userProfile,
         absoluteWeek,
-        isDeload: isDeloadFromProgress,
-      });
+        isDeloadFromProgress
+      );
 
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;

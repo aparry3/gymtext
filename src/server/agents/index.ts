@@ -22,8 +22,8 @@ export type {
 export { createAgentFromFunction, createRunnableAgent } from './base';
 export type { Agent, AgentDeps, AgentConfig } from './base';
 
-// Fitness Plan Agents
-export { createFitnessPlanAgent } from './training/plans';
+// NOTE: Fitness Plan agents have been moved to @/server/services/agents/training/
+// Use fitnessPlanAgentService.generateFitnessPlan() instead of createFitnessPlanAgent()
 
 // Conversation Agents
 export { type ChatAgentConfig } from './conversation/chain';

@@ -1,6 +1,6 @@
 import { UserService } from '../../user/userService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
-import { createModifyFitnessPlanAgent } from '@/server/agents/training/plans';
+import { fitnessPlanAgentService } from '../training';
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, getDayOfWeek } from '@/shared/utils/date';
@@ -92,17 +92,11 @@ export class PlanModificationService {
 
       // 4. Run plan and week modifications in PARALLEL
       // modifyWeek handles microcycle modification AND workout generation
-      const modifyPlanAgent = createModifyFitnessPlanAgent();
-
       console.log('[MODIFY_PLAN] Running plan and week modifications in parallel');
 
       const [planResult, weekResult] = await Promise.all([
-        // Modify plan
-        modifyPlanAgent.invoke({
-          user,
-          currentPlan,
-          changeRequest,
-        }),
+        // Modify plan using agent service
+        fitnessPlanAgentService.modifyFitnessPlan(user, currentPlan, changeRequest),
         // Modify week (handles microcycle + workout)
         this.workoutModificationService.modifyWeek({
           userId,
