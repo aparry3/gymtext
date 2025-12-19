@@ -1,46 +1,80 @@
-// ==========================================
-// Configurable Agent System (RECOMMENDED)
-// ==========================================
-// Use createAgent for declarative, composable agent definitions
-export { createAgent } from './configurable';
+/**
+ * Configurable Agent System
+ *
+ * A declarative, composable way to define AI agents.
+ * This is the primary way to create agents in the codebase.
+ *
+ * @example
+ * ```typescript
+ * import { createAgent } from '@/server/agents';
+ *
+ * const myAgent = createAgent({
+ *   name: 'my-agent',
+ *   systemPrompt: 'You are a helpful assistant.',
+ *   userPrompt: (input) => `Help with: ${input}`,
+ *   schema: OutputSchema,
+ * }, {
+ *   model: 'gpt-5-nano',
+ *   maxTokens: 4000,
+ * });
+ *
+ * const result = await myAgent.invoke('something');
+ * // result.response contains the schema-typed output
+ * ```
+ */
+
+// ============================================
+// Main Agent Factory
+// ============================================
+export { createAgent } from './createAgent';
+
+// ============================================
+// Model Initialization
+// ============================================
+export { initializeModel, initializeImageModel } from './models';
+export type { ModelOptions, ImageModelConfig, ImageGenerationResult, InvokableModel } from './models';
+
+// ============================================
+// Types
+// ============================================
 export type {
+  // Base agent types
+  AgentConfig,
+  AgentDeps,
+  Agent,
+  ToolType,
+  ToolResult,
+
+  // Configurable agent types
   AgentDefinition,
   ModelConfig,
   ConfigurableAgent,
   SubAgentBatch,
+  SubAgentEntry,
+  SubAgentConfig,
   ModelId,
+
+  // Output types
   InferSchemaOutput,
   AgentComposedOutput,
-} from './configurable';
 
-// ==========================================
-// Agent Factory Exports
-// ==========================================
-// Use these factory functions to create agents with dependency injection
+  // Message types
+  Message,
+  ToolCall,
+  ToolExecutionResult,
+} from './types';
 
-// Base types and helpers
-export { createAgentFromFunction, createRunnableAgent } from './base';
-export type { Agent, AgentDeps, AgentConfig } from './base';
+// ============================================
+// Utilities
+// ============================================
+export { buildMessages, buildLoopContinuationMessage } from './utils';
+export type { BuildMessagesConfig } from './utils';
 
-// NOTE: Fitness Plan agents have been moved to @/server/services/agents/training/
-// Use fitnessPlanAgentService.generateFitnessPlan() instead of createFitnessPlanAgent()
+// ============================================
+// Executors (for advanced use cases)
+// ============================================
+export { executeSubAgents } from './subAgentExecutor';
+export type { SubAgentExecutorConfig } from './subAgentExecutor';
 
-// NOTE: Messaging agents have been moved to @/server/services/agents/messaging/
-// Use messagingAgentService methods instead of create*Agent() functions
-
-// NOTE: Conversation agent has been moved to @/server/services/agents/chat/
-// ChatService now handles chat agent creation inline
-
-// NOTE: Modification agents have been moved to @/server/services/agents/modifications/
-// Use ModificationService.makeModification() instead of createModificationsAgent()
-
-// NOTE: Profile agents have been moved to @/server/services/agents/profile/
-// Use ProfileService.updateProfile() or inline createAgent with prompts/schemas from there
-
-// ==========================================
-// Agent Exports
-// ==========================================
-
-export * from './training/plans';
-export * from './training/microcycles';
-export * from './training/workouts';
+export { executeToolLoop } from './toolExecutor';
+export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';

@@ -1,4 +1,4 @@
-import { createAgent } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents';
 import { WorkoutStructureSchema } from '@/server/agents/training/schemas';
 import {
   DAILY_WORKOUT_SYSTEM_PROMPT,

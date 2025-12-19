@@ -1,7 +1,7 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { createAgent, type Message as AgentMessage } from '@/server/agents/configurable';
+import { createAgent, type Message as AgentMessage } from '@/server/agents';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';

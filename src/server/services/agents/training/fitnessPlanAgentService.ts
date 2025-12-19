@@ -1,4 +1,4 @@
-import { createAgent } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/agents/training/schemas';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,

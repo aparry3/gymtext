@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { initializeModel } from '@/server/agents/base';
+import { initializeModel } from '@/server/agents';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
@@ -11,10 +11,12 @@ import type { MicrocycleGenerationOutput } from '@/server/agents/training/microc
 const WeeklyMessageSchema = z.object({
   feedbackMessage: z.string().describe("Message asking for feedback on the past week")
 });
+type WeeklyMessage = z.infer<typeof WeeklyMessageSchema>;
 
 const PlanSummarySchema = z.object({
   messages: z.array(z.string()).describe("Array of SMS messages (each under 160 chars)")
 });
+type PlanSummary = z.infer<typeof PlanSummarySchema>;
 
 // Prompts
 const WEEKLY_MESSAGE_SYSTEM_PROMPT = `You are a fitness coach sending a weekly check-in message via SMS.
@@ -256,7 +258,7 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
     isDeload: boolean,
     absoluteWeek: number
   ): Promise<string> {
-    const model = initializeModel(WeeklyMessageSchema);
+    const model = initializeModel<WeeklyMessage>(WeeklyMessageSchema);
     const firstName = user.name.split(' ')[0];
 
     const userPrompt = `Generate a weekly feedback check-in message for the user.
@@ -290,7 +292,7 @@ Generate the feedback message now.`;
     plan: FitnessPlan,
     previousMessages?: Message[]
   ): Promise<string[]> {
-    const model = initializeModel(PlanSummarySchema);
+    const model = initializeModel<PlanSummary>(PlanSummarySchema);
 
     const hasContext = previousMessages && previousMessages.length > 0;
     const contextSection = hasContext

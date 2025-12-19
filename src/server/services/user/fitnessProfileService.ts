@@ -14,7 +14,7 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createAgent } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents';
 import {
   PROFILE_UPDATE_SYSTEM_PROMPT,
   buildProfileUpdateUserMessage,

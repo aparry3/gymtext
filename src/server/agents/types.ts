@@ -1,6 +1,61 @@
 import type { z, ZodSchema } from 'zod';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 
+// ============================================
+// Base Agent Types (from base.ts)
+// ============================================
+
+/**
+ * Configuration for agents
+ */
+export interface AgentConfig {
+  model?: 'gpt-5-nano' | 'gpt-5-mini' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
+  temperature?: number;
+  maxTokens?: number;
+  verbose?: boolean;
+}
+
+/**
+ * Standard agent interface - all agents should implement this
+ * @template TInput - The input type for the agent
+ * @template TOutput - The output type from the agent
+ */
+export interface Agent<TInput, TOutput> {
+  invoke(input: TInput): Promise<TOutput>;
+}
+
+/**
+ * Standard agent dependencies interface
+ * All agent deps interfaces should extend this
+ */
+export interface AgentDeps {
+  config?: AgentConfig;
+}
+
+/**
+ * Tool types for contextual response generation
+ * - 'query': User asked for information (e.g., "What's my workout?")
+ * - 'action': User requested a change (e.g., "Record my injury")
+ */
+export type ToolType = 'query' | 'action';
+
+/**
+ * Standard tool result type
+ * All tools called by agents should return this
+ */
+export interface ToolResult {
+  /** Type of tool for contextual response generation */
+  toolType: ToolType;
+  /** Summary for the calling agent */
+  response: string;
+  /** SMS messages to send to user (optional) */
+  messages?: string[];
+}
+
+// ============================================
+// Configurable Agent Types
+// ============================================
+
 /**
  * Supported model identifiers
  */

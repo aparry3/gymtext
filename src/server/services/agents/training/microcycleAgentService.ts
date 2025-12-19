@@ -1,4 +1,4 @@
-import { createAgent } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/agents/training/schemas';
 import {
   MICROCYCLE_SYSTEM_PROMPT,

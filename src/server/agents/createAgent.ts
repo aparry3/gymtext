@@ -1,5 +1,5 @@
 import type { ZodSchema } from 'zod';
-import { initializeModel } from '../base';
+import { initializeModel, type InvokableModel } from './models';
 import type {
   AgentDefinition,
   ModelConfig,
@@ -79,7 +79,8 @@ export function createAgent<
 
   // Initialize the model appropriately
   // Tools and schema are mutually exclusive - tools take precedence
-  const model = isToolAgent
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const model: InvokableModel<any> = isToolAgent
     ? initializeModel(undefined, config, { tools })
     : initializeModel(schema, config);
 

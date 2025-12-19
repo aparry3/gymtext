@@ -12,7 +12,7 @@ import { OnboardingRepository, SignupData } from '@/server/repositories/onboardi
 import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 // Profile agent imports for inline agent creation
-import { createAgent } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents';
 import {
   PROFILE_UPDATE_SYSTEM_PROMPT,
   buildProfileUpdateUserMessage,

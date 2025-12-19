@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { z } from 'zod';
-import { createAgent } from '@/server/agents/configurable/createAgent';
-import * as base from '@/server/agents/base';
+import { createAgent } from '@/server/agents/createAgent';
+import * as base from '@/server/agents';
 
 // Mock the base module
-vi.mock('@/server/agents/base', () => ({
+vi.mock('@/server/agents', () => ({
   initializeModel: vi.fn(),
 }));
 

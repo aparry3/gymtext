@@ -1,7 +1,7 @@
 import { workoutModificationService } from './workoutModificationService';
 import { planModificationService } from './planModificationService';
 import { createModificationTools } from './tools';
-import { createAgent, type Message as AgentMessage } from '@/server/agents/configurable';
+import { createAgent, type Message as AgentMessage } from '@/server/agents';
 import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
