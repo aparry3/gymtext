@@ -284,4 +284,36 @@ export class WorkoutInstanceRepository extends BaseRepository {
 
     return Number(result.numDeletedRows) > 0;
   }
+
+  /**
+   * Find which users already have workouts for their respective "today"
+   * Used for catch-up logic to avoid sending duplicate daily messages
+   * @param userDatePairs Array of user IDs with their timezone-specific date ranges
+   * @returns Set of user IDs that already have workouts
+   */
+  async findUserIdsWithWorkoutsForUserDates(
+    userDatePairs: Array<{ userId: string; startOfDay: Date; endOfDay: Date }>
+  ): Promise<Set<string>> {
+    if (userDatePairs.length === 0) {
+      return new Set();
+    }
+
+    // Build OR conditions for each user/date pair
+    const results = await this.db
+      .selectFrom('workoutInstances')
+      .select('clientId')
+      .where((eb) => {
+        const conditions = userDatePairs.map(({ userId, startOfDay, endOfDay }) =>
+          eb.and([
+            eb('clientId', '=', userId),
+            eb('date', '>=', startOfDay),
+            eb('date', '<', endOfDay)
+          ])
+        );
+        return eb.or(conditions);
+      })
+      .execute();
+
+    return new Set(results.map(r => r.clientId));
+  }
 }

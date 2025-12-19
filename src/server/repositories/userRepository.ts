@@ -236,8 +236,9 @@ export class UserRepository extends BaseRepository {
   }
 
   async findUsersForHour(currentUtcHour: number): Promise<UserWithProfile[]> {
-    // This query finds all users with active subscriptions whose local preferred hour matches
+    // This query finds all users with active subscriptions whose local hour is at or past their preferred send hour
     // Only users with status='active' receive messages (excludes 'cancel_pending' and 'canceled')
+    // Note: This returns candidates - the caller should also filter by workout existence to avoid duplicates
     const users = await this.db
       .selectFrom('users')
       .innerJoin('subscriptions', 'users.id', 'subscriptions.clientId')
@@ -245,7 +246,7 @@ export class UserRepository extends BaseRepository {
       .selectAll('users')
       .execute();
 
-    // Filter users whose local hour matches their preference
+    // Filter users whose local hour is at or past their preferred send hour
     const matchingUsers: UserWithProfile[] = [];
     const currentUtcDate = new Date();
     currentUtcDate.setUTCHours(currentUtcHour, 0, 0, 0);
@@ -253,7 +254,7 @@ export class UserRepository extends BaseRepository {
     for (const user of users) {
       try {
         const localHour = getLocalHourForTimezone(currentUtcDate, user.timezone);
-        if (localHour === user.preferredSendHour) {
+        if (localHour >= user.preferredSendHour) {
           matchingUsers.push(UserModel.fromDb(user)!);
         }
       } catch (error) {

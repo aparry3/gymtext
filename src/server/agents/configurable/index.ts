@@ -30,6 +30,8 @@ export type {
   ModelConfig,
   ConfigurableAgent,
   SubAgentBatch,
+  SubAgentEntry,
+  SubAgentConfig,
   ModelId,
 
   // Output types

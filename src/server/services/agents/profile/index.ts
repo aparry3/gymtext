@@ -1,8 +1,7 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { createProfileUpdateAgent } from '@/server/agents/profile';
-import { createUserFieldsAgent } from '@/server/agents/profile/user';
+import { createProfileUpdateAgent, createUserFieldsAgent } from '@/server/agents/profile';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import type { ToolResult } from '../shared/types';
@@ -72,10 +71,18 @@ export class ProfileService {
         }),
       ]);
 
-      // Persist profile updates
+      // Persist profile updates (structured data now included from update agent)
       if (profileResult.wasUpdated) {
-        await fitnessProfileService.saveProfile(userId, profileResult.updatedProfile);
-        console.log('[PROFILE_SERVICE] Profile updated:', profileResult.updateSummary);
+        await fitnessProfileService.saveProfileWithStructured(
+          userId,
+          profileResult.updatedProfile,
+          profileResult.structured
+        );
+
+        console.log('[PROFILE_SERVICE] Profile updated:', {
+          summary: profileResult.updateSummary,
+          hasStructured: profileResult.structured !== null,
+        });
       } else {
         console.log('[PROFILE_SERVICE] No profile updates detected');
       }

@@ -5,6 +5,7 @@ import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { inngest } from '@/server/connections/inngest/client';
 import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 
@@ -26,12 +27,14 @@ export class DailyMessageService {
   private static instance: DailyMessageService;
   private userService: UserService;
   private workoutInstanceService: WorkoutInstanceService;
+  private workoutInstanceRepository: WorkoutInstanceRepository;
   private messageService: MessageService;
   private batchSize: number;
 
   private constructor(batchSize: number = 10) {
     this.userService = UserService.getInstance();
     this.workoutInstanceService = WorkoutInstanceService.getInstance();
+    this.workoutInstanceRepository = new WorkoutInstanceRepository();
     this.messageService = MessageService.getInstance();
     this.batchSize = batchSize;
   }
@@ -46,6 +49,10 @@ export class DailyMessageService {
   /**
    * Schedules daily messages for all users in a given UTC hour
    * Returns metrics about the scheduling operation
+   *
+   * This method uses catch-up logic: it schedules messages for users whose
+   * preferred send hour has already passed today AND who haven't received
+   * their workout message yet (no workout instance exists for today).
    */
   public async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
     const startTime = Date.now();
@@ -54,11 +61,38 @@ export class DailyMessageService {
     let failed = 0;
 
     try {
-      // Get all users who should receive messages this hour
-      const users = await this.userService.getUsersForHour(utcHour);
-      console.log(`[DailyMessageService] Found ${users.length} users to schedule for hour ${utcHour}`);
+      // Get candidate users (those whose local hour >= preferredSendHour)
+      const candidateUsers = await this.userService.getUsersForHour(utcHour);
+      console.log(`[DailyMessageService] Found ${candidateUsers.length} candidate users for hour ${utcHour}`);
 
-      if (users.length === 0) {
+      if (candidateUsers.length === 0) {
+        return {
+          scheduled: 0,
+          failed: 0,
+          duration: Date.now() - startTime,
+          errors: []
+        };
+      }
+
+      // Build user-specific date ranges (each user's "today" based on their timezone)
+      const userDatePairs = candidateUsers.map(user => {
+        const todayStart = now(user.timezone).startOf('day').toJSDate();
+        const todayEnd = now(user.timezone).startOf('day').plus({ days: 1 }).toJSDate();
+        return { userId: user.id, startOfDay: todayStart, endOfDay: todayEnd };
+      });
+
+      // Batch-check which users already have workouts for their "today"
+      const userIdsWithWorkouts = await this.workoutInstanceRepository
+        .findUserIdsWithWorkoutsForUserDates(userDatePairs);
+
+      // Filter to only users WITHOUT workouts (they haven't been sent yet)
+      const usersToSchedule = candidateUsers.filter(
+        u => !userIdsWithWorkouts.has(u.id)
+      );
+
+      console.log(`[DailyMessageService] ${userIdsWithWorkouts.size} users already have workouts, scheduling ${usersToSchedule.length} users`);
+
+      if (usersToSchedule.length === 0) {
         return {
           scheduled: 0,
           failed: 0,
@@ -68,7 +102,7 @@ export class DailyMessageService {
       }
 
       // Map users to Inngest events
-      const events = users.map(user => {
+      const events = usersToSchedule.map(user => {
         // Get target date in user's timezone (today at start of day)
         const targetDate = now(user.timezone)
           .startOf('day')
