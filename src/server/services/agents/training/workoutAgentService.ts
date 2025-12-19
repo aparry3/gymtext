@@ -61,6 +61,20 @@ export class WorkoutAgentService {
   }
 
   /**
+   * Get the message sub-agent for standalone usage
+   */
+  public getMessageAgent() {
+    return this.messageAgent;
+  }
+
+  /**
+   * Get the structured sub-agent for standalone usage
+   */
+  public getStructuredAgent() {
+    return this.structuredAgent;
+  }
+
+  /**
    * Generate a workout for a specific day
    *
    * @param user - User with profile

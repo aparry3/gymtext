@@ -84,6 +84,20 @@ export class MicrocycleAgentService {
   }
 
   /**
+   * Get the message sub-agent for standalone usage
+   */
+  public getMessageAgent() {
+    return this.messageAgent;
+  }
+
+  /**
+   * Get the structured sub-agent for standalone usage
+   */
+  public getStructuredAgent() {
+    return this.structuredAgent;
+  }
+
+  /**
    * Generate a weekly microcycle training pattern
    *
    * Includes retry logic (MAX_RETRIES = 3) with validation to ensure all 7 days are generated.

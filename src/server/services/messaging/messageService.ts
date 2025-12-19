@@ -3,7 +3,7 @@ import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
 import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
-import { createWorkoutMessageAgent } from '../../agents/training/workouts';
+import { workoutAgentService } from '../agents/training';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -514,10 +514,8 @@ export class MessageService {
       console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
       try {
-        // Create message agent with config
-        const messageAgent = createWorkoutMessageAgent({
-          operationName: 'fallback message'
-        });
+        // Get message agent from workout agent service
+        const messageAgent = workoutAgentService.getMessageAgent();
 
         // Invoke with workout description string
         const result = await messageAgent.invoke(workout.description);

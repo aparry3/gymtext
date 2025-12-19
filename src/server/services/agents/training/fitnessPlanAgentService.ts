@@ -70,6 +70,20 @@ export class FitnessPlanAgentService {
   }
 
   /**
+   * Get the message sub-agent for standalone usage
+   */
+  public getMessageAgent() {
+    return this.messageAgent;
+  }
+
+  /**
+   * Get the structured sub-agent for standalone usage
+   */
+  public getStructuredAgent() {
+    return this.structuredAgent;
+  }
+
+  /**
    * Generate a fitness plan for a user
    *
    * @param user - User with profile containing goals, preferences, etc.
