@@ -1,8 +1,8 @@
 import { createAgent, type ConfigurableAgent, type ModelConfig } from '@/server/agents/configurable';
-import type { UserWithProfile } from '@/server/models/userModel';
 import {
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
+  type PlanMessageData,
 } from '../prompts';
 
 /**
@@ -29,12 +29,10 @@ export const createFitnessPlanMessageAgent = (
     name: `message-plan-${config?.operationName || 'default'}`,
     systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
     userPrompt: (input: string) => {
-      // Parse the JSON input from main agent
+      // Parse the JSON input from main agent (expects PlanMessageData format)
       try {
-        const parsed = JSON.parse(input);
-        const user = parsed.user as UserWithProfile;
-        const overview = parsed.description || parsed.fitnessPlan || '';
-        return planSummaryMessageUserPrompt(user, overview);
+        const data = JSON.parse(input) as PlanMessageData;
+        return planSummaryMessageUserPrompt(data);
       } catch {
         // Fallback for plain text input
         return `Generate a short, friendly SMS about this fitness plan:\n\n${input}`;

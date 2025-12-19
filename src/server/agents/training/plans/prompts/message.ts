@@ -1,4 +1,8 @@
-import { UserWithProfile } from '@/server/models/userModel';
+export interface PlanMessageData {
+  userName: string;
+  userProfile: string;
+  overview: string;
+}
 
 export const PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT = `
 You are a certified personal trainer sending a short, natural text message right after finishing a client's fitness plan.
@@ -61,20 +65,20 @@ Starts simple and ends with a recovery week
 
 
 
-export const planSummaryMessageUserPrompt = (user: UserWithProfile, overview: string) => {
+export const planSummaryMessageUserPrompt = (data: PlanMessageData) => {
   return `
 Generate a short, friendly onboarding SMS for the client below based on their new fitness plan.
 
 <User>
-Name: ${user.name}
+Name: ${data.userName}
 </User>
 
 <User Profile>
-${user.profile || 'No profile information available'}
+${data.userProfile || 'No profile information available'}
 </User Profile>
 
 <Fitness Plan>
-${overview}
+${data.overview}
 </Fitness Plan>
 
 Guidelines:

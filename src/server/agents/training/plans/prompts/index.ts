@@ -15,6 +15,7 @@ export {
 export {
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
+  type PlanMessageData,
 } from './message';
 
 // Structured prompts

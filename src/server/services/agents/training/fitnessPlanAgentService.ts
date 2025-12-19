@@ -1,10 +1,11 @@
-import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents/configurable';
 import { PlanStructureSchema, type PlanStructure } from '@/server/agents/training/schemas';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
+  type PlanMessageData,
   STRUCTURED_PLAN_SYSTEM_PROMPT,
   structuredPlanUserPrompt,
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
@@ -34,6 +35,31 @@ import type { ModifyFitnessPlanOutput } from '@/server/agents/training/plans/typ
 export class FitnessPlanAgentService {
   private static instance: FitnessPlanAgentService;
 
+  // Sub-agents as class properties (reused between generate/modify)
+  private messageAgent = createAgent({
+    name: 'message-plan',
+    systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      const data = JSON.parse(input) as PlanMessageData;
+      return planSummaryMessageUserPrompt(data);
+    },
+  }, { model: 'gpt-5-nano' });
+
+  private structuredAgent = createAgent({
+    name: 'structure-plan',
+    systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      try {
+        const parsed = JSON.parse(input);
+        const planText = parsed.description || parsed.fitnessPlan || input;
+        return structuredPlanUserPrompt(planText);
+      } catch {
+        return structuredPlanUserPrompt(input);
+      }
+    },
+    schema: PlanStructureSchema,
+  }, { model: 'gpt-5-nano', maxTokens: 32000 });
+
   private constructor() {}
 
   public static getInstance(): FitnessPlanAgentService {
@@ -54,45 +80,34 @@ export class FitnessPlanAgentService {
     message: string;
     structure: PlanStructure;
   }> {
-    // Create subAgents for message formatting and structure extraction
-    const subAgents: SubAgentBatch[] = [
-      {
-        message: createAgent({
-          name: 'message-plan-generate',
-          systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
-          userPrompt: (input: string) => {
-            try {
-              const parsed = JSON.parse(input);
-              const overview = parsed.description || parsed.fitnessPlan || '';
-              return planSummaryMessageUserPrompt(user, overview);
-            } catch {
-              return `Generate a short, friendly SMS about this fitness plan:\n\n${input}`;
-            }
-          },
-        }, { model: 'gpt-5-nano' }),
-        structure: createAgent({
-          name: 'structured-plan-generate',
-          systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
-          userPrompt: (input: string) => {
-            let planText = input;
-            try {
-              const parsed = JSON.parse(input);
-              planText = parsed.description || parsed.fitnessPlan || input;
-            } catch {
-              // Input is already plain text
-            }
-            return structuredPlanUserPrompt(planText);
-          },
-          schema: PlanStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
+    // Transform to inject user info into the JSON for message agent
+    const injectUserForMessage = (mainResult: unknown): string => {
+      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
+      try {
+        const parsed = JSON.parse(jsonString);
+        const overview = parsed.description || parsed.fitnessPlan || jsonString;
+        return JSON.stringify({
+          userName: user.name,
+          userProfile: user.profile || '',
+          overview,
+        } as PlanMessageData);
+      } catch {
+        return JSON.stringify({
+          userName: user.name,
+          userProfile: user.profile || '',
+          overview: jsonString,
+        } as PlanMessageData);
+      }
+    };
 
     // Create main agent - no context needed, uses userPrompt transformer
     const agent = createAgent({
       name: 'plan-generate',
       systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
-      subAgents,
+      subAgents: [{
+        message: { agent: this.messageAgent, transform: injectUserForMessage },
+        structure: this.structuredAgent,
+      }],
     }, { model: 'gpt-5.1' });
 
     // Build the user prompt
@@ -132,28 +147,6 @@ export class FitnessPlanAgentService {
     modifications: string;
     structure: PlanStructure;
   }> {
-    // Helper to extract plan description from the modify response JSON string
-    const extractPlanDescription = (jsonString: string): string => {
-      try {
-        const parsed = JSON.parse(jsonString);
-        return parsed.description || jsonString;
-      } catch {
-        return jsonString;
-      }
-    };
-
-    // SubAgents that extract description from structured JSON response
-    const subAgents: SubAgentBatch[] = [
-      {
-        structure: createAgent({
-          name: 'structure-plan-modify',
-          systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
-          userPrompt: (jsonInput: string) => structuredPlanUserPrompt(extractPlanDescription(jsonInput)),
-          schema: PlanStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
-
     // Build the user prompt using the existing function
     const userPromptContent = modifyFitnessPlanUserPrompt({
       userProfile: user.profile || '',
@@ -165,7 +158,9 @@ export class FitnessPlanAgentService {
       name: 'plan-modify',
       systemPrompt: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
       schema: ModifyFitnessPlanOutputSchema,
-      subAgents,
+      subAgents: [{
+        structure: this.structuredAgent,  // No message needed for modify
+      }],
     }, { model: 'gpt-5.1' });
 
     const result = await agent.invoke(userPromptContent) as ModifyFitnessPlanOutput;

@@ -1,4 +1,4 @@
-import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents/configurable';
 import { WorkoutStructureSchema } from '@/server/agents/training/schemas';
 import {
   DAILY_WORKOUT_SYSTEM_PROMPT,
@@ -34,6 +34,20 @@ import type { WorkoutInstance } from '@/server/models/workout';
 export class WorkoutAgentService {
   private static instance: WorkoutAgentService;
   private contextService: ContextService;
+
+  // Sub-agents as class properties (reused between generate/modify)
+  private messageAgent = createAgent({
+    name: 'workout-message',
+    systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
+    userPrompt: (input: string) => workoutSmsUserPrompt(input),
+  }, { model: 'gpt-5-nano' });
+
+  private structuredAgent = createAgent({
+    name: 'structured-workout',
+    systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
+    userPrompt: (input: string) => structuredWorkoutUserPrompt(input),
+    schema: WorkoutStructureSchema,
+  }, { model: 'gpt-5-nano', maxTokens: 32000 });
 
   private constructor() {
     this.contextService = ContextService.getInstance();
@@ -75,29 +89,12 @@ export class WorkoutAgentService {
       }
     );
 
-    // Create subAgents for message formatting and structure extraction
-    const subAgents: SubAgentBatch[] = [
-      {
-        message: createAgent({
-          name: 'workout-message-generate',
-          systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-          userPrompt: (input: string) => workoutSmsUserPrompt(input),
-        }, { model: 'gpt-5-nano' }),
-        structure: createAgent({
-          name: 'structured-workout-generate',
-          systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-          userPrompt: (input: string) => structuredWorkoutUserPrompt(input),
-          schema: WorkoutStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
-
-    // Create main agent with context
+    // Create main agent with context (using class property sub-agents)
     const agent = createAgent({
       name: 'workout-generate',
       systemPrompt: DAILY_WORKOUT_SYSTEM_PROMPT,
       context,
-      subAgents,
+      subAgents: [{ message: this.messageAgent, structure: this.structuredAgent }],
     }, { model: 'gpt-5.1' });
 
     return agent.invoke('Generate the detailed workout for this day.') as Promise<WorkoutGenerateOutput>;
@@ -130,8 +127,9 @@ export class WorkoutAgentService {
       }
     );
 
-    // Helper to extract overview from modify response JSON
-    const extractOverview = (jsonString: string): string => {
+    // Transform to extract overview from JSON response for sub-agents
+    const extractOverview = (mainResult: unknown): string => {
+      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
       try {
         const parsed = JSON.parse(jsonString);
         return parsed.overview || jsonString;
@@ -140,29 +138,15 @@ export class WorkoutAgentService {
       }
     };
 
-    // SubAgents that extract overview from structured JSON response
-    const subAgents: SubAgentBatch[] = [
-      {
-        message: createAgent({
-          name: 'workout-message-modify',
-          systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-          userPrompt: (jsonInput: string) => workoutSmsUserPrompt(extractOverview(jsonInput)),
-        }, { model: 'gpt-5-nano' }),
-        structure: createAgent({
-          name: 'structured-workout-modify',
-          systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-          userPrompt: (jsonInput: string) => structuredWorkoutUserPrompt(extractOverview(jsonInput)),
-          schema: WorkoutStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
-
     const agent = createAgent({
       name: 'workout-modify',
       systemPrompt: MODIFY_WORKOUT_SYSTEM_PROMPT,
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
-      subAgents,
+      subAgents: [{
+        message: { agent: this.messageAgent, transform: extractOverview },
+        structure: { agent: this.structuredAgent, transform: extractOverview },
+      }],
     }, { model: 'gpt-5-mini' });
 
     return agent.invoke(

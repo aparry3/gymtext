@@ -1,4 +1,4 @@
-import { createAgent, type SubAgentBatch } from '@/server/agents/configurable';
+import { createAgent } from '@/server/agents/configurable';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/agents/training/schemas';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
@@ -46,6 +46,31 @@ const validateDays = (days: string[]): boolean => {
 export class MicrocycleAgentService {
   private static instance: MicrocycleAgentService;
   private contextService: ContextService;
+
+  // Sub-agents as class properties (reused between generate/modify)
+  private messageAgent = createAgent({
+    name: 'microcycle-message',
+    systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      const data = JSON.parse(input) as MicrocycleGenerationOutput;
+      return microcycleMessageUserPrompt(data);
+    },
+  }, { model: 'gpt-5-nano' });
+
+  private structuredAgent = createAgent({
+    name: 'structured-microcycle',
+    systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
+      return structuredMicrocycleUserPrompt(
+        data.overview,
+        data.days,
+        data.absoluteWeek ?? 1,
+        data.isDeload
+      );
+    },
+    schema: MicrocycleStructureSchema,
+  }, { model: 'gpt-5-nano', maxTokens: 32000 });
 
   private constructor() {
     this.contextService = ContextService.getInstance();
@@ -98,41 +123,27 @@ export class MicrocycleAgentService {
       }
     );
 
-    // Create subAgents for message formatting and structure extraction
-    const subAgents: SubAgentBatch[] = [
-      {
-        message: createAgent({
-          name: 'message-microcycle-generate',
-          systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
-          userPrompt: (input: string) => {
-            const data = JSON.parse(input) as MicrocycleGenerationOutput;
-            return microcycleMessageUserPrompt(data);
-          },
-        }, { model: 'gpt-5-nano' }),
-        structure: createAgent({
-          name: 'structured-microcycle-generate',
-          systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
-          userPrompt: (input: string) => {
-            const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
-            return structuredMicrocycleUserPrompt(
-              data.overview,
-              data.days,
-              data.absoluteWeek ?? absoluteWeek,
-              data.isDeload
-            );
-          },
-          schema: MicrocycleStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
+    // Transform to inject absoluteWeek into the JSON for structured agent
+    const injectWeekNumber = (mainResult: unknown): string => {
+      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
+      try {
+        const parsed = JSON.parse(jsonString);
+        return JSON.stringify({ ...parsed, absoluteWeek });
+      } catch {
+        return jsonString;
+      }
+    };
 
-    // Create main agent with context
+    // Create main agent with context (using class property sub-agents)
     const agent = createAgent({
       name: 'microcycle-generate',
       systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
       context,
       schema: MicrocycleGenerationOutputSchema,
-      subAgents,
+      subAgents: [{
+        message: this.messageAgent,
+        structure: { agent: this.structuredAgent, transform: injectWeekNumber },
+      }],
     }, { model: 'gpt-5.1' });
 
     // Execute with retry logic
@@ -217,52 +228,16 @@ export class MicrocycleAgentService {
     wasModified: boolean;
     modifications: string;
   }> {
-    // Helper to extract microcycle data from the modify response JSON string
-    const extractMicrocycleData = (jsonString: string): MicrocycleGenerationOutput & { absoluteWeek?: number } => {
+    // Transform to inject weekNumber as absoluteWeek into the JSON for structured agent
+    const injectWeekNumber = (mainResult: unknown): string => {
+      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
       try {
         const parsed = JSON.parse(jsonString);
-        return {
-          overview: parsed.overview || '',
-          days: parsed.days || [],
-          isDeload: parsed.isDeload || false,
-          absoluteWeek: parsed.absoluteWeek,
-        };
+        return JSON.stringify({ ...parsed, absoluteWeek: weekNumber });
       } catch {
-        return {
-          overview: jsonString,
-          days: [],
-          isDeload: false,
-        };
+        return jsonString;
       }
     };
-
-    // SubAgents that extract data from structured JSON response
-    const subAgents: SubAgentBatch[] = [
-      {
-        message: createAgent({
-          name: 'message-microcycle-modify',
-          systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
-          userPrompt: (jsonInput: string) => {
-            const data = extractMicrocycleData(jsonInput);
-            return microcycleMessageUserPrompt(data);
-          },
-        }, { model: 'gpt-5-nano' }),
-        structure: createAgent({
-          name: 'structured-microcycle-modify',
-          systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
-          userPrompt: (jsonInput: string) => {
-            const data = extractMicrocycleData(jsonInput);
-            return structuredMicrocycleUserPrompt(
-              data.overview,
-              data.days,
-              weekNumber,
-              data.isDeload
-            );
-          },
-          schema: MicrocycleStructureSchema,
-        }, { model: 'gpt-5-nano', maxTokens: 32000 }),
-      },
-    ];
 
     // Build the user prompt using the existing function
     const userPromptContent = modifyMicrocycleUserPrompt({
@@ -276,7 +251,10 @@ export class MicrocycleAgentService {
       name: 'microcycle-modify',
       systemPrompt: MICROCYCLE_MODIFY_SYSTEM_PROMPT,
       schema: ModifyMicrocycleOutputSchema,
-      subAgents,
+      subAgents: [{
+        message: this.messageAgent,
+        structure: { agent: this.structuredAgent, transform: injectWeekNumber },
+      }],
     }, { model: 'gpt-5.1' });
 
     // Execute with retry logic
