@@ -5,7 +5,7 @@ import { ProgressService } from '../training/progressService';
 import { MicrocycleService } from '../training/microcycleService';
 import { UserWithProfile } from '@/server/models/userModel';
 import { inngest } from '@/server/connections/inngest/client';
-import { createWeeklyMessageAgent } from '@/server/agents/messaging/weeklyMessage/chain';
+import { messagingAgentService } from '@/server/services/agents/messaging';
 import { now, getNextWeekStart } from '@/shared/utils/date';
 
 interface MessageResult {
@@ -171,13 +171,12 @@ export class WeeklyMessageService {
         console.log(`[WeeklyMessageService] User ${user.id} is entering a deload week (week ${nextWeekMicrocycle.absoluteWeek})`);
       }
 
-      // Step 6: Generate feedback message using AI agent
-      const weeklyMessageAgent = createWeeklyMessageAgent();
-      const { feedbackMessage } = await weeklyMessageAgent.invoke({
+      // Step 6: Generate feedback message using messaging agent service
+      const feedbackMessage = await messagingAgentService.generateWeeklyMessage(
         user,
         isDeload,
-        absoluteWeek: nextWeekMicrocycle.absoluteWeek
-      });
+        nextWeekMicrocycle.absoluteWeek
+      );
 
       // Step 7: Get breakdown message from stored microcycle
       const breakdownMessage = nextWeekMicrocycle.message;

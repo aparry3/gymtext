@@ -2,8 +2,8 @@ import { UserWithProfile } from '../../models/userModel';
 import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
-import { createWelcomeMessageAgent, planSummaryMessageAgent } from '../../agents';
 import { workoutAgentService } from '../agents/training';
+import { messagingAgentService } from '../agents/messaging';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
 import { Message } from '../../models/conversation';
 import { MessageRepository } from '../../repositories/messageRepository';
@@ -445,19 +445,17 @@ export class MessageService {
 
   /**
    * Send welcome message to a user
-   * Wraps welcomeMessageAgent and sends the generated message
+   * Uses messagingAgentService and sends the generated message
    * @returns The stored Message object
    */
   public async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {
-    const welcomeMessageAgent = createWelcomeMessageAgent();
-    const agentResponse = await welcomeMessageAgent.invoke({ user });
-    const welcomeMessage = agentResponse.message;
+    const welcomeMessage = await messagingAgentService.generateWelcomeMessage(user);
     return await this.sendMessage(user, welcomeMessage);
   }
 
   /**
    * Send fitness plan summary messages to a user
-   * Wraps planSummaryMessageAgent and sends the generated messages
+   * Uses messagingAgentService and sends the generated messages
    * @param user - The user to send to
    * @param plan - The fitness plan to summarize
    * @param previousMessages - Optional previous messages for context
@@ -468,15 +466,15 @@ export class MessageService {
     plan: FitnessPlan,
     previousMessages?: Message[]
   ): Promise<Message[]> {
-    const agentResponse = await planSummaryMessageAgent({ user, plan, previousMessages });
+    const generatedMessages = await messagingAgentService.generatePlanSummary(user, plan, previousMessages);
 
     // Send each message in sequence
     const sentMessages: Message[] = [];
-    for (const message of agentResponse.messages) {
+    for (const message of generatedMessages) {
       const storedMessage = await this.sendMessage(user, message);
       sentMessages.push(storedMessage);
       // Small delay between messages to ensure proper ordering
-      if (agentResponse.messages.length > 1) {
+      if (generatedMessages.length > 1) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }

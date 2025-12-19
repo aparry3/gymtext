@@ -1,9 +1,24 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { createProfileUpdateAgent, createUserFieldsAgent } from '@/server/agents/profile';
+import { createAgent, type Message as AgentMessage } from '@/server/agents/configurable';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import {
+  PROFILE_UPDATE_SYSTEM_PROMPT,
+  buildProfileUpdateUserMessage,
+  USER_FIELDS_SYSTEM_PROMPT,
+  buildUserFieldsUserMessage,
+  STRUCTURED_PROFILE_SYSTEM_PROMPT,
+  buildStructuredProfileUserMessage,
+} from './prompts';
+import {
+  ProfileUpdateOutputSchema,
+  UserFieldsOutputSchema,
+  StructuredProfileSchema,
+} from './schemas';
+import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from './types';
 import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
@@ -52,23 +67,81 @@ export class ProfileService {
       const currentProfile = await fitnessProfileService.getCurrentProfile(userId) ?? '';
       const currentDate = formatForAI(new Date(), user.timezone);
 
+      // Convert previous messages to Message format for the configurable agent
+      const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
+
+      // Helper function to create and invoke the structured profile agent
+      const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
+        const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+        const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
+        const agent = createAgent({
+          name: 'structured-profile',
+          systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
+          schema: StructuredProfileSchema,
+        }, { model: 'gpt-5-nano', temperature: 0.3 });
+
+        const result = await agent.invoke(userPrompt);
+        return { structured: result.response, success: true };
+      };
+
       // Run BOTH agents in parallel for efficiency
       const [profileResult, userFieldsResult] = await Promise.all([
         // Profile agent - updates fitness profile dossier
-        createProfileUpdateAgent().invoke({
-          currentProfile,
-          message,
-          user,
-          currentDate,
-          previousMessages,
-        }),
+        (async (): Promise<ProfileUpdateOutput> => {
+          const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
+
+          // Create profile update agent with subAgents for structured extraction
+          const agent = createAgent({
+            name: 'profile-update',
+            systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+            previousMessages: previousMsgs,
+            schema: ProfileUpdateOutputSchema,
+            subAgents: [{
+              structured: {
+                agent: { name: 'structured-profile', invoke: invokeStructuredProfileAgent },
+                condition: (result: unknown) => (result as { wasUpdated: boolean }).wasUpdated,
+                transform: (result: unknown) => JSON.stringify({
+                  dossierText: (result as { updatedProfile: string }).updatedProfile,
+                  currentDate,
+                }),
+              },
+            }],
+          });
+
+          const result = await agent.invoke(userPrompt);
+          const structuredResult = (result as { structured?: StructuredProfileOutput }).structured;
+          const structured = structuredResult?.success ? structuredResult.structured : null;
+
+          return {
+            updatedProfile: result.response.updatedProfile,
+            wasUpdated: result.response.wasUpdated,
+            updateSummary: result.response.updateSummary || '',
+            structured,
+          };
+        })(),
         // User fields agent - extracts timezone, send time, name changes
-        createUserFieldsAgent().invoke({
-          message,
-          user,
-          currentDate,
-          previousMessages,
-        }),
+        (async (): Promise<UserFieldsOutput> => {
+          const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
+          const agent = createAgent({
+            name: 'user-fields',
+            systemPrompt: USER_FIELDS_SYSTEM_PROMPT,
+            previousMessages: previousMsgs,
+            schema: UserFieldsOutputSchema,
+          }, { model: 'gpt-5-nano', temperature: 0.3 });
+
+          const result = await agent.invoke(userPrompt);
+          return {
+            timezone: result.response.timezone,
+            preferredSendHour: result.response.preferredSendHour,
+            name: result.response.name,
+            hasUpdates: result.response.hasUpdates,
+            updateSummary: result.response.updateSummary || '',
+          };
+        })(),
       ]);
 
       // Persist profile updates (structured data now included from update agent)

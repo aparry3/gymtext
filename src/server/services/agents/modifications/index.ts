@@ -1,10 +1,12 @@
 import { workoutModificationService } from './workoutModificationService';
 import { planModificationService } from './planModificationService';
 import { createModificationTools } from './tools';
-import { createModificationsAgent } from '@/server/agents/modifications';
+import { createAgent, type Message as AgentMessage } from '@/server/agents/configurable';
 import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
 import type { ToolResult } from '../shared/types';
 import type { Message } from '@/server/models/messageModel';
 
@@ -70,22 +72,30 @@ export class ModificationService {
         }
       );
 
-      // Create the modifications agent with tools
-      const agent = createModificationsAgent({ tools, model: 'gpt-5-mini' });
+      // Convert previous messages to Message format for the configurable agent
+      const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
 
-      // Invoke the agent
-      const result = await agent.invoke({
-        user,
-        message,
-        previousMessages,
-        currentWorkout,
-        workoutDate: today,
-        targetDay,
-      });
+      // Build user message
+      const userMessage = buildModificationsUserMessage({ user, message });
+
+      // Create modifications agent inline with configurable pattern
+      const agent = createAgent({
+        name: 'modifications',
+        systemPrompt: MODIFICATIONS_SYSTEM_PROMPT,
+        previousMessages: previousMsgs,
+        tools,
+      }, { model: 'gpt-5-mini' });
+
+      // Invoke the agent - tool execution is handled by createAgent
+      const result = await agent.invoke(userMessage);
 
       console.log('[MODIFICATION_SERVICE] Agent returned:', {
         messageCount: result.messages?.length ?? 0,
-        response: result.response,
+        response: result.response.substring(0, 100) + (result.response.length > 100 ? '...' : ''),
       });
 
       return {

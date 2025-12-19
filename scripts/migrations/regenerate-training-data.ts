@@ -11,7 +11,13 @@ import { now, formatForAI } from '@/shared/utils/date';
 import { OnboardingRepository, SignupData } from '@/server/repositories/onboardingRepository';
 import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
-import { createProfileUpdateAgent } from '@/server/agents/profile';
+// Profile agent imports for inline agent creation
+import { createAgent } from '@/server/agents/configurable';
+import {
+  PROFILE_UPDATE_SYSTEM_PROMPT,
+  buildProfileUpdateUserMessage,
+} from '@/server/services/agents/profile/prompts';
+import { ProfileUpdateOutputSchema } from '@/server/services/agents/profile/schemas';
 
 /**
  * Data Migration Script: Full Reset & Regenerate Training Data for All Users
@@ -174,16 +180,17 @@ async function generateProfileFromSignupData(
 
   // Use Profile Update Agent to build profile from signup data
   const currentDate = formatForAI(new Date(), user.timezone);
-  const agent = createProfileUpdateAgent();
+  const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
-  const result = await agent.invoke({
-    currentProfile,
-    message,
-    user,
-    currentDate,
+  const agent = createAgent({
+    name: 'profile-update',
+    systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+    schema: ProfileUpdateOutputSchema,
   });
 
-  return result.updatedProfile;
+  const result = await agent.invoke(userPrompt);
+
+  return result.response.updatedProfile;
 }
 
 // ============================================================================

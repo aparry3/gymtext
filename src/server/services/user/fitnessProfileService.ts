@@ -14,7 +14,16 @@
 import { UserWithProfile } from '@/server/models/userModel';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createProfileUpdateAgent, type StructuredProfile } from '@/server/agents/profile';
+import { createAgent } from '@/server/agents/configurable';
+import {
+  PROFILE_UPDATE_SYSTEM_PROMPT,
+  buildProfileUpdateUserMessage,
+  STRUCTURED_PROFILE_SYSTEM_PROMPT,
+  buildStructuredProfileUserMessage,
+} from '@/server/services/agents/profile/prompts';
+import { ProfileUpdateOutputSchema, StructuredProfileSchema } from '@/server/services/agents/profile/schemas';
+import type { StructuredProfile } from '@/server/services/agents/profile/schemas';
+import type { StructuredProfileOutput, StructuredProfileInput } from '@/server/services/agents/profile/types';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
@@ -120,14 +129,49 @@ export class FitnessProfileService {
 
         // Use Profile Update Agent to build initial profile from signup data
         const currentDate = formatForAI(new Date(), user.timezone);
-        const agent = createProfileUpdateAgent({ model: 'gpt-5.1' });
 
-        const result = await agent.invoke({
-          currentProfile,
-          message,
-          user,
-          currentDate,
-        });
+        // Helper function for structured profile extraction
+        const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
+          const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+          const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
+          const agent = createAgent({
+            name: 'structured-profile',
+            systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
+            schema: StructuredProfileSchema,
+          }, { model: 'gpt-5-nano', temperature: 0.3 });
+
+          const agentResult = await agent.invoke(userPrompt);
+          return { structured: agentResult.response, success: true };
+        };
+
+        // Create profile update agent inline with subAgents for structured extraction
+        const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
+        const agent = createAgent({
+          name: 'profile-update',
+          systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+          schema: ProfileUpdateOutputSchema,
+          subAgents: [{
+            structured: {
+              agent: { name: 'structured-profile', invoke: invokeStructuredProfileAgent },
+              condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
+              transform: (agentResult: unknown) => JSON.stringify({
+                dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
+                currentDate,
+              }),
+            },
+          }],
+        }, { model: 'gpt-5.1' });
+
+        const agentResult = await agent.invoke(userPrompt);
+        const structuredResult = (agentResult as { structured?: StructuredProfileOutput }).structured;
+        const structured = structuredResult?.success ? structuredResult.structured : null;
+
+        const result = {
+          updatedProfile: agentResult.response.updatedProfile,
+          wasUpdated: agentResult.response.wasUpdated,
+          updateSummary: agentResult.response.updateSummary || '',
+          structured,
+        };
 
         console.log('[FitnessProfileService] Created initial profile:', {
           wasUpdated: result.wasUpdated,

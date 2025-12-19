@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/userModel';
-import { createChatAgent } from '@/server/agents/conversation/chain';
+import { createAgent, type Message as AgentMessage } from '@/server/agents/configurable';
 import { messageService } from '../../messaging/messageService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { ProfileService } from '../profile';
@@ -7,6 +7,9 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
+import { CHAT_SYSTEM_PROMPT } from './prompts';
+import { buildDateContext, buildWorkoutContext } from '@/server/services/context';
+import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../shared/types';
 
 // Configuration from environment variables
@@ -173,22 +176,36 @@ export class ChatService {
       );
 
 
-      // Create chat agent with wrapped tools
-      const agent = createChatAgent({
+      // Build context using standardized builders
+      const agentContext = [
+        buildDateContext(userWithProfile.timezone, undefined),
+        buildWorkoutContext(currentWorkout),
+      ].filter(ctx => ctx.trim().length > 0);
+
+      // Convert previous messages to Message format for the configurable agent
+      const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(context || [])
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
+
+      // Create chat agent inline with configurable agent factory
+      const agent = createAgent({
+        name: 'conversation',
+        systemPrompt: CHAT_SYSTEM_PROMPT,
+        context: agentContext,
+        previousMessages: previousMsgs,
         tools,
       });
 
       // Invoke the chat agent - it will decide when to call tools (including update_profile)
-      const chatResult = await agent.invoke({
-        user: userWithProfile,
-        message,
-        previousMessages: context,
-        currentWorkout: currentWorkout,
-      });
+      const result = await agent.invoke(message);
 
-      // ChatOutput always returns messages array
-      // Order: [agent's final response, ...tool messages]
-      const { messages } = chatResult;
+      console.log(`[ChatService] Agent completed with response length: ${result.response.length}, accumulated messages: ${result.messages?.length || 0}`);
+
+      // Map to ChatOutput format
+      // Order: [agent's final response, ...accumulated tool messages]
+      const messages = [result.response, ...(result.messages || [])].filter(m => m && m.trim());
 
       if (!messages || messages.length === 0) {
         throw new Error('Chat agent returned no messages');

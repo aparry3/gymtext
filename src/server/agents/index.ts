@@ -14,7 +14,7 @@ export type {
 } from './configurable';
 
 // ==========================================
-// Agent Factory Exports (LEGACY PATTERN)
+// Agent Factory Exports
 // ==========================================
 // Use these factory functions to create agents with dependency injection
 
@@ -25,39 +25,22 @@ export type { Agent, AgentDeps, AgentConfig } from './base';
 // NOTE: Fitness Plan agents have been moved to @/server/services/agents/training/
 // Use fitnessPlanAgentService.generateFitnessPlan() instead of createFitnessPlanAgent()
 
-// Conversation Agents
-export { type ChatAgentConfig } from './conversation/chain';
+// NOTE: Messaging agents have been moved to @/server/services/agents/messaging/
+// Use messagingAgentService methods instead of create*Agent() functions
 
-// Image Generation Agents
-export {
-  createExerciseImageAgent,
-  type ExerciseImageInput,
-  type ExerciseImageOutput,
-  type ExerciseImageConfig,
-} from './images/exercises';
+// NOTE: Conversation agent has been moved to @/server/services/agents/chat/
+// ChatService now handles chat agent creation inline
 
-// Modification Agents (standalone agent)
-export {
-  createModificationsAgent,
-  type ModificationsAgentConfig,
-  type ModificationsAgentInput,
-  type ModificationsResponse,
-} from './modifications';
+// NOTE: Modification agents have been moved to @/server/services/agents/modifications/
+// Use ModificationService.makeModification() instead of createModificationsAgent()
 
-// Note: Modification tools have been moved to @/server/services/agents/modifications/tools.ts
-// Import createModificationTools and related types from there instead
+// NOTE: Profile agents have been moved to @/server/services/agents/profile/
+// Use ProfileService.updateProfile() or inline createAgent with prompts/schemas from there
 
 // ==========================================
-// Legacy Exports (DEPRECATED - for backward compatibility only)
+// Agent Exports
 // ==========================================
-// These will be removed in a future version
-// Please migrate to the factory functions above
 
 export * from './training/plans';
-export * from './messaging/welcomeMessage/chain';
-export * from './messaging/planSummary/chain';
-export * from './messaging/planMicrocycleCombined/chain';
-export * from './messaging/updatedMicrocycleMessage/chain';
-export * from './conversation/chain';
 export * from './training/microcycles';
 export * from './training/workouts';

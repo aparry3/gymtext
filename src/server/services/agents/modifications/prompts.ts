@@ -1,5 +1,13 @@
-import type { ModificationsAgentInput } from './types';
+import type { UserWithProfile } from '@/server/models/userModel';
 import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
+
+/**
+ * Input for building the modifications user message
+ */
+export interface ModificationsUserMessageInput {
+  user: UserWithProfile;
+  message: string;
+}
 
 /**
  * Static system prompt for the Modifications Agent
@@ -103,7 +111,7 @@ Tool: modify_week (temporary rearrange)
  * Note: Conversation history is now passed as structured messages in the message array,
  * not concatenated into this prompt.
  */
-export const buildModificationsUserMessage = (input: ModificationsAgentInput): string => {
+export const buildModificationsUserMessage = (input: ModificationsUserMessageInput): string => {
   const { user } = input;
 
   // Get current date/time in user's timezone
