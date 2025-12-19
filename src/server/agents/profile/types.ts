@@ -33,6 +33,8 @@ export interface ProfileUpdateOutput {
   wasUpdated: boolean;
   /** Brief summary of what was updated (for logging/display). Empty string if nothing was updated. */
   updateSummary: string;
+  /** Structured profile data extracted from the dossier (null if !wasUpdated or extraction failed) */
+  structured: StructuredProfile | null;
 }
 
 // =============================================================================

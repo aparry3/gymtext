@@ -132,10 +132,15 @@ export class FitnessProfileService {
         console.log('[FitnessProfileService] Created initial profile:', {
           wasUpdated: result.wasUpdated,
           summary: result.updateSummary,
+          hasStructured: result.structured !== null,
         });
 
-        // Store the profile in profiles table
-        await this.profileRepository.createProfileForUser(user.id, result.updatedProfile);
+        // Store profile with structured data
+        await this.profileRepository.createProfileWithStructured(
+          user.id,
+          result.updatedProfile,
+          result.structured
+        );
 
         return result.updatedProfile;
       } catch (error) {

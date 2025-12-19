@@ -12,22 +12,30 @@ import { StructuredProfileSchema } from '../schemas';
  *
  * Uses gpt-5-nano by default for fast, efficient extraction.
  *
+ * Supports both typed input (StructuredProfileInput) and string input (for subAgent use).
+ *
  * @param config - Optional agent configuration (model, temperature, etc.)
  * @returns Agent that extracts structured profile data
  */
 export const createStructuredProfileAgent = (config?: ModelConfig) => {
   return {
-    invoke: async (input: StructuredProfileInput): Promise<StructuredProfileOutput> => {
+    name: 'structured-profile',
+    invoke: async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
       try {
+        // Parse string input (from subAgent pattern) or use typed input directly
+        const parsedInput: StructuredProfileInput = typeof input === 'string'
+          ? JSON.parse(input)
+          : input;
+
         console.log('[STRUCTURED PROFILE AGENT] Parsing dossier:', {
-          dossierLength: input.dossierText.length,
-          currentDate: input.currentDate,
+          dossierLength: parsedInput.dossierText.length,
+          currentDate: parsedInput.currentDate,
         });
 
         // Build the user message
         const userPrompt = buildStructuredProfileUserMessage(
-          input.dossierText,
-          input.currentDate
+          parsedInput.dossierText,
+          parsedInput.currentDate
         );
 
         // Create agent with configurable agent factory

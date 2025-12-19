@@ -24,11 +24,30 @@ export interface ConfigurableAgent<TOutput> {
 }
 
 /**
- * SubAgent batch - agents within a batch run in parallel
- * Key becomes the property name in the result
+ * Extended subAgent configuration with optional transform and condition
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SubAgentBatch = Record<string, ConfigurableAgent<any>>;
+export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = ConfigurableAgent<any>> {
+  /** The subAgent to execute */
+  agent: TAgent;
+  /** Transform main result to string input for this subAgent */
+  transform?: (mainResult: unknown) => string;
+  /** Condition to run this subAgent (default: always run) */
+  condition?: (mainResult: unknown) => boolean;
+}
+
+/**
+ * SubAgent entry - either a bare agent or extended config
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SubAgentEntry = ConfigurableAgent<any> | SubAgentConfig;
+
+/**
+ * SubAgent batch - agents within a batch run in parallel
+ * Key becomes the property name in the result
+ * Values can be bare agents or extended configs with transform/condition
+ */
+export type SubAgentBatch = Record<string, SubAgentEntry>;
 
 /**
  * Agent definition - the declarative configuration
