@@ -6,3 +6,9 @@ export { buildDateContext } from './dateContext';
 export { buildTrainingMetaContext, type TrainingMetaInput } from './trainingMeta';
 export { buildChangeRequestContext } from './changeRequest';
 export { buildMicrocycleContext } from './microcycle';
+export {
+  buildExperienceLevelContext,
+  SnippetType,
+  EXPERIENCE_SNIPPETS,
+  type ExperienceLevel,
+} from './experienceLevel';

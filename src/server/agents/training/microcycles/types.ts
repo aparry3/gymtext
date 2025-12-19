@@ -3,6 +3,7 @@ import type { MicrocycleStructure } from '@/server/agents/training/schemas';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { DayOfWeek } from '@/shared/utils/date';
+import type { ExperienceLevel } from '@/server/services/context';
 
 // Re-export for convenience
 export type { MicrocycleStructure };
@@ -21,6 +22,7 @@ export interface MicrocycleGenerateInput {
   userProfile: string;     // User's markdown profile
   absoluteWeek: number;    // Week number from plan start (1-indexed)
   isDeload: boolean;       // Whether this should be a deload week
+  experienceLevel?: ExperienceLevel;  // User's experience level for context
 }
 
 /**

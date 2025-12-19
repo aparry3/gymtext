@@ -1,4 +1,5 @@
 import type { WorkoutInstance, Microcycle } from '@/server/models';
+import type { ExperienceLevel, SnippetType } from './builders/experienceLevel';
 
 /**
  * Context types that can be requested from the ContextService
@@ -12,6 +13,7 @@ export enum ContextType {
   TRAINING_META = 'trainingMeta',
   CHANGE_REQUEST = 'changeRequest',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
+  EXPERIENCE_LEVEL = 'experienceLevel',
 }
 
 /**
@@ -34,6 +36,10 @@ export interface ContextExtras {
 
   // Date override
   date?: Date;
+
+  // Experience level context
+  experienceLevel?: ExperienceLevel;
+  snippetType?: SnippetType;
 }
 
 /**
@@ -52,4 +58,6 @@ export interface ResolvedContextData {
   absoluteWeek?: number;
   currentWeek?: number;
   changeRequest?: string;
+  experienceLevel?: ExperienceLevel | null;
+  snippetType?: SnippetType;
 }

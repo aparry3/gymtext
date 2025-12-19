@@ -2,7 +2,9 @@ import type { UserWithProfile } from '@/server/models';
 import type { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
 import type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
 import type { MicrocycleService } from '@/server/services/training/microcycleService';
+import type { ProfileRepository } from '@/server/repositories/profileRepository';
 import { ContextType, type ContextExtras, type ResolvedContextData } from './types';
+import { SnippetType } from './builders/experienceLevel';
 import * as builders from './builders';
 
 /**
@@ -12,6 +14,7 @@ export interface ContextServiceDeps {
   fitnessPlanService: FitnessPlanService;
   workoutInstanceService: WorkoutInstanceService;
   microcycleService: MicrocycleService;
+  profileRepository: ProfileRepository;
 }
 
 /**
@@ -85,13 +88,15 @@ export class ContextService {
     const needsFitnessPlan = types.includes(ContextType.FITNESS_PLAN) && !extras.planText;
     const needsWorkout = types.includes(ContextType.CURRENT_WORKOUT) && extras.workout === undefined;
     const needsMicrocycle = types.includes(ContextType.CURRENT_MICROCYCLE) && extras.microcycle === undefined;
+    const needsExperienceLevel = types.includes(ContextType.EXPERIENCE_LEVEL) && extras.experienceLevel === undefined;
 
     // Fetch required data in parallel
     const targetDate = extras.date || new Date();
-    const [fitnessPlan, workout, microcycle] = await Promise.all([
+    const [fitnessPlan, workout, microcycle, structuredProfile] = await Promise.all([
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
       needsMicrocycle ? this.deps.microcycleService.getMicrocycleByDate(user.id, targetDate) : null,
+      needsExperienceLevel ? this.deps.profileRepository.getCurrentStructuredProfile(user.id) : null,
     ]);
 
     // Build resolved data object
@@ -107,6 +112,8 @@ export class ContextService {
       absoluteWeek: extras.absoluteWeek,
       currentWeek: extras.currentWeek,
       changeRequest: extras.changeRequest,
+      experienceLevel: extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null,
+      snippetType: extras.snippetType,
     };
 
     // Build context strings for each requested type
@@ -140,6 +147,11 @@ export class ContextService {
         return builders.buildChangeRequestContext(data.changeRequest);
       case ContextType.CURRENT_MICROCYCLE:
         return builders.buildMicrocycleContext(data.microcycle);
+      case ContextType.EXPERIENCE_LEVEL:
+        return builders.buildExperienceLevelContext(
+          data.experienceLevel,
+          data.snippetType || SnippetType.WORKOUT
+        );
       default:
         return '';
     }

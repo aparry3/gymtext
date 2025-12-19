@@ -7,6 +7,8 @@ import {
   buildUserProfileContext,
   buildDayOverviewContext,
   buildTrainingMetaContext,
+  buildExperienceLevelContext,
+  SnippetType,
 } from '@/server/services/context';
 
 /**
@@ -42,6 +44,7 @@ export const generateWorkout = async (
   // Build context using standardized builders
   const context = [
     buildUserProfileContext(input.user.profile),
+    buildExperienceLevelContext(input.experienceLevel, SnippetType.WORKOUT),
     buildDayOverviewContext(input.dayOverview),
     buildTrainingMetaContext({ isDeload: input.isDeload }),
   ].filter(ctx => ctx.trim().length > 0);

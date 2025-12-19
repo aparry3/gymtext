@@ -15,6 +15,8 @@ import {
   buildUserProfileContext,
   buildFitnessPlanContext,
   buildTrainingMetaContext,
+  buildExperienceLevelContext,
+  SnippetType,
 } from '@/server/services/context';
 
 const MAX_RETRIES = 3;
@@ -63,6 +65,7 @@ export const generateMicrocycle = async (
   const context = [
     buildFitnessPlanContext(input.planText),
     buildUserProfileContext(input.userProfile),
+    buildExperienceLevelContext(input.experienceLevel, SnippetType.MICROCYCLE),
     buildTrainingMetaContext({ absoluteWeek }),
   ].filter(ctx => ctx.trim().length > 0);
 
