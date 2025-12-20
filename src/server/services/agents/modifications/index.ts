@@ -8,7 +8,7 @@ import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from '../prompts/modifications';
 import type { ToolResult } from '../types/shared';
-import type { Message } from '@/server/models/messageModel';
+import type { Message } from '@/server/models/message';
 
 /**
  * ModificationService - Orchestration service for modifications agent

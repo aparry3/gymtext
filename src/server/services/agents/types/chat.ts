@@ -1,5 +1,5 @@
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
+import type { UserWithProfile } from '@/server/models/user';
+import type { Message } from '@/server/models/message';
 import type { WorkoutInstance } from '@/server/models';
 
 /**

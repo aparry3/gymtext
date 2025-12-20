@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { initializeModel } from '@/server/agents';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';

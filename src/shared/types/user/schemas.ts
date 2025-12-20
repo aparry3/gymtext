@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { Users } from '../_types';
-import { Insertable, Selectable, Updateable } from 'kysely';
 import { normalizeUSPhoneNumber, validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 // Base user schema
@@ -19,8 +17,6 @@ export const UserSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
-// DELETED - CurrentTrainingSchema replaced with activity-specific data
 
 // NEW - Simplified Availability Schema
 export const AvailabilitySchema = z.object({
@@ -52,16 +48,12 @@ export const EquipmentAccessSchema = z.object({
   temporaryChanges: z.array(TemporaryEnvironmentChangeSchema).nullish(),
 });
 
-// DELETED - PreferencesSchema moved to activity-specific data
-
 // Weight schema for metrics (kept but simplified)
 export const WeightSchema = z.object({
   value: z.number().positive(),
   unit: z.enum(['lbs', 'kg']),
   date: z.string().nullish(),
 });
-
-// DELETED - PRLiftSchema replaced with flexible keyLifts record
 
 // NEW - Simplified User Metrics Schema
 export const UserMetricsSchema = z.object({
@@ -85,9 +77,6 @@ export const ConstraintSchema = z.object({
   isTemporary: z.boolean().default(false),
 });
 
-
-// DELETED - RunningDataSchema consolidated into CardioDataSchema
-
 // NEW - Simplified Strength Data Schema
 export const StrengthDataSchema = z.object({
   type: z.literal('strength'),
@@ -102,8 +91,6 @@ export const StrengthDataSchema = z.object({
   }).nullish(),
   trainingFrequency: z.number().int().min(1).max(7),
 });
-
-// DELETED - CyclingDataSchema consolidated into CardioDataSchema
 
 // NEW - Simplified Cardio Data Schema (replaces running, cycling, general)
 export const CardioDataSchema = z.object({
@@ -131,7 +118,6 @@ export const ActivityDataSchema = z.array(z.union([
   StrengthDataSchema,
   CardioDataSchema,
 ]));
-
 
 // NEW - Simplified Goals Schema
 export const GoalsSchema = z.object({
@@ -195,15 +181,10 @@ export const ProfileUpdateRequestSchema = z.object({
   reason: z.string().optional().nullable(),
 });
 
-// Kysely-based types (using database schema)
-export type User = Selectable<Users>;
-export type NewUser = Insertable<Users>;
-export type UserUpdate = Updateable<Users>;
-
 // Zod-inferred types (for validation)
 export type FitnessProfile = z.infer<typeof FitnessProfileSchema>;
 
-// NEW - Activity-specific data types (only strength + cardio)
+// Activity-specific data types (only strength + cardio)
 export type ActivityData = z.infer<typeof ActivityDataSchema>;
 export type StrengthData = z.infer<typeof StrengthDataSchema>;
 export type CardioData = z.infer<typeof CardioDataSchema>;

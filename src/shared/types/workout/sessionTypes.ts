@@ -1,6 +1,6 @@
 /**
  * Maps LLM-generated session types to database-compatible session types
- * 
+ *
  * Database expects: 'strength', 'cardio', 'mobility', 'recovery', 'assessment', 'deload'
  * LLM generates: 'run', 'lift', 'metcon', 'mobility', 'rest', 'other'
  */
@@ -18,7 +18,7 @@ export const SESSION_TYPE_MAP: Record<string, string> = {
 // Valid database session types
 export const DB_SESSION_TYPES = [
   'strength',
-  'cardio', 
+  'cardio',
   'mobility',
   'recovery',
   'assessment',
@@ -46,13 +46,13 @@ export type LLMSessionType = typeof LLM_SESSION_TYPES[number];
  */
 export function mapSessionType(llmSessionType: string): DBSessionType {
   const mapped = SESSION_TYPE_MAP[llmSessionType];
-  
+
   if (!mapped) {
     // If we get an unmapped type, default to 'recovery'
     console.warn(`Unknown LLM session type: ${llmSessionType}, defaulting to 'recovery'`);
     return 'recovery';
   }
-  
+
   return mapped as DBSessionType;
 }
 

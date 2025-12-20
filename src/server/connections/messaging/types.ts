@@ -5,7 +5,7 @@
  * Supports Twilio, local development clients, and future messaging providers.
  */
 
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 export type MessagingProvider = 'twilio' | 'local' | 'websocket';
 

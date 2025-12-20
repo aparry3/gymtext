@@ -5,7 +5,7 @@
  * for use in prompts, messages, and other contexts.
  */
 
-import type { UserWithProfile } from "@/server/models/userModel";
+import type { UserWithProfile } from "@/server/models/user";
 
 /**
  * Format a user's fitness profile into a structured string representation

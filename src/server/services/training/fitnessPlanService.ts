@@ -1,6 +1,6 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
-import { UserWithProfile } from '../../models/userModel';
+import { UserWithProfile } from '../../models/user';
 import { fitnessPlanAgentService } from '../agents/training';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 

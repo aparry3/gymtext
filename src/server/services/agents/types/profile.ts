@@ -1,5 +1,5 @@
-import type { Message } from '@/server/models/messageModel';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { Message } from '@/server/models/message';
+import type { UserWithProfile } from '@/server/models/user';
 import type { CommonTimezone } from '@/shared/utils/timezone';
 import type { StructuredProfile } from '@/server/models/profile';
 

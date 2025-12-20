@@ -16,7 +16,7 @@ import {
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { WorkoutInstance } from '@/server/models/workout';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 export type ChainOperation = 'full' | 'structured' | 'message';
 

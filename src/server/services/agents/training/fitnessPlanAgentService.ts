@@ -13,7 +13,7 @@ import {
   ModifyFitnessPlanOutputSchema,
   type ModifyFitnessPlanOutput,
 } from '@/server/services/agents/prompts/plans';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 
 /**

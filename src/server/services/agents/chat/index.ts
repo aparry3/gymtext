@@ -1,4 +1,4 @@
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/user';
 import { createAgent, type Message as AgentMessage } from '@/server/agents';
 import { messageService } from '../../messaging/messageService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';

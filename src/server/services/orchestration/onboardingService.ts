@@ -1,4 +1,4 @@
-import { UserWithProfile } from '../../models/userModel';
+import { UserWithProfile } from '../../models/user';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';

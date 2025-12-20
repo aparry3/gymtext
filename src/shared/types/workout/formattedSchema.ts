@@ -16,7 +16,7 @@ export const FormattedWorkoutSchema = z.object({
       REQUIRED STRUCTURE:
       # {Theme} - {Focus}
 
-      ## 🎯 Session Overview
+      ## Session Overview
       **Duration:** ~{X} minutes
       **RPE Target:** {X-Y}
       **Focus:** {focus areas}
@@ -30,7 +30,7 @@ export const FormattedWorkoutSchema = z.object({
 
       ---
 
-      ## 📝 Coaching Notes
+      ## Coaching Notes
       - {Notes for user}
 
       FORMAT EXAMPLES:
@@ -71,7 +71,7 @@ export const FormattedWorkoutSchema = z.object({
       - Use --- to separate blocks
       - Use **bold** for exercise names
       - Use [TYPE] tags: [PREP], [COMPOUND], [SECONDARY], [ACCESSORY], [CORE], [CARDIO], [COOLDOWN]
-      - Use emojis for visual hierarchy: 🔥🎯💪🏋️🏃🧘📝
+      - Use emojis for visual hierarchy
       - Use *italic* for coaching cues
       - Use bullet points (-) for lists
       - Include RPE, sets, reps, rest periods as appropriate

@@ -5,6 +5,8 @@
  * Use getWorkoutSchemas() to automatically select the appropriate schemas based on the model.
  */
 
+import { z } from 'zod';
+
 // ============================================================================
 // Workout Structure Schemas (for structured workout output)
 // ============================================================================
@@ -66,7 +68,7 @@ export {
 } from './openAISchema';
 
 // ============================================================================
-// Formatted Text Schema Exports (NEW: replaces complex JSON)
+// Formatted Text Schema Exports (replaces complex JSON)
 // ============================================================================
 export {
   FormattedWorkoutSchema,
@@ -78,10 +80,22 @@ export {
 } from './formattedSchema';
 
 // ============================================================================
+// Session Type Exports
+// ============================================================================
+export {
+  SESSION_TYPE_MAP,
+  DB_SESSION_TYPES,
+  LLM_SESSION_TYPES,
+  mapSessionType,
+  isValidDBSessionType,
+  type DBSessionType,
+  type LLMSessionType,
+} from './sessionTypes';
+
+// ============================================================================
 // Schema Selection Utilities
 // ============================================================================
 
-import { z } from 'zod';
 import {
   GeminiEnhancedWorkoutInstanceSchema,
   GeminiUpdatedWorkoutInstanceSchema,

@@ -1,20 +1,8 @@
 /**
  * Profile Model
  *
- * Exports structured profile schemas and types for the
- * LLM-extracted profile data stored in profiles.structured.
+ * Re-exports structured profile schemas and types from shared/types.
  */
 
-// Schema exports
-export {
-  StructuredProfileSchema,
-  StructuredConstraintSchema,
-  ExperienceLevelSchema,
-} from './schema';
-
-// Type exports
-export type {
-  StructuredProfile,
-  StructuredConstraint,
-  ExperienceLevel,
-} from './schema';
+// Re-export from shared types
+export * from '@/shared/types/profile';

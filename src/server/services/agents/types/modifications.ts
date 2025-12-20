@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { UserWithProfile } from '@/server/models/userModel';
-import type { Message } from '@/server/models/messageModel';
+import type { UserWithProfile } from '@/server/models/user';
+import type { Message } from '@/server/models/message';
 import { WorkoutInstance } from '@/server/models';
 import type { AgentConfig } from '@/server/agents';
 import type { StructuredToolInterface } from '@langchain/core/tools';

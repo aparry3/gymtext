@@ -4,7 +4,7 @@ import {
   type UserWithProfile,
   type CreateUserData,
   UserModel
-} from '@/server/models/userModel';
+} from '@/server/models/user';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
 
 export class UserRepository extends BaseRepository {

@@ -20,7 +20,7 @@ import {
 import { StructuredProfileSchema } from '@/server/models/profile';
 import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from '../types/profile';
 import type { ToolResult } from '../types/shared';
-import type { Message } from '@/server/models/messageModel';
+import type { Message } from '@/server/models/message';
 
 /**
  * ProfileService - Orchestration service for profile and user field agents

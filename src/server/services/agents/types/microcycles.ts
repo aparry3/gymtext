@@ -1,7 +1,7 @@
 import type { ModelConfig } from '@/server/agents';
 import type { MicrocycleStructure } from '@/server/models/microcycle';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { DayOfWeek } from '@/shared/utils/date';
 import type { ExperienceLevel } from '@/server/services/context';
 

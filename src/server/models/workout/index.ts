@@ -1,39 +1,12 @@
 import type { JsonValue, WorkoutInstances } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
-
 export type WorkoutInstance = Selectable<WorkoutInstances>;
 export type NewWorkoutInstance = Insertable<WorkoutInstances>;
 export type WorkoutInstanceUpdate = Updateable<WorkoutInstances>;
 
-// Re-export session type utilities
-export { mapSessionType, isValidDBSessionType, SESSION_TYPE_MAP, DB_SESSION_TYPES, LLM_SESSION_TYPES } from './sessionTypeMapping';
-export type { DBSessionType, LLMSessionType } from './sessionTypeMapping';
-
-// Export enhanced types (for LLM structured output)
-export type {
-  WorkoutBlock,
-  WorkoutBlockItem,
-  WorkoutModification,
-  EnhancedWorkoutInstance,
-  UpdatedWorkoutInstance
-} from './schema';
-
-// Export workout structure types (for workout rendering)
-export type {
-  WorkoutStructure,
-  WorkoutActivity,
-  WorkoutSection,
-  Intensity,
-} from './schema';
-
-// Export workout structure schemas
-export {
-  WorkoutStructureSchema,
-  WorkoutActivitySchema,
-  WorkoutSectionSchema,
-  IntensitySchema,
-} from './schema';
+// Re-export everything from shared workout types
+export * from '@/shared/types/workout';
 
 export class WorkoutInstanceModel implements NewWorkoutInstance {
   clientId: string;

@@ -2,7 +2,7 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { workoutAgentService } from '@/server/services/agents/training';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';

@@ -1,21 +1,22 @@
-// Model exports for clean imports
-export { UserModel } from './userModel';
+// Model class exports
+export { UserModel } from './user';
 export { FitnessPlanModel } from './fitnessPlan';
-export { MessageModel } from './messageModel';
 export { WorkoutInstanceModel } from './workout';
 export { MicrocycleModel } from './microcycle';
 
-// Type exports from models
+// User types (DB types + shared types re-exported)
 export type {
   User, NewUser, UserUpdate,
   FitnessProfile,
   UserWithProfile, CreateUserData, CreateFitnessProfileData
-} from './userModel';
+} from './user';
 
+// Message types (DB types)
 export type {
   Message, NewMessage, MessageUpdate, RecentMessage
 } from './conversation';
 
+// Fitness plan types (DB types + shared types)
 export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
   FitnessPlanDB, FitnessPlanOverview,
@@ -23,6 +24,7 @@ export type {
 } from './fitnessPlan';
 export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 
+// Workout types (DB types + shared types)
 export type {
   WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
   WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity
@@ -31,7 +33,7 @@ export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, In
 
 // Microcycle types
 export type { Microcycle, MicrocycleStructure, MicrocycleDay } from './microcycle';
-export type { MicrocyclePattern, MicrocycleGenerationOutput } from './microcycle/schema';
+export type { MicrocyclePattern, MicrocycleGenerationOutput } from './microcycle';
 export { MicrocycleStructureSchema, MicrocycleDaySchema } from './microcycle';
 
 // Profile types (structured profile from LLM extraction)

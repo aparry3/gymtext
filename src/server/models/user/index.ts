@@ -1,8 +1,17 @@
-// Re-export all types and schemas from schemas.ts
-export * from './schemas';
+// Re-export types from shared (Zod schemas and inferred types)
+export * from '@/shared/types/user';
+
+// Import Kysely DB types
+import type { Users } from '../_types';
+import { Insertable, Selectable, Updateable } from 'kysely';
+
+// Kysely-based types (using database schema)
+export type User = Selectable<Users>;
+export type NewUser = Insertable<Users>;
+export type UserUpdate = Updateable<Users>;
 
 // Import what we need for the UserModel class
-import type { User, NewUser, FitnessProfile } from './schemas';
+import type { FitnessProfile } from '@/shared/types/user';
 import { validateUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 export type CreateUserData = Omit<NewUser, 'id' | 'createdAt' | 'updatedAt'>;
@@ -42,11 +51,11 @@ export class UserModel {
     if (!userData.name || userData.name.trim().length < 2) {
       throw new Error('User name must be at least 2 characters long');
     }
-    
+
     if (!userData.phoneNumber || !validateUSPhoneNumber(userData.phoneNumber)) {
       throw new Error('Valid US phone number is required');
     }
-    
+
     if (userData.email && !this.isValidEmail(userData.email)) {
       throw new Error('Invalid email format');
     }
@@ -62,11 +71,11 @@ export class UserModel {
     if (profileData.goals?.timeline && (profileData.goals.timeline < 1 || profileData.goals.timeline > 104)) {
       throw new Error('Goals timeline must be between 1 and 104 weeks');
     }
-    
+
     if (profileData.availability?.daysPerWeek && (profileData.availability.daysPerWeek < 1 || profileData.availability.daysPerWeek > 7)) {
       throw new Error('Days per week must be between 1 and 7');
     }
-    
+
     if (profileData.availability?.minutesPerSession && (profileData.availability.minutesPerSession < 15 || profileData.availability.minutesPerSession > 240)) {
       throw new Error('Minutes per session must be between 15 and 240');
     }
@@ -81,11 +90,11 @@ export class UserModel {
     if (updates.name && updates.name.trim().length < 2) {
       throw new Error('User name must be at least 2 characters long');
     }
-    
+
     if (updates.phoneNumber && !validateUSPhoneNumber(updates.phoneNumber)) {
       throw new Error('Valid US phone number is required');
     }
-    
+
     if (updates.email && !this.isValidEmail(updates.email)) {
       throw new Error('Invalid email format');
     }

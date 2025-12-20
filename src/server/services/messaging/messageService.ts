@@ -1,4 +1,4 @@
-import { UserWithProfile } from '../../models/userModel';
+import { UserWithProfile } from '../../models/user';
 import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';

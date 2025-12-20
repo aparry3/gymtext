@@ -3,7 +3,7 @@ import { UserService } from '../user/userService';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { ProgressService } from '../training/progressService';
 import { MicrocycleService } from '../training/microcycleService';
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/user';
 import { inngest } from '@/server/connections/inngest/client';
 import { messagingAgentService } from '@/server/services/agents/messaging';
 import { now, getNextWeekStart } from '@/shared/utils/date';

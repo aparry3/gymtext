@@ -1,4 +1,4 @@
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
 
 /**

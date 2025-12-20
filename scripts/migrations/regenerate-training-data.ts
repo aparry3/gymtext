@@ -6,7 +6,7 @@ import { FitnessPlanService } from '@/server/services/training/fitnessPlanServic
 import { progressService } from '@/server/services/training/progressService';
 import { userService } from '@/server/services/user/userService';
 import { fitnessProfileService } from '@/server/services/user/fitnessProfileService';
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/user';
 import { now, formatForAI } from '@/shared/utils/date';
 import { OnboardingRepository, SignupData } from '@/server/repositories/onboardingRepository';
 import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';

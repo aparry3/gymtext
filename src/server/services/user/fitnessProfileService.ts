@@ -11,7 +11,7 @@
  * - Circuit breaker pattern for resilience
  */
 
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/user';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createAgent } from '@/server/agents';

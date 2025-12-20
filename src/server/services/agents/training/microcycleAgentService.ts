@@ -17,7 +17,7 @@ import type { Microcycle } from '@/server/models/microcycle';
 import type { DayOfWeek } from '@/shared/utils/date';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
 import { DAY_NAMES } from '@/shared/utils/date';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 const MAX_RETRIES = 3;
 

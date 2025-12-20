@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 
 // =============================================================================

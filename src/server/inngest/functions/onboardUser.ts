@@ -27,7 +27,7 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
 import { onboardingSteps } from '@/server/services/orchestration/onboardingSteps';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { SignupData } from '@/server/repositories/onboardingRepository';

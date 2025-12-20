@@ -11,7 +11,7 @@ import {
 } from '@/server/services/agents/prompts/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 
 /**

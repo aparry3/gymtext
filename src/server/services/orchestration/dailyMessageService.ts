@@ -1,6 +1,6 @@
 import { MessageService } from '../messaging/messageService';
 import { UserService } from '../user/userService';
-import { UserWithProfile } from '@/server/models/userModel';
+import { UserWithProfile } from '@/server/models/user';
 import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';

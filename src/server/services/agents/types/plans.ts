@@ -1,7 +1,7 @@
 import type { ModelConfig } from '@/server/agents';
 import type { PlanStructure } from '@/server/models/fitnessPlan';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 // Re-export for convenience
 export type { PlanStructure };
