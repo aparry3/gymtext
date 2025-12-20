@@ -3,8 +3,7 @@
  */
 
 import { z } from 'zod';
-import type { Microcycle } from '@/server/models/microcycle';
-import { DAY_NAMES, DayOfWeek } from '@/shared/utils/date';
+import { DAY_NAMES } from '@/shared/utils/date';
 
 // =============================================================================
 // Generate Prompts
@@ -141,10 +140,13 @@ You are an expert Strength & Conditioning Programming Manager specializing in **
 
 Your goal is to modify an existing weekly microcycle based on user feedback while maintaining the **structural integrity and physiological balance** of the plan.
 
-You will receive:
-1. **The Current Plan:** The 7-day schedule as it stands.
-2. **Context:** The User's Profile and the "Current Day" (e.g., It is currently Wednesday).
-3. **The Trigger:** A specific user request (e.g., "I missed Monday," "My knee hurts," "Combine the weekend").
+You will receive the following context:
+- <User> - Basic user information (name, gender)
+- <UserProfile> - The user's fitness profile
+- <CurrentMicrocycle> - The 7-day schedule as it stands
+- <DateContext> - Today's date including day of week
+
+The user's change request will be provided as the message.
 
 You must output a JSON object with: \`overview\`, \`isDeload\`, \`days\`, \`wasModified\`, \`modifications\`.
 
@@ -173,59 +175,8 @@ Choose the correct tactic based on the User Request:
 - **Action:** Keep the *Structure* but change the *Primary Patterns* and *Directive*.
 `;
 
-const formatCurrentWeekFromRecord = (microcycle: Microcycle) => {
-  const days = microcycle.days ?? [];
-  const overview = microcycle.description ?? '';
-
-  return `
-<CurrentMicrocycleState>
-  <Overview>${overview}</Overview>
-  <Schedule>
-${DAY_NAMES
-  .map(
-    (name, i) => `    <Day index="${i}" name="${name}">
-${days[i] ?? 'Session Type: Rest\nFocus: Recovery'}
-    </Day>`,
-  )
-  .join('\n')}
-  </Schedule>
-</CurrentMicrocycleState>`.trim();
-};
-
-interface ModifyMicrocycleUserPromptParams {
-  fitnessProfile: string;
-  currentMicrocycle: Microcycle;
-  changeRequest: string;
-  currentDayOfWeek: DayOfWeek;
-}
-
-export const modifyMicrocycleUserPrompt = ({
-  fitnessProfile,
-  currentMicrocycle,
-  changeRequest,
-  currentDayOfWeek,
-}: ModifyMicrocycleUserPromptParams) => {
-  return `
-You are the **Microcycle Modifier**. Adjust the weekly plan based on the user's constraints.
-
-<UserContext>
-  <CurrentDay>${currentDayOfWeek}</CurrentDay>
-  <Profile>${fitnessProfile}</Profile>
-</UserContext>
-
-${formatCurrentWeekFromRecord(currentMicrocycle)}
-
-<UserChangeRequest>
-"${changeRequest}"
-</UserChangeRequest>
-
-**Directives:**
-1. Analyze the <UserChangeRequest> against the <CurrentMicrocycleState>.
-2. Apply the necessary "Modification Primitive" (Shift, Merge, Prune, or Adapt).
-3. Ensure the remainder of the week is balanced (manage fatigue).
-4. **Output the strict JSON.**
-`.trim();
-};
+// Note: For modifyMicrocycle, the changeRequest is passed directly to invoke()
+// No static user prompt needed - the user's change request IS the message
 
 // =============================================================================
 // Message Prompts

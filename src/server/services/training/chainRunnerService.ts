@@ -293,11 +293,11 @@ export class ChainRunnerService {
     console.log(`[ChainRunner] Running full microcycle chain for microcycle ${microcycle.id}`);
 
     // Use microcycle agent service for full chain
+    // Fitness plan is auto-fetched by context service
+    // isDeload is determined by agent from plan's Progression Strategy
     const result = await microcycleAgentService.generateMicrocycle(
       user,
-      plan.description,
-      microcycle.absoluteWeek,
-      microcycle.isDeload
+      microcycle.absoluteWeek
     );
 
     const updated = await this.microcycleService.updateMicrocycle(microcycle.id, {

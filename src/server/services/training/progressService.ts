@@ -20,7 +20,6 @@ export interface ProgressInfo {
   dayOfWeek: number;             // Day of week (1-7, Luxon format: 1=Mon, 7=Sun)
   weekStartDate: Date;           // Start of current week
   weekEndDate: Date;             // End of current week
-  isDeload: boolean;             // Whether this week should be a deload
 }
 
 /**
@@ -88,9 +87,6 @@ export class ProgressService {
       );
     }
 
-    // Calculate if this should be a deload week based on plan rules
-    const isDeload = this.calculateIsDeload(plan.description, absoluteWeek);
-
     // Calculate date-related fields
     const dayOfWeek = getWeekday(targetDate, timezone);
     const weekStart = startOfWeek(targetDate, timezone);
@@ -103,7 +99,6 @@ export class ProgressService {
       dayOfWeek,
       weekStartDate: weekStart,
       weekEndDate: weekEnd,
-      isDeload,
     };
   }
 
@@ -153,37 +148,6 @@ export class ProgressService {
     const updatedProgress = { ...progress, microcycle };
 
     return { microcycle, progress: updatedProgress, wasCreated: true };
-  }
-
-  /**
-   * Calculate if a given week should be a deload week based on plan description
-   * Parses common patterns like "Deload: Every 4th week" from the plan text
-   */
-  private calculateIsDeload(planDescription: string, absoluteWeek: number): boolean {
-    if (!planDescription) return false;
-
-    // Common patterns to look for:
-    // "Deload: Every 4th week"
-    // "Deload every 4 weeks"
-    // "Every 4th week is deload"
-    const patterns = [
-      /deload[:\s]+every\s+(\d+)(?:th|st|nd|rd)?\s+week/i,
-      /every\s+(\d+)(?:th|st|nd|rd)?\s+week[:\s]+deload/i,
-      /every\s+(\d+)(?:th|st|nd|rd)?\s+week\s+(?:is\s+)?(?:a\s+)?deload/i,
-    ];
-
-    for (const pattern of patterns) {
-      const match = planDescription.match(pattern);
-      if (match) {
-        const deloadFrequency = parseInt(match[1], 10);
-        if (deloadFrequency > 0) {
-          // Week numbers are 1-indexed, so week 4, 8, 12 are deloads with frequency 4
-          return absoluteWeek % deloadFrequency === 0;
-        }
-      }
-    }
-
-    return false;
   }
 }
 

@@ -8,13 +8,11 @@ import {
   STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
   structuredMicrocycleUserPrompt,
   MICROCYCLE_MODIFY_SYSTEM_PROMPT,
-  modifyMicrocycleUserPrompt,
   ModifyMicrocycleOutputSchema,
   type MicrocycleGenerationOutput,
 } from '@/server/services/agents/prompts/microcycles';
 import type { MicrocycleGenerateOutput, ModifyMicrocycleOutput } from '@/server/services/agents/types/microcycles';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { DayOfWeek } from '@/shared/utils/date';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
 import { DAY_NAMES } from '@/shared/utils/date';
 import type { UserWithProfile } from '@/server/models/user';
@@ -105,18 +103,16 @@ export class MicrocycleAgentService {
    * Generate a weekly microcycle training pattern
    *
    * Includes retry logic (MAX_RETRIES = 3) with validation to ensure all 7 days are generated.
+   * The agent determines isDeload based on the plan's Progression Strategy and absolute week.
+   * Fitness plan is automatically fetched by the context service.
    *
    * @param user - User with profile
-   * @param planText - Full fitness plan description
    * @param absoluteWeek - Week number from plan start (1-indexed)
-   * @param isDeload - Whether this should be a deload week
    * @returns Object with days, description, isDeload, message, and structure (matching legacy format)
    */
   async generateMicrocycle(
     user: UserWithProfile,
-    planText: string,
-    absoluteWeek: number,
-    isDeload: boolean
+    absoluteWeek: number
   ): Promise<{
     days: string[];
     description: string;
@@ -125,6 +121,8 @@ export class MicrocycleAgentService {
     structure?: MicrocycleStructure;
   }> {
     // Build context using ContextService
+    // FITNESS_PLAN is auto-fetched by context service
+    // isDeload is determined by agent from plan's Progression Strategy
     const context = await this.getContextService().getContext(
       user,
       [
@@ -134,9 +132,7 @@ export class MicrocycleAgentService {
         ContextType.TRAINING_META,
       ],
       {
-        planText,
         absoluteWeek,
-        isDeload,
         snippetType: SnippetType.MICROCYCLE,
       }
     );
@@ -226,17 +222,13 @@ export class MicrocycleAgentService {
    *
    * @param user - User with profile
    * @param currentMicrocycle - Current microcycle to modify
-   * @param changeRequest - User's modification request
-   * @param currentDayOfWeek - Current day of the week
-   * @param weekNumber - Week number (absolute)
+   * @param changeRequest - User's modification request (passed directly to invoke)
    * @returns Object with days, description, isDeload, message, structure, wasModified, modifications (matching legacy format)
    */
   async modifyMicrocycle(
     user: UserWithProfile,
     currentMicrocycle: Microcycle,
-    changeRequest: string,
-    currentDayOfWeek: DayOfWeek,
-    weekNumber: number
+    changeRequest: string
   ): Promise<{
     days: string[];
     description: string;
@@ -246,28 +238,36 @@ export class MicrocycleAgentService {
     wasModified: boolean;
     modifications: string;
   }> {
-    // Transform to inject weekNumber as absoluteWeek into the JSON for structured agent
+    // Get absoluteWeek from the current microcycle
+    const absoluteWeek = currentMicrocycle.absoluteWeek;
+
+    // Build context using ContextService
+    const context = await this.getContextService().getContext(
+      user,
+      [
+        ContextType.USER,
+        ContextType.USER_PROFILE,
+        ContextType.CURRENT_MICROCYCLE,
+        ContextType.DATE_CONTEXT,
+      ],
+      { microcycle: currentMicrocycle }
+    );
+
+    // Transform to inject absoluteWeek into the JSON for structured agent
     const injectWeekNumber = (mainResult: unknown): string => {
       const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
       try {
         const parsed = JSON.parse(jsonString);
-        return JSON.stringify({ ...parsed, absoluteWeek: weekNumber });
+        return JSON.stringify({ ...parsed, absoluteWeek });
       } catch {
         return jsonString;
       }
     };
 
-    // Build the user prompt using the existing function
-    const userPromptContent = modifyMicrocycleUserPrompt({
-      fitnessProfile: user.profile || '',
-      currentMicrocycle,
-      changeRequest,
-      currentDayOfWeek,
-    });
-
     const agent = createAgent({
       name: 'microcycle-modify',
       systemPrompt: MICROCYCLE_MODIFY_SYSTEM_PROMPT,
+      context,
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{
         message: this.messageAgent,
@@ -281,10 +281,11 @@ export class MicrocycleAgentService {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         if (attempt > 1) {
-          console.log(`[microcycle-modify] Retry attempt ${attempt}/${MAX_RETRIES} for week ${weekNumber}`);
+          console.log(`[microcycle-modify] Retry attempt ${attempt}/${MAX_RETRIES} for week ${absoluteWeek}`);
         }
 
-        const result = await agent.invoke(userPromptContent) as ModifyMicrocycleOutput;
+        // Pass changeRequest directly as the message - it's the user's request, not context
+        const result = await agent.invoke(changeRequest) as ModifyMicrocycleOutput;
 
         // Validate that all 7 days are present and non-empty
         if (!validateDays(result.response.days)) {
@@ -300,7 +301,7 @@ export class MicrocycleAgentService {
           );
         }
 
-        console.log(`[microcycle-modify] Successfully modified day overviews and message for week ${weekNumber}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
+        console.log(`[microcycle-modify] Successfully modified day overviews and message for week ${absoluteWeek}${attempt > 1 ? ` (after ${attempt} attempts)` : ''}`);
 
         // Map to legacy format expected by WorkoutModificationService
         return {
@@ -314,7 +315,7 @@ export class MicrocycleAgentService {
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.error(`[microcycle-modify] Attempt ${attempt}/${MAX_RETRIES} failed for week ${weekNumber}:`, lastError.message);
+        console.error(`[microcycle-modify] Attempt ${attempt}/${MAX_RETRIES} failed for week ${absoluteWeek}:`, lastError.message);
 
         // If this was the last attempt, break out
         if (attempt === MAX_RETRIES) {
@@ -325,7 +326,7 @@ export class MicrocycleAgentService {
 
     // All retries exhausted
     throw new Error(
-      `Failed to modify microcycle pattern for week ${weekNumber} after ${MAX_RETRIES} attempts. ` +
+      `Failed to modify microcycle pattern for week ${absoluteWeek} after ${MAX_RETRIES} attempts. ` +
       `Last error: ${lastError?.message || 'Unknown error'}`
     );
   }

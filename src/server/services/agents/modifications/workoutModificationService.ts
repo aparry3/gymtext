@@ -3,7 +3,7 @@ import { MicrocycleService } from '../../training/microcycleService';
 import { WorkoutInstanceService } from '../../training/workoutInstanceService';
 import { workoutAgentService, microcycleAgentService } from '../training';
 import type { ModifyWorkoutOutput, WorkoutGenerateOutput } from '@/server/services/agents/types/workouts';
-import { now, DayOfWeek, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
+import { now, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import { ProgressService } from '../../training/progressService';
 import { FitnessPlanService } from '../../training/fitnessPlanService';
@@ -185,7 +185,7 @@ export class WorkoutModificationService {
         };
       }
 
-      const {microcycle, absoluteWeek} = progress;
+      const { microcycle } = progress;
 
       if (!microcycle) {
         return {
@@ -209,9 +209,7 @@ export class WorkoutModificationService {
       const modifyMicrocycleResult = await microcycleAgentService.modifyMicrocycle(
         user,
         microcycle,
-        changeRequest,
-        todayDayOfWeek as DayOfWeek,
-        absoluteWeek
+        changeRequest
       );
 
       console.log(`[MODIFY_WEEK] Microcycle modification result:`, modifyMicrocycleResult);

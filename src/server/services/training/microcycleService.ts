@@ -134,11 +134,10 @@ export class MicrocycleService {
     }
 
     // Generate microcycle using AI agent service
-    const { days, description, isDeload, message, structure } = await this.generateMicrocyclePattern(
+    // Note: fitness plan and isDeload are determined by the agent via context service
+    const { days, description, isDeload, message, structure } = await this.generateMicrocycle(
       user,
-      plan.description,
-      progress.absoluteWeek,
-      progress.isDeload  // Pass the calculated isDeload from progress
+      progress.absoluteWeek
     );
 
     // Create new microcycle
@@ -161,13 +160,12 @@ export class MicrocycleService {
 
   /**
    * Generate a microcycle using AI agent service
-   * Uses fitness plan text and user profile to generate day descriptions
+   * Fitness plan is auto-fetched by context service
+   * The agent determines isDeload based on the plan's Progression Strategy
    */
-  private async generateMicrocyclePattern(
+  private async generateMicrocycle(
     user: UserWithProfile,
-    planText: string,
-    absoluteWeek: number,
-    isDeloadFromProgress: boolean
+    absoluteWeek: number
   ): Promise<{
     days: string[];
     description: string;
@@ -179,9 +177,7 @@ export class MicrocycleService {
       // Use AI agent service to generate the microcycle
       const result = await microcycleAgentService.generateMicrocycle(
         user,
-        planText,
-        absoluteWeek,
-        isDeloadFromProgress
+        absoluteWeek
       );
 
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);

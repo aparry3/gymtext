@@ -57,7 +57,6 @@ export {
   MicrocycleGenerationOutputSchema,
   type MicrocycleGenerationOutput,
   MICROCYCLE_MODIFY_SYSTEM_PROMPT,
-  modifyMicrocycleUserPrompt,
   ModifyMicrocycleOutputSchema,
   type ModifyMicrocycleOutput,
   MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
