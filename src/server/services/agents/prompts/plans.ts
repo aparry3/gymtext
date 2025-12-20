@@ -173,7 +173,8 @@ You will receive the following context:
 - <User> - Basic user information (name, gender)
 - <UserProfile> - The user's fitness profile with goals, constraints, and preferences
 - <FitnessPlan> - The complete fitness plan as it currently exists
-- <ChangeRequest> - A specific user request to modify their program
+
+The user's change request will be provided as the message.
 
 You must output a JSON object with: \`description\`, \`wasModified\`, \`modifications\`.
 
@@ -275,16 +276,8 @@ Format:
 5. **modifications Summary:** Briefly explain what changed (e.g., "Restructured to 4-day Upper/Lower split, added yoga anchors on Monday/Friday AM").
 `;
 
-export const FITNESS_PLAN_MODIFY_USER_PROMPT = `
-Adjust the training blueprint based on the user's change request.
-
-**Directives:**
-1. Analyze the <ChangeRequest> against the <FitnessPlan>.
-2. Determine which Modification Primitive applies (Restructure, Anchor, Refocus, or Constrain).
-3. Apply the necessary changes while preserving the overall program integrity and NASM logic.
-4. If the current plan already satisfies the request, set wasModified to false.
-5. **Output the strict JSON with description, wasModified, and modifications.**
-`.trim();
+// Note: For modifyFitnessPlan, the changeRequest is passed directly to invoke()
+// No static user prompt needed - the user's change request IS the message
 
 // =============================================================================
 // Message Prompts

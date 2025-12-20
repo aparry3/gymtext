@@ -113,7 +113,6 @@ export class ContextService {
       isDeload: extras.isDeload,
       absoluteWeek: extras.absoluteWeek,
       currentWeek: extras.currentWeek,
-      changeRequest: extras.changeRequest,
       experienceLevel: extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null,
       snippetType: extras.snippetType,
     };
@@ -147,8 +146,6 @@ export class ContextService {
           absoluteWeek: data.absoluteWeek,
           currentWeek: data.currentWeek,
         });
-      case ContextType.CHANGE_REQUEST:
-        return builders.buildChangeRequestContext(data.changeRequest);
       case ContextType.CURRENT_MICROCYCLE:
         return builders.buildMicrocycleContext(data.microcycle);
       case ContextType.EXPERIENCE_LEVEL:

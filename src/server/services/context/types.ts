@@ -12,7 +12,6 @@ export enum ContextType {
   CURRENT_WORKOUT = 'currentWorkout',
   DATE_CONTEXT = 'dateContext',
   TRAINING_META = 'trainingMeta',
-  CHANGE_REQUEST = 'changeRequest',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
   EXPERIENCE_LEVEL = 'experienceLevel',
 }
@@ -23,7 +22,6 @@ export enum ContextType {
 export interface ContextExtras {
   // Caller-provided data (cannot be auto-fetched)
   dayOverview?: string;
-  changeRequest?: string;
 
   // Training metadata (from orchestration context)
   isDeload?: boolean;
@@ -60,7 +58,6 @@ export interface ResolvedContextData {
   isDeload?: boolean;
   absoluteWeek?: number;
   currentWeek?: number;
-  changeRequest?: string;
   experienceLevel?: ExperienceLevel | null;
   snippetType?: SnippetType;
 }

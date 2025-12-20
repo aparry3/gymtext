@@ -9,7 +9,6 @@ import {
   STRUCTURED_PLAN_SYSTEM_PROMPT,
   structuredPlanUserPrompt,
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
-  FITNESS_PLAN_MODIFY_USER_PROMPT,
   ModifyFitnessPlanOutputSchema,
   type ModifyFitnessPlanOutput,
 } from '@/server/services/agents/prompts/plans';
@@ -170,8 +169,8 @@ export class FitnessPlanAgentService {
     // Build context using ContextService
     const context = await this.getContextService().getContext(
       user,
-      [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN, ContextType.CHANGE_REQUEST],
-      { planText: currentPlan.description || '', changeRequest }
+      [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN],
+      { planText: currentPlan.description || '' }
     );
 
     const agent = createAgent({
@@ -184,7 +183,8 @@ export class FitnessPlanAgentService {
       }],
     }, { model: 'gpt-5.1' });
 
-    const result = await agent.invoke(FITNESS_PLAN_MODIFY_USER_PROMPT) as {
+    // Pass changeRequest directly as the message - it's the user's request, not context
+    const result = await agent.invoke(changeRequest) as {
       response: ModifyFitnessPlanOutput;
       structure?: PlanStructure;
       messages?: string[];

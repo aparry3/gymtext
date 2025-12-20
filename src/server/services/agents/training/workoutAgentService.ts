@@ -128,18 +128,14 @@ export class WorkoutAgentService {
     workout: WorkoutInstance,
     changeRequest: string
   ): Promise<ModifyWorkoutOutput> {
-    // Build context for modification - uses workout and change request
+    // Build context for modification - uses workout
     const context = await this.getContextService().getContext(
       user,
       [
         ContextType.USER_PROFILE,
         ContextType.CURRENT_WORKOUT,
-        ContextType.CHANGE_REQUEST,
       ],
-      {
-        workout,
-        changeRequest,
-      }
+      { workout }
     );
 
     // Transform to extract overview from JSON response for sub-agents
@@ -164,12 +160,8 @@ export class WorkoutAgentService {
       }],
     }, { model: 'gpt-5-mini' });
 
-    return agent.invoke(
-      `Using the workout overview, fitness profile, and requested changes from the context, decide whether the workout needs to be modified.
-- Follow the reasoning and modification rules from the system instructions.
-- Preserve the original training intent and structure as much as possible.
-- Apply substitutions or adjustments only when needed based on the user's request and profile.`
-    ) as Promise<ModifyWorkoutOutput>;
+    // Pass changeRequest directly as the message - it's the user's request, not context
+    return agent.invoke(changeRequest) as Promise<ModifyWorkoutOutput>;
   }
 }
 
