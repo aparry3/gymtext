@@ -39,7 +39,6 @@ export {
 // Workouts prompts
 export {
   DAILY_WORKOUT_SYSTEM_PROMPT,
-  dailyWorkoutUserPrompt,
   MODIFY_WORKOUT_SYSTEM_PROMPT,
   modifyWorkoutUserPrompt,
   ModifyWorkoutGenerationOutputSchema,

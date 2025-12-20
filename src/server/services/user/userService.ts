@@ -231,6 +231,21 @@ export class UserService {
     return result;
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await this.circuitBreaker.execute(async () => {
+      // Verify user exists first
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        return false;
+      }
+
+      // Delete user and all cascaded data
+      return await this.userRepository.delete(id);
+    });
+
+    return result || false;
+  }
+
   private transformToAdminUser(user: UserWithProfile): AdminUser {
     const hasProfile = Boolean(user.profile);
 
