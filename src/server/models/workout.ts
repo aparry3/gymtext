@@ -1,4 +1,4 @@
-import type { JsonValue, WorkoutInstances } from '../_types';
+import type { JsonValue, WorkoutInstances } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
 export type WorkoutInstance = Selectable<WorkoutInstances>;

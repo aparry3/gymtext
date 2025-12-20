@@ -2,7 +2,7 @@
 export * from '@/shared/types/user';
 
 // Import Kysely DB types
-import type { Users } from '../_types';
+import type { Users } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 
 // Kysely-based types (using database schema)

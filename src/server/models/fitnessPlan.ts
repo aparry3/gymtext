@@ -1,7 +1,7 @@
-import type { FitnessPlans } from '../_types';
+import type { FitnessPlans } from './_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
 import { _FitnessPlanSchema, type PlanStructure } from '@/shared/types/plan';
-import { UserWithProfile } from '../user';
+import { UserWithProfile } from './user';
 
 // Re-export schema types from shared
 export * from '@/shared/types/plan';
