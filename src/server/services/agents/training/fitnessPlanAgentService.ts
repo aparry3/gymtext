@@ -96,10 +96,8 @@ export class FitnessPlanAgentService {
   }> {
     // Transform to inject user info into the JSON for message agent
     const injectUserForMessage = (mainResult: unknown): string => {
-      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
       try {
-        const parsed = JSON.parse(jsonString);
-        const overview = parsed.description || parsed.fitnessPlan || jsonString;
+        const overview = mainResult as string;
         return JSON.stringify({
           userName: user.name,
           userProfile: user.profile || '',
@@ -109,7 +107,7 @@ export class FitnessPlanAgentService {
         return JSON.stringify({
           userName: user.name,
           userProfile: user.profile || '',
-          overview: jsonString,
+          overview: mainResult,
         } as PlanMessageData);
       }
     };
