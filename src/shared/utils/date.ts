@@ -104,6 +104,15 @@ export function now(timezone?: string): DateTime {
 }
 
 /**
+ * Get today's date (start of day) in a specific timezone
+ * @param timezone - IANA timezone (e.g., "America/New_York")
+ * @returns Date object representing midnight of today in the specified timezone
+ */
+export function today(timezone?: string): Date {
+  return now(timezone).startOf('day').toJSDate();
+}
+
+/**
  * Get start of day for a date in a specific timezone
  */
 export function startOfDay(date: Date | string, timezone?: string): Date {
