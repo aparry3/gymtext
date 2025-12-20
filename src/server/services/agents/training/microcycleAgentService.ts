@@ -45,7 +45,6 @@ const validateDays = (days: string[]): boolean => {
  */
 export class MicrocycleAgentService {
   private static instance: MicrocycleAgentService;
-  private contextService: ContextService;
 
   // Sub-agents as class properties (reused between generate/modify)
   private messageAgent = createAgent({
@@ -72,8 +71,13 @@ export class MicrocycleAgentService {
     schema: MicrocycleStructureSchema,
   }, { model: 'gpt-5-nano', maxTokens: 32000 });
 
-  private constructor() {
-    this.contextService = ContextService.getInstance();
+  private constructor() {}
+
+  /**
+   * Lazy-load ContextService to avoid module-load-time initialization
+   */
+  private getContextService(): ContextService {
+    return ContextService.getInstance();
   }
 
   public static getInstance(): MicrocycleAgentService {
@@ -121,7 +125,7 @@ export class MicrocycleAgentService {
     structure?: MicrocycleStructure;
   }> {
     // Build context using ContextService
-    const context = await this.contextService.getContext(
+    const context = await this.getContextService().getContext(
       user,
       [
         ContextType.FITNESS_PLAN,

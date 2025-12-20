@@ -30,7 +30,6 @@ import type { WorkoutInstance } from '@/server/models/workout';
  */
 export class WorkoutAgentService {
   private static instance: WorkoutAgentService;
-  private contextService: ContextService;
 
   // Sub-agents as class properties (reused between generate/modify)
   private messageAgent = createAgent({
@@ -46,8 +45,13 @@ export class WorkoutAgentService {
     schema: WorkoutStructureSchema,
   }, { model: 'gpt-5-nano', maxTokens: 32000 });
 
-  private constructor() {
-    this.contextService = ContextService.getInstance();
+  private constructor() {}
+
+  /**
+   * Lazy-load ContextService to avoid module-load-time initialization
+   */
+  private getContextService(): ContextService {
+    return ContextService.getInstance();
   }
 
   public static getInstance(): WorkoutAgentService {
@@ -85,7 +89,7 @@ export class WorkoutAgentService {
     isDeload: boolean = false
   ): Promise<WorkoutGenerateOutput> {
     // Build context using ContextService
-    const context = await this.contextService.getContext(
+    const context = await this.getContextService().getContext(
       user,
       [
         ContextType.USER_PROFILE,
@@ -125,7 +129,7 @@ export class WorkoutAgentService {
     changeRequest: string
   ): Promise<ModifyWorkoutOutput> {
     // Build context for modification - uses workout and change request
-    const context = await this.contextService.getContext(
+    const context = await this.getContextService().getContext(
       user,
       [
         ContextType.USER_PROFILE,
