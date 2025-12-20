@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { PlanStructureSchema, type PlanStructure } from '@/server/agents/training/schemas';
+import { PlanStructureSchema, type PlanStructure } from '@/server/services/agents/schemas/training';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,
@@ -11,10 +11,10 @@ import {
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
   modifyFitnessPlanUserPrompt,
   ModifyFitnessPlanOutputSchema,
-} from '@/server/agents/training/plans/prompts';
+  type ModifyFitnessPlanOutput,
+} from '@/server/services/agents/prompts/plans';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
-import type { ModifyFitnessPlanOutput } from '@/server/agents/training/plans/types';
 
 /**
  * FitnessPlanAgentService - Handles all fitness plan-related AI operations
@@ -177,7 +177,11 @@ export class FitnessPlanAgentService {
       }],
     }, { model: 'gpt-5.1' });
 
-    const result = await agent.invoke(userPromptContent) as ModifyFitnessPlanOutput;
+    const result = await agent.invoke(userPromptContent) as {
+      response: ModifyFitnessPlanOutput;
+      structure?: PlanStructure;
+      messages?: string[];
+    };
 
     console.log(`[plan-modify] Modified fitness plan, wasModified: ${result.response.wasModified}`);
 
@@ -186,7 +190,7 @@ export class FitnessPlanAgentService {
       description: result.response.description,
       wasModified: result.response.wasModified,
       modifications: result.response.modifications,
-      structure: result.structure,
+      structure: result.structure!,
     };
   }
 }

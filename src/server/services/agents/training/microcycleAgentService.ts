@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/agents/training/schemas';
+import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/services/agents/schemas/training';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
   MicrocycleGenerationOutputSchema,
@@ -11,8 +11,8 @@ import {
   modifyMicrocycleUserPrompt,
   ModifyMicrocycleOutputSchema,
   type MicrocycleGenerationOutput,
-} from '@/server/agents/training/microcycles/prompts';
-import type { MicrocycleGenerateOutput, ModifyMicrocycleOutput } from '@/server/agents/training/microcycles/types';
+} from '@/server/services/agents/prompts/microcycles';
+import type { MicrocycleGenerateOutput, ModifyMicrocycleOutput } from '@/server/services/agents/types/microcycles';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { DayOfWeek } from '@/shared/utils/date';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';

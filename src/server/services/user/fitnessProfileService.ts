@@ -20,10 +20,10 @@ import {
   buildProfileUpdateUserMessage,
   STRUCTURED_PROFILE_SYSTEM_PROMPT,
   buildStructuredProfileUserMessage,
-} from '@/server/services/agents/profile/prompts';
-import { ProfileUpdateOutputSchema, StructuredProfileSchema } from '@/server/services/agents/profile/schemas';
-import type { StructuredProfile } from '@/server/services/agents/profile/schemas';
-import type { StructuredProfileOutput, StructuredProfileInput } from '@/server/services/agents/profile/types';
+} from '@/server/services/agents/prompts/profile';
+import { ProfileUpdateOutputSchema, StructuredProfileSchema } from '@/server/services/agents/schemas/profile';
+import type { StructuredProfile } from '@/server/services/agents/schemas/profile';
+import type { StructuredProfileOutput, StructuredProfileInput } from '@/server/services/agents/types/profile';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';

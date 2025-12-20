@@ -12,14 +12,14 @@ import {
   buildUserFieldsUserMessage,
   STRUCTURED_PROFILE_SYSTEM_PROMPT,
   buildStructuredProfileUserMessage,
-} from './prompts';
+} from '../prompts/profile';
 import {
   ProfileUpdateOutputSchema,
   UserFieldsOutputSchema,
   StructuredProfileSchema,
-} from './schemas';
-import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from './types';
-import type { ToolResult } from '../shared/types';
+} from '../schemas/profile';
+import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from '../types/profile';
+import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/messageModel';
 
 /**

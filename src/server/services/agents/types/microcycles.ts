@@ -1,5 +1,5 @@
 import type { ModelConfig } from '@/server/agents';
-import type { MicrocycleStructure } from '@/server/agents/training/schemas';
+import type { MicrocycleStructure } from '@/server/services/agents/schemas/training';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { DayOfWeek } from '@/shared/utils/date';

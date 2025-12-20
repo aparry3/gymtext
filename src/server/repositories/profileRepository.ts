@@ -1,7 +1,7 @@
 import { BaseRepository } from './baseRepository';
 import type { Profiles } from '../models/_types';
 import type { Selectable, Insertable } from 'kysely';
-import type { StructuredProfile } from '@/server/services/agents/profile/schemas';
+import type { StructuredProfile } from '@/server/services/agents/schemas/profile';
 
 export type Profile = Selectable<Profiles>;
 export type NewProfile = Insertable<Profiles>;

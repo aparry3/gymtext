@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { WorkoutStructureSchema } from '@/server/agents/training/schemas';
+import { WorkoutStructureSchema } from '@/server/services/agents/schemas/training';
 import {
   DAILY_WORKOUT_SYSTEM_PROMPT,
   MODIFY_WORKOUT_SYSTEM_PROMPT,
@@ -8,11 +8,8 @@ import {
   workoutSmsUserPrompt,
   STRUCTURED_WORKOUT_SYSTEM_PROMPT,
   structuredWorkoutUserPrompt,
-} from '@/server/agents/training/workouts/prompts';
-import type {
-  WorkoutGenerateOutput,
-  ModifyWorkoutOutput,
-} from '@/server/agents/training/workouts/types';
+} from '@/server/services/agents/prompts/workouts';
+import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { WorkoutInstance } from '@/server/models/workout';

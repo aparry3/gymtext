@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
 import { StructuredPlanRenderer } from '@/components/pages/shared/StructuredPlanRenderer'
-import type { PlanStructure } from '@/server/agents/training/schemas'
+import type { PlanStructure } from '@/server/services/agents/schemas/training'
 import { getStepName, getProgressPercentage, TOTAL_STEPS } from '@/shared/constants/onboarding'
 
 interface FitnessPlan {

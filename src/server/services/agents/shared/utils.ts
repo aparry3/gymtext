@@ -2,7 +2,7 @@
  * Shared utilities for agent orchestration services
  */
 
-import type { ToolResult } from './types';
+import type { ToolResult } from '../types/shared';
 import type { ToolType } from '@/server/agents';
 
 /**

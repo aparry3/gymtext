@@ -7,7 +7,7 @@ import {
   WeeklyRhythmCard,
   ConditioningCard,
 } from '@/components/pages/me/plan';
-import type { PlanStructure } from '@/server/agents/training/schemas';
+import type { PlanStructure } from '@/server/services/agents/schemas/training';
 
 interface StructuredPlanRendererProps {
   structure: PlanStructure | null | undefined;

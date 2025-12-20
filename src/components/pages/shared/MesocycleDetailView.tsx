@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
 import { StructuredPlanRenderer } from '@/components/pages/shared/StructuredPlanRenderer'
-import type { PlanStructure } from '@/server/agents/training/schemas'
+import type { PlanStructure } from '@/server/services/agents/schemas/training'
 
 interface Mesocycle {
   id: string

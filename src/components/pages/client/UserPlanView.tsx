@@ -10,7 +10,7 @@ import {
   ConditioningCard,
   PlanSkeleton,
 } from '@/components/pages/me/plan';
-import type { PlanStructure } from '@/server/agents/training/schemas';
+import type { PlanStructure } from '@/server/services/agents/schemas/training';
 
 interface UserPlanViewProps {
   userId: string;

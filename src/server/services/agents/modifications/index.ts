@@ -6,8 +6,8 @@ import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from './prompts';
-import type { ToolResult } from '../shared/types';
+import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from '../prompts/modifications';
+import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/messageModel';
 
 /**

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
-import type { ToolResult } from '../shared/types';
+import type { ToolResult } from '../types/shared';
 import { toToolResult } from '../shared/utils';
 import type { ModifyWorkoutResult, ModifyWeekResult } from './workoutModificationService';
 import type { ModifyPlanResult } from './planModificationService';

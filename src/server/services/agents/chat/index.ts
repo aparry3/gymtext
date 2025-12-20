@@ -7,10 +7,10 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
-import { CHAT_SYSTEM_PROMPT } from './prompts';
+import { CHAT_SYSTEM_PROMPT } from '../prompts/chat';
 import { buildDateContext, buildWorkoutContext } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import type { ToolResult } from '../shared/types';
+import type { ToolResult } from '../types/shared';
 
 // Configuration from environment variables
 const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');

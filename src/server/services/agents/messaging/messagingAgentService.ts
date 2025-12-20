@@ -5,7 +5,7 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
 import { DAY_NAMES } from '@/shared/utils/date';
-import type { MicrocycleGenerationOutput } from '@/server/agents/training/microcycles';
+import type { MicrocycleGenerationOutput } from '@/server/services/agents/prompts/microcycles';
 
 // Schemas for structured outputs
 const WeeklyMessageSchema = z.object({
