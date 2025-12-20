@@ -1,5 +1,38 @@
 import { z } from "zod";
 
+// ============================================================================
+// Microcycle Structure Schemas (for structured microcycle representation)
+// ============================================================================
+
+/**
+ * Individual day within a microcycle
+ */
+export const MicrocycleDaySchema = z.object({
+  day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
+  focus: z.string().default(''),
+  activityType: z.enum(["Lifting", "Cardio", "Hybrid", "Mobility", "Rest", "Sport"]).default("Lifting"),
+  isRest: z.boolean().default(false),
+  notes: z.string().default('')
+});
+
+/**
+ * Complete microcycle structure (weekly rhythm)
+ */
+export const MicrocycleStructureSchema = z.object({
+  weekNumber: z.number().default(-1),
+  phase: z.string().default(''),
+  overview: z.string().default(''),
+  days: z.array(MicrocycleDaySchema).length(7), // LLM must provide exactly 7 days
+  isDeload: z.boolean().default(false)
+});
+
+export type MicrocycleStructure = z.infer<typeof MicrocycleStructureSchema>;
+export type MicrocycleDay = z.infer<typeof MicrocycleDaySchema>;
+
+// ============================================================================
+// Microcycle Generation Schema (for LLM output)
+// ============================================================================
+
 /**
  * Schema for microcycle generation output
  *

@@ -1,8 +1,11 @@
 import type { FitnessPlans } from '../_types';
 import { Insertable, Selectable, Updateable } from 'kysely';
-import { _FitnessPlanSchema } from './schema';
+import { _FitnessPlanSchema, type PlanStructure } from './schema';
 import { UserWithProfile } from '../userModel';
-import type { PlanStructure } from '@/server/services/agents/schemas/training';
+
+// Re-export schema types
+export type { PlanStructure } from './schema';
+export { PlanStructureSchema, PlanScheduleTemplateSchema } from './schema';
 
 export type FitnessPlanDB = Selectable<FitnessPlans>;
 export type NewFitnessPlan = Insertable<FitnessPlans>;

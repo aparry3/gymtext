@@ -1,7 +1,16 @@
 import { z } from "zod";
 
 /**
- * SHARED PRIMITIVES
+ * Workout Structure Schemas
+ *
+ * These schemas define the structured workout format used for:
+ * - LLM-generated workout outputs
+ * - UI rendering of workout details
+ * - Storing structured workout data
+ */
+
+/**
+ * Intensity descriptor for exercises
  * Default values used to ensure no nulls reach the UI.
  */
 export const IntensitySchema = z.object({
@@ -11,7 +20,7 @@ export const IntensitySchema = z.object({
 });
 
 /**
- * 1. WORKOUT SCHEMA (Daily Mission)
+ * Individual workout activity/exercise
  * Flexible schema for Lifting, Cardio, and Hybrid sessions.
  */
 export const WorkoutActivitySchema = z.object({
@@ -38,12 +47,18 @@ export const WorkoutActivitySchema = z.object({
   supersetId: z.string().default('')
 });
 
+/**
+ * Section of a workout (e.g., Warm Up, Main Lift, Cooldown)
+ */
 export const WorkoutSectionSchema = z.object({
   title: z.string().describe("e.g. 'Warm Up', 'Main Lift'"),
   overview: z.string().describe("Brief goal of this section").default(''),
   exercises: z.array(WorkoutActivitySchema).default([])
 });
 
+/**
+ * Complete workout structure
+ */
 export const WorkoutStructureSchema = z.object({
   title: z.string().describe("Concise workout name, 2-4 words max (e.g. 'Pull A', 'Upper Strength', 'Leg Day')"),
   focus: z.string().describe("Brief focus area, 1-3 words (e.g. 'Back & Biceps', 'Quads', 'Push')").default(''),
@@ -63,67 +78,8 @@ export const WorkoutStructureSchema = z.object({
   intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate")
 });
 
+// Inferred types
 export type WorkoutStructure = z.infer<typeof WorkoutStructureSchema>;
 export type WorkoutActivity = z.infer<typeof WorkoutActivitySchema>;
 export type WorkoutSection = z.infer<typeof WorkoutSectionSchema>;
 export type Intensity = z.infer<typeof IntensitySchema>;
-
-
-/**
- * 2. MICROCYCLE SCHEMA (Weekly Rhythm)
- */
-export const MicrocycleDaySchema = z.object({
-  day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
-  focus: z.string().default(''),
-  activityType: z.enum(["Lifting", "Cardio", "Hybrid", "Mobility", "Rest", "Sport"]).default("Lifting"),
-  isRest: z.boolean().default(false),
-  notes: z.string().default('')
-});
-
-export const MicrocycleStructureSchema = z.object({
-  weekNumber: z.number().default(-1),
-  phase: z.string().default(''),
-  overview: z.string().default(''),
-  days: z.array(MicrocycleDaySchema).length(7), // LLM must provide exactly 7 days
-  isDeload: z.boolean().default(false)
-});
-
-export type MicrocycleStructure = z.infer<typeof MicrocycleStructureSchema>;
-
-
-/**
- * 3. PLAN SCHEMA (Program Blueprint)
- */
-export const PlanScheduleTemplateSchema = z.array(
-  z.object({
-    day: z.string(), // e.g. "Monday"
-    focus: z.string().default(''),
-    rationale: z.string().default('')
-  })
-).describe("The ideal/default weekly rhythm");
-
-export const PlanStructureSchema = z.object({
-  name: z.string().describe("e.g. 'Strength + Lean Build Phase'"),
-  type: z.string().describe("e.g. 'Powerbuilding'").default(''),
-
-  // Core Strategy
-  coreStrategy: z.string().default(''),
-
-  // How You Progress
-  progressionStrategy: z.array(z.string()).default([]),
-
-  // When We Adjust
-  adjustmentStrategy: z.string().default(''),
-
-  // Conditioning Guidelines
-  conditioning: z.array(z.string()).default([]),
-
-  // Schedule
-  scheduleTemplate: PlanScheduleTemplateSchema.default([]),
-
-  // Metadata
-  durationWeeks: z.number().default(-1),
-  frequencyPerWeek: z.number().default(-1)
-});
-
-export type PlanStructure = z.infer<typeof PlanStructureSchema>;

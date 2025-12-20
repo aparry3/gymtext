@@ -16,8 +16,8 @@ import {
 import {
   ProfileUpdateOutputSchema,
   UserFieldsOutputSchema,
-  StructuredProfileSchema,
 } from '../schemas/profile';
+import { StructuredProfileSchema } from '@/server/models/profile';
 import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from '../types/profile';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/messageModel';

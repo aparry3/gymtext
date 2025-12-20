@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { PlanStructureSchema, type PlanStructure } from '@/server/services/agents/schemas/training';
+import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
   fitnessPlanUserPrompt,

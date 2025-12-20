@@ -1,5 +1,5 @@
 import type { ModelConfig } from '@/server/agents';
-import type { WorkoutStructure } from '@/server/services/agents/schemas/training';
+import type { WorkoutStructure } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ExperienceLevel } from '@/server/services/context';

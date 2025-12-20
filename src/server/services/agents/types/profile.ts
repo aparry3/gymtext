@@ -1,7 +1,7 @@
 import type { Message } from '@/server/models/messageModel';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { CommonTimezone } from '@/shared/utils/timezone';
-import type { StructuredProfile } from '../schemas/profile';
+import type { StructuredProfile } from '@/server/models/profile';
 
 // =============================================================================
 // Profile Update Agent Types

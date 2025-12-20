@@ -6,6 +6,20 @@
  */
 
 // ============================================================================
+// Workout Structure Schemas (for structured workout output)
+// ============================================================================
+export {
+  IntensitySchema,
+  WorkoutActivitySchema,
+  WorkoutSectionSchema,
+  WorkoutStructureSchema,
+  type WorkoutStructure,
+  type WorkoutActivity,
+  type WorkoutSection,
+  type Intensity,
+} from './workoutStructure';
+
+// ============================================================================
 // Gemini Schema Exports (use sentinel values instead of null)
 // ============================================================================
 export {

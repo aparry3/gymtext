@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { WorkoutStructureSchema } from '@/server/services/agents/schemas/training';
+import { WorkoutStructureSchema } from '@/server/models/workout';
 import {
   DAILY_WORKOUT_SYSTEM_PROMPT,
   MODIFY_WORKOUT_SYSTEM_PROMPT,

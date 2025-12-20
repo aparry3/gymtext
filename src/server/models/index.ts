@@ -18,16 +18,25 @@ export type {
 
 export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
-  FitnessPlanDB, FitnessPlanOverview
+  FitnessPlanDB, FitnessPlanOverview,
+  PlanStructure
 } from './fitnessPlan';
+export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 
 export type {
-  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate
+  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
+  WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity
 } from './workout';
+export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, IntensitySchema } from './workout';
 
 // Microcycle types
-export type { Microcycle } from './microcycle';
+export type { Microcycle, MicrocycleStructure, MicrocycleDay } from './microcycle';
 export type { MicrocyclePattern, MicrocycleGenerationOutput } from './microcycle/schema';
+export { MicrocycleStructureSchema, MicrocycleDaySchema } from './microcycle';
+
+// Profile types (structured profile from LLM extraction)
+export type { StructuredProfile, StructuredConstraint, ExperienceLevel } from './profile';
+export { StructuredProfileSchema, StructuredConstraintSchema, ExperienceLevelSchema } from './profile';
 
 // PageVisit types
 export type { PageVisit, NewPageVisit } from './pageVisit';

@@ -15,7 +15,7 @@ import { ExerciseAccordionCard } from './ExerciseAccordionCard';
 import { ExerciseExpandedView } from './ExerciseExpandedView';
 import { WorkoutTextView } from './WorkoutTextView';
 import { SectionAccordion } from './SectionAccordion';
-import type { WorkoutStructure, WorkoutActivity } from '@/server/services/agents/schemas/training';
+import type { WorkoutStructure, WorkoutActivity } from '@/server/models/workout';
 
 interface WorkoutDetailSheetProps {
   open: boolean;

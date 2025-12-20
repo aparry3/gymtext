@@ -1,8 +1,11 @@
 import { Microcycles } from '@/server/models/_types';
-import type { MicrocycleStructure } from '@/server/services/agents/schemas/training';
 
 // Re-export schema types
-export type { MicrocyclePattern, UpdatedMicrocyclePattern } from './schema';
+export type { MicrocyclePattern, UpdatedMicrocyclePattern, MicrocycleStructure, MicrocycleDay } from './schema';
+export { MicrocycleStructureSchema, MicrocycleDaySchema } from './schema';
+
+// Import for local use
+import type { MicrocycleStructure } from './schema';
 
 /**
  * Simplified Microcycle interface

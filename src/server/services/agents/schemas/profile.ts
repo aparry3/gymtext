@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { COMMON_TIMEZONES } from '@/shared/utils/timezone';
 
+/**
+ * Agent-Specific Profile Schemas
+ *
+ * These schemas are for agent output formats only.
+ * Domain types (StructuredProfile, etc.) have been moved to @/server/models/profile
+ */
+
 // =============================================================================
 // Profile Update Agent Schema
 // =============================================================================
@@ -72,51 +79,3 @@ export const UserFieldsOutputSchema = z.object({
 });
 
 export type UserFieldsOutputSchemaType = z.infer<typeof UserFieldsOutputSchema>;
-
-// =============================================================================
-// Structured Profile Agent Schema
-// =============================================================================
-
-/**
- * Constraint with optional temporal bounds
- * Represents temporary constraints like travel, injuries with recovery time, etc.
- */
-export const ConstraintSchema = z.object({
-  value: z.string().describe('Description of the constraint (injury, travel, temporary limitation, etc.)'),
-  start: z.string().nullable().describe('ISO date string when constraint started, or null if permanent/unknown'),
-  end: z.string().nullable().describe('ISO date string when constraint ends, or null if ongoing/permanent'),
-});
-
-/**
- * Experience level enum
- */
-export const ExperienceLevelSchema = z.enum(['beginner', 'intermediate', 'advanced']);
-
-/**
- * Main structured profile schema
- * A simplified, flat representation of the user's fitness profile
- * extracted from the Markdown dossier
- */
-export const StructuredProfileSchema = z.object({
-  /** User's fitness goals extracted from profile */
-  goals: z.array(z.string()).describe("User's stated fitness goals"),
-
-  /** User's experience level if stated */
-  experienceLevel: ExperienceLevelSchema.nullable().describe("User's experience level (beginner, intermediate, advanced) or null if not stated"),
-
-  /** Exercise, scheduling, and workout style preferences */
-  preferences: z.array(z.string()).describe('Preferences including exercise likes/dislikes, scheduling preferences, and workout style preferences'),
-
-  /** Permanent physical limitations or injuries */
-  injuries: z.array(z.string()).describe('Permanent physical limitations or chronic injuries'),
-
-  /** Temporary constraints with optional date bounds */
-  constraints: z.array(ConstraintSchema).describe('Temporary constraints with optional start/end dates (travel, temporary injuries, etc.)'),
-
-  /** Available equipment and gym access info */
-  equipmentAccess: z.array(z.string()).describe('Equipment access including gym type, available equipment, and limitations'),
-});
-
-export type StructuredProfile = z.infer<typeof StructuredProfileSchema>;
-export type Constraint = z.infer<typeof ConstraintSchema>;
-export type ExperienceLevel = z.infer<typeof ExperienceLevelSchema>;

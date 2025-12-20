@@ -17,7 +17,7 @@ import {
   PROFILE_UPDATE_SYSTEM_PROMPT,
   buildProfileUpdateUserMessage,
 } from '@/server/services/agents/prompts/profile';
-import { ProfileUpdateOutputSchema } from '@/server/services/agents/schemas/profile';
+import { ProfileUpdateOutputSchema } from '@/server/services/agents/schemas';
 
 /**
  * Data Migration Script: Full Reset & Regenerate Training Data for All Users

@@ -1,10 +1,9 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
-import { Microcycle } from '@/server/models/microcycle';
+import { Microcycle, type MicrocycleStructure } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
 import { microcycleAgentService } from '@/server/services/agents/training';
-import type { MicrocycleStructure } from '@/server/services/agents/schemas/training';
 import type { UserWithProfile } from '@/server/models/userModel';
 import type { ProgressInfo } from './progressService';
 import { UserService } from '../user/userService';

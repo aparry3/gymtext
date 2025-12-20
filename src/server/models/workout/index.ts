@@ -10,13 +10,29 @@ export type WorkoutInstanceUpdate = Updateable<WorkoutInstances>;
 export { mapSessionType, isValidDBSessionType, SESSION_TYPE_MAP, DB_SESSION_TYPES, LLM_SESSION_TYPES } from './sessionTypeMapping';
 export type { DBSessionType, LLMSessionType } from './sessionTypeMapping';
 
-// Export new enhanced types
+// Export enhanced types (for LLM structured output)
 export type {
   WorkoutBlock,
   WorkoutBlockItem,
   WorkoutModification,
   EnhancedWorkoutInstance,
   UpdatedWorkoutInstance
+} from './schema';
+
+// Export workout structure types (for workout rendering)
+export type {
+  WorkoutStructure,
+  WorkoutActivity,
+  WorkoutSection,
+  Intensity,
+} from './schema';
+
+// Export workout structure schemas
+export {
+  WorkoutStructureSchema,
+  WorkoutActivitySchema,
+  WorkoutSectionSchema,
+  IntensitySchema,
 } from './schema';
 
 export class WorkoutInstanceModel implements NewWorkoutInstance {

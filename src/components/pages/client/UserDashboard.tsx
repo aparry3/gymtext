@@ -10,7 +10,7 @@ import {
   DashboardSkeleton,
 } from '@/components/pages/me/dashboard';
 import { WorkoutDetailSheet } from '@/components/pages/me/workout/WorkoutDetailSheet';
-import type { WorkoutStructure } from '@/server/services/agents/schemas/training';
+import type { WorkoutStructure } from '@/server/models/workout';
 
 interface UserDashboardProps {
   userId: string;

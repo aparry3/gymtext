@@ -1,5 +1,5 @@
 import { createAgent } from '@/server/agents';
-import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/services/agents/schemas/training';
+import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
   MicrocycleGenerationOutputSchema,

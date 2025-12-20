@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { parseDate, formatDate } from '@/shared/utils/date'
 import { StructuredMicrocycleRenderer } from './StructuredMicrocycleRenderer'
-import type { MicrocycleStructure } from '@/server/services/agents/schemas/training'
+import type { MicrocycleStructure } from '@/server/models/microcycle'
 
 interface DayPattern {
   day: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'

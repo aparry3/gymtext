@@ -1,5 +1,5 @@
 import type { ModelConfig } from '@/server/agents';
-import type { PlanStructure } from '@/server/services/agents/schemas/training';
+import type { PlanStructure } from '@/server/models/fitnessPlan';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { UserWithProfile } from '@/server/models/userModel';
 
