@@ -11,6 +11,7 @@ import type {
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
+import { logAgentInvocation } from './logger';
 
 /**
  * Create a configurable agent from a definition and model config
@@ -117,6 +118,9 @@ export function createAgent<
       } else {
         mainResult = await model.invoke(messages) as InferSchemaOutput<TSchema>;
       }
+
+      // Log the agent invocation (fire-and-forget, won't block execution)
+      logAgentInvocation(name, input, messages, mainResult);
 
       console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms`);
 
