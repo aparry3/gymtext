@@ -8,7 +8,7 @@
 
 import { EventEmitter } from 'events';
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 export interface LocalMessage {
   messageId: string;

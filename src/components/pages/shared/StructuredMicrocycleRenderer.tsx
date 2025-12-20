@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { MicrocycleStructure } from '@/server/agents/training/schemas';
+import type { MicrocycleStructure } from '@/server/models/microcycle';
 
 interface StructuredMicrocycleRendererProps {
   structure: MicrocycleStructure | null | undefined;

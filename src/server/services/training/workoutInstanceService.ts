@@ -1,8 +1,8 @@
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { createWorkoutGenerateAgent } from '@/server/agents/training/workouts';
+import { workoutAgentService } from '@/server/services/agents/training';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { Microcycle } from '@/server/models/microcycle';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
@@ -159,13 +159,12 @@ export class WorkoutInstanceService {
       // Get recent workouts for context (last 7 days)
       // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
-      // Use AI agent to generate workout with message
-      const { response: description, message, structure } = await createWorkoutGenerateAgent().invoke({
+      // Use AI agent service to generate workout with message
+      const { response: description, message, structure } = await workoutAgentService.generateWorkout(
         user,
-        date: targetDate.toJSDate(),
-        dayOverview, // Pass the string overview instead of pattern object
-        isDeload: microcycle.isDeload,
-      });
+        dayOverview,
+        microcycle.isDeload ?? false
+      );
 
       // Extract theme from structured data or use default
       const theme = structure?.title || 'Workout';

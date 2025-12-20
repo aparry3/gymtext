@@ -6,6 +6,7 @@ import type { ProfileRepository } from '@/server/repositories/profileRepository'
 import { ContextType, type ContextExtras, type ResolvedContextData } from './types';
 import { SnippetType } from './builders/experienceLevel';
 import * as builders from './builders';
+import { today } from '@/shared/utils/date';
 
 /**
  * Dependencies for ContextService
@@ -91,7 +92,7 @@ export class ContextService {
     const needsExperienceLevel = types.includes(ContextType.EXPERIENCE_LEVEL) && extras.experienceLevel === undefined;
 
     // Fetch required data in parallel
-    const targetDate = extras.date || new Date();
+    const targetDate = extras.date || today(user.timezone);
     const [fitnessPlan, workout, microcycle, structuredProfile] = await Promise.all([
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
@@ -101,6 +102,8 @@ export class ContextService {
 
     // Build resolved data object
     const data: ResolvedContextData = {
+      userName: user.name,
+      userGender: user.gender,
       profile: user.profile,
       planText: extras.planText ?? fitnessPlan?.description,
       dayOverview: extras.dayOverview,
@@ -111,7 +114,6 @@ export class ContextService {
       isDeload: extras.isDeload,
       absoluteWeek: extras.absoluteWeek,
       currentWeek: extras.currentWeek,
-      changeRequest: extras.changeRequest,
       experienceLevel: extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null,
       snippetType: extras.snippetType,
     };
@@ -127,6 +129,8 @@ export class ContextService {
    */
   private buildContextForType(type: ContextType, data: ResolvedContextData): string {
     switch (type) {
+      case ContextType.USER:
+        return builders.buildUserContext({ name: data.userName, gender: data.userGender });
       case ContextType.USER_PROFILE:
         return builders.buildUserProfileContext(data.profile);
       case ContextType.FITNESS_PLAN:
@@ -143,8 +147,6 @@ export class ContextService {
           absoluteWeek: data.absoluteWeek,
           currentWeek: data.currentWeek,
         });
-      case ContextType.CHANGE_REQUEST:
-        return builders.buildChangeRequestContext(data.changeRequest);
       case ContextType.CURRENT_MICROCYCLE:
         return builders.buildMicrocycleContext(data.microcycle);
       case ContextType.EXPERIENCE_LEVEL:

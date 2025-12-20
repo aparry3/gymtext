@@ -1,0 +1,205 @@
+import { createAgent } from '@/server/agents';
+import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
+import {
+  FITNESS_PLAN_SYSTEM_PROMPT,
+  FITNESS_PLAN_GENERATE_USER_PROMPT,
+  PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
+  planSummaryMessageUserPrompt,
+  type PlanMessageData,
+  STRUCTURED_PLAN_SYSTEM_PROMPT,
+  structuredPlanUserPrompt,
+  FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
+  ModifyFitnessPlanOutputSchema,
+  type ModifyFitnessPlanOutput,
+} from '@/server/services/agents/prompts/plans';
+import type { UserWithProfile } from '@/server/models/user';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
+import { ContextService } from '@/server/services/context/contextService';
+import { ContextType } from '@/server/services/context/types';
+
+/**
+ * FitnessPlanAgentService - Handles all fitness plan-related AI operations
+ *
+ * Responsibilities:
+ * - Creates and invokes agents for fitness plan generation
+ * - Uses ContextService to build context from user profile
+ * - Returns structured results in legacy format
+ *
+ * @example
+ * ```typescript
+ * const result = await fitnessPlanAgentService.generateFitnessPlan(user);
+ * const { description, message, structure } = result;
+ * ```
+ */
+export class FitnessPlanAgentService {
+  private static instance: FitnessPlanAgentService;
+
+  private getContextService(): ContextService {
+    return ContextService.getInstance();
+  }
+
+  // Sub-agents as class properties (reused between generate/modify)
+  private messageAgent = createAgent({
+    name: 'message-plan',
+    systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      const data = JSON.parse(input) as PlanMessageData;
+      return planSummaryMessageUserPrompt(data);
+    },
+  }, { model: 'gpt-5-nano' });
+
+  private structuredAgent = createAgent({
+    name: 'structure-plan',
+    systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
+    userPrompt: (input: string) => {
+      try {
+        const parsed = JSON.parse(input);
+        const planText = parsed.description || parsed.fitnessPlan || input;
+        return structuredPlanUserPrompt(planText);
+      } catch {
+        return structuredPlanUserPrompt(input);
+      }
+    },
+    schema: PlanStructureSchema,
+  }, { model: 'gpt-5-nano', maxTokens: 32000 });
+
+  private constructor() {}
+
+  public static getInstance(): FitnessPlanAgentService {
+    if (!FitnessPlanAgentService.instance) {
+      FitnessPlanAgentService.instance = new FitnessPlanAgentService();
+    }
+    return FitnessPlanAgentService.instance;
+  }
+
+  /**
+   * Get the message sub-agent for standalone usage
+   */
+  public getMessageAgent() {
+    return this.messageAgent;
+  }
+
+  /**
+   * Get the structured sub-agent for standalone usage
+   */
+  public getStructuredAgent() {
+    return this.structuredAgent;
+  }
+
+  /**
+   * Generate a fitness plan for a user
+   *
+   * @param user - User with profile containing goals, preferences, etc.
+   * @returns Object with description, message, and structure (matching legacy format)
+   */
+  async generateFitnessPlan(user: UserWithProfile): Promise<{
+    description: string;
+    message: string;
+    structure: PlanStructure;
+  }> {
+    // Build context using ContextService
+    const context = await this.getContextService().getContext(
+      user,
+      [ContextType.USER, ContextType.USER_PROFILE]
+    );
+
+    // Transform to inject user info into the JSON for message agent
+    const injectUserForMessage = (mainResult: unknown): string => {
+      try {
+        const overview = mainResult as string;
+        return JSON.stringify({
+          userName: user.name,
+          userProfile: user.profile || '',
+          overview,
+        } as PlanMessageData);
+      } catch {
+        return JSON.stringify({
+          userName: user.name,
+          userProfile: user.profile || '',
+          overview: mainResult,
+        } as PlanMessageData);
+      }
+    };
+
+    // Create main agent with context
+    const agent = createAgent({
+      name: 'plan-generate',
+      systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
+      context,
+      subAgents: [{
+        message: { agent: this.messageAgent, transform: injectUserForMessage },
+        structure: this.structuredAgent,
+      }],
+    }, { model: 'gpt-5.1' });
+
+    const result = await agent.invoke(FITNESS_PLAN_GENERATE_USER_PROMPT) as {
+      response: string;
+      message: string;
+      structure: PlanStructure;
+    };
+
+    console.log(`[plan-generate] Generated fitness plan for user ${user.id}`);
+
+    // Map to legacy format expected by FitnessPlanService
+    return {
+      description: result.response,
+      message: result.message,
+      structure: result.structure,
+    };
+  }
+
+  /**
+   * Modify an existing fitness plan based on user constraints/requests
+   *
+   * @param user - User with profile
+   * @param currentPlan - Current fitness plan to modify
+   * @param changeRequest - User's modification request
+   * @returns Object with description, wasModified, modifications, structure (matching legacy format)
+   */
+  async modifyFitnessPlan(
+    user: UserWithProfile,
+    currentPlan: FitnessPlan,
+    changeRequest: string
+  ): Promise<{
+    description: string;
+    wasModified: boolean;
+    modifications: string;
+    structure: PlanStructure;
+  }> {
+    // Build context using ContextService
+    const context = await this.getContextService().getContext(
+      user,
+      [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN],
+      { planText: currentPlan.description || '' }
+    );
+
+    const agent = createAgent({
+      name: 'plan-modify',
+      systemPrompt: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
+      context,
+      schema: ModifyFitnessPlanOutputSchema,
+      subAgents: [{
+        structure: this.structuredAgent,  // No message needed for modify
+      }],
+    }, { model: 'gpt-5.1' });
+
+    // Pass changeRequest directly as the message - it's the user's request, not context
+    const result = await agent.invoke(changeRequest) as {
+      response: ModifyFitnessPlanOutput;
+      structure?: PlanStructure;
+      messages?: string[];
+    };
+
+    console.log(`[plan-modify] Modified fitness plan, wasModified: ${result.response.wasModified}`);
+
+    // Map to legacy format expected by PlanModificationService
+    return {
+      description: result.response.description,
+      wasModified: result.response.wasModified,
+      modifications: result.response.modifications,
+      structure: result.structure!,
+    };
+  }
+}
+
+export const fitnessPlanAgentService = FitnessPlanAgentService.getInstance();

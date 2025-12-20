@@ -1,13 +1,10 @@
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
-import { Microcycle } from '@/server/models/microcycle';
+import { Microcycle, type MicrocycleStructure } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
-import { createMicrocycleGenerateAgent } from '@/server/agents/training/microcycles';
-import type { MicrocycleStructure } from '@/server/agents/training/schemas';
-
-// Backwards-compatible alias
-const createMicrocycleAgent = createMicrocycleGenerateAgent;
+import { microcycleAgentService } from '@/server/services/agents/training';
+import type { UserWithProfile } from '@/server/models/user';
 import type { ProgressInfo } from './progressService';
 import { UserService } from '../user/userService';
 
@@ -136,12 +133,11 @@ export class MicrocycleService {
       throw new Error(`Client not found: ${clientId}`);
     }
 
-    // Generate microcycle using AI agent with plan text + user profile + week number
-    const { days, description, isDeload, message, structure } = await this.generateMicrocyclePattern(
-      plan.description,
-      user.profile || '',
-      progress.absoluteWeek,
-      progress.isDeload  // Pass the calculated isDeload from progress
+    // Generate microcycle using AI agent service
+    // Note: fitness plan and isDeload are determined by the agent via context service
+    const { days, description, isDeload, message, structure } = await this.generateMicrocycle(
+      user,
+      progress.absoluteWeek
     );
 
     // Create new microcycle
@@ -163,14 +159,13 @@ export class MicrocycleService {
   }
 
   /**
-   * Generate a microcycle using AI agent
-   * Uses fitness plan text and user profile to generate day descriptions
+   * Generate a microcycle using AI agent service
+   * Fitness plan is auto-fetched by context service
+   * The agent determines isDeload based on the plan's Progression Strategy
    */
-  private async generateMicrocyclePattern(
-    planText: string,
-    userProfile: string,
-    absoluteWeek: number,
-    isDeloadFromProgress: boolean
+  private async generateMicrocycle(
+    user: UserWithProfile,
+    absoluteWeek: number
   ): Promise<{
     days: string[];
     description: string;
@@ -179,14 +174,11 @@ export class MicrocycleService {
     structure?: MicrocycleStructure;
   }> {
     try {
-      // Use AI agent to generate the microcycle
-      const agent = createMicrocycleAgent();
-      const result = await agent.invoke({
-        planText,
-        userProfile,
-        absoluteWeek,
-        isDeload: isDeloadFromProgress,
-      });
+      // Use AI agent service to generate the microcycle
+      const result = await microcycleAgentService.generateMicrocycle(
+        user,
+        absoluteWeek
+      );
 
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;

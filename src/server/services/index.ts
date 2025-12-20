@@ -1,3 +1,22 @@
+// Entity services (from /services/training/, /services/user/, /services/messaging/)
+// NOTE: These must be imported first as they're used to initialize ContextService
+import { fitnessPlanService } from './training/fitnessPlanService';
+import { workoutInstanceService } from './training/workoutInstanceService';
+import { microcycleService } from './training/microcycleService';
+import { progressService } from './training/progressService';
+export { fitnessPlanService, workoutInstanceService, microcycleService, progressService };
+
+// Context service initialization (must happen before any agent services are used)
+import { ContextService } from './context';
+import { ProfileRepository } from '@/server/repositories/profileRepository';
+
+ContextService.initialize({
+  fitnessPlanService,
+  workoutInstanceService,
+  microcycleService,
+  profileRepository: new ProfileRepository(),
+});
+
 // Agent orchestration services (from /services/agents/)
 // These use static methods - call directly e.g. ChatService.handleIncomingMessage()
 export { ChatService } from './agents/chat';
@@ -26,12 +45,6 @@ export { onboardingService } from './orchestration/onboardingService';
 export type { DailyMessageService } from './orchestration/dailyMessageService';
 export type { WeeklyMessageService } from './orchestration/weeklyMessageService';
 export type { OnboardingService } from './orchestration/onboardingService';
-
-// Entity services (from /services/training/, /services/user/, /services/messaging/)
-export { fitnessPlanService } from './training/fitnessPlanService';
-export { progressService } from './training/progressService';
-export { workoutInstanceService } from './training/workoutInstanceService';
-export { microcycleService } from './training/microcycleService';
 
 export type { FitnessPlanService } from './training/fitnessPlanService';
 export type { ProgressService } from './training/progressService';

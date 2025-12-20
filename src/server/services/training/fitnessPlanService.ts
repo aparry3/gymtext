@@ -1,7 +1,7 @@
 import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
-import { UserWithProfile } from '../../models/userModel';
-import { createFitnessPlanAgent } from '../../agents/training/plans';
+import { UserWithProfile } from '../../models/user';
+import { fitnessPlanAgentService } from '../agents/training';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 /**
@@ -33,8 +33,8 @@ export class FitnessPlanService {
    * that contains split, frequency, goals, deload rules, and progression principles.
    */
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-    const fitnessPlanAgent = createFitnessPlanAgent();
-    const agentResponse = await fitnessPlanAgent(user);
+    // Use AI agent service to generate fitness plan
+    const agentResponse = await fitnessPlanAgentService.generateFitnessPlan(user);
 
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
     console.log('[FitnessPlanService] Created plan:', fitnessPlan.description?.substring(0, 200));

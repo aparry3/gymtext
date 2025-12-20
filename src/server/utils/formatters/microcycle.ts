@@ -5,7 +5,7 @@
  * for use in prompts, messages, and other contexts.
  */
 
-import type { MicrocyclePattern } from '@/server/models/microcycle/schema';
+import type { MicrocyclePattern } from '@/server/models/microcycle';
 
 /**
  * Simple day input with day name and content

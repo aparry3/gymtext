@@ -4,7 +4,7 @@ import {
   type UserWithProfile,
   type CreateUserData,
   UserModel
-} from '@/server/models/userModel';
+} from '@/server/models/user';
 import { getLocalHourForTimezone } from '@/server/utils/timezone';
 
 export class UserRepository extends BaseRepository {
@@ -292,5 +292,27 @@ export class UserRepository extends BaseRepository {
       .where('subscriptions.status', '=', 'active')
       .selectAll('users')
       .execute();
+  }
+
+  async delete(id: string): Promise<boolean> {
+    // First, clean up admin_activity_logs which has no FK constraint
+    // Delete where user is the target or the actor
+    await this.db
+      .deleteFrom('adminActivityLogs')
+      .where((eb) => eb.or([
+        eb('targetClientId', '=', id),
+        eb('actorClientId', '=', id)
+      ]))
+      .execute();
+
+    // Now delete the user - CASCADE will handle all other related tables:
+    // profile_updates, subscriptions, conversations, messages, fitness_plans,
+    // microcycles, workout_instances, user_onboarding, profiles, short_links, message_queues
+    const result = await this.db
+      .deleteFrom('users')
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
   }
 }

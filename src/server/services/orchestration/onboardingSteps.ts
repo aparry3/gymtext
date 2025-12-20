@@ -27,7 +27,7 @@ import { workoutInstanceService } from '@/server/services/training/workoutInstan
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
 import { now } from '@/shared/utils/date';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { WorkoutInstance } from '@/server/models/workout';

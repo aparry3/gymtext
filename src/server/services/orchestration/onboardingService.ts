@@ -1,11 +1,11 @@
-import { UserWithProfile } from '../../models/userModel';
+import { UserWithProfile } from '../../models/user';
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
-import { createPlanMicrocycleCombinedAgent } from '@/server/agents';
+import { messagingAgentService } from '@/server/services/agents/messaging';
 import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 
 /**
@@ -191,13 +191,12 @@ export class OnboardingService {
     // Get current weekday for the user's timezone
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
 
-    // Generate combined message using agent with fitness plan and week one details
-    const planMicrocycleCombinedAgent = createPlanMicrocycleCombinedAgent();
-    const message = await planMicrocycleCombinedAgent.invoke({
-      fitnessPlan: plan.message,
-      weekOne: microcycle.message,
+    // Generate combined message using messaging agent service
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(
+      plan.message,
+      microcycle.message,
       currentWeekday
-    });
+    );
 
     console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
     return message;

@@ -1,63 +1,80 @@
-// ==========================================
-// Configurable Agent System (RECOMMENDED)
-// ==========================================
-// Use createAgent for declarative, composable agent definitions
-export { createAgent } from './configurable';
+/**
+ * Configurable Agent System
+ *
+ * A declarative, composable way to define AI agents.
+ * This is the primary way to create agents in the codebase.
+ *
+ * @example
+ * ```typescript
+ * import { createAgent } from '@/server/agents';
+ *
+ * const myAgent = createAgent({
+ *   name: 'my-agent',
+ *   systemPrompt: 'You are a helpful assistant.',
+ *   userPrompt: (input) => `Help with: ${input}`,
+ *   schema: OutputSchema,
+ * }, {
+ *   model: 'gpt-5-nano',
+ *   maxTokens: 4000,
+ * });
+ *
+ * const result = await myAgent.invoke('something');
+ * // result.response contains the schema-typed output
+ * ```
+ */
+
+// ============================================
+// Main Agent Factory
+// ============================================
+export { createAgent } from './createAgent';
+
+// ============================================
+// Model Initialization
+// ============================================
+export { initializeModel, initializeImageModel } from './models';
+export type { ModelOptions, ImageModelConfig, ImageGenerationResult, InvokableModel } from './models';
+
+// ============================================
+// Types
+// ============================================
 export type {
+  // Base agent types
+  AgentConfig,
+  AgentDeps,
+  Agent,
+  ToolType,
+  ToolResult,
+
+  // Configurable agent types
   AgentDefinition,
   ModelConfig,
   ConfigurableAgent,
   SubAgentBatch,
+  SubAgentEntry,
+  SubAgentConfig,
   ModelId,
+
+  // Output types
   InferSchemaOutput,
   AgentComposedOutput,
-} from './configurable';
 
-// ==========================================
-// Agent Factory Exports (LEGACY PATTERN)
-// ==========================================
-// Use these factory functions to create agents with dependency injection
+  // Message types
+  Message,
+  ToolCall,
+  ToolExecutionResult,
+} from './types';
 
-// Base types and helpers
-export { createAgentFromFunction, createRunnableAgent } from './base';
-export type { Agent, AgentDeps, AgentConfig } from './base';
+// ============================================
+// Utilities
+// ============================================
+export { buildMessages, buildLoopContinuationMessage } from './utils';
+export type { BuildMessagesConfig } from './utils';
 
-// Fitness Plan Agents
-export { createFitnessPlanAgent } from './training/plans';
+// ============================================
+// Executors (for advanced use cases)
+// ============================================
+export { executeSubAgents } from './subAgentExecutor';
+export type { SubAgentExecutorConfig } from './subAgentExecutor';
 
-// Conversation Agents
-export { type ChatAgentConfig } from './conversation/chain';
-
-// Image Generation Agents
-export {
-  createExerciseImageAgent,
-  type ExerciseImageInput,
-  type ExerciseImageOutput,
-  type ExerciseImageConfig,
-} from './images/exercises';
-
-// Modification Agents (standalone agent)
-export {
-  createModificationsAgent,
-  type ModificationsAgentConfig,
-  type ModificationsAgentInput,
-  type ModificationsResponse,
-} from './modifications';
-
-// Note: Modification tools have been moved to @/server/services/agents/modifications/tools.ts
-// Import createModificationTools and related types from there instead
-
-// ==========================================
-// Legacy Exports (DEPRECATED - for backward compatibility only)
-// ==========================================
-// These will be removed in a future version
-// Please migrate to the factory functions above
-
-export * from './training/plans';
-export * from './messaging/welcomeMessage/chain';
-export * from './messaging/planSummary/chain';
-export * from './messaging/planMicrocycleCombined/chain';
-export * from './messaging/updatedMicrocycleMessage/chain';
-export * from './conversation/chain';
-export * from './training/microcycles';
-export * from './training/workouts';
+export { executeToolLoop } from './toolExecutor';
+export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';

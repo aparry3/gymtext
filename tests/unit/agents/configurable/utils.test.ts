@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildMessages } from '@/server/agents/configurable/utils';
+import { buildMessages } from '@/server/agents/utils';
 
 describe('buildMessages', () => {
   it('should build messages in correct order: system, context, previous, user', () => {

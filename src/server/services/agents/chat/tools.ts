@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
-import type { ToolResult } from '../shared/types';
-import type { Message } from '@/server/models/messageModel';
+import type { ToolResult } from '../types/shared';
+import type { Message } from '@/server/models/message';
 
 /**
  * Creates a tool with a required `message` parameter that gets sent immediately

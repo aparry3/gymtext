@@ -2,7 +2,7 @@ import { BaseRepository } from '@/server/repositories/baseRepository';
 import type { 
   Message, 
   NewMessage, 
-} from '@/server/models/messageModel';
+} from '@/server/models/message';
 
 export class MessageRepository extends BaseRepository {
   async create(message: NewMessage): Promise<Message> {

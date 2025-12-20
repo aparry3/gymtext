@@ -5,13 +5,13 @@ import type { ExperienceLevel, SnippetType } from './builders/experienceLevel';
  * Context types that can be requested from the ContextService
  */
 export enum ContextType {
+  USER = 'user',
   USER_PROFILE = 'userProfile',
   FITNESS_PLAN = 'fitnessPlan',
   DAY_OVERVIEW = 'dayOverview',
   CURRENT_WORKOUT = 'currentWorkout',
   DATE_CONTEXT = 'dateContext',
   TRAINING_META = 'trainingMeta',
-  CHANGE_REQUEST = 'changeRequest',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
   EXPERIENCE_LEVEL = 'experienceLevel',
 }
@@ -22,7 +22,6 @@ export enum ContextType {
 export interface ContextExtras {
   // Caller-provided data (cannot be auto-fetched)
   dayOverview?: string;
-  changeRequest?: string;
 
   // Training metadata (from orchestration context)
   isDeload?: boolean;
@@ -47,6 +46,8 @@ export interface ContextExtras {
  * Passed to individual builders
  */
 export interface ResolvedContextData {
+  userName?: string | null;
+  userGender?: string | null;
   profile?: string | null;
   planText?: string | null;
   dayOverview?: string;
@@ -57,7 +58,6 @@ export interface ResolvedContextData {
   isDeload?: boolean;
   absoluteWeek?: number;
   currentWeek?: number;
-  changeRequest?: string;
   experienceLevel?: ExperienceLevel | null;
   snippetType?: SnippetType;
 }

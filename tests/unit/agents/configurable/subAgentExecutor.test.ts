@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { executeSubAgents } from '@/server/agents/configurable/subAgentExecutor';
-import type { ConfigurableAgent } from '@/server/agents/configurable/types';
+import { executeSubAgents } from '@/server/agents/subAgentExecutor';
+import type { ConfigurableAgent } from '@/server/agents/types';
 
 describe('executeSubAgents', () => {
   it('should execute agents within a batch in parallel', async () => {

@@ -48,3 +48,6 @@ next-env.d.ts
 backup-*
 
 backups/
+
+# agent logs
+_logs/

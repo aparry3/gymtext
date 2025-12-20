@@ -1,7 +1,6 @@
-import { UserModel, CreateUserData, UserWithProfile } from '@/server/models/userModel';
+import { UserModel, CreateUserData, UserWithProfile, User } from '@/server/models/user';
 import { UserRepository } from '@/server/repositories/userRepository';
 import { OnboardingRepository } from '@/server/repositories/onboardingRepository';
-import type { User } from '@/server/models/user/schemas';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/components/admin/types';
 import { getTimezonesAtLocalTime } from '@/shared/utils/date';
@@ -230,6 +229,21 @@ export class UserService {
     }
 
     return result;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await this.circuitBreaker.execute(async () => {
+      // Verify user exists first
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        return false;
+      }
+
+      // Delete user and all cascaded data
+      return await this.userRepository.delete(id);
+    });
+
+    return result || false;
   }
 
   private transformToAdminUser(user: UserWithProfile): AdminUser {

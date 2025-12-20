@@ -7,7 +7,7 @@
 
 import { twilioClient as twilioSdk } from '../twilio/twilio';
 import type { IMessagingClient, MessageResult, MessagingProvider } from './types';
-import type { UserWithProfile } from '@/server/models/userModel';
+import type { UserWithProfile } from '@/server/models/user';
 
 export class TwilioMessagingClient implements IMessagingClient {
   public readonly provider: MessagingProvider = 'twilio';
