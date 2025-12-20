@@ -8,7 +8,7 @@ import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
 import { CHAT_SYSTEM_PROMPT } from '../prompts/chat';
-import { buildDateContext, buildWorkoutContext } from '@/server/services/context';
+import { ContextService, ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../types/shared';
 
@@ -139,9 +139,6 @@ export class ChatService {
         aggregatedContent: message.substring(0, 100) + (message.length > 100 ? '...' : '')
       });
 
-      // Fetch current workout
-      const currentWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, now(user.timezone).toJSDate());
-
       // Fetch user with profile (if not already included)
       const userWithProfile = user.profile !== undefined
         ? user
@@ -176,11 +173,11 @@ export class ChatService {
       );
 
 
-      // Build context using standardized builders
-      const agentContext = [
-        buildDateContext(userWithProfile.timezone, undefined),
-        buildWorkoutContext(currentWorkout),
-      ].filter(ctx => ctx.trim().length > 0);
+      // Build context using ContextService
+      const agentContext = await ContextService.getInstance().getContext(
+        userWithProfile,
+        [ContextType.DATE_CONTEXT, ContextType.CURRENT_WORKOUT]
+      );
 
       // Convert previous messages to Message format for the configurable agent
       const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(context || [])
