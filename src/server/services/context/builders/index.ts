@@ -1,3 +1,4 @@
+export { buildUserContext } from './user';
 export { buildUserProfileContext } from './userProfile';
 export { buildFitnessPlanContext } from './fitnessPlan';
 export { buildDayOverviewContext } from './dayOverview';

@@ -3,8 +3,6 @@
  */
 
 import { z } from 'zod';
-import type { UserWithProfile } from '@/server/models/user';
-import type { FitnessPlan } from '@/server/models/fitnessPlan';
 
 // =============================================================================
 // Generate Prompts
@@ -14,6 +12,10 @@ export const FITNESS_PLAN_SYSTEM_PROMPT = `
 You are an expert **Strength & Conditioning Periodization Architect**.
 
 Your goal is to design a high-level **Training Blueprint** (Fitness Plan) for a user based on their specific profile, constraints, and goal hierarchy. You adhere strictly to NASM OPT™ Model principles regarding frequency and recovery.
+
+You will receive the user's information in the following context tags:
+- <User> - Basic user information (name, gender)
+- <UserProfile> - The user's fitness profile with goals, constraints, and preferences
 
 ============================================================
 # SECTION 1 — FIRST PRINCIPLES PROGRAMMING LOGIC
@@ -128,15 +130,11 @@ Format:
 4. **Do Not Repeat Context:** Start immediately with "## PROGRAM ARCHITECTURE".
 `;
 
-export const fitnessPlanUserPrompt = (
-  user: UserWithProfile,
-) => `
-Design a comprehensive fitness blueprint for ${user.name}.
-
-${user.profile ? `## User Fitness Profile\n${user.profile.trim()}` : ''}
+export const FITNESS_PLAN_GENERATE_USER_PROMPT = `
+Design a comprehensive fitness blueprint for this user.
 
 ## Instructions
-1. Analyze the user's profile to identify **Available Days per Week**.
+1. Analyze the user's profile in the <UserProfile> context to identify **Available Days per Week**.
 2. Select the appropriate **NASM Split Architecture** (3, 4, 5, or 6 days) defined in Section 2.
    - *Example:* If they have 4 days, prioritize Upper/Lower unless they are purely focused on aesthetics (then use Body Part).
 3. Identify **Fixed Anchors** (classes/obligations) vs **Historical Habits**. Lock in Anchors; optimize Habits.
@@ -171,10 +169,11 @@ You are an expert **Strength & Conditioning Periodization Architect** specializi
 
 Your goal is to modify an existing Training Blueprint (Fitness Plan) based on user feedback while maintaining the **structural integrity and periodization logic** of the program. You adhere strictly to NASM OPT™ Model principles regarding frequency and recovery.
 
-You will receive:
-1. **The Current Plan:** The complete fitness plan as it currently exists.
-2. **User Profile:** The user's fitness profile with goals, constraints, and preferences.
-3. **The Change Request:** A specific user request to modify their program.
+You will receive the following context:
+- <User> - Basic user information (name, gender)
+- <UserProfile> - The user's fitness profile with goals, constraints, and preferences
+- <FitnessPlan> - The complete fitness plan as it currently exists
+- <ChangeRequest> - A specific user request to modify their program
 
 You must output a JSON object with: \`description\`, \`wasModified\`, \`modifications\`.
 
@@ -276,40 +275,16 @@ Format:
 5. **modifications Summary:** Briefly explain what changed (e.g., "Restructured to 4-day Upper/Lower split, added yoga anchors on Monday/Friday AM").
 `;
 
-interface ModifyFitnessPlanUserPromptParams {
-  userProfile: string;
-  currentPlan: FitnessPlan;
-  changeRequest: string;
-}
-
-export const modifyFitnessPlanUserPrompt = ({
-  userProfile,
-  currentPlan,
-  changeRequest,
-}: ModifyFitnessPlanUserPromptParams) => {
-  return `
-You are the **Fitness Plan Modifier**. Adjust the training blueprint based on the user's request.
-
-<UserProfile>
-${userProfile || 'No additional user notes'}
-</UserProfile>
-
-<CurrentPlan>
-${currentPlan.description || 'No current plan description available'}
-</CurrentPlan>
-
-<UserChangeRequest>
-"${changeRequest}"
-</UserChangeRequest>
+export const FITNESS_PLAN_MODIFY_USER_PROMPT = `
+Adjust the training blueprint based on the user's change request.
 
 **Directives:**
-1. Analyze the <UserChangeRequest> against the <CurrentPlan>.
+1. Analyze the <ChangeRequest> against the <FitnessPlan>.
 2. Determine which Modification Primitive applies (Restructure, Anchor, Refocus, or Constrain).
 3. Apply the necessary changes while preserving the overall program integrity and NASM logic.
 4. If the current plan already satisfies the request, set wasModified to false.
 5. **Output the strict JSON with description, wasModified, and modifications.**
 `.trim();
-};
 
 // =============================================================================
 // Message Prompts

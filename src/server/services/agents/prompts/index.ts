@@ -25,9 +25,9 @@ export {
 // Plans prompts
 export {
   FITNESS_PLAN_SYSTEM_PROMPT,
-  fitnessPlanUserPrompt,
+  FITNESS_PLAN_GENERATE_USER_PROMPT,
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
-  modifyFitnessPlanUserPrompt,
+  FITNESS_PLAN_MODIFY_USER_PROMPT,
   ModifyFitnessPlanOutputSchema,
   type ModifyFitnessPlanOutput,
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,

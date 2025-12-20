@@ -2,29 +2,29 @@ import { createAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
-  fitnessPlanUserPrompt,
+  FITNESS_PLAN_GENERATE_USER_PROMPT,
   PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
   type PlanMessageData,
   STRUCTURED_PLAN_SYSTEM_PROMPT,
   structuredPlanUserPrompt,
   FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
-  modifyFitnessPlanUserPrompt,
+  FITNESS_PLAN_MODIFY_USER_PROMPT,
   ModifyFitnessPlanOutputSchema,
   type ModifyFitnessPlanOutput,
 } from '@/server/services/agents/prompts/plans';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
+import { ContextService } from '@/server/services/context/contextService';
+import { ContextType } from '@/server/services/context/types';
 
 /**
  * FitnessPlanAgentService - Handles all fitness plan-related AI operations
  *
  * Responsibilities:
  * - Creates and invokes agents for fitness plan generation
+ * - Uses ContextService to build context from user profile
  * - Returns structured results in legacy format
- *
- * Note: Fitness plan generation uses userPrompt transformer rather than context
- * because it creates the initial plan from the user's profile directly.
  *
  * @example
  * ```typescript
@@ -34,6 +34,10 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
  */
 export class FitnessPlanAgentService {
   private static instance: FitnessPlanAgentService;
+
+  private getContextService(): ContextService {
+    return ContextService.getInstance();
+  }
 
   // Sub-agents as class properties (reused between generate/modify)
   private messageAgent = createAgent({
@@ -94,6 +98,12 @@ export class FitnessPlanAgentService {
     message: string;
     structure: PlanStructure;
   }> {
+    // Build context using ContextService
+    const context = await this.getContextService().getContext(
+      user,
+      [ContextType.USER, ContextType.USER_PROFILE]
+    );
+
     // Transform to inject user info into the JSON for message agent
     const injectUserForMessage = (mainResult: unknown): string => {
       try {
@@ -112,20 +122,18 @@ export class FitnessPlanAgentService {
       }
     };
 
-    // Create main agent - no context needed, uses userPrompt transformer
+    // Create main agent with context
     const agent = createAgent({
       name: 'plan-generate',
       systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
+      context,
       subAgents: [{
         message: { agent: this.messageAgent, transform: injectUserForMessage },
         structure: this.structuredAgent,
       }],
     }, { model: 'gpt-5.1' });
 
-    // Build the user prompt
-    const userPromptContent = fitnessPlanUserPrompt(user);
-
-    const result = await agent.invoke(userPromptContent) as {
+    const result = await agent.invoke(FITNESS_PLAN_GENERATE_USER_PROMPT) as {
       response: string;
       message: string;
       structure: PlanStructure;
@@ -159,23 +167,24 @@ export class FitnessPlanAgentService {
     modifications: string;
     structure: PlanStructure;
   }> {
-    // Build the user prompt using the existing function
-    const userPromptContent = modifyFitnessPlanUserPrompt({
-      userProfile: user.profile || '',
-      currentPlan,
-      changeRequest,
-    });
+    // Build context using ContextService
+    const context = await this.getContextService().getContext(
+      user,
+      [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN, ContextType.CHANGE_REQUEST],
+      { planText: currentPlan.description || '', changeRequest }
+    );
 
     const agent = createAgent({
       name: 'plan-modify',
       systemPrompt: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
+      context,
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{
         structure: this.structuredAgent,  // No message needed for modify
       }],
     }, { model: 'gpt-5.1' });
 
-    const result = await agent.invoke(userPromptContent) as {
+    const result = await agent.invoke(FITNESS_PLAN_MODIFY_USER_PROMPT) as {
       response: ModifyFitnessPlanOutput;
       structure?: PlanStructure;
       messages?: string[];

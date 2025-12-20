@@ -101,6 +101,8 @@ export class ContextService {
 
     // Build resolved data object
     const data: ResolvedContextData = {
+      userName: user.name,
+      userGender: user.gender,
       profile: user.profile,
       planText: extras.planText ?? fitnessPlan?.description,
       dayOverview: extras.dayOverview,
@@ -127,6 +129,8 @@ export class ContextService {
    */
   private buildContextForType(type: ContextType, data: ResolvedContextData): string {
     switch (type) {
+      case ContextType.USER:
+        return builders.buildUserContext({ name: data.userName, gender: data.userGender });
       case ContextType.USER_PROFILE:
         return builders.buildUserProfileContext(data.profile);
       case ContextType.FITNESS_PLAN:

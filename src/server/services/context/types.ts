@@ -5,6 +5,7 @@ import type { ExperienceLevel, SnippetType } from './builders/experienceLevel';
  * Context types that can be requested from the ContextService
  */
 export enum ContextType {
+  USER = 'user',
   USER_PROFILE = 'userProfile',
   FITNESS_PLAN = 'fitnessPlan',
   DAY_OVERVIEW = 'dayOverview',
@@ -47,6 +48,8 @@ export interface ContextExtras {
  * Passed to individual builders
  */
 export interface ResolvedContextData {
+  userName?: string | null;
+  userGender?: string | null;
   profile?: string | null;
   planText?: string | null;
   dayOverview?: string;
