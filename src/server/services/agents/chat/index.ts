@@ -7,7 +7,6 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
-import { CHAT_SYSTEM_PROMPT } from '../prompts/chat';
 import { ContextService, ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../types/shared';
@@ -186,10 +185,9 @@ export class ChatService {
           content: m.content,
         }));
 
-      // Create chat agent inline with configurable agent factory
+      // Create chat agent - prompts fetched from DB based on agent name
       const agent = await createAgent({
-        name: 'conversation',
-        systemPrompt: CHAT_SYSTEM_PROMPT,
+        name: 'chat',
         context: agentContext,
         previousMessages: previousMsgs,
         tools,

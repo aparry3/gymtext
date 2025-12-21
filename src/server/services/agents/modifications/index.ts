@@ -6,7 +6,7 @@ import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from '../prompts/modifications';
+import { buildModificationsUserMessage } from '../prompts/modifications';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 
@@ -82,10 +82,9 @@ export class ModificationService {
       // Build user message
       const userMessage = buildModificationsUserMessage({ user, message });
 
-      // Create modifications agent inline with configurable pattern
+      // Create modifications agent - prompts fetched from DB based on agent name
       const agent = await createAgent({
         name: 'modifications',
-        systemPrompt: MODIFICATIONS_SYSTEM_PROMPT,
         previousMessages: previousMsgs,
         tools,
       }, { model: 'gpt-5-mini' });

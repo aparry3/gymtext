@@ -1,13 +1,9 @@
 import { createAgent, type ConfigurableAgent } from '@/server/agents';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
-  MICROCYCLE_SYSTEM_PROMPT,
   MicrocycleGenerationOutputSchema,
-  MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
   microcycleMessageUserPrompt,
-  STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
   structuredMicrocycleUserPrompt,
-  MICROCYCLE_MODIFY_SYSTEM_PROMPT,
   ModifyMicrocycleOutputSchema,
   type MicrocycleGenerationOutput,
 } from '@/server/services/agents/prompts/microcycles';
@@ -66,12 +62,12 @@ export class MicrocycleAgentService {
 
   /**
    * Get the message sub-agent (lazy-initialized)
+   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
         name: 'microcycle-message',
-        systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
         userPrompt: (input: string) => {
           const data = JSON.parse(input) as MicrocycleGenerationOutput;
           return microcycleMessageUserPrompt(data);
@@ -83,12 +79,12 @@ export class MicrocycleAgentService {
 
   /**
    * Get the structured sub-agent (lazy-initialized)
+   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
-        name: 'structured-microcycle',
-        systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
+        name: 'microcycle-structured',
         userPrompt: (input: string) => {
           const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
           return structuredMicrocycleUserPrompt(
@@ -159,10 +155,9 @@ export class MicrocycleAgentService {
       }
     };
 
-    // Create main agent with context
+    // Create main agent with context (prompts fetched from DB)
     const agent = await createAgent({
-      name: 'microcycle-generate',
-      systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
+      name: 'microcycle',
       context,
       schema: MicrocycleGenerationOutputSchema,
       subAgents: [{
@@ -180,8 +175,9 @@ export class MicrocycleAgentService {
           console.log(`[microcycle-generate] Retry attempt ${attempt}/${MAX_RETRIES} for week ${absoluteWeek}`);
         }
 
+        // Pass just the dynamic data - DB user prompt provides instructions
         const result = await agent.invoke(
-          `Generate the Weekly Training Pattern for **Week ${absoluteWeek}**.`
+          `Absolute Week: ${absoluteWeek}`
         ) as MicrocycleGenerateOutput;
 
         // Validate that all 7 days are present and non-empty
@@ -281,9 +277,9 @@ export class MicrocycleAgentService {
       }
     };
 
+    // Prompts fetched from DB based on agent name
     const agent = await createAgent({
-      name: 'microcycle-modify',
-      systemPrompt: MICROCYCLE_MODIFY_SYSTEM_PROMPT,
+      name: 'modify-microcycle',
       context,
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{

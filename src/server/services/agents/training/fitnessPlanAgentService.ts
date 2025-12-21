@@ -1,14 +1,9 @@
 import { createAgent, type ConfigurableAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
-  FITNESS_PLAN_SYSTEM_PROMPT,
-  FITNESS_PLAN_GENERATE_USER_PROMPT,
-  PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
   planSummaryMessageUserPrompt,
   type PlanMessageData,
-  STRUCTURED_PLAN_SYSTEM_PROMPT,
   structuredPlanUserPrompt,
-  FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
   ModifyFitnessPlanOutputSchema,
   type ModifyFitnessPlanOutput,
 } from '@/server/services/agents/prompts/plans';
@@ -53,12 +48,12 @@ export class FitnessPlanAgentService {
 
   /**
    * Get the message sub-agent (lazy-initialized)
+   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
-        name: 'message-plan',
-        systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
+        name: 'fitness-plan-message',
         userPrompt: (input: string) => {
           const data = JSON.parse(input) as PlanMessageData;
           return planSummaryMessageUserPrompt(data);
@@ -70,12 +65,12 @@ export class FitnessPlanAgentService {
 
   /**
    * Get the structured sub-agent (lazy-initialized)
+   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: PlanStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
-        name: 'structure-plan',
-        systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
+        name: 'fitness-plan-structured',
         userPrompt: (input: string) => {
           try {
             const parsed = JSON.parse(input);
@@ -132,10 +127,9 @@ export class FitnessPlanAgentService {
       }
     };
 
-    // Create main agent with context
+    // Create main agent with context (prompts fetched from DB)
     const agent = await createAgent({
-      name: 'plan-generate',
-      systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
+      name: 'fitness-plan',
       context,
       subAgents: [{
         message: { agent: messageAgent, transform: injectUserForMessage },
@@ -143,7 +137,8 @@ export class FitnessPlanAgentService {
       }],
     }, { model: 'gpt-5.1' });
 
-    const result = await agent.invoke(FITNESS_PLAN_GENERATE_USER_PROMPT) as {
+    // Empty input - DB user prompt provides the instructions
+    const result = await agent.invoke('') as {
       response: string;
       message: string;
       structure: PlanStructure;
@@ -187,9 +182,9 @@ export class FitnessPlanAgentService {
     // Get structured sub-agent (lazy-initialized)
     const structuredAgent = await this.getStructuredAgent();
 
+    // Prompts fetched from DB based on agent name
     const agent = await createAgent({
-      name: 'plan-modify',
-      systemPrompt: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
+      name: 'modify-fitness-plan',
       context,
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{
