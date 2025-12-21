@@ -180,7 +180,7 @@ export class DailyMessageService {
       } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
         // Fallback: Generate message if needed (shouldn't happen in production)
         const { workoutAgentService } = await import('@/server/services/agents/training');
-        const messageAgent = workoutAgentService.getMessageAgent();
+        const messageAgent = await workoutAgentService.getMessageAgent();
         const result = await messageAgent.invoke(workout.description);
         workoutMessage = result.response;
       } else {

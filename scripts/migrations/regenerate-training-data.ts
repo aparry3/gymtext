@@ -182,7 +182,7 @@ async function generateProfileFromSignupData(
   const currentDate = formatForAI(new Date(), user.timezone);
   const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
-  const agent = createAgent({
+  const agent = await createAgent({
     name: 'profile-update',
     systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
     schema: ProfileUpdateOutputSchema,

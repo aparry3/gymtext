@@ -1,4 +1,4 @@
-import { createAgent } from '@/server/agents';
+import { createAgent, type ConfigurableAgent } from '@/server/agents';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
   MICROCYCLE_SYSTEM_PROMPT,
@@ -44,30 +44,9 @@ const validateDays = (days: string[]): boolean => {
 export class MicrocycleAgentService {
   private static instance: MicrocycleAgentService;
 
-  // Sub-agents as class properties (reused between generate/modify)
-  private messageAgent = createAgent({
-    name: 'microcycle-message',
-    systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
-    userPrompt: (input: string) => {
-      const data = JSON.parse(input) as MicrocycleGenerationOutput;
-      return microcycleMessageUserPrompt(data);
-    },
-  }, { model: 'gpt-5-nano' });
-
-  private structuredAgent = createAgent({
-    name: 'structured-microcycle',
-    systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
-    userPrompt: (input: string) => {
-      const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
-      return structuredMicrocycleUserPrompt(
-        data.overview,
-        data.days,
-        data.absoluteWeek ?? 1,
-        data.isDeload
-      );
-    },
-    schema: MicrocycleStructureSchema,
-  }, { model: 'gpt-5-nano', maxTokens: 32000 });
+  // Lazy-initialized sub-agents (promises cached after first creation)
+  private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
+  private structuredAgentPromise: Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> | null = null;
 
   private constructor() {}
 
@@ -86,17 +65,43 @@ export class MicrocycleAgentService {
   }
 
   /**
-   * Get the message sub-agent for standalone usage
+   * Get the message sub-agent (lazy-initialized)
    */
-  public getMessageAgent() {
-    return this.messageAgent;
+  public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
+    if (!this.messageAgentPromise) {
+      this.messageAgentPromise = createAgent({
+        name: 'microcycle-message',
+        systemPrompt: MICROCYCLE_MESSAGE_SYSTEM_PROMPT,
+        userPrompt: (input: string) => {
+          const data = JSON.parse(input) as MicrocycleGenerationOutput;
+          return microcycleMessageUserPrompt(data);
+        },
+      }, { model: 'gpt-5-nano' });
+    }
+    return this.messageAgentPromise;
   }
 
   /**
-   * Get the structured sub-agent for standalone usage
+   * Get the structured sub-agent (lazy-initialized)
    */
-  public getStructuredAgent() {
-    return this.structuredAgent;
+  public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> {
+    if (!this.structuredAgentPromise) {
+      this.structuredAgentPromise = createAgent({
+        name: 'structured-microcycle',
+        systemPrompt: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT,
+        userPrompt: (input: string) => {
+          const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
+          return structuredMicrocycleUserPrompt(
+            data.overview,
+            data.days,
+            data.absoluteWeek ?? 1,
+            data.isDeload
+          );
+        },
+        schema: MicrocycleStructureSchema,
+      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+    }
+    return this.structuredAgentPromise;
   }
 
   /**
@@ -137,6 +142,12 @@ export class MicrocycleAgentService {
       }
     );
 
+    // Get sub-agents (lazy-initialized)
+    const [messageAgent, structuredAgent] = await Promise.all([
+      this.getMessageAgent(),
+      this.getStructuredAgent(),
+    ]);
+
     // Transform to inject absoluteWeek into the JSON for structured agent
     const injectWeekNumber = (mainResult: unknown): string => {
       const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
@@ -148,15 +159,15 @@ export class MicrocycleAgentService {
       }
     };
 
-    // Create main agent with context (using class property sub-agents)
-    const agent = createAgent({
+    // Create main agent with context
+    const agent = await createAgent({
       name: 'microcycle-generate',
       systemPrompt: MICROCYCLE_SYSTEM_PROMPT,
       context,
       schema: MicrocycleGenerationOutputSchema,
       subAgents: [{
-        message: this.messageAgent,
-        structure: { agent: this.structuredAgent, transform: injectWeekNumber },
+        message: messageAgent,
+        structure: { agent: structuredAgent, transform: injectWeekNumber },
       }],
     }, { model: 'gpt-5.1' });
 
@@ -253,6 +264,12 @@ export class MicrocycleAgentService {
       { microcycle: currentMicrocycle }
     );
 
+    // Get sub-agents (lazy-initialized)
+    const [messageAgent, structuredAgent] = await Promise.all([
+      this.getMessageAgent(),
+      this.getStructuredAgent(),
+    ]);
+
     // Transform to inject absoluteWeek into the JSON for structured agent
     const injectWeekNumber = (mainResult: unknown): string => {
       const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
@@ -264,14 +281,14 @@ export class MicrocycleAgentService {
       }
     };
 
-    const agent = createAgent({
+    const agent = await createAgent({
       name: 'microcycle-modify',
       systemPrompt: MICROCYCLE_MODIFY_SYSTEM_PROMPT,
       context,
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{
-        message: this.messageAgent,
-        structure: { agent: this.structuredAgent, transform: injectWeekNumber },
+        message: messageAgent,
+        structure: { agent: structuredAgent, transform: injectWeekNumber },
       }],
     }, { model: 'gpt-5.1' });
 

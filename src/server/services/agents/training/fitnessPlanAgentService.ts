@@ -1,4 +1,4 @@
-import { createAgent } from '@/server/agents';
+import { createAgent, type ConfigurableAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   FITNESS_PLAN_SYSTEM_PROMPT,
@@ -34,34 +34,13 @@ import { ContextType } from '@/server/services/context/types';
 export class FitnessPlanAgentService {
   private static instance: FitnessPlanAgentService;
 
+  // Lazy-initialized sub-agents (promises cached after first creation)
+  private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
+  private structuredAgentPromise: Promise<ConfigurableAgent<{ response: PlanStructure }>> | null = null;
+
   private getContextService(): ContextService {
     return ContextService.getInstance();
   }
-
-  // Sub-agents as class properties (reused between generate/modify)
-  private messageAgent = createAgent({
-    name: 'message-plan',
-    systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
-    userPrompt: (input: string) => {
-      const data = JSON.parse(input) as PlanMessageData;
-      return planSummaryMessageUserPrompt(data);
-    },
-  }, { model: 'gpt-5-nano' });
-
-  private structuredAgent = createAgent({
-    name: 'structure-plan',
-    systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
-    userPrompt: (input: string) => {
-      try {
-        const parsed = JSON.parse(input);
-        const planText = parsed.description || parsed.fitnessPlan || input;
-        return structuredPlanUserPrompt(planText);
-      } catch {
-        return structuredPlanUserPrompt(input);
-      }
-    },
-    schema: PlanStructureSchema,
-  }, { model: 'gpt-5-nano', maxTokens: 32000 });
 
   private constructor() {}
 
@@ -73,17 +52,43 @@ export class FitnessPlanAgentService {
   }
 
   /**
-   * Get the message sub-agent for standalone usage
+   * Get the message sub-agent (lazy-initialized)
    */
-  public getMessageAgent() {
-    return this.messageAgent;
+  public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
+    if (!this.messageAgentPromise) {
+      this.messageAgentPromise = createAgent({
+        name: 'message-plan',
+        systemPrompt: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT,
+        userPrompt: (input: string) => {
+          const data = JSON.parse(input) as PlanMessageData;
+          return planSummaryMessageUserPrompt(data);
+        },
+      }, { model: 'gpt-5-nano' });
+    }
+    return this.messageAgentPromise;
   }
 
   /**
-   * Get the structured sub-agent for standalone usage
+   * Get the structured sub-agent (lazy-initialized)
    */
-  public getStructuredAgent() {
-    return this.structuredAgent;
+  public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: PlanStructure }>> {
+    if (!this.structuredAgentPromise) {
+      this.structuredAgentPromise = createAgent({
+        name: 'structure-plan',
+        systemPrompt: STRUCTURED_PLAN_SYSTEM_PROMPT,
+        userPrompt: (input: string) => {
+          try {
+            const parsed = JSON.parse(input);
+            const planText = parsed.description || parsed.fitnessPlan || input;
+            return structuredPlanUserPrompt(planText);
+          } catch {
+            return structuredPlanUserPrompt(input);
+          }
+        },
+        schema: PlanStructureSchema,
+      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+    }
+    return this.structuredAgentPromise;
   }
 
   /**
@@ -102,6 +107,12 @@ export class FitnessPlanAgentService {
       user,
       [ContextType.USER, ContextType.USER_PROFILE]
     );
+
+    // Get sub-agents (lazy-initialized)
+    const [messageAgent, structuredAgent] = await Promise.all([
+      this.getMessageAgent(),
+      this.getStructuredAgent(),
+    ]);
 
     // Transform to inject user info into the JSON for message agent
     const injectUserForMessage = (mainResult: unknown): string => {
@@ -122,13 +133,13 @@ export class FitnessPlanAgentService {
     };
 
     // Create main agent with context
-    const agent = createAgent({
+    const agent = await createAgent({
       name: 'plan-generate',
       systemPrompt: FITNESS_PLAN_SYSTEM_PROMPT,
       context,
       subAgents: [{
-        message: { agent: this.messageAgent, transform: injectUserForMessage },
-        structure: this.structuredAgent,
+        message: { agent: messageAgent, transform: injectUserForMessage },
+        structure: structuredAgent,
       }],
     }, { model: 'gpt-5.1' });
 
@@ -173,13 +184,16 @@ export class FitnessPlanAgentService {
       { planText: currentPlan.description || '' }
     );
 
-    const agent = createAgent({
+    // Get structured sub-agent (lazy-initialized)
+    const structuredAgent = await this.getStructuredAgent();
+
+    const agent = await createAgent({
       name: 'plan-modify',
       systemPrompt: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT,
       context,
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{
-        structure: this.structuredAgent,  // No message needed for modify
+        structure: structuredAgent,  // No message needed for modify
       }],
     }, { model: 'gpt-5.1' });
 

@@ -48,6 +48,7 @@ export interface ContextExtras {
 export interface ResolvedContextData {
   userName?: string | null;
   userGender?: string | null;
+  userAge?: number | null;
   profile?: string | null;
   planText?: string | null;
   dayOverview?: string;

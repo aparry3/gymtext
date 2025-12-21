@@ -83,7 +83,7 @@ export class ModificationService {
       const userMessage = buildModificationsUserMessage({ user, message });
 
       // Create modifications agent inline with configurable pattern
-      const agent = createAgent({
+      const agent = await createAgent({
         name: 'modifications',
         systemPrompt: MODIFICATIONS_SYSTEM_PROMPT,
         previousMessages: previousMsgs,

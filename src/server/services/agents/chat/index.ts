@@ -187,7 +187,7 @@ export class ChatService {
         }));
 
       // Create chat agent inline with configurable agent factory
-      const agent = createAgent({
+      const agent = await createAgent({
         name: 'conversation',
         systemPrompt: CHAT_SYSTEM_PROMPT,
         context: agentContext,

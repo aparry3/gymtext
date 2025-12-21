@@ -43,5 +43,8 @@ export { StructuredProfileSchema, StructuredConstraintSchema, ExperienceLevelSch
 // PageVisit types
 export type { PageVisit, NewPageVisit } from './pageVisit';
 
+// Prompt types
+export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
+
 // Re-export database types from _types
 export * from './_types';

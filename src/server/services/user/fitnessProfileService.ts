@@ -134,7 +134,7 @@ export class FitnessProfileService {
         const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
           const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
           const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-          const agent = createAgent({
+          const agent = await createAgent({
             name: 'structured-profile',
             systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
             schema: StructuredProfileSchema,
@@ -146,7 +146,7 @@ export class FitnessProfileService {
 
         // Create profile update agent inline with subAgents for structured extraction
         const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-        const agent = createAgent({
+        const agent = await createAgent({
           name: 'profile-update',
           systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
           schema: ProfileUpdateOutputSchema,

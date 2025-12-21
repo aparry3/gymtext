@@ -78,7 +78,7 @@ export class ProfileService {
       const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
         const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
         const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-        const agent = createAgent({
+        const agent = await createAgent({
           name: 'structured-profile',
           systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
           schema: StructuredProfileSchema,
@@ -95,7 +95,7 @@ export class ProfileService {
           const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
           // Create profile update agent with subAgents for structured extraction
-          const agent = createAgent({
+          const agent = await createAgent({
             name: 'profile-update',
             systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
             previousMessages: previousMsgs,
@@ -126,7 +126,7 @@ export class ProfileService {
         // User fields agent - extracts timezone, send time, name changes
         (async (): Promise<UserFieldsOutput> => {
           const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
-          const agent = createAgent({
+          const agent = await createAgent({
             name: 'user-fields',
             systemPrompt: USER_FIELDS_SYSTEM_PROMPT,
             previousMessages: previousMsgs,

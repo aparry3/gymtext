@@ -181,7 +181,7 @@ export class ChainRunnerService {
   private async runFitnessPlanStructuredChain(plan: FitnessPlan): Promise<FitnessPlan> {
     console.log(`[ChainRunner] Running structured chain for plan ${plan.id}`);
 
-    const agent = fitnessPlanAgentService.getStructuredAgent();
+    const agent = await fitnessPlanAgentService.getStructuredAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -208,7 +208,7 @@ export class ChainRunnerService {
   ): Promise<FitnessPlan> {
     console.log(`[ChainRunner] Running message chain for plan ${plan.id}`);
 
-    const agent = fitnessPlanAgentService.getMessageAgent();
+    const agent = await fitnessPlanAgentService.getMessageAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -318,7 +318,7 @@ export class ChainRunnerService {
   private async runMicrocycleStructuredChain(microcycle: Microcycle): Promise<Microcycle> {
     console.log(`[ChainRunner] Running structured chain for microcycle ${microcycle.id}`);
 
-    const agent = microcycleAgentService.getStructuredAgent();
+    const agent = await microcycleAgentService.getStructuredAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -345,7 +345,7 @@ export class ChainRunnerService {
   private async runMicrocycleMessageChain(microcycle: Microcycle): Promise<Microcycle> {
     console.log(`[ChainRunner] Running message chain for microcycle ${microcycle.id}`);
 
-    const agent = microcycleAgentService.getMessageAgent();
+    const agent = await microcycleAgentService.getMessageAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -469,7 +469,7 @@ export class ChainRunnerService {
       throw new Error(`Workout ${workout.id} has no description to parse`);
     }
 
-    const agent = workoutAgentService.getStructuredAgent();
+    const agent = await workoutAgentService.getStructuredAgent();
     const result = await agent.invoke(workout.description);
     const structure = result.response;
 
@@ -491,7 +491,7 @@ export class ChainRunnerService {
       throw new Error(`Workout ${workout.id} has no description to create message from`);
     }
 
-    const agent = workoutAgentService.getMessageAgent();
+    const agent = await workoutAgentService.getMessageAgent();
     const result = await agent.invoke(workout.description);
     const message = result.response;
 
