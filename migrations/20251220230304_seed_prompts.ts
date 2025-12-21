@@ -73,6 +73,51 @@ Parse this fitness plan into a structured JSON format for storage.`;
 const STRUCTURED_MICROCYCLE_USER_PROMPT = `## TASK
 Parse this microcycle into a structured JSON format for storage.`;
 
+// Additional user prompts for agents that were missing them
+const FITNESS_PLAN_USER_PROMPT = `Design a comprehensive fitness blueprint for this user.
+
+## Instructions
+1. Analyze the user's profile in the <UserProfile> context to identify **Available Days per Week**.
+2. Select the appropriate **NASM Split Architecture** (3, 4, 5, or 6 days) defined in Section 2.
+   - *Example:* If they have 4 days, prioritize Upper/Lower unless they are purely focused on aesthetics (then use Body Part).
+3. Identify **Fixed Anchors** (classes/obligations) vs **Historical Habits**. Lock in Anchors; optimize Habits.
+4. Construct a **Weekly Schedule Template**.
+   - Prioritize **Single Sessions**.
+5. Ensure the progression model is sustainable.`;
+
+const PLAN_SUMMARY_MESSAGE_USER_PROMPT = `Generate a short, friendly onboarding SMS for the client based on their new fitness plan.
+
+Guidelines:
+- This message is sent right after the trainer finishes creating the plan.
+- It should sound natural and personal, as if the coach is texting the client directly.
+- Focus on what the plan does and how it's structured (e.g., building from base to strength, using 4-day split, etc.).
+- Translate complex language into clear, human terms.
+- Limit to 1 or 2 messages total (each under 160 characters).
+- Do not greet or include the client's name.
+- Use first-person tone.
+- Avoid em dashes and long sentences.
+- Output only the message text (no JSON wrapper).`;
+
+const WORKOUT_GENERATE_USER_PROMPT = `Generate the detailed workout for this day.`;
+
+const WORKOUT_MESSAGE_USER_PROMPT = `Format the workout below into a clean SMS message following the system rules.
+
+Return ONLY the formatted SMS message.`;
+
+const MICROCYCLE_USER_PROMPT = `Generate the Weekly Training Pattern for this week.
+
+You MUST:
+1. Read the **Progression Strategy** in the Fitness Plan to determine what "Phase" this week falls into (e.g., Accumulation, Peak, or Deload).
+2. Generate the JSON with \`overview\`, \`isDeload\`, and \`days\`.
+3. Respect all **Fixed Anchors** (e.g., Classes) defined in the Plan.
+4. If the Plan specifies **Double Sessions** (AM/PM) for specific days, format the Day String to reflect that.`;
+
+const MICROCYCLE_MESSAGE_USER_PROMPT = `Generate a weekly breakdown SMS message based on the following structured microcycle pattern.
+
+Focus on summarizing the week's training theme and providing a clear, easy-to-read breakdown of training days and rest days for the client.
+
+Output only the message text (no JSON wrapper) as specified in your system instructions.`;
+
 // All prompts to seed
 const PROMPTS: Array<{ id: string; role: string; value: string }> = [
   // Chat agent (system only - uses tools, no user prompt)
@@ -92,23 +137,29 @@ const PROMPTS: Array<{ id: string; role: string; value: string }> = [
 
   // Fitness plan agents
   { id: 'fitness-plan', role: 'system', value: FITNESS_PLAN_SYSTEM_PROMPT },
+  { id: 'fitness-plan', role: 'user', value: FITNESS_PLAN_USER_PROMPT },
   { id: 'fitness-plan-modify', role: 'system', value: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT },
   { id: 'plan-summary-message', role: 'system', value: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT },
+  { id: 'plan-summary-message', role: 'user', value: PLAN_SUMMARY_MESSAGE_USER_PROMPT },
   { id: 'structured-plan', role: 'system', value: STRUCTURED_PLAN_SYSTEM_PROMPT },
   { id: 'structured-plan', role: 'user', value: STRUCTURED_PLAN_USER_PROMPT },
 
   // Workout agents
   { id: 'workout-generate', role: 'system', value: DAILY_WORKOUT_SYSTEM_PROMPT },
+  { id: 'workout-generate', role: 'user', value: WORKOUT_GENERATE_USER_PROMPT },
   { id: 'workout-modify', role: 'system', value: MODIFY_WORKOUT_SYSTEM_PROMPT },
   { id: 'workout-modify', role: 'user', value: MODIFY_WORKOUT_USER_PROMPT },
   { id: 'workout-message', role: 'system', value: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT },
+  { id: 'workout-message', role: 'user', value: WORKOUT_MESSAGE_USER_PROMPT },
   { id: 'structured-workout', role: 'system', value: STRUCTURED_WORKOUT_SYSTEM_PROMPT },
   { id: 'structured-workout', role: 'user', value: STRUCTURED_WORKOUT_USER_PROMPT },
 
   // Microcycle agents
   { id: 'microcycle', role: 'system', value: MICROCYCLE_SYSTEM_PROMPT },
+  { id: 'microcycle', role: 'user', value: MICROCYCLE_USER_PROMPT },
   { id: 'microcycle-modify', role: 'system', value: MICROCYCLE_MODIFY_SYSTEM_PROMPT },
   { id: 'microcycle-message', role: 'system', value: MICROCYCLE_MESSAGE_SYSTEM_PROMPT },
+  { id: 'microcycle-message', role: 'user', value: MICROCYCLE_MESSAGE_USER_PROMPT },
   { id: 'structured-microcycle', role: 'system', value: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT },
   { id: 'structured-microcycle', role: 'user', value: STRUCTURED_MICROCYCLE_USER_PROMPT },
 ];
