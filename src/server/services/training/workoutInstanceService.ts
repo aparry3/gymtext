@@ -10,6 +10,7 @@ import { MicrocycleService } from './microcycleService';
 import { shortLinkService } from '../links/shortLinkService';
 import { DateTime } from 'luxon';
 import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
+import { normalizeWhitespace } from '@/server/utils/formatters';
 
 export class WorkoutInstanceService {
   private static instance: WorkoutInstanceService;
@@ -202,7 +203,7 @@ export class WorkoutInstanceService {
         // Append short link to message
         if (savedWorkout.message) {
           const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone); // Monday, Tuesday, etc.
-          savedWorkout.message = `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n\(More details: ${fullUrl}\)`;
+          savedWorkout.message = normalizeWhitespace(`${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n(More details: ${fullUrl})`);
           await this.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
         }
       } catch (error) {
