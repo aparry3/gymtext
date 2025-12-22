@@ -134,7 +134,7 @@ export class FitnessProfileService {
           const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
           const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
           const agent = await createAgent({
-            name: 'profile-structured',
+            name: 'profile:structured',
             schema: StructuredProfileSchema,
           }, { model: 'gpt-5-nano', temperature: 0.3 });
 
@@ -146,11 +146,11 @@ export class FitnessProfileService {
         // Prompts fetched from DB based on agent name
         const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
         const agent = await createAgent({
-          name: 'profile',
+          name: 'profile:fitness',
           schema: ProfileUpdateOutputSchema,
           subAgents: [{
             structured: {
-              agent: { name: 'profile-structured', invoke: invokeStructuredProfileAgent },
+              agent: { name: 'profile:structured', invoke: invokeStructuredProfileAgent },
               condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
               transform: (agentResult: unknown) => JSON.stringify({
                 dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
