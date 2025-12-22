@@ -5,13 +5,18 @@ import { z } from "zod";
 // ============================================================================
 
 /**
+ * Activity type enum for microcycle days
+ */
+export const ActivityTypeEnum = z.enum(["TRAINING", "ACTIVE_RECOVERY", "REST"]);
+export type ActivityType = z.infer<typeof ActivityTypeEnum>;
+
+/**
  * Individual day within a microcycle
  */
 export const MicrocycleDaySchema = z.object({
   day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
   focus: z.string().default(''),
-  activityType: z.enum(["Lifting", "Cardio", "Hybrid", "Mobility", "Rest", "Sport"]).default("Lifting"),
-  isRest: z.boolean().default(false),
+  activityType: ActivityTypeEnum.default("TRAINING"),
   notes: z.string().default('')
 });
 

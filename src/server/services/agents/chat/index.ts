@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/user';
-import { createAgent, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
 import { messageService } from '../../messaging/messageService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { ProfileService } from '../profile';
@@ -7,7 +7,6 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
-import { CHAT_SYSTEM_PROMPT } from '../prompts/chat';
 import { ContextService, ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../types/shared';
@@ -186,10 +185,9 @@ export class ChatService {
           content: m.content,
         }));
 
-      // Create chat agent inline with configurable agent factory
-      const agent = createAgent({
-        name: 'conversation',
-        systemPrompt: CHAT_SYSTEM_PROMPT,
+      // Create chat agent - prompts fetched from DB based on agent name
+      const agent = await createAgent({
+        name: PROMPT_IDS.CHAT_GENERATE,
         context: agentContext,
         previousMessages: previousMsgs,
         tools,

@@ -14,6 +14,7 @@ export enum ContextType {
   TRAINING_META = 'trainingMeta',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
   EXPERIENCE_LEVEL = 'experienceLevel',
+  DAY_FORMAT = 'dayFormat',
 }
 
 /**
@@ -39,6 +40,9 @@ export interface ContextExtras {
   // Experience level context
   experienceLevel?: ExperienceLevel;
   snippetType?: SnippetType;
+
+  // Activity type for day format context
+  activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
 }
 
 /**
@@ -48,6 +52,7 @@ export interface ContextExtras {
 export interface ResolvedContextData {
   userName?: string | null;
   userGender?: string | null;
+  userAge?: number | null;
   profile?: string | null;
   planText?: string | null;
   dayOverview?: string;
@@ -60,4 +65,7 @@ export interface ResolvedContextData {
   currentWeek?: number;
   experienceLevel?: ExperienceLevel | null;
   snippetType?: SnippetType;
+  activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
+  dayFormatTemplate?: string | null;
+  experienceSnippet?: string | null;
 }

@@ -1,16 +1,13 @@
 import { userService } from '../../user/userService';
 import { fitnessProfileService } from '../../user/fitnessProfileService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
-import { createAgent, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import {
-  PROFILE_UPDATE_SYSTEM_PROMPT,
   buildProfileUpdateUserMessage,
-  USER_FIELDS_SYSTEM_PROMPT,
   buildUserFieldsUserMessage,
-  STRUCTURED_PROFILE_SYSTEM_PROMPT,
   buildStructuredProfileUserMessage,
 } from '../prompts/profile';
 import {
@@ -75,12 +72,12 @@ export class ProfileService {
         }));
 
       // Helper function to create and invoke the structured profile agent
+      // System prompt fetched from DB based on agent name
       const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
         const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
         const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-        const agent = createAgent({
-          name: 'structured-profile',
-          systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
+        const agent = await createAgent({
+          name: PROMPT_IDS.PROFILE_STRUCTURED,
           schema: StructuredProfileSchema,
         }, { model: 'gpt-5-nano', temperature: 0.3 });
 
@@ -91,18 +88,18 @@ export class ProfileService {
       // Run BOTH agents in parallel for efficiency
       const [profileResult, userFieldsResult] = await Promise.all([
         // Profile agent - updates fitness profile dossier
+        // Prompts fetched from DB based on agent name
         (async (): Promise<ProfileUpdateOutput> => {
           const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
           // Create profile update agent with subAgents for structured extraction
-          const agent = createAgent({
-            name: 'profile-update',
-            systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+          const agent = await createAgent({
+            name: PROMPT_IDS.PROFILE_FITNESS,
             previousMessages: previousMsgs,
             schema: ProfileUpdateOutputSchema,
             subAgents: [{
               structured: {
-                agent: { name: 'structured-profile', invoke: invokeStructuredProfileAgent },
+                agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
                 condition: (result: unknown) => (result as { wasUpdated: boolean }).wasUpdated,
                 transform: (result: unknown) => JSON.stringify({
                   dossierText: (result as { updatedProfile: string }).updatedProfile,
@@ -124,11 +121,11 @@ export class ProfileService {
           };
         })(),
         // User fields agent - extracts timezone, send time, name changes
+        // Prompts fetched from DB based on agent name
         (async (): Promise<UserFieldsOutput> => {
           const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
-          const agent = createAgent({
-            name: 'user-fields',
-            systemPrompt: USER_FIELDS_SYSTEM_PROMPT,
+          const agent = await createAgent({
+            name: PROMPT_IDS.PROFILE_USER,
             previousMessages: previousMsgs,
             schema: UserFieldsOutputSchema,
           }, { model: 'gpt-5-nano', temperature: 0.3 });

@@ -29,6 +29,12 @@
 export { createAgent } from './createAgent';
 
 // ============================================
+// Prompt IDs (use these in createAgent calls)
+// ============================================
+export { PROMPT_IDS, CONTEXT_IDS, PROMPT_ROLES } from './promptIds';
+export type { PromptId, ContextId, PromptRole } from './promptIds';
+
+// ============================================
 // Model Initialization
 // ============================================
 export { initializeModel, initializeImageModel } from './models';

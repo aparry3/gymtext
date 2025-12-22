@@ -90,20 +90,33 @@ export class ContextService {
     const needsWorkout = types.includes(ContextType.CURRENT_WORKOUT) && extras.workout === undefined;
     const needsMicrocycle = types.includes(ContextType.CURRENT_MICROCYCLE) && extras.microcycle === undefined;
     const needsExperienceLevel = types.includes(ContextType.EXPERIENCE_LEVEL) && extras.experienceLevel === undefined;
+    const needsDayFormat = types.includes(ContextType.DAY_FORMAT) && extras.activityType !== undefined;
+    const needsExperienceSnippet = types.includes(ContextType.EXPERIENCE_LEVEL);
 
-    // Fetch required data in parallel
+    // Fetch required data in parallel (phase 1: data that doesn't depend on other fetches)
     const targetDate = extras.date || today(user.timezone);
-    const [fitnessPlan, workout, microcycle, structuredProfile] = await Promise.all([
+    const [fitnessPlan, workout, microcycle, structuredProfile, dayFormatTemplate] = await Promise.all([
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
       needsMicrocycle ? this.deps.microcycleService.getMicrocycleByDate(user.id, targetDate) : null,
       needsExperienceLevel ? this.deps.profileRepository.getCurrentStructuredProfile(user.id) : null,
+      needsDayFormat ? builders.fetchDayFormat(extras.activityType) : null,
     ]);
+
+    // Resolve experience level (needed for experience snippet fetch)
+    const resolvedExperienceLevel = extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null;
+    const resolvedSnippetType = extras.snippetType || SnippetType.WORKOUT;
+
+    // Phase 2: fetch experience snippet (depends on resolved experience level)
+    const experienceSnippet = needsExperienceSnippet && resolvedExperienceLevel
+      ? await builders.fetchExperienceLevelSnippet(resolvedExperienceLevel, resolvedSnippetType)
+      : null;
 
     // Build resolved data object
     const data: ResolvedContextData = {
       userName: user.name,
       userGender: user.gender,
+      userAge: user.age,
       profile: user.profile,
       planText: extras.planText ?? fitnessPlan?.description,
       dayOverview: extras.dayOverview,
@@ -114,8 +127,11 @@ export class ContextService {
       isDeload: extras.isDeload,
       absoluteWeek: extras.absoluteWeek,
       currentWeek: extras.currentWeek,
-      experienceLevel: extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null,
-      snippetType: extras.snippetType,
+      experienceLevel: resolvedExperienceLevel,
+      snippetType: resolvedSnippetType,
+      activityType: extras.activityType,
+      dayFormatTemplate: dayFormatTemplate,
+      experienceSnippet: experienceSnippet,
     };
 
     // Build context strings for each requested type
@@ -130,7 +146,7 @@ export class ContextService {
   private buildContextForType(type: ContextType, data: ResolvedContextData): string {
     switch (type) {
       case ContextType.USER:
-        return builders.buildUserContext({ name: data.userName, gender: data.userGender });
+        return builders.buildUserContext({ name: data.userName, gender: data.userGender, age: data.userAge });
       case ContextType.USER_PROFILE:
         return builders.buildUserProfileContext(data.profile);
       case ContextType.FITNESS_PLAN:
@@ -151,9 +167,12 @@ export class ContextService {
         return builders.buildMicrocycleContext(data.microcycle);
       case ContextType.EXPERIENCE_LEVEL:
         return builders.buildExperienceLevelContext(
+          data.experienceSnippet,
           data.experienceLevel,
           data.snippetType || SnippetType.WORKOUT
         );
+      case ContextType.DAY_FORMAT:
+        return builders.buildDayFormatContext(data.dayFormatTemplate, data.activityType);
       default:
         return '';
     }

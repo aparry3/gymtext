@@ -12,6 +12,7 @@ import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
 import { logAgentInvocation } from './logger';
+import { promptService } from '@/server/services/prompts/promptService';
 
 /**
  * Create a configurable agent from a definition and model config
@@ -22,25 +23,25 @@ import { logAgentInvocation } from './logger';
  * - Pre-computed context messages
  * - Tool-based agents with agentic loops
  * - Composed agents with parallel/sequential subAgents
+ * - Database-backed prompts (fetched if systemPrompt not provided)
  *
  * @param definition - The agent's declarative configuration
  * @param config - Optional model configuration
- * @returns A ConfigurableAgent that can be invoked with a string
+ * @returns A Promise resolving to a ConfigurableAgent that can be invoked with a string
  *
  * @example
  * ```typescript
- * // Agent with context (userPrompt undefined - input IS the message)
- * const messageAgent = createAgent({
+ * // Agent with DB-stored prompts (systemPrompt fetched from database)
+ * const messageAgent = await createAgent({
  *   name: 'workout-message',
- *   systemPrompt: SYSTEM_PROMPT,
  *   context: [`<Profile>${user.profile}</Profile>`],
  *   schema: MessageSchema,
  * }, { model: 'gpt-5-nano' });
  *
  * await messageAgent.invoke('Generate a motivational workout message');
  *
- * // Agent with userPrompt transformer
- * const workoutAgent = createAgent({
+ * // Agent with explicit systemPrompt (legacy pattern, bypasses DB)
+ * const workoutAgent = await createAgent({
  *   name: 'workout',
  *   systemPrompt: SYSTEM_PROMPT,
  *   userPrompt: (input) => `Create workout based on: ${input}`,
@@ -54,24 +55,34 @@ import { logAgentInvocation } from './logger';
  * await workoutAgent.invoke('upper body strength');
  * ```
  */
-export function createAgent<
+export async function createAgent<
   TSchema extends ZodSchema | undefined = undefined,
   TSubAgents extends SubAgentBatch[] | undefined = undefined
 >(
   definition: AgentDefinition<TSchema>,
   config?: ModelConfig
-): ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> {
+): Promise<ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>>> {
 
   const {
     name,
-    systemPrompt,
-    userPrompt,
+    systemPrompt: providedSystemPrompt,
+    userPrompt: providedUserPrompt,
     context = [],
     previousMessages = [],
     tools,
     schema,
     subAgents = [],
   } = definition;
+
+  // Fetch prompts from database if systemPrompt not provided directly
+  let systemPrompt = providedSystemPrompt;
+  let dbUserPrompt: string | null = null;
+
+  if (!systemPrompt) {
+    const prompts = await promptService.getPrompts(name);
+    systemPrompt = prompts.systemPrompt;
+    dbUserPrompt = prompts.userPrompt;
+  }
 
   const { maxIterations = 5 } = config || {};
 
@@ -90,8 +101,20 @@ export function createAgent<
     console.log(`[${name}] Starting execution`);
 
     try {
-      // If userPrompt transformer is provided, use it; otherwise input IS the user message
-      const evaluatedUserPrompt = userPrompt ? userPrompt(input) : input;
+      // Determine the final user message:
+      // 1. If userPrompt function provided, use it to transform input
+      // 2. Else if DB user prompt exists, prepend it to input
+      // 3. Else input IS the user message directly
+      let evaluatedUserPrompt: string;
+
+      if (providedUserPrompt) {
+        evaluatedUserPrompt = providedUserPrompt(input);
+      } else if (dbUserPrompt) {
+        // DB user prompt is a template that precedes the actual user input
+        evaluatedUserPrompt = `${dbUserPrompt}\n\n${input}`;
+      } else {
+        evaluatedUserPrompt = input;
+      }
 
       // Build messages with context and previous conversation history
       const messages = buildMessages({

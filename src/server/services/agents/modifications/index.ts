@@ -1,12 +1,12 @@
 import { workoutModificationService } from './workoutModificationService';
 import { planModificationService } from './planModificationService';
 import { createModificationTools } from './tools';
-import { createAgent, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
 import { userService } from '../../user/userService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import { MODIFICATIONS_SYSTEM_PROMPT, buildModificationsUserMessage } from '../prompts/modifications';
+import { buildModificationsUserMessage } from '../prompts/modifications';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 
@@ -82,10 +82,9 @@ export class ModificationService {
       // Build user message
       const userMessage = buildModificationsUserMessage({ user, message });
 
-      // Create modifications agent inline with configurable pattern
-      const agent = createAgent({
-        name: 'modifications',
-        systemPrompt: MODIFICATIONS_SYSTEM_PROMPT,
+      // Create modifications agent - prompts fetched from DB based on agent name
+      const agent = await createAgent({
+        name: PROMPT_IDS.MODIFICATIONS_ROUTER,
         previousMessages: previousMsgs,
         tools,
       }, { model: 'gpt-5-mini' });

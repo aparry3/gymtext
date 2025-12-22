@@ -14,11 +14,9 @@
 import { UserWithProfile } from '@/server/models/user';
 import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS } from '@/server/agents';
 import {
-  PROFILE_UPDATE_SYSTEM_PROMPT,
   buildProfileUpdateUserMessage,
-  STRUCTURED_PROFILE_SYSTEM_PROMPT,
   buildStructuredProfileUserMessage,
 } from '@/server/services/agents/prompts/profile';
 import { ProfileUpdateOutputSchema } from '@/server/services/agents/schemas/profile';
@@ -131,12 +129,12 @@ export class FitnessProfileService {
         const currentDate = formatForAI(new Date(), user.timezone);
 
         // Helper function for structured profile extraction
+        // System prompt fetched from DB based on agent name
         const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
           const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
           const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-          const agent = createAgent({
-            name: 'structured-profile',
-            systemPrompt: STRUCTURED_PROFILE_SYSTEM_PROMPT,
+          const agent = await createAgent({
+            name: PROMPT_IDS.PROFILE_STRUCTURED,
             schema: StructuredProfileSchema,
           }, { model: 'gpt-5-nano', temperature: 0.3 });
 
@@ -145,14 +143,14 @@ export class FitnessProfileService {
         };
 
         // Create profile update agent inline with subAgents for structured extraction
+        // Prompts fetched from DB based on agent name
         const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-        const agent = createAgent({
-          name: 'profile-update',
-          systemPrompt: PROFILE_UPDATE_SYSTEM_PROMPT,
+        const agent = await createAgent({
+          name: PROMPT_IDS.PROFILE_FITNESS,
           schema: ProfileUpdateOutputSchema,
           subAgents: [{
             structured: {
-              agent: { name: 'structured-profile', invoke: invokeStructuredProfileAgent },
+              agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
               condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
               transform: (agentResult: unknown) => JSON.stringify({
                 dossierText: (agentResult as { updatedProfile: string }).updatedProfile,

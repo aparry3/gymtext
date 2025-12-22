@@ -6,7 +6,7 @@ import { RefreshCw } from 'lucide-react';
 interface DaySchedule {
   day: string;
   focus: string;
-  isRest?: boolean;
+  activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | string;
 }
 
 interface WeeklyRhythmCardProps {
@@ -58,7 +58,7 @@ export function WeeklyRhythmCard({ days = [], isLoading = false }: WeeklyRhythmC
       </div>
       <div className="space-y-2">
         {days.map((day, index) => {
-          const isRest = day.isRest ?? (day.focus?.toLowerCase().includes('rest') ?? false);
+          const isRest = day.activityType === 'REST' || (day.focus?.toLowerCase().includes('rest') ?? false);
           const isTraining = !isRest;
 
           return (

@@ -1,18 +1,11 @@
-import { createAgent } from '@/server/agents';
-import { WorkoutStructureSchema } from '@/server/models/workout';
-import {
-  DAILY_WORKOUT_SYSTEM_PROMPT,
-  MODIFY_WORKOUT_SYSTEM_PROMPT,
-  ModifyWorkoutGenerationOutputSchema,
-  WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-  workoutSmsUserPrompt,
-  STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-  structuredWorkoutUserPrompt,
-} from '@/server/services/agents/prompts/workouts';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/models/workout';
+import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/prompts/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
+import type { ActivityType } from '@/shared/types/microcycle/schema';
 
 /**
  * WorkoutAgentService - Handles all workout-related AI operations
@@ -31,19 +24,9 @@ import type { WorkoutInstance } from '@/server/models/workout';
 export class WorkoutAgentService {
   private static instance: WorkoutAgentService;
 
-  // Sub-agents as class properties (reused between generate/modify)
-  private messageAgent = createAgent({
-    name: 'workout-message',
-    systemPrompt: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT,
-    userPrompt: (input: string) => workoutSmsUserPrompt(input),
-  }, { model: 'gpt-5-nano' });
-
-  private structuredAgent = createAgent({
-    name: 'structured-workout',
-    systemPrompt: STRUCTURED_WORKOUT_SYSTEM_PROMPT,
-    userPrompt: (input: string) => structuredWorkoutUserPrompt(input),
-    schema: WorkoutStructureSchema,
-  }, { model: 'gpt-5-nano', maxTokens: 32000 });
+  // Lazy-initialized sub-agents (promises cached after first creation)
+  private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
+  private structuredAgentPromise: Promise<ConfigurableAgent<{ response: WorkoutStructure }>> | null = null;
 
   private constructor() {}
 
@@ -62,17 +45,50 @@ export class WorkoutAgentService {
   }
 
   /**
-   * Get the message sub-agent for standalone usage
+   * Get the message sub-agent (lazy-initialized for basic use, or with context)
+   * Prompts fetched from DB based on agent name
+   *
+   * @param user - Optional user for context-aware agent (required when activityType is provided)
+   * @param activityType - Optional activity type for day format context injection
    */
-  public getMessageAgent() {
-    return this.messageAgent;
+  public async getMessageAgent(
+    user?: UserWithProfile,
+    activityType?: ActivityType
+  ): Promise<ConfigurableAgent<{ response: string }>> {
+    // If activityType is provided, create a new agent with day format context
+    if (activityType && user) {
+      const dayFormatContext = await this.getContextService().getContext(
+        user,
+        [ContextType.DAY_FORMAT],
+        { activityType }
+      );
+      return createAgent({
+        name: PROMPT_IDS.WORKOUT_MESSAGE,
+        context: dayFormatContext,
+      }, { model: 'gpt-5-nano' });
+    }
+
+    // Otherwise, use the cached singleton
+    if (!this.messageAgentPromise) {
+      this.messageAgentPromise = createAgent({
+        name: PROMPT_IDS.WORKOUT_MESSAGE,
+      }, { model: 'gpt-5-nano' });
+    }
+    return this.messageAgentPromise;
   }
 
   /**
-   * Get the structured sub-agent for standalone usage
+   * Get the structured sub-agent (lazy-initialized)
+   * Prompts fetched from DB based on agent name
    */
-  public getStructuredAgent() {
-    return this.structuredAgent;
+  public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
+    if (!this.structuredAgentPromise) {
+      this.structuredAgentPromise = createAgent({
+        name: PROMPT_IDS.WORKOUT_STRUCTURED,
+        schema: WorkoutStructureSchema,
+      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+    }
+    return this.structuredAgentPromise;
   }
 
   /**
@@ -81,12 +97,14 @@ export class WorkoutAgentService {
    * @param user - User with profile
    * @param dayOverview - Day overview from microcycle (e.g., "Upper body push focus")
    * @param isDeload - Whether this is a deload week
+   * @param activityType - Optional activity type for day format context (TRAINING, ACTIVE_RECOVERY, REST)
    * @returns WorkoutGenerateOutput with response, message, and structure
    */
   async generateWorkout(
     user: UserWithProfile,
     dayOverview: string,
-    isDeload: boolean = false
+    isDeload: boolean = false,
+    activityType?: ActivityType
   ): Promise<WorkoutGenerateOutput> {
     // Build context using ContextService
     const context = await this.getContextService().getContext(
@@ -104,15 +122,21 @@ export class WorkoutAgentService {
       }
     );
 
-    // Create main agent with context (using class property sub-agents)
-    const agent = createAgent({
-      name: 'workout-generate',
-      systemPrompt: DAILY_WORKOUT_SYSTEM_PROMPT,
+    // Get sub-agents (message agent with day format context if activityType provided)
+    const [messageAgent, structuredAgent] = await Promise.all([
+      this.getMessageAgent(user, activityType),
+      this.getStructuredAgent(),
+    ]);
+
+    // Create main agent with context (prompts fetched from DB)
+    const agent = await createAgent({
+      name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
-      subAgents: [{ message: this.messageAgent, structure: this.structuredAgent }],
+      subAgents: [{ message: messageAgent, structure: structuredAgent }],
     }, { model: 'gpt-5.1' });
 
-    return agent.invoke('Generate the detailed workout for this day.') as Promise<WorkoutGenerateOutput>;
+    // Empty input - DB user prompt provides the instructions
+    return agent.invoke('') as Promise<WorkoutGenerateOutput>;
   }
 
   /**
@@ -138,6 +162,12 @@ export class WorkoutAgentService {
       { workout }
     );
 
+    // Get sub-agents (lazy-initialized)
+    const [messageAgent, structuredAgent] = await Promise.all([
+      this.getMessageAgent(),
+      this.getStructuredAgent(),
+    ]);
+
     // Transform to extract overview from JSON response for sub-agents
     const extractOverview = (mainResult: unknown): string => {
       const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
@@ -149,14 +179,14 @@ export class WorkoutAgentService {
       }
     };
 
-    const agent = createAgent({
-      name: 'workout-modify',
-      systemPrompt: MODIFY_WORKOUT_SYSTEM_PROMPT,
+    // Prompts fetched from DB based on agent name
+    const agent = await createAgent({
+      name: PROMPT_IDS.WORKOUT_MODIFY,
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
       subAgents: [{
-        message: { agent: this.messageAgent, transform: extractOverview },
-        structure: { agent: this.structuredAgent, transform: extractOverview },
+        message: { agent: messageAgent, transform: extractOverview },
+        structure: { agent: structuredAgent, transform: extractOverview },
       }],
     }, { model: 'gpt-5-mini' });
 

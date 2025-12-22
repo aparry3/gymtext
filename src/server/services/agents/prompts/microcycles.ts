@@ -257,9 +257,11 @@ EXTRACTION RULES:
 3. Extract the overall weekly overview/goals
 4. Parse EXACTLY 7 days (Monday through Sunday):
    - day: Day name (enum: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
-   - focus: Primary training focus for the day (e.g., "Upper Body Push", "Lower Body", "Active Recovery")
-   - activityType: Lifting, Cardio, Hybrid, Mobility, Rest, or Sport
-   - isRest: true if it's a rest/recovery day
+   - focus: Primary training focus for the day (e.g., "Upper Body Push", "Lower Body", "Mobility")
+   - activityType: TRAINING, ACTIVE_RECOVERY, or REST
+     - TRAINING: Strength, hypertrophy, conditioning, sport-specific training days
+     - ACTIVE_RECOVERY: Light cardio, mobility work, easy recreation days
+     - REST: Full rest days with no structured activity
    - notes: Any specific instructions or modifications
 5. Determine if this is a deload week (reduced volume/intensity)
 
@@ -270,7 +272,7 @@ DEFAULTS:
 - Use empty string ("") for text fields that cannot be determined
 - Use -1 for weekNumber if not provided
 - Use false for isDeload if unclear
-- Use "Lifting" as default activityType if unclear`;
+- Use "TRAINING" as default activityType if unclear`;
 
 export const structuredMicrocycleUserPrompt = (
   overview: string,

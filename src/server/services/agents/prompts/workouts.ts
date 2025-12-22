@@ -363,63 +363,21 @@ Rules:
 FORMAT RULES BY SESSION TYPE
 =====================================================
 
-A) TRAINING
-- Allowed section headers (0–2, in this order if present):
-  Workout:
-  Conditioning:
-- ALWAYS omit warmup and cooldown.
-- Each item is a bullet starting with "- ".
-- Use standard exercise formatting.
-
-B) ACTIVE_RECOVERY (CRITICAL — NO HEADERS)
-- DO NOT use any section headers ("Workout:", "Optional:", etc.).
-- Output EXACTLY 1–2 bullet lines total.
-- Bullets must be:
-  - Simple
-  - Non-prescriptive
-  - Constraint-based (time + easy effort)
-
-Required first bullet:
-- Easy activity with duration and non-exhaustive examples.
-
-Exact format:
-- "- Easy activity: ~30m (walk, bike, jog, row, swim, etc.)"
-
-Optional second bullet (if stretching or mobility is mentioned in source):
-- Keep it supportive, not instructional.
-- Do NOT list specific stretches.
-- Do NOT imply requirement.
-
-Allowed format:
-- "- Stretching: 5–10m (let me know if you need stretches)"
-
-Avoid for ACTIVE_RECOVERY:
-- Section headers
-- Checklists
-- Multiple activity bullets
-- Listing individual mobility movements
-- Language implying obligation
-
-C) REST
-- No section headers.
-- Output at most 1 bullet line.
-- Gentle, optional movement only.
-
-Example:
-- "- Optional easy walk: 5–15m"
+Follow the formatting rules provided in the <DayFormatRules> context.
+The day format context specifies exactly how to format output based on session type.
 
 =====================================================
 BULLET LINE FORMATS
 =====================================================
-- Training: "- BB Bench Press: 4x8–10"
+- Training: "- BB Bench Press: 4x8-10"
 - Time-based: "- Easy activity: ~30m"
 
 Abbreviations:
-- Barbell → BB
-- Dumbbell → DB
-- Overhead Press → OHP
-- Romanian Deadlift → RDL
-- Single-Leg → SL
+- Barbell -> BB
+- Dumbbell -> DB
+- Overhead Press -> OHP
+- Romanian Deadlift -> RDL
+- Single-Leg -> SL
 
 Supersets use "SS1", "SS2".
 Circuits use "C1", "C2".

@@ -8,7 +8,12 @@ export { buildTrainingMetaContext, type TrainingMetaInput } from './trainingMeta
 export { buildMicrocycleContext } from './microcycle';
 export {
   buildExperienceLevelContext,
+  fetchExperienceLevelSnippet,
   SnippetType,
-  EXPERIENCE_SNIPPETS,
   type ExperienceLevel,
 } from './experienceLevel';
+export {
+  buildDayFormatContext,
+  fetchDayFormat,
+  type DayActivityType,
+} from './dayFormat';

@@ -181,7 +181,7 @@ export class ChainRunnerService {
   private async runFitnessPlanStructuredChain(plan: FitnessPlan): Promise<FitnessPlan> {
     console.log(`[ChainRunner] Running structured chain for plan ${plan.id}`);
 
-    const agent = fitnessPlanAgentService.getStructuredAgent();
+    const agent = await fitnessPlanAgentService.getStructuredAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -208,7 +208,7 @@ export class ChainRunnerService {
   ): Promise<FitnessPlan> {
     console.log(`[ChainRunner] Running message chain for plan ${plan.id}`);
 
-    const agent = fitnessPlanAgentService.getMessageAgent();
+    const agent = await fitnessPlanAgentService.getMessageAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -318,7 +318,7 @@ export class ChainRunnerService {
   private async runMicrocycleStructuredChain(microcycle: Microcycle): Promise<Microcycle> {
     console.log(`[ChainRunner] Running structured chain for microcycle ${microcycle.id}`);
 
-    const agent = microcycleAgentService.getStructuredAgent();
+    const agent = await microcycleAgentService.getStructuredAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -345,7 +345,7 @@ export class ChainRunnerService {
   private async runMicrocycleMessageChain(microcycle: Microcycle): Promise<Microcycle> {
     console.log(`[ChainRunner] Running message chain for microcycle ${microcycle.id}`);
 
-    const agent = microcycleAgentService.getMessageAgent();
+    const agent = await microcycleAgentService.getMessageAgent();
 
     // Configurable agents expect JSON string input
     const inputJson = JSON.stringify({
@@ -430,8 +430,9 @@ export class ChainRunnerService {
   ): Promise<WorkoutInstance> {
     console.log(`[ChainRunner] Running full workout chain for workout ${workout.id}`);
 
-    // Determine day overview from microcycle or use existing goal
+    // Determine day overview and activity type from microcycle
     let dayOverview = workout.goal || 'General workout';
+    let activityType: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     if (microcycle) {
       const workoutDate = new Date(workout.date);
       const dayOfWeek = workoutDate.getDay(); // 0 = Sunday
@@ -440,13 +441,17 @@ export class ChainRunnerService {
       if (microcycle.days[dayIndex]) {
         dayOverview = microcycle.days[dayIndex];
       }
+      // Get activity type from structured data
+      const structuredDay = microcycle.structured?.days?.[dayIndex];
+      activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     }
 
     // Use workout agent service for full chain
     const result = await workoutAgentService.generateWorkout(
       user,
       dayOverview,
-      microcycle?.isDeload || false
+      microcycle?.isDeload || false,
+      activityType
     );
 
     const updated = await this.workoutService.updateWorkout(workout.id, {
@@ -469,7 +474,7 @@ export class ChainRunnerService {
       throw new Error(`Workout ${workout.id} has no description to parse`);
     }
 
-    const agent = workoutAgentService.getStructuredAgent();
+    const agent = await workoutAgentService.getStructuredAgent();
     const result = await agent.invoke(workout.description);
     const structure = result.response;
 
@@ -491,7 +496,7 @@ export class ChainRunnerService {
       throw new Error(`Workout ${workout.id} has no description to create message from`);
     }
 
-    const agent = workoutAgentService.getMessageAgent();
+    const agent = await workoutAgentService.getMessageAgent();
     const result = await agent.invoke(workout.description);
     const message = result.response;
 

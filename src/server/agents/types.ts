@@ -111,8 +111,11 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
   /** Identifier for logging and debugging */
   name: string;
 
-  /** Static system prompt instructions */
-  systemPrompt: string;
+  /**
+   * Static system prompt instructions.
+   * If not provided, fetched from database using agent name.
+   */
+  systemPrompt?: string;
 
   /**
    * Optional transformer for the input string.

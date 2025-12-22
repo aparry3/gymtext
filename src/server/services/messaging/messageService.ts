@@ -513,7 +513,7 @@ export class MessageService {
 
       try {
         // Get message agent from workout agent service
-        const messageAgent = workoutAgentService.getMessageAgent();
+        const messageAgent = await workoutAgentService.getMessageAgent();
 
         // Invoke with workout description string
         const result = await messageAgent.invoke(workout.description);
