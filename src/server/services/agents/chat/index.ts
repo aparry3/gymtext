@@ -1,5 +1,5 @@
 import { UserWithProfile } from '@/server/models/user';
-import { createAgent, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
 import { messageService } from '../../messaging/messageService';
 import { workoutInstanceService } from '../../training/workoutInstanceService';
 import { ProfileService } from '../profile';
@@ -187,7 +187,7 @@ export class ChatService {
 
       // Create chat agent - prompts fetched from DB based on agent name
       const agent = await createAgent({
-        name: 'chat:generate',
+        name: PROMPT_IDS.CHAT_GENERATE,
         context: agentContext,
         previousMessages: previousMsgs,
         tools,

@@ -1,4 +1,4 @@
-import { createAgent, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   planSummaryMessageUserPrompt,
@@ -53,7 +53,7 @@ export class FitnessPlanAgentService {
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
-        name: 'plan:message',
+        name: PROMPT_IDS.PLAN_MESSAGE,
         userPrompt: (input: string) => {
           const data = JSON.parse(input) as PlanMessageData;
           return planSummaryMessageUserPrompt(data);
@@ -70,7 +70,7 @@ export class FitnessPlanAgentService {
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: PlanStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
-        name: 'plan:structured',
+        name: PROMPT_IDS.PLAN_STRUCTURED,
         userPrompt: (input: string) => {
           try {
             const parsed = JSON.parse(input);
@@ -129,7 +129,7 @@ export class FitnessPlanAgentService {
 
     // Create main agent with context (prompts fetched from DB)
     const agent = await createAgent({
-      name: 'plan:generate',
+      name: PROMPT_IDS.PLAN_GENERATE,
       context,
       subAgents: [{
         message: { agent: messageAgent, transform: injectUserForMessage },
@@ -184,7 +184,7 @@ export class FitnessPlanAgentService {
 
     // Prompts fetched from DB based on agent name
     const agent = await createAgent({
-      name: 'plan:modify',
+      name: PROMPT_IDS.PLAN_MODIFY,
       context,
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{

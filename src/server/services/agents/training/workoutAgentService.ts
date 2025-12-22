@@ -1,4 +1,4 @@
-import { createAgent, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/models/workout';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/prompts/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
@@ -63,7 +63,7 @@ export class WorkoutAgentService {
         { activityType }
       );
       return createAgent({
-        name: 'workout:message',
+        name: PROMPT_IDS.WORKOUT_MESSAGE,
         context: dayFormatContext,
       }, { model: 'gpt-5-nano' });
     }
@@ -71,7 +71,7 @@ export class WorkoutAgentService {
     // Otherwise, use the cached singleton
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
-        name: 'workout:message',
+        name: PROMPT_IDS.WORKOUT_MESSAGE,
       }, { model: 'gpt-5-nano' });
     }
     return this.messageAgentPromise;
@@ -84,7 +84,7 @@ export class WorkoutAgentService {
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
-        name: 'workout:structured',
+        name: PROMPT_IDS.WORKOUT_STRUCTURED,
         schema: WorkoutStructureSchema,
       }, { model: 'gpt-5-nano', maxTokens: 32000 });
     }
@@ -130,7 +130,7 @@ export class WorkoutAgentService {
 
     // Create main agent with context (prompts fetched from DB)
     const agent = await createAgent({
-      name: 'workout:generate',
+      name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
       subAgents: [{ message: messageAgent, structure: structuredAgent }],
     }, { model: 'gpt-5.1' });
@@ -181,7 +181,7 @@ export class WorkoutAgentService {
 
     // Prompts fetched from DB based on agent name
     const agent = await createAgent({
-      name: 'workout:modify',
+      name: PROMPT_IDS.WORKOUT_MODIFY,
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
       subAgents: [{
