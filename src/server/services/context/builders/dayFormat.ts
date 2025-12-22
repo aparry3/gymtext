@@ -35,8 +35,7 @@ export const fetchDayFormat = async (
   }
 
   try {
-    const prompts = await promptService.getPrompts(promptId);
-    return prompts.systemPrompt;
+    return await promptService.getContextPrompt(promptId);
   } catch (error) {
     console.warn(`[dayFormat] Could not fetch format for ${activityType}:`, error);
     return null;

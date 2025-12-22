@@ -67,4 +67,5 @@ export interface ResolvedContextData {
   snippetType?: SnippetType;
   activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
   dayFormatTemplate?: string | null;
+  experienceSnippet?: string | null;
 }

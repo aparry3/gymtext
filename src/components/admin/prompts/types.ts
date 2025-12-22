@@ -49,6 +49,9 @@ export const PROMPT_DOMAINS: PromptDomain[] = [
     label: 'Microcycles',
     agents: [
       { id: 'microcycle:generate', label: 'Microcycle Generator', roles: ['system', 'user'] },
+      { id: 'microcycle:generate:experience:beginner', label: 'Beginner Experience', roles: ['context'] },
+      { id: 'microcycle:generate:experience:intermediate', label: 'Intermediate Experience', roles: ['context'] },
+      { id: 'microcycle:generate:experience:advanced', label: 'Advanced Experience', roles: ['context'] },
       { id: 'microcycle:structured', label: 'Structured Microcycle', roles: ['system', 'user'] },
       { id: 'microcycle:message', label: 'Microcycle Message', roles: ['system', 'user'] },
       { id: 'microcycle:modify', label: 'Modify Microcycle', roles: ['system'] },
@@ -59,6 +62,9 @@ export const PROMPT_DOMAINS: PromptDomain[] = [
     label: 'Workouts',
     agents: [
       { id: 'workout:generate', label: 'Workout Generator', roles: ['system', 'user'] },
+      { id: 'workout:generate:experience:beginner', label: 'Beginner Experience', roles: ['context'] },
+      { id: 'workout:generate:experience:intermediate', label: 'Intermediate Experience', roles: ['context'] },
+      { id: 'workout:generate:experience:advanced', label: 'Advanced Experience', roles: ['context'] },
       { id: 'workout:structured', label: 'Structured Workout', roles: ['system', 'user'] },
       { id: 'workout:message', label: 'Workout Message', roles: ['system', 'user'] },
       { id: 'workout:modify', label: 'Modify Workout', roles: ['system', 'user'] },

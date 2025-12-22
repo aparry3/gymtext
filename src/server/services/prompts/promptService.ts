@@ -1,8 +1,8 @@
 import { promptRepository } from '@/server/repositories/promptRepository';
 import type { PromptPair } from '@/server/models/prompt';
 
-interface CacheEntry {
-  data: PromptPair;
+interface CacheEntry<T> {
+  data: T;
   expiresAt: number;
 }
 
@@ -18,7 +18,8 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
  */
 export class PromptService {
   private static instance: PromptService;
-  private cache: Map<string, CacheEntry> = new Map();
+  private cache: Map<string, CacheEntry<PromptPair>> = new Map();
+  private contextCache: Map<string, CacheEntry<string>> = new Map();
 
   private constructor() {}
 
@@ -61,10 +62,39 @@ export class PromptService {
   }
 
   /**
+   * Get context prompt for an agent, using cache when available
+   *
+   * @returns The context prompt value, or null if not found
+   */
+  async getContextPrompt(agentId: string): Promise<string | null> {
+    const cacheKey = `${agentId}:context`;
+
+    // Check cache first
+    const cached = this.contextCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
+    // Fetch from database
+    const value = await promptRepository.getContextPrompt(agentId);
+
+    if (value !== null) {
+      // Update cache
+      this.contextCache.set(cacheKey, {
+        data: value,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
+    }
+
+    return value;
+  }
+
+  /**
    * Invalidate cache for a specific agent (useful after updates)
    */
   invalidateCache(agentId: string): void {
     this.cache.delete(agentId);
+    this.contextCache.delete(`${agentId}:context`);
   }
 
   /**
@@ -72,6 +102,7 @@ export class PromptService {
    */
   clearCache(): void {
     this.cache.clear();
+    this.contextCache.clear();
   }
 }
 

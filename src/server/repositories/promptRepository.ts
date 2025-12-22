@@ -66,6 +66,22 @@ export class PromptRepository extends BaseRepository {
   }
 
   /**
+   * Get the most recent context prompt for an agent (if exists)
+   */
+  async getContextPrompt(id: string): Promise<string | null> {
+    const prompt = await this.db
+      .selectFrom('prompts')
+      .where('id', '=', id)
+      .where('role', '=', 'context')
+      .orderBy('createdAt', 'desc')
+      .limit(1)
+      .select('value')
+      .executeTakeFirst();
+
+    return prompt?.value ?? null;
+  }
+
+  /**
    * Create a new prompt version (insert-only)
    */
   async createPrompt(newPrompt: NewPrompt): Promise<Prompt> {
