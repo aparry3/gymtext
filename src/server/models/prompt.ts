@@ -13,7 +13,7 @@ export type Prompt = Selectable<Prompts>;
 export type NewPrompt = Insertable<Prompts>;
 
 // Domain types
-export type PromptRole = 'system' | 'user';
+export type PromptRole = 'system' | 'user' | 'context';
 
 /**
  * A pair of system and user prompts for an agent

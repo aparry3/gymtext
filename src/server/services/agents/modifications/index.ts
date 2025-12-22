@@ -84,7 +84,7 @@ export class ModificationService {
 
       // Create modifications agent - prompts fetched from DB based on agent name
       const agent = await createAgent({
-        name: 'modifications',
+        name: 'modifications:router',
         previousMessages: previousMsgs,
         tools,
       }, { model: 'gpt-5-mini' });

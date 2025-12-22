@@ -11,9 +11,9 @@ export type DayActivityType = 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
 
 // Map activity types to prompt IDs
 const ACTIVITY_TYPE_PROMPT_MAP: Record<DayActivityType, string> = {
-  TRAINING: 'workout-message-format-training',
-  ACTIVE_RECOVERY: 'workout-message-format-active_recovery',
-  REST: 'workout-message-format-rest',
+  TRAINING: 'workout:message:format:training',
+  ACTIVE_RECOVERY: 'workout:message:format:active_recovery',
+  REST: 'workout:message:format:rest',
 };
 
 /**

@@ -59,9 +59,9 @@ Example:
 - "- Optional easy walk: 5-15m"`;
 
 const PROMPTS = [
-  { id: 'workout-message-format-training', role: 'context', value: TRAINING_FORMAT },
-  { id: 'workout-message-format-active_recovery', role: 'context', value: ACTIVE_RECOVERY_FORMAT },
-  { id: 'workout-message-format-rest', role: 'context', value: REST_FORMAT },
+  { id: 'workout:message:format:training', role: 'context', value: TRAINING_FORMAT },
+  { id: 'workout:message:format:active_recovery', role: 'context', value: ACTIVE_RECOVERY_FORMAT },
+  { id: 'workout:message:format:rest', role: 'context', value: REST_FORMAT },
 ];
 
 export async function up(db: Kysely<unknown>): Promise<void> {

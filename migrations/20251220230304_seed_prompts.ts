@@ -121,47 +121,47 @@ Output only the message text (no JSON wrapper) as specified in your system instr
 // All prompts to seed
 const PROMPTS: Array<{ id: string; role: string; value: string }> = [
   // Chat agent (system only - uses tools, no user prompt)
-  { id: 'chat', role: 'system', value: CHAT_SYSTEM_PROMPT },
+  { id: 'chat:generate', role: 'system', value: CHAT_SYSTEM_PROMPT },
 
   // Modifications agent
-  { id: 'modifications', role: 'system', value: MODIFICATIONS_SYSTEM_PROMPT },
-  { id: 'modifications', role: 'user', value: MODIFICATIONS_USER_PROMPT },
+  { id: 'modifications:router', role: 'system', value: MODIFICATIONS_SYSTEM_PROMPT },
+  { id: 'modifications:router', role: 'user', value: MODIFICATIONS_USER_PROMPT },
 
   // Profile agents
-  { id: 'profile', role: 'system', value: PROFILE_UPDATE_SYSTEM_PROMPT },
-  { id: 'profile', role: 'user', value: PROFILE_UPDATE_USER_PROMPT },
-  { id: 'profile-structured', role: 'system', value: STRUCTURED_PROFILE_SYSTEM_PROMPT },
-  { id: 'profile-structured', role: 'user', value: STRUCTURED_PROFILE_USER_PROMPT },
-  { id: 'user-fields', role: 'system', value: USER_FIELDS_SYSTEM_PROMPT },
-  { id: 'user-fields', role: 'user', value: USER_FIELDS_USER_PROMPT },
+  { id: 'profile:fitness', role: 'system', value: PROFILE_UPDATE_SYSTEM_PROMPT },
+  { id: 'profile:fitness', role: 'user', value: PROFILE_UPDATE_USER_PROMPT },
+  { id: 'profile:structured', role: 'system', value: STRUCTURED_PROFILE_SYSTEM_PROMPT },
+  { id: 'profile:structured', role: 'user', value: STRUCTURED_PROFILE_USER_PROMPT },
+  { id: 'profile:user', role: 'system', value: USER_FIELDS_SYSTEM_PROMPT },
+  { id: 'profile:user', role: 'user', value: USER_FIELDS_USER_PROMPT },
 
   // Fitness plan agents
-  { id: 'fitness-plan', role: 'system', value: FITNESS_PLAN_SYSTEM_PROMPT },
-  { id: 'fitness-plan', role: 'user', value: FITNESS_PLAN_USER_PROMPT },
-  { id: 'fitness-plan-structured', role: 'system', value: STRUCTURED_PLAN_SYSTEM_PROMPT },
-  { id: 'fitness-plan-structured', role: 'user', value: STRUCTURED_PLAN_USER_PROMPT },
-  { id: 'fitness-plan-message', role: 'system', value: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT },
-  { id: 'fitness-plan-message', role: 'user', value: PLAN_SUMMARY_MESSAGE_USER_PROMPT },
-  { id: 'modify-fitness-plan', role: 'system', value: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT },
+  { id: 'plan:generate', role: 'system', value: FITNESS_PLAN_SYSTEM_PROMPT },
+  { id: 'plan:generate', role: 'user', value: FITNESS_PLAN_USER_PROMPT },
+  { id: 'plan:structured', role: 'system', value: STRUCTURED_PLAN_SYSTEM_PROMPT },
+  { id: 'plan:structured', role: 'user', value: STRUCTURED_PLAN_USER_PROMPT },
+  { id: 'plan:message', role: 'system', value: PLAN_SUMMARY_MESSAGE_SYSTEM_PROMPT },
+  { id: 'plan:message', role: 'user', value: PLAN_SUMMARY_MESSAGE_USER_PROMPT },
+  { id: 'plan:modify', role: 'system', value: FITNESS_PLAN_MODIFY_SYSTEM_PROMPT },
 
   // Workout agents
-  { id: 'workout', role: 'system', value: DAILY_WORKOUT_SYSTEM_PROMPT },
-  { id: 'workout', role: 'user', value: WORKOUT_GENERATE_USER_PROMPT },
-  { id: 'workout-structured', role: 'system', value: STRUCTURED_WORKOUT_SYSTEM_PROMPT },
-  { id: 'workout-structured', role: 'user', value: STRUCTURED_WORKOUT_USER_PROMPT },
-  { id: 'workout-message', role: 'system', value: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT },
-  { id: 'workout-message', role: 'user', value: WORKOUT_MESSAGE_USER_PROMPT },
-  { id: 'modify-workout', role: 'system', value: MODIFY_WORKOUT_SYSTEM_PROMPT },
-  { id: 'modify-workout', role: 'user', value: MODIFY_WORKOUT_USER_PROMPT },
+  { id: 'workout:generate', role: 'system', value: DAILY_WORKOUT_SYSTEM_PROMPT },
+  { id: 'workout:generate', role: 'user', value: WORKOUT_GENERATE_USER_PROMPT },
+  { id: 'workout:structured', role: 'system', value: STRUCTURED_WORKOUT_SYSTEM_PROMPT },
+  { id: 'workout:structured', role: 'user', value: STRUCTURED_WORKOUT_USER_PROMPT },
+  { id: 'workout:message', role: 'system', value: WORKOUT_SMS_FORMATTER_SYSTEM_PROMPT },
+  { id: 'workout:message', role: 'user', value: WORKOUT_MESSAGE_USER_PROMPT },
+  { id: 'workout:modify', role: 'system', value: MODIFY_WORKOUT_SYSTEM_PROMPT },
+  { id: 'workout:modify', role: 'user', value: MODIFY_WORKOUT_USER_PROMPT },
 
   // Microcycle agents
-  { id: 'microcycle', role: 'system', value: MICROCYCLE_SYSTEM_PROMPT },
-  { id: 'microcycle', role: 'user', value: MICROCYCLE_USER_PROMPT },
-  { id: 'microcycle-structured', role: 'system', value: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT },
-  { id: 'microcycle-structured', role: 'user', value: STRUCTURED_MICROCYCLE_USER_PROMPT },
-  { id: 'microcycle-message', role: 'system', value: MICROCYCLE_MESSAGE_SYSTEM_PROMPT },
-  { id: 'microcycle-message', role: 'user', value: MICROCYCLE_MESSAGE_USER_PROMPT },
-  { id: 'modify-microcycle', role: 'system', value: MICROCYCLE_MODIFY_SYSTEM_PROMPT },
+  { id: 'microcycle:generate', role: 'system', value: MICROCYCLE_SYSTEM_PROMPT },
+  { id: 'microcycle:generate', role: 'user', value: MICROCYCLE_USER_PROMPT },
+  { id: 'microcycle:structured', role: 'system', value: STRUCTURED_MICROCYCLE_SYSTEM_PROMPT },
+  { id: 'microcycle:structured', role: 'user', value: STRUCTURED_MICROCYCLE_USER_PROMPT },
+  { id: 'microcycle:message', role: 'system', value: MICROCYCLE_MESSAGE_SYSTEM_PROMPT },
+  { id: 'microcycle:message', role: 'user', value: MICROCYCLE_MESSAGE_USER_PROMPT },
+  { id: 'microcycle:modify', role: 'system', value: MICROCYCLE_MODIFY_SYSTEM_PROMPT },
 ];
 
 export async function up(db: Kysely<unknown>): Promise<void> {

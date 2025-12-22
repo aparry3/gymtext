@@ -63,7 +63,7 @@ export class WorkoutAgentService {
         { activityType }
       );
       return createAgent({
-        name: 'workout-message',
+        name: 'workout:message',
         context: dayFormatContext,
       }, { model: 'gpt-5-nano' });
     }
@@ -71,7 +71,7 @@ export class WorkoutAgentService {
     // Otherwise, use the cached singleton
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
-        name: 'workout-message',
+        name: 'workout:message',
       }, { model: 'gpt-5-nano' });
     }
     return this.messageAgentPromise;
@@ -84,7 +84,7 @@ export class WorkoutAgentService {
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
-        name: 'workout-structured',
+        name: 'workout:structured',
         schema: WorkoutStructureSchema,
       }, { model: 'gpt-5-nano', maxTokens: 32000 });
     }
@@ -130,7 +130,7 @@ export class WorkoutAgentService {
 
     // Create main agent with context (prompts fetched from DB)
     const agent = await createAgent({
-      name: 'workout',
+      name: 'workout:generate',
       context,
       subAgents: [{ message: messageAgent, structure: structuredAgent }],
     }, { model: 'gpt-5.1' });
@@ -181,7 +181,7 @@ export class WorkoutAgentService {
 
     // Prompts fetched from DB based on agent name
     const agent = await createAgent({
-      name: 'modify-workout',
+      name: 'workout:modify',
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
       subAgents: [{

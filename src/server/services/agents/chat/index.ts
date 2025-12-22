@@ -187,7 +187,7 @@ export class ChatService {
 
       // Create chat agent - prompts fetched from DB based on agent name
       const agent = await createAgent({
-        name: 'chat',
+        name: 'chat:generate',
         context: agentContext,
         previousMessages: previousMsgs,
         tools,

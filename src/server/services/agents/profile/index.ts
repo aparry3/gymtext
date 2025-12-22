@@ -77,7 +77,7 @@ export class ProfileService {
         const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
         const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
         const agent = await createAgent({
-          name: 'profile-structured',
+          name: 'profile:structured',
           schema: StructuredProfileSchema,
         }, { model: 'gpt-5-nano', temperature: 0.3 });
 
@@ -94,12 +94,12 @@ export class ProfileService {
 
           // Create profile update agent with subAgents for structured extraction
           const agent = await createAgent({
-            name: 'profile',
+            name: 'profile:fitness',
             previousMessages: previousMsgs,
             schema: ProfileUpdateOutputSchema,
             subAgents: [{
               structured: {
-                agent: { name: 'profile-structured', invoke: invokeStructuredProfileAgent },
+                agent: { name: 'profile:structured', invoke: invokeStructuredProfileAgent },
                 condition: (result: unknown) => (result as { wasUpdated: boolean }).wasUpdated,
                 transform: (result: unknown) => JSON.stringify({
                   dossierText: (result as { updatedProfile: string }).updatedProfile,
@@ -125,7 +125,7 @@ export class ProfileService {
         (async (): Promise<UserFieldsOutput> => {
           const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
           const agent = await createAgent({
-            name: 'user-fields',
+            name: 'profile:user',
             previousMessages: previousMsgs,
             schema: UserFieldsOutputSchema,
           }, { model: 'gpt-5-nano', temperature: 0.3 });
