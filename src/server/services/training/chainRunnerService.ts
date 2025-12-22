@@ -430,8 +430,9 @@ export class ChainRunnerService {
   ): Promise<WorkoutInstance> {
     console.log(`[ChainRunner] Running full workout chain for workout ${workout.id}`);
 
-    // Determine day overview from microcycle or use existing goal
+    // Determine day overview and activity type from microcycle
     let dayOverview = workout.goal || 'General workout';
+    let activityType: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     if (microcycle) {
       const workoutDate = new Date(workout.date);
       const dayOfWeek = workoutDate.getDay(); // 0 = Sunday
@@ -440,13 +441,17 @@ export class ChainRunnerService {
       if (microcycle.days[dayIndex]) {
         dayOverview = microcycle.days[dayIndex];
       }
+      // Get activity type from structured data
+      const structuredDay = microcycle.structured?.days?.[dayIndex];
+      activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     }
 
     // Use workout agent service for full chain
     const result = await workoutAgentService.generateWorkout(
       user,
       dayOverview,
-      microcycle?.isDeload || false
+      microcycle?.isDeload || false,
+      activityType
     );
 
     const updated = await this.workoutService.updateWorkout(workout.id, {

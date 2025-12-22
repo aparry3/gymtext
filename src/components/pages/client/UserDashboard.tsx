@@ -28,8 +28,7 @@ interface WorkoutData {
 
 interface DayFocus {
   focus: string;
-  activityType: string;
-  isRest: boolean;
+  activityType: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | string;
 }
 
 interface DashboardData {
@@ -123,14 +122,12 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
             todayFocus = {
               focus: todayDayInfo.focus,
               activityType: todayDayInfo.activityType,
-              isRest: todayDayInfo.isRest,
             };
           }
           if (tomorrowDayInfo) {
             tomorrowFocus = {
               focus: tomorrowDayInfo.focus,
               activityType: tomorrowDayInfo.activityType,
-              isRest: tomorrowDayInfo.isRest,
             };
           }
         }
@@ -139,8 +136,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       setDashboardData({
         todayWorkout,
         tomorrowWorkout,
-        isRestDayToday: todayFocus?.isRest ?? (todayWorkout?.sessionType === 'rest' || !todayWorkout),
-        isRestDayTomorrow: tomorrowFocus?.isRest ?? (tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout),
+        isRestDayToday: todayFocus?.activityType === 'REST' || (todayWorkout?.sessionType === 'rest' || !todayWorkout),
+        isRestDayTomorrow: tomorrowFocus?.activityType === 'REST' || (tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout),
         weekNumber,
         programPhase,
         quote: todayWorkout?.structure?.quote,

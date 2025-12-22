@@ -246,12 +246,16 @@ export class WorkoutModificationService {
         const newTodayOverview = modifyMicrocycleResult.days[todayDayIndex] || null;
 
         if (originalTodayOverview !== newTodayOverview) {
+          // Get activity type from modified microcycle structure
+          const structuredDay = modifyMicrocycleResult.structure?.days?.[todayDayIndex];
+          const activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
 
           // Generate new workout for today using workout agent service
           const workoutResult = await workoutAgentService.generateWorkout(
             user,
             newTodayOverview || '',
-            modifyMicrocycleResult.isDeload || false
+            modifyMicrocycleResult.isDeload || false,
+            activityType
           );
 
           // Extract theme from structured data or use default

@@ -11,14 +11,18 @@ interface StructuredMicrocycleRendererProps {
   className?: string;
 }
 
-// Activity type styling
+// Activity type styling for new enum values
 const activityTypeStyles: Record<string, string> = {
-  Lifting: 'bg-blue-100 text-blue-800 border-blue-200',
-  Cardio: 'bg-green-100 text-green-800 border-green-200',
-  Hybrid: 'bg-purple-100 text-purple-800 border-purple-200',
-  Mobility: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  Rest: 'bg-gray-100 text-gray-600 border-gray-200',
-  Sport: 'bg-orange-100 text-orange-800 border-orange-200',
+  TRAINING: 'bg-blue-100 text-blue-800 border-blue-200',
+  ACTIVE_RECOVERY: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  REST: 'bg-gray-100 text-gray-600 border-gray-200',
+};
+
+// Display names for activity types
+const activityTypeDisplayNames: Record<string, string> = {
+  TRAINING: 'Training',
+  ACTIVE_RECOVERY: 'Recovery',
+  REST: 'Rest',
 };
 
 /**
@@ -71,25 +75,27 @@ interface DayCardProps {
 }
 
 function DayCard({ day }: DayCardProps) {
-  const activityStyle = activityTypeStyles[day.activityType] || activityTypeStyles.Rest;
+  const isRest = day.activityType === 'REST';
+  const activityStyle = activityTypeStyles[day.activityType] || activityTypeStyles.REST;
+  const activityDisplayName = activityTypeDisplayNames[day.activityType] || day.activityType;
 
   return (
-    <Card className={cn('p-4', day.isRest && 'opacity-75')}>
+    <Card className={cn('p-4', isRest && 'opacity-75')}>
       <div className="space-y-2">
         {/* Day Name */}
         <div className="flex items-center justify-between">
           <h4 className="font-medium text-foreground">{day.day}</h4>
           <Badge variant="outline" className={cn('text-xs', activityStyle)}>
-            {day.activityType}
+            {activityDisplayName}
           </Badge>
         </div>
 
         {/* Focus */}
         <p className={cn(
           'text-sm',
-          day.isRest ? 'text-muted-foreground' : 'text-foreground'
+          isRest ? 'text-muted-foreground' : 'text-foreground'
         )}>
-          {day.focus || (day.isRest ? 'Rest Day' : 'Training')}
+          {day.focus || (isRest ? 'Rest Day' : 'Training')}
         </p>
 
         {/* Notes */}
@@ -116,7 +122,7 @@ export function StructuredMicrocycleCompact({
   return (
     <div className="flex flex-wrap gap-1">
       {structure.days.map((day, index) => {
-        const isTraining = !day.isRest;
+        const isTraining = day.activityType !== 'REST';
         return (
           <div
             key={index}

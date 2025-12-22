@@ -3,7 +3,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { workoutAgentService } from '@/server/services/agents/training';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
-import type { Microcycle } from '@/server/models/microcycle';
+import type { ActivityType, Microcycle } from '@/server/models/microcycle';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
@@ -157,6 +157,10 @@ export class WorkoutInstanceService {
         return null;
       }
 
+      // Get activity type from structured microcycle data (if available)
+      const structuredDay = microcycle.structured?.days?.[dayIndex];
+      const activityType = structuredDay?.activityType as ActivityType | undefined;
+
       // Get recent workouts for context (last 7 days)
       // const recentWorkouts = await this.getRecentWorkouts(user.id, 7);
 
@@ -164,7 +168,8 @@ export class WorkoutInstanceService {
       const { response: description, message, structure } = await workoutAgentService.generateWorkout(
         user,
         dayOverview,
-        microcycle.isDeload ?? false
+        microcycle.isDeload ?? false,
+        activityType
       );
 
       // Extract theme from structured data or use default

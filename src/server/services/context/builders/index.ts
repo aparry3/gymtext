@@ -12,3 +12,8 @@ export {
   EXPERIENCE_SNIPPETS,
   type ExperienceLevel,
 } from './experienceLevel';
+export {
+  buildDayFormatContext,
+  fetchDayFormat,
+  type DayActivityType,
+} from './dayFormat';

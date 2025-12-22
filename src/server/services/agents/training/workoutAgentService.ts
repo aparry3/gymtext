@@ -5,6 +5,7 @@ import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/servic
 import { ContextService, ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
+import type { ActivityType } from '@/shared/types/microcycle/schema';
 
 /**
  * WorkoutAgentService - Handles all workout-related AI operations
@@ -44,10 +45,30 @@ export class WorkoutAgentService {
   }
 
   /**
-   * Get the message sub-agent (lazy-initialized)
+   * Get the message sub-agent (lazy-initialized for basic use, or with context)
    * Prompts fetched from DB based on agent name
+   *
+   * @param user - Optional user for context-aware agent (required when activityType is provided)
+   * @param activityType - Optional activity type for day format context injection
    */
-  public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
+  public async getMessageAgent(
+    user?: UserWithProfile,
+    activityType?: ActivityType
+  ): Promise<ConfigurableAgent<{ response: string }>> {
+    // If activityType is provided, create a new agent with day format context
+    if (activityType && user) {
+      const dayFormatContext = await this.getContextService().getContext(
+        user,
+        [ContextType.DAY_FORMAT],
+        { activityType }
+      );
+      return createAgent({
+        name: 'workout-message',
+        context: dayFormatContext,
+      }, { model: 'gpt-5-nano' });
+    }
+
+    // Otherwise, use the cached singleton
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
         name: 'workout-message',
@@ -76,12 +97,14 @@ export class WorkoutAgentService {
    * @param user - User with profile
    * @param dayOverview - Day overview from microcycle (e.g., "Upper body push focus")
    * @param isDeload - Whether this is a deload week
+   * @param activityType - Optional activity type for day format context (TRAINING, ACTIVE_RECOVERY, REST)
    * @returns WorkoutGenerateOutput with response, message, and structure
    */
   async generateWorkout(
     user: UserWithProfile,
     dayOverview: string,
-    isDeload: boolean = false
+    isDeload: boolean = false,
+    activityType?: ActivityType
   ): Promise<WorkoutGenerateOutput> {
     // Build context using ContextService
     const context = await this.getContextService().getContext(
@@ -99,9 +122,9 @@ export class WorkoutAgentService {
       }
     );
 
-    // Get sub-agents (lazy-initialized)
+    // Get sub-agents (message agent with day format context if activityType provided)
     const [messageAgent, structuredAgent] = await Promise.all([
-      this.getMessageAgent(),
+      this.getMessageAgent(user, activityType),
       this.getStructuredAgent(),
     ]);
 

@@ -90,14 +90,16 @@ export class ContextService {
     const needsWorkout = types.includes(ContextType.CURRENT_WORKOUT) && extras.workout === undefined;
     const needsMicrocycle = types.includes(ContextType.CURRENT_MICROCYCLE) && extras.microcycle === undefined;
     const needsExperienceLevel = types.includes(ContextType.EXPERIENCE_LEVEL) && extras.experienceLevel === undefined;
+    const needsDayFormat = types.includes(ContextType.DAY_FORMAT) && extras.activityType !== undefined;
 
     // Fetch required data in parallel
     const targetDate = extras.date || today(user.timezone);
-    const [fitnessPlan, workout, microcycle, structuredProfile] = await Promise.all([
+    const [fitnessPlan, workout, microcycle, structuredProfile, dayFormatTemplate] = await Promise.all([
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
       needsMicrocycle ? this.deps.microcycleService.getMicrocycleByDate(user.id, targetDate) : null,
       needsExperienceLevel ? this.deps.profileRepository.getCurrentStructuredProfile(user.id) : null,
+      needsDayFormat ? builders.fetchDayFormat(extras.activityType) : null,
     ]);
 
     // Build resolved data object
@@ -117,6 +119,8 @@ export class ContextService {
       currentWeek: extras.currentWeek,
       experienceLevel: extras.experienceLevel ?? structuredProfile?.experienceLevel ?? null,
       snippetType: extras.snippetType,
+      activityType: extras.activityType,
+      dayFormatTemplate: dayFormatTemplate,
     };
 
     // Build context strings for each requested type
@@ -155,6 +159,8 @@ export class ContextService {
           data.experienceLevel,
           data.snippetType || SnippetType.WORKOUT
         );
+      case ContextType.DAY_FORMAT:
+        return builders.buildDayFormatContext(data.dayFormatTemplate, data.activityType);
       default:
         return '';
     }
