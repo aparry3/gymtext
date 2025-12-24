@@ -44,7 +44,7 @@ export interface InvokableModel<T = unknown> {
  * @returns Model that returns structured output (T), plain text (string), or model with tools bound
  */
 export const initializeModel = <T = string>(outputSchema?: unknown, config?: { model?: string; temperature?: number; maxTokens?: number }, options?: ModelOptions): InvokableModel<T> => {
-    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 8000 } = config || {};
+    const { model = 'gpt-5-nano', temperature = 1, maxTokens = 16000 } = config || {};
 
     if (model.startsWith('gemini')) {
       const llm = new ChatGoogleGenerativeAI({
