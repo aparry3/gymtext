@@ -1,19 +1,15 @@
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
+import { getTwilioSecrets } from '@/server/config';
+import { getUrlsConfig } from '@/shared/config';
 
 class TwilioClient {
   private client: twilio.Twilio;
   private fromNumber: string;
 
   constructor() {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    this.fromNumber = process.env.TWILIO_NUMBER || '';
-
-    if (!accountSid || !authToken) {
-      throw new Error('Twilio credentials are not properly configured');
-    }
-
+    const { accountSid, authToken, phoneNumber } = getTwilioSecrets();
+    this.fromNumber = phoneNumber;
     this.client = twilio(accountSid, authToken);
   }
 
@@ -29,8 +25,9 @@ class TwilioClient {
       }
 
       // Build status callback URL if BASE_URL is configured
-      const statusCallback = process.env.BASE_URL
-        ? `${process.env.BASE_URL}/api/twilio/status`
+      const { baseUrl } = getUrlsConfig();
+      const statusCallback = baseUrl
+        ? `${baseUrl}/api/twilio/status`
         : undefined;
 
       const response = await this.client.messages.create({

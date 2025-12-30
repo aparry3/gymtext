@@ -8,6 +8,7 @@ import { WorkoutInstanceService } from '../training/workoutInstanceService';
 import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { inngest } from '@/server/connections/inngest/client';
 import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
+import { getUrlsConfig } from '@/shared/config';
 
 interface MessageResult {
   success: boolean;
@@ -188,10 +189,11 @@ export class DailyMessageService {
       }
 
       // Send single message with both image and text
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
-      const mediaUrls = baseUrl ? [`${baseUrl}/OpenGraphGymtext.png`] : undefined;
+      const { publicBaseUrl, baseUrl } = getUrlsConfig();
+      const resolvedBaseUrl = publicBaseUrl || baseUrl;
+      const mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
 
-      if (!baseUrl) {
+      if (!resolvedBaseUrl) {
         console.warn('BASE_URL not configured - sending workout without logo image');
       }
 

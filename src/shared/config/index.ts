@@ -16,6 +16,7 @@
 export { getConfig, loadConfig, resetConfig, getEnvironment } from './loader';
 export type { Environment } from './loader';
 export * from './schema';
+export * from './public';
 
 import { getConfig } from './loader';
 import type {

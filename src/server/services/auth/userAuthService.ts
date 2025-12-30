@@ -3,6 +3,8 @@ import { UserRepository } from '@/server/repositories/userRepository';
 import { twilioClient } from '@/server/connections/twilio/twilio';
 import { encryptUserId } from '@/server/utils/sessionCrypto';
 import { adminAuthService } from './adminAuthService';
+import { getEnvironmentSettings } from '@/server/config';
+import { getAdminConfig } from '@/shared/config';
 
 /**
  * Service for handling user authentication via SMS verification codes
@@ -18,8 +20,8 @@ export class UserAuthService {
   private readonly CODE_LENGTH = 6;
 
   // Dev mode detection
-  private readonly isDev = process.env.NODE_ENV !== 'production';
-  private readonly devBypassCode = process.env.DEV_BYPASS_CODE || '000000';
+  private readonly isDev = !getEnvironmentSettings().isProduction;
+  private readonly devBypassCode = getAdminConfig().devBypassCode || '000000';
 
   constructor() {
     this.authRepository = new UserAuthRepository();

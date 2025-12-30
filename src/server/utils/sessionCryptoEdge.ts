@@ -1,6 +1,10 @@
 /**
  * Session crypto utilities for Edge Runtime (middleware)
  * Uses Web Crypto API instead of Node.js crypto module
+ *
+ * NOTE: This file runs in Edge Runtime and cannot import from @/server/config
+ * (which uses 'server-only' and Node.js modules). Direct process.env access
+ * is an accepted exception for this file.
  */
 
 const ALGORITHM = 'AES-GCM';
@@ -11,6 +15,7 @@ const KEY_LENGTH = 256; // bits
  * Get or derive the encryption key for Edge Runtime
  */
 async function getEncryptionKey(): Promise<CryptoKey> {
+  // Edge runtime exception - cannot use server config module
   const keyString = process.env.SESSION_ENCRYPTION_KEY || 'gymtext-dev-key';
 
   // Encode the key string

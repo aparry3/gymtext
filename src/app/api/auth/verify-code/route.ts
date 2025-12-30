@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userAuthService } from '@/server/services/auth/userAuthService';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
+import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
  * POST /api/auth/verify-code
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     // Set secure session cookie
     response.cookies.set('gt_user_session', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProductionEnvironment(),
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',

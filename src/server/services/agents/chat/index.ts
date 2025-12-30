@@ -10,10 +10,11 @@ import { createChatTools } from './tools';
 import { ContextService, ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../types/shared';
+import { getChatConfig } from '@/shared/config';
+import { getEnvironmentSettings } from '@/server/config';
 
-// Configuration from environment variables
-const SMS_MAX_LENGTH = parseInt(process.env.SMS_MAX_LENGTH || '1600');
-const CHAT_CONTEXT_MINUTES = parseInt(process.env.CHAT_CONTEXT_MINUTES || '10');
+// Configuration from shared config
+const { smsMaxLength: SMS_MAX_LENGTH, contextMinutes: CHAT_CONTEXT_MINUTES } = getChatConfig();
 
 /**
  * Get or generate today's workout for a user.
@@ -223,7 +224,7 @@ export class ChatService {
       console.error('[ChatService] Error handling message:', error);
 
       // Log additional context in development
-      if (process.env.NODE_ENV === 'development') {
+      if (getEnvironmentSettings().isDevelopment) {
         console.error('Error details:', {
           userId: user.id,
           error: error instanceof Error ? error.stack : error

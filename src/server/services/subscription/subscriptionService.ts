@@ -1,8 +1,11 @@
 import Stripe from 'stripe';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import { UserRepository } from '@/server/repositories/userRepository';
+import { getStripeSecrets } from '@/server/config';
+import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const { secretKey } = getStripeSecrets();
+const stripe = new Stripe(secretKey, {
   apiVersion: '2023-10-16',
 });
 
@@ -179,14 +182,16 @@ export class SubscriptionService {
         return { success: false, reactivated: false, requiresNewSubscription: true, error: 'User not found' };
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
+      const { publicBaseUrl, baseUrl } = getUrlsConfig();
+      const resolvedBaseUrl = publicBaseUrl || baseUrl;
+      const { priceId } = getStripeConfig();
 
       const session = await stripe.checkout.sessions.create({
         customer: user.stripeCustomerId || undefined,
         mode: 'subscription',
-        line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-        success_url: `${baseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/`,
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${resolvedBaseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${resolvedBaseUrl}/`,
         metadata: { userId },
         client_reference_id: userId,
       });

@@ -1,13 +1,10 @@
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import type { DB } from '@/server/models/_types';
+import { getDatabaseSecrets } from '@/server/config';
 
-// Get the database URL from environment variables
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
+// Get the database URL from validated server config
+const { databaseUrl } = getDatabaseSecrets();
 
 // Create a connection pool
 const pool = new Pool({

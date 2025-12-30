@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
+import { getStripeSecrets } from '@/server/config';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const { secretKey, webhookSecret } = getStripeSecrets();
+const stripe = new Stripe(secretKey, {
   apiVersion: '2023-10-16',
 });
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 /**
  * POST /api/stripe/webhook

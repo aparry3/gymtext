@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 // ============================================================================
+// Environment Detection (for smart defaults)
+// ============================================================================
+const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production';
+
+// ============================================================================
 // Context Configuration (migrated from context.config.ts)
 // ============================================================================
 export const ContextConfigSchema = z.object({
@@ -10,7 +16,8 @@ export const ContextConfigSchema = z.object({
   reserveTokensForResponse: z.number().int().positive().default(1500),
   conversationGapMinutes: z.number().int().positive().default(30),
   enableCaching: z.boolean().default(true),
-  cacheTTLSeconds: z.number().int().nonnegative().default(300),
+  // Longer cache in production
+  cacheTTLSeconds: z.number().int().nonnegative().default(isProd ? 600 : 300),
 });
 
 // ============================================================================
@@ -27,14 +34,16 @@ export const ChatConfigSchema = z.object({
 export const MessagingProviderSchema = z.enum(['twilio', 'local']);
 
 export const MessagingConfigSchema = z.object({
-  provider: MessagingProviderSchema.default('twilio'),
+  // Use local provider in development, twilio in production
+  provider: MessagingProviderSchema.default(isDev ? 'local' : 'twilio'),
 });
 
 // ============================================================================
 // Feature Flags
 // ============================================================================
 export const FeatureFlagsSchema = z.object({
-  agentLogging: z.boolean().default(false),
+  // Enable agent logging in development by default
+  agentLogging: z.boolean().default(isDev),
   enableConversationStorage: z.boolean().default(true),
 });
 

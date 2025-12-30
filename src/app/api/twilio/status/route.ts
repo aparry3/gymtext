@@ -3,6 +3,8 @@ import { inngest } from '@/server/connections/inngest/client';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { getTwilioSecrets } from '@/server/config';
+import { getUrlsConfig } from '@/shared/config';
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,10 +34,11 @@ export async function POST(req: NextRequest) {
 
     // Optional: Validate Twilio signature for security
     // Note: This requires TWILIO_AUTH_TOKEN and the full URL
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    if (authToken) {
+    const { authToken } = getTwilioSecrets();
+    const { baseUrl } = getUrlsConfig();
+    if (authToken && baseUrl) {
       const signature = req.headers.get('x-twilio-signature');
-      const url = `${process.env.BASE_URL}/api/twilio/status`;
+      const url = `${baseUrl}/api/twilio/status`;
 
       if (signature && url) {
         const params: Record<string, string> = {};

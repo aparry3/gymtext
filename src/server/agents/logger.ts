@@ -1,14 +1,15 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { Message } from './types';
+import { getFeatureFlags } from '@/shared/config';
 
 const LOGS_DIR = path.join(process.cwd(), '_logs');
 
 /**
- * Check if agent logging is enabled via environment variable
+ * Check if agent logging is enabled via config
  */
 function isLoggingEnabled(): boolean {
-  return process.env.AGENT_LOGGING === 'true';
+  return getFeatureFlags().agentLogging;
 }
 
 /**

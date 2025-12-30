@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthService } from '@/server/services/auth/adminAuthService';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
+import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
  * POST /api/auth/admin/verify-code
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Set secure admin cookie
     response.cookies.set('gt_admin', 'ok', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProductionEnvironment(),
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',

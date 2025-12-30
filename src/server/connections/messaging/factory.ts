@@ -8,13 +8,14 @@
 import type { IMessagingClient, MessagingProvider } from './types';
 import { twilioMessagingClient } from './twilioClient';
 import { localMessagingClient } from './localClient';
+import { getMessagingConfig } from '@/shared/config';
 
 /**
  * Get the messaging client based on environment configuration
  * Defaults to Twilio in production, can be overridden with MESSAGING_PROVIDER env var
  */
 export function getMessagingClient(): IMessagingClient {
-  const provider = (process.env.MESSAGING_PROVIDER || 'twilio') as MessagingProvider;
+  const { provider } = getMessagingConfig();
 
   switch (provider) {
     case 'local':

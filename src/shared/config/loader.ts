@@ -1,14 +1,6 @@
 import { AppConfigSchema, type AppConfig, type MessagingProvider } from './schema';
-import { baseConfig } from './environments/base';
-import { developmentConfig } from './environments/development';
-import { stagingConfig } from './environments/staging';
-import { productionConfig } from './environments/production';
 
 export type Environment = 'development' | 'staging' | 'production';
-
-type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
 
 /**
  * Determine current environment.
@@ -21,21 +13,6 @@ export function getEnvironment(): Environment {
   if (appEnv === 'staging') return 'staging';
   if (nodeEnv === 'production') return 'production';
   return 'development';
-}
-
-/**
- * Get environment-specific base config.
- */
-function getEnvironmentConfig(env: Environment): DeepPartial<AppConfig> {
-  switch (env) {
-    case 'production':
-      return productionConfig;
-    case 'staging':
-      return stagingConfig;
-    case 'development':
-    default:
-      return developmentConfig;
-  }
 }
 
 /**
@@ -60,44 +37,31 @@ function parseOptionalInt(value: string | undefined): number | undefined {
 
 /**
  * Parse optional boolean from env var.
- * Treats 'false' as false, anything else truthy as true.
+ * Treats 'true' as true, 'false' as false, undefined as undefined.
  */
-function parseOptionalBool(
-  value: string | undefined,
-  invertCheck = false
-): boolean | undefined {
+function parseOptionalBool(value: string | undefined): boolean | undefined {
   if (value === undefined) return undefined;
-  if (invertCheck) {
-    return value !== 'false';
-  }
   return value === 'true';
 }
 
 /**
- * Build config from environment variables (for runtime overrides).
- * These env vars allow override of config values without changing code.
+ * Load and validate configuration.
+ * Builds config from env vars, letting Zod schemas handle defaults.
+ * Throws on validation failure (fail-fast).
  */
-function buildEnvOverrides(): DeepPartial<AppConfig> {
-  return {
+export function loadConfig(): AppConfig {
+  const env = getEnvironment();
+
+  // Build raw config from env vars - undefined values let Zod defaults apply
+  const rawConfig = {
+    environment: env,
     context: {
-      messageHistoryLimit: parseOptionalInt(
-        process.env.CONTEXT_MESSAGE_HISTORY_LIMIT
-      ),
-      includeSystemMessages: parseOptionalBool(
-        process.env.CONTEXT_INCLUDE_SYSTEM_MESSAGES,
-        true
-      ),
+      messageHistoryLimit: parseOptionalInt(process.env.CONTEXT_MESSAGE_HISTORY_LIMIT),
+      includeSystemMessages: parseOptionalBool(process.env.CONTEXT_INCLUDE_SYSTEM_MESSAGES),
       maxContextTokens: parseOptionalInt(process.env.CONTEXT_MAX_TOKENS),
-      reserveTokensForResponse: parseOptionalInt(
-        process.env.CONTEXT_RESERVE_TOKENS
-      ),
-      conversationGapMinutes: parseOptionalInt(
-        process.env.CONTEXT_CONVERSATION_GAP_MINUTES
-      ),
-      enableCaching: parseOptionalBool(
-        process.env.CONTEXT_ENABLE_CACHING,
-        true
-      ),
+      reserveTokensForResponse: parseOptionalInt(process.env.CONTEXT_RESERVE_TOKENS),
+      conversationGapMinutes: parseOptionalInt(process.env.CONTEXT_CONVERSATION_GAP_MINUTES),
+      enableCaching: parseOptionalBool(process.env.CONTEXT_ENABLE_CACHING),
       cacheTTLSeconds: parseOptionalInt(process.env.CONTEXT_CACHE_TTL),
     },
     chat: {
@@ -109,24 +73,15 @@ function buildEnvOverrides(): DeepPartial<AppConfig> {
     },
     features: {
       agentLogging: parseOptionalBool(process.env.AGENT_LOGGING),
-      enableConversationStorage: parseOptionalBool(
-        process.env.ENABLE_CONVERSATION_STORAGE,
-        true
-      ),
+      enableConversationStorage: parseOptionalBool(process.env.ENABLE_CONVERSATION_STORAGE),
     },
     conversation: {
-      timeoutMinutes: parseOptionalInt(
-        process.env.CONVERSATION_TIMEOUT_MINUTES
-      ),
+      timeoutMinutes: parseOptionalInt(process.env.CONVERSATION_TIMEOUT_MINUTES),
       maxLength: parseOptionalInt(process.env.MAX_CONVERSATION_LENGTH),
-      inactiveThresholdDays: parseOptionalInt(
-        process.env.INACTIVE_THRESHOLD_DAYS
-      ),
+      inactiveThresholdDays: parseOptionalInt(process.env.INACTIVE_THRESHOLD_DAYS),
     },
     shortLinks: {
-      defaultExpiryDays: parseOptionalInt(
-        process.env.SHORT_LINK_DEFAULT_EXPIRY_DAYS
-      ),
+      defaultExpiryDays: parseOptionalInt(process.env.SHORT_LINK_DEFAULT_EXPIRY_DAYS),
       domain: process.env.SHORT_LINK_DOMAIN,
     },
     stripe: {
@@ -143,59 +98,9 @@ function buildEnvOverrides(): DeepPartial<AppConfig> {
       publicBaseUrl: process.env.NEXT_PUBLIC_BASE_URL,
     },
   };
-}
 
-/**
- * Deep merge configs, with later sources overriding earlier ones.
- * Filters out undefined values before merging.
- */
-function deepMerge<T extends Record<string, unknown>>(
-  target: T,
-  source: DeepPartial<T>
-): T {
-  const result = { ...target };
-
-  for (const key of Object.keys(source) as Array<keyof T>) {
-    const sourceValue = source[key as keyof typeof source];
-    if (sourceValue === undefined) continue;
-
-    if (
-      typeof sourceValue === 'object' &&
-      sourceValue !== null &&
-      !Array.isArray(sourceValue) &&
-      typeof result[key] === 'object' &&
-      result[key] !== null
-    ) {
-      result[key] = deepMerge(
-        result[key] as Record<string, unknown>,
-        sourceValue as Record<string, unknown>
-      ) as T[keyof T];
-    } else {
-      result[key] = sourceValue as T[keyof T];
-    }
-  }
-
-  return result;
-}
-
-/**
- * Load and validate configuration.
- * Throws on validation failure (fail-fast).
- */
-export function loadConfig(): AppConfig {
-  const env = getEnvironment();
-  const envConfig = getEnvironmentConfig(env);
-  const envOverrides = buildEnvOverrides();
-
-  // Merge: base -> environment -> env vars
-  let merged = deepMerge(baseConfig as AppConfig, envConfig);
-  merged = deepMerge(merged, envOverrides);
-
-  // Add environment to merged config
-  merged.environment = env;
-
-  // Validate with Zod - throws on failure
-  const result = AppConfigSchema.safeParse(merged);
+  // Validate with Zod - applies defaults and throws on failure
+  const result = AppConfigSchema.safeParse(rawConfig);
 
   if (!result.success) {
     const errors = result.error.errors
@@ -205,7 +110,7 @@ export function loadConfig(): AppConfig {
     throw new Error(
       `Configuration validation failed:\n${errors}\n\n` +
         `Environment: ${env}\n` +
-        `Check your environment variables and config files.`
+        `Check your environment variables.`
     );
   }
 

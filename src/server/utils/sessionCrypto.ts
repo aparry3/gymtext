@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { getDatabaseSecrets } from '@/server/config';
 
 /**
  * Session crypto utilities for encrypting and decrypting user IDs in session cookies
@@ -11,25 +12,25 @@ const AUTH_TAG_LENGTH = 16;
 const KEY_LENGTH = 32; // 256 bits
 
 /**
- * Get the encryption key from environment
+ * Get the encryption key from config
  * In production, this should be a strong random key stored securely
  */
 function getEncryptionKey(): Buffer {
-  const key = process.env.SESSION_ENCRYPTION_KEY;
+  const { sessionEncryptionKey } = getDatabaseSecrets();
 
-  if (!key) {
+  if (!sessionEncryptionKey) {
     // For development, use a default key (NOT for production!)
     console.warn('SESSION_ENCRYPTION_KEY not set, using development key');
     return crypto.scryptSync('gymtext-dev-key', 'salt', KEY_LENGTH);
   }
 
   // If key is hex-encoded, decode it
-  if (key.length === KEY_LENGTH * 2) {
-    return Buffer.from(key, 'hex');
+  if (sessionEncryptionKey.length === KEY_LENGTH * 2) {
+    return Buffer.from(sessionEncryptionKey, 'hex');
   }
 
   // Otherwise, derive key from string
-  return crypto.scryptSync(key, 'salt', KEY_LENGTH);
+  return crypto.scryptSync(sessionEncryptionKey, 'salt', KEY_LENGTH);
 }
 
 /**

@@ -12,6 +12,7 @@ import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { Json } from '../../models/_types';
 import { UserService } from '../user/userService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { getTwilioSecrets } from '@/server/config';
 
 /**
  * Parameters for storing an inbound message
@@ -159,7 +160,7 @@ export class MessageService {
     clientId: string,
     to: string,
     messageContent: string,
-    from: string = process.env.TWILIO_NUMBER || '',
+    from: string = getTwilioSecrets().phoneNumber,
     provider: 'twilio' | 'local' | 'websocket' = 'twilio',
     providerMessageId?: string,
     metadata?: Record<string, unknown>

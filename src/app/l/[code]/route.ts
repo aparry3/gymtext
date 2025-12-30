@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { shortLinkService } from '@/server/services/links/shortLinkService';
 import { encryptUserId } from '@/server/utils/sessionCrypto';
+import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
  * GET /l/:code
@@ -49,7 +50,7 @@ export async function GET(
 
       response.cookies.set('gt_user_session', sessionToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProductionEnvironment(),
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60, // 30 days
         path: '/',

@@ -1,5 +1,6 @@
 import { ShortLinkRepository } from '@/server/repositories/shortLinkRepository';
 import { ShortLink, CreateShortLinkOptions, ResolvedShortLink } from '@/server/models/shortLink';
+import { getShortLinksConfig } from '@/shared/config';
 
 /**
  * Service for managing short links
@@ -9,11 +10,8 @@ export class ShortLinkService {
   private static instance: ShortLinkService;
   private repository: ShortLinkRepository;
 
-  // Default expiration: 7 days
-  private readonly DEFAULT_EXPIRY_DAYS = parseInt(
-    process.env.SHORT_LINK_DEFAULT_EXPIRY_DAYS || '7',
-    10
-  );
+  // Default expiration from config
+  private readonly DEFAULT_EXPIRY_DAYS = getShortLinksConfig().defaultExpiryDays;
 
   private constructor() {
     this.repository = new ShortLinkRepository();
@@ -136,7 +134,7 @@ export class ShortLinkService {
    * @returns Full URL (e.g., https://gtxt.ai/l/aSxc2)
    */
   getFullUrl(code: string): string {
-    const domain = process.env.SHORT_LINK_DOMAIN || 'https://gtxt.ai';
+    const domain = getShortLinksConfig().domain || 'https://gtxt.ai';
     return `${domain}/l/${code}`;
   }
 

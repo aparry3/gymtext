@@ -2,6 +2,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import { GoogleGenAI } from "@google/genai";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import { getAiSecrets } from "@/server/config";
 
 /**
  * Options for model initialization
@@ -104,7 +105,8 @@ export const initializeModel = <T = string>(outputSchema?: unknown, config?: { m
 export const initializeImageModel = (config?: ImageModelConfig) => {
   const { model = 'gemini-2.5-flash-image', aspectRatio = '3:4', imageSize = '2K' } = config || {};
 
-  const googleGenAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
+  const { googleApiKey } = getAiSecrets();
+  const googleGenAI = new GoogleGenAI({ apiKey: googleApiKey });
 
   return {
     invoke: async (prompt: string): Promise<ImageGenerationResult> => {

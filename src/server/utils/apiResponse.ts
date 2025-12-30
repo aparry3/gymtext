@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getEnvironmentSettings } from '@/server/config';
 
 export interface APIError {
   message: string;
@@ -34,7 +35,7 @@ export function errorResponse(
     response.error = error instanceof Error ? error.message : String(error);
     
     // In development, include stack trace
-    if (process.env.NODE_ENV === 'development' && error instanceof Error) {
+    if (getEnvironmentSettings().isDevelopment && error instanceof Error) {
       response.details = {
         stack: error.stack,
         name: error.name,

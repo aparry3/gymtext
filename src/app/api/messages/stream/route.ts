@@ -7,13 +7,14 @@
 
 import { NextRequest } from 'next/server';
 import { localMessagingClient, type LocalMessage } from '@/server/connections/messaging';
+import { getMessagingConfig } from '@/shared/config';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest): Promise<Response> {
   // Only allow SSE when using local messaging provider
-  const provider = process.env.MESSAGING_PROVIDER || 'twilio';
+  const { provider } = getMessagingConfig();
   if (provider !== 'local') {
     return new Response('SSE is only available with MESSAGING_PROVIDER=local', {
       status: 400,
