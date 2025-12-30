@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { WeeklyMessageService } from '@/server/services/orchestration/weeklyMessageService';
+import { getCronSecrets } from '@/server/config';
 
 /**
  * Vercel Cron endpoint for scheduling weekly check-in messages
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   try {
     // Verify this is a legitimate cron request from Vercel
     const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+    const { cronSecret } = getCronSecrets();
 
     if (!cronSecret) {
       console.error('[CRON] CRON_SECRET is not configured');

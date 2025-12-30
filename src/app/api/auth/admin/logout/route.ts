@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
  * POST /api/auth/admin/logout
@@ -19,7 +20,7 @@ export async function POST() {
     // Clear the admin cookie
     response.cookies.set('gt_admin', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProductionEnvironment(),
       sameSite: 'lax',
       maxAge: 0, // Expire immediately
       path: '/',

@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
  * User information stored in the cookie
@@ -26,7 +27,7 @@ console.log('setting user cookie', userData);
     name: COOKIE_NAME,
     value: JSON.stringify(userData),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProductionEnvironment(),
     sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',

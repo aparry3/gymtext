@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
-
-const ANALYTICS_WRITE_KEY = process.env.NEXT_PUBLIC_ANALYTICS_WRITE_KEY
+import { getAnalyticsConfig } from '@/shared/config/public'
 
 export function useAnalytics() {
+  const { writeKey, isEnabled } = getAnalyticsConfig()
+
   const track = (event: string, properties: Record<string, unknown> = {}) => {
-    if (!ANALYTICS_WRITE_KEY) {
+    if (!isEnabled) {
       // Development mode - just log to console
       console.log('Analytics Event:', { event, properties })
       return

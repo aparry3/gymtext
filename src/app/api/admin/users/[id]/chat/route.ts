@@ -1,6 +1,7 @@
 import { userService } from '@/server/services/user/userService';
 import { messageService } from '@/server/services';
 import { NextRequest, NextResponse } from 'next/server';
+import { getTwilioSecrets } from '@/server/config';
 
 interface ChatRequestBody {
   message: string;
@@ -43,7 +44,7 @@ export async function POST(
 
     // For admin chat, we'll use placeholder phone numbers
     const adminFrom = user.phoneNumber; // Simulating user's phone
-    const adminTo = process.env.TWILIO_NUMBER || '+10000000000'; // Simulating our number
+    const adminTo = getTwilioSecrets().phoneNumber || '+10000000000'; // Simulating our number
 
     // Use MessageService to ingest the message (async via Inngest)
     // This matches the production SMS flow for accurate testing

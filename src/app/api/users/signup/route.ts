@@ -7,8 +7,12 @@ import { messageService } from '@/server/services';
 import { inngest } from '@/server/connections/inngest/client';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
+import { getStripeSecrets } from '@/server/config';
+import { getStripeConfig, getUrlsConfig } from '@/shared/config';
+import { isProductionEnvironment } from '@/shared/config/public';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const { secretKey } = getStripeSecrets();
+const stripe = new Stripe(secretKey, {
   apiVersion: '2023-10-16',
 });
 
@@ -190,7 +194,7 @@ async function handleSubscribedUserReOnboard(
 
   response.cookies.set('gt_user_session', sessionToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProductionEnvironment(),
     sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',
@@ -237,19 +241,23 @@ async function completeSignupFlow(
 
   // Create Stripe checkout session
   console.log('[Signup] Creating Stripe checkout session');
+  const { publicBaseUrl, baseUrl } = getUrlsConfig();
+  const resolvedBaseUrl = publicBaseUrl || baseUrl;
+  const { priceId } = getStripeConfig();
+
   const session = await stripe.checkout.sessions.create({
     customer: stripeCustomerId,
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [
       {
-        price: process.env.STRIPE_PRICE_ID,
+        price: priceId,
         quantity: 1,
       },
     ],
     allow_promotion_codes: true,
-    success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?canceled=true`,
+    success_url: `${resolvedBaseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${resolvedBaseUrl}?canceled=true`,
     metadata: {
       userId,
     },
@@ -268,7 +276,7 @@ async function completeSignupFlow(
 
   response.cookies.set('gt_user_session', sessionToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProductionEnvironment(),
     sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',

@@ -1,10 +1,11 @@
 import { Pinecone, RecordMetadata } from '@pinecone-database/pinecone';
+import { getPineconeSecrets } from '@/server/config';
 
-const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY!
-});
+const { apiKey, indexName } = getPineconeSecrets();
 
-export const vectorIndex = pinecone.index(process.env.PINECONE_INDEX!);
+const pinecone = new Pinecone({ apiKey });
+
+export const vectorIndex = pinecone.index(indexName);
 
 export async function remember(userId: string, id: string, vector: number[], metadata: RecordMetadata) {
   await vectorIndex.namespace(userId).upsert([{ id, values: vector, metadata: {...metadata, timestamp: new Date().toISOString()} }]);

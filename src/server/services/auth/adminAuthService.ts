@@ -1,5 +1,7 @@
 import { UserAuthRepository } from '@/server/repositories/userAuthRepository';
 import { twilioClient } from '@/server/connections/twilio/twilio';
+import { getEnvironmentSettings } from '@/server/config';
+import { getAdminConfig } from '@/shared/config';
 
 /**
  * Service for handling admin authentication via SMS verification codes
@@ -15,8 +17,8 @@ export class AdminAuthService {
   private readonly CODE_LENGTH = 6;
 
   // Dev mode detection
-  private readonly isDev = process.env.NODE_ENV !== 'production';
-  private readonly devBypassCode = process.env.DEV_BYPASS_CODE || '000000';
+  private readonly isDev = !getEnvironmentSettings().isProduction;
+  private readonly devBypassCode = getAdminConfig().devBypassCode || '000000';
 
   constructor() {
     this.authRepository = new UserAuthRepository();
@@ -27,21 +29,15 @@ export class AdminAuthService {
    * Expects phone number to already be normalized to E.164 format (+1XXXXXXXXXX)
    */
   isPhoneWhitelisted(phoneNumber: string): boolean {
-    const whitelist = process.env.ADMIN_PHONE_NUMBERS;
+    const { phoneNumbers } = getAdminConfig();
 
-    if (!whitelist) {
+    if (phoneNumbers.length === 0) {
       console.warn('[AdminAuth] ADMIN_PHONE_NUMBERS not configured');
       return false;
     }
 
-    // Parse comma-separated list and trim whitespace
-    const allowedNumbers = whitelist
-      .split(',')
-      .map(num => num.trim())
-      .filter(num => num.length > 0);
-
     // Phone number should already be normalized - just check whitelist
-    return allowedNumbers.includes(phoneNumber);
+    return phoneNumbers.includes(phoneNumber);
   }
 
   /**
