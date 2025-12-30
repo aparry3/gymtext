@@ -4,6 +4,7 @@ import { userAuthService } from '@/server/services/auth/userAuthService';
 import { userService } from '@/server/services';
 import { onboardingDataService } from '@/server/services/user/onboardingDataService';
 import { messageService } from '@/server/services';
+import { referralService } from '@/server/services/referral/referralService';
 import { inngest } from '@/server/connections/inngest/client';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
@@ -245,7 +246,34 @@ async function completeSignupFlow(
   const resolvedBaseUrl = publicBaseUrl || baseUrl;
   const { priceId } = getStripeConfig();
 
-  const session = await stripe.checkout.sessions.create({
+  // Handle referral code if present
+  const referralCode = formData.referralCode as string | undefined;
+  let validReferralCode: string | undefined;
+  let refereeCouponId: string | undefined;
+
+  if (referralCode) {
+    console.log(`[Signup] Validating referral code: ${referralCode}`);
+    const userWithProfile = await userService.getUser(userId);
+    const validation = await referralService.validateReferralCode(
+      referralCode,
+      userWithProfile?.phoneNumber
+    );
+
+    if (validation.valid) {
+      validReferralCode = referralCode.toUpperCase();
+      // Get or create the referral coupon in Stripe
+      refereeCouponId = await referralService.getRefereeCouponId();
+      console.log(`[Signup] Referral code valid, applying coupon: ${refereeCouponId}`);
+
+      // Create the referral record now (credit applied later via webhook)
+      await referralService.completeReferral(validReferralCode, userId);
+    } else {
+      console.log(`[Signup] Referral code invalid: ${validation.error}`);
+    }
+  }
+
+  // Build checkout session options
+  const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
     customer: stripeCustomerId,
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -255,14 +283,23 @@ async function completeSignupFlow(
         quantity: 1,
       },
     ],
-    allow_promotion_codes: true,
     success_url: `${resolvedBaseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${resolvedBaseUrl}?canceled=true`,
     metadata: {
       userId,
+      referralCode: validReferralCode || '',
     },
     client_reference_id: userId,
-  });
+  };
+
+  // Add discount if referral is valid, otherwise allow promo codes
+  if (refereeCouponId) {
+    checkoutOptions.discounts = [{ coupon: refereeCouponId }];
+  } else {
+    checkoutOptions.allow_promotion_codes = true;
+  }
+
+  const session = await stripe.checkout.sessions.create(checkoutOptions);
 
   console.log(`[Signup] Checkout session created: ${session.id}`);
 

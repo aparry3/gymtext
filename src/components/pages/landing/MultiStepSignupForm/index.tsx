@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -69,7 +69,30 @@ export function MultiStepSignupForm() {
   const [furthestStep, setFurthestStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
+
+  // Read referral code from URL or cookie on mount
+  useEffect(() => {
+    // Check URL query param first
+    const params = new URLSearchParams(window.location.search);
+    const refFromUrl = params.get('ref');
+
+    if (refFromUrl) {
+      setReferralCode(refFromUrl.toUpperCase());
+      return;
+    }
+
+    // Fall back to cookie
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'gt_ref' && value) {
+        setReferralCode(value.toUpperCase());
+        return;
+      }
+    }
+  }, []);
 
   const {
     register,
@@ -152,6 +175,9 @@ export function MultiStepSignupForm() {
         equipment: data.equipment,
         injuries: data.injuries,
         acceptedRisks: data.acceptRisks,
+
+        // Referral code (if present)
+        referralCode: referralCode || undefined,
       };
 
       // Call signup API

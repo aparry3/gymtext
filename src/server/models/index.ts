@@ -46,5 +46,9 @@ export type { PageVisit, NewPageVisit } from './pageVisit';
 // Prompt types
 export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
 
+// Referral types
+export type { Referral, NewReferral, ReferralUpdate, ReferralStats } from './referral';
+export { MAX_REFERRAL_CREDITS, REFERRAL_CREDIT_AMOUNT_CENTS } from './referral';
+
 // Re-export database types from _types
 export * from './_types';

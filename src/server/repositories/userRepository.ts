@@ -315,4 +315,96 @@ export class UserRepository extends BaseRepository {
 
     return Number(result.numDeletedRows) > 0;
   }
+
+  // ============================================
+  // Referral Code Methods
+  // ============================================
+
+  /**
+   * Generate a random 6-character referral code
+   * Uses uppercase letters and numbers, excluding confusing characters (O/0, I/1, L)
+   */
+  generateReferralCode(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  /**
+   * Get or create a referral code for a user
+   * If the user already has a code, returns it; otherwise generates and saves a new one
+   */
+  async getOrCreateReferralCode(userId: string): Promise<string | null> {
+    // First check if user already has a code
+    const user = await this.db
+      .selectFrom('users')
+      .select(['id', 'referralCode'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
+
+    if (!user) {
+      return null;
+    }
+
+    if (user.referralCode) {
+      return user.referralCode;
+    }
+
+    // Generate a new code with retry logic for uniqueness
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+      const newCode = this.generateReferralCode();
+
+      try {
+        const updated = await this.db
+          .updateTable('users')
+          .set({ referralCode: newCode, updatedAt: new Date() })
+          .where('id', '=', userId)
+          .where('referralCode', 'is', null) // Only update if still null (race condition protection)
+          .returningAll()
+          .executeTakeFirst();
+
+        if (updated) {
+          return newCode;
+        }
+
+        // If no rows updated, the user might have gotten a code from another request
+        const refreshedUser = await this.db
+          .selectFrom('users')
+          .select('referralCode')
+          .where('id', '=', userId)
+          .executeTakeFirst();
+
+        if (refreshedUser?.referralCode) {
+          return refreshedUser.referralCode;
+        }
+      } catch (error) {
+        // Unique constraint violation - try again with a new code
+        attempts++;
+        if (attempts >= maxAttempts) {
+          console.error(`Failed to generate unique referral code after ${maxAttempts} attempts`);
+          throw error;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Find a user by their referral code
+   * Used to validate referral codes during signup
+   */
+  async findByReferralCode(code: string): Promise<UserWithProfile | undefined> {
+    return UserModel.fromDb(await this.db
+      .selectFrom('users')
+      .where('referralCode', '=', code.toUpperCase())
+      .selectAll()
+      .executeTakeFirst());
+  }
 }

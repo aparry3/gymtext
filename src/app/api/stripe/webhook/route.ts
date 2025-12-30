@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
+import { referralService } from '@/server/services/referral/referralService';
 import { getStripeSecrets } from '@/server/config';
 
 const { secretKey, webhookSecret } = getStripeSecrets();
@@ -82,6 +83,22 @@ export async function POST(request: NextRequest) {
         });
 
         console.log(`[Stripe Webhook] Subscription created for user ${userId}`);
+
+        // Credit referrer if this was a referred signup
+        const referralCode = session.metadata?.referralCode;
+        if (referralCode) {
+          try {
+            const result = await referralService.creditReferrer(userId);
+            if (result.success) {
+              console.log(`[Stripe Webhook] Referrer credited for user ${userId}`);
+            } else if (result.error) {
+              console.error(`[Stripe Webhook] Failed to credit referrer: ${result.error}`);
+            }
+          } catch (error) {
+            // Don't fail the webhook if referral crediting fails
+            console.error(`[Stripe Webhook] Error crediting referrer for user ${userId}:`, error);
+          }
+        }
 
         // Try to send onboarding messages (if onboarding is complete)
         try {

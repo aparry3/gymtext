@@ -8,6 +8,7 @@ import {
   QuoteCard,
   TrackOfDayCard,
   DashboardSkeleton,
+  ReferralCard,
 } from '@/components/pages/me/dashboard';
 import { WorkoutDetailSheet } from '@/components/pages/me/workout/WorkoutDetailSheet';
 import type { WorkoutStructure } from '@/server/models/workout';
@@ -236,6 +237,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
             />
 
             <TrackOfDayCard />
+
+            <ReferralCard userId={userId} />
           </div>
         </div>
       </div>
