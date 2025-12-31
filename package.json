@@ -91,6 +91,7 @@
     "openai": "^4.95.1",
     "pg": "^8.14.1",
     "react": "^19.0.0",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.50.0",
     "react-markdown": "^10.1.0",

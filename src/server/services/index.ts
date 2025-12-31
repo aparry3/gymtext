@@ -74,3 +74,7 @@ export type {
 // Chain runner service for testing/improving AI outputs
 export { ChainRunnerService } from './training/chainRunnerService';
 export type { ChainOperation, ChainRunResult, ProfileRegenerationResult } from './training/chainRunnerService';
+
+// Calendar services
+export { dayConfigService } from './calendar/dayConfigService';
+export type { DayConfigService } from './calendar/dayConfigService';
