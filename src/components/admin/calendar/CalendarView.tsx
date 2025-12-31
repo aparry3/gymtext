@@ -170,7 +170,7 @@ export function CalendarView() {
             day: 'flex-1 aspect-square p-1',
             day_button:
               'w-full h-full flex flex-col items-center justify-center rounded-lg text-sm hover:bg-gray-100 transition-colors cursor-pointer disabled:cursor-default disabled:opacity-50',
-            selected: 'bg-primary text-white hover:bg-primary/90',
+            selected: '',
             today: 'font-bold',
             outside: 'text-gray-300',
             hidden: 'invisible',
@@ -189,7 +189,6 @@ export function CalendarView() {
                     ${modifiers.today ? 'font-bold ring-2 ring-primary/30' : ''}
                     ${modifiers.outside ? 'text-gray-300' : ''}
                     ${hasImage ? 'bg-green-100 hover:bg-green-200' : 'hover:bg-gray-100'}
-                    ${modifiers.selected ? 'bg-primary text-white hover:bg-primary/90' : ''}
                   `}
                 >
                   <span>{dateNumber}</span>
