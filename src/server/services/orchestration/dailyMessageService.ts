@@ -9,6 +9,7 @@ import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstance
 import { inngest } from '@/server/connections/inngest/client';
 import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 import { getUrlsConfig } from '@/shared/config';
+import { dayConfigService } from '../calendar/dayConfigService';
 
 interface MessageResult {
   success: boolean;
@@ -189,12 +190,23 @@ export class DailyMessageService {
       }
 
       // Send single message with both image and text
-      const { publicBaseUrl, baseUrl } = getUrlsConfig();
-      const resolvedBaseUrl = publicBaseUrl || baseUrl;
-      const mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
+      // Check for day-specific custom image first
+      const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());
 
-      if (!resolvedBaseUrl) {
-        console.warn('BASE_URL not configured - sending workout without logo image');
+      let mediaUrls: string[] | undefined;
+      if (customImageUrl) {
+        // Use day-specific custom image (e.g., holiday themed)
+        mediaUrls = [customImageUrl];
+        console.log(`Using custom day image for ${targetDate.toISODate()}`);
+      } else {
+        // Fall back to default logo
+        const { publicBaseUrl, baseUrl } = getUrlsConfig();
+        const resolvedBaseUrl = publicBaseUrl || baseUrl;
+        mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
+
+        if (!resolvedBaseUrl) {
+          console.warn('BASE_URL not configured - sending workout without logo image');
+        }
       }
 
       const queuedMessages: QueuedMessage[] = [{
