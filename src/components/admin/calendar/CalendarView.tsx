@@ -148,6 +148,7 @@ export function CalendarView() {
         {/* Calendar */}
         <DayPicker
           mode="single"
+          selected={undefined}
           month={state.currentMonth}
           onMonthChange={(month) => setState((s) => ({ ...s, currentMonth: month }))}
           onDayClick={handleDayClick}
