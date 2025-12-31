@@ -1,18 +1,18 @@
 {
-  "name": "gymtext",
+  "name": "gymtext-monorepo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "source .env.local && next dev --turbopack",
-    "build": "next build",
-    "build:local": "source .env.local && next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:admin": "turbo dev --filter=admin",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=web",
+    "build:admin": "turbo build --filter=admin",
+    "lint": "turbo lint",
+    "test": "turbo test",
     "inngest": "npx inngest-cli@latest dev",
-    "predev": "source .env.local && pnpm db:codegen",
-    "prebuild": "pnpm db:codegen",
-    "premigrate": "pnpm db:codegen",
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports",
+    "db:codegen": "pnpm --filter @gymtext/shared db:codegen",
     "db:migrate": "tsx scripts/migrations/run.ts up",
     "db:migrate:down": "tsx scripts/migrations/run.ts down",
     "db:migrate:create": "tsx scripts/migrations/create.ts",
@@ -131,7 +131,9 @@
     "table": "^6.9.0",
     "tailwindcss": "^4",
     "tsx": "^4.7.1",
+    "turbo": "^2.3.3",
     "typescript": "^5",
     "vitest": "^3.2.4"
-  }
+  },
+  "packageManager": "pnpm@9.15.0"
 }
