@@ -16,9 +16,9 @@
  */
 import { headers } from 'next/headers';
 import type { EnvironmentContext, EnvironmentMode, EnvironmentSecretsConfig } from './types';
-import { createDatabase } from '@/server/connections/postgres/factory';
-import { createTwilioClient } from '@/server/connections/twilio/factory';
-import { createStripeClient } from '@/server/connections/stripe/factory';
+import { createDatabase } from '../connections/postgres/factory';
+import { createTwilioClient } from '../connections/twilio/factory';
+import { createStripeClient } from '../connections/stripe/factory';
 import { getUrlsConfig } from '@/shared/config';
 
 /**

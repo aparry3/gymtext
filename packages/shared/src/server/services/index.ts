@@ -78,3 +78,7 @@ export type { ChainOperation, ChainRunResult, ProfileRegenerationResult } from '
 // Calendar services
 export { dayConfigService } from './calendar/dayConfigService';
 export type { DayConfigService } from './calendar/dayConfigService';
+
+// Service factory (for environment context switching)
+export { getServices, clearServiceCache } from './factory';
+export type { ServiceContainer, WithContext } from './factory';

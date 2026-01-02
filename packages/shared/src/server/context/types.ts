@@ -8,7 +8,7 @@
 import type { Kysely } from 'kysely';
 import type Stripe from 'stripe';
 import type { DB } from '@/server/models/_types';
-import type { ITwilioClient } from '@/server/connections/twilio/factory';
+import type { ITwilioClient } from '../connections/twilio/factory';
 
 /**
  * Environment mode - sandbox or production

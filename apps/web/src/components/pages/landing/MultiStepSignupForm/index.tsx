@@ -1,0 +1,348 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { FormProgressIndicator } from './FormProgressIndicator';
+import { BioStep } from './FormSteps/BioStep';
+import { GoalsStep } from './FormSteps/GoalsStep';
+import { ExperienceStep } from './FormSteps/ExperienceStep';
+import { ActivityStep } from './FormSteps/ActivityStep';
+import { PreferencesStep } from './FormSteps/PreferencesStep';
+import { SubmitStep } from './FormSteps/SubmitStep';
+import { Button } from '@/components/ui/button';
+
+// Form validation schema
+const formSchema = z.object({
+  // Bio
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
+  preferredSendHour: z.number().min(0).max(23),
+  timezone: z.string().min(1, 'Timezone is required'),
+  gender: z.enum(['male', 'female', 'prefer_not_to_say'], {
+    required_error: 'Please select your gender',
+  }),
+  age: z.number().int().min(13, 'Must be at least 13 years old').max(120, 'Please enter a valid age'),
+
+  // Goals
+  primaryGoals: z.array(z.enum(['strength', 'endurance', 'weight_loss', 'general_fitness'])).min(1, 'Please select at least one goal'),
+  goalsElaboration: z.string().optional(),
+
+  // Experience
+  experienceLevel: z.enum(['beginner', 'intermediate', 'advanced'], {
+    required_error: 'Please select your experience level',
+  }),
+
+  // Desired Training Frequency
+  desiredDaysPerWeek: z.enum(['3_per_week', '4_per_week', '5_per_week', '6_per_week'], {
+    required_error: 'Please select how many days you want to train',
+  }),
+  availabilityElaboration: z.string().optional(),
+
+  // Preferences
+  trainingLocation: z.enum(['home', 'commercial_gym', 'bodyweight'], {
+    required_error: 'Please select your training location',
+  }),
+  equipment: z.array(z.string()).min(1, 'Please select at least one equipment option'),
+  injuries: z.string().optional(),
+
+  // Submit
+  acceptRisks: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the risks associated with exercise',
+  }),
+});
+
+export type FormData = z.infer<typeof formSchema>;
+
+const STEP_LABELS = [
+  'Your Info',
+  'Your Goals',
+  'Experience',
+  'Activity Level',
+  'Preferences',
+  'Finish',
+];
+
+export function MultiStepSignupForm() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [furthestStep, setFurthestStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
+
+  // Read referral code from URL or cookie on mount
+  useEffect(() => {
+    // Check URL query param first
+    const params = new URLSearchParams(window.location.search);
+    const refFromUrl = params.get('ref');
+
+    if (refFromUrl) {
+      setReferralCode(refFromUrl.toUpperCase());
+      return;
+    }
+
+    // Fall back to cookie
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'gt_ref' && value) {
+        setReferralCode(value.toUpperCase());
+        return;
+      }
+    }
+  }, []);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    trigger,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      preferredSendHour: 8,
+      timezone: 'America/New_York',
+      gender: 'prefer_not_to_say',
+      primaryGoals: [],
+      equipment: [],
+    },
+    mode: 'onBlur',
+  });
+
+  const handleNext = async () => {
+    // Validate current step before moving forward
+    const fieldsToValidate = getFieldsForStep(currentStep);
+    const isValid = await trigger(fieldsToValidate as (keyof FormData)[]);
+
+    if (isValid) {
+      const nextStep = Math.min(currentStep + 1, 6);
+      setCurrentStep(nextStep);
+      setFurthestStep((prev) => Math.max(prev, nextStep));
+
+      // Scroll to top of form
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+
+    // Scroll to top of form
+    formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleStepClick = (step: number) => {
+    // Allow navigation to any step up to the furthest step reached
+    if (step <= furthestStep && step !== currentStep) {
+      setCurrentStep(step);
+
+      // Scroll to top of form
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      // Format phone number with +1 prefix
+      const phoneNumber = data.phoneNumber.startsWith('+1')
+        ? data.phoneNumber
+        : `+1${data.phoneNumber}`;
+
+      // Send ALL raw form data to backend - formatting happens server-side
+      const formattedData = {
+        // User info
+        name: data.name,
+        phoneNumber,
+        gender: data.gender,
+        age: data.age.toString(),
+        timezone: data.timezone,
+        preferredSendHour: data.preferredSendHour,
+
+        // All raw form data (backend will format for LLM)
+        primaryGoals: data.primaryGoals,
+        goalsElaboration: data.goalsElaboration,
+        experienceLevel: data.experienceLevel,
+        desiredDaysPerWeek: data.desiredDaysPerWeek,
+        availabilityElaboration: data.availabilityElaboration,
+        trainingLocation: data.trainingLocation,
+        equipment: data.equipment,
+        injuries: data.injuries,
+        acceptedRisks: data.acceptRisks,
+
+        // Referral code (if present)
+        referralCode: referralCode || undefined,
+      };
+
+      // Call signup API
+      const response = await fetch('/api/users/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create account');
+      }
+
+      const { checkoutUrl, redirectUrl } = await response.json();
+
+      // Redirect to Stripe checkout or /me for subscribed users
+      window.location.href = checkoutUrl || redirectUrl;
+    } catch (error) {
+      console.error('Error preparing signup:', error);
+      setErrorMessage(
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div ref={formContainerRef} className="relative lg:flex lg:gap-8 lg:items-start">
+      {errorMessage && (
+        <div className="bg-red-50 p-4 rounded-md border border-red-200 mb-6 lg:max-w-3xl">
+          <p className="text-red-600">{errorMessage}</p>
+        </div>
+      )}
+
+      {/* Form Content */}
+      <div className="flex-1 lg:max-w-3xl">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Mobile progress indicator */}
+          <div className="sticky top-0 z-30 lg:hidden">
+            <FormProgressIndicator
+              currentStep={currentStep}
+              totalSteps={6}
+              stepLabels={STEP_LABELS}
+              furthestStep={furthestStep}
+              onStepClick={handleStepClick}
+              variant="mobile"
+            />
+          </div>
+
+          {/* Step content */}
+          <div className="px-5 pb-6 pt-6 md:px-10 md:pb-10 md:pt-8">
+            {currentStep === 1 && (
+              <BioStep
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            )}
+            {currentStep === 2 && (
+              <GoalsStep
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            )}
+            {currentStep === 3 && (
+              <ExperienceStep
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            )}
+            {currentStep === 4 && (
+              <ActivityStep
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            )}
+            {currentStep === 5 && (
+              <PreferencesStep
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            )}
+            {currentStep === 6 && (
+              <SubmitStep register={register} errors={errors} />
+            )}
+
+            {/* Navigation buttons */}
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                className="w-full sm:w-auto"
+              >
+                Back
+              </Button>
+
+              {currentStep < 6 ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="w-full sm:w-auto"
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full sm:w-auto"
+                >
+                  {isLoading ? 'Processing...' : 'Start My Transformation'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Desktop sticky progress indicator */}
+      <div className="hidden lg:block lg:w-64 lg:sticky lg:top-32 lg:self-start">
+        <FormProgressIndicator
+          currentStep={currentStep}
+          totalSteps={6}
+          stepLabels={STEP_LABELS}
+          furthestStep={furthestStep}
+          onStepClick={handleStepClick}
+          variant="desktop"
+        />
+      </div>
+    </div>
+  );
+}
+
+// Helper functions
+function getFieldsForStep(step: number): (keyof FormData)[] {
+  switch (step) {
+    case 1:
+      return ['name', 'phoneNumber', 'preferredSendHour', 'timezone', 'gender', 'age'];
+    case 2:
+      return ['primaryGoals'];
+    case 3:
+      return ['experienceLevel'];
+    case 4:
+      return ['desiredDaysPerWeek'];
+    case 5:
+      return ['trainingLocation', 'equipment'];
+    case 6:
+      return ['acceptRisks'];
+    default:
+      return [];
+  }
+}
+

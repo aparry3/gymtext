@@ -1,0 +1,57 @@
+'use client';
+
+import { Suspense } from 'react';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { PromptsEditor } from '@/components/admin/prompts/PromptsEditor';
+
+function PromptsEditorSkeleton() {
+  return (
+    <div className="flex h-[calc(100vh-180px)] gap-4 mt-6">
+      {/* Sidebar skeleton */}
+      <aside className="w-64 flex-shrink-0 border rounded-lg bg-white animate-pulse">
+        <div className="p-4 space-y-3">
+          <div className="h-4 bg-gray-200 rounded w-20" />
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-8 bg-gray-200 rounded" />
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content skeleton */}
+      <main className="flex-1 border rounded-lg bg-white animate-pulse">
+        <div className="p-4 border-b">
+          <div className="h-6 bg-gray-200 rounded w-48" />
+        </div>
+        <div className="p-4">
+          <div className="h-96 bg-gray-100 rounded" />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function AdminPromptsPageContent() {
+  return (
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-4 py-6 max-w-full">
+        <div className="space-y-2">
+          {/* Header */}
+          <AdminHeader title="Prompts Editor" subtitle="Manage AI agent prompts with version history" />
+
+          {/* Editor */}
+          <PromptsEditor />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminPromptsPage() {
+  return (
+    <Suspense fallback={<PromptsEditorSkeleton />}>
+      <AdminPromptsPageContent />
+    </Suspense>
+  );
+}
