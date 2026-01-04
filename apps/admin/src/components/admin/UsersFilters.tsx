@@ -45,7 +45,7 @@ export function UsersFilters({ onFiltersChange, isLoading = false }: UsersFilter
       }
     })
 
-    const url = params.toString() ? `?${params.toString()}` : '/admin/users'
+    const url = params.toString() ? `?${params.toString()}` : '/users'
     router.replace(url, { scroll: false })
     onFiltersChange(filters)
   }, [filters, onFiltersChange, router])

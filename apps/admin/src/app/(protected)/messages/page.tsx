@@ -57,7 +57,7 @@ function AdminMessagesPageContent() {
         params.set('page', String(page));
         params.set('pageSize', '50');
 
-        const response = await fetch(`/api/admin/messages?${params.toString()}`);
+        const response = await fetch(`/api/messages?${params.toString()}`);
         const result = await response.json();
 
         if (!response.ok || !result.success) {

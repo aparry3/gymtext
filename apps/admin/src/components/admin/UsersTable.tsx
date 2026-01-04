@@ -144,7 +144,7 @@ function UserRow({ user }: UserRowProps) {
   }
 
   const handleRowClick = () => {
-    router.push(`/admin/users/${user.id}`)
+    router.push(`/users/${user.id}`)
   }
 
   return (

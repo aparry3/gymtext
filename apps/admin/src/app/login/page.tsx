@@ -15,7 +15,7 @@ type LoginStep = 'phone' | 'code';
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get('next') || '/admin/users';
+  const nextUrl = searchParams.get('next') || '/users';
 
   const [step, setStep] = useState<LoginStep>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -54,7 +54,7 @@ function AdminLoginForm() {
         return;
       }
 
-      const response = await fetch('/api/auth/admin/request-code', {
+      const response = await fetch('/api/auth/request-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: `+1${cleanedPhone}` }),
@@ -91,7 +91,7 @@ function AdminLoginForm() {
 
       const cleanedPhone = phoneNumber.replace(/\D/g, '');
 
-      const response = await fetch('/api/auth/admin/verify-code', {
+      const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: `+1${cleanedPhone}`, code }),

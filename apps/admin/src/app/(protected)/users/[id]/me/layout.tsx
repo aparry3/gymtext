@@ -23,8 +23,8 @@ export default async function AdminUserMeLayout({ children, params }: AdminUserM
     console.error('Error fetching user for sidebar:', error);
   }
 
-  const basePath = `/admin/users/${id}/me`;
-  const adminBackUrl = `/admin/users/${id}`;
+  const basePath = `/users/${id}/me`;
+  const adminBackUrl = `/users/${id}`;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">

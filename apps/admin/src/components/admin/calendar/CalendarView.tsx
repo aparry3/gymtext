@@ -41,7 +41,7 @@ export function CalendarView() {
     const month = state.currentMonth.getMonth() + 1;
 
     try {
-      const res = await fetch(`/api/admin/calendar?year=${year}&month=${month}`);
+      const res = await fetch(`/api/calendar?year=${year}&month=${month}`);
       const data = await res.json();
 
       if (data.success) {

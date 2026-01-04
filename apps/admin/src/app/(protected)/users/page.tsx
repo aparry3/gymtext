@@ -59,7 +59,7 @@ function AdminUsersPageContent() {
       params.set('sortField', sort.field)
       params.set('sortDirection', sort.direction)
 
-      const response = await fetch(`/api/admin/users?${params.toString()}`)
+      const response = await fetch(`/api/users?${params.toString()}`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {

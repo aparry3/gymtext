@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { usePageView } from '@/hooks/useAnalytics'
 import { parseDate, formatDate } from '@/shared/utils/date'
 import { StructuredPlanRenderer } from '@/components/pages/shared/StructuredPlanRenderer'
 import type { PlanStructure } from '@/server/models/fitnessPlan'
@@ -38,7 +37,7 @@ interface ProgramTabProps {
 
 export function ProgramTab({
   userId,
-  basePath = '/admin/users',
+  basePath = '/users',
   showAdminActions = true,
   onboardingStatus = null,
   currentStep = null
@@ -47,9 +46,6 @@ export function ProgramTab({
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Analytics tracking
-  usePageView('program_viewed', { userId, fitnessPlanId: fitnessPlan?.id })
 
   const fetchProgramData = useCallback(async () => {
     setIsLoading(true)

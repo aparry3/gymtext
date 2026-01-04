@@ -1,4 +1,19 @@
-[00:00:01.100] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.249] Server  LOG      ✓ Ready in 945ms
-[00:00:04.323] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
-[00:01:32.325] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:00.818] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:00.911] Server  LOG      ✓ Ready in 700ms
+[00:00:03.946] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[00:01:36.900] Server  LOG     [Inngest] Processing next queued message: {}
+[00:01:36.900] Server  LOG     [MessageQueueService] Processing next message for client 62f7dfb1-23c9-4d52-9bed-d67c284ee438 in queue 'daily'
+[00:01:36.990] Server  LOG     [MessageQueueService] Found next message (sequence 1)
+[00:01:37.178] Server  LOG     [Inngest] Sending queued message: {}
+[00:01:37.202] Server  LOG     [MessageQueueService] Sending queued message ab8af1ad-7aa6-46c7-8785-d4295d863c47
+[00:01:37.239] Server  LOG     [LocalMessagingClient] Message sent (not actual SMS): {}
+[00:01:37.261] Server  LOG     [MessageService] Updated message with provider ID: {}
+[00:01:37.261] Server  LOG     [MessageService] Simulating local delivery in 1500ms for message fd469a58-bb37-44a0-9cf6-40ec0c070803
+[00:01:37.293] Server  LOG     [MessageQueueService] Queued message sent successfully {}
+[00:01:38.786] Server  LOG     [MessageQueueService] Marking message fd469a58-bb37-44a0-9cf6-40ec0c070803 as delivered
+[00:01:38.802] Server  LOG     [MessageQueueService] Triggered next message for queue 'daily'
+[00:01:38.802] Server  LOG     [MessageService] Local delivery simulation complete for message fd469a58-bb37-44a0-9cf6-40ec0c070803
+[00:01:39.124] Server  LOG     [Inngest] Processing next queued message: {}
+[00:01:39.124] Server  LOG     [MessageQueueService] Processing next message for client 62f7dfb1-23c9-4d52-9bed-d67c284ee438 in queue 'daily'
+[00:01:39.135] Server  LOG     [MessageQueueService] No more pending messages in queue 'daily' for client 62f7dfb1-23c9-4d52-9bed-d67c284ee438
+[00:01:39.135] Server  LOG     [MessageQueueService] Clearing completed queue 'daily' for client 62f7dfb1-23c9-4d52-9bed-d67c284ee438

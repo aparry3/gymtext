@@ -57,7 +57,7 @@ export function PromptEditorPane({
       setError(null);
 
       try {
-        const response = await fetch(`/api/admin/prompts/${agentId}/${role}`);
+        const response = await fetch(`/api/prompts/${agentId}/${role}`);
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -93,7 +93,7 @@ export function PromptEditorPane({
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/prompts/${agentId}/${role}`, {
+      const response = await fetch(`/api/prompts/${agentId}/${role}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: content }),

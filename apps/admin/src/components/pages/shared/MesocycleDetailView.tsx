@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { usePageView } from '@/hooks/useAnalytics'
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -80,13 +79,6 @@ export function MesocycleDetailView({ userId, mesocycleIndex, basePath }: Mesocy
 
   const mesocycle = fitnessPlan?.mesocycles[mesocycleIndex]
 
-  // Analytics tracking
-  usePageView('mesocycle_viewed', {
-    userId,
-    mesocycleIndex,
-    fitnessPlanId: fitnessPlan?.id
-  })
-
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
@@ -159,7 +151,7 @@ export function MesocycleDetailView({ userId, mesocycleIndex, basePath }: Mesocy
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={basePath === '/me' ? '/me' : '/admin/users'}>
+                <BreadcrumbLink href={basePath === '/me' ? '/me' : '/users'}>
                   {basePath === '/me' ? 'My Profile' : 'Users'}
                 </BreadcrumbLink>
               </BreadcrumbItem>

@@ -62,7 +62,7 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
       const [planResponse, workoutsResponse, userResponse] = await Promise.all([
         fetch(`/api/users/${userId}/fitness-plan`),
         fetch(`/api/users/${userId}/workouts?limit=10`),
-        fetch(`/api/admin/users/${userId}`)
+        fetch(`/api/users/${userId}`)
       ])
 
       // Handle user response to check profile status
@@ -139,7 +139,7 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
     setProfileExecutionTime(null)
 
     try {
-      const response = await fetch(`/api/admin/chains/profiles/${userId}/run`, {
+      const response = await fetch(`/api/chains/profiles/${userId}/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -393,11 +393,11 @@ function StatusBadge({ label, hasValue }: { label: string; hasValue: boolean }) 
 function getDeleteApiPath(entityType: EntityType, entityId: string): string {
   switch (entityType) {
     case 'fitness-plan':
-      return `/api/admin/chains/fitness-plans/${entityId}`
+      return `/api/chains/fitness-plans/${entityId}`
     case 'microcycle':
-      return `/api/admin/chains/microcycles/${entityId}`
+      return `/api/chains/microcycles/${entityId}`
     case 'workout':
-      return `/api/admin/chains/workouts/${entityId}`
+      return `/api/chains/workouts/${entityId}`
   }
 }
 

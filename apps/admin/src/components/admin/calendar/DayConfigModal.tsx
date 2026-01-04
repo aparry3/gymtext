@@ -57,7 +57,7 @@ export function DayConfigModal({ date, config, onClose }: DayConfigModalProps) {
 
     try {
       const res = await fetch(
-        `/api/admin/calendar/${format(date, 'yyyy-MM-dd')}`,
+        `/api/calendar/${format(date, 'yyyy-MM-dd')}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -87,7 +87,7 @@ export function DayConfigModal({ date, config, onClose }: DayConfigModalProps) {
 
     try {
       const res = await fetch(
-        `/api/admin/calendar/${format(date, 'yyyy-MM-dd')}`,
+        `/api/calendar/${format(date, 'yyyy-MM-dd')}`,
         {
           method: 'DELETE',
         }

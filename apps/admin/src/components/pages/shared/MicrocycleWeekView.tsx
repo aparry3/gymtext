@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { usePageView } from '@/hooks/useAnalytics'
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -73,14 +72,6 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
   const [fitnessPlan, setFitnessPlan] = useState<FitnessPlan | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Analytics tracking
-  usePageView('microcycle_viewed', {
-    userId,
-    mesocycleIndex,
-    weekNumber,
-    microcycleId: microcycle?.id
-  })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,7 +177,7 @@ export function MicrocycleWeekView({ userId, mesocycleIndex, weekNumber, basePat
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={basePath === '/me' ? '/me' : '/admin/users'}>
+                <BreadcrumbLink href={basePath === '/me' ? '/me' : '/users'}>
                   {basePath === '/me' ? 'My Profile' : 'Users'}
                 </BreadcrumbLink>
               </BreadcrumbItem>

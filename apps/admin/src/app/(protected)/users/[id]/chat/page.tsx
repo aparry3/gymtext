@@ -57,7 +57,7 @@ export default function AdminChatPage() {
       setIsInitialLoading(true)
     }
     try {
-      const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=0`)
+      const response = await fetch(`/api/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=0`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -72,7 +72,7 @@ export default function AdminChatPage() {
 
       // Fetch user name and phone number on initial load
       if (isInitialLoad) {
-        const userResponse = await fetch(`/api/admin/users/${id}`)
+        const userResponse = await fetch(`/api/users/${id}`)
         const userResult = await userResponse.json()
         if (userResult.success) {
           setUserName(userResult.data.user.name || 'User')
@@ -93,7 +93,7 @@ export default function AdminChatPage() {
 
     setIsLoadingMore(true)
     try {
-      const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=${offset}`)
+      const response = await fetch(`/api/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=${offset}`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -229,7 +229,7 @@ export default function AdminChatPage() {
     setMessages(prev => [...prev, optimisticUserMessage])
 
     try {
-      const response = await fetch(`/api/admin/users/${id}/chat`, {
+      const response = await fetch(`/api/users/${id}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -283,11 +283,11 @@ export default function AdminChatPage() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
+                <BreadcrumbLink href="/users">Users</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={`/admin/users/${id}`}>
+                <BreadcrumbLink href={`/users/${id}`}>
                   {userName || 'User'}
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -318,7 +318,7 @@ export default function AdminChatPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push(`/admin/users/${id}`)}
+                  onClick={() => router.push(`/users/${id}`)}
                 >
                   Back to Profile
                 </Button>

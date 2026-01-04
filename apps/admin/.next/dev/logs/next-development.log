@@ -1,10 +1,31 @@
-[00:00:01.017] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.153] Server  LOG      ✓ Ready in 939ms
-[00:04:57.811] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:25.209] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:25.448] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:28.288] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
-[00:05:31.161] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:31.349] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:44.688] Server  LOG      ✓ Compiled in 698ms
-[00:05:44.785] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.119] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.235] Server  LOG      ✓ Ready in 943ms
+[00:00:13.233] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:16.185] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[00:00:18.757] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:00:24.676] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:24.676] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:24.955] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:27.163] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:39.228] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:13:57.301] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:21:27.305] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:24:17.308] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:24:21.305] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:27:15.563] Server  LOG      ✓ Compiled in 427ms
+[00:27:16.303] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
+[00:27:17.679] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[00:27:43.420] Server  LOG      ✓ Compiled in 288ms
+[00:27:44.350] Server  LOG      ✓ Compiled in 176ms
+[00:27:45.260] Server  LOG      ✓ Compiled in 206ms
+[00:29:05.998] Server  LOG      ✓ Compiled in 208ms
+[00:32:19.420] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

@@ -10,7 +10,7 @@ export default function WorkoutDetailPage() {
     <WorkoutDetailView
       userId={id as string}
       workoutId={workoutId as string}
-      basePath="/admin/users"
+      basePath="/users"
       showAdminActions={true}
     />
   )

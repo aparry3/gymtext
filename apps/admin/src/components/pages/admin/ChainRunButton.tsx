@@ -43,11 +43,11 @@ export function ChainRunButton({
   const getApiPath = () => {
     switch (entityType) {
       case 'fitness-plan':
-        return `/api/admin/chains/fitness-plans/${entityId}/run`
+        return `/api/chains/fitness-plans/${entityId}/run`
       case 'microcycle':
-        return `/api/admin/chains/microcycles/${entityId}/run`
+        return `/api/chains/microcycles/${entityId}/run`
       case 'workout':
-        return `/api/admin/chains/workouts/${entityId}/run`
+        return `/api/chains/workouts/${entityId}/run`
     }
   }
 

@@ -1,0 +1,3 @@
+{
+  "/api/chains/microcycles/[microcycleId]/run/route": "app/api/chains/microcycles/[microcycleId]/run/route.js"
+}

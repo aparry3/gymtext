@@ -29,7 +29,7 @@ export function ImageLibrary({ selectedUrl, onSelect }: ImageLibraryProps) {
     setError(null);
 
     try {
-      const res = await fetch('/api/admin/images');
+      const res = await fetch('/api/images');
       const data = await res.json();
 
       if (data.success) {
@@ -58,7 +58,7 @@ export function ImageLibrary({ selectedUrl, onSelect }: ImageLibraryProps) {
     setDeletingId(id);
 
     try {
-      const res = await fetch(`/api/admin/images/${id}`, {
+      const res = await fetch(`/api/images/${id}`, {
         method: 'DELETE',
       });
 

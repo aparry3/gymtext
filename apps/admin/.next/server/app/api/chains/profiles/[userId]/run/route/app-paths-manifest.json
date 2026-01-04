@@ -1,0 +1,3 @@
+{
+  "/api/chains/profiles/[userId]/run/route": "app/api/chains/profiles/[userId]/run/route.js"
+}

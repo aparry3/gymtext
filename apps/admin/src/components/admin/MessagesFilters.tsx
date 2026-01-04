@@ -21,7 +21,7 @@ interface MessagesFiltersProps {
 export function MessagesFilters({
   onFiltersChange,
   isLoading = false,
-  basePath = '/admin/messages',
+  basePath = '/messages',
 }: MessagesFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();

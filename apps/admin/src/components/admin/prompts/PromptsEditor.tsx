@@ -67,7 +67,7 @@ export function PromptsEditor() {
   // Handler for revert
   const handleRevert = useCallback((version: Prompt) => {
     // Trigger a save with the old content
-    fetch(`/api/admin/prompts/${version.id}/${version.role}`, {
+    fetch(`/api/prompts/${version.id}/${version.role}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: version.value }),

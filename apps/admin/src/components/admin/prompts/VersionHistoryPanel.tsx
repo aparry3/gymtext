@@ -47,7 +47,7 @@ export function VersionHistoryPanel({
     async function fetchHistory() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/admin/prompts/${agentId}/${role}/history?limit=20`);
+        const response = await fetch(`/api/prompts/${agentId}/${role}/history?limit=20`);
         const result = await response.json();
 
         if (result.success) {

@@ -51,7 +51,7 @@ export default function AdminUserDetailPage() {
     setError(null)
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}`)
+      const response = await fetch(`/api/users/${userId}`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -96,7 +96,7 @@ export default function AdminUserDetailPage() {
 
     setIsSendingWorkout(true)
     try {
-      const response = await fetch(`/api/admin/users/${user.id}/messages`, {
+      const response = await fetch(`/api/users/${user.id}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export default function AdminUserDetailPage() {
     setDeleteError(null)
 
     try {
-      const response = await fetch(`/api/admin/users/${user.id}`, {
+      const response = await fetch(`/api/users/${user.id}`, {
         method: 'DELETE',
       })
 
@@ -135,7 +135,7 @@ export default function AdminUserDetailPage() {
       }
 
       // Redirect to users list on success
-      router.push('/admin/users')
+      router.push('/users')
     } catch (err) {
       console.error('Failed to delete user:', err)
       setDeleteError(err instanceof Error ? err.message : 'Failed to delete user')
@@ -161,7 +161,7 @@ export default function AdminUserDetailPage() {
           <p className="text-lg text-muted-foreground mb-4">
             {error || 'User not found'}
           </p>
-          <Button onClick={() => router.push('/admin/users')} variant="outline">
+          <Button onClick={() => router.push('/users')} variant="outline">
             Back to Users
           </Button>
         </div>
@@ -192,7 +192,7 @@ export default function AdminUserDetailPage() {
           <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
+              <BreadcrumbLink href="/users">Users</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -240,7 +240,7 @@ export default function AdminUserDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/admin/users/${user.id}/chat`)}
+                onClick={() => router.push(`/users/${user.id}/chat`)}
                 className="gap-2"
               >
                 <MessageSquare className="h-4 w-4" />
@@ -249,7 +249,7 @@ export default function AdminUserDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/admin/users/${user.id}/me`)}
+                onClick={() => router.push(`/users/${user.id}/me`)}
                 className="gap-2"
               >
                 <EyeIcon className="h-4 w-4" />

@@ -94,7 +94,7 @@ function MessageRow({ message, showUserColumn }: MessageRowProps) {
         {showUserColumn && (
           <td className="p-4">
             <Link
-              href={`/admin/users/${message.clientId}`}
+              href={`/users/${message.clientId}`}
               onClick={(e) => e.stopPropagation()}
               className="hover:underline"
             >

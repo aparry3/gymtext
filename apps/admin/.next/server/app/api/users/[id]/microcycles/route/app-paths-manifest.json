@@ -1,0 +1,3 @@
+{
+  "/api/users/[id]/microcycles/route": "app/api/users/[id]/microcycles/route.js"
+}

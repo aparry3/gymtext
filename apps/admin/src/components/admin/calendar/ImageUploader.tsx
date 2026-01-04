@@ -100,7 +100,7 @@ export function ImageUploader({ onUploadComplete }: ImageUploaderProps) {
     formData.append('category', 'holiday');
 
     try {
-      const res = await fetch('/api/admin/images', {
+      const res = await fetch('/api/images', {
         method: 'POST',
         body: formData,
       });

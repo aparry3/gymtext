@@ -63,7 +63,7 @@ function UserMessagesPageContent({ userId }: { userId: string }) {
         params.set('page', String(page));
         params.set('pageSize', '50');
 
-        const response = await fetch(`/api/admin/messages?${params.toString()}`);
+        const response = await fetch(`/api/messages?${params.toString()}`);
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -98,7 +98,7 @@ function UserMessagesPageContent({ userId }: { userId: string }) {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch(`/api/admin/users/${userId}`);
+        const response = await fetch(`/api/users/${userId}`);
         const result = await response.json();
         if (result.success && result.data?.user?.name) {
           setUserName(result.data.user.name);
@@ -140,12 +140,12 @@ function UserMessagesPageContent({ userId }: { userId: string }) {
         <div className="space-y-6">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/admin/users" className="hover:text-foreground">
+            <Link href="/users" className="hover:text-foreground">
               Users
             </Link>
             <span>/</span>
             <Link
-              href={`/admin/users/${userId}`}
+              href={`/users/${userId}`}
               className="hover:text-foreground"
             >
               {userName || userId.slice(0, 8)}
@@ -215,7 +215,7 @@ function UserMessagesPageContent({ userId }: { userId: string }) {
           <MessagesFilters
             onFiltersChange={handleFiltersChange}
             isLoading={isLoading}
-            basePath={`/admin/users/${userId}/messages`}
+            basePath={`/users/${userId}/messages`}
           />
 
           {/* Messages Table - without user column */}
