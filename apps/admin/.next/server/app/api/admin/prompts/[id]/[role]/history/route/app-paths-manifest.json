@@ -1,0 +1,3 @@
+{
+  "/api/admin/prompts/[id]/[role]/history/route": "app/api/admin/prompts/[id]/[role]/history/route.js"
+}

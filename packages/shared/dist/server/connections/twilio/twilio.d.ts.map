@@ -1,0 +1,1 @@
+{"version":3,"file":"twilio.d.ts","sourceRoot":"","sources":["../../../../src/server/connections/twilio/twilio.ts"],"names":[],"mappings":"AASA,OAAO,EAAsB,KAAK,aAAa,EAA0B,MAAM,WAAW,CAAC;AAU3F,eAAO,MAAM,YAAY,EAAE,aAO1B,CAAC;AAGF,OAAO,EACL,kBAAkB,EAClB,kBAAkB,EAClB,uBAAuB,EACvB,KAAK,aAAa,EAClB,KAAK,iBAAiB,GACvB,MAAM,WAAW,CAAC"}

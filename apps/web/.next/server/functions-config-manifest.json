@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/cron/check-stalled-queues": {
+      "maxDuration": 60
+    },
+    "/api/cron/daily-messages": {
+      "maxDuration": 60
+    },
+    "/api/messages/stream": {},
+    "/api/cron/weekly-messages": {
+      "maxDuration": 60
+    }
+  }
+}

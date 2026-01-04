@@ -1,0 +1,78 @@
+
+> web@0.1.0 build /Users/aaronparry/Developer/GymText/gymtext/apps/web
+> next build
+
+   ▲ Next.js 16.0.7 (Turbopack)
+   - Environments: .env.local
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 14.5s
+   Running TypeScript ...
+   Collecting page data using 7 workers ...
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+   Generating static pages using 7 workers (0/26) ...
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+   Generating static pages using 7 workers (6/26) 
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+   Generating static pages using 7 workers (12/26) 
+[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+   Generating static pages using 7 workers (19/26) 
+ ✓ Generating static pages using 7 workers (26/26) in 1054.6ms
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/request-code
+├ ƒ /api/auth/verify-code
+├ ƒ /api/checkout/session
+├ ƒ /api/cron/check-stalled-queues
+├ ƒ /api/cron/daily-messages
+├ ƒ /api/cron/weekly-messages
+├ ƒ /api/inngest
+├ ƒ /api/messages/stream
+├ ƒ /api/short-links
+├ ƒ /api/stripe/webhook
+├ ƒ /api/track
+├ ƒ /api/twilio/sms
+├ ƒ /api/twilio/status
+├ ƒ /api/users/[id]
+├ ƒ /api/users/[id]/fitness-plan
+├ ƒ /api/users/[id]/messages
+├ ƒ /api/users/[id]/microcycle
+├ ƒ /api/users/[id]/microcycles
+├ ƒ /api/users/[id]/onboarding-status
+├ ƒ /api/users/[id]/referral
+├ ƒ /api/users/[id]/workouts
+├ ƒ /api/users/[id]/workouts/[workoutId]
+├ ƒ /api/users/preferences
+├ ƒ /api/users/signup
+├ ○ /chat
+├ ○ /ihg
+├ ƒ /l/[code]
+├ ƒ /me
+├ ƒ /me/login
+├ ƒ /me/plan
+├ ƒ /me/program/workouts/[workoutId]
+├ ○ /privacy
+├ ƒ /r/[code]
+└ ○ /terms
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

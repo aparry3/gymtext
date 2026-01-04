@@ -19,7 +19,7 @@ export default async function AdminLayout({
   // Check if user is authenticated as admin
   if (!adminCookie || adminCookie.value !== 'ok') {
     // Redirect to admin login
-    redirect('/admin/login');
+    redirect('/login');
   }
 
   return <>{children}</>;

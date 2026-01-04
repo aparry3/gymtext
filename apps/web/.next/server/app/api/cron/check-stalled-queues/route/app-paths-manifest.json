@@ -1,0 +1,3 @@
+{
+  "/api/cron/check-stalled-queues/route": "app/api/cron/check-stalled-queues/route.js"
+}

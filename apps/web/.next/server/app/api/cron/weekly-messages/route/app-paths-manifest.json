@@ -1,0 +1,3 @@
+{
+  "/api/cron/weekly-messages/route": "app/api/cron/weekly-messages/route.js"
+}

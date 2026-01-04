@@ -1,0 +1,304 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/users/[id]",
+      "regex": "^/api/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/fitness-plan",
+      "regex": "^/api/users/([^/]+?)/fitness\\-plan(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/fitness\\-plan(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/messages",
+      "regex": "^/api/users/([^/]+?)/messages(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/messages(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/microcycle",
+      "regex": "^/api/users/([^/]+?)/microcycle(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/microcycle(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/microcycles",
+      "regex": "^/api/users/([^/]+?)/microcycles(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/microcycles(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/onboarding-status",
+      "regex": "^/api/users/([^/]+?)/onboarding\\-status(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/onboarding\\-status(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/referral",
+      "regex": "^/api/users/([^/]+?)/referral(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/referral(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/workouts",
+      "regex": "^/api/users/([^/]+?)/workouts(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/workouts(?:/)?$"
+    },
+    {
+      "page": "/api/users/[id]/workouts/[workoutId]",
+      "regex": "^/api/users/([^/]+?)/workouts/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPworkoutId": "nxtPworkoutId"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)/workouts/(?<nxtPworkoutId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/l/[code]",
+      "regex": "^/l/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcode": "nxtPcode"
+      },
+      "namedRegex": "^/l/(?<nxtPcode>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/me/program/workouts/[workoutId]",
+      "regex": "^/me/program/workouts/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPworkoutId": "nxtPworkoutId"
+      },
+      "namedRegex": "^/me/program/workouts/(?<nxtPworkoutId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/r/[code]",
+      "regex": "^/r/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcode": "nxtPcode"
+      },
+      "namedRegex": "^/r/(?<nxtPcode>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/auth/logout",
+      "regex": "^/api/auth/logout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/logout(?:/)?$"
+    },
+    {
+      "page": "/api/auth/request-code",
+      "regex": "^/api/auth/request\\-code(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/request\\-code(?:/)?$"
+    },
+    {
+      "page": "/api/auth/verify-code",
+      "regex": "^/api/auth/verify\\-code(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/verify\\-code(?:/)?$"
+    },
+    {
+      "page": "/api/checkout/session",
+      "regex": "^/api/checkout/session(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/checkout/session(?:/)?$"
+    },
+    {
+      "page": "/api/cron/check-stalled-queues",
+      "regex": "^/api/cron/check\\-stalled\\-queues(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron/check\\-stalled\\-queues(?:/)?$"
+    },
+    {
+      "page": "/api/cron/daily-messages",
+      "regex": "^/api/cron/daily\\-messages(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron/daily\\-messages(?:/)?$"
+    },
+    {
+      "page": "/api/cron/weekly-messages",
+      "regex": "^/api/cron/weekly\\-messages(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron/weekly\\-messages(?:/)?$"
+    },
+    {
+      "page": "/api/inngest",
+      "regex": "^/api/inngest(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/inngest(?:/)?$"
+    },
+    {
+      "page": "/api/messages/stream",
+      "regex": "^/api/messages/stream(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/messages/stream(?:/)?$"
+    },
+    {
+      "page": "/api/short-links",
+      "regex": "^/api/short\\-links(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/short\\-links(?:/)?$"
+    },
+    {
+      "page": "/api/stripe/webhook",
+      "regex": "^/api/stripe/webhook(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stripe/webhook(?:/)?$"
+    },
+    {
+      "page": "/api/track",
+      "regex": "^/api/track(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/track(?:/)?$"
+    },
+    {
+      "page": "/api/twilio/sms",
+      "regex": "^/api/twilio/sms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/twilio/sms(?:/)?$"
+    },
+    {
+      "page": "/api/twilio/status",
+      "regex": "^/api/twilio/status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/twilio/status(?:/)?$"
+    },
+    {
+      "page": "/api/users/preferences",
+      "regex": "^/api/users/preferences(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users/preferences(?:/)?$"
+    },
+    {
+      "page": "/api/users/signup",
+      "regex": "^/api/users/signup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users/signup(?:/)?$"
+    },
+    {
+      "page": "/chat",
+      "regex": "^/chat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/chat(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/ihg",
+      "regex": "^/ihg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/ihg(?:/)?$"
+    },
+    {
+      "page": "/me",
+      "regex": "^/me(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/me(?:/)?$"
+    },
+    {
+      "page": "/me/login",
+      "regex": "^/me/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/me/login(?:/)?$"
+    },
+    {
+      "page": "/me/plan",
+      "regex": "^/me/plan(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/me/plan(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
