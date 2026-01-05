@@ -13,6 +13,7 @@
         "TWILIO_NUMBER",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PRICE_ID",
         "OPENAI_API_KEY",
         "GOOGLE_API_KEY",
         "XAI_API_KEY",
