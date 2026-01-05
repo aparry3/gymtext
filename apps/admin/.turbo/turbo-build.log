@@ -3,11 +3,11 @@
 > next build
 
    ▲ Next.js 16.0.7 (Turbopack)
-   - Environments: .env.local
+   - Environments: .env.local, .env
 
  ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
    Creating an optimized production build ...
- ✓ Compiled successfully in 10.4s
+ ✓ Compiled successfully in 8.3s
    Running TypeScript ...
    Collecting page data using 7 workers ...
 [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
@@ -24,7 +24,7 @@
    Generating static pages using 7 workers (7/15) 
 [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
    Generating static pages using 7 workers (11/15) 
- ✓ Generating static pages using 7 workers (15/15) in 549.9ms
+ ✓ Generating static pages using 7 workers (15/15) in 503.3ms
    Finalizing page optimization ...
 
 Route (app)

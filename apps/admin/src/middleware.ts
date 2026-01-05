@@ -41,8 +41,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // All admin routes
+    // Explicit routes that need middleware (auth + env header injection)
     '/',
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/login',
+    '/calendar/:path*',
+    '/prompts/:path*',
+    '/users/:path*',
+    '/api/:path*',
   ],
 };
