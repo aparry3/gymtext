@@ -1,3 +1,0 @@
-{
-  "/api/twilio/sms/route": "app/api/twilio/sms/route.js"
-}

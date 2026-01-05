@@ -1,3 +1,0 @@
-{
-  "/(protected)/users/[id]/program/workouts/[workoutId]/page": "app/(protected)/users/[id]/program/workouts/[workoutId]/page.js"
-}
