@@ -1,3 +1,15 @@
 {
-  "/api/inngest/route": "app/api/inngest/route.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/checkout/session/route": "app/api/checkout/session/route.js",
+  "/api/inngest/route": "app/api/inngest/route.js",
+  "/api/track/route": "app/api/track/route.js",
+  "/api/users/[id]/fitness-plan/route": "app/api/users/[id]/fitness-plan/route.js",
+  "/api/users/[id]/microcycle/route": "app/api/users/[id]/microcycle/route.js",
+  "/api/users/[id]/referral/route": "app/api/users/[id]/referral/route.js",
+  "/api/users/[id]/workouts/[workoutId]/route": "app/api/users/[id]/workouts/[workoutId]/route.js",
+  "/api/users/[id]/workouts/route": "app/api/users/[id]/workouts/route.js",
+  "/api/users/signup/route": "app/api/users/signup/route.js",
+  "/me/page": "app/me/page.js",
+  "/me/plan/page": "app/me/plan/page.js",
+  "/page": "app/page.js"
 }

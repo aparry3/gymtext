@@ -1,31 +1,35 @@
-[00:00:01.119] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.235] Server  LOG      ✓ Ready in 943ms
-[00:00:13.233] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:16.185] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
-[00:00:18.757] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
-[00:00:24.676] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:24.676] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:24.955] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:27.163] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:28.701] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:31.147] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:39.228] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:00:41.499] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:13:57.301] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:21:27.305] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:24:17.308] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:24:21.305] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:27:15.563] Server  LOG      ✓ Compiled in 427ms
-[00:27:16.303] Browser LOG     Analytics Event: {"event":"page_viewed","properties":{"page":"program_viewed","userId":"62f7dfb1-23c9-4d52-9bed-d67c284ee438"}}
-[00:27:17.679] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
-[00:27:43.420] Server  LOG      ✓ Compiled in 288ms
-[00:27:44.350] Server  LOG      ✓ Compiled in 176ms
-[00:27:45.260] Server  LOG      ✓ Compiled in 206ms
-[00:29:05.998] Server  LOG      ✓ Compiled in 208ms
-[00:32:19.420] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:00.828] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:00.918] Server  LOG      ✓ Ready in 713ms
+[00:00:06.195] Server  ERROR    ⨯ "The requested resource isn't a valid image for" "/IconInverse.png" "received" null
+[00:00:06.267] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.713] Server  ERROR    ⨯ "The requested resource isn't a valid image for" "/IconInverse.png" "received" null
+[00:00:06.733] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.173] Server  ERROR    ⨯ "The requested resource isn't a valid image for" "/IconInverse.png" "received" null
+[00:00:07.202] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:42.516] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:45.666] Server  LOG     [MessagingFactory] Using LocalMessagingClient (no SMS will be sent)
+[00:01:12.591] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:18.493] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:27.365] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:30.702] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:04:42.620] Server  LOG      ✓ Compiled in 207ms
+[00:09:07.766] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:09.261] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:09:12.612] Server  LOG     [SSE] Client connected {}
+[00:09:12.715] Browser LOG     [SSE] Connected to message stream
+[00:09:12.715] Browser LOG     [SSE] Stream ready: {"timestamp":"2026-01-05T12:52:41.197Z","type":"connected"}
+[00:09:40.812] Server  LOG     [SSE] Client disconnected {}
+[00:09:40.910] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:41.150] Server  LOG     [SSE] Client connected {}
+[00:09:41.253] Browser LOG     [SSE] Connected to message stream
+[00:09:41.253] Browser LOG     [SSE] Stream ready: {"timestamp":"2026-01-05T12:53:09.735Z","type":"connected"}
+[00:10:18.150] Server  LOG     [SSE] Client disconnected {}
+[00:10:18.252] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:18.411] Server  LOG     [SSE] Client connected {}
+[00:10:18.516] Browser LOG     [SSE] Connected to message stream
+[00:10:18.516] Browser LOG     [SSE] Stream ready: {"timestamp":"2026-01-05T12:53:46.996Z","type":"connected"}
+[00:11:10.559] Server  LOG     [SSE] Client disconnected {}
+[00:11:10.645] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:10.892] Server  LOG     [SSE] Client connected {}
+[00:11:10.997] Browser LOG     [SSE] Connected to message stream
+[00:11:10.997] Browser LOG     [SSE] Stream ready: {"timestamp":"2026-01-05T12:54:39.476Z","type":"connected"}

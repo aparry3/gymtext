@@ -400,7 +400,7 @@ function AdminChatPage() {
                 setIsInitialLoading(true);
             }
             try {
-                const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=0`);
+                const response = await fetch(`/api/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=0`);
                 const result = await response.json();
                 if (!response.ok || !result.success) {
                     throw new Error(result.error || 'Failed to fetch messages');
@@ -412,7 +412,7 @@ function AdminChatPage() {
                 setOffset(MESSAGES_PER_PAGE);
                 // Fetch user name and phone number on initial load
                 if (isInitialLoad) {
-                    const userResponse = await fetch(`/api/admin/users/${id}`);
+                    const userResponse = await fetch(`/api/users/${id}`);
                     const userResult = await userResponse.json();
                     if (userResult.success) {
                         setUserName(userResult.data.user.name || 'User');
@@ -436,7 +436,7 @@ function AdminChatPage() {
             if (!hasMore || isLoadingMore) return;
             setIsLoadingMore(true);
             try {
-                const response = await fetch(`/api/admin/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=${offset}`);
+                const response = await fetch(`/api/users/${id}/chat?limit=${MESSAGES_PER_PAGE}&offset=${offset}`);
                 const result = await response.json();
                 if (!response.ok || !result.success) {
                     throw new Error(result.error || 'Failed to fetch more messages');
@@ -607,7 +607,7 @@ function AdminChatPage() {
                 optimisticUserMessage
             ]);
         try {
-            const response = await fetch(`/api/admin/users/${id}/chat`, {
+            const response = await fetch(`/api/users/${id}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

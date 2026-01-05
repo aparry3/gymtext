@@ -1,10 +1,10 @@
 {
+  "/(protected)/users/[id]/chat/page": "app/(protected)/users/[id]/chat/page.js",
   "/(protected)/users/[id]/page": "app/(protected)/users/[id]/page.js",
   "/(protected)/users/page": "app/(protected)/users/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/admin/users/[id]/route": "app/api/admin/users/[id]/route.js",
-  "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/api/users/[id]/fitness-plan/route": "app/api/users/[id]/fitness-plan/route.js",
+  "/api/messages/stream/route": "app/api/messages/stream/route.js",
+  "/api/users/[id]/chat/route": "app/api/users/[id]/chat/route.js",
   "/api/users/[id]/route": "app/api/users/[id]/route.js",
-  "/api/users/[id]/workouts/route": "app/api/users/[id]/workouts/route.js"
+  "/api/users/route": "app/api/users/route.js",
+  "/login/page": "app/login/page.js"
 }
