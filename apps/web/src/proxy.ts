@@ -1,4 +1,4 @@
-import { after, NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, NextFetchEvent } from 'next/server';
 
 /**
  * Paths that should be tracked for analytics.
@@ -31,9 +31,9 @@ function normalizePath(fullPath: string): string {
 }
 
 /**
- * Fire tracking event (non-blocking).
+ * Fire tracking event (returns Promise for waitUntil).
  */
-function trackPageVisit(request: NextRequest): void {
+async function trackPageVisit(request: NextRequest): Promise<void> {
   const url = request.nextUrl;
   const fullPath = url.pathname + url.search;
 
@@ -44,32 +44,35 @@ function trackPageVisit(request: NextRequest): void {
   // Build absolute URL for the tracking endpoint
   const trackUrl = new URL('/api/track', request.url);
 
-  // Fire-and-forget: don't await, just catch errors
-  fetch(trackUrl.toString(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // Forward visitor metadata
-      'x-forwarded-for': request.headers.get('x-forwarded-for') ?? '',
-      'x-real-ip': request.headers.get('x-real-ip') ?? '',
-      'user-agent': request.headers.get('user-agent') ?? '',
-      referer: request.headers.get('referer') ?? '',
-    },
-    body: JSON.stringify({ page: normalizedPage, source }),
-  }).catch((err) => console.error('[Middleware] Tracking error:', err));
+  try {
+    await fetch(trackUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Forward visitor metadata
+        'x-forwarded-for': request.headers.get('x-forwarded-for') ?? '',
+        'x-real-ip': request.headers.get('x-real-ip') ?? '',
+        'user-agent': request.headers.get('user-agent') ?? '',
+        referer: request.headers.get('referer') ?? '',
+      },
+      body: JSON.stringify({ page: normalizedPage, source }),
+    });
+  } catch (err) {
+    console.error('[Proxy] Tracking error:', err);
+  }
 }
 
 /**
- * Web app middleware
+ * Web app proxy
  * - Tracks page visits for analytics
  * - Protects /me routes with user session
  */
-export async function middleware(request: NextRequest) {
+export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
-  // Fire tracking for relevant pages (runs after response is sent)
+  // Fire tracking for relevant pages (runs in background)
   if (shouldTrack(pathname)) {
-    after(() => trackPageVisit(request));
+    event.waitUntil(trackPageVisit(request));
   }
 
   // User /me path protection

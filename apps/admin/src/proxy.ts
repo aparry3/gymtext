@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Admin app middleware
+ * Admin app proxy
  * - Protects admin routes with admin auth
  * - Injects X-Gymtext-Env header for environment switching
  */
-export async function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Get environment from cookie (default to production)
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Explicit routes that need middleware (auth + env header injection)
+    // Explicit routes that need proxy (auth + env header injection)
     '/',
     '/login',
     '/calendar/:path*',
