@@ -46,7 +46,10 @@ next-env.d.ts
 /migrations_backup
 
 # generated types
-/src/server/models/_types/
+packages/shared/src/server/models/_types/
+
+# claude docs
+_claude_docs/
 
 backup-*
 
