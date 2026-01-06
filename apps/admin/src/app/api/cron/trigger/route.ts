@@ -25,6 +25,12 @@ export async function POST() {
       );
     }
 
+    // Debug: log obfuscated secret
+    const obfuscated = cronSecret.length > 10
+      ? `${cronSecret.slice(0, 5)}${'*'.repeat(cronSecret.length - 10)}${cronSecret.slice(-5)}`
+      : '***too-short***';
+    console.log('[ADMIN CRON] Using CRON_SECRET:', obfuscated, 'length:', cronSecret.length);
+
     const cronUrl = `${webAppUrl}/api/cron/daily-messages`;
     console.log('[ADMIN CRON] Triggering daily messages cron:', cronUrl);
 

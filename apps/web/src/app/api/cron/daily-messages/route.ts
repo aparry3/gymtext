@@ -22,7 +22,21 @@ export async function GET(request: Request) {
       );
     }
 
+    // Debug: log obfuscated secrets for comparison
+    const obfuscate = (s: string) => s.length > 10
+      ? `${s.slice(0, 5)}${'*'.repeat(s.length - 10)}${s.slice(-5)}`
+      : '***too-short***';
+    console.log('[CRON] Expected CRON_SECRET:', obfuscate(cronSecret), 'length:', cronSecret.length);
+
+    const receivedToken = authHeader?.replace('Bearer ', '') || '';
+    if (receivedToken) {
+      console.log('[CRON] Received token:', obfuscate(receivedToken), 'length:', receivedToken.length);
+    } else {
+      console.log('[CRON] No Bearer token received. authHeader:', authHeader);
+    }
+
     if (authHeader !== `Bearer ${cronSecret}`) {
+      console.log('[CRON] Auth mismatch!');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
