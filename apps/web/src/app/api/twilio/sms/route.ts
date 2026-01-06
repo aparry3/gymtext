@@ -1,5 +1,4 @@
-import { userService } from '@/server/services/user/userService';
-import { messageService, subscriptionService } from '@/server/services';
+import { getServices } from '@/lib/context';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { getTwilioSecrets } from '@/server/config';
@@ -33,7 +32,8 @@ export async function POST(req: NextRequest) {
     const from = body.From as string || '';
     const to = body.To as string || getTwilioSecrets().phoneNumber;
 
-    const user = await userService.getUserByPhone(from);
+    const services = getServices();
+    const user = await services.user.getUserByPhone(from);
 
     if (!user) {
         twiml.message(
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user with profile for chat context
-    const userWithProfile = await userService.getUser(user.id);
+    const userWithProfile = await services.user.getUser(user.id);
 
     if (!userWithProfile) {
       twiml.message('Sorry, I had trouble loading your profile. Please try again later.');
@@ -62,10 +62,10 @@ export async function POST(req: NextRequest) {
 
     // Handle STOP command - cancel subscription
     if (isStopCommand(incomingMessage)) {
-      const result = await subscriptionService.cancelSubscription(user.id);
+      const result = await services.subscription.cancelSubscription(user.id);
 
       // Store the inbound message for history
-      await messageService.storeInboundMessage({
+      await services.message.storeInboundMessage({
         clientId: user.id,
         from,
         to,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      await messageService.sendMessage(userWithProfile, confirmationMessage);
+      await services.message.sendMessage(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');
@@ -101,10 +101,10 @@ export async function POST(req: NextRequest) {
 
     // Handle START command - reactivate subscription
     if (isStartCommand(incomingMessage)) {
-      const result = await subscriptionService.reactivateSubscription(user.id);
+      const result = await services.subscription.reactivateSubscription(user.id);
 
       // Store the inbound message for history
-      await messageService.storeInboundMessage({
+      await services.message.storeInboundMessage({
         clientId: user.id,
         from,
         to,
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      await messageService.sendMessage(userWithProfile, confirmationMessage);
+      await services.message.sendMessage(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     // Use MessageService to ingest the message (async via Inngest)
     // This returns immediately with an ack, preventing Twilio webhook timeouts
     // The actual response will be sent by the Inngest processMessage function
-    const result = await messageService.ingestMessage({
+    const result = await services.message.ingestMessage({
       user: userWithProfile,
       content: incomingMessage,
       from,

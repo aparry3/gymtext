@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { userService } from '@/server/services';
+import { getServices } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -42,7 +42,8 @@ export async function GET(
     }
 
     // Fetch user data
-    const result = await userService.getUserForAdmin(requestedUserId);
+    const services = getServices();
+    const result = await services.user.getUserForAdmin(requestedUserId);
 
     return NextResponse.json({
       success: true,

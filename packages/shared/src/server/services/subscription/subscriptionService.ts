@@ -29,6 +29,7 @@ export interface SubscriptionServiceInstance {
   cancelSubscription(userId: string): Promise<CancelResult>;
   reactivateSubscription(userId: string): Promise<ReactivateResult>;
   shouldReceiveMessages(userId: string): Promise<boolean>;
+  hasActiveSubscription(userId: string): Promise<boolean>;
 }
 
 /**
@@ -165,6 +166,10 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
     async shouldReceiveMessages(userId: string): Promise<boolean> {
       const subscription = await repos.subscription.findActiveForMessaging(userId);
       return subscription !== null;
+    },
+
+    async hasActiveSubscription(userId: string): Promise<boolean> {
+      return await repos.subscription.hasActiveSubscription(userId);
     },
   };
 }

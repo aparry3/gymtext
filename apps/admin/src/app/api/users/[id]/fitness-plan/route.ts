@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fitnessPlanService, progressService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -42,7 +42,8 @@ export async function GET(
     }
 
     // Fetch current fitness plan
-    const fitnessPlan = await fitnessPlanService.getCurrentPlan(requestedUserId);
+    const { services } = await getAdminContext();
+    const fitnessPlan = await services.fitnessPlan.getCurrentPlan(requestedUserId);
 
     if (!fitnessPlan) {
       return NextResponse.json(
@@ -55,7 +56,7 @@ export async function GET(
     }
 
     // Calculate current absoluteWeek based on plan start date
-    const progress = await progressService.getCurrentProgress(fitnessPlan);
+    const progress = await services.progress.getCurrentProgress(fitnessPlan);
     const absoluteWeek = progress?.absoluteWeek ?? 1;
 
     return NextResponse.json({

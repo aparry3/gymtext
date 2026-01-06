@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { userAuthService } from '@/server/services/auth/userAuthService';
-import { userService } from '@/server/services';
-import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { messageService } from '@/server/services';
+import { getServices, type ServiceContainer } from '@/lib/context';
 import { referralService } from '@/server/services/referral/referralService';
 import { inngest } from '@/server/connections/inngest/client';
-import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
@@ -35,27 +32,28 @@ export async function POST(request: NextRequest) {
     const formData = await request.json();
     console.log('[Signup] Form data:', formData);
 
+    const services = getServices();
+
     // Check for existing user by phone number
-    const existingUser = await userService.getUserByPhone(formData.phoneNumber);
+    const existingUser = await services.user.getUserByPhone(formData.phoneNumber);
 
     if (existingUser) {
-      const subscriptionRepo = new SubscriptionRepository();
-      const hasActiveSub = await subscriptionRepo.hasActiveSubscription(existingUser.id);
+      const hasActiveSub = await services.subscription.hasActiveSubscription(existingUser.id);
 
       if (hasActiveSub) {
         // SCENARIO 2: Subscribed user - re-onboard and redirect to /me
         console.log(`[Signup] Existing subscribed user: ${existingUser.id}`);
-        return await handleSubscribedUserReOnboard(existingUser, formData);
+        return await handleSubscribedUserReOnboard(services, existingUser, formData);
       } else {
         // SCENARIO 1: Unsubscribed user - update and continue to Stripe
         console.log(`[Signup] Existing unsubscribed user: ${existingUser.id}`);
-        return await handleUnsubscribedUserSignup(existingUser, formData);
+        return await handleUnsubscribedUserSignup(services, existingUser, formData);
       }
     }
 
     // NEW USER: Standard signup flow
     console.log('[Signup] Creating new user');
-    return await handleNewUserSignup(formData);
+    return await handleNewUserSignup(services, formData);
   } catch (error) {
     console.error('[Signup] Error in signup API:', error);
     return NextResponse.json(
@@ -71,10 +69,10 @@ export async function POST(request: NextRequest) {
 /**
  * Handle signup for a completely new user
  */
-async function handleNewUserSignup(formData: Record<string, unknown>) {
+async function handleNewUserSignup(services: ServiceContainer, formData: Record<string, unknown>) {
   // Step 1: Create user (basic info only)
   console.log('[Signup] Creating user with basic info');
-  const user = await userService.createUser({
+  const user = await services.user.createUser({
     name: formData.name as string,
     phoneNumber: formData.phoneNumber as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
@@ -96,14 +94,14 @@ async function handleNewUserSignup(formData: Record<string, unknown>) {
   });
 
   // Update user with Stripe customer ID
-  await userService.updateUser(user.id, {
+  await services.user.updateUser(user.id, {
     stripeCustomerId: customer.id,
   });
 
   console.log(`[Signup] Stripe customer created: ${customer.id}`);
 
   // Continue with common flow
-  return await completeSignupFlow(user.id, customer.id, formData, false);
+  return await completeSignupFlow(services, user.id, customer.id, formData, false);
 }
 
 /**
@@ -111,12 +109,13 @@ async function handleNewUserSignup(formData: Record<string, unknown>) {
  * Updates user info and continues to Stripe checkout
  */
 async function handleUnsubscribedUserSignup(
+  services: ServiceContainer,
   existingUser: { id: string; stripeCustomerId: string | null; name: string; phoneNumber: string },
   formData: Record<string, unknown>
 ) {
   // Update existing user with new form data
   console.log('[Signup] Updating existing user info');
-  await userService.updateUser(existingUser.id, {
+  await services.user.updateUser(existingUser.id, {
     name: formData.name as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
     gender: formData.gender as string | undefined,
@@ -136,7 +135,7 @@ async function handleUnsubscribedUserSignup(
       },
     });
     customerId = customer.id;
-    await userService.updateUser(existingUser.id, {
+    await services.user.updateUser(existingUser.id, {
       stripeCustomerId: customerId,
     });
     console.log(`[Signup] Stripe customer created: ${customerId}`);
@@ -145,7 +144,7 @@ async function handleUnsubscribedUserSignup(
   }
 
   // Continue with common flow
-  return await completeSignupFlow(existingUser.id, customerId, formData, false);
+  return await completeSignupFlow(services, existingUser.id, customerId, formData, false);
 }
 
 /**
@@ -153,12 +152,13 @@ async function handleUnsubscribedUserSignup(
  * Creates fresh plan/profile/workout, skips Stripe, redirects to /me
  */
 async function handleSubscribedUserReOnboard(
+  services: ServiceContainer,
   existingUser: { id: string },
   formData: Record<string, unknown>
 ) {
   // Update user with new form data
   console.log('[Signup] Updating subscribed user info');
-  await userService.updateUser(existingUser.id, {
+  await services.user.updateUser(existingUser.id, {
     name: formData.name as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
     gender: formData.gender as string | undefined,
@@ -169,11 +169,11 @@ async function handleSubscribedUserReOnboard(
   // Reset onboarding record with new signup data
   console.log('[Signup] Resetting onboarding record');
   try {
-    await onboardingDataService.delete(existingUser.id);
+    await services.onboardingData.delete(existingUser.id);
   } catch {
     // Ignore if no existing record
   }
-  await onboardingDataService.createOnboardingRecord(existingUser.id, extractSignupData(formData));
+  await services.onboardingData.createOnboardingRecord(existingUser.id, extractSignupData(formData));
 
   // Trigger async Inngest onboarding job with forceCreate flag
   console.log('[Signup] Triggering re-onboarding job with forceCreate');
@@ -209,6 +209,7 @@ async function handleSubscribedUserReOnboard(
  * Complete the signup flow common to new and unsubscribed existing users
  */
 async function completeSignupFlow(
+  services: ServiceContainer,
   userId: string,
   stripeCustomerId: string,
   formData: Record<string, unknown>,
@@ -217,17 +218,17 @@ async function completeSignupFlow(
   // Reset onboarding record if exists, create fresh
   console.log('[Signup] Creating onboarding record');
   try {
-    await onboardingDataService.delete(userId);
+    await services.onboardingData.delete(userId);
   } catch {
     // Ignore if no existing record
   }
-  await onboardingDataService.createOnboardingRecord(userId, extractSignupData(formData));
+  await services.onboardingData.createOnboardingRecord(userId, extractSignupData(formData));
 
   // Send welcome SMS
   console.log('[Signup] Sending welcome SMS');
-  const userWithProfile = await userService.getUser(userId);
+  const userWithProfile = await services.user.getUser(userId);
   if (userWithProfile) {
-    await messageService.sendWelcomeMessage(userWithProfile);
+    await services.message.sendWelcomeMessage(userWithProfile);
   }
 
   // Trigger async Inngest onboarding job
@@ -253,7 +254,7 @@ async function completeSignupFlow(
 
   if (referralCode) {
     console.log(`[Signup] Validating referral code: ${referralCode}`);
-    const userWithProfile = await userService.getUser(userId);
+    const userWithProfile = await services.user.getUser(userId);
     const validation = await referralService.validateReferralCode(
       referralCode,
       userWithProfile?.phoneNumber

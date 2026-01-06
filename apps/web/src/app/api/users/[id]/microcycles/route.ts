@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { microcycleService } from '@/server/services'
+import { getServices } from '@/lib/context'
 import { checkAuthorization } from '@/server/utils/authMiddleware'
 
 /**
@@ -35,7 +35,8 @@ export async function GET(
     }
 
     // Get all microcycles for the user
-    const microcycles = await microcycleService.getAllMicrocycles(userId)
+    const services = getServices()
+    const microcycles = await services.microcycle.getAllMicrocycles(userId)
 
     return NextResponse.json({
       success: true,
