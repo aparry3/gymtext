@@ -53,7 +53,28 @@
     },
     "@gymtext/shared#build": {
       "dependsOn": ["db:codegen"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_NUMBER",
+        "OPENAI_API_KEY",
+        "GOOGLE_API_KEY",
+        "XAI_API_KEY",
+        "PINECONE_API_KEY",
+        "PINECONE_INDEX",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PRICE_ID",
+        "SANDBOX_DATABASE_URL",
+        "SANDBOX_TWILIO_ACCOUNT_SID",
+        "SANDBOX_TWILIO_AUTH_TOKEN",
+        "SANDBOX_TWILIO_NUMBER",
+        "SANDBOX_STRIPE_SECRET_KEY",
+        "SANDBOX_STRIPE_WEBHOOK_SECRET",
+        "ADMIN_PHONE_NUMBERS"
+      ]
     }
   }
 }
