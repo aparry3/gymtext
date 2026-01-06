@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 
 /**
  * Paths that should be tracked for analytics.
@@ -67,9 +67,9 @@ function trackPageVisit(request: NextRequest): void {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Fire tracking for relevant pages (non-blocking)
+  // Fire tracking for relevant pages (runs after response is sent)
   if (shouldTrack(pathname)) {
-    trackPageVisit(request);
+    after(() => trackPageVisit(request));
   }
 
   // User /me path protection
