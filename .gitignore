@@ -54,3 +54,5 @@ backups/
 
 # agent logs
 _logs/
+
+**/dist/
