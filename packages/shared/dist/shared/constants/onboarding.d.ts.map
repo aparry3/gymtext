@@ -1,1 +1,0 @@
-{"version":3,"file":"onboarding.d.ts","sourceRoot":"","sources":["../../../src/shared/constants/onboarding.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,eAAO,MAAM,gBAAgB;;;;;;;;;;;;;;;;;;;;;EAQnB,CAAC;AAEX,eAAO,MAAM,WAAW,GAA0B,CAAC;AAEnD;;GAEG;AACH,wBAAgB,WAAW,CAAC,UAAU,EAAE,MAAM,GAAG,MAAM,CAGtD;AAED;;GAEG;AACH,wBAAgB,qBAAqB,CAAC,WAAW,EAAE,MAAM,GAAG,MAAM,CAEjE"}

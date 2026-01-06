@@ -1,1 +1,0 @@
-{"version":3,"file":"stripe.d.ts","sourceRoot":"","sources":["../../../../src/server/connections/stripe/stripe.ts"],"names":[],"mappings":"AAWA,QAAA,MAAmB,aAAa,QAAuB,CAAC;AAGxD,eAAO,MAAM,YAAY,yBAGvB,CAAC;AAGH,OAAO,EAAE,aAAa,EAAE,CAAC;AAGzB,OAAO,EACL,kBAAkB,EAClB,gBAAgB,EAChB,kBAAkB,EAClB,KAAK,iBAAiB,GACvB,MAAM,WAAW,CAAC"}

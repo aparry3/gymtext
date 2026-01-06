@@ -1,1 +1,0 @@
-{"version":3,"file":"factory.d.ts","sourceRoot":"","sources":["../../../../src/server/connections/messaging/factory.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,OAAO,KAAK,EAAE,gBAAgB,EAAE,iBAAiB,EAAE,MAAM,SAAS,CAAC;AAKnE;;;GAGG;AACH,wBAAgB,kBAAkB,IAAI,gBAAgB,CAWrD;AAED;;;GAGG;AACH,wBAAgB,4BAA4B,CAAC,QAAQ,EAAE,iBAAiB,GAAG,gBAAgB,CAS1F;AAGD,eAAO,MAAM,eAAe,kBAAuB,CAAC"}
