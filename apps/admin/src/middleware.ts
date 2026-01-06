@@ -11,10 +11,11 @@ export async function middleware(request: NextRequest) {
   // Get environment from cookie (default to production)
   const envMode = request.cookies.get('gt_env')?.value || 'production';
 
-  // Admin auth check for all routes except login
+  // Admin auth check for all routes except login and auth API
   const isLoginPath = pathname === '/login' || pathname === '/login/';
+  const isAuthApiPath = pathname.startsWith('/api/auth/');
 
-  if (!isLoginPath) {
+  if (!isLoginPath && !isAuthApiPath) {
     const adminCookie = request.cookies.get('gt_admin')?.value;
 
     if (adminCookie !== 'ok') {
