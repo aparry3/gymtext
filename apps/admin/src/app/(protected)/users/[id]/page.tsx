@@ -91,31 +91,29 @@ export default function AdminUserDetailPage() {
     }
   }, [user])
 
-  const handleSendWorkout = useCallback(async () => {
-    if (!user) return
-
+  const handleTriggerDailyCron = useCallback(async () => {
     setIsSendingWorkout(true)
     try {
-      const response = await fetch(`/api/users/${user.id}/messages`, {
+      const response = await fetch('/api/cron/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       })
-      
+
       const result = await response.json()
-      
+
       if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to send daily message')
+        throw new Error(result.error || 'Failed to trigger daily cron')
       }
-      
-      console.log('Daily message sent to user:', user.name)
+
+      console.log('Daily cron triggered:', result)
     } catch (err) {
-      console.error('Failed to send daily message:', err)
+      console.error('Failed to trigger daily cron:', err)
     } finally {
       setIsSendingWorkout(false)
     }
-  }, [user])
+  }, [])
 
   const handleDeleteUser = useCallback(async () => {
     if (!user) return
@@ -257,12 +255,12 @@ export default function AdminUserDetailPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={handleSendWorkout}
+                onClick={handleTriggerDailyCron}
                 disabled={isSendingWorkout}
                 className="gap-2"
               >
                 <Send className={`h-4 w-4 ${isSendingWorkout ? 'animate-pulse' : ''}`} />
-                {isSendingWorkout ? 'Sending...' : 'Send Daily Message'}
+                {isSendingWorkout ? 'Triggering...' : 'Trigger Daily Cron'}
               </Button>
               <Button
                 variant="destructive"

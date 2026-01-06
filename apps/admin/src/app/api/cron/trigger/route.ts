@@ -1,0 +1,61 @@
+import { NextResponse } from 'next/server';
+
+/**
+ * Proxy endpoint to trigger the web app's daily message cron
+ * This allows admins to manually trigger the cron job from the admin dashboard
+ */
+export async function POST() {
+  try {
+    const webAppUrl = process.env.WEB_APP_URL;
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!webAppUrl) {
+      console.error('[ADMIN CRON] WEB_APP_URL is not configured');
+      return NextResponse.json(
+        { success: false, error: 'WEB_APP_URL is not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (!cronSecret) {
+      console.error('[ADMIN CRON] CRON_SECRET is not configured');
+      return NextResponse.json(
+        { success: false, error: 'CRON_SECRET is not configured' },
+        { status: 500 }
+      );
+    }
+
+    const cronUrl = `${webAppUrl}/api/cron/daily-messages`;
+    console.log('[ADMIN CRON] Triggering daily messages cron:', cronUrl);
+
+    const response = await fetch(cronUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${cronSecret}`,
+      },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('[ADMIN CRON] Cron request failed:', result);
+      return NextResponse.json(
+        { success: false, error: result.error || 'Cron request failed', status: response.status },
+        { status: response.status }
+      );
+    }
+
+    console.log('[ADMIN CRON] Cron triggered successfully:', result);
+    return NextResponse.json({
+      success: true,
+      ...result,
+    });
+
+  } catch (error) {
+    console.error('[ADMIN CRON] Error triggering cron:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to trigger cron' },
+      { status: 500 }
+    );
+  }
+}
