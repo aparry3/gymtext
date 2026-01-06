@@ -1,0 +1,62 @@
+/* Import IBM Plex Sans for Norrøna page */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+/* Norrøna page font overrides */
+.norrona-page {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+/* Custom colors - matching Norrøna brand */
+.bg-norr-black {
+  background-color: #0a0a0a;
+}
+
+.text-norr-black {
+  color: #0a0a0a;
+}
+
+.bg-norr-gray {
+  background-color: #f4f4f4;
+}
+
+.text-norr-gray {
+  color: #f4f4f4;
+}
+
+/* Gymtext blue accent */
+.text-gymtext-blue {
+  color: #1a73e8;
+}
+
+.bg-gymtext-blue {
+  background-color: #1a73e8;
+}
+
+.hover\:bg-gymtext-blue:hover {
+  background-color: #1a73e8;
+}
+
+.fill-gymtext-blue {
+  fill: #1a73e8;
+}
+
+/* Editorial letter spacing */
+.tracking-editorial {
+  letter-spacing: 0.05em;
+}
+
+/* Smooth scrolling */
+.norrona-page {
+  scroll-behavior: smooth;
+}
+
+/* Selection styling for Norrøna page */
+.norrona-page ::selection {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Image transition duration for hero carousel */
+.duration-1500 {
+  transition-duration: 1500ms;
+}
