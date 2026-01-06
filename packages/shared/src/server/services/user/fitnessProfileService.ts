@@ -12,7 +12,6 @@
  */
 
 import { UserWithProfile } from '@/server/models/user';
-import { ProfileRepository } from '@/server/repositories/profileRepository';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { createAgent, PROMPT_IDS } from '@/server/agents';
 import {
@@ -26,6 +25,7 @@ import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { formatForAI } from '@/shared/utils/date';
+import type { RepositoryContainer } from '../../repositories/factory';
 
 /**
  * Result returned when patching/updating a profile
@@ -39,6 +39,169 @@ export interface ProfileUpdateResult {
   updateSummary: string;
 }
 
+/**
+ * FitnessProfileServiceInstance interface
+ */
+export interface FitnessProfileServiceInstance {
+  getCurrentProfile(userId: string): Promise<string | null>;
+  saveProfile(userId: string, profile: string): Promise<void>;
+  createFitnessProfile(user: UserWithProfile, signupData: SignupData): Promise<string | null>;
+  getProfileHistory(userId: string, limit?: number): Promise<Array<{ profile: string; createdAt: Date }>>;
+  saveProfileWithStructured(userId: string, profile: string, structured: StructuredProfile | null): Promise<void>;
+  getCurrentStructuredProfile(userId: string): Promise<StructuredProfile | null>;
+}
+
+/**
+ * Create a FitnessProfileService instance with injected repositories
+ */
+export function createFitnessProfileService(repos: RepositoryContainer): FitnessProfileServiceInstance {
+  const circuitBreaker = new CircuitBreaker({
+    failureThreshold: 5,
+    resetTimeout: 60000,
+    monitoringPeriod: 60000,
+  });
+
+  return {
+    async getCurrentProfile(userId: string): Promise<string | null> {
+      return await repos.profile.getCurrentProfileText(userId);
+    },
+
+    async saveProfile(userId: string, profile: string): Promise<void> {
+      try {
+        await repos.profile.createProfileForUser(userId, profile);
+        console.log(`[FitnessProfileService] Saved profile for user ${userId}`);
+      } catch (error) {
+        console.error(`[FitnessProfileService] Error saving profile for user ${userId}:`, error);
+        throw error;
+      }
+    },
+
+    async createFitnessProfile(user: UserWithProfile, signupData: SignupData): Promise<string | null> {
+      return circuitBreaker.execute<string | null>(async (): Promise<string | null> => {
+        try {
+          const formattedData = formatSignupDataForLLM(signupData);
+
+          const messageParts: string[] = [];
+
+          if (formattedData.fitnessGoals?.trim()) {
+            messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
+          }
+
+          if (formattedData.currentExercise?.trim()) {
+            messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
+          }
+
+          if (formattedData.environment?.trim()) {
+            messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
+          }
+
+          if (formattedData.injuries?.trim()) {
+            messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
+          }
+
+          const message = messageParts.join('\n\n');
+          const currentProfile = createEmptyProfile(user);
+          const currentDate = formatForAI(new Date(), user.timezone);
+
+          const invokeStructuredProfileAgent = async (
+            input: StructuredProfileInput | string
+          ): Promise<StructuredProfileOutput> => {
+            const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+            const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
+            const agent = await createAgent(
+              {
+                name: PROMPT_IDS.PROFILE_STRUCTURED,
+                schema: StructuredProfileSchema,
+              },
+              { model: 'gpt-5-nano', temperature: 0.3 }
+            );
+
+            const agentResult = await agent.invoke(userPrompt);
+            return { structured: agentResult.response, success: true };
+          };
+
+          const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
+          const agent = await createAgent(
+            {
+              name: PROMPT_IDS.PROFILE_FITNESS,
+              schema: ProfileUpdateOutputSchema,
+              subAgents: [
+                {
+                  structured: {
+                    agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
+                    condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
+                    transform: (agentResult: unknown) =>
+                      JSON.stringify({
+                        dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
+                        currentDate,
+                      }),
+                  },
+                },
+              ],
+            },
+            { model: 'gpt-5.1' }
+          );
+
+          const agentResult = await agent.invoke(userPrompt);
+          const structuredResult = (agentResult as { structured?: StructuredProfileOutput }).structured;
+          const structured = structuredResult?.success ? structuredResult.structured : null;
+
+          const result = {
+            updatedProfile: agentResult.response.updatedProfile,
+            wasUpdated: agentResult.response.wasUpdated,
+            updateSummary: agentResult.response.updateSummary || '',
+            structured,
+          };
+
+          console.log('[FitnessProfileService] Created initial profile:', {
+            wasUpdated: result.wasUpdated,
+            summary: result.updateSummary,
+            hasStructured: result.structured !== null,
+          });
+
+          await repos.profile.createProfileWithStructured(user.id, result.updatedProfile, result.structured);
+
+          return result.updatedProfile;
+        } catch (error) {
+          console.error('[FitnessProfileService] Error creating profile:', error);
+          throw error;
+        }
+      });
+    },
+
+    async getProfileHistory(userId: string, limit: number = 10) {
+      return await repos.profile.getProfileHistory(userId, limit);
+    },
+
+    async saveProfileWithStructured(
+      userId: string,
+      profile: string,
+      structured: StructuredProfile | null
+    ): Promise<void> {
+      try {
+        await repos.profile.createProfileWithStructured(userId, profile, structured);
+        console.log(`[FitnessProfileService] Saved profile with structured data for user ${userId}`);
+      } catch (error) {
+        console.error(`[FitnessProfileService] Error saving profile for user ${userId}:`, error);
+        throw error;
+      }
+    },
+
+    async getCurrentStructuredProfile(userId: string): Promise<StructuredProfile | null> {
+      return await repos.profile.getCurrentStructuredProfile(userId);
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// =============================================================================
+
+import { ProfileRepository } from '@/server/repositories/profileRepository';
+
+/**
+ * @deprecated Use createFitnessProfileService(repos) instead
+ */
 export class FitnessProfileService {
   private static instance: FitnessProfileService;
   private circuitBreaker: CircuitBreaker;
@@ -47,8 +210,8 @@ export class FitnessProfileService {
   private constructor() {
     this.circuitBreaker = new CircuitBreaker({
       failureThreshold: 5,
-      resetTimeout: 60000, // 1 minute
-      monitoringPeriod: 60000, // 1 minute
+      resetTimeout: 60000,
+      monitoringPeriod: 60000,
     });
     this.profileRepository = new ProfileRepository();
   }
@@ -60,23 +223,10 @@ export class FitnessProfileService {
     return FitnessProfileService.instance;
   }
 
-  /**
-   * Get the current Markdown profile for a user
-   *
-   * @param userId - UUID of the user
-   * @returns Markdown profile text or null if no profile exists
-   */
   async getCurrentProfile(userId: string): Promise<string | null> {
     return await this.profileRepository.getCurrentProfileText(userId);
   }
 
-  /**
-   * Save updated profile
-   * Creates new row in profiles table for history tracking
-   *
-   * @param userId - UUID of the user
-   * @param profile - Complete profile text
-   */
   async saveProfile(userId: string, profile: string): Promise<void> {
     try {
       await this.profileRepository.createProfileForUser(userId, profile);
@@ -87,78 +237,63 @@ export class FitnessProfileService {
     }
   }
 
-  /**
-   * Create initial fitness profile from signup data
-   * Converts signup data to Markdown format and stores it
-   *
-   * @param user - User to create profile for
-   * @param signupData - Onboarding signup data
-   * @returns Markdown profile text
-   */
   async createFitnessProfile(user: UserWithProfile, signupData: SignupData): Promise<string | null> {
     return this.circuitBreaker.execute<string | null>(async (): Promise<string | null> => {
       try {
-        // Format signup data for agent processing
         const formattedData = formatSignupDataForLLM(signupData);
-
-        // Build message from signup data
         const messageParts: string[] = [];
 
         if (formattedData.fitnessGoals?.trim()) {
           messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
         }
-
         if (formattedData.currentExercise?.trim()) {
           messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
         }
-
         if (formattedData.environment?.trim()) {
           messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
         }
-
         if (formattedData.injuries?.trim()) {
           messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
         }
 
         const message = messageParts.join('\n\n');
-
-        // Start with empty profile
         const currentProfile = createEmptyProfile(user);
-
-        // Use Profile Update Agent to build initial profile from signup data
         const currentDate = formatForAI(new Date(), user.timezone);
 
-        // Helper function for structured profile extraction
-        // System prompt fetched from DB based on agent name
-        const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
+        const invokeStructuredProfileAgent = async (
+          input: StructuredProfileInput | string
+        ): Promise<StructuredProfileOutput> => {
           const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
           const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-          const agent = await createAgent({
-            name: PROMPT_IDS.PROFILE_STRUCTURED,
-            schema: StructuredProfileSchema,
-          }, { model: 'gpt-5-nano', temperature: 0.3 });
-
+          const agent = await createAgent(
+            { name: PROMPT_IDS.PROFILE_STRUCTURED, schema: StructuredProfileSchema },
+            { model: 'gpt-5-nano', temperature: 0.3 }
+          );
           const agentResult = await agent.invoke(userPrompt);
           return { structured: agentResult.response, success: true };
         };
 
-        // Create profile update agent inline with subAgents for structured extraction
-        // Prompts fetched from DB based on agent name
         const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-        const agent = await createAgent({
-          name: PROMPT_IDS.PROFILE_FITNESS,
-          schema: ProfileUpdateOutputSchema,
-          subAgents: [{
-            structured: {
-              agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
-              condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
-              transform: (agentResult: unknown) => JSON.stringify({
-                dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
-                currentDate,
-              }),
-            },
-          }],
-        }, { model: 'gpt-5.1' });
+        const agent = await createAgent(
+          {
+            name: PROMPT_IDS.PROFILE_FITNESS,
+            schema: ProfileUpdateOutputSchema,
+            subAgents: [
+              {
+                structured: {
+                  agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
+                  condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
+                  transform: (agentResult: unknown) =>
+                    JSON.stringify({
+                      dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
+                      currentDate,
+                    }),
+                },
+              },
+            ],
+          },
+          { model: 'gpt-5.1' }
+        );
 
         const agentResult = await agent.invoke(userPrompt);
         const structuredResult = (agentResult as { structured?: StructuredProfileOutput }).structured;
@@ -177,13 +312,7 @@ export class FitnessProfileService {
           hasStructured: result.structured !== null,
         });
 
-        // Store profile with structured data
-        await this.profileRepository.createProfileWithStructured(
-          user.id,
-          result.updatedProfile,
-          result.structured
-        );
-
+        await this.profileRepository.createProfileWithStructured(user.id, result.updatedProfile, result.structured);
         return result.updatedProfile;
       } catch (error) {
         console.error('[FitnessProfileService] Error creating profile:', error);
@@ -192,29 +321,10 @@ export class FitnessProfileService {
     });
   }
 
-  /**
-   * Get profile update history for a user
-   *
-   * @param userId - UUID of the user
-   * @param limit - Number of historical profiles to retrieve
-   * @returns Array of profile snapshots with timestamps
-   */
   async getProfileHistory(userId: string, limit: number = 10) {
     return await this.profileRepository.getProfileHistory(userId, limit);
   }
 
-  // ============================================
-  // Structured Profile Methods
-  // ============================================
-
-  /**
-   * Save updated profile with structured data
-   * Creates new row in profiles table for history tracking
-   *
-   * @param userId - UUID of the user
-   * @param profile - Complete profile text (Markdown)
-   * @param structured - Structured profile data (or null)
-   */
   async saveProfileWithStructured(
     userId: string,
     profile: string,
@@ -229,16 +339,12 @@ export class FitnessProfileService {
     }
   }
 
-  /**
-   * Get current structured profile data
-   *
-   * @param userId - UUID of the user
-   * @returns Structured profile data or null if not available
-   */
   async getCurrentStructuredProfile(userId: string): Promise<StructuredProfile | null> {
     return await this.profileRepository.getCurrentStructuredProfile(userId);
   }
 }
 
-// Export singleton instance
+/**
+ * @deprecated Use createFitnessProfileService(repos) instead
+ */
 export const fitnessProfileService = FitnessProfileService.getInstance();

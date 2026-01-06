@@ -1,8 +1,7 @@
 import Stripe from 'stripe';
-import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { UserRepository } from '@/server/repositories/userRepository';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
+import type { RepositoryContainer } from '../../repositories/factory';
 
 const { secretKey } = getStripeSecrets();
 const stripe = new Stripe(secretKey, {
@@ -24,15 +23,161 @@ export interface ReactivateResult {
 }
 
 /**
- * SubscriptionService
- *
- * Manages subscription cancellation and reactivation via SMS commands (STOP/START)
- *
- * Status flow:
- * - 'active' -> user sends STOP -> 'cancel_pending' (messages stop, sub cancels at period end)
- * - 'cancel_pending' -> user sends START -> 'active' (reactivated)
- * - 'cancel_pending' -> period ends -> 'canceled' (handled by Stripe webhook)
- * - 'canceled' -> user sends START -> new checkout session required
+ * SubscriptionServiceInstance interface
+ */
+export interface SubscriptionServiceInstance {
+  cancelSubscription(userId: string): Promise<CancelResult>;
+  reactivateSubscription(userId: string): Promise<ReactivateResult>;
+  shouldReceiveMessages(userId: string): Promise<boolean>;
+}
+
+/**
+ * Create a SubscriptionService instance with injected repositories
+ * Note: Stripe client is shared (reads from env at module load)
+ */
+export function createSubscriptionService(repos: RepositoryContainer): SubscriptionServiceInstance {
+  const createResubscriptionSession = async (userId: string): Promise<ReactivateResult> => {
+    try {
+      const user = await repos.user.findById(userId);
+      if (!user) {
+        return { success: false, reactivated: false, requiresNewSubscription: true, error: 'User not found' };
+      }
+
+      const { publicBaseUrl, baseUrl } = getUrlsConfig();
+      const resolvedBaseUrl = publicBaseUrl || baseUrl;
+      const { priceId } = getStripeConfig();
+
+      const session = await stripe.checkout.sessions.create({
+        customer: user.stripeCustomerId || undefined,
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${resolvedBaseUrl}/api/checkout/session?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${resolvedBaseUrl}/`,
+        metadata: { userId },
+        client_reference_id: userId,
+      });
+
+      console.log(`[SubscriptionService] Created resubscription checkout session for user ${userId}`);
+
+      return {
+        success: true,
+        reactivated: false,
+        requiresNewSubscription: true,
+        checkoutUrl: session.url || undefined,
+      };
+    } catch (error) {
+      console.error('[SubscriptionService] Create checkout session failed:', error);
+      return {
+        success: false,
+        reactivated: false,
+        requiresNewSubscription: true,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  };
+
+  return {
+    async cancelSubscription(userId: string): Promise<CancelResult> {
+      try {
+        const subscription = await repos.subscription.getActiveSubscription(userId);
+        if (!subscription) {
+          const subscriptions = await repos.subscription.findByClientId(userId);
+          const pendingSub = subscriptions.find((s) => s.status === 'cancel_pending');
+          if (pendingSub) {
+            return {
+              success: true,
+              periodEndDate: new Date(pendingSub.currentPeriodEnd),
+            };
+          }
+          return { success: false, error: 'No active subscription found' };
+        }
+
+        const stripeSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        });
+
+        await repos.subscription.scheduleCancellation(subscription.stripeSubscriptionId);
+
+        console.log(`[SubscriptionService] Subscription ${subscription.stripeSubscriptionId} scheduled for cancellation`);
+
+        return {
+          success: true,
+          periodEndDate: new Date(stripeSubscription.current_period_end * 1000),
+        };
+      } catch (error) {
+        console.error('[SubscriptionService] Cancel failed:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
+
+    async reactivateSubscription(userId: string): Promise<ReactivateResult> {
+      try {
+        const subscriptions = await repos.subscription.findByClientId(userId);
+        const subscription = subscriptions[0];
+
+        if (!subscription) {
+          return await createResubscriptionSession(userId);
+        }
+
+        if (subscription.status === 'active') {
+          return { success: true, reactivated: false, requiresNewSubscription: false };
+        }
+
+        if (subscription.status === 'cancel_pending') {
+          try {
+            const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+
+            if (stripeSubscription.status === 'active' && stripeSubscription.cancel_at_period_end) {
+              await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+                cancel_at_period_end: false,
+              });
+
+              await repos.subscription.reactivate(subscription.stripeSubscriptionId);
+
+              console.log(`[SubscriptionService] Subscription ${subscription.stripeSubscriptionId} reactivated`);
+
+              return { success: true, reactivated: true, requiresNewSubscription: false };
+            }
+          } catch (stripeError) {
+            console.error('[SubscriptionService] Stripe reactivation failed:', stripeError);
+          }
+        }
+
+        if (subscription.status === 'canceled' || subscription.status === 'cancel_pending') {
+          return await createResubscriptionSession(userId);
+        }
+
+        return { success: false, reactivated: false, requiresNewSubscription: false, error: 'Unknown subscription state' };
+      } catch (error) {
+        console.error('[SubscriptionService] Reactivate failed:', error);
+        return {
+          success: false,
+          reactivated: false,
+          requiresNewSubscription: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
+
+    async shouldReceiveMessages(userId: string): Promise<boolean> {
+      const subscription = await repos.subscription.findActiveForMessaging(userId);
+      return subscription !== null;
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// =============================================================================
+
+import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
+import { UserRepository } from '@/server/repositories/userRepository';
+
+/**
+ * @deprecated Use createSubscriptionService(repos) instead
  */
 export class SubscriptionService {
   private static instance: SubscriptionService;
@@ -51,19 +196,12 @@ export class SubscriptionService {
     return SubscriptionService.instance;
   }
 
-  /**
-   * Cancel user's subscription via STOP command
-   * Sets cancel_at_period_end in Stripe and status to 'cancel_pending' locally
-   * User keeps access but messages stop immediately
-   */
   async cancelSubscription(userId: string): Promise<CancelResult> {
     try {
-      // Get active subscription
       const subscription = await this.subscriptionRepo.getActiveSubscription(userId);
       if (!subscription) {
-        // Check if already pending cancellation
         const subscriptions = await this.subscriptionRepo.findByClientId(userId);
-        const pendingSub = subscriptions.find(s => s.status === 'cancel_pending');
+        const pendingSub = subscriptions.find((s) => s.status === 'cancel_pending');
         if (pendingSub) {
           return {
             success: true,
@@ -73,13 +211,10 @@ export class SubscriptionService {
         return { success: false, error: 'No active subscription found' };
       }
 
-      // Cancel in Stripe (at period end)
-      const stripeSubscription = await stripe.subscriptions.update(
-        subscription.stripeSubscriptionId,
-        { cancel_at_period_end: true }
-      );
+      const stripeSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
 
-      // Update local DB to 'cancel_pending'
       await this.subscriptionRepo.scheduleCancellation(subscription.stripeSubscriptionId);
 
       console.log(`[SubscriptionService] Subscription ${subscription.stripeSubscriptionId} scheduled for cancellation`);
@@ -97,42 +232,28 @@ export class SubscriptionService {
     }
   }
 
-  /**
-   * Reactivate user's subscription via START command
-   * If cancel_at_period_end was set, clears it and sets status back to 'active'
-   * If fully canceled, returns checkout URL for new subscription
-   */
   async reactivateSubscription(userId: string): Promise<ReactivateResult> {
     try {
-      // Get user's most recent subscription
       const subscriptions = await this.subscriptionRepo.findByClientId(userId);
-      const subscription = subscriptions[0]; // Most recent
+      const subscription = subscriptions[0];
 
       if (!subscription) {
-        // No subscription history - need new subscription
         return await this.createResubscriptionSession(userId);
       }
 
-      // If already active, nothing to do
       if (subscription.status === 'active') {
         return { success: true, reactivated: false, requiresNewSubscription: false };
       }
 
-      // If cancel_pending, try to reactivate in Stripe
       if (subscription.status === 'cancel_pending') {
         try {
-          // Check Stripe subscription state
-          const stripeSubscription = await stripe.subscriptions.retrieve(
-            subscription.stripeSubscriptionId
-          );
+          const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
 
           if (stripeSubscription.status === 'active' && stripeSubscription.cancel_at_period_end) {
-            // Can reactivate by clearing cancel_at_period_end
             await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
               cancel_at_period_end: false,
             });
 
-            // Update local DB
             await this.subscriptionRepo.reactivate(subscription.stripeSubscriptionId);
 
             console.log(`[SubscriptionService] Subscription ${subscription.stripeSubscriptionId} reactivated`);
@@ -141,16 +262,13 @@ export class SubscriptionService {
           }
         } catch (stripeError) {
           console.error('[SubscriptionService] Stripe reactivation failed:', stripeError);
-          // Fall through to create new subscription
         }
       }
 
-      // If canceled or Stripe reactivation failed, need new subscription
       if (subscription.status === 'canceled' || subscription.status === 'cancel_pending') {
         return await this.createResubscriptionSession(userId);
       }
 
-      // Unknown state
       return { success: false, reactivated: false, requiresNewSubscription: false, error: 'Unknown subscription state' };
     } catch (error) {
       console.error('[SubscriptionService] Reactivate failed:', error);
@@ -163,18 +281,11 @@ export class SubscriptionService {
     }
   }
 
-  /**
-   * Check if user should receive messages
-   * Only users with status='active' (not 'cancel_pending') receive messages
-   */
   async shouldReceiveMessages(userId: string): Promise<boolean> {
     const subscription = await this.subscriptionRepo.findActiveForMessaging(userId);
     return subscription !== null;
   }
 
-  /**
-   * Create a new checkout session for resubscription
-   */
   private async createResubscriptionSession(userId: string): Promise<ReactivateResult> {
     try {
       const user = await this.userRepo.findById(userId);
@@ -216,4 +327,7 @@ export class SubscriptionService {
   }
 }
 
+/**
+ * @deprecated Use createSubscriptionService(repos) instead
+ */
 export const subscriptionService = SubscriptionService.getInstance();

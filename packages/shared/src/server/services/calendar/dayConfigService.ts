@@ -1,21 +1,136 @@
-import { DayConfigRepository } from '@/server/repositories/dayConfigRepository';
-import { UploadedImageRepository } from '@/server/repositories/uploadedImageRepository';
 import {
   uploadImage as uploadToBlob,
   deleteFile as deleteFromBlob,
 } from '@/server/connections/storage/storage';
-import {
-  DayConfigOptions,
-  DayConfigWithTypedConfig,
-} from '@/server/models/dayConfig';
+import { DayConfigOptions, DayConfigWithTypedConfig } from '@/server/models/dayConfig';
 import { UploadedImage, NewUploadedImage } from '@/server/models/uploadedImage';
+import type { RepositoryContainer } from '../../repositories/factory';
 
 /**
- * DayConfigService
- *
- * Manages day-specific configurations (images, themes, etc.) for the calendar.
- * Configurations can be global (apply to all users) or scoped to specific users/groups.
- * Also manages the image library for uploaded images.
+ * DayConfigServiceInstance interface
+ */
+export interface DayConfigServiceInstance {
+  getConfigForDate(date: Date): Promise<DayConfigWithTypedConfig | null>;
+  getConfigsForMonth(year: number, month: number): Promise<DayConfigWithTypedConfig[]>;
+  upsertConfig(date: Date, config: Partial<DayConfigOptions>): Promise<DayConfigWithTypedConfig>;
+  setDayImage(date: Date, imageUrl: string, imageName?: string): Promise<DayConfigWithTypedConfig>;
+  clearConfig(date: Date): Promise<void>;
+  getImageUrlForDate(date: Date): Promise<string | null>;
+  uploadImage(
+    file: Buffer | Blob,
+    filename: string,
+    contentType: string,
+    options?: { category?: string; displayName?: string; uploadedBy?: string }
+  ): Promise<UploadedImage>;
+  getImageLibrary(category?: string): Promise<UploadedImage[]>;
+  getImageById(id: string): Promise<UploadedImage | null>;
+  deleteImage(id: string): Promise<void>;
+  updateImageMetadata(id: string, data: Partial<Pick<UploadedImage, 'displayName' | 'category'>>): Promise<UploadedImage>;
+}
+
+/**
+ * Create a DayConfigService instance with injected repositories
+ */
+export function createDayConfigService(repos: RepositoryContainer): DayConfigServiceInstance {
+  return {
+    async getConfigForDate(date: Date): Promise<DayConfigWithTypedConfig | null> {
+      return repos.dayConfig.getByDate(date);
+    },
+
+    async getConfigsForMonth(year: number, month: number): Promise<DayConfigWithTypedConfig[]> {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      return repos.dayConfig.getByDateRange(startDate, endDate);
+    },
+
+    async upsertConfig(date: Date, config: Partial<DayConfigOptions>): Promise<DayConfigWithTypedConfig> {
+      return repos.dayConfig.upsert(date, config);
+    },
+
+    async setDayImage(date: Date, imageUrl: string, imageName?: string): Promise<DayConfigWithTypedConfig> {
+      return repos.dayConfig.upsert(date, {
+        imageUrl,
+        imageName: imageName ?? undefined,
+      });
+    },
+
+    async clearConfig(date: Date): Promise<void> {
+      return repos.dayConfig.deleteByDate(date);
+    },
+
+    async getImageUrlForDate(date: Date): Promise<string | null> {
+      const config = await repos.dayConfig.getByDate(date);
+      return config?.config?.imageUrl ?? null;
+    },
+
+    async uploadImage(
+      file: Buffer | Blob,
+      filename: string,
+      contentType: string,
+      options?: { category?: string; displayName?: string; uploadedBy?: string }
+    ): Promise<UploadedImage> {
+      const timestamp = Date.now();
+      const uniqueFilename = `${timestamp}-${filename}`;
+
+      const url = await uploadToBlob(uniqueFilename, file, {
+        folder: 'day-images',
+        contentType,
+      });
+
+      const imageData: NewUploadedImage = {
+        url,
+        filename,
+        displayName: options?.displayName ?? filename.replace(/\.[^/.]+$/, ''),
+        contentType,
+        sizeBytes: file instanceof Buffer ? file.length : 0,
+        category: options?.category ?? 'general',
+        uploadedBy: options?.uploadedBy ?? null,
+      };
+
+      return repos.uploadedImage.create(imageData);
+    },
+
+    async getImageLibrary(category?: string): Promise<UploadedImage[]> {
+      return repos.uploadedImage.list({ category });
+    },
+
+    async getImageById(id: string): Promise<UploadedImage | null> {
+      return repos.uploadedImage.getById(id);
+    },
+
+    async deleteImage(id: string): Promise<void> {
+      const image = await repos.uploadedImage.getById(id);
+      if (!image) {
+        return;
+      }
+
+      try {
+        await deleteFromBlob(image.url);
+      } catch (error) {
+        console.error(`[DayConfigService] Failed to delete blob ${image.url}:`, error);
+      }
+
+      await repos.uploadedImage.delete(id);
+    },
+
+    async updateImageMetadata(
+      id: string,
+      data: Partial<Pick<UploadedImage, 'displayName' | 'category'>>
+    ): Promise<UploadedImage> {
+      return repos.uploadedImage.update(id, data);
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// =============================================================================
+
+import { DayConfigRepository } from '@/server/repositories/dayConfigRepository';
+import { UploadedImageRepository } from '@/server/repositories/uploadedImageRepository';
+
+/**
+ * @deprecated Use createDayConfigService(repos) instead
  */
 export class DayConfigService {
   private static instance: DayConfigService;
@@ -34,98 +149,50 @@ export class DayConfigService {
     return DayConfigService.instance;
   }
 
-  // =====================
-  // Day Config Methods
-  // =====================
-
-  /**
-   * Get config for a specific date (global scope)
-   */
   async getConfigForDate(date: Date): Promise<DayConfigWithTypedConfig | null> {
     return this.dayConfigRepo.getByDate(date);
   }
 
-  /**
-   * Get configs for a month (for calendar view)
-   * Returns all global configs for the specified month
-   */
-  async getConfigsForMonth(
-    year: number,
-    month: number
-  ): Promise<DayConfigWithTypedConfig[]> {
+  async getConfigsForMonth(year: number, month: number): Promise<DayConfigWithTypedConfig[]> {
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0); // Last day of month
+    const endDate = new Date(year, month, 0);
     return this.dayConfigRepo.getByDateRange(startDate, endDate);
   }
 
-  /**
-   * Upsert config for a date (merges with existing config)
-   */
-  async upsertConfig(
-    date: Date,
-    config: Partial<DayConfigOptions>
-  ): Promise<DayConfigWithTypedConfig> {
+  async upsertConfig(date: Date, config: Partial<DayConfigOptions>): Promise<DayConfigWithTypedConfig> {
     return this.dayConfigRepo.upsert(date, config);
   }
 
-  /**
-   * Set image for a specific date
-   */
-  async setDayImage(
-    date: Date,
-    imageUrl: string,
-    imageName?: string
-  ): Promise<DayConfigWithTypedConfig> {
+  async setDayImage(date: Date, imageUrl: string, imageName?: string): Promise<DayConfigWithTypedConfig> {
     return this.dayConfigRepo.upsert(date, {
       imageUrl,
       imageName: imageName ?? undefined,
     });
   }
 
-  /**
-   * Clear config for a date (removes entire config)
-   */
   async clearConfig(date: Date): Promise<void> {
     return this.dayConfigRepo.deleteByDate(date);
   }
 
-  /**
-   * Get image URL for a date (used by daily message service)
-   * Returns null if no custom image is set
-   */
   async getImageUrlForDate(date: Date): Promise<string | null> {
     const config = await this.dayConfigRepo.getByDate(date);
     return config?.config?.imageUrl ?? null;
   }
 
-  // =====================
-  // Image Library Methods
-  // =====================
-
-  /**
-   * Upload a new image to the library
-   */
   async uploadImage(
     file: Buffer | Blob,
     filename: string,
     contentType: string,
-    options?: {
-      category?: string;
-      displayName?: string;
-      uploadedBy?: string;
-    }
+    options?: { category?: string; displayName?: string; uploadedBy?: string }
   ): Promise<UploadedImage> {
-    // Generate unique filename with timestamp
     const timestamp = Date.now();
     const uniqueFilename = `${timestamp}-${filename}`;
 
-    // Upload to Vercel Blob
     const url = await uploadToBlob(uniqueFilename, file, {
       folder: 'day-images',
       contentType,
     });
 
-    // Store metadata in DB
     const imageData: NewUploadedImage = {
       url,
       filename,
@@ -139,48 +206,29 @@ export class DayConfigService {
     return this.imageRepo.create(imageData);
   }
 
-  /**
-   * Get image library with optional category filter
-   */
   async getImageLibrary(category?: string): Promise<UploadedImage[]> {
     return this.imageRepo.list({ category });
   }
 
-  /**
-   * Get an image by ID
-   */
   async getImageById(id: string): Promise<UploadedImage | null> {
     return this.imageRepo.getById(id);
   }
 
-  /**
-   * Delete an image from the library
-   * Also removes from Vercel Blob storage
-   */
   async deleteImage(id: string): Promise<void> {
     const image = await this.imageRepo.getById(id);
     if (!image) {
       return;
     }
 
-    // Delete from Vercel Blob
     try {
       await deleteFromBlob(image.url);
     } catch (error) {
-      console.error(
-        `[DayConfigService] Failed to delete blob ${image.url}:`,
-        error
-      );
-      // Continue with DB deletion even if blob deletion fails
+      console.error(`[DayConfigService] Failed to delete blob ${image.url}:`, error);
     }
 
-    // Delete from DB
     await this.imageRepo.delete(id);
   }
 
-  /**
-   * Update image metadata
-   */
   async updateImageMetadata(
     id: string,
     data: Partial<Pick<UploadedImage, 'displayName' | 'category'>>
@@ -189,4 +237,7 @@ export class DayConfigService {
   }
 }
 
+/**
+ * @deprecated Use createDayConfigService(repos) instead
+ */
 export const dayConfigService = DayConfigService.getInstance();

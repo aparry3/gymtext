@@ -1,15 +1,70 @@
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
 import { UserWithProfile } from '../../models/user';
 import { fitnessPlanAgentService } from '../agents/training';
+import type { RepositoryContainer } from '../../repositories/factory';
+
+/**
+ * FitnessPlanServiceInstance interface
+ */
+export interface FitnessPlanServiceInstance {
+  createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan>;
+  getCurrentPlan(userId: string): Promise<FitnessPlan | null>;
+  getPlanById(planId: string): Promise<FitnessPlan | null>;
+  getPlanHistory(userId: string): Promise<FitnessPlan[]>;
+  updateFitnessPlan(
+    planId: string,
+    updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
+  ): Promise<FitnessPlan | null>;
+  deleteFitnessPlan(planId: string): Promise<boolean>;
+}
+
+/**
+ * Create a FitnessPlanService instance with injected repositories
+ */
+export function createFitnessPlanService(repos: RepositoryContainer): FitnessPlanServiceInstance {
+  return {
+    async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
+      const agentResponse = await fitnessPlanAgentService.generateFitnessPlan(user);
+      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
+      console.log('[FitnessPlanService] Created plan:', fitnessPlan.description?.substring(0, 200));
+      const savedFitnessPlan = await repos.fitnessPlan.insertFitnessPlan(fitnessPlan);
+      return savedFitnessPlan;
+    },
+
+    async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
+      return await repos.fitnessPlan.getCurrentPlan(userId);
+    },
+
+    async getPlanById(planId: string): Promise<FitnessPlan | null> {
+      return await repos.fitnessPlan.getFitnessPlan(planId);
+    },
+
+    async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
+      return await repos.fitnessPlan.getPlanHistory(userId);
+    },
+
+    async updateFitnessPlan(
+      planId: string,
+      updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
+    ): Promise<FitnessPlan | null> {
+      return await repos.fitnessPlan.updateFitnessPlan(planId, updates);
+    },
+
+    async deleteFitnessPlan(planId: string): Promise<boolean> {
+      return await repos.fitnessPlan.deleteFitnessPlan(planId);
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// =============================================================================
+
+import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 /**
- * Simplified FitnessPlanService
- *
- * Creates and manages fitness plans. Plans are now simple structured text
- * that describe the training split, frequency, goals, and progression rules.
- * No more mesocycle generation - microcycles are generated directly from the plan.
+ * @deprecated Use createFitnessPlanService(repos) instead
  */
 export class FitnessPlanService {
   private static instance: FitnessPlanService;
@@ -26,48 +81,26 @@ export class FitnessPlanService {
     return FitnessPlanService.instance;
   }
 
-  /**
-   * Create a new fitness plan for a user
-   *
-   * Uses the FitnessPlanAgent to generate a structured text plan
-   * that contains split, frequency, goals, deload rules, and progression principles.
-   */
   public async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-    // Use AI agent service to generate fitness plan
     const agentResponse = await fitnessPlanAgentService.generateFitnessPlan(user);
-
     const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
     console.log('[FitnessPlanService] Created plan:', fitnessPlan.description?.substring(0, 200));
-
     const savedFitnessPlan = await this.fitnessPlanRepo.insertFitnessPlan(fitnessPlan);
-
     return savedFitnessPlan;
   }
 
-  /**
-   * Get the current (latest) fitness plan for a user
-   */
   public async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
     return await this.fitnessPlanRepo.getCurrentPlan(userId);
   }
 
-  /**
-   * Get a fitness plan by ID
-   */
   public async getPlanById(planId: string): Promise<FitnessPlan | null> {
     return await this.fitnessPlanRepo.getFitnessPlan(planId);
   }
 
-  /**
-   * Get all fitness plans for a user (for history)
-   */
   public async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
     return await this.fitnessPlanRepo.getPlanHistory(userId);
   }
 
-  /**
-   * Update a fitness plan's AI-generated fields
-   */
   public async updateFitnessPlan(
     planId: string,
     updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
@@ -75,13 +108,12 @@ export class FitnessPlanService {
     return await this.fitnessPlanRepo.updateFitnessPlan(planId, updates);
   }
 
-  /**
-   * Delete a fitness plan by ID
-   */
   public async deleteFitnessPlan(planId: string): Promise<boolean> {
     return await this.fitnessPlanRepo.deleteFitnessPlan(planId);
   }
 }
 
-// Export singleton instance
+/**
+ * @deprecated Use createFitnessPlanService(repos) instead
+ */
 export const fitnessPlanService = FitnessPlanService.getInstance();

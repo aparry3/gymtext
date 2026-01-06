@@ -1,18 +1,193 @@
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { postgresDb } from '@/server/connections/postgres/postgres';
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle, type MicrocycleStructure } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
 import { microcycleAgentService } from '@/server/services/agents/training';
 import type { UserWithProfile } from '@/server/models/user';
 import type { ProgressInfo } from './progressService';
+import type { RepositoryContainer } from '../../repositories/factory';
+import type { UserServiceInstance } from '../user/userService';
+
+/**
+ * MicrocycleServiceInstance interface
+ */
+export interface MicrocycleServiceInstance {
+  getActiveMicrocycle(clientId: string): Promise<Microcycle | null>;
+  isActiveMicrocycleCurrent(clientId: string, timezone?: string): Promise<boolean>;
+  getAllMicrocycles(clientId: string): Promise<Microcycle[]>;
+  getMicrocycleByAbsoluteWeek(clientId: string, absoluteWeek: number): Promise<Microcycle | null>;
+  getMicrocycleByDate(clientId: string, targetDate: Date): Promise<Microcycle | null>;
+  getMicrocycleById(microcycleId: string): Promise<Microcycle | null>;
+  updateMicrocycleDays(microcycleId: string, days: string[]): Promise<Microcycle | null>;
+  updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null>;
+  createMicrocycleFromProgress(clientId: string, plan: FitnessPlan, progress: ProgressInfo): Promise<Microcycle>;
+  deleteMicrocycleWithWorkouts(microcycleId: string): Promise<{ deleted: boolean; deletedWorkoutsCount: number }>;
+}
+
+/**
+ * Create a MicrocycleService instance with injected dependencies
+ */
+export function createMicrocycleService(
+  repos: RepositoryContainer,
+  deps?: { user?: UserServiceInstance }
+): MicrocycleServiceInstance {
+  // Lazy load user service to avoid circular dependency
+  let userService: UserServiceInstance | null = deps?.user ?? null;
+
+  const getUserService = async (): Promise<UserServiceInstance> => {
+    if (!userService) {
+      const { UserService } = await import('../user/userService');
+      userService = UserService.getInstance();
+    }
+    return userService;
+  };
+
+  const calculateWeekDates = (timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } => {
+    const currentDate = now(timezone).toJSDate();
+    return {
+      startDate: startOfWeek(currentDate, timezone),
+      endDate: endOfWeek(currentDate, timezone),
+    };
+  };
+
+  const generateMicrocycle = async (
+    user: UserWithProfile,
+    absoluteWeek: number
+  ): Promise<{
+    days: string[];
+    description: string;
+    isDeload: boolean;
+    message: string;
+    structure?: MicrocycleStructure;
+  }> => {
+    try {
+      const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
+      console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
+      return result;
+    } catch (error) {
+      console.error('[MicrocycleService] Failed to generate microcycle:', error);
+      throw error;
+    }
+  };
+
+  return {
+    async getActiveMicrocycle(clientId: string) {
+      return await repos.microcycle.getActiveMicrocycle(clientId);
+    },
+
+    async isActiveMicrocycleCurrent(clientId: string, timezone: string = 'America/New_York'): Promise<boolean> {
+      const activeMicrocycle = await repos.microcycle.getActiveMicrocycle(clientId);
+      if (!activeMicrocycle) {
+        return false;
+      }
+
+      const { startDate: currentWeekStart } = calculateWeekDates(timezone);
+      const normalizedCurrentWeekStart = new Date(currentWeekStart);
+      normalizedCurrentWeekStart.setHours(0, 0, 0, 0);
+
+      const activeMicrocycleStart = new Date(activeMicrocycle.startDate);
+      activeMicrocycleStart.setHours(0, 0, 0, 0);
+
+      const activeMicrocycleEnd = new Date(activeMicrocycle.endDate);
+      activeMicrocycleEnd.setHours(0, 0, 0, 0);
+
+      return normalizedCurrentWeekStart >= activeMicrocycleStart && normalizedCurrentWeekStart <= activeMicrocycleEnd;
+    },
+
+    async getAllMicrocycles(clientId: string) {
+      return await repos.microcycle.getAllMicrocycles(clientId);
+    },
+
+    async getMicrocycleByAbsoluteWeek(clientId: string, absoluteWeek: number): Promise<Microcycle | null> {
+      return await repos.microcycle.getMicrocycleByAbsoluteWeek(clientId, absoluteWeek);
+    },
+
+    async getMicrocycleByDate(clientId: string, targetDate: Date): Promise<Microcycle | null> {
+      return await repos.microcycle.getMicrocycleByDate(clientId, targetDate);
+    },
+
+    async getMicrocycleById(microcycleId: string): Promise<Microcycle | null> {
+      return await repos.microcycle.getMicrocycleById(microcycleId);
+    },
+
+    async updateMicrocycleDays(microcycleId: string, days: string[]): Promise<Microcycle | null> {
+      return await repos.microcycle.updateMicrocycle(microcycleId, { days });
+    },
+
+    async updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null> {
+      return await repos.microcycle.updateMicrocycle(microcycleId, microcycle);
+    },
+
+    async createMicrocycleFromProgress(
+      clientId: string,
+      plan: FitnessPlan,
+      progress: ProgressInfo
+    ): Promise<Microcycle> {
+      const us = await getUserService();
+      const user = await us.getUser(clientId);
+      if (!user) {
+        throw new Error(`Client not found: ${clientId}`);
+      }
+
+      const { days, description, isDeload, message, structure } = await generateMicrocycle(user, progress.absoluteWeek);
+
+      const microcycle = await repos.microcycle.createMicrocycle({
+        clientId,
+        absoluteWeek: progress.absoluteWeek,
+        days,
+        description,
+        isDeload,
+        message,
+        structured: structure,
+        startDate: progress.weekStartDate,
+        endDate: progress.weekEndDate,
+        isActive: false,
+      });
+
+      console.log(
+        `[MicrocycleService] Created microcycle for client ${clientId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`
+      );
+      return microcycle;
+    },
+
+    async deleteMicrocycleWithWorkouts(
+      microcycleId: string
+    ): Promise<{ deleted: boolean; deletedWorkoutsCount: number }> {
+      const microcycle = await repos.microcycle.getMicrocycleById(microcycleId);
+
+      if (!microcycle) {
+        return { deleted: false, deletedWorkoutsCount: 0 };
+      }
+
+      // Import workoutInstanceService dynamically to avoid circular dependency
+      const { workoutInstanceService } = await import('./workoutInstanceService');
+
+      const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(microcycle.clientId, microcycleId);
+
+      let deletedWorkoutsCount = 0;
+      for (const workout of workouts) {
+        const deleted = await workoutInstanceService.deleteWorkout(workout.id, microcycle.clientId);
+        if (deleted) {
+          deletedWorkoutsCount++;
+        }
+      }
+
+      const deleted = await repos.microcycle.deleteMicrocycle(microcycleId);
+
+      return { deleted, deletedWorkoutsCount };
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// =============================================================================
+
+import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 import { UserService } from '../user/userService';
 
 /**
- * Simplified MicrocycleService
- *
- * Creates and manages microcycles. Now works directly with fitness plan text
- * instead of mesocycle overviews. Uses absoluteWeek and days array.
+ * @deprecated Use createMicrocycleService(repos, deps) instead
  */
 export class MicrocycleService {
   private static instance: MicrocycleService;
@@ -31,16 +206,10 @@ export class MicrocycleService {
     return MicrocycleService.instance;
   }
 
-  /**
-   * Get the active microcycle for a client (the one flagged as active in DB)
-   */
   public async getActiveMicrocycle(clientId: string) {
     return await this.microcycleRepo.getActiveMicrocycle(clientId);
   }
 
-  /**
-   * Check if the active microcycle encompasses the current week in the client's timezone
-   */
   public async isActiveMicrocycleCurrent(clientId: string, timezone: string = 'America/New_York'): Promise<boolean> {
     const activeMicrocycle = await this.microcycleRepo.getActiveMicrocycle(clientId);
     if (!activeMicrocycle) {
@@ -57,90 +226,48 @@ export class MicrocycleService {
     const activeMicrocycleEnd = new Date(activeMicrocycle.endDate);
     activeMicrocycleEnd.setHours(0, 0, 0, 0);
 
-    // Check if current week falls within active microcycle's date range
     return normalizedCurrentWeekStart >= activeMicrocycleStart && normalizedCurrentWeekStart <= activeMicrocycleEnd;
   }
 
-  /**
-   * Get all microcycles for a client
-   */
   public async getAllMicrocycles(clientId: string) {
     return await this.microcycleRepo.getAllMicrocycles(clientId);
   }
 
-  /**
-   * Get microcycle by absolute week number
-   * Queries by clientId + absoluteWeek only (not fitnessPlanId)
-   */
-  public async getMicrocycleByAbsoluteWeek(
-    clientId: string,
-    absoluteWeek: number
-  ): Promise<Microcycle | null> {
+  public async getMicrocycleByAbsoluteWeek(clientId: string, absoluteWeek: number): Promise<Microcycle | null> {
     return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(clientId, absoluteWeek);
   }
 
-  /**
-   * Get microcycle for a specific date
-   * Used for date-based progress tracking - finds the microcycle that contains the target date
-   * Queries by clientId + date range only (not fitnessPlanId)
-   */
-  public async getMicrocycleByDate(
-    clientId: string,
-    targetDate: Date
-  ): Promise<Microcycle | null> {
+  public async getMicrocycleByDate(clientId: string, targetDate: Date): Promise<Microcycle | null> {
     return await this.microcycleRepo.getMicrocycleByDate(clientId, targetDate);
   }
 
-  /**
-   * Get a microcycle by ID
-   */
   public async getMicrocycleById(microcycleId: string): Promise<Microcycle | null> {
     return await this.microcycleRepo.getMicrocycleById(microcycleId);
   }
 
-  /**
-   * Update a microcycle's days array
-   */
-  public async updateMicrocycleDays(
-    microcycleId: string,
-    days: string[]
-  ): Promise<Microcycle | null> {
+  public async updateMicrocycleDays(microcycleId: string, days: string[]): Promise<Microcycle | null> {
     return await this.microcycleRepo.updateMicrocycle(microcycleId, { days });
   }
 
-  /**
-   * Update a microcycle
-   */
-  public async updateMicrocycle(
-    microcycleId: string,
-    microcycle: Partial<Microcycle>
-  ): Promise<Microcycle | null> {
+  public async updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null> {
     return await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
   }
 
-  /**
-   * Create a new microcycle from progress information
-   * Uses fitness plan text and user profile to generate the week
-   */
   public async createMicrocycleFromProgress(
     clientId: string,
     plan: FitnessPlan,
     progress: ProgressInfo
   ): Promise<Microcycle> {
-    // Get user profile for context
     const user = await this.userService.getUser(clientId);
     if (!user) {
       throw new Error(`Client not found: ${clientId}`);
     }
 
-    // Generate microcycle using AI agent service
-    // Note: fitness plan and isDeload are determined by the agent via context service
     const { days, description, isDeload, message, structure } = await this.generateMicrocycle(
       user,
       progress.absoluteWeek
     );
 
-    // Create new microcycle
     const microcycle = await this.microcycleRepo.createMicrocycle({
       clientId,
       absoluteWeek: progress.absoluteWeek,
@@ -151,18 +278,15 @@ export class MicrocycleService {
       structured: structure,
       startDate: progress.weekStartDate,
       endDate: progress.weekEndDate,
-      isActive: false, // No longer using isActive flag - we query by dates instead
+      isActive: false,
     });
 
-    console.log(`[MicrocycleService] Created microcycle for client ${clientId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`);
+    console.log(
+      `[MicrocycleService] Created microcycle for client ${clientId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`
+    );
     return microcycle;
   }
 
-  /**
-   * Generate a microcycle using AI agent service
-   * Fitness plan is auto-fetched by context service
-   * The agent determines isDeload based on the plan's Progression Strategy
-   */
   private async generateMicrocycle(
     user: UserWithProfile,
     absoluteWeek: number
@@ -174,12 +298,7 @@ export class MicrocycleService {
     structure?: MicrocycleStructure;
   }> {
     try {
-      // Use AI agent service to generate the microcycle
-      const result = await microcycleAgentService.generateMicrocycle(
-        user,
-        absoluteWeek
-      );
-
+      const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;
     } catch (error) {
@@ -188,42 +307,27 @@ export class MicrocycleService {
     }
   }
 
-  /**
-   * Calculate week dates in a specific timezone
-   */
   private calculateWeekDates(timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } {
     const currentDate = now(timezone).toJSDate();
-
     return {
       startDate: startOfWeek(currentDate, timezone),
       endDate: endOfWeek(currentDate, timezone),
     };
   }
 
-  /**
-   * Delete a microcycle and all associated workouts
-   * Returns the count of deleted workouts along with success status
-   */
   public async deleteMicrocycleWithWorkouts(
     microcycleId: string
   ): Promise<{ deleted: boolean; deletedWorkoutsCount: number }> {
-    // First, get the microcycle to verify it exists and get clientId
     const microcycle = await this.microcycleRepo.getMicrocycleById(microcycleId);
 
     if (!microcycle) {
       return { deleted: false, deletedWorkoutsCount: 0 };
     }
 
-    // Import workoutInstanceService dynamically to avoid circular dependency
     const { workoutInstanceService } = await import('./workoutInstanceService');
 
-    // Get all workouts for this microcycle
-    const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(
-      microcycle.clientId,
-      microcycleId
-    );
+    const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(microcycle.clientId, microcycleId);
 
-    // Delete all associated workouts first
     let deletedWorkoutsCount = 0;
     for (const workout of workouts) {
       const deleted = await workoutInstanceService.deleteWorkout(workout.id, microcycle.clientId);
@@ -232,12 +336,13 @@ export class MicrocycleService {
       }
     }
 
-    // Then delete the microcycle
     const deleted = await this.microcycleRepo.deleteMicrocycle(microcycleId);
 
     return { deleted, deletedWorkoutsCount };
   }
 }
 
-// Export singleton instance
+/**
+ * @deprecated Use createMicrocycleService(repos, deps) instead
+ */
 export const microcycleService = MicrocycleService.getInstance();
