@@ -48,7 +48,12 @@
       "dependsOn": ["build"]
     },
     "db:codegen": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "@gymtext/shared#build": {
+      "dependsOn": ["db:codegen"],
+      "outputs": ["dist/**"]
     }
   }
 }
