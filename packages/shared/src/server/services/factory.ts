@@ -1,86 +1,110 @@
 /**
  * Service Factory
  *
- * Creates service instances with a specific environment context.
- * Used for environment switching in the admin app.
- *
- * This factory provides context-aware versions of services that need
- * database, Twilio, or Stripe access. Services created through this
- * factory will use the context's connections instead of the default singletons.
+ * Creates service instances with injected repositories.
+ * Services are stateless - repos are passed to each factory function.
  *
  * @example
- * const ctx = await createEnvContext();
- * const services = getServices(ctx);
- * await services.user.getUser(userId);
+ * const repos = createRepositories(db);
+ * const services = createServices(repos);
+ * await services.user.getUserById(userId);
  */
-import type { EnvironmentContext } from '../context/types';
+import type { Kysely } from 'kysely';
+import type { DB } from '../models/_types';
 import { createRepositories, type RepositoryContainer } from '../repositories/factory';
 
-// Import service classes that we'll wrap
-import { UserService } from './user/userService';
-import { FitnessProfileService } from './user/fitnessProfileService';
-import { MessageService } from './messaging/messageService';
-import { DailyMessageService } from './orchestration/dailyMessageService';
-import { WeeklyMessageService } from './orchestration/weeklyMessageService';
-import { DayConfigService } from './calendar/dayConfigService';
+// Import service factory functions (to be created)
+import { createUserService, type UserServiceInstance } from './user/userService';
+import { createFitnessProfileService, type FitnessProfileServiceInstance } from './user/fitnessProfileService';
+import { createOnboardingDataService, type OnboardingDataServiceInstance } from './user/onboardingDataService';
+import { createMessageService, type MessageServiceInstance } from './messaging/messageService';
+import { createFitnessPlanService, type FitnessPlanServiceInstance } from './training/fitnessPlanService';
+import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './training/workoutInstanceService';
+import { createMicrocycleService, type MicrocycleServiceInstance } from './training/microcycleService';
+import { createProgressService, type ProgressServiceInstance } from './training/progressService';
+import { createSubscriptionService, type SubscriptionServiceInstance } from './subscription/subscriptionService';
+import { createDayConfigService, type DayConfigServiceInstance } from './calendar/dayConfigService';
 
 /**
- * Service container with context-aware service instances
- *
- * Note: Some services are stateless static classes (ChatService, ProfileService, etc.)
- * and don't need context wrapping - they get context passed to their methods.
- *
- * This container provides the main data-access services that benefit from
- * being instantiated with a specific database connection.
+ * Container for all service instances
  */
 export interface ServiceContainer {
-  /** Repository container for direct data access */
-  repos: RepositoryContainer;
-
-  /** Context for accessing connections directly */
-  ctx: EnvironmentContext;
-
-  // Service instances would go here if we fully refactored them
-  // For now, use repos directly or call service static methods with ctx
+  user: UserServiceInstance;
+  fitnessProfile: FitnessProfileServiceInstance;
+  onboardingData: OnboardingDataServiceInstance;
+  message: MessageServiceInstance;
+  fitnessPlan: FitnessPlanServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
+  microcycle: MicrocycleServiceInstance;
+  progress: ProgressServiceInstance;
+  subscription: SubscriptionServiceInstance;
+  dayConfig: DayConfigServiceInstance;
 }
 
-// Cache service containers by environment mode
-const containerCache = new Map<string, ServiceContainer>();
-
 /**
- * Get a service container for the given environment context
+ * Create all service instances with the given repositories
  *
- * @param ctx - Environment context with db, twilio, stripe connections
- * @returns Service container with context-aware services
+ * Services are created in dependency order:
+ * 1. Services with no service dependencies (only repos)
+ * 2. Services that depend on other services
+ *
+ * @param repos - Repository container
+ * @returns Service container with all service instances
  */
-export function getServices(ctx: EnvironmentContext): ServiceContainer {
-  const cacheKey = ctx.mode;
+export function createServices(repos: RepositoryContainer): ServiceContainer {
+  // Phase 1: Create services with no service dependencies
+  const user = createUserService(repos);
+  const fitnessProfile = createFitnessProfileService(repos);
+  const onboardingData = createOnboardingDataService(repos);
+  const fitnessPlan = createFitnessPlanService(repos);
+  const workoutInstance = createWorkoutInstanceService(repos);
+  const microcycle = createMicrocycleService(repos);
+  const progress = createProgressService(repos);
+  const subscription = createSubscriptionService(repos);
+  const dayConfig = createDayConfigService(repos);
 
-  // Return cached container if available
-  const cached = containerCache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
+  // Phase 2: Create services that depend on other services
+  const message = createMessageService(repos, {
+    user,
+    workoutInstance,
+  });
 
-  // Create new service container
-  const container: ServiceContainer = {
-    repos: createRepositories(ctx.db),
-    ctx,
+  return {
+    user,
+    fitnessProfile,
+    onboardingData,
+    message,
+    fitnessPlan,
+    workoutInstance,
+    microcycle,
+    progress,
+    subscription,
+    dayConfig,
   };
-
-  // Cache for reuse
-  containerCache.set(cacheKey, container);
-  return container;
 }
 
 /**
- * Clear the service container cache (for testing)
+ * Create services directly from a database instance
+ *
+ * Convenience function that creates repositories and services in one call.
+ *
+ * @param db - Kysely database instance
+ * @returns Service container
  */
-export function clearServiceCache(): void {
-  containerCache.clear();
+export function createServicesFromDb(db: Kysely<DB>): ServiceContainer {
+  return createServices(createRepositories(db));
 }
 
-/**
- * Helper type for services that accept context
- */
-export type WithContext<T> = T & { ctx: EnvironmentContext };
+// Re-export types for convenience
+export type {
+  UserServiceInstance,
+  FitnessProfileServiceInstance,
+  OnboardingDataServiceInstance,
+  MessageServiceInstance,
+  FitnessPlanServiceInstance,
+  WorkoutInstanceServiceInstance,
+  MicrocycleServiceInstance,
+  ProgressServiceInstance,
+  SubscriptionServiceInstance,
+  DayConfigServiceInstance,
+};
