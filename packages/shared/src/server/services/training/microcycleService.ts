@@ -22,6 +22,8 @@ export interface MicrocycleServiceInstance {
   updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null>;
   createMicrocycleFromProgress(clientId: string, plan: FitnessPlan, progress: ProgressInfo): Promise<Microcycle>;
   deleteMicrocycleWithWorkouts(microcycleId: string): Promise<{ deleted: boolean; deletedWorkoutsCount: number }>;
+  /** Inject contextService for late binding (called by factory after Phase 2) */
+  injectContextService(ctx: ContextService): void;
 }
 
 /**
@@ -38,8 +40,11 @@ export interface MicrocycleServiceDeps {
  */
 export function createMicrocycleService(
   repos: RepositoryContainer,
-  deps?: MicrocycleServiceDeps
+  initialDeps?: MicrocycleServiceDeps
 ): MicrocycleServiceInstance {
+  // Mutable deps object that can be updated via injection
+  let deps: MicrocycleServiceDeps = { ...initialDeps };
+
   // Lazy load user service to avoid circular dependency
   let userService: UserServiceInstance | null = deps?.user ?? null;
   let microcycleAgent: MicrocycleAgentService | null = deps?.microcycleAgent ?? null;
@@ -199,6 +204,12 @@ export function createMicrocycleService(
       const deleted = await repos.microcycle.deleteMicrocycle(microcycleId);
 
       return { deleted, deletedWorkoutsCount };
+    },
+
+    injectContextService(ctx: ContextService): void {
+      deps = { ...deps, contextService: ctx };
+      // Reset microcycleAgent so it will be recreated with the new contextService
+      microcycleAgent = null;
     },
   };
 }

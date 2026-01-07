@@ -36,6 +36,8 @@ export interface ProgressServiceInstance {
     timezone?: string,
     forceCreate?: boolean
   ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }>;
+  /** Inject microcycleService for late binding (called by factory after Phase 2) */
+  injectMicrocycleService(ms: MicrocycleServiceInstance): void;
 }
 
 /**
@@ -131,6 +133,10 @@ export function createProgressService(
       const updatedProgress = { ...progress, microcycle };
 
       return { microcycle, progress: updatedProgress, wasCreated: true };
+    },
+
+    injectMicrocycleService(ms: MicrocycleServiceInstance): void {
+      microcycleService = ms;
     },
   };
 }

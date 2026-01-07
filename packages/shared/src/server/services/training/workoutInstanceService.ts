@@ -31,6 +31,10 @@ export interface WorkoutInstanceServiceInstance {
   ): Promise<WorkoutInstance | null>;
   deleteWorkout(workoutId: string, userId: string): Promise<boolean>;
   getWorkoutsByMicrocycle(userId: string, microcycleId: string): Promise<WorkoutInstance[]>;
+  /** Inject contextService for late binding (called by factory after Phase 2) */
+  injectContextService(ctx: ContextService): void;
+  /** Inject progressService for late binding (called by factory after Phase 2) */
+  injectProgressService(ps: ProgressServiceInstance): void;
 }
 
 /**
@@ -50,8 +54,11 @@ export interface WorkoutInstanceServiceDeps {
  */
 export function createWorkoutInstanceService(
   repos: RepositoryContainer,
-  deps?: WorkoutInstanceServiceDeps
+  initialDeps?: WorkoutInstanceServiceDeps
 ): WorkoutInstanceServiceInstance {
+  // Mutable deps object that can be updated via injection
+  let deps: WorkoutInstanceServiceDeps = { ...initialDeps };
+
   // Lazy load services to avoid circular dependencies
   let fitnessPlanService: FitnessPlanServiceInstance | null = deps?.fitnessPlan ?? null;
   let progressService: ProgressServiceInstance | null = deps?.progress ?? null;
@@ -238,6 +245,16 @@ export function createWorkoutInstanceService(
 
     async getWorkoutsByMicrocycle(userId: string, microcycleId: string): Promise<WorkoutInstance[]> {
       return await repos.workoutInstance.getWorkoutsByMicrocycle(userId, microcycleId);
+    },
+
+    injectContextService(ctx: ContextService): void {
+      deps = { ...deps, contextService: ctx };
+      // Reset workoutAgent so it will be recreated with the new contextService
+      workoutAgent = null;
+    },
+
+    injectProgressService(ps: ProgressServiceInstance): void {
+      progressService = ps;
     },
   };
 }

@@ -147,6 +147,16 @@ export function createServices(
   });
 
   // =========================================================================
+  // Phase 2.5: Inject contextService into Phase 1 services that need it
+  // This breaks the circular dependency: services are created in Phase 1,
+  // contextService is created in Phase 2, then we inject it back.
+  // =========================================================================
+  microcycle.injectContextService(contextService);
+  progress.injectMicrocycleService(microcycle);
+  workoutInstance.injectContextService(contextService);
+  workoutInstance.injectProgressService(progress);
+
+  // =========================================================================
   // Phase 3: Create services that depend on other services
   // =========================================================================
   const message = createMessageService(repos, {
