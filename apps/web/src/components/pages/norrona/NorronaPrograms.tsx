@@ -18,7 +18,7 @@ const programs: TrainingProgram[] = [
     subtitle: 'Endurance & Elevation',
     description: 'Built for long days on the trail. Build the resilience needed for elevation gain, heavy packs, and multi-day treks.',
     focusAreas: ['Joint Resilience', 'Leg Endurance', 'Pack Carry', 'Recovery', 'Cardio Base'],
-    image: 'https://images.unsplash.com/photo-1506103043831-758e5792bb83?q=80&w=2218&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/norrona/image/upload/x_3303,y_2009,w_3960,h_2227,c_crop,g_xy_center/b_rgb:fcfcfc/c_pad,f_auto,d_imgmissing.jpg,fl_progressive.lossy,q_auto,w_3200/Auto%2FEvent-Series-MorganBodet-MB_02495.jpg',
     cta: 'Start Hiking Training'
   }
 ];
