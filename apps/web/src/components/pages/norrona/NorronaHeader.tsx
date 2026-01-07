@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export const NorronaHeader: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -21,7 +22,13 @@ export const NorronaHeader: React.FC = () => {
         <div className="flex items-center gap-3">
           <span className="text-xl md:text-2xl font-bold tracking-tighter uppercase">Norrøna</span>
           <span className="text-lg opacity-50">×</span>
-          <span className={`text-lg md:text-xl font-bold tracking-tighter uppercase italic ${scrolled ? 'text-gymtext-blue' : 'text-white'}`}>Gymtext</span>
+          <Image
+            src="/Wordmark.png"
+            alt="GymText"
+            width={100}
+            height={22}
+            className="h-[22px] w-auto"
+          />
         </div>
 
         {/* Nav / CTA */}

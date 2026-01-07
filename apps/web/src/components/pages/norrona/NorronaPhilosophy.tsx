@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export const NorronaPhilosophy: React.FC = () => {
   return (
@@ -20,13 +21,13 @@ export const NorronaPhilosophy: React.FC = () => {
               <div className="flex items-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
                  <span className="font-bold text-xl tracking-tight">NORRØNA</span>
                  <span className="text-xl">×</span>
-                 <div className="flex items-center gap-2">
-                    {/* Gymtext Icon SVG */}
-                    <svg viewBox="0 0 512 512" className="w-8 h-8 fill-current text-gymtext-blue">
-                         <path d="M256 0c141.4 0 256 114.6 256 256s-114.6 256-256 256S0 397.4 0 256 114.6 0 256 0zM232 184v144h48V184h-48zm-112 0v144h32v-52h32v52h32V184h-32v52h-32v-52h-32zm208 0v144h32v-56l38 56h34l-42-60 40-54h-36l-34 48v-78h-32z"/>
-                    </svg>
-                    <span className="font-bold text-xl italic text-gymtext-blue">GYMTEXT</span>
-                 </div>
+                 <Image
+                   src="/Wordmark.png"
+                   alt="GymText"
+                   width={108}
+                   height={24}
+                   className="h-6 w-auto"
+                 />
               </div>
             </div>
           </div>
