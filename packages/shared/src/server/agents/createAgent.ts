@@ -12,7 +12,20 @@ import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
 import { logAgentInvocation } from './logger';
-import { promptService } from '@/server/services/prompts/promptService';
+import type { PromptServiceInstance } from '@/server/services/prompts/promptService';
+
+// Lazy-loaded prompt service instance
+let _promptService: PromptServiceInstance | null = null;
+
+async function getPromptService(): Promise<PromptServiceInstance> {
+  if (!_promptService) {
+    const { createServicesFromDb } = await import('@/server/services/factory');
+    const { postgresDb } = await import('@/server/connections/postgres/postgres');
+    const services = createServicesFromDb(postgresDb);
+    _promptService = services.prompt;
+  }
+  return _promptService;
+}
 
 /**
  * Create a configurable agent from a definition and model config
@@ -79,6 +92,7 @@ export async function createAgent<
   let dbUserPrompt: string | null = null;
 
   if (!systemPrompt) {
+    const promptService = await getPromptService();
     const prompts = await promptService.getPrompts(name);
     systemPrompt = prompts.systemPrompt;
     dbUserPrompt = prompts.userPrompt;

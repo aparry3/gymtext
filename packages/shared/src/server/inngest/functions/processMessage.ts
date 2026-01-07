@@ -17,25 +17,18 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import {
-  messageService,
-  createChatService,
-  createContextService,
-  fitnessPlanService,
-  workoutInstanceService,
-  microcycleService,
-  fitnessProfileService,
-} from '@/server/services';
-import { userService } from '@/server/services/user/userService';
+import { createServicesFromDb, createChatService } from '@/server/services';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 
-// Create ContextService from production singletons (Inngest always uses production)
-const contextService = createContextService({
-  fitnessPlanService,
-  workoutInstanceService,
-  microcycleService,
-  fitnessProfileService,
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
+const chatService = createChatService({
+  message: services.message,
+  user: services.user,
+  workoutInstance: services.workoutInstance,
+  modification: services.modification,
+  contextService: services.contextService,
 });
-const chatService = createChatService(contextService);
 
 export const processMessageFunction = inngest.createFunction(
   {
@@ -56,7 +49,7 @@ export const processMessageFunction = inngest.createFunction(
     // ChatService handles fetching pending messages and splitting context internally
     const messages = await step.run('generate-response', async () => {
       console.log('[Inngest] Loading user and generating response:', userId);
-      const user = await userService.getUser(userId);
+      const user = await services.user.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
@@ -85,7 +78,7 @@ export const processMessageFunction = inngest.createFunction(
     // Load user fresh again to avoid serialization issues
     const messageResults = await step.run('send-messages', async () => {
       console.log('[Inngest] Loading user and sending messages:', userId);
-      const user = await userService.getUser(userId);
+      const user = await services.user.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
@@ -94,7 +87,7 @@ export const processMessageFunction = inngest.createFunction(
       // Send each message sequentially
       const results = [];
       for (const message of messages) {
-        const result = await messageService.sendMessage(user, message);
+        const result = await services.message.sendMessage(user, message);
         results.push(result);
       }
 

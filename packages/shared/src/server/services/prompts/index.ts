@@ -1,1 +1,2 @@
-export { PromptService, promptService } from './promptService';
+export { createPromptService } from './promptService';
+export type { PromptServiceInstance } from './promptService';

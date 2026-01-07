@@ -46,8 +46,10 @@ export function createMicrocycleService(
 
   const getUserService = async (): Promise<UserServiceInstance> => {
     if (!userService) {
-      const { UserService } = await import('../user/userService');
-      userService = UserService.getInstance();
+      const { createServicesFromDb } = await import('../factory');
+      const { postgresDb } = await import('@/server/connections/postgres/postgres');
+      const services = createServicesFromDb(postgresDb);
+      userService = services.user;
     }
     return userService;
   };
@@ -180,13 +182,15 @@ export function createMicrocycleService(
       }
 
       // Import workoutInstanceService dynamically to avoid circular dependency
-      const { workoutInstanceService } = await import('./workoutInstanceService');
+      const { createServicesFromDb } = await import('../factory');
+      const { postgresDb } = await import('@/server/connections/postgres/postgres');
+      const services = createServicesFromDb(postgresDb);
 
-      const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(microcycle.clientId, microcycleId);
+      const workouts = await services.workoutInstance.getWorkoutsByMicrocycle(microcycle.clientId, microcycleId);
 
       let deletedWorkoutsCount = 0;
       for (const workout of workouts) {
-        const deleted = await workoutInstanceService.deleteWorkout(workout.id, microcycle.clientId);
+        const deleted = await services.workoutInstance.deleteWorkout(workout.id, microcycle.clientId);
         if (deleted) {
           deletedWorkoutsCount++;
         }
@@ -200,189 +204,3 @@ export function createMicrocycleService(
 }
 
 // =============================================================================
-// DEPRECATED: Singleton pattern for backward compatibility
-// =============================================================================
-
-import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
-import { postgresDb } from '@/server/connections/postgres/postgres';
-import { UserService } from '../user/userService';
-import { createContextService } from '../context';
-
-/**
- * @deprecated Use createMicrocycleService(repos, deps) instead
- */
-export class MicrocycleService {
-  private static instance: MicrocycleService;
-  private microcycleRepo: MicrocycleRepository;
-  private userService: UserService;
-  private microcycleAgent: MicrocycleAgentService | null = null;
-
-  private constructor() {
-    this.microcycleRepo = new MicrocycleRepository(postgresDb);
-    this.userService = UserService.getInstance();
-  }
-
-  public static getInstance(): MicrocycleService {
-    if (!MicrocycleService.instance) {
-      MicrocycleService.instance = new MicrocycleService();
-    }
-    return MicrocycleService.instance;
-  }
-
-  private getMicrocycleAgent(): MicrocycleAgentService {
-    if (!this.microcycleAgent) {
-      // Lazily create agent service using production singletons
-      // Use require to avoid circular dependency
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const services = require('@/server/services');
-      const contextService = createContextService({
-        fitnessPlanService: services.fitnessPlanService,
-        workoutInstanceService: services.workoutInstanceService,
-        microcycleService: services.microcycleService,
-        fitnessProfileService: services.fitnessProfileService,
-      });
-      this.microcycleAgent = createMicrocycleAgentService(contextService);
-    }
-    return this.microcycleAgent;
-  }
-
-  public async getActiveMicrocycle(clientId: string) {
-    return await this.microcycleRepo.getActiveMicrocycle(clientId);
-  }
-
-  public async isActiveMicrocycleCurrent(clientId: string, timezone: string = 'America/New_York'): Promise<boolean> {
-    const activeMicrocycle = await this.microcycleRepo.getActiveMicrocycle(clientId);
-    if (!activeMicrocycle) {
-      return false;
-    }
-
-    const { startDate: currentWeekStart } = this.calculateWeekDates(timezone);
-    const normalizedCurrentWeekStart = new Date(currentWeekStart);
-    normalizedCurrentWeekStart.setHours(0, 0, 0, 0);
-
-    const activeMicrocycleStart = new Date(activeMicrocycle.startDate);
-    activeMicrocycleStart.setHours(0, 0, 0, 0);
-
-    const activeMicrocycleEnd = new Date(activeMicrocycle.endDate);
-    activeMicrocycleEnd.setHours(0, 0, 0, 0);
-
-    return normalizedCurrentWeekStart >= activeMicrocycleStart && normalizedCurrentWeekStart <= activeMicrocycleEnd;
-  }
-
-  public async getAllMicrocycles(clientId: string) {
-    return await this.microcycleRepo.getAllMicrocycles(clientId);
-  }
-
-  public async getMicrocycleByAbsoluteWeek(clientId: string, absoluteWeek: number): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByAbsoluteWeek(clientId, absoluteWeek);
-  }
-
-  public async getMicrocycleByDate(clientId: string, targetDate: Date): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleByDate(clientId, targetDate);
-  }
-
-  public async getMicrocycleById(microcycleId: string): Promise<Microcycle | null> {
-    return await this.microcycleRepo.getMicrocycleById(microcycleId);
-  }
-
-  public async updateMicrocycleDays(microcycleId: string, days: string[]): Promise<Microcycle | null> {
-    return await this.microcycleRepo.updateMicrocycle(microcycleId, { days });
-  }
-
-  public async updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null> {
-    return await this.microcycleRepo.updateMicrocycle(microcycleId, microcycle);
-  }
-
-  public async createMicrocycleFromProgress(
-    clientId: string,
-    plan: FitnessPlan,
-    progress: ProgressInfo
-  ): Promise<Microcycle> {
-    const user = await this.userService.getUser(clientId);
-    if (!user) {
-      throw new Error(`Client not found: ${clientId}`);
-    }
-
-    const { days, description, isDeload, message, structure } = await this.generateMicrocycle(
-      user,
-      progress.absoluteWeek
-    );
-
-    const microcycle = await this.microcycleRepo.createMicrocycle({
-      clientId,
-      absoluteWeek: progress.absoluteWeek,
-      days,
-      description,
-      isDeload,
-      message,
-      structured: structure,
-      startDate: progress.weekStartDate,
-      endDate: progress.weekEndDate,
-      isActive: false,
-    });
-
-    console.log(
-      `[MicrocycleService] Created microcycle for client ${clientId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`
-    );
-    return microcycle;
-  }
-
-  private async generateMicrocycle(
-    user: UserWithProfile,
-    absoluteWeek: number
-  ): Promise<{
-    days: string[];
-    description: string;
-    isDeload: boolean;
-    message: string;
-    structure?: MicrocycleStructure;
-  }> {
-    try {
-      const result = await this.getMicrocycleAgent().generateMicrocycle(user, absoluteWeek);
-      console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
-      return result;
-    } catch (error) {
-      console.error('[MicrocycleService] Failed to generate microcycle:', error);
-      throw error;
-    }
-  }
-
-  private calculateWeekDates(timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } {
-    const currentDate = now(timezone).toJSDate();
-    return {
-      startDate: startOfWeek(currentDate, timezone),
-      endDate: endOfWeek(currentDate, timezone),
-    };
-  }
-
-  public async deleteMicrocycleWithWorkouts(
-    microcycleId: string
-  ): Promise<{ deleted: boolean; deletedWorkoutsCount: number }> {
-    const microcycle = await this.microcycleRepo.getMicrocycleById(microcycleId);
-
-    if (!microcycle) {
-      return { deleted: false, deletedWorkoutsCount: 0 };
-    }
-
-    const { workoutInstanceService } = await import('./workoutInstanceService');
-
-    const workouts = await workoutInstanceService.getWorkoutsByMicrocycle(microcycle.clientId, microcycleId);
-
-    let deletedWorkoutsCount = 0;
-    for (const workout of workouts) {
-      const deleted = await workoutInstanceService.deleteWorkout(workout.id, microcycle.clientId);
-      if (deleted) {
-        deletedWorkoutsCount++;
-      }
-    }
-
-    const deleted = await this.microcycleRepo.deleteMicrocycle(microcycleId);
-
-    return { deleted, deletedWorkoutsCount };
-  }
-}
-
-/**
- * @deprecated Use createMicrocycleService(repos, deps) instead
- */
-export const microcycleService = MicrocycleService.getInstance();

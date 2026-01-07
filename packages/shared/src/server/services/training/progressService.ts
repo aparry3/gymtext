@@ -50,8 +50,10 @@ export function createProgressService(
 
   const getMicrocycleService = async (): Promise<MicrocycleServiceInstance> => {
     if (!microcycleService) {
-      const { MicrocycleService } = await import('./microcycleService');
-      microcycleService = MicrocycleService.getInstance();
+      const { createServicesFromDb } = await import('../factory');
+      const { postgresDb } = await import('@/server/connections/postgres/postgres');
+      const services = createServicesFromDb(postgresDb);
+      microcycleService = services.microcycle;
     }
     return microcycleService;
   };
@@ -134,103 +136,3 @@ export function createProgressService(
 }
 
 // =============================================================================
-// DEPRECATED: Singleton pattern for backward compatibility
-// =============================================================================
-
-import { MicrocycleService } from './microcycleService';
-
-/**
- * @deprecated Use createProgressService(repos, deps) instead
- */
-export class ProgressService {
-  private static instance: ProgressService;
-  private microcycleService: MicrocycleService;
-
-  private constructor() {
-    this.microcycleService = MicrocycleService.getInstance();
-  }
-
-  public static getInstance(): ProgressService {
-    if (!ProgressService.instance) {
-      ProgressService.instance = new ProgressService();
-    }
-    return ProgressService.instance;
-  }
-
-  public async getProgressForDate(
-    plan: FitnessPlan,
-    targetDate: Date,
-    timezone: string = 'America/New_York'
-  ): Promise<ProgressInfo | null> {
-    if (!plan || !plan.id) {
-      return null;
-    }
-
-    const planStartDate = parseDate(plan.startDate);
-    if (!planStartDate) {
-      return null;
-    }
-
-    const planStart = startOfWeek(planStartDate, timezone);
-    const targetWeekStart = startOfWeek(targetDate, timezone);
-    const absoluteWeek = diffInWeeks(targetWeekStart, planStart, timezone) + 1;
-
-    if (absoluteWeek < 1) {
-      return null;
-    }
-
-    let microcycle = await this.microcycleService.getMicrocycleByDate(plan.clientId, targetDate);
-
-    if (!microcycle) {
-      microcycle = await this.microcycleService.getMicrocycleByAbsoluteWeek(plan.clientId, absoluteWeek);
-    }
-
-    const dayOfWeek = getWeekday(targetDate, timezone);
-    const weekStart = startOfWeek(targetDate, timezone);
-    const weekEnd = endOfWeek(targetDate, timezone);
-
-    return {
-      fitnessPlan: plan,
-      microcycle,
-      absoluteWeek,
-      dayOfWeek,
-      weekStartDate: weekStart,
-      weekEndDate: weekEnd,
-    };
-  }
-
-  public async getCurrentProgress(
-    plan: FitnessPlan,
-    timezone: string = 'America/New_York'
-  ): Promise<ProgressInfo | null> {
-    const currentDate = now(timezone).toJSDate();
-    return await this.getProgressForDate(plan, currentDate, timezone);
-  }
-
-  public async getOrCreateMicrocycleForDate(
-    userId: string,
-    plan: FitnessPlan,
-    targetDate: Date,
-    timezone: string = 'America/New_York',
-    forceCreate: boolean = false
-  ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }> {
-    const progress = await this.getProgressForDate(plan, targetDate, timezone);
-    if (!progress) {
-      throw new Error(`Could not calculate progress for date ${targetDate}`);
-    }
-
-    if (progress.microcycle && !forceCreate) {
-      return { microcycle: progress.microcycle, progress, wasCreated: false };
-    }
-
-    const microcycle = await this.microcycleService.createMicrocycleFromProgress(userId, plan, progress);
-    const updatedProgress = { ...progress, microcycle };
-
-    return { microcycle, progress: updatedProgress, wasCreated: true };
-  }
-}
-
-/**
- * @deprecated Use createProgressService(repos, deps) instead
- */
-export const progressService = ProgressService.getInstance();

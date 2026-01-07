@@ -11,9 +11,11 @@
  */
 import type { Kysely } from 'kysely';
 import type { DB } from '../models/_types';
+import type Stripe from 'stripe';
 import { createRepositories, type RepositoryContainer } from '../repositories/factory';
+import type { ITwilioClient } from '../connections/twilio/factory';
 
-// Import service factory functions (to be created)
+// Core service factory functions
 import { createUserService, type UserServiceInstance } from './user/userService';
 import { createFitnessProfileService, type FitnessProfileServiceInstance } from './user/fitnessProfileService';
 import { createOnboardingDataService, type OnboardingDataServiceInstance } from './user/onboardingDataService';
@@ -26,10 +28,36 @@ import { createSubscriptionService, type SubscriptionServiceInstance } from './s
 import { createDayConfigService, type DayConfigServiceInstance } from './calendar/dayConfigService';
 import { createContextService, type ContextService } from './context/contextService';
 
+// New service factory functions
+import { createShortLinkService, type ShortLinkServiceInstance } from './links/shortLinkService';
+import { createPromptService, type PromptServiceInstance } from './prompts/promptService';
+import { createReferralService, type ReferralServiceInstance } from './referral/referralService';
+import { createAdminAuthService, type AdminAuthServiceInstance } from './auth/adminAuthService';
+import { createUserAuthService, type UserAuthServiceInstance } from './auth/userAuthService';
+import { createMessageQueueService, type MessageQueueServiceInstance } from './messaging/messageQueueService';
+import { createDailyMessageService, type DailyMessageServiceInstance } from './orchestration/dailyMessageService';
+import { createWeeklyMessageService, type WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
+import { createOnboardingService, type OnboardingServiceInstance } from './orchestration/onboardingService';
+import { createOnboardingCoordinator, type OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
+import { createChainRunnerService, type ChainRunnerServiceInstance } from './training/chainRunnerService';
+import { createMessagingAgentService, type MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
+import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
+import { createPlanModificationService, type PlanModificationServiceInstance } from './agents/modifications/planModificationService';
+import { createModificationService, type ModificationServiceInstance } from './agents/modifications';
+
+/**
+ * External clients that can be injected for environment switching
+ */
+export interface ExternalClients {
+  stripeClient?: Stripe;
+  twilioClient?: ITwilioClient;
+}
+
 /**
  * Container for all service instances
  */
 export interface ServiceContainer {
+  // Core services
   user: UserServiceInstance;
   fitnessProfile: FitnessProfileServiceInstance;
   onboardingData: OnboardingDataServiceInstance;
@@ -40,6 +68,26 @@ export interface ServiceContainer {
   progress: ProgressServiceInstance;
   subscription: SubscriptionServiceInstance;
   dayConfig: DayConfigServiceInstance;
+
+  // Additional services
+  shortLink: ShortLinkServiceInstance;
+  prompt: PromptServiceInstance;
+  referral: ReferralServiceInstance;
+  adminAuth: AdminAuthServiceInstance;
+  userAuth: UserAuthServiceInstance;
+  messageQueue: MessageQueueServiceInstance;
+  dailyMessage: DailyMessageServiceInstance;
+  weeklyMessage: WeeklyMessageServiceInstance;
+  onboarding: OnboardingServiceInstance;
+  onboardingCoordinator: OnboardingCoordinatorInstance;
+  chainRunner: ChainRunnerServiceInstance;
+  messagingAgent: MessagingAgentServiceInstance;
+  workoutModification: WorkoutModificationServiceInstance;
+  planModification: PlanModificationServiceInstance;
+  modification: ModificationServiceInstance;
+
+  // Shared context service for agents
+  contextService: ContextService;
 }
 
 /**
@@ -47,13 +95,35 @@ export interface ServiceContainer {
  *
  * Services are created in dependency order:
  * 1. Services with no service dependencies (only repos)
- * 2. Services that depend on other services
+ * 2. ContextService (needed by agents)
+ * 3. Services that depend on other services
+ * 4. Orchestration services
+ * 5. Modification services
  *
  * @param repos - Repository container
+ * @param clients - Optional external clients for environment switching
  * @returns Service container with all service instances
  */
-export function createServices(repos: RepositoryContainer): ServiceContainer {
-  // Phase 1: Create services with no service dependencies
+export function createServices(
+  repos: RepositoryContainer,
+  clients?: ExternalClients
+): ServiceContainer {
+  // Get default clients if not provided (for backward compatibility)
+  const getDefaultStripeClient = async () => {
+    const { getStripeSecrets } = await import('../config');
+    const Stripe = (await import('stripe')).default;
+    const { secretKey } = getStripeSecrets();
+    return new Stripe(secretKey, { apiVersion: '2023-10-16' });
+  };
+
+  const getDefaultTwilioClient = async () => {
+    const { twilioClient } = await import('../connections/twilio/twilio');
+    return twilioClient;
+  };
+
+  // =========================================================================
+  // Phase 1: Create services with no service dependencies (repos only)
+  // =========================================================================
   const user = createUserService(repos);
   const fitnessProfile = createFitnessProfileService(repos);
   const onboardingData = createOnboardingDataService(repos);
@@ -63,14 +133,173 @@ export function createServices(repos: RepositoryContainer): ServiceContainer {
   const progress = createProgressService(repos);
   const subscription = createSubscriptionService(repos);
   const dayConfig = createDayConfigService(repos);
+  const shortLink = createShortLinkService(repos);
+  const prompt = createPromptService(repos);
 
-  // Phase 2: Create services that depend on other services
+  // =========================================================================
+  // Phase 2: Create ContextService (needed by agents)
+  // =========================================================================
+  const contextService = createContextService({
+    fitnessPlanService: fitnessPlan,
+    workoutInstanceService: workoutInstance,
+    microcycleService: microcycle,
+    fitnessProfileService: fitnessProfile,
+  });
+
+  // =========================================================================
+  // Phase 3: Create services that depend on other services
+  // =========================================================================
   const message = createMessageService(repos, {
     user,
     workoutInstance,
+    contextService,
   });
 
+  // Services needing external clients - use lazy initialization
+  // These will be initialized when first accessed if clients not provided
+  let _referral: ReferralServiceInstance | null = null;
+  let _adminAuth: AdminAuthServiceInstance | null = null;
+  let _userAuth: UserAuthServiceInstance | null = null;
+  let _messageQueue: MessageQueueServiceInstance | null = null;
+
+  const getReferral = (): ReferralServiceInstance => {
+    if (!_referral) {
+      if (clients?.stripeClient) {
+        _referral = createReferralService(repos, { stripeClient: clients.stripeClient });
+      } else {
+        // Synchronous fallback - create with promise that resolves immediately for prod
+        const { getStripeSecrets } = require('../config');
+        const Stripe = require('stripe').default;
+        const { secretKey } = getStripeSecrets();
+        const stripeClient = new Stripe(secretKey, { apiVersion: '2023-10-16' });
+        _referral = createReferralService(repos, { stripeClient });
+      }
+    }
+    return _referral;
+  };
+
+  const getAdminAuth = (): AdminAuthServiceInstance => {
+    if (!_adminAuth) {
+      if (clients?.twilioClient) {
+        _adminAuth = createAdminAuthService(repos, { twilioClient: clients.twilioClient });
+      } else {
+        const { twilioClient } = require('../connections/twilio/twilio');
+        _adminAuth = createAdminAuthService(repos, { twilioClient });
+      }
+    }
+    return _adminAuth;
+  };
+
+  const getUserAuth = (): UserAuthServiceInstance => {
+    if (!_userAuth) {
+      if (clients?.twilioClient) {
+        _userAuth = createUserAuthService(repos, {
+          twilioClient: clients.twilioClient,
+          adminAuth: getAdminAuth()
+        });
+      } else {
+        const { twilioClient } = require('../connections/twilio/twilio');
+        _userAuth = createUserAuthService(repos, {
+          twilioClient,
+          adminAuth: getAdminAuth()
+        });
+      }
+    }
+    return _userAuth;
+  };
+
+  const getMessageQueue = (): MessageQueueServiceInstance => {
+    if (!_messageQueue) {
+      if (clients?.twilioClient) {
+        _messageQueue = createMessageQueueService(repos, {
+          message,
+          user,
+          twilioClient: clients.twilioClient
+        });
+      } else {
+        const { twilioClient } = require('../connections/twilio/twilio');
+        _messageQueue = createMessageQueueService(repos, { message, user, twilioClient });
+      }
+    }
+    return _messageQueue;
+  };
+
+  // =========================================================================
+  // Phase 4: Create agent and orchestration services
+  // =========================================================================
+  const messagingAgent = createMessagingAgentService();
+
+  const dailyMessage = createDailyMessageService(repos, {
+    user,
+    workoutInstance,
+    messageQueue: getMessageQueue(),
+    dayConfig,
+    contextService,
+  });
+
+  const weeklyMessage = createWeeklyMessageService({
+    user,
+    message,
+    progress,
+    fitnessPlan,
+    messagingAgent,
+  });
+
+  const onboarding = createOnboardingService({
+    fitnessPlan,
+    progress,
+    workoutInstance,
+    dailyMessage,
+    messageQueue: getMessageQueue(),
+    messagingAgent,
+  });
+
+  const onboardingCoordinator = createOnboardingCoordinator(repos, {
+    onboardingData,
+    user,
+    onboarding,
+  });
+
+  // =========================================================================
+  // Phase 5: Create modification and chain runner services
+  // =========================================================================
+  const workoutModification = createWorkoutModificationService({
+    user,
+    microcycle,
+    workoutInstance,
+    progress,
+    fitnessPlan,
+    contextService,
+  });
+
+  const planModification = createPlanModificationService(repos, {
+    user,
+    fitnessPlan,
+    workoutModification,
+    contextService,
+  });
+
+  const modification = createModificationService({
+    user,
+    workoutInstance,
+    workoutModification,
+    planModification,
+  });
+
+  const chainRunner = createChainRunnerService(repos, {
+    fitnessPlan,
+    microcycle,
+    workoutInstance,
+    user,
+    fitnessProfile,
+    contextService,
+  });
+
+  // =========================================================================
+  // Return complete service container
+  // =========================================================================
   return {
+    // Core services
     user,
     fitnessProfile,
     onboardingData,
@@ -81,6 +310,26 @@ export function createServices(repos: RepositoryContainer): ServiceContainer {
     progress,
     subscription,
     dayConfig,
+
+    // Additional services (use getters for lazy-loaded ones)
+    shortLink,
+    prompt,
+    get referral() { return getReferral(); },
+    get adminAuth() { return getAdminAuth(); },
+    get userAuth() { return getUserAuth(); },
+    get messageQueue() { return getMessageQueue(); },
+    dailyMessage,
+    weeklyMessage,
+    onboarding,
+    onboardingCoordinator,
+    chainRunner,
+    messagingAgent,
+    workoutModification,
+    planModification,
+    modification,
+
+    // Shared context
+    contextService,
   };
 }
 
@@ -90,10 +339,14 @@ export function createServices(repos: RepositoryContainer): ServiceContainer {
  * Convenience function that creates repositories and services in one call.
  *
  * @param db - Kysely database instance
+ * @param clients - Optional external clients for environment switching
  * @returns Service container
  */
-export function createServicesFromDb(db: Kysely<DB>): ServiceContainer {
-  return createServices(createRepositories(db));
+export function createServicesFromDb(
+  db: Kysely<DB>,
+  clients?: ExternalClients
+): ServiceContainer {
+  return createServices(createRepositories(db), clients);
 }
 
 /**
@@ -105,16 +358,12 @@ export function createServicesFromDb(db: Kysely<DB>): ServiceContainer {
  * @returns ContextService instance
  */
 export function createContextServiceFromContainer(services: ServiceContainer): ContextService {
-  return createContextService({
-    fitnessPlanService: services.fitnessPlan,
-    workoutInstanceService: services.workoutInstance,
-    microcycleService: services.microcycle,
-    fitnessProfileService: services.fitnessProfile,
-  });
+  return services.contextService;
 }
 
 // Re-export types for convenience
 export type {
+  // Core service types
   UserServiceInstance,
   FitnessProfileServiceInstance,
   OnboardingDataServiceInstance,
@@ -126,4 +375,21 @@ export type {
   SubscriptionServiceInstance,
   DayConfigServiceInstance,
   ContextService,
+
+  // Additional service types
+  ShortLinkServiceInstance,
+  PromptServiceInstance,
+  ReferralServiceInstance,
+  AdminAuthServiceInstance,
+  UserAuthServiceInstance,
+  MessageQueueServiceInstance,
+  DailyMessageServiceInstance,
+  WeeklyMessageServiceInstance,
+  OnboardingServiceInstance,
+  OnboardingCoordinatorInstance,
+  ChainRunnerServiceInstance,
+  MessagingAgentServiceInstance,
+  WorkoutModificationServiceInstance,
+  PlanModificationServiceInstance,
+  ModificationServiceInstance,
 };
