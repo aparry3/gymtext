@@ -6,9 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
-import { Bebas_Neue } from 'next/font/google';
-
-const bn = Bebas_Neue({ weight: '400', subsets: ['latin'] });
 
 type LoginStep = 'phone' | 'code';
 
@@ -122,17 +119,14 @@ export default function MeLoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center mb-4">
             <Image
-              src="/IconInverse.png"
-              alt="GymText Logo"
-              width={48}
-              height={48}
-              className="h-12 w-12"
+              src="/Wordmark.png"
+              alt="GymText"
+              width={162}
+              height={36}
+              className="h-9 w-auto"
             />
-            <h1 className={`text-4xl font-bold italic text-[#2d3748] ${bn.className}`}>
-              GYMTEXT
-            </h1>
           </div>
           <p className="text-muted-foreground">
             {step === 'phone' ? 'Sign in to your account' : 'Enter your verification code'}

@@ -1,6 +1,5 @@
 'use client';
 
-import { Bebas_Neue } from 'next/font/google';
 import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
@@ -11,8 +10,6 @@ import { ComparisonTable } from '@/components/pages/landing/ComparisonTable';
 import { FAQSection } from '@/components/pages/landing/FAQSection';
 import { MultiStepSignupForm } from '@/components/pages/landing/MultiStepSignupForm';
 import { FixedCTA } from '@/components/pages/landing/FixedCTA';
-
-const bn = Bebas_Neue({ weight: '400', subsets: ['latin'] });
 
 export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,20 +26,13 @@ export function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-8">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/IconInverse.png"
-                    alt="GymText Logo"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10"
-                  />
-                  <h2
-                    className={`text-3xl font-bold italic text-[#2d3748] ${bn.className}`}
-                  >
-                    GYMTEXT
-                  </h2>
-                </div>
+                <Image
+                  src="/Wordmark.png"
+                  alt="GymText"
+                  width={135}
+                  height={30}
+                  className="h-[30px] w-auto"
+                />
 
                 <nav className="hidden md:block">
                   <ul className="flex items-center gap-8">
@@ -222,19 +212,14 @@ export function LandingPage() {
       <footer className="border-t border-border bg-muted py-12">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-7xl text-center">
-            <div className="mb-4 flex items-center justify-center gap-3">
+            <div className="mb-4 flex items-center justify-center">
               <Image
-                src="/IconInverse.png"
-                alt="GymText Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
+                src="/Wordmark.png"
+                alt="GymText"
+                width={108}
+                height={24}
+                className="h-6 w-auto"
               />
-              <h3
-                className={`text-2xl font-bold italic text-[#2d3748] ${bn.className}`}
-              >
-                GYMTEXT
-              </h3>
             </div>
             <p className="mb-4 text-muted-foreground">
               Your personal trainer, always in your pocket.
