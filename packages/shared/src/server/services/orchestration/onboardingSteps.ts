@@ -74,8 +74,8 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
     onboardingData: onboardingDataService,
     fitnessProfile: fitnessProfileService,
     fitnessPlan: fitnessPlanService,
-    progress: progressService,
     workoutInstance: workoutInstanceService,
+    training: trainingService,
     onboardingCoordinator,
   } = services;
 
@@ -164,12 +164,11 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       forceCreate = false
     ): Promise<MicrocycleResult> {
       const currentDate = now(user.timezone).toJSDate();
-      const { microcycle, wasCreated } = await progressService.getOrCreateMicrocycleForDate(
+      const { microcycle, wasCreated } = await trainingService.prepareMicrocycleForDate(
         user.id,
         plan,
         currentDate,
-        user.timezone,
-        forceCreate
+        user.timezone
       );
 
       if (!microcycle) {
@@ -203,7 +202,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       }
 
       console.log(`[Onboarding] Step 5: Creating workout for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
-      const workout = await workoutInstanceService.generateWorkoutForDate(user, targetDate, microcycle);
+      const workout = await trainingService.prepareWorkoutForDate(user, targetDate, microcycle);
       if (!workout) {
         throw new Error(`Failed to generate workout for user ${user.id}`);
       }

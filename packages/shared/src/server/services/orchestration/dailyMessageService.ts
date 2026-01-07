@@ -4,13 +4,13 @@ import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { getUrlsConfig } from '@/shared/config';
-import { createWorkoutAgentService, type WorkoutAgentService } from '../agents/training';
+import type { WorkoutAgentService } from '../agents/training';
 import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
 import type { MessageQueueServiceInstance, QueuedMessage } from '../messaging/messageQueueService';
 import type { DayConfigServiceInstance } from '../calendar/dayConfigService';
-import type { ContextService } from '../context/contextService';
+import type { TrainingServiceInstance } from './trainingService';
 
 interface MessageResult {
   success: boolean;
@@ -47,7 +47,8 @@ export interface DailyMessageServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   messageQueue: MessageQueueServiceInstance;
   dayConfig: DayConfigServiceInstance;
-  contextService: ContextService;
+  training: TrainingServiceInstance;
+  workoutAgent: WorkoutAgentService;
 }
 
 /**
@@ -61,15 +62,14 @@ export function createDailyMessageService(
   repos: RepositoryContainer,
   deps: DailyMessageServiceDeps
 ): DailyMessageServiceInstance {
-  const { user: userService, workoutInstance: workoutInstanceService, messageQueue: messageQueueService, dayConfig: dayConfigService, contextService } = deps;
-  let workoutAgent: WorkoutAgentService | null = null;
-
-  const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) {
-      workoutAgent = createWorkoutAgentService(contextService);
-    }
-    return workoutAgent;
-  };
+  const {
+    user: userService,
+    workoutInstance: workoutInstanceService,
+    messageQueue: messageQueueService,
+    dayConfig: dayConfigService,
+    training: trainingService,
+    workoutAgent,
+  } = deps;
 
   return {
     async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
@@ -138,7 +138,7 @@ export function createDailyMessageService(
 
         if (!workout) {
           console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
-          workout = await workoutInstanceService.generateWorkoutForDate(user, targetDate);
+          workout = await trainingService.prepareWorkoutForDate(user, targetDate);
 
           if (!workout) {
             console.log(`Failed to generate workout for user ${user.id} on ${targetDate.toISODate()}`);
@@ -150,7 +150,7 @@ export function createDailyMessageService(
         if ('message' in workout && workout.message) {
           workoutMessage = workout.message;
         } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
-          const messageAgent = await getWorkoutAgent().getMessageAgent();
+          const messageAgent = await workoutAgent.getMessageAgent();
           const result = await messageAgent.invoke(workout.description);
           workoutMessage = result.response;
         } else {
@@ -192,7 +192,7 @@ export function createDailyMessageService(
     },
 
     async generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null> {
-      return workoutInstanceService.generateWorkoutForDate(user, targetDate);
+      return trainingService.prepareWorkoutForDate(user, targetDate);
     },
   };
 }

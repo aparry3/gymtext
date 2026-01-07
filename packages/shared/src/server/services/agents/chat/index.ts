@@ -12,6 +12,7 @@ import { getEnvironmentSettings } from '@/server/config';
 import type { MessageServiceInstance } from '../../messaging/messageService';
 import type { UserServiceInstance } from '../../user/userService';
 import type { WorkoutInstanceServiceInstance } from '../../training/workoutInstanceService';
+import type { TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { ModificationServiceInstance } from '../modifications';
 
 // Configuration from shared config
@@ -28,6 +29,7 @@ export interface ChatServiceDeps {
   message: MessageServiceInstance;
   user: UserServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
+  training: TrainingServiceInstance;
   modification: ModificationServiceInstance;
   contextService: ContextService;
 }
@@ -50,7 +52,14 @@ export interface ChatServiceDeps {
  * - SMS length constraints are enforced
  */
 export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
-  const { message: messageService, user: userService, workoutInstance: workoutInstanceService, modification: modificationService, contextService } = deps;
+  const {
+    message: messageService,
+    user: userService,
+    workoutInstance: workoutInstanceService,
+    training: trainingService,
+    modification: modificationService,
+    contextService,
+  } = deps;
 
   /**
    * Get or generate today's workout for a user.
@@ -83,7 +92,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
 
       // Generate the workout
       console.log('[ChatService] Generating workout for today');
-      const generatedWorkout = await workoutInstanceService.generateWorkoutForDate(user, today);
+      const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today);
 
       if (!generatedWorkout) {
         return {
@@ -273,6 +282,7 @@ export class ChatService {
         message: services.message,
         user: services.user,
         workoutInstance: services.workoutInstance,
+        training: services.training,
         modification: services.modification,
         contextService: this.contextService,
       });

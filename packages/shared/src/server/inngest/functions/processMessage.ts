@@ -26,6 +26,7 @@ const chatService = createChatService({
   message: services.message,
   user: services.user,
   workoutInstance: services.workoutInstance,
+  training: services.training,
   modification: services.modification,
   contextService: services.contextService,
 });

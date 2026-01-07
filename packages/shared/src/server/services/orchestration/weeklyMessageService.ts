@@ -4,7 +4,7 @@ import { now, getNextWeekStart } from '@/shared/utils/date';
 import type { UserServiceInstance } from '../user/userService';
 import type { MessageServiceInstance } from '../messaging/messageService';
 import type { FitnessPlanServiceInstance } from '../training/fitnessPlanService';
-import type { ProgressServiceInstance } from '../training/progressService';
+import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 
 interface MessageResult {
@@ -38,7 +38,7 @@ export interface WeeklyMessageServiceInstance {
 export interface WeeklyMessageServiceDeps {
   user: UserServiceInstance;
   message: MessageServiceInstance;
-  progress: ProgressServiceInstance;
+  training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
 }
@@ -52,7 +52,13 @@ export interface WeeklyMessageServiceDeps {
 export function createWeeklyMessageService(
   deps: WeeklyMessageServiceDeps
 ): WeeklyMessageServiceInstance {
-  const { user: userService, message: messageService, progress: progressService, fitnessPlan: fitnessPlanService, messagingAgent: messagingAgentService } = deps;
+  const {
+    user: userService,
+    message: messageService,
+    training: trainingService,
+    fitnessPlan: fitnessPlanService,
+    messagingAgent: messagingAgentService,
+  } = deps;
 
   return {
     async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
@@ -109,15 +115,16 @@ export function createWeeklyMessageService(
 
         console.log(`[WeeklyMessageService] Getting next week's plan for ${nextSundayDate.toISOString()} for user ${user.id}`);
 
-        const nextWeekProgress = await progressService.getProgressForDate(plan, nextSundayDate, user.timezone);
-        if (!nextWeekProgress) {
-          console.error(`[WeeklyMessageService] Could not calculate progress for next week for user ${user.id}`);
-          return { success: false, userId: user.id, error: 'Could not determine next week\'s training progress' };
+        let nextWeekMicrocycle;
+        try {
+          const result = await trainingService.prepareMicrocycleForDate(
+            user.id, plan, nextSundayDate, user.timezone
+          );
+          nextWeekMicrocycle = result.microcycle;
+        } catch (error) {
+          console.error(`[WeeklyMessageService] Failed to get/create next week's microcycle for user ${user.id}:`, error);
+          return { success: false, userId: user.id, error: 'Could not generate next week\'s training pattern' };
         }
-
-        const { microcycle: nextWeekMicrocycle } = await progressService.getOrCreateMicrocycleForDate(
-          user.id, plan, nextSundayDate, user.timezone
-        );
 
         if (!nextWeekMicrocycle) {
           console.error(`[WeeklyMessageService] Failed to get/create next week's microcycle for user ${user.id}`);

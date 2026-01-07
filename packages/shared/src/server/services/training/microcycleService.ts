@@ -20,6 +20,9 @@ export interface MicrocycleServiceInstance {
   getMicrocycleById(microcycleId: string): Promise<Microcycle | null>;
   updateMicrocycleDays(microcycleId: string, days: string[]): Promise<Microcycle | null>;
   updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null>;
+  /** Create a microcycle record (CRUD) */
+  createMicrocycle(data: Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Microcycle>;
+  /** @deprecated Use trainingService.prepareMicrocycleForDate instead */
   createMicrocycleFromProgress(clientId: string, plan: FitnessPlan, progress: ProgressInfo): Promise<Microcycle>;
   deleteMicrocycleWithWorkouts(microcycleId: string): Promise<{ deleted: boolean; deletedWorkoutsCount: number }>;
   /** Inject contextService for late binding (called by factory after Phase 2) */
@@ -143,6 +146,10 @@ export function createMicrocycleService(
 
     async updateMicrocycle(microcycleId: string, microcycle: Partial<Microcycle>): Promise<Microcycle | null> {
       return await repos.microcycle.updateMicrocycle(microcycleId, microcycle);
+    },
+
+    async createMicrocycle(data: Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Microcycle> {
+      return await repos.microcycle.createMicrocycle(data);
     },
 
     async createMicrocycleFromProgress(

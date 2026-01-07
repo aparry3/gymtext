@@ -10,8 +10,8 @@ import { DateTime } from 'luxon';
 import type { UserServiceInstance } from '../../user/userService';
 import type { MicrocycleServiceInstance } from '../../training/microcycleService';
 import type { WorkoutInstanceServiceInstance } from '../../training/workoutInstanceService';
-import type { ProgressServiceInstance } from '../../training/progressService';
 import type { FitnessPlanServiceInstance } from '../../training/fitnessPlanService';
+import type { TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { ContextService } from '../../context/contextService';
 
 export interface ModifyWorkoutParams {
@@ -59,7 +59,7 @@ export interface WorkoutModificationServiceDeps {
   user: UserServiceInstance;
   microcycle: MicrocycleServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  progress: ProgressServiceInstance;
+  training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   contextService: ContextService;
 }
@@ -70,7 +70,14 @@ export interface WorkoutModificationServiceDeps {
 export function createWorkoutModificationService(
   deps: WorkoutModificationServiceDeps
 ): WorkoutModificationServiceInstance {
-  const { user: userService, microcycle: microcycleService, workoutInstance: workoutInstanceService, progress: progressService, fitnessPlan: fitnessPlanService, contextService } = deps;
+  const {
+    user: userService,
+    microcycle: microcycleService,
+    workoutInstance: workoutInstanceService,
+    training: trainingService,
+    fitnessPlan: fitnessPlanService,
+    contextService,
+  } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
   let microcycleAgent: MicrocycleAgentService | null = null;
@@ -140,7 +147,7 @@ export function createWorkoutModificationService(
         const plan = await fitnessPlanService.getCurrentPlan(userId);
         if (!plan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
 
-        const { microcycle } = await progressService.getOrCreateMicrocycleForDate(userId, plan, today.toJSDate(), user.timezone);
+        const { microcycle } = await trainingService.prepareMicrocycleForDate(userId, plan, today.toJSDate(), user.timezone);
         if (!microcycle) return { success: false, messages: [], error: 'Could not find or create microcycle for current week' };
 
         console.log('[MODIFY_WEEK] Modifying microcycle', { microcycleId: microcycle.id, absoluteWeek: microcycle.absoluteWeek });
@@ -167,7 +174,7 @@ export function createWorkoutModificationService(
 
         if (!workout) {
           console.log('[MODIFY_WEEK] No existing workout found, generating new one');
-          const generatedWorkout = await workoutInstanceService.generateWorkoutForDate(user, targetDate);
+          const generatedWorkout = await trainingService.prepareWorkoutForDate(user, targetDate);
           if (generatedWorkout) {
             workout = generatedWorkout;
           }

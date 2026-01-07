@@ -44,6 +44,15 @@ import { createMessagingAgentService, type MessagingAgentServiceInstance } from 
 import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
 import { createPlanModificationService, type PlanModificationServiceInstance } from './agents/modifications/planModificationService';
 import { createModificationService, type ModificationServiceInstance } from './agents/modifications';
+import { createTrainingService, type TrainingServiceInstance } from './orchestration/trainingService';
+
+// Agent services
+import {
+  createWorkoutAgentService,
+  createMicrocycleAgentService,
+  type WorkoutAgentService,
+  type MicrocycleAgentService,
+} from './agents/training';
 
 /**
  * External clients that can be injected for environment switching
@@ -85,6 +94,13 @@ export interface ServiceContainer {
   workoutModification: WorkoutModificationServiceInstance;
   planModification: PlanModificationServiceInstance;
   modification: ModificationServiceInstance;
+
+  // Training orchestration
+  training: TrainingServiceInstance;
+
+  // Agent services
+  workoutAgent: WorkoutAgentService;
+  microcycleAgent: MicrocycleAgentService;
 
   // Shared context service for agents
   contextService: ContextService;
@@ -147,14 +163,33 @@ export function createServices(
   });
 
   // =========================================================================
-  // Phase 2.5: Inject contextService into Phase 1 services that need it
-  // This breaks the circular dependency: services are created in Phase 1,
-  // contextService is created in Phase 2, then we inject it back.
+  // Phase 2.5: Create agent services (need contextService)
+  // =========================================================================
+  const workoutAgent = createWorkoutAgentService(contextService);
+  const microcycleAgent = createMicrocycleAgentService(contextService);
+
+  // =========================================================================
+  // Phase 2.6: Inject contextService into Phase 1 services for backward compatibility
+  // NOTE: These injections support deprecated methods. New code should use trainingService.
   // =========================================================================
   microcycle.injectContextService(contextService);
   progress.injectMicrocycleService(microcycle);
   workoutInstance.injectContextService(contextService);
   workoutInstance.injectProgressService(progress);
+
+  // =========================================================================
+  // Phase 2.7: Create training orchestration service
+  // =========================================================================
+  const training = createTrainingService({
+    user,
+    fitnessPlan,
+    progress,
+    microcycle,
+    workoutInstance,
+    shortLink,
+    workoutAgent,
+    microcycleAgent,
+  });
 
   // =========================================================================
   // Phase 3: Create services that depend on other services
@@ -244,21 +279,21 @@ export function createServices(
     workoutInstance,
     messageQueue: getMessageQueue(),
     dayConfig,
-    contextService,
+    training,
+    workoutAgent,
   });
 
   const weeklyMessage = createWeeklyMessageService({
     user,
     message,
-    progress,
+    training,
     fitnessPlan,
     messagingAgent,
   });
 
   const onboarding = createOnboardingService({
     fitnessPlan,
-    progress,
-    workoutInstance,
+    training,
     dailyMessage,
     messageQueue: getMessageQueue(),
     messagingAgent,
@@ -277,7 +312,7 @@ export function createServices(
     user,
     microcycle,
     workoutInstance,
-    progress,
+    training,
     fitnessPlan,
     contextService,
   });
@@ -337,6 +372,13 @@ export function createServices(
     workoutModification,
     planModification,
     modification,
+
+    // Training orchestration
+    training,
+
+    // Agent services
+    workoutAgent,
+    microcycleAgent,
 
     // Shared context
     contextService,
@@ -402,4 +444,11 @@ export type {
   WorkoutModificationServiceInstance,
   PlanModificationServiceInstance,
   ModificationServiceInstance,
+
+  // Training orchestration
+  TrainingServiceInstance,
+
+  // Agent services
+  WorkoutAgentService,
+  MicrocycleAgentService,
 };
