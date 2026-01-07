@@ -17,8 +17,25 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { messageService, ChatService } from '@/server/services';
+import {
+  messageService,
+  createChatService,
+  createContextService,
+  fitnessPlanService,
+  workoutInstanceService,
+  microcycleService,
+  fitnessProfileService,
+} from '@/server/services';
 import { userService } from '@/server/services/user/userService';
+
+// Create ContextService from production singletons (Inngest always uses production)
+const contextService = createContextService({
+  fitnessPlanService,
+  workoutInstanceService,
+  microcycleService,
+  fitnessProfileService,
+});
+const chatService = createChatService(contextService);
 
 export const processMessageFunction = inngest.createFunction(
   {
@@ -50,7 +67,7 @@ export const processMessageFunction = inngest.createFunction(
       // - Splitting into pending vs context
       // - Aggregating pending message content
       // - Early return if no pending messages
-      const chatMessages = await ChatService.handleIncomingMessage(user);
+      const chatMessages = await chatService.handleIncomingMessage(user);
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;
     });

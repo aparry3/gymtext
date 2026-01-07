@@ -1,11 +1,12 @@
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle, type MicrocycleStructure } from '@/server/models/microcycle';
 import { FitnessPlan } from '@/server/models/fitnessPlan';
-import { microcycleAgentService } from '@/server/services/agents/training';
+import { createMicrocycleAgentService, type MicrocycleAgentService } from '@/server/services/agents/training';
 import type { UserWithProfile } from '@/server/models/user';
 import type { ProgressInfo } from './progressService';
 import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
+import type { ContextService } from '../context';
 
 /**
  * MicrocycleServiceInstance interface
@@ -24,14 +25,24 @@ export interface MicrocycleServiceInstance {
 }
 
 /**
+ * Dependencies for MicrocycleService
+ */
+export interface MicrocycleServiceDeps {
+  user?: UserServiceInstance;
+  microcycleAgent?: MicrocycleAgentService;
+  contextService?: ContextService;
+}
+
+/**
  * Create a MicrocycleService instance with injected dependencies
  */
 export function createMicrocycleService(
   repos: RepositoryContainer,
-  deps?: { user?: UserServiceInstance }
+  deps?: MicrocycleServiceDeps
 ): MicrocycleServiceInstance {
   // Lazy load user service to avoid circular dependency
   let userService: UserServiceInstance | null = deps?.user ?? null;
+  let microcycleAgent: MicrocycleAgentService | null = deps?.microcycleAgent ?? null;
 
   const getUserService = async (): Promise<UserServiceInstance> => {
     if (!userService) {
@@ -39,6 +50,16 @@ export function createMicrocycleService(
       userService = UserService.getInstance();
     }
     return userService;
+  };
+
+  const getMicrocycleAgent = (): MicrocycleAgentService => {
+    if (!microcycleAgent) {
+      if (!deps?.contextService) {
+        throw new Error('MicrocycleService requires either microcycleAgent or contextService to be provided');
+      }
+      microcycleAgent = createMicrocycleAgentService(deps.contextService);
+    }
+    return microcycleAgent;
   };
 
   const calculateWeekDates = (timezone: string = 'America/New_York'): { startDate: Date; endDate: Date } => {
@@ -60,7 +81,7 @@ export function createMicrocycleService(
     structure?: MicrocycleStructure;
   }> => {
     try {
-      const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
+      const result = await getMicrocycleAgent().generateMicrocycle(user, absoluteWeek);
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;
     } catch (error) {
@@ -185,6 +206,7 @@ export function createMicrocycleService(
 import { MicrocycleRepository } from '@/server/repositories/microcycleRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 import { UserService } from '../user/userService';
+import { createContextService } from '../context';
 
 /**
  * @deprecated Use createMicrocycleService(repos, deps) instead
@@ -193,6 +215,7 @@ export class MicrocycleService {
   private static instance: MicrocycleService;
   private microcycleRepo: MicrocycleRepository;
   private userService: UserService;
+  private microcycleAgent: MicrocycleAgentService | null = null;
 
   private constructor() {
     this.microcycleRepo = new MicrocycleRepository(postgresDb);
@@ -204,6 +227,23 @@ export class MicrocycleService {
       MicrocycleService.instance = new MicrocycleService();
     }
     return MicrocycleService.instance;
+  }
+
+  private getMicrocycleAgent(): MicrocycleAgentService {
+    if (!this.microcycleAgent) {
+      // Lazily create agent service using production singletons
+      // Use require to avoid circular dependency
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const services = require('@/server/services');
+      const contextService = createContextService({
+        fitnessPlanService: services.fitnessPlanService,
+        workoutInstanceService: services.workoutInstanceService,
+        microcycleService: services.microcycleService,
+        fitnessProfileService: services.fitnessProfileService,
+      });
+      this.microcycleAgent = createMicrocycleAgentService(contextService);
+    }
+    return this.microcycleAgent;
   }
 
   public async getActiveMicrocycle(clientId: string) {
@@ -298,7 +338,7 @@ export class MicrocycleService {
     structure?: MicrocycleStructure;
   }> {
     try {
-      const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
+      const result = await this.getMicrocycleAgent().generateMicrocycle(user, absoluteWeek);
       console.log(`[MicrocycleService] Generated microcycle for week ${absoluteWeek}, isDeload=${result.isDeload}`);
       return result;
     } catch (error) {

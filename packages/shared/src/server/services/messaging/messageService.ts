@@ -2,7 +2,7 @@ import { UserWithProfile } from '../../models/user';
 import { FitnessPlan } from '../../models/fitnessPlan';
 import { messagingClient } from '../../connections/messaging';
 import { inngest } from '../../connections/inngest/client';
-import { workoutAgentService } from '../agents/training';
+import { createWorkoutAgentService, type WorkoutAgentService } from '../agents/training';
 import { messagingAgentService } from '../agents/messaging';
 import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
 import { Message } from '../../models/conversation';
@@ -12,6 +12,7 @@ import { getTwilioSecrets } from '@/server/config';
 import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
+import type { ContextService } from '../context';
 
 /**
  * Parameters for storing an inbound message
@@ -71,15 +72,34 @@ export interface MessageServiceInstance {
 }
 
 /**
+ * Dependencies for MessageService
+ */
+export interface MessageServiceDeps {
+  user: UserServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
+  workoutAgent?: WorkoutAgentService;
+  contextService?: ContextService;
+}
+
+/**
  * Create a MessageService instance with injected dependencies
  */
 export function createMessageService(
   repos: RepositoryContainer,
-  deps: {
-    user: UserServiceInstance;
-    workoutInstance: WorkoutInstanceServiceInstance;
-  }
+  deps: MessageServiceDeps
 ): MessageServiceInstance {
+  let workoutAgent: WorkoutAgentService | null = deps.workoutAgent ?? null;
+
+  const getWorkoutAgent = (): WorkoutAgentService => {
+    if (!workoutAgent) {
+      if (!deps.contextService) {
+        throw new Error('MessageService requires either workoutAgent or contextService to be provided');
+      }
+      workoutAgent = createWorkoutAgentService(deps.contextService);
+    }
+    return workoutAgent;
+  };
+
   const circuitBreaker = new CircuitBreaker({
     failureThreshold: 5,
     resetTimeout: 60000,
@@ -338,7 +358,7 @@ export function createMessageService(
         console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
         try {
-          const messageAgent = await workoutAgentService.getMessageAgent();
+          const messageAgent = await getWorkoutAgent().getMessageAgent();
           const result = await messageAgent.invoke(workout.description);
           message = result.response;
 
@@ -371,6 +391,7 @@ import { MessageRepository } from '../../repositories/messageRepository';
 import { postgresDb } from '../../connections/postgres/postgres';
 import { UserService } from '../user/userService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
+import { createContextService } from '../context';
 
 /**
  * @deprecated Use createMessageService(repos, deps) instead
@@ -381,6 +402,7 @@ export class MessageService {
   private userService: UserService;
   private workoutInstanceService: WorkoutInstanceService;
   private circuitBreaker: CircuitBreaker;
+  private workoutAgent: WorkoutAgentService | null = null;
 
   private constructor() {
     this.messageRepo = new MessageRepository(postgresDb);
@@ -398,6 +420,23 @@ export class MessageService {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
+  }
+
+  private getWorkoutAgent(): WorkoutAgentService {
+    if (!this.workoutAgent) {
+      // Lazily create agent service using production singletons
+      // Use require to avoid circular dependency
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const services = require('@/server/services');
+      const contextService = createContextService({
+        fitnessPlanService: services.fitnessPlanService,
+        workoutInstanceService: services.workoutInstanceService,
+        microcycleService: services.microcycleService,
+        fitnessProfileService: services.fitnessProfileService,
+      });
+      this.workoutAgent = createWorkoutAgentService(contextService);
+    }
+    return this.workoutAgent;
   }
 
   async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
@@ -652,7 +691,7 @@ export class MessageService {
       console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
 
       try {
-        const messageAgent = await workoutAgentService.getMessageAgent();
+        const messageAgent = await this.getWorkoutAgent().getMessageAgent();
         const result = await messageAgent.invoke(workout.description);
         message = result.response;
 

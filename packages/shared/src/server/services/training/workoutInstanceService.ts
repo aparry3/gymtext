@@ -1,4 +1,4 @@
-import { workoutAgentService } from '@/server/services/agents/training';
+import { createWorkoutAgentService, type WorkoutAgentService } from '@/server/services/agents/training';
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
 import type { ActivityType, Microcycle } from '@/server/models/microcycle';
@@ -10,6 +10,7 @@ import type { RepositoryContainer } from '../../repositories/factory';
 import type { FitnessPlanServiceInstance } from './fitnessPlanService';
 import type { ProgressServiceInstance } from './progressService';
 import type { MicrocycleServiceInstance } from './microcycleService';
+import type { ContextService } from '../context';
 
 /**
  * WorkoutInstanceServiceInstance interface
@@ -33,19 +34,27 @@ export interface WorkoutInstanceServiceInstance {
 }
 
 /**
+ * Dependencies for WorkoutInstanceService
+ */
+export interface WorkoutInstanceServiceDeps {
+  fitnessPlan?: FitnessPlanServiceInstance;
+  progress?: ProgressServiceInstance;
+  microcycle?: MicrocycleServiceInstance;
+  workoutAgent?: WorkoutAgentService;
+  contextService?: ContextService;
+}
+
+/**
  * Create a WorkoutInstanceService instance with injected dependencies
  */
 export function createWorkoutInstanceService(
   repos: RepositoryContainer,
-  deps?: {
-    fitnessPlan?: FitnessPlanServiceInstance;
-    progress?: ProgressServiceInstance;
-    microcycle?: MicrocycleServiceInstance;
-  }
+  deps?: WorkoutInstanceServiceDeps
 ): WorkoutInstanceServiceInstance {
   // Lazy load services to avoid circular dependencies
   let fitnessPlanService: FitnessPlanServiceInstance | null = deps?.fitnessPlan ?? null;
   let progressService: ProgressServiceInstance | null = deps?.progress ?? null;
+  let workoutAgent: WorkoutAgentService | null = deps?.workoutAgent ?? null;
 
   const getFitnessPlanService = async (): Promise<FitnessPlanServiceInstance> => {
     if (!fitnessPlanService) {
@@ -61,6 +70,16 @@ export function createWorkoutInstanceService(
       progressService = ProgressService.getInstance();
     }
     return progressService;
+  };
+
+  const getWorkoutAgent = (): WorkoutAgentService => {
+    if (!workoutAgent) {
+      if (!deps?.contextService) {
+        throw new Error('WorkoutInstanceService requires either workoutAgent or contextService to be provided');
+      }
+      workoutAgent = createWorkoutAgentService(deps.contextService);
+    }
+    return workoutAgent;
   };
 
   return {
@@ -141,7 +160,7 @@ export function createWorkoutInstanceService(
         const structuredDay = microcycle.structured?.days?.[dayIndex];
         const activityType = structuredDay?.activityType as ActivityType | undefined;
 
-        const { response: description, message, structure } = await workoutAgentService.generateWorkout(
+        const { response: description, message, structure } = await getWorkoutAgent().generateWorkout(
           user,
           dayOverview,
           microcycle.isDeload ?? false,
@@ -166,7 +185,7 @@ export function createWorkoutInstanceService(
           updatedAt: new Date(),
         };
 
-        const savedWorkout = await this.createWorkout(workout);
+        const savedWorkout = await repos.workoutInstance.create(workout);
         console.log(`Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
 
         try {
@@ -215,6 +234,7 @@ import { postgresDb } from '@/server/connections/postgres/postgres';
 import { FitnessPlanService } from './fitnessPlanService';
 import { ProgressService } from './progressService';
 import { MicrocycleService } from './microcycleService';
+import { createContextService } from '../context';
 
 /**
  * @deprecated Use createWorkoutInstanceService(repos, deps) instead
@@ -225,6 +245,7 @@ export class WorkoutInstanceService {
   private fitnessPlanService: FitnessPlanService;
   private progressService: ProgressService;
   private microcycleService: MicrocycleService;
+  private workoutAgent: WorkoutAgentService | null = null;
 
   private constructor() {
     this.workoutRepo = new WorkoutInstanceRepository(postgresDb);
@@ -238,6 +259,23 @@ export class WorkoutInstanceService {
       WorkoutInstanceService.instance = new WorkoutInstanceService();
     }
     return WorkoutInstanceService.instance;
+  }
+
+  private getWorkoutAgent(): WorkoutAgentService {
+    if (!this.workoutAgent) {
+      // Lazily create agent service using production singletons
+      // Use require to avoid circular dependency
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const services = require('@/server/services');
+      const contextService = createContextService({
+        fitnessPlanService: services.fitnessPlanService,
+        workoutInstanceService: services.workoutInstanceService,
+        microcycleService: services.microcycleService,
+        fitnessProfileService: services.fitnessProfileService,
+      });
+      this.workoutAgent = createWorkoutAgentService(contextService);
+    }
+    return this.workoutAgent;
   }
 
   public async getRecentWorkouts(userId: string, limit: number = 10) {
@@ -320,7 +358,7 @@ export class WorkoutInstanceService {
       const structuredDay = microcycle.structured?.days?.[dayIndex];
       const activityType = structuredDay?.activityType as ActivityType | undefined;
 
-      const { response: description, message, structure } = await workoutAgentService.generateWorkout(
+      const { response: description, message, structure } = await this.getWorkoutAgent().generateWorkout(
         user,
         dayOverview,
         microcycle.isDeload ?? false,

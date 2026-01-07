@@ -1,18 +1,87 @@
-import { onboardingDataService } from '@/server/services/user/onboardingDataService';
+import type { RepositoryContainer } from '../../repositories/factory';
+import type { OnboardingDataServiceInstance } from '../user/onboardingDataService';
+import type { UserServiceInstance } from '../user/userService';
+import type { OnboardingServiceInstance } from './onboardingService';
+
+// =============================================================================
+// Factory Pattern (Recommended)
+// =============================================================================
+
+/**
+ * OnboardingCoordinatorInstance interface
+ */
+export interface OnboardingCoordinatorInstance {
+  sendOnboardingMessages(userId: string): Promise<boolean>;
+}
+
+export interface OnboardingCoordinatorDeps {
+  onboardingData: OnboardingDataServiceInstance;
+  user: UserServiceInstance;
+  onboarding: OnboardingServiceInstance;
+}
+
+/**
+ * Create an OnboardingCoordinator instance with injected dependencies
+ */
+export function createOnboardingCoordinator(
+  repos: RepositoryContainer,
+  deps: OnboardingCoordinatorDeps
+): OnboardingCoordinatorInstance {
+  const { onboardingData: onboardingDataService, user: userService, onboarding: onboardingService } = deps;
+
+  return {
+    async sendOnboardingMessages(userId: string): Promise<boolean> {
+      console.log(`[OnboardingCoordinator] Checking if ready to send messages for user ${userId}`);
+
+      try {
+        const messagesSent = await onboardingDataService.hasMessagesSent(userId);
+        if (messagesSent) {
+          console.log(`[OnboardingCoordinator] Messages already sent for user ${userId}, skipping`);
+          return false;
+        }
+
+        const onboarding = await onboardingDataService.findByClientId(userId);
+        if (!onboarding || onboarding.status !== 'completed') {
+          console.log(`[OnboardingCoordinator] Onboarding not complete for user ${userId} (status: ${onboarding?.status}), waiting`);
+          return false;
+        }
+
+        const hasActiveSub = await repos.subscription.hasActiveSubscription(userId);
+        if (!hasActiveSub) {
+          console.log(`[OnboardingCoordinator] No active subscription for user ${userId}, waiting`);
+          return false;
+        }
+
+        console.log(`[OnboardingCoordinator] All conditions met, sending onboarding messages to user ${userId}`);
+
+        const user = await userService.getUser(userId);
+        if (!user) throw new Error(`User ${userId} not found`);
+
+        await onboardingService.sendOnboardingMessages(user);
+        await onboardingDataService.markMessagesSent(userId);
+
+        console.log(`[OnboardingCoordinator] Successfully sent onboarding messages to user ${userId}`);
+        return true;
+      } catch (error) {
+        console.error(`[OnboardingCoordinator] Error sending onboarding messages to user ${userId}:`, error);
+        throw error;
+      }
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// Remove after all consumers migrate to factory pattern
+// =============================================================================
+
+import { onboardingDataService as deprecatedOnboardingDataService } from '@/server/services/user/onboardingDataService';
 import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { userService } from '@/server/services/user/userService';
+import { userService as deprecatedUserService } from '@/server/services/user/userService';
 import { OnboardingService } from './onboardingService';
 
 /**
- * OnboardingCoordinator
- *
- * Coordinates the final step of onboarding: sending program messages
- * Only sends messages when BOTH conditions are met:
- * 1. Onboarding status = 'completed' (profile + plan created)
- * 2. User has active subscription (payment completed)
- *
- * This ensures users only receive their program after payment,
- * and prevents duplicate messages using idempotency flag.
+ * @deprecated Use createOnboardingCoordinator(repos, deps) instead
  */
 export class OnboardingCoordinator {
   private static instance: OnboardingCoordinator;
@@ -46,14 +115,14 @@ export class OnboardingCoordinator {
 
     try {
       // Check 1: Messages already sent?
-      const messagesSent = await onboardingDataService.hasMessagesSent(userId);
+      const messagesSent = await deprecatedOnboardingDataService.hasMessagesSent(userId);
       if (messagesSent) {
         console.log(`[OnboardingCoordinator] Messages already sent for user ${userId}, skipping`);
         return false;
       }
 
       // Check 2: Onboarding complete?
-      const onboarding = await onboardingDataService.findByClientId(userId);
+      const onboarding = await deprecatedOnboardingDataService.findByClientId(userId);
       if (!onboarding || onboarding.status !== 'completed') {
         console.log(`[OnboardingCoordinator] Onboarding not complete for user ${userId} (status: ${onboarding?.status}), waiting`);
         return false;
@@ -70,7 +139,7 @@ export class OnboardingCoordinator {
       console.log(`[OnboardingCoordinator] All conditions met, sending onboarding messages to user ${userId}`);
 
       // Get user with profile
-      const user = await userService.getUser(userId);
+      const user = await deprecatedUserService.getUser(userId);
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }
@@ -79,7 +148,7 @@ export class OnboardingCoordinator {
       await this.onboardingService.sendOnboardingMessages(user);
 
       // Mark as sent (idempotency flag)
-      await onboardingDataService.markMessagesSent(userId);
+      await deprecatedOnboardingDataService.markMessagesSent(userId);
 
       console.log(`[OnboardingCoordinator] Successfully sent onboarding messages to user ${userId}`);
       return true;

@@ -1,30 +1,146 @@
 import { UserWithProfile } from '../../models/user';
+import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
+import type { FitnessPlanServiceInstance } from '../training/fitnessPlanService';
+import type { ProgressServiceInstance } from '../training/progressService';
+import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
+import type { DailyMessageServiceInstance } from './dailyMessageService';
+import type { MessageQueueServiceInstance, QueuedMessage } from '../messaging/messageQueueService';
+import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+
+// =============================================================================
+// Factory Pattern (Recommended)
+// =============================================================================
+
+/**
+ * OnboardingServiceInstance interface
+ */
+export interface OnboardingServiceInstance {
+  createFitnessPlan(user: UserWithProfile): Promise<void>;
+  createFirstMicrocycle(user: UserWithProfile): Promise<void>;
+  createFirstWorkout(user: UserWithProfile): Promise<void>;
+  sendOnboardingMessages(user: UserWithProfile): Promise<void>;
+}
+
+export interface OnboardingServiceDeps {
+  fitnessPlan: FitnessPlanServiceInstance;
+  progress: ProgressServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
+  dailyMessage: DailyMessageServiceInstance;
+  messageQueue: MessageQueueServiceInstance;
+  messagingAgent: MessagingAgentServiceInstance;
+}
+
+/**
+ * Create an OnboardingService instance with injected dependencies
+ */
+export function createOnboardingService(
+  deps: OnboardingServiceDeps
+): OnboardingServiceInstance {
+  const { fitnessPlan: fitnessPlanService, progress: progressService, workoutInstance: workoutInstanceService, dailyMessage: dailyMessageService, messageQueue: messageQueueService, messagingAgent: messagingAgentService } = deps;
+
+  const prepareCombinedPlanMicrocycleMessage = async (user: UserWithProfile): Promise<string> => {
+    const plan = await fitnessPlanService.getCurrentPlan(user.id);
+    if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
+    if (!plan.message) throw new Error(`No plan message found for user ${user.id}`);
+
+    const currentDate = now(user.timezone).toJSDate();
+    const { microcycle } = await progressService.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
+    if (!microcycle) throw new Error(`No microcycle found for user ${user.id}`);
+    if (!microcycle.message) throw new Error(`No microcycle message found for user ${user.id}`);
+
+    const currentWeekday = getDayOfWeek(undefined, user.timezone);
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.message, microcycle.message, currentWeekday);
+    console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
+    return message;
+  };
+
+  const prepareWorkoutMessage = async (user: UserWithProfile): Promise<string> => {
+    const targetDate = startOfDay(now(user.timezone).toJSDate(), user.timezone);
+    const workout = await dailyMessageService.getTodaysWorkout(user.id, targetDate);
+    if (!workout) throw new Error(`No workout found for user ${user.id} on ${targetDate.toISOString()}`);
+    if (!workout.message) throw new Error(`No workout message found for ${workout.id}`);
+    console.log(`[Onboarding] Prepared workout message for ${user.id}`);
+    return workout.message;
+  };
+
+  return {
+    async createFitnessPlan(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Creating fitness plan for ${user.id}`);
+      try {
+        await fitnessPlanService.createFitnessPlan(user);
+        console.log(`[Onboarding] Successfully created fitness plan for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to create fitness plan for ${user.id}:`, error);
+        throw error;
+      }
+    },
+
+    async createFirstMicrocycle(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Creating first microcycle for ${user.id}`);
+      try {
+        const plan = await fitnessPlanService.getCurrentPlan(user.id);
+        if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
+
+        const currentDate = now(user.timezone).toJSDate();
+        const { microcycle } = await progressService.getOrCreateMicrocycleForDate(user.id, plan, currentDate, user.timezone);
+        if (!microcycle) throw new Error('Failed to create first microcycle');
+
+        console.log(`[Onboarding] Successfully created first microcycle for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to create first microcycle for ${user.id}:`, error);
+        throw error;
+      }
+    },
+
+    async createFirstWorkout(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Creating first workout for ${user.id}`);
+      try {
+        const targetDate = now(user.timezone).startOf('day');
+        const workout = await workoutInstanceService.generateWorkoutForDate(user, targetDate);
+        if (!workout) throw new Error('Failed to create first workout');
+        console.log(`[Onboarding] Successfully created first workout for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to create first workout for ${user.id}:`, error);
+        throw error;
+      }
+    },
+
+    async sendOnboardingMessages(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Sending onboarding messages to ${user.id}`);
+      try {
+        const planMicrocycleMessage = await prepareCombinedPlanMicrocycleMessage(user);
+        const workoutMessage = await prepareWorkoutMessage(user);
+
+        const messages: QueuedMessage[] = [
+          { content: planMicrocycleMessage },
+          { content: workoutMessage }
+        ];
+
+        await messageQueueService.enqueueMessages(user.id, messages, 'onboarding');
+        console.log(`[Onboarding] Successfully queued onboarding messages for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to send onboarding messages to ${user.id}:`, error);
+        throw error;
+      }
+    },
+  };
+}
+
+// =============================================================================
+// DEPRECATED: Singleton pattern for backward compatibility
+// Remove after all consumers migrate to factory pattern
+// =============================================================================
+
 import { FitnessPlanService } from '../training/fitnessPlanService';
 import { MessageService } from '../messaging/messageService';
 import { DailyMessageService } from './dailyMessageService';
 import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import { ProgressService } from '../training/progressService';
-import { messagingAgentService } from '@/server/services/agents/messaging';
-import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
+import { messagingAgentService as deprecatedMessagingAgentService } from '@/server/services/agents/messaging';
+import { messageQueueService as deprecatedMessageQueueService } from '../messaging/messageQueueService';
 
 /**
- * OnboardingService
- *
- * Orchestrates the complete user onboarding flow:
- * 1. Send welcome message
- * 2. Create fitness plan
- * 3. Send plan summary
- * 4. Send first daily workout
- *
- * Uses ConversationFlowBuilder to maintain natural conversation flow
- * and avoid repetitive greetings.
- *
- * Responsibilities:
- * - Coordinate multiple services for onboarding
- * - Handle onboarding flow logic
- * - Ensure proper sequencing of onboarding steps
- * - Maintain conversation context across messages
+ * @deprecated Use createOnboardingService(deps) instead
  */
 export class OnboardingService {
   private static instance: OnboardingService;
@@ -150,7 +266,7 @@ export class OnboardingService {
         { content: workoutMessage }
       ];
 
-      await messageQueueService.enqueueMessages(
+      await deprecatedMessageQueueService.enqueueMessages(
         user.id,
         messages,
         'onboarding'
@@ -192,7 +308,7 @@ export class OnboardingService {
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
 
     // Generate combined message using messaging agent service
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(
+    const message = await deprecatedMessagingAgentService.generatePlanMicrocycleCombinedMessage(
       plan.message,
       microcycle.message,
       currentWeekday
