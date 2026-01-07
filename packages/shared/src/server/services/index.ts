@@ -86,10 +86,10 @@ export type { SubscriptionService } from './subscription/subscriptionService';
 export type { DayConfigService } from './calendar/dayConfigService';
 
 // =============================================================================
-// Agent Orchestration Services (unchanged - these use static methods)
+// Agent Orchestration Services
 // =============================================================================
 
-export { ChatService } from './agents/chat';
+export { ChatService, createChatService } from './agents/chat';
 export { ModificationService } from './agents/modifications';
 export { ProfileService } from './agents/profile';
 

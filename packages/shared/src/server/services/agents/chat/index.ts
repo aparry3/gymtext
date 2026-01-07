@@ -7,7 +7,8 @@ import { ModificationService } from '../modifications';
 import { userService } from '../../user/userService';
 import { now } from '@/shared/utils/date';
 import { createChatTools } from './tools';
-import { ContextService, ContextType } from '@/server/services/context';
+import type { ContextService } from '@/server/services/context';
+import { ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { ToolResult } from '../types/shared';
 import { getChatConfig } from '@/shared/config';
@@ -84,8 +85,19 @@ async function getWorkoutForToday(userId: string, timezone: string): Promise<Too
  * - Modifications happen when the agent decides to call make_modification
  * - Conversation history and context are properly maintained
  * - SMS length constraints are enforced
+ *
+ * @example
+ * ```typescript
+ * const chatService = createChatService(contextService);
+ * const messages = await chatService.handleIncomingMessage(user);
+ * ```
  */
 export class ChatService {
+  private contextService: ContextService;
+
+  constructor(contextService: ContextService) {
+    this.contextService = contextService;
+  }
 
   /**
    * Processes pending inbound SMS messages using the two-agent architecture.
@@ -106,11 +118,12 @@ export class ChatService {
    *
    * @example
    * ```typescript
-   * const messages = await ChatService.handleIncomingMessage(user);
+   * const chatService = createChatService(contextService);
+   * const messages = await chatService.handleIncomingMessage(user);
    * // Returns [] if no pending messages, otherwise generates responses
    * ```
    */
-  static async handleIncomingMessage(
+  async handleIncomingMessage(
     user: UserWithProfile
   ): Promise<string[]> {
     try {
@@ -174,7 +187,7 @@ export class ChatService {
 
 
       // Build context using ContextService
-      const agentContext = await ContextService.getInstance().getContext(
+      const agentContext = await this.contextService.getContext(
         userWithProfile,
         [ContextType.DATE_CONTEXT, ContextType.CURRENT_WORKOUT]
       );
@@ -235,6 +248,16 @@ export class ChatService {
       return ["Sorry, I'm having trouble processing that. Try asking about your workout or fitness goals!"];
     }
   }
+}
+
+/**
+ * Factory function to create a ChatService instance
+ *
+ * @param contextService - ContextService for building agent context
+ * @returns A new ChatService instance
+ */
+export function createChatService(contextService: ContextService): ChatService {
+  return new ChatService(contextService);
 }
 
 // Re-export tools for external use

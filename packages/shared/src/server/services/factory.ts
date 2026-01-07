@@ -24,6 +24,7 @@ import { createMicrocycleService, type MicrocycleServiceInstance } from './train
 import { createProgressService, type ProgressServiceInstance } from './training/progressService';
 import { createSubscriptionService, type SubscriptionServiceInstance } from './subscription/subscriptionService';
 import { createDayConfigService, type DayConfigServiceInstance } from './calendar/dayConfigService';
+import { createContextService, type ContextService } from './context/contextService';
 
 /**
  * Container for all service instances
@@ -95,6 +96,23 @@ export function createServicesFromDb(db: Kysely<DB>): ServiceContainer {
   return createServices(createRepositories(db));
 }
 
+/**
+ * Create a ContextService from a ServiceContainer
+ *
+ * Convenience function for creating a ContextService with services from the container.
+ *
+ * @param services - Service container
+ * @returns ContextService instance
+ */
+export function createContextServiceFromContainer(services: ServiceContainer): ContextService {
+  return createContextService({
+    fitnessPlanService: services.fitnessPlan,
+    workoutInstanceService: services.workoutInstance,
+    microcycleService: services.microcycle,
+    fitnessProfileService: services.fitnessProfile,
+  });
+}
+
 // Re-export types for convenience
 export type {
   UserServiceInstance,
@@ -107,4 +125,5 @@ export type {
   ProgressServiceInstance,
   SubscriptionServiceInstance,
   DayConfigServiceInstance,
+  ContextService,
 };
