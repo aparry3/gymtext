@@ -60,11 +60,27 @@ export class ContextService {
 
   /**
    * Get the singleton instance
-   * Throws if not initialized
+   * Lazily initializes with production singletons if not already initialized
    */
   public static getInstance(): ContextService {
     if (!ContextService.instance) {
-      throw new Error('ContextService not initialized. Call initialize() first.');
+      // Lazy initialization with production singletons
+      // Using require() to avoid build-time import chain issues
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { fitnessPlanService } = require('../training/fitnessPlanService');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { workoutInstanceService } = require('../training/workoutInstanceService');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { microcycleService } = require('../training/microcycleService');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { ProfileRepository } = require('@/server/repositories/profileRepository');
+
+      ContextService.instance = new ContextService({
+        fitnessPlanService,
+        workoutInstanceService,
+        microcycleService,
+        profileRepository: new ProfileRepository(),
+      });
     }
     return ContextService.instance;
   }

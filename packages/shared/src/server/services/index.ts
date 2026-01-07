@@ -89,22 +89,6 @@ export type { DayConfigService } from './calendar/dayConfigService';
 // Agent Orchestration Services (unchanged - these use static methods)
 // =============================================================================
 
-// Import services to trigger ContextService lazy initialization
-// NOTE: ContextService is now lazily initialized when first accessed
-import { ContextService } from './context';
-import { ProfileRepository } from '@/server/repositories/profileRepository';
-import { fitnessPlanService } from './training/fitnessPlanService';
-import { workoutInstanceService } from './training/workoutInstanceService';
-import { microcycleService } from './training/microcycleService';
-
-// Initialize ContextService with legacy singletons (for backward compatibility)
-ContextService.initialize({
-  fitnessPlanService,
-  workoutInstanceService,
-  microcycleService,
-  profileRepository: new ProfileRepository(),
-});
-
 export { ChatService } from './agents/chat';
 export { ModificationService } from './agents/modifications';
 export { ProfileService } from './agents/profile';

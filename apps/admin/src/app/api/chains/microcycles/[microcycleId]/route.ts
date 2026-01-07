@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { microcycleService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * DELETE /api/admin/chains/microcycles/[microcycleId]
@@ -24,7 +24,8 @@ export async function DELETE(
       );
     }
 
-    const { deleted, deletedWorkoutsCount } = await microcycleService.deleteMicrocycleWithWorkouts(microcycleId);
+    const { services } = await getAdminContext();
+    const { deleted, deletedWorkoutsCount } = await services.microcycle.deleteMicrocycleWithWorkouts(microcycleId);
 
     if (!deleted) {
       return NextResponse.json(

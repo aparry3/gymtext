@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fitnessPlanService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * DELETE /api/admin/chains/fitness-plans/[planId]
@@ -24,7 +24,8 @@ export async function DELETE(
       );
     }
 
-    const deleted = await fitnessPlanService.deleteFitnessPlan(planId);
+    const { services } = await getAdminContext();
+    const deleted = await services.fitnessPlan.deleteFitnessPlan(planId);
 
     if (!deleted) {
       return NextResponse.json(

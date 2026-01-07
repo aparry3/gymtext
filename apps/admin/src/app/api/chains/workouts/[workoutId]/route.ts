@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { workoutInstanceService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * DELETE /api/admin/chains/workouts/[workoutId]
@@ -24,8 +24,10 @@ export async function DELETE(
       );
     }
 
+    const { services } = await getAdminContext();
+
     // Get the workout first to find its userId
-    const workout = await workoutInstanceService.getWorkoutByIdInternal(workoutId);
+    const workout = await services.workoutInstance.getWorkoutByIdInternal(workoutId);
 
     if (!workout) {
       return NextResponse.json(
@@ -37,7 +39,7 @@ export async function DELETE(
       );
     }
 
-    const deleted = await workoutInstanceService.deleteWorkout(workoutId, workout.clientId);
+    const deleted = await services.workoutInstance.deleteWorkout(workoutId, workout.clientId);
 
     if (!deleted) {
       return NextResponse.json(
