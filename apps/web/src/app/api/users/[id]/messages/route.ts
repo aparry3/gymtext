@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServices } from '@/lib/context';
-import { dailyMessageService } from '@/server/services';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    await dailyMessageService.sendDailyMessage(user);
+    await services.dailyMessage.sendDailyMessage(user);
 
     return NextResponse.json({ success: true, message: 'dailyMessage sent successfully' })
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dayConfigService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * GET /api/admin/images
@@ -13,7 +13,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') ?? undefined;
 
-    const images = await dayConfigService.getImageLibrary(category);
+    const { services } = await getAdminContext();
+    const images = await services.dayConfig.getImageLibrary(category);
 
     return NextResponse.json({
       success: true,
@@ -73,8 +74,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const { services } = await getAdminContext();
     const buffer = Buffer.from(await file.arrayBuffer());
-    const image = await dayConfigService.uploadImage(
+    const image = await services.dayConfig.uploadImage(
       buffer,
       file.name,
       file.type,

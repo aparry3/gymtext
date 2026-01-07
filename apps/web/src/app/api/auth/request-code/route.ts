@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { userAuthService } from '@/server/services/auth/userAuthService';
+import { getServices } from '@/lib/context';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 /**
@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Request verification code
-    const result = await userAuthService.requestVerificationCode(normalizedPhone);
+    const services = getServices();
+    const result = await services.userAuth.requestVerificationCode(normalizedPhone);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });

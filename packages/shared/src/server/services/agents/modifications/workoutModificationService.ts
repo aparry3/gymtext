@@ -112,7 +112,7 @@ export function createWorkoutModificationService(
 
         const modifiedWorkout = await getWorkoutAgent().modifyWorkout(user, workout, changeRequest);
         const updated = await workoutInstanceService.updateWorkout(workout.id, {
-          description: modifiedWorkout.response,
+          description: modifiedWorkout.response.overview,
           structured: modifiedWorkout.structure,
           message: modifiedWorkout.message,
         });
@@ -167,7 +167,10 @@ export function createWorkoutModificationService(
 
         if (!workout) {
           console.log('[MODIFY_WEEK] No existing workout found, generating new one');
-          workout = await workoutInstanceService.generateWorkoutForDate(user, targetDate);
+          const generatedWorkout = await workoutInstanceService.generateWorkoutForDate(user, targetDate);
+          if (generatedWorkout) {
+            workout = generatedWorkout;
+          }
         } else {
           console.log('[MODIFY_WEEK] Regenerating existing workout');
           const workoutResult = await getWorkoutAgent().generateWorkout(user, dayOverview, modifiedMicrocycle.isDeload, activityType);
@@ -176,7 +179,7 @@ export function createWorkoutModificationService(
             description: workoutResult.response,
             structured: workoutResult.structure ?? undefined,
             message: workoutResult.message,
-            workoutType: getWorkoutTypeFromTheme(dayOverview),
+            sessionType: getWorkoutTypeFromTheme(dayOverview),
           });
         }
 

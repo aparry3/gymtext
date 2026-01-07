@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
-import { referralService } from '@/server/services/referral/referralService';
+import { getServices, getRepositories } from '@/lib/context';
 import { getStripeSecrets } from '@/server/config';
 
 const { secretKey, webhookSecret } = getStripeSecrets();
@@ -47,7 +45,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Stripe Webhook] Received event: ${event.type}`);
 
-    const subscriptionRepo = new SubscriptionRepository();
+    const services = getServices();
+    const repos = getRepositories();
 
     // Handle the event
     switch (event.type) {
@@ -73,7 +72,7 @@ export async function POST(request: NextRequest) {
         );
 
         // Create subscription record
-        await subscriptionRepo.create({
+        await repos.subscription.create({
           clientId: userId,
           stripeSubscriptionId: subscription.id,
           status: subscription.status,
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
         const referralCode = session.metadata?.referralCode;
         if (referralCode) {
           try {
-            const result = await referralService.creditReferrer(userId);
+            const result = await services.referral.creditReferrer(userId);
             if (result.success) {
               console.log(`[Stripe Webhook] Referrer credited for user ${userId}`);
             } else if (result.error) {
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
 
         // Try to send onboarding messages (if onboarding is complete)
         try {
-          const sent = await onboardingCoordinator.sendOnboardingMessages(userId);
+          const sent = await services.onboardingCoordinator.sendOnboardingMessages(userId);
           if (sent) {
             console.log(`[Stripe Webhook] Onboarding messages sent to user ${userId}`);
           } else {
@@ -128,7 +127,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update subscription record
-        await subscriptionRepo.updateByStripeId(subscription.id, {
+        await repos.subscription.updateByStripeId(subscription.id, {
           status: localStatus,
           currentPeriodStart: new Date(subscription.current_period_start * 1000),
           currentPeriodEnd: new Date(subscription.current_period_end * 1000),
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Stripe Webhook] Subscription deleted:`, subscription.id);
 
         // Mark subscription as canceled
-        await subscriptionRepo.cancel(
+        await repos.subscription.cancel(
           subscription.id,
           new Date(subscription.canceled_at! * 1000)
         );

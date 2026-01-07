@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import { dailyMessageService } from '@/server/services';
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -30,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
-    const messageResult = await dailyMessageService.sendDailyMessage(user);
+    const messageResult = await services.dailyMessage.sendDailyMessage(user);
 
     return NextResponse.json({
       success: messageResult.success,

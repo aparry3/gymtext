@@ -13,9 +13,7 @@ import type { WorkoutInstanceServiceInstance } from '../training/workoutInstance
 import type { ContextService } from '../context';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { MessageQueueServiceInstance } from './messageQueueService';
-
-// Type for JSON values (compatible with Kysely's Json type)
-type Json = unknown;
+import type { Json } from '../../models/_types';
 
 /**
  * Parameters for storing an inbound message

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { userAuthService } from '@/server/services/auth/userAuthService';
+import { getServices } from '@/lib/context';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 import { isProductionEnvironment } from '@/shared/config/public';
 
@@ -58,7 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the code
-    const result = await userAuthService.verifyCode(normalizedPhone, code);
+    const services = getServices();
+    const result = await services.userAuth.verifyCode(normalizedPhone, code);
 
     if (!result.success || !result.userId) {
       return NextResponse.json(
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session token
-    const sessionToken = userAuthService.createSessionToken(result.userId);
+    const sessionToken = services.userAuth.createSessionToken(result.userId);
 
     // Create response with session cookie
     const response = NextResponse.json({

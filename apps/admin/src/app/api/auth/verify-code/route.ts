@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuthService } from '@/server/services/auth/adminAuthService';
+import { getAdminContext } from '@/lib/context';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 import { isProductionEnvironment } from '@/shared/config/public';
 
@@ -57,8 +57,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get services from context
+    const { services } = await getAdminContext();
+
     // Verify the code
-    const result = await adminAuthService.verifyCode(normalizedPhone, code);
+    const result = await services.adminAuth.verifyCode(normalizedPhone, code);
 
     if (!result.success) {
       return NextResponse.json(

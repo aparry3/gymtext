@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { userAuthService } from '@/server/services/auth/userAuthService';
 import { getServices, type ServiceContainer } from '@/lib/context';
-import { referralService } from '@/server/services/referral/referralService';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets } from '@/server/config';
@@ -186,7 +184,7 @@ async function handleSubscribedUserReOnboard(
   });
 
   // Set session cookie and return redirect URL (no Stripe checkout)
-  const sessionToken = userAuthService.createSessionToken(existingUser.id);
+  const sessionToken = services.userAuth.createSessionToken(existingUser.id);
 
   const response = NextResponse.json({
     success: true,
@@ -255,7 +253,7 @@ async function completeSignupFlow(
   if (referralCode) {
     console.log(`[Signup] Validating referral code: ${referralCode}`);
     const userWithProfile = await services.user.getUser(userId);
-    const validation = await referralService.validateReferralCode(
+    const validation = await services.referral.validateReferralCode(
       referralCode,
       userWithProfile?.phoneNumber
     );
@@ -263,11 +261,11 @@ async function completeSignupFlow(
     if (validation.valid) {
       validReferralCode = referralCode.toUpperCase();
       // Get or create the referral coupon in Stripe
-      refereeCouponId = await referralService.getRefereeCouponId();
+      refereeCouponId = await services.referral.getRefereeCouponId();
       console.log(`[Signup] Referral code valid, applying coupon: ${refereeCouponId}`);
 
       // Create the referral record now (credit applied later via webhook)
-      await referralService.completeReferral(validReferralCode, userId);
+      await services.referral.completeReferral(validReferralCode, userId);
     } else {
       console.log(`[Signup] Referral code invalid: ${validation.error}`);
     }
@@ -305,7 +303,7 @@ async function completeSignupFlow(
   console.log(`[Signup] Checkout session created: ${session.id}`);
 
   // Set session cookie and return checkout URL
-  const sessionToken = userAuthService.createSessionToken(userId);
+  const sessionToken = services.userAuth.createSessionToken(userId);
 
   const response = NextResponse.json({
     success: true,

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dayConfigService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,7 +12,8 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const image = await dayConfigService.getImageById(id);
+    const { services } = await getAdminContext();
+    const image = await services.dayConfig.getImageById(id);
 
     if (!image) {
       return NextResponse.json(
@@ -46,9 +47,10 @@ export async function GET(request: Request, { params }: RouteParams) {
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const { services } = await getAdminContext();
 
     // Verify image exists
-    const image = await dayConfigService.getImageById(id);
+    const image = await services.dayConfig.getImageById(id);
     if (!image) {
       return NextResponse.json(
         { success: false, message: 'Image not found' },
@@ -56,7 +58,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    await dayConfigService.deleteImage(id);
+    await services.dayConfig.deleteImage(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

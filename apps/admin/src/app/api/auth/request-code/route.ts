@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuthService } from '@/server/services/auth/adminAuthService';
+import { getAdminContext } from '@/lib/context';
 import { normalizeUSPhoneNumber } from '@/shared/utils/phoneUtils';
 
 /**
@@ -43,8 +43,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get services from context
+    const { services } = await getAdminContext();
+
     // Request verification code (checks whitelist internally)
-    const result = await adminAuthService.requestCode(normalizedPhone);
+    const result = await services.adminAuth.requestCode(normalizedPhone);
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });

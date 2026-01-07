@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ChainRunnerService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 export async function POST(
   request: Request,
@@ -18,8 +18,8 @@ export async function POST(
       );
     }
 
-    const chainRunnerService = ChainRunnerService.getInstance();
-    const result = await chainRunnerService.runProfileRegeneration(userId);
+    const { services } = await getAdminContext();
+    const result = await services.chainRunner.runProfileRegeneration(userId);
 
     return NextResponse.json({
       success: true,

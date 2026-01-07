@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { shortLinkService } from '@/server/services/links/shortLinkService';
+import { getServices } from '@/lib/context';
 import { encryptUserId } from '@/server/utils/sessionCrypto';
 import { isProductionEnvironment } from '@/shared/config/public';
 
@@ -25,7 +25,8 @@ export async function GET(
 
   try {
     // Resolve the short link
-    const resolved = await shortLinkService.resolveShortLink(code);
+    const services = getServices();
+    const resolved = await services.shortLink.resolveShortLink(code);
 
     // Link not found
     if (!resolved) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DailyMessageService } from '@/server/services/orchestration/dailyMessageService';
+import { getServices } from '@/lib/context';
 import { getCronSecrets } from '@/server/config';
 
 /**
@@ -52,8 +52,8 @@ export async function GET(request: Request) {
     });
 
     // Delegate scheduling to service
-    const dailyMessageService = DailyMessageService.getInstance();
-    const { scheduled, failed, duration, errors } = await dailyMessageService.scheduleMessagesForHour(currentUtcHour);
+    const services = getServices();
+    const { scheduled, failed, duration, errors } = await services.dailyMessage.scheduleMessagesForHour(currentUtcHour);
 
     console.log('[CRON] Daily message scheduling completed:', {
       scheduled,

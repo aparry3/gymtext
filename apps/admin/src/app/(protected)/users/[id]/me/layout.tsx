@@ -1,5 +1,5 @@
 import { MeSidebar } from '@/components/pages/me/layout/MeSidebar';
-import { userService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 interface AdminUserMeLayoutProps {
   children: React.ReactNode;
@@ -14,7 +14,8 @@ export default async function AdminUserMeLayout({ children, params }: AdminUserM
   let programType: string | undefined;
 
   try {
-    const result = await userService.getUserForAdmin(id);
+    const { services } = await getAdminContext();
+    const result = await services.user.getUserForAdmin(id);
     if (result?.user) {
       userName = result.user.name || 'User';
       programType = 'Strength + Lean Build';
