@@ -148,7 +148,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       }
 
       console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
-      const plan = await fitnessPlanService.createFitnessPlan(user);
+      const plan = await trainingService.createFitnessPlan(user);
       return { plan, wasCreated: true };
     },
 

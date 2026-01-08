@@ -51,8 +51,10 @@ import { createChatService, type ChatServiceInstance } from './orchestration/cha
 import {
   createWorkoutAgentService,
   createMicrocycleAgentService,
+  createFitnessPlanAgentService,
   type WorkoutAgentService,
   type MicrocycleAgentService,
+  type FitnessPlanAgentService,
 } from './agents/training';
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 
@@ -103,6 +105,7 @@ export interface ServiceContainer {
   // Agent services
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
+  fitnessPlanAgent: FitnessPlanAgentService;
   chatAgent: ChatAgentServiceInstance;
 
   // Orchestration services
@@ -160,6 +163,7 @@ export function createServices(
   // =========================================================================
   const workoutAgent = createWorkoutAgentService(contextService);
   const microcycleAgent = createMicrocycleAgentService(contextService);
+  const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
   const chatAgent = createChatAgentService(contextService);
 
   // =========================================================================
@@ -174,6 +178,7 @@ export function createServices(
     shortLink,
     workoutAgent,
     microcycleAgent,
+    fitnessPlanAgent,
   });
 
   // =========================================================================
@@ -376,6 +381,7 @@ export function createServices(
     // Agent services
     workoutAgent,
     microcycleAgent,
+    fitnessPlanAgent,
     chatAgent,
 
     // Chat orchestration

@@ -71,7 +71,7 @@ export function createOnboardingService(
     async createFitnessPlan(user: UserWithProfile): Promise<void> {
       console.log(`[Onboarding] Creating fitness plan for ${user.id}`);
       try {
-        await fitnessPlanService.createFitnessPlan(user);
+        await trainingService.createFitnessPlan(user);
         console.log(`[Onboarding] Successfully created fitness plan for ${user.id}`);
       } catch (error) {
         console.error(`[Onboarding] Failed to create fitness plan for ${user.id}:`, error);

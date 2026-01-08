@@ -1,14 +1,14 @@
-import { FitnessPlan, FitnessPlanModel } from '../../../models/fitnessPlan';
-import { UserWithProfile } from '../../../models/user';
-import { createFitnessPlanAgentService, type FitnessPlanAgentService } from '../../agents/training';
+import { FitnessPlan } from '../../../models/fitnessPlan';
 import type { RepositoryContainer } from '../../../repositories/factory';
-import type { ContextService } from '../../context';
 
 /**
  * FitnessPlanServiceInstance interface
+ *
+ * Pure CRUD operations for fitness plans.
+ * For plan generation/orchestration, use TrainingService.createFitnessPlan().
  */
 export interface FitnessPlanServiceInstance {
-  createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan>;
+  insertPlan(plan: FitnessPlan): Promise<FitnessPlan>;
   getCurrentPlan(userId: string): Promise<FitnessPlan | null>;
   getPlanById(planId: string): Promise<FitnessPlan | null>;
   getPlanHistory(userId: string): Promise<FitnessPlan[]>;
@@ -20,40 +20,18 @@ export interface FitnessPlanServiceInstance {
 }
 
 /**
- * Dependencies for FitnessPlanService
- */
-export interface FitnessPlanServiceDeps {
-  fitnessPlanAgent?: FitnessPlanAgentService;
-  contextService?: ContextService;
-}
-
-/**
  * Create a FitnessPlanService instance with injected repositories
+ *
+ * This is a pure CRUD service - no orchestration logic.
+ * For generating fitness plans, use TrainingService.createFitnessPlan().
  */
 export function createFitnessPlanService(
-  repos: RepositoryContainer,
-  deps?: FitnessPlanServiceDeps
+  repos: RepositoryContainer
 ): FitnessPlanServiceInstance {
-  // Lazily create agent service if not provided
-  let agentService: FitnessPlanAgentService | null = deps?.fitnessPlanAgent ?? null;
-
-  const getAgentService = (): FitnessPlanAgentService => {
-    if (!agentService) {
-      if (!deps?.contextService) {
-        throw new Error('FitnessPlanService requires either fitnessPlanAgent or contextService to be provided');
-      }
-      agentService = createFitnessPlanAgentService(deps.contextService);
-    }
-    return agentService;
-  };
-
   return {
-    async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
-      const agentResponse = await getAgentService().generateFitnessPlan(user);
-      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
-      console.log('[FitnessPlanService] Created plan:', fitnessPlan.description?.substring(0, 200));
-      const savedFitnessPlan = await repos.fitnessPlan.insertFitnessPlan(fitnessPlan);
-      return savedFitnessPlan;
+    async insertPlan(plan: FitnessPlan): Promise<FitnessPlan> {
+      console.log('[FitnessPlanService] Inserting plan:', plan.description?.substring(0, 200));
+      return await repos.fitnessPlan.insertFitnessPlan(plan);
     },
 
     async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {

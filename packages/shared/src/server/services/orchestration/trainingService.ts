@@ -11,7 +11,7 @@ import { DateTime } from 'luxon';
 import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
 import { normalizeWhitespace } from '@/server/utils/formatters';
 import type { UserWithProfile } from '@/server/models/user';
-import type { FitnessPlan } from '@/server/models/fitnessPlan';
+import { FitnessPlanModel, type FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle, ActivityType } from '@/server/models/microcycle';
 import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import type { ProgressInfo } from '../domain/training/progressService';
@@ -27,12 +27,19 @@ import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService'
 // Agent services
 import type { WorkoutAgentService } from '../agents/training/workoutAgentService';
 import type { MicrocycleAgentService } from '../agents/training/microcycleAgentService';
+import type { FitnessPlanAgentService } from '../agents/training/fitnessPlanAgentService';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface TrainingServiceInstance {
+  /**
+   * Generate a fitness plan for a user
+   * Orchestrates: AI generation, database storage
+   */
+  createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan>;
+
   /**
    * Generate a workout for a specific date
    * Orchestrates: fitness plan lookup, progress calculation, microcycle creation, workout generation
@@ -67,6 +74,7 @@ export interface TrainingServiceDeps {
   // Agent services
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
+  fitnessPlanAgent: FitnessPlanAgentService;
 }
 
 // =============================================================================
@@ -86,9 +94,27 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     shortLink: shortLinkService,
     workoutAgent,
     microcycleAgent,
+    fitnessPlanAgent,
   } = deps;
 
   return {
+    async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
+      console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
+
+      // 1. Generate plan via AI agent
+      const agentResponse = await fitnessPlanAgent.generateFitnessPlan(user);
+
+      // 2. Create plan model from agent response
+      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
+      console.log('[TrainingService] Generated plan:', fitnessPlan.description?.substring(0, 200));
+
+      // 3. Save to database
+      const savedPlan = await fitnessPlanService.insertPlan(fitnessPlan);
+      console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
+
+      return savedPlan;
+    },
+
     async prepareWorkoutForDate(
       user: UserWithProfile,
       targetDate: DateTime,
