@@ -23,7 +23,7 @@ export const NorronaHeader: React.FC = () => {
           <span className="text-xl md:text-2xl font-bold tracking-tighter uppercase">Norrøna</span>
           <span className="text-lg opacity-50">×</span>
           <Image
-            src="/Wordmark.png"
+            src={scrolled ? "/Wordmark.png" : "/WordmarkWhite.png"}
             alt="GymText"
             width={100}
             height={22}
