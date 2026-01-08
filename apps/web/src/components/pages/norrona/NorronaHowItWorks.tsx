@@ -42,7 +42,7 @@ export const NorronaHowItWorks: React.FC = () => {
             <span className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Step 03</span>
             <h3 className="text-xl font-bold mb-3">Train & Reply</h3>
             <p className="text-gray-600 leading-relaxed">
-              Complete the workout anywhere. Reply to your coach anytime for adjustments or advice.
+              Complete the workout anywhere. Reply to your AI coach anytime for adjustments or advice.
             </p>
           </div>
         </div>

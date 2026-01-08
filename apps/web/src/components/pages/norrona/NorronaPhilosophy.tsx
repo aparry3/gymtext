@@ -57,8 +57,8 @@ export const NorronaPhilosophy: React.FC = () => {
                 <div className="flex gap-6">
                   <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-black text-white rounded-full font-bold text-lg">3</div>
                   <div>
-                    <h4 className="text-xl font-bold mb-2">Real Human Coaching</h4>
-                    <p className="text-gray-600 leading-relaxed">It&apos;s not a bot. Reply to your daily text and a real coach responds to adjust your plan or answer questions.</p>
+                    <h4 className="text-xl font-bold mb-2">Conversational AI Coaching</h4>
+                    <p className="text-gray-600 leading-relaxed">Reply to your daily text and your AI coach responds instantly to adjust your plan or answer questions.</p>
                   </div>
                 </div>
               </div>
