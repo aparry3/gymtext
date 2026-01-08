@@ -7,18 +7,10 @@ import type { DayOfWeek } from '@/shared/utils/date';
 import { DAY_NAMES } from '@/shared/utils/date';
 import type { MicrocycleGenerationOutput } from '@/server/services/agents/prompts/microcycles';
 
-// Schemas for structured outputs
-const WeeklyMessageSchema = z.object({
-  feedbackMessage: z.string().describe("Message asking for feedback on the past week")
-});
-type WeeklyMessage = z.infer<typeof WeeklyMessageSchema>;
+// =============================================================================
+// System Prompts
+// =============================================================================
 
-const PlanSummarySchema = z.object({
-  messages: z.array(z.string()).describe("Array of SMS messages (each under 160 chars)")
-});
-type PlanSummary = z.infer<typeof PlanSummarySchema>;
-
-// Prompts
 const WEEKLY_MESSAGE_SYSTEM_PROMPT = `You are a fitness coach sending a weekly check-in message via SMS.
 
 Your task is to generate a FEEDBACK MESSAGE asking how their workouts went this past week.
@@ -82,11 +74,11 @@ Every day line must:
 - Fit on a single phone line with no wrapping
 - Use simple wording
 - Ideal format examples:
-    "Thu: Push + cardio (20–25 min)"
+    "Thu: Push + cardio (20-25 min)"
     "Fri: Pull + cardio"
     "Sat: Legs (technique)"
     "Sun: Rest (optional walk)"
-- NO em dashes — only colons, hyphens, parentheses, commas, plus signs.
+- NO em dashes - only colons, hyphens, parentheses, commas, plus signs.
 - One simple focus per day.
 
 -----------------------------------------
@@ -122,7 +114,7 @@ STRICT RULES
 - Must match the spacing described above
 - No jargon or technical terms (no RIR, mesocycle, hypertrophy, etc.)
 - No em dashes
-- No more than 1–2 emojis total
+- No more than 1-2 emojis total
 - Keep sentences short
 - Paraphrase naturally
 `;
@@ -163,21 +155,21 @@ Every day line must:
 - Be VERY short
 - Fit on a single phone line with no wrapping
 - Use simple wording
-- NO em dashes — only colons, hyphens, parentheses, commas, plus signs.
+- NO em dashes - only colons, hyphens, parentheses, commas, plus signs.
 - Keep each day to one simple focus.
 
 -----------------------------------------
 SESSION NAME SIMPLIFICATION
 -----------------------------------------
 Translate technical terms into plain English:
-- Push → Chest & Shoulders
-- Pull → Back & Arms
-- Upper → Upper Body
-- Lower → Lower Body
-- Legs / Legs & Glutes → Lower Body
-- Active Recovery → Light Movement
-- Rest / Off → Rest Day
-- Deload → Recovery Day
+- Push -> Chest & Shoulders
+- Pull -> Back & Arms
+- Upper -> Upper Body
+- Lower -> Lower Body
+- Legs / Legs & Glutes -> Lower Body
+- Active Recovery -> Light Movement
+- Rest / Off -> Rest Day
+- Deload -> Recovery Day
 
 No jargon terms: hypertrophy, mesocycle, microcycle, RIR, RPE, volume, intensity, etc.
 
@@ -187,7 +179,7 @@ STRUCTURE
 Your final SMS must follow this structure:
 
 1. Friendly acknowledgment of the update
-2. Brief explanation of what changed (1–2 sentences)
+2. Brief explanation of what changed (1-2 sentences)
 3. Remaining days breakdown (today through Sunday)
 4. Optional short supportive closing (if space allows)
 
@@ -203,41 +195,39 @@ STRICT RULES
 - Show ONLY remaining days
 `;
 
+// =============================================================================
+// Factory Pattern (Recommended)
+// =============================================================================
+
 /**
- * MessagingAgentService - Handles all messaging-related AI operations
- *
- * Responsibilities:
- * - Welcome messages for new users
- * - Weekly check-in messages
- * - Plan summary messages
- * - Plan ready (combined plan + microcycle) messages
- * - Updated microcycle messages
- *
- * @example
- * ```typescript
- * const message = await messagingAgentService.generateWelcomeMessage(user);
- * ```
+ * MessagingAgentServiceInstance interface
  */
-export class MessagingAgentService {
-  private static instance: MessagingAgentService;
+export interface MessagingAgentServiceInstance {
+  generateWelcomeMessage(user: UserWithProfile): Promise<string>;
+  generateWeeklyMessage(user: UserWithProfile, isDeload: boolean, absoluteWeek: number): Promise<string>;
+  generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]>;
+  generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string>;
+  generateUpdatedMicrocycleMessage(modifiedMicrocycle: MicrocycleGenerationOutput, modifications: string, currentWeekday: DayOfWeek): Promise<string>;
+}
 
-  private constructor() {}
+/**
+ * Create a MessagingAgentService instance
+ * No dependencies needed - uses initializeModel internally
+ */
+export function createMessagingAgentService(): MessagingAgentServiceInstance {
+  // Reuse schemas and prompts from below
+  const WeeklyMessageSchema = z.object({
+    feedbackMessage: z.string().describe("Message asking for feedback on the past week")
+  });
 
-  public static getInstance(): MessagingAgentService {
-    if (!MessagingAgentService.instance) {
-      MessagingAgentService.instance = new MessagingAgentService();
-    }
-    return MessagingAgentService.instance;
-  }
+  const PlanSummarySchema = z.object({
+    messages: z.array(z.string()).describe("Array of SMS messages (each under 160 chars)")
+  });
 
-  /**
-   * Generate a welcome message for a new user
-   * Uses a static template - no LLM needed
-   */
-  async generateWelcomeMessage(user: UserWithProfile): Promise<string> {
-    const firstName = user.name?.split(' ')[0] || 'there';
-
-    return `Hey ${firstName}!
+  return {
+    async generateWelcomeMessage(user: UserWithProfile): Promise<string> {
+      const firstName = user.name?.split(' ')[0] || 'there';
+      return `Hey ${firstName}!
 
 After you hit "Sign Up," millions of documents were scanned—each with one goal: to build the best plan for your fitness journey.
 
@@ -248,20 +238,13 @@ Now, as your first workout sends, the bots cheer…then back to work…and we at
 Welcome to GymText.
 
 Text me anytime with questions about your workouts, your plan, or if you just need a little extra help!`;
-  }
+    },
 
-  /**
-   * Generate a weekly check-in message asking for feedback
-   */
-  async generateWeeklyMessage(
-    user: UserWithProfile,
-    isDeload: boolean,
-    absoluteWeek: number
-  ): Promise<string> {
-    const model = initializeModel<WeeklyMessage>(WeeklyMessageSchema);
-    const firstName = user.name.split(' ')[0];
+    async generateWeeklyMessage(user: UserWithProfile, isDeload: boolean, absoluteWeek: number): Promise<string> {
+      const model = initializeModel<{ feedbackMessage: string }>(WeeklyMessageSchema);
+      const firstName = user.name.split(' ')[0];
 
-    const userPrompt = `Generate a weekly feedback check-in message for the user.
+      const userPrompt = `Generate a weekly feedback check-in message for the user.
 
 User Information:
 - Name: ${user.name}
@@ -273,39 +256,31 @@ Acknowledge this positively and remind them that recovery is part of the trainin
 
 Generate the feedback message now.`;
 
-    console.log(`[MessagingAgentService] Weekly message user prompt: ${userPrompt}`);
+      console.log(`[MessagingAgentService] Weekly message user prompt: ${userPrompt}`);
 
-    const prompt = [
-      { role: 'system' as const, content: WEEKLY_MESSAGE_SYSTEM_PROMPT },
-      { role: 'user' as const, content: userPrompt }
-    ];
+      const prompt = [
+        { role: 'system' as const, content: WEEKLY_MESSAGE_SYSTEM_PROMPT },
+        { role: 'user' as const, content: userPrompt }
+      ];
 
-    const result = await model.invoke(prompt);
-    return result.feedbackMessage;
-  }
+      const result = await model.invoke(prompt);
+      return result.feedbackMessage;
+    },
 
-  /**
-   * Generate plan summary SMS messages (2-3 messages under 160 chars each)
-   */
-  async generatePlanSummary(
-    user: UserWithProfile,
-    plan: FitnessPlan,
-    previousMessages?: Message[]
-  ): Promise<string[]> {
-    const model = initializeModel<PlanSummary>(PlanSummarySchema);
-
-    const hasContext = previousMessages && previousMessages.length > 0;
-    const contextSection = hasContext
-      ? `
+    async generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]> {
+      const model = initializeModel<{ messages: string[] }>(PlanSummarySchema);
+      const hasContext = previousMessages && previousMessages.length > 0;
+      const contextSection = hasContext
+        ? `
 <Previous Messages>
-${previousMessages.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`).join('\n\n')}
+${previousMessages?.map(msg => `${msg.direction === 'inbound' ? 'User' : 'Coach'}: ${msg.content}`).join('\n\n')}
 </Previous Messages>
 
 IMPORTANT: You are continuing a conversation that has already started. DO NOT greet the user by name again. DO NOT introduce yourself again. Just continue naturally with the plan summary.
 `
-      : '';
+        : '';
 
-    const prompt = `
+      const prompt = `
 You are a motivational fitness coach sending an exciting SMS message about a new fitness plan.
 
 ${contextSection}
@@ -346,21 +321,13 @@ Return a JSON object with an array of messages:
 Now create the motivational SMS messages for ${user.name}'s training program.
 `;
 
-    const result = await model.invoke(prompt);
-    return result.messages;
-  }
+      const result = await model.invoke(prompt);
+      return result.messages;
+    },
 
-  /**
-   * Generate a "plan ready" message combining plan summary and week one breakdown
-   */
-  async generatePlanMicrocycleCombinedMessage(
-    fitnessPlan: string,
-    weekOne: string,
-    currentWeekday: DayOfWeek
-  ): Promise<string> {
-    const model = initializeModel(undefined); // Plain text output
-
-    const userPrompt = `
+    async generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string> {
+      const model = initializeModel(undefined);
+      const userPrompt = `
 Create the "your plan is ready" SMS using the inputs below.
 Follow the System Prompt exactly.
 
@@ -382,37 +349,26 @@ Output ONE medium-length SMS:
 - Supportive closing line
 `.trim();
 
-    const messages = [
-      { role: 'system', content: PLAN_READY_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt }
-    ];
+      const messages = [
+        { role: 'system', content: PLAN_READY_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt }
+      ];
 
-    return model.invoke(messages);
-  }
+      return model.invoke(messages);
+    },
 
-  /**
-   * Generate an "updated week" message when a microcycle is modified
-   */
-  async generateUpdatedMicrocycleMessage(
-    modifiedMicrocycle: MicrocycleGenerationOutput,
-    modifications: string,
-    currentWeekday: DayOfWeek
-  ): Promise<string> {
-    const model = initializeModel(undefined); // Plain text output
+    async generateUpdatedMicrocycleMessage(modifiedMicrocycle: MicrocycleGenerationOutput, modifications: string, currentWeekday: DayOfWeek): Promise<string> {
+      const model = initializeModel(undefined);
+      const dayIndex = DAY_NAMES.indexOf(currentWeekday);
+      const remainingDays = modifiedMicrocycle.days
+        .slice(dayIndex)
+        .map((dayOverview, idx) => {
+          const actualDayName = DAY_NAMES[dayIndex + idx];
+          return `${actualDayName}:\n${dayOverview}`;
+        })
+        .join('\n\n');
 
-    // Get day index (Mon=0, Tue=1, etc.)
-    const dayIndex = DAY_NAMES.indexOf(currentWeekday);
-
-    // Get remaining days (today through Sunday)
-    const remainingDays = modifiedMicrocycle.days
-      .slice(dayIndex)
-      .map((dayOverview, idx) => {
-        const actualDayName = DAY_NAMES[dayIndex + idx];
-        return `${actualDayName}:\n${dayOverview}`;
-      })
-      .join('\n\n');
-
-    const userPrompt = `
+      const userPrompt = `
 Create an "updated week" SMS using the inputs below.
 Follow the System Prompt exactly.
 
@@ -439,13 +395,13 @@ Output ONE concise SMS:
 - Optional supportive closing
 `.trim();
 
-    const messages = [
-      { role: 'system', content: UPDATED_MICROCYCLE_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt }
-    ];
+      const messages = [
+        { role: 'system', content: UPDATED_MICROCYCLE_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt }
+      ];
 
-    return model.invoke(messages);
-  }
+      return model.invoke(messages);
+    },
+  };
 }
 
-export const messagingAgentService = MessagingAgentService.getInstance();

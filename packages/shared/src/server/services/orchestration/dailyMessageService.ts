@@ -1,15 +1,16 @@
-import { MessageService } from '../messaging/messageService';
-import { UserService } from '../user/userService';
 import { UserWithProfile } from '@/server/models/user';
 import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
-import { WorkoutInstanceService } from '../training/workoutInstanceService';
-import { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { inngest } from '@/server/connections/inngest/client';
-import { messageQueueService, type QueuedMessage } from '../messaging/messageQueueService';
 import { getUrlsConfig } from '@/shared/config';
-import { dayConfigService } from '../calendar/dayConfigService';
+import type { WorkoutAgentService } from '../agents/training';
+import type { RepositoryContainer } from '../../repositories/factory';
+import type { UserServiceInstance } from '../domain/user/userService';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { MessageQueueServiceInstance, QueuedMessage } from '../domain/messaging/messageQueueService';
+import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
+import type { TrainingServiceInstance } from './trainingService';
 
 interface MessageResult {
   success: boolean;
@@ -25,235 +26,175 @@ interface SchedulingResult {
   errors: Array<{ userId: string; error: string }>;
 }
 
-export class DailyMessageService {
-  private static instance: DailyMessageService;
-  private userService: UserService;
-  private workoutInstanceService: WorkoutInstanceService;
-  private workoutInstanceRepository: WorkoutInstanceRepository;
-  private messageService: MessageService;
-  private batchSize: number;
+// =============================================================================
+// Factory Pattern (Recommended)
+// =============================================================================
 
-  private constructor(batchSize: number = 10) {
-    this.userService = UserService.getInstance();
-    this.workoutInstanceService = WorkoutInstanceService.getInstance();
-    this.workoutInstanceRepository = new WorkoutInstanceRepository();
-    this.messageService = MessageService.getInstance();
-    this.batchSize = batchSize;
-  }
+/**
+ * DailyMessageServiceInstance interface
+ *
+ * Defines all public methods available on the daily message service.
+ */
+export interface DailyMessageServiceInstance {
+  scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult>;
+  sendDailyMessage(user: UserWithProfile): Promise<MessageResult>;
+  getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null>;
+  generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null>;
+}
 
-  public static getInstance(batchSize: number = 10): DailyMessageService {
-    if (!DailyMessageService.instance) {
-      DailyMessageService.instance = new DailyMessageService(batchSize);
-    }
-    return DailyMessageService.instance;
-  }
+export interface DailyMessageServiceDeps {
+  user: UserServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
+  messageQueue: MessageQueueServiceInstance;
+  dayConfig: DayConfigServiceInstance;
+  training: TrainingServiceInstance;
+  workoutAgent: WorkoutAgentService;
+}
 
-  /**
-   * Schedules daily messages for all users in a given UTC hour
-   * Returns metrics about the scheduling operation
-   *
-   * This method uses catch-up logic: it schedules messages for users whose
-   * preferred send hour has already passed today AND who haven't received
-   * their workout message yet (no workout instance exists for today).
-   */
-  public async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
-    const startTime = Date.now();
-    const errors: Array<{ userId: string; error: string }> = [];
-    let scheduled = 0;
-    let failed = 0;
+/**
+ * Create a DailyMessageService instance with injected dependencies
+ *
+ * @param repos - Repository container with all repositories
+ * @param deps - Service dependencies
+ * @returns DailyMessageServiceInstance
+ */
+export function createDailyMessageService(
+  repos: RepositoryContainer,
+  deps: DailyMessageServiceDeps
+): DailyMessageServiceInstance {
+  const {
+    user: userService,
+    workoutInstance: workoutInstanceService,
+    messageQueue: messageQueueService,
+    dayConfig: dayConfigService,
+    training: trainingService,
+    workoutAgent,
+  } = deps;
 
-    try {
-      // Get candidate users (those whose local hour >= preferredSendHour)
-      const candidateUsers = await this.userService.getUsersForHour(utcHour);
-      console.log(`[DailyMessageService] Found ${candidateUsers.length} candidate users for hour ${utcHour}`);
+  return {
+    async scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult> {
+      const startTime = Date.now();
+      const errors: Array<{ userId: string; error: string }> = [];
+      let scheduled = 0;
+      let failed = 0;
 
-      if (candidateUsers.length === 0) {
-        return {
-          scheduled: 0,
-          failed: 0,
-          duration: Date.now() - startTime,
-          errors: []
-        };
-      }
+      try {
+        const candidateUsers = await userService.getUsersForHour(utcHour);
+        console.log(`[DailyMessageService] Found ${candidateUsers.length} candidate users for hour ${utcHour}`);
 
-      // Build user-specific date ranges (each user's "today" based on their timezone)
-      const userDatePairs = candidateUsers.map(user => {
-        const todayStart = now(user.timezone).startOf('day').toJSDate();
-        const todayEnd = now(user.timezone).startOf('day').plus({ days: 1 }).toJSDate();
-        return { userId: user.id, startOfDay: todayStart, endOfDay: todayEnd };
-      });
+        if (candidateUsers.length === 0) {
+          return { scheduled: 0, failed: 0, duration: Date.now() - startTime, errors: [] };
+        }
 
-      // Batch-check which users already have workouts for their "today"
-      const userIdsWithWorkouts = await this.workoutInstanceRepository
-        .findUserIdsWithWorkoutsForUserDates(userDatePairs);
+        const userDatePairs = candidateUsers.map(user => {
+          const todayStart = now(user.timezone).startOf('day').toJSDate();
+          const todayEnd = now(user.timezone).startOf('day').plus({ days: 1 }).toJSDate();
+          return { userId: user.id, startOfDay: todayStart, endOfDay: todayEnd };
+        });
 
-      // Filter to only users WITHOUT workouts (they haven't been sent yet)
-      const usersToSchedule = candidateUsers.filter(
-        u => !userIdsWithWorkouts.has(u.id)
-      );
+        const userIdsWithWorkouts = await repos.workoutInstance.findUserIdsWithWorkoutsForUserDates(userDatePairs);
+        const usersToSchedule = candidateUsers.filter(u => !userIdsWithWorkouts.has(u.id));
 
-      console.log(`[DailyMessageService] ${userIdsWithWorkouts.size} users already have workouts, scheduling ${usersToSchedule.length} users`);
+        console.log(`[DailyMessageService] ${userIdsWithWorkouts.size} users already have workouts, scheduling ${usersToSchedule.length} users`);
 
-      if (usersToSchedule.length === 0) {
-        return {
-          scheduled: 0,
-          failed: 0,
-          duration: Date.now() - startTime,
-          errors: []
-        };
-      }
+        if (usersToSchedule.length === 0) {
+          return { scheduled: 0, failed: 0, duration: Date.now() - startTime, errors: [] };
+        }
 
-      // Map users to Inngest events
-      const events = usersToSchedule.map(user => {
-        // Get target date in user's timezone (today at start of day)
-        const targetDate = now(user.timezone)
-          .startOf('day')
-          .toISO();
-
-        return {
+        const events = usersToSchedule.map(user => ({
           name: 'workout/scheduled' as const,
           data: {
             userId: user.id,
-            targetDate,
+            targetDate: now(user.timezone).startOf('day').toISO(),
           },
-        };
-      });
+        }));
 
-      // Send all events to Inngest in batch
-      try {
-        const { ids } = await inngest.send(events);
-        scheduled = ids.length;
-        console.log(`[DailyMessageService] Scheduled ${scheduled} Inngest jobs`);
+        try {
+          const { ids } = await inngest.send(events);
+          scheduled = ids.length;
+          console.log(`[DailyMessageService] Scheduled ${scheduled} Inngest jobs`);
+        } catch (error) {
+          console.error('[DailyMessageService] Failed to schedule Inngest jobs:', error);
+          failed = events.length;
+          errors.push({
+            userId: 'batch',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+
+        return { scheduled, failed, duration: Date.now() - startTime, errors };
       } catch (error) {
-        console.error('[DailyMessageService] Failed to schedule Inngest jobs:', error);
-        failed = events.length;
-        errors.push({
-          userId: 'batch',
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        console.error('[DailyMessageService] Error scheduling messages:', error);
+        throw error;
       }
+    },
 
-      return {
-        scheduled,
-        failed,
-        duration: Date.now() - startTime,
-        errors
-      };
-    } catch (error) {
-      console.error('[DailyMessageService] Error scheduling messages:', error);
-      throw error;
-    }
-  }
+    async sendDailyMessage(user: UserWithProfile): Promise<MessageResult> {
+      try {
+        console.log(`Processing daily message for user ${user.id}`);
 
-  /**
-   * Sends a daily message to a single user
-   */
-  public async sendDailyMessage(
-    user: UserWithProfile
-  ): Promise<MessageResult> {
-    try {
-      console.log(`Processing daily message for user ${user.id}`);
-
-      // Get today's date in the user's timezone
-      const targetDate = now(user.timezone).startOf('day');
-
-      // First try to get existing workout
-      let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
-
-      // If no workout exists, generate it on-demand
-      if (!workout) {
-        console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
-        workout = await this.workoutInstanceService.generateWorkoutForDate(user, targetDate);
+        const targetDate = now(user.timezone).startOf('day');
+        let workout = await this.getTodaysWorkout(user.id, targetDate.toJSDate());
 
         if (!workout) {
-          console.log(`Failed to generate workout for user ${user.id} on ${targetDate.toISODate()}`);
-          return {
-            success: false,
-            userId: user.id,
-            error: 'Could not generate workout for today'
-          };
+          console.log(`No workout found for user ${user.id} on ${targetDate.toISODate()}, generating on-demand`);
+          workout = await trainingService.prepareWorkoutForDate(user, targetDate);
+
+          if (!workout) {
+            console.log(`Failed to generate workout for user ${user.id} on ${targetDate.toISODate()}`);
+            return { success: false, userId: user.id, error: 'Could not generate workout for today' };
+          }
         }
-      }
 
-      // Extract message content (either pre-generated or need to generate)
-      let workoutMessage: string;
-      if ('message' in workout && workout.message) {
-        workoutMessage = workout.message;
-      } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
-        // Fallback: Generate message if needed (shouldn't happen in production)
-        const { workoutAgentService } = await import('@/server/services/agents/training');
-        const messageAgent = await workoutAgentService.getMessageAgent();
-        const result = await messageAgent.invoke(workout.description);
-        workoutMessage = result.response;
-      } else {
-        throw new Error('Workout missing required fields for message generation');
-      }
-
-      // Send single message with both image and text
-      // Check for day-specific custom image first
-      const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());
-
-      let mediaUrls: string[] | undefined;
-      if (customImageUrl) {
-        // Use day-specific custom image (e.g., holiday themed)
-        mediaUrls = [customImageUrl];
-        console.log(`Using custom day image for ${targetDate.toISODate()}`);
-      } else {
-        // Fall back to default logo
-        const { publicBaseUrl, baseUrl } = getUrlsConfig();
-        const resolvedBaseUrl = publicBaseUrl || baseUrl;
-        mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
-
-        if (!resolvedBaseUrl) {
-          console.warn('BASE_URL not configured - sending workout without logo image');
+        let workoutMessage: string;
+        if ('message' in workout && workout.message) {
+          workoutMessage = workout.message;
+        } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
+          const messageAgent = await workoutAgent.getMessageAgent();
+          const result = await messageAgent.invoke(workout.description);
+          workoutMessage = result.response;
+        } else {
+          throw new Error('Workout missing required fields for message generation');
         }
+
+        const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());
+
+        let mediaUrls: string[] | undefined;
+        if (customImageUrl) {
+          mediaUrls = [customImageUrl];
+          console.log(`Using custom day image for ${targetDate.toISODate()}`);
+        } else {
+          const { publicBaseUrl, baseUrl } = getUrlsConfig();
+          const resolvedBaseUrl = publicBaseUrl || baseUrl;
+          mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
+
+          if (!resolvedBaseUrl) {
+            console.warn('BASE_URL not configured - sending workout without logo image');
+          }
+        }
+
+        const queuedMessages: QueuedMessage[] = [{ content: workoutMessage, mediaUrls }];
+
+        await messageQueueService.enqueueMessages(user.id, queuedMessages, 'daily');
+        console.log(`Successfully queued daily messages for user ${user.id}`);
+
+        return { success: true, userId: user.id, messageId: undefined };
+      } catch (error) {
+        console.error(`Error sending daily message to user ${user.id}:`, error);
+        return { success: false, userId: user.id, error: error instanceof Error ? error.message : 'Unknown error' };
       }
+    },
 
-      const queuedMessages: QueuedMessage[] = [{
-        content: workoutMessage,
-        mediaUrls
-      }];
+    async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
+      const workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
+      console.log(`Workout: ${workout}`);
+      return workout || null;
+    },
 
-      await messageQueueService.enqueueMessages(user.id, queuedMessages, 'daily');
-      console.log(`Successfully queued daily messages for user ${user.id}`);
-
-      return {
-        success: true,
-        userId: user.id,
-        messageId: undefined // Messages will be sent asynchronously by queue
-      };
-    } catch (error) {
-      console.error(`Error sending daily message to user ${user.id}:`, error);
-      return {
-        success: false,
-        userId: user.id,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
-
-  /**
-   * Gets today's workout for a user
-   */
-  public async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
-    // The date passed in is already the correct date at midnight in the user's timezone
-    // We can use it directly for the query
-    const workout = await this.workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
-    console.log(`Workout: ${workout}`);
-    return workout || null;
-  }
-
-  /**
-   * Generates a workout for a specific date (wrapper for onboarding)
-   * Delegates to WorkoutInstanceService for business logic
-   */
-  public async generateWorkout(
-    user: UserWithProfile,
-    targetDate: DateTime
-  ): Promise<WorkoutInstance | null> {
-    return this.workoutInstanceService.generateWorkoutForDate(user, targetDate);
-  }
+    async generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null> {
+      return trainingService.prepareWorkoutForDate(user, targetDate);
+    },
+  };
 }
 
-// Export singleton instance
-export const dailyMessageService = DailyMessageService.getInstance();
+// =============================================================================

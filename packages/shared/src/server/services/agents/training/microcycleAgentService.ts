@@ -9,7 +9,8 @@ import {
 } from '@/server/services/agents/prompts/microcycles';
 import type { MicrocycleGenerateOutput, ModifyMicrocycleOutput } from '@/server/services/agents/types/microcycles';
 import type { Microcycle } from '@/server/models/microcycle';
-import { ContextService, ContextType, SnippetType } from '@/server/services/context';
+import type { ContextService } from '@/server/services/context';
+import { ContextType, SnippetType } from '@/server/services/context';
 import { DAY_NAMES } from '@/shared/utils/date';
 import type { UserWithProfile } from '@/server/models/user';
 
@@ -26,38 +27,27 @@ const validateDays = (days: string[]): boolean => {
  * MicrocycleAgentService - Handles all microcycle-related AI operations
  *
  * Responsibilities:
- * - Fetches context via ContextService
+ * - Fetches context via ContextService (injected)
  * - Creates and invokes agents for microcycle generation
  * - Includes retry logic for validation
  * - Returns structured results
  *
  * @example
  * ```typescript
- * const result = await microcycleAgentService.generateMicrocycle(user, planText, absoluteWeek, isDeload);
+ * const microcycleAgentService = createMicrocycleAgentService(contextService);
+ * const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
  * const { days, description, isDeload, message, structure } = result;
  * ```
  */
 export class MicrocycleAgentService {
-  private static instance: MicrocycleAgentService;
+  private contextService: ContextService;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> | null = null;
 
-  private constructor() {}
-
-  /**
-   * Lazy-load ContextService to avoid module-load-time initialization
-   */
-  private getContextService(): ContextService {
-    return ContextService.getInstance();
-  }
-
-  public static getInstance(): MicrocycleAgentService {
-    if (!MicrocycleAgentService.instance) {
-      MicrocycleAgentService.instance = new MicrocycleAgentService();
-    }
-    return MicrocycleAgentService.instance;
+  constructor(contextService: ContextService) {
+    this.contextService = contextService;
   }
 
   /**
@@ -124,7 +114,7 @@ export class MicrocycleAgentService {
     // Build context using ContextService
     // FITNESS_PLAN is auto-fetched by context service
     // isDeload is determined by agent from plan's Progression Strategy
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [
         ContextType.FITNESS_PLAN,
@@ -249,7 +239,7 @@ export class MicrocycleAgentService {
     const absoluteWeek = currentMicrocycle.absoluteWeek;
 
     // Build context using ContextService
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [
         ContextType.USER,
@@ -345,4 +335,12 @@ export class MicrocycleAgentService {
   }
 }
 
-export const microcycleAgentService = MicrocycleAgentService.getInstance();
+/**
+ * Factory function to create a MicrocycleAgentService instance
+ *
+ * @param contextService - ContextService for building agent context
+ * @returns A new MicrocycleAgentService instance
+ */
+export function createMicrocycleAgentService(contextService: ContextService): MicrocycleAgentService {
+  return new MicrocycleAgentService(contextService);
+}

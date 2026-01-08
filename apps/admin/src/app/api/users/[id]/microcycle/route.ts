@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { microcycleService, userService, fitnessPlanService, progressService } from '@/server/services'
+import { getAdminContext } from '@/lib/context'
 import { checkAuthorization } from '@/server/utils/authMiddleware'
 
 /**
@@ -42,6 +42,8 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const absoluteWeekParam = searchParams.get('absoluteWeek')
 
+    const { services } = await getAdminContext()
+
     // If absoluteWeek provided, use it (existing behavior)
     if (absoluteWeekParam !== null) {
       const absoluteWeek = parseInt(absoluteWeekParam, 10)
@@ -53,7 +55,7 @@ export async function GET(
         )
       }
 
-      const microcycle = await microcycleService.getMicrocycleByAbsoluteWeek(userId, absoluteWeek)
+      const microcycle = await services.microcycle.getMicrocycleByAbsoluteWeek(userId, absoluteWeek)
 
       if (!microcycle) {
         return NextResponse.json(
@@ -69,7 +71,7 @@ export async function GET(
     }
 
     // No params: return current week's microcycle using user's timezone
-    const user = await userService.getUser(userId)
+    const user = await services.user.getUser(userId)
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'User not found' },
@@ -77,7 +79,7 @@ export async function GET(
       )
     }
 
-    const plan = await fitnessPlanService.getCurrentPlan(userId)
+    const plan = await services.fitnessPlan.getCurrentPlan(userId)
     if (!plan) {
       return NextResponse.json(
         { success: false, message: 'No fitness plan found for user' },
@@ -85,7 +87,7 @@ export async function GET(
       )
     }
 
-    const progress = await progressService.getCurrentProgress(plan, user.timezone)
+    const progress = await services.progress.getCurrentProgress(plan, user.timezone)
     if (!progress) {
       return NextResponse.json(
         { success: false, message: 'Could not calculate current progress' },
@@ -93,7 +95,7 @@ export async function GET(
       )
     }
 
-    const microcycle = await microcycleService.getMicrocycleByAbsoluteWeek(userId, progress.absoluteWeek)
+    const microcycle = await services.microcycle.getMicrocycleByAbsoluteWeek(userId, progress.absoluteWeek)
 
     if (!microcycle) {
       return NextResponse.json(

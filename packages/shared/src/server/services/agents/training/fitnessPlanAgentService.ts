@@ -9,7 +9,7 @@ import {
 } from '@/server/services/agents/prompts/plans';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
-import { ContextService } from '@/server/services/context/contextService';
+import type { ContextService } from '@/server/services/context/contextService';
 import { ContextType } from '@/server/services/context/types';
 
 /**
@@ -17,33 +17,25 @@ import { ContextType } from '@/server/services/context/types';
  *
  * Responsibilities:
  * - Creates and invokes agents for fitness plan generation
- * - Uses ContextService to build context from user profile
+ * - Uses ContextService (injected) to build context from user profile
  * - Returns structured results in legacy format
  *
  * @example
  * ```typescript
+ * const fitnessPlanAgentService = createFitnessPlanAgentService(contextService);
  * const result = await fitnessPlanAgentService.generateFitnessPlan(user);
  * const { description, message, structure } = result;
  * ```
  */
 export class FitnessPlanAgentService {
-  private static instance: FitnessPlanAgentService;
+  private contextService: ContextService;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: PlanStructure }>> | null = null;
 
-  private getContextService(): ContextService {
-    return ContextService.getInstance();
-  }
-
-  private constructor() {}
-
-  public static getInstance(): FitnessPlanAgentService {
-    if (!FitnessPlanAgentService.instance) {
-      FitnessPlanAgentService.instance = new FitnessPlanAgentService();
-    }
-    return FitnessPlanAgentService.instance;
+  constructor(contextService: ContextService) {
+    this.contextService = contextService;
   }
 
   /**
@@ -98,7 +90,7 @@ export class FitnessPlanAgentService {
     structure: PlanStructure;
   }> {
     // Build context using ContextService
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [ContextType.USER, ContextType.USER_PROFILE]
     );
@@ -173,7 +165,7 @@ export class FitnessPlanAgentService {
     structure: PlanStructure;
   }> {
     // Build context using ContextService
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN],
       { planText: currentPlan.description || '' }
@@ -211,4 +203,12 @@ export class FitnessPlanAgentService {
   }
 }
 
-export const fitnessPlanAgentService = FitnessPlanAgentService.getInstance();
+/**
+ * Factory function to create a FitnessPlanAgentService instance
+ *
+ * @param contextService - ContextService for building agent context
+ * @returns A new FitnessPlanAgentService instance
+ */
+export function createFitnessPlanAgentService(contextService: ContextService): FitnessPlanAgentService {
+  return new FitnessPlanAgentService(contextService);
+}

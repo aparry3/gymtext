@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dayConfigService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * GET /api/admin/calendar
@@ -31,7 +31,8 @@ export async function GET(request: Request) {
       );
     }
 
-    const configs = await dayConfigService.getConfigsForMonth(year, month);
+    const { services } = await getAdminContext();
+    const configs = await services.dayConfig.getConfigsForMonth(year, month);
 
     return NextResponse.json({
       success: true,

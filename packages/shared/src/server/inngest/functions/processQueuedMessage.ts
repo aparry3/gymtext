@@ -16,7 +16,11 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { messageQueueService } from '@/server/services/messaging/messageQueueService';
+import { createServicesFromDb } from '@/server/services';
+import { postgresDb } from '@/server/connections/postgres/postgres';
+
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
 
 /**
  * Process next message in queue
@@ -33,7 +37,7 @@ export const processNextQueuedMessageFunction = inngest.createFunction(
 
     await step.run('process-next-message', async () => {
       console.log('[Inngest] Processing next queued message:', { clientId, queueName });
-      await messageQueueService.processNextMessage(clientId, queueName);
+      await services.messageQueue.processNextMessage(clientId, queueName);
     });
 
     return {
@@ -59,7 +63,7 @@ export const sendQueuedMessageFunction = inngest.createFunction(
 
     const message = await step.run('send-message', async () => {
       console.log('[Inngest] Sending queued message:', { queueEntryId, clientId, queueName });
-      return await messageQueueService.sendQueuedMessage(queueEntryId);
+      return await services.messageQueue.sendQueuedMessage(queueEntryId);
     });
 
     return {

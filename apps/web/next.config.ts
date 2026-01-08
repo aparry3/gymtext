@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Enable transpiling of shared package
   transpilePackages: ["@gymtext/shared"],
 
+  // Exclude packages with WASM from bundling - load at runtime from node_modules
+  serverExternalPackages: ["@dqbd/tiktoken"],
+
   // Turbopack configuration for path aliases (Next.js 16+)
   turbopack: {
     root: path.resolve(__dirname, "../.."),

@@ -2,7 +2,8 @@ import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents
 import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/models/workout';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/prompts/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
-import { ContextService, ContextType, SnippetType } from '@/server/services/context';
+import type { ContextService } from '@/server/services/context';
+import { ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
@@ -11,37 +12,26 @@ import type { ActivityType } from '@/shared/types/microcycle/schema';
  * WorkoutAgentService - Handles all workout-related AI operations
  *
  * Responsibilities:
- * - Fetches context via ContextService
+ * - Fetches context via ContextService (injected)
  * - Creates and invokes agents for workout generation/modification
  * - Returns structured results
  *
  * @example
  * ```typescript
+ * const workoutAgentService = createWorkoutAgentService(contextService);
  * const result = await workoutAgentService.generateWorkout(user, dayOverview, isDeload);
  * const { response, message, structure } = result;
  * ```
  */
 export class WorkoutAgentService {
-  private static instance: WorkoutAgentService;
+  private contextService: ContextService;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: WorkoutStructure }>> | null = null;
 
-  private constructor() {}
-
-  /**
-   * Lazy-load ContextService to avoid module-load-time initialization
-   */
-  private getContextService(): ContextService {
-    return ContextService.getInstance();
-  }
-
-  public static getInstance(): WorkoutAgentService {
-    if (!WorkoutAgentService.instance) {
-      WorkoutAgentService.instance = new WorkoutAgentService();
-    }
-    return WorkoutAgentService.instance;
+  constructor(contextService: ContextService) {
+    this.contextService = contextService;
   }
 
   /**
@@ -57,7 +47,7 @@ export class WorkoutAgentService {
   ): Promise<ConfigurableAgent<{ response: string }>> {
     // If activityType is provided, create a new agent with day format context
     if (activityType && user) {
-      const dayFormatContext = await this.getContextService().getContext(
+      const dayFormatContext = await this.contextService.getContext(
         user,
         [ContextType.DAY_FORMAT],
         { activityType }
@@ -107,7 +97,7 @@ export class WorkoutAgentService {
     activityType?: ActivityType
   ): Promise<WorkoutGenerateOutput> {
     // Build context using ContextService
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [
         ContextType.USER_PROFILE,
@@ -153,7 +143,7 @@ export class WorkoutAgentService {
     changeRequest: string
   ): Promise<ModifyWorkoutOutput> {
     // Build context for modification - uses workout
-    const context = await this.getContextService().getContext(
+    const context = await this.contextService.getContext(
       user,
       [
         ContextType.USER_PROFILE,
@@ -195,4 +185,12 @@ export class WorkoutAgentService {
   }
 }
 
-export const workoutAgentService = WorkoutAgentService.getInstance();
+/**
+ * Factory function to create a WorkoutAgentService instance
+ *
+ * @param contextService - ContextService for building agent context
+ * @returns A new WorkoutAgentService instance
+ */
+export function createWorkoutAgentService(contextService: ContextService): WorkoutAgentService {
+  return new WorkoutAgentService(contextService);
+}

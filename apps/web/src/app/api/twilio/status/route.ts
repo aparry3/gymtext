@@ -1,10 +1,9 @@
-import { MessageRepository } from '@/server/repositories/messageRepository';
 import { inngest } from '@/server/connections/inngest/client';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
-import { postgresDb } from '@/server/connections/postgres/postgres';
 import { getTwilioSecrets } from '@/server/config';
 import { getUrlsConfig } from '@/shared/config';
+import { getServices, getRepositories } from '@/lib/context';
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,9 +62,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Get repositories and services
+    const repos = getRepositories();
+    const services = getServices();
+
     // Update message delivery status
-    const messageRepo = new MessageRepository(postgresDb);
-    const message = await messageRepo.findByProviderMessageId(messageSid);
+    const message = await repos.message.findByProviderMessageId(messageSid);
 
     if (!message) {
       console.warn('[Twilio Status Callback] Message not found:', messageSid);
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
       : undefined;
 
     // Update the message
-    await messageRepo.updateDeliveryStatus(
+    await repos.message.updateDeliveryStatus(
       message.id,
       messageStatus as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
       deliveryError
@@ -93,17 +95,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Handle message queue processing
-    // Import here to avoid circular dependency at module level
-    const { messageQueueService } = await import('@/server/services/messaging/messageQueueService');
-
     if (messageStatus === 'delivered') {
       // Mark as delivered in queue and trigger next message
       console.log('[Twilio Status Callback] Message delivered, processing queue');
-      await messageQueueService.markMessageDelivered(message.id);
+      await services.messageQueue.markMessageDelivered(message.id);
     } else if (messageStatus === 'failed' || messageStatus === 'undelivered') {
       // Handle failure in queue (retry or skip)
       console.log('[Twilio Status Callback] Message failed, handling in queue');
-      await messageQueueService.markMessageFailed(message.id, deliveryError);
+      await services.messageQueue.markMessageFailed(message.id, deliveryError);
 
       // Also trigger the existing retry mechanism for non-queued messages
       await inngest.send({

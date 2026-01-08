@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { referralService } from '@/server/services/referral/referralService';
+import { getServices } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -33,7 +33,8 @@ export async function GET(
       );
     }
 
-    const stats = await referralService.getReferralStats(userId);
+    const services = getServices();
+    const stats = await services.referral.getReferralStats(userId);
     if (!stats) {
       return NextResponse.json(
         { success: false, message: 'User not found' },

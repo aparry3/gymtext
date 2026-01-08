@@ -5,7 +5,20 @@
  * Format templates are stored in the prompts table and fetched dynamically.
  */
 
-import { promptService } from '@/server/services/prompts/promptService';
+import type { PromptServiceInstance } from '@/server/services/domain/prompts/promptService';
+
+// Lazy-loaded prompt service instance
+let _promptService: PromptServiceInstance | null = null;
+
+async function getPromptService(): Promise<PromptServiceInstance> {
+  if (!_promptService) {
+    const { createServicesFromDb } = await import('@/server/services/factory');
+    const { postgresDb } = await import('@/server/connections/postgres/postgres');
+    const services = createServicesFromDb(postgresDb);
+    _promptService = services.prompt;
+  }
+  return _promptService;
+}
 
 export type DayActivityType = 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
 
@@ -35,6 +48,7 @@ export const fetchDayFormat = async (
   }
 
   try {
+    const promptService = await getPromptService();
     return await promptService.getContextPrompt(promptId);
   } catch (error) {
     console.warn(`[dayFormat] Could not fetch format for ${activityType}:`, error);

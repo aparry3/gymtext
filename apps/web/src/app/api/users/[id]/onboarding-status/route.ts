@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { FitnessPlanRepository } from '@/server/repositories/fitnessPlanRepository';
+import { getServices } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -36,11 +34,10 @@ export async function GET(
       );
     }
 
-    const subscriptionRepo = new SubscriptionRepository();
-    const fitnessPlanRepo = new FitnessPlanRepository();
+    const services = getServices();
 
     // Get onboarding record
-    const onboarding = await onboardingDataService.findByClientId(userId);
+    const onboarding = await services.onboardingData.findByClientId(userId);
     if (!onboarding) {
       return NextResponse.json({
         onboardingStatus: 'pending',
@@ -50,10 +47,10 @@ export async function GET(
     }
 
     // Check for fitness plan
-    const fitnessPlan = await fitnessPlanRepo.getCurrentPlan(userId);
+    const fitnessPlan = await services.fitnessPlan.getCurrentPlan(userId);
 
     // Check for active subscription
-    const hasActiveSubscription = await subscriptionRepo.hasActiveSubscription(userId);
+    const hasActiveSubscription = await services.subscription.hasActiveSubscription(userId);
 
     return NextResponse.json({
       onboardingStatus: onboarding.status,

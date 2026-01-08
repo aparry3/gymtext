@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { referralService } from '@/server/services/referral/referralService';
+import { getServices } from '@/lib/context';
 import { isProductionEnvironment } from '@/shared/config/public';
 
 /**
@@ -29,7 +29,8 @@ export async function GET(
 
   try {
     // Validate the referral code exists
-    const validation = await referralService.validateReferralCode(upperCode);
+    const services = getServices();
+    const validation = await services.referral.validateReferralCode(upperCode);
 
     // Create redirect URL
     const redirectUrl = new URL('/', request.url);

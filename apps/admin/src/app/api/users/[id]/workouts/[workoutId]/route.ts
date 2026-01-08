@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { workoutInstanceService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -45,7 +45,8 @@ export async function GET(
       );
     }
 
-    const workout = await workoutInstanceService.getWorkoutById(
+    const { services } = await getAdminContext();
+    const workout = await services.workoutInstance.getWorkoutById(
       workoutId,
       requestedUserId
     );
@@ -124,7 +125,8 @@ export async function DELETE(
       );
     }
 
-    const deleted = await workoutInstanceService.deleteWorkout(
+    const { services } = await getAdminContext();
+    const deleted = await services.workoutInstance.deleteWorkout(
       workoutId,
       requestedUserId
     );

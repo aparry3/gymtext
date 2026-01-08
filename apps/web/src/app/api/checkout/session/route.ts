@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { SubscriptionRepository } from '@/server/repositories/subscriptionRepository';
-import { onboardingCoordinator } from '@/server/services/orchestration/onboardingCoordinator';
+import { getServices, getRepositories } from '@/lib/context';
 import { getStripeSecrets } from '@/server/config';
 
 const { secretKey } = getStripeSecrets();
@@ -54,10 +53,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL('/me', req.nextUrl.origin));
     }
 
-    const subscriptionRepo = new SubscriptionRepository();
+    const services = getServices();
+    const repos = getRepositories();
 
     // Check if subscription already exists in DB
-    const existingSubscription = await subscriptionRepo.findByStripeId(
+    const existingSubscription = await repos.subscription.findByStripeId(
       session.subscription as string
     );
 
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
         session.subscription as string
       );
 
-      await subscriptionRepo.create({
+      await repos.subscription.create({
         clientId: userId,
         stripeSubscriptionId: subscription.id,
         status: subscription.status,
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
 
     // Try to send onboarding messages (if onboarding is complete)
     try {
-      const sent = await onboardingCoordinator.sendOnboardingMessages(userId);
+      const sent = await services.onboardingCoordinator.sendOnboardingMessages(userId);
       if (sent) {
         console.log(`[Checkout Session] Onboarding messages sent to user ${userId}`);
       } else {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promptRepository } from '@/server/repositories/promptRepository';
-import { promptService } from '@/server/services/prompts/promptService';
+import { getAdminContext } from '@/lib/context';
 import type { PromptRole } from '@/server/models/prompt';
 
 type RouteParams = { params: Promise<{ id: string; role: string }> };
@@ -9,7 +8,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id, role } = await params;
 
   try {
-    const history = await promptRepository.getPromptHistory(id, role as PromptRole, 1);
+    const { repos } = await getAdminContext();
+    const history = await repos.prompt.getPromptHistory(id, role as PromptRole, 1);
     const prompt = history[0] || null;
 
     return NextResponse.json({
@@ -43,14 +43,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const newPrompt = await promptRepository.createPrompt({
+    const { repos, services } = await getAdminContext();
+    const newPrompt = await repos.prompt.createPrompt({
       id,
       role: role as PromptRole,
       value,
     });
 
     // Invalidate cache for this agent
-    promptService.invalidateCache(id);
+    services.prompt.invalidateCache(id);
 
     return NextResponse.json({
       success: true,

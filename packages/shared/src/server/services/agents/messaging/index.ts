@@ -1,1 +1,2 @@
-export { MessagingAgentService, messagingAgentService } from './messagingAgentService';
+export { createMessagingAgentService } from './messagingAgentService';
+export type { MessagingAgentServiceInstance } from './messagingAgentService';

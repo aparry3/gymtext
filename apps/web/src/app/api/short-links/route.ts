@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { shortLinkService } from '@/server/services/links/shortLinkService';
+import { getServices, getRepositories } from '@/lib/context';
 
 /**
  * POST /api/short-links
@@ -74,12 +74,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the short link
-    const link = await shortLinkService.createShortLink(userId, targetPath, {
+    const services = getServices();
+    const link = await services.shortLink.createShortLink(userId, targetPath, {
       code,
       expiresAt: expiresAtDate,
     });
 
-    const fullUrl = shortLinkService.getFullUrl(link.code);
+    const fullUrl = services.shortLink.getFullUrl(link.code);
 
     return NextResponse.json({
       success: true,
@@ -115,8 +116,8 @@ export async function GET(request: NextRequest) {
 
     if (clientId) {
       // Get links for specific client
-      const repository = new (await import('@/server/repositories/shortLinkRepository')).ShortLinkRepository();
-      const links = await repository.findByClientId(clientId);
+      const repos = getRepositories();
+      const links = await repos.shortLink.findByClientId(clientId);
 
       return NextResponse.json({
         success: true,

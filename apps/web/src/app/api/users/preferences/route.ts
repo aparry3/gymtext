@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userService } from '@/server/services/user/userService';
+import { getServices } from '@/lib/context';
 import { isValidIANATimezone, formatTimezoneForDisplay } from '@/server/utils/timezone';
 import { now } from '@/shared/utils/date';
 
@@ -26,7 +26,8 @@ export async function GET(request: Request) {
       );
     }
     
-    const user = await userService.getUserById(userId);
+    const services = getServices();
+    const user = await services.user.getUserById(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -123,7 +124,8 @@ export async function PUT(request: Request) {
       updateData.timezone = timezone;
     }
 
-    const updatedUser = await userService.updatePreferences(userId, updateData);
+    const services = getServices();
+    const updatedUser = await services.user.updatePreferences(userId, updateData);
 
     if (!updatedUser) {
       return NextResponse.json(

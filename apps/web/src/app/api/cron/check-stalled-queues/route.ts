@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { messageQueueService } from '@/server/services/messaging/messageQueueService';
+import { getServices } from '@/lib/context';
 import { getCronSecrets } from '@/server/config';
 
 /**
@@ -36,8 +36,9 @@ export async function GET(request: Request) {
     });
 
     // Check for stalled messages
+    const services = getServices();
     const startTime = Date.now();
-    await messageQueueService.checkStalledMessages();
+    await services.messageQueue.checkStalledMessages();
     const duration = Date.now() - startTime;
 
     console.log('[CRON] Stalled queue check completed:', {

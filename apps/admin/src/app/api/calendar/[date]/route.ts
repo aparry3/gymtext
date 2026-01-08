@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dayConfigService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 /**
  * Parse a date string (YYYY-MM-DD) into a Date object
@@ -54,7 +54,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       );
     }
 
-    const config = await dayConfigService.getConfigForDate(date);
+    const { services } = await getAdminContext();
+    const config = await services.dayConfig.getConfigForDate(date);
 
     return NextResponse.json({
       success: true,
@@ -104,7 +105,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
       );
     }
 
-    const config = await dayConfigService.setDayImage(date, imageUrl, imageName);
+    const { services } = await getAdminContext();
+    const config = await services.dayConfig.setDayImage(date, imageUrl, imageName);
 
     return NextResponse.json({
       success: true,
@@ -140,7 +142,8 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    await dayConfigService.clearConfig(date);
+    const { services } = await getAdminContext();
+    await services.dayConfig.clearConfig(date);
 
     return NextResponse.json({ success: true });
   } catch (error) {

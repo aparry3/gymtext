@@ -25,12 +25,17 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { onboardingDataService } from '@/server/services/user/onboardingDataService';
-import { onboardingSteps } from '@/server/services/orchestration/onboardingSteps';
+import { createServicesFromDb } from '@/server/services';
+import { createOnboardingSteps } from '@/server/services/orchestration/onboardingSteps';
+import { postgresDb } from '@/server/connections/postgres/postgres';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
+
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
+const onboardingSteps = createOnboardingSteps(services);
 
 export const onboardUserFunction = inngest.createFunction(
   {
@@ -44,7 +49,7 @@ export const onboardUserFunction = inngest.createFunction(
 
     try {
       // Mark as started
-      await step.run('mark-started', () => onboardingDataService.markStarted(userId));
+      await step.run('mark-started', () => services.onboardingData.markStarted(userId));
 
       // Step 1: Load user + signup data (cached by Inngest)
       // Note: Inngest serializes data between steps, so Date objects become strings.
@@ -95,7 +100,7 @@ export const onboardUserFunction = inngest.createFunction(
       console.error(`[Inngest] Onboarding failed for user ${userId}:`, error);
 
       try {
-        await onboardingDataService.updateStatus(
+        await services.onboardingData.updateStatus(
           userId,
           'failed',
           error instanceof Error ? error.message : 'Unknown error during onboarding'

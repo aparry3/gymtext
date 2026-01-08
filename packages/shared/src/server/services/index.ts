@@ -1,84 +1,131 @@
-// Entity services (from /services/training/, /services/user/, /services/messaging/)
-// NOTE: These must be imported first as they're used to initialize ContextService
-import { fitnessPlanService } from './training/fitnessPlanService';
-import { workoutInstanceService } from './training/workoutInstanceService';
-import { microcycleService } from './training/microcycleService';
-import { progressService } from './training/progressService';
-export { fitnessPlanService, workoutInstanceService, microcycleService, progressService };
+/**
+ * Services Index
+ *
+ * This file exports all services and the service factory infrastructure.
+ *
+ * Usage:
+ * - Factory pattern (RECOMMENDED): Use createServices(repos) or createServicesFromDb(db)
+ */
 
-// Context service initialization (must happen before any agent services are used)
-import { ContextService } from './context';
-import { ProfileRepository } from '@/server/repositories/profileRepository';
+// =============================================================================
+// Service Factory (Primary Export)
+// =============================================================================
 
-ContextService.initialize({
-  fitnessPlanService,
-  workoutInstanceService,
-  microcycleService,
-  profileRepository: new ProfileRepository(),
-});
-
-// Agent orchestration services (from /services/agents/)
-// These use static methods - call directly e.g. ChatService.handleIncomingMessage()
-export { ChatService } from './agents/chat';
-export { ModificationService } from './agents/modifications';
-export { ProfileService } from './agents/profile';
-
-// Sub-services for modifications (still use singleton pattern)
 export {
-  workoutModificationService,
-  planModificationService,
+  createServices,
+  createServicesFromDb,
+  createContextServiceFromContainer,
+} from './factory';
+export type { ServiceContainer, ExternalClients } from './factory';
+
+// Context service
+export { createContextService } from './context/contextService';
+export type { ContextService } from './context/contextService';
+
+// =============================================================================
+// Domain Service Factory Functions
+// =============================================================================
+
+export { createUserService } from './domain/user/userService';
+export { createFitnessProfileService } from './domain/user/fitnessProfileService';
+export { createOnboardingDataService } from './domain/user/onboardingDataService';
+export { createMessageService } from './domain/messaging/messageService';
+export { createFitnessPlanService } from './domain/training/fitnessPlanService';
+export { createWorkoutInstanceService } from './domain/training/workoutInstanceService';
+export { createMicrocycleService } from './domain/training/microcycleService';
+export { createProgressService } from './domain/training/progressService';
+export { createSubscriptionService } from './domain/subscription/subscriptionService';
+export { createDayConfigService } from './domain/calendar/dayConfigService';
+export { createShortLinkService } from './domain/links/shortLinkService';
+export { createPromptService } from './domain/prompts/promptService';
+export { createReferralService } from './domain/referral/referralService';
+export { createAdminAuthService } from './domain/auth/adminAuthService';
+export { createUserAuthService } from './domain/auth/userAuthService';
+export { createMessageQueueService } from './domain/messaging/messageQueueService';
+export { createChainRunnerService } from './domain/training/chainRunnerService';
+
+// Orchestration service factory functions
+export { createDailyMessageService } from './orchestration/dailyMessageService';
+export { createWeeklyMessageService } from './orchestration/weeklyMessageService';
+export { createOnboardingService } from './orchestration/onboardingService';
+export { createOnboardingCoordinator } from './orchestration/onboardingCoordinator';
+export { createOnboardingSteps } from './orchestration/onboardingSteps';
+
+// Agent service factory functions
+export { createMessagingAgentService } from './agents/messaging/messagingAgentService';
+
+// =============================================================================
+// Domain Service Instance Types
+// =============================================================================
+
+export type { UserServiceInstance, CreateUserRequest } from './domain/user/userService';
+export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './domain/user/fitnessProfileService';
+export type { OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
+export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
+export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
+export type { WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
+export type { MicrocycleServiceInstance } from './domain/training/microcycleService';
+export type { ProgressServiceInstance, ProgressInfo } from './domain/training/progressService';
+export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './domain/subscription/subscriptionService';
+export type { DayConfigServiceInstance } from './domain/calendar/dayConfigService';
+export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
+export type { PromptServiceInstance } from './domain/prompts/promptService';
+export type { ReferralServiceInstance } from './domain/referral/referralService';
+export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
+export type { UserAuthServiceInstance } from './domain/auth/userAuthService';
+export type { MessageQueueServiceInstance, QueuedMessage } from './domain/messaging/messageQueueService';
+export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './domain/training/chainRunnerService';
+
+// Orchestration service instance types
+export type { DailyMessageServiceInstance } from './orchestration/dailyMessageService';
+export type { WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
+export type { OnboardingServiceInstance } from './orchestration/onboardingService';
+export type { OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
+export type { OnboardingSteps } from './orchestration/onboardingSteps';
+
+// Agent service instance types
+export type { MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
+
+// =============================================================================
+// Orchestration Services
+// =============================================================================
+
+// Chat orchestration service
+export { createChatService } from './orchestration/chatService';
+export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatService';
+
+// =============================================================================
+// Agent Services
+// =============================================================================
+
+// Chat agent service
+export { createChatAgentService } from './agents/chat';
+export type { ChatAgentServiceInstance, ChatAgentResult } from './agents/chat';
+
+// Modification orchestration service
+export { createModificationService } from './orchestration/modificationService';
+export type { ModificationServiceInstance, ModificationServiceDeps } from './orchestration/modificationService';
+
+// Modification agent services (helpers)
+export {
+  createWorkoutModificationService,
+  createPlanModificationService,
+  createModificationTools,
 } from './agents/modifications';
 export type {
-  WorkoutModificationService,
+  WorkoutModificationServiceInstance,
+  WorkoutModificationServiceDeps,
   ModifyWorkoutResult,
   ModifyWeekResult,
-  PlanModificationService,
-  ModifyPlanParams,
+  ModifyWorkoutParams,
+  ModifyWeekParams,
+  PlanModificationServiceInstance,
+  PlanModificationServiceDeps,
   ModifyPlanResult,
+  ModifyPlanParams,
+  ModificationToolContext,
+  ModificationToolDeps,
 } from './agents/modifications';
 
-// Non-agent orchestration services (from /services/orchestration/)
-export { dailyMessageService } from './orchestration/dailyMessageService';
-export { weeklyMessageService } from './orchestration/weeklyMessageService';
-export { onboardingService } from './orchestration/onboardingService';
-
-export type { DailyMessageService } from './orchestration/dailyMessageService';
-export type { WeeklyMessageService } from './orchestration/weeklyMessageService';
-export type { OnboardingService } from './orchestration/onboardingService';
-
-export type { FitnessPlanService } from './training/fitnessPlanService';
-export type { ProgressService } from './training/progressService';
-export type { WorkoutInstanceService } from './training/workoutInstanceService';
-export type { MicrocycleService } from './training/microcycleService';
-
-export { userService } from './user/userService';
-export { fitnessProfileService } from './user/fitnessProfileService';
-export { onboardingDataService } from './user/onboardingDataService';
-
-export type { UserService, CreateUserRequest } from './user/userService';
-export type { FitnessProfileService, ProfileUpdateResult } from './user/fitnessProfileService';
-export type { OnboardingDataService } from './user/onboardingDataService';
-
-export { messageService } from './messaging/messageService';
-
-export type { MessageService } from './messaging/messageService';
-
-export { subscriptionService } from './subscription/subscriptionService';
-
-export type {
-  SubscriptionService,
-  CancelResult,
-  ReactivateResult,
-} from './subscription/subscriptionService';
-
-// Chain runner service for testing/improving AI outputs
-export { ChainRunnerService } from './training/chainRunnerService';
-export type { ChainOperation, ChainRunResult, ProfileRegenerationResult } from './training/chainRunnerService';
-
-// Calendar services
-export { dayConfigService } from './calendar/dayConfigService';
-export type { DayConfigService } from './calendar/dayConfigService';
-
-// Service factory (for environment context switching)
-export { getServices, clearServiceCache } from './factory';
-export type { ServiceContainer, WithContext } from './factory';
+// Profile service
+export { ProfileService } from './agents/profile';

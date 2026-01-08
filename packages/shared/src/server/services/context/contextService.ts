@@ -1,8 +1,8 @@
 import type { UserWithProfile } from '@/server/models';
-import type { FitnessPlanService } from '@/server/services/training/fitnessPlanService';
-import type { WorkoutInstanceService } from '@/server/services/training/workoutInstanceService';
-import type { MicrocycleService } from '@/server/services/training/microcycleService';
-import type { ProfileRepository } from '@/server/repositories/profileRepository';
+import type { FitnessPlanServiceInstance } from '@/server/services/domain/training/fitnessPlanService';
+import type { WorkoutInstanceServiceInstance } from '@/server/services/domain/training/workoutInstanceService';
+import type { MicrocycleServiceInstance } from '@/server/services/domain/training/microcycleService';
+import type { FitnessProfileServiceInstance } from '@/server/services/domain/user/fitnessProfileService';
 import { ContextType, type ContextExtras, type ResolvedContextData } from './types';
 import { SnippetType } from './builders/experienceLevel';
 import * as builders from './builders';
@@ -10,12 +10,13 @@ import { today } from '@/shared/utils/date';
 
 /**
  * Dependencies for ContextService
+ * Uses the new instance types from the factory pattern
  */
 export interface ContextServiceDeps {
-  fitnessPlanService: FitnessPlanService;
-  workoutInstanceService: WorkoutInstanceService;
-  microcycleService: MicrocycleService;
-  profileRepository: ProfileRepository;
+  fitnessPlanService: FitnessPlanServiceInstance;
+  workoutInstanceService: WorkoutInstanceServiceInstance;
+  microcycleService: MicrocycleServiceInstance;
+  fitnessProfileService: FitnessProfileServiceInstance;
 }
 
 /**
@@ -26,47 +27,26 @@ export interface ContextServiceDeps {
  *
  * @example
  * ```typescript
+ * // Create via factory function with injected services
+ * const contextService = createContextService({
+ *   fitnessPlanService: services.fitnessPlan,
+ *   workoutInstanceService: services.workoutInstance,
+ *   microcycleService: services.microcycle,
+ *   fitnessProfileService: services.fitnessProfile,
+ * });
+ *
  * const context = await contextService.getContext(
  *   user,
  *   [ContextType.USER_PROFILE, ContextType.DAY_OVERVIEW, ContextType.TRAINING_META],
  *   { dayOverview: input.dayOverview, isDeload: input.isDeload }
  * );
- *
- * const agent = createAgent({
- *   name: 'workout-generate',
- *   systemPrompt: SYSTEM_PROMPT,
- *   context,
- * }, config);
  * ```
  */
 export class ContextService {
-  private static instance: ContextService;
   private deps: ContextServiceDeps;
 
-  private constructor(deps: ContextServiceDeps) {
+  constructor(deps: ContextServiceDeps) {
     this.deps = deps;
-  }
-
-  /**
-   * Initialize the singleton with dependencies
-   * Must be called before getInstance()
-   */
-  public static initialize(deps: ContextServiceDeps): ContextService {
-    if (!ContextService.instance) {
-      ContextService.instance = new ContextService(deps);
-    }
-    return ContextService.instance;
-  }
-
-  /**
-   * Get the singleton instance
-   * Throws if not initialized
-   */
-  public static getInstance(): ContextService {
-    if (!ContextService.instance) {
-      throw new Error('ContextService not initialized. Call initialize() first.');
-    }
-    return ContextService.instance;
   }
 
   /**
@@ -99,7 +79,7 @@ export class ContextService {
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
       needsMicrocycle ? this.deps.microcycleService.getMicrocycleByDate(user.id, targetDate) : null,
-      needsExperienceLevel ? this.deps.profileRepository.getCurrentStructuredProfile(user.id) : null,
+      needsExperienceLevel ? this.deps.fitnessProfileService.getCurrentStructuredProfile(user.id) : null,
       needsDayFormat ? builders.fetchDayFormat(extras.activityType) : null,
     ]);
 
@@ -177,4 +157,14 @@ export class ContextService {
         return '';
     }
   }
+}
+
+/**
+ * Factory function to create a ContextService instance
+ *
+ * @param deps - Service dependencies for context building
+ * @returns A new ContextService instance
+ */
+export function createContextService(deps: ContextServiceDeps): ContextService {
+  return new ContextService(deps);
 }

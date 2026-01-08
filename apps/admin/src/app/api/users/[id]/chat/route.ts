@@ -1,5 +1,4 @@
-import { userService } from '@/server/services/user/userService';
-import { messageService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTwilioSecrets } from '@/server/config';
 
@@ -23,7 +22,8 @@ export async function POST(
       );
     }
 
-    const user = await userService.getUserById(userId);
+    const { services } = await getAdminContext();
+    const user = await services.user.getUserById(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Get user with profile for chat context
-    const userWithProfile = await userService.getUser(user.id);
+    const userWithProfile = await services.user.getUser(user.id);
 
     if (!userWithProfile) {
       return NextResponse.json(
@@ -48,7 +48,7 @@ export async function POST(
 
     // Use MessageService to ingest the message (async via Inngest)
     // This matches the production SMS flow for accurate testing
-    const result = await messageService.ingestMessage({
+    const result = await services.message.ingestMessage({
       user: userWithProfile,
       content: message,
       from: adminFrom,
@@ -94,7 +94,8 @@ export async function GET(
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100 per request
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const user = await userService.getUserById(userId);
+    const { services } = await getAdminContext();
+    const user = await services.user.getUserById(userId);
 
     if (!user) {
       return NextResponse.json(
@@ -104,7 +105,7 @@ export async function GET(
     }
 
     // Get message history (returns DESC - latest first)
-    const messages = await messageService.getMessages(userId, limit, offset);
+    const messages = await services.message.getMessages(userId, limit, offset);
 
     // Transform messages to match frontend interface
     // Frontend expects: { timestamp, from, to, ... }

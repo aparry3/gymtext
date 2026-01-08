@@ -17,8 +17,11 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { dailyMessageService } from '@/server/services';
-import { userService } from '@/server/services/user/userService';
+import { createServicesFromDb } from '@/server/services';
+import { postgresDb } from '@/server/connections/postgres/postgres';
+
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
 
 export const sendDailyWorkoutFunction = inngest.createFunction(
   {
@@ -35,7 +38,7 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
     const result = await step.run('send-daily-workout', async () => {
       console.log('[Inngest] Sending daily workout:', { userId, targetDate });
 
-      const user = await userService.getUser(userId);
+      const user = await services.user.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
@@ -45,7 +48,7 @@ export const sendDailyWorkoutFunction = inngest.createFunction(
       // 1. Getting or generating today's workout
       // 2. Generating the message
       // 3. Sending via MessageService
-      const messageResult = await dailyMessageService.sendDailyMessage(user);
+      const messageResult = await services.dailyMessage.sendDailyMessage(user);
 
       console.log('[Inngest] Daily workout sent:', {
         userId,

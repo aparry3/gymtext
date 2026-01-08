@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { workoutInstanceService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -51,13 +51,15 @@ export async function GET(
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
 
+    const { services } = await getAdminContext();
+
     // If filtering by date range
     if (startDateParam && endDateParam) {
       const startDate = new Date(startDateParam);
       const endDate = new Date(endDateParam);
 
       if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-        const workouts = await workoutInstanceService.getWorkoutsByDateRange(
+        const workouts = await services.workoutInstance.getWorkoutsByDateRange(
           requestedUserId,
           startDate,
           endDate
@@ -70,7 +72,7 @@ export async function GET(
     }
 
     // Default: return recent workouts by date DESC
-    const workouts = await workoutInstanceService.getRecentWorkouts(
+    const workouts = await services.workoutInstance.getRecentWorkouts(
       requestedUserId,
       limit
     );

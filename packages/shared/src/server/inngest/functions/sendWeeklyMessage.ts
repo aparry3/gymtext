@@ -18,8 +18,11 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { weeklyMessageService } from '@/server/services';
-import { userService } from '@/server/services/user/userService';
+import { createServicesFromDb } from '@/server/services';
+import { postgresDb } from '@/server/connections/postgres/postgres';
+
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
 
 export const sendWeeklyMessageFunction = inngest.createFunction(
   {
@@ -39,7 +42,7 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
     const result = await step.run('send-weekly-message', async () => {
       console.log('[Inngest] Sending weekly message:', { userId });
 
-      const user = await userService.getUser(userId);
+      const user = await services.user.getUser(userId);
 
       if (!user) {
         throw new Error(`User ${userId} not found`);
@@ -51,7 +54,7 @@ export const sendWeeklyMessageFunction = inngest.createFunction(
       // 3. Checking for mesocycle transitions
       // 4. Generating messages with AI
       // 5. Sending both messages
-      const messageResult = await weeklyMessageService.sendWeeklyMessage(user);
+      const messageResult = await services.weeklyMessage.sendWeeklyMessage(user);
 
       console.log('[Inngest] Weekly message sent:', {
         userId,

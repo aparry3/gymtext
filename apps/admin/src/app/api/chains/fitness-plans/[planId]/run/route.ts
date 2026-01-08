@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { ChainRunnerService, type ChainOperation } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
+import type { ChainOperation } from '@gymtext/shared/server';
 
 const VALID_OPERATIONS: ChainOperation[] = ['full', 'structured', 'message'];
 
@@ -33,8 +34,8 @@ export async function POST(
       );
     }
 
-    const chainRunnerService = ChainRunnerService.getInstance();
-    const result = await chainRunnerService.runFitnessPlanChain(planId, operation);
+    const { services } = await getAdminContext();
+    const result = await services.chainRunner.runFitnessPlanChain(planId, operation);
 
     return NextResponse.json({
       success: true,

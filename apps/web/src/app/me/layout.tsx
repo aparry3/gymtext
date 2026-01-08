@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decryptUserId } from '@/server/utils/sessionCrypto';
 import { MeSidebar } from '@/components/pages/me/layout/MeSidebar';
-import { userService } from '@/server/services';
+import { getServices } from '@/lib/context';
 
 interface MeLayoutProps {
   children: React.ReactNode;
@@ -28,7 +28,8 @@ export default async function MeLayout({ children }: MeLayoutProps) {
   let programType: string | undefined;
 
   try {
-    const result = await userService.getUserForAdmin(userId);
+    const services = getServices();
+    const result = await services.user.getUserForAdmin(userId);
     if (result?.user) {
       userName = result.user.name || 'User';
       // Try to extract program type from fitness profile or plan

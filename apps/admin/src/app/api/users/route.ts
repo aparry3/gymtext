@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 import type { UserFilters, UserSort } from '@/components/admin/types';
 
 export async function GET(request: Request) {
@@ -54,7 +54,8 @@ export async function GET(request: Request) {
       };
     }
 
-    const result = await userService.listUsersForAdmin(filters);
+    const { services } = await getAdminContext();
+    const result = await services.user.listUsersForAdmin(filters);
 
     return NextResponse.json({
       success: true,

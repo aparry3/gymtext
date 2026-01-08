@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userService } from '@/server/services';
+import { getAdminContext } from '@/lib/context';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -15,7 +15,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       );
     }
 
-    const result = await userService.getUserForAdmin(id);
+    const { services } = await getAdminContext();
+    const result = await services.user.getUserForAdmin(id);
 
     return NextResponse.json({
       success: true,
@@ -59,7 +60,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       );
     }
 
-    const deleted = await userService.deleteUser(id);
+    const { services } = await getAdminContext();
+    const deleted = await services.user.deleteUser(id);
 
     if (!deleted) {
       return NextResponse.json(

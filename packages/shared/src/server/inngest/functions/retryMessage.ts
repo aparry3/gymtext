@@ -18,9 +18,12 @@
 
 import { inngest } from '@/server/connections/inngest/client';
 import { MessageRepository } from '@/server/repositories';
-import { userService } from '@/server/services/user/userService';
+import { createServicesFromDb } from '@/server/services';
 import { messagingClient } from '@/server/connections/messaging';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+
+// Create services container at module level (Inngest always uses production)
+const services = createServicesFromDb(postgresDb);
 
 // Retry delays in seconds: [immediate, 5min, 30min]
 const RETRY_DELAYS = [0, 300, 1800];
@@ -111,7 +114,7 @@ export const retryMessageFunction = inngest.createFunction(
     const retryResult = await step.run('retry-send-message', async () => {
       const messageRepo = new MessageRepository(postgresDb);
 
-      const user = await userService.getUser(userId);
+      const user = await services.user.getUser(userId);
       if (!user) {
         throw new Error(`User ${userId} not found`);
       }
