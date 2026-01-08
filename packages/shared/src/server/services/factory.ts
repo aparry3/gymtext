@@ -169,16 +169,7 @@ export function createServices(
   const microcycleAgent = createMicrocycleAgentService(contextService);
 
   // =========================================================================
-  // Phase 2.6: Inject contextService into Phase 1 services for backward compatibility
-  // NOTE: These injections support deprecated methods. New code should use trainingService.
-  // =========================================================================
-  microcycle.injectContextService(contextService);
-  progress.injectMicrocycleService(microcycle);
-  workoutInstance.injectContextService(contextService);
-  workoutInstance.injectProgressService(progress);
-
-  // =========================================================================
-  // Phase 2.7: Create training orchestration service
+  // Phase 2.6: Create training orchestration service
   // =========================================================================
   const training = createTrainingService({
     user,
