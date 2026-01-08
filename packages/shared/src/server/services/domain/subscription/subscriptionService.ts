@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 const { secretKey } = getStripeSecrets();
 const stripe = new Stripe(secretKey, {

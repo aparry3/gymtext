@@ -1,9 +1,9 @@
 import { UserWithProfile } from '../../models/user';
 import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
-import type { FitnessPlanServiceInstance } from '../training/fitnessPlanService';
+import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { DailyMessageServiceInstance } from './dailyMessageService';
 import type { TrainingServiceInstance } from './trainingService';
-import type { MessageQueueServiceInstance, QueuedMessage } from '../messaging/messageQueueService';
+import type { MessageQueueServiceInstance, QueuedMessage } from '../domain/messaging/messageQueueService';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 
 // =============================================================================

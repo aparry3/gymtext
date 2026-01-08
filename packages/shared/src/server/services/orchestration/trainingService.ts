@@ -14,15 +14,15 @@ import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle, ActivityType } from '@/server/models/microcycle';
 import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
-import type { ProgressInfo } from '../training/progressService';
+import type { ProgressInfo } from '../domain/training/progressService';
 
 // Domain services
-import type { UserServiceInstance } from '../user/userService';
-import type { FitnessPlanServiceInstance } from '../training/fitnessPlanService';
-import type { ProgressServiceInstance } from '../training/progressService';
-import type { MicrocycleServiceInstance } from '../training/microcycleService';
-import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
-import type { ShortLinkServiceInstance } from '../links/shortLinkService';
+import type { UserServiceInstance } from '../domain/user/userService';
+import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
+import type { ProgressServiceInstance } from '../domain/training/progressService';
+import type { MicrocycleServiceInstance } from '../domain/training/microcycleService';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
 
 // Agent services
 import type { WorkoutAgentService } from '../agents/training/workoutAgentService';

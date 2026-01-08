@@ -15,36 +15,37 @@ import type Stripe from 'stripe';
 import { createRepositories, type RepositoryContainer } from '../repositories/factory';
 import type { ITwilioClient } from '../connections/twilio/factory';
 
-// Core service factory functions
-import { createUserService, type UserServiceInstance } from './user/userService';
-import { createFitnessProfileService, type FitnessProfileServiceInstance } from './user/fitnessProfileService';
-import { createOnboardingDataService, type OnboardingDataServiceInstance } from './user/onboardingDataService';
-import { createMessageService, type MessageServiceInstance } from './messaging/messageService';
-import { createFitnessPlanService, type FitnessPlanServiceInstance } from './training/fitnessPlanService';
-import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './training/workoutInstanceService';
-import { createMicrocycleService, type MicrocycleServiceInstance } from './training/microcycleService';
-import { createProgressService, type ProgressServiceInstance } from './training/progressService';
-import { createSubscriptionService, type SubscriptionServiceInstance } from './subscription/subscriptionService';
-import { createDayConfigService, type DayConfigServiceInstance } from './calendar/dayConfigService';
+// Domain service factory functions
+import { createUserService, type UserServiceInstance } from './domain/user/userService';
+import { createFitnessProfileService, type FitnessProfileServiceInstance } from './domain/user/fitnessProfileService';
+import { createOnboardingDataService, type OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
+import { createMessageService, type MessageServiceInstance } from './domain/messaging/messageService';
+import { createFitnessPlanService, type FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
+import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
+import { createMicrocycleService, type MicrocycleServiceInstance } from './domain/training/microcycleService';
+import { createProgressService, type ProgressServiceInstance } from './domain/training/progressService';
+import { createSubscriptionService, type SubscriptionServiceInstance } from './domain/subscription/subscriptionService';
+import { createDayConfigService, type DayConfigServiceInstance } from './domain/calendar/dayConfigService';
 import { createContextService, type ContextService } from './context/contextService';
 
-// New service factory functions
-import { createShortLinkService, type ShortLinkServiceInstance } from './links/shortLinkService';
-import { createPromptService, type PromptServiceInstance } from './prompts/promptService';
-import { createReferralService, type ReferralServiceInstance } from './referral/referralService';
-import { createAdminAuthService, type AdminAuthServiceInstance } from './auth/adminAuthService';
-import { createUserAuthService, type UserAuthServiceInstance } from './auth/userAuthService';
-import { createMessageQueueService, type MessageQueueServiceInstance } from './messaging/messageQueueService';
+// More domain service factory functions
+import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
+import { createPromptService, type PromptServiceInstance } from './domain/prompts/promptService';
+import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
+import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
+import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
+import { createMessageQueueService, type MessageQueueServiceInstance } from './domain/messaging/messageQueueService';
 import { createDailyMessageService, type DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 import { createWeeklyMessageService, type WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
 import { createOnboardingService, type OnboardingServiceInstance } from './orchestration/onboardingService';
 import { createOnboardingCoordinator, type OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
-import { createChainRunnerService, type ChainRunnerServiceInstance } from './training/chainRunnerService';
+import { createChainRunnerService, type ChainRunnerServiceInstance } from './domain/training/chainRunnerService';
 import { createMessagingAgentService, type MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
 import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
 import { createPlanModificationService, type PlanModificationServiceInstance } from './agents/modifications/planModificationService';
-import { createModificationService, type ModificationServiceInstance } from './agents/modifications';
 import { createTrainingService, type TrainingServiceInstance } from './orchestration/trainingService';
+import { createModificationService, type ModificationServiceInstance } from './orchestration/modificationService';
+import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
 
 // Agent services
 import {
@@ -53,6 +54,7 @@ import {
   type WorkoutAgentService,
   type MicrocycleAgentService,
 } from './agents/training';
+import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 
 /**
  * External clients that can be injected for environment switching
@@ -101,6 +103,10 @@ export interface ServiceContainer {
   // Agent services
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
+  chatAgent: ChatAgentServiceInstance;
+
+  // Orchestration services
+  chat: ChatServiceInstance;
 
   // Shared context service for agents
   contextService: ContextService;
@@ -124,19 +130,6 @@ export function createServices(
   repos: RepositoryContainer,
   clients?: ExternalClients
 ): ServiceContainer {
-  // Get default clients if not provided (for backward compatibility)
-  const getDefaultStripeClient = async () => {
-    const { getStripeSecrets } = await import('../config');
-    const Stripe = (await import('stripe')).default;
-    const { secretKey } = getStripeSecrets();
-    return new Stripe(secretKey, { apiVersion: '2023-10-16' });
-  };
-
-  const getDefaultTwilioClient = async () => {
-    const { twilioClient } = await import('../connections/twilio/twilio');
-    return twilioClient;
-  };
-
   // =========================================================================
   // Phase 1: Create services with no service dependencies (repos only)
   // =========================================================================
@@ -167,6 +160,7 @@ export function createServices(
   // =========================================================================
   const workoutAgent = createWorkoutAgentService(contextService);
   const microcycleAgent = createMicrocycleAgentService(contextService);
+  const chatAgent = createChatAgentService(contextService);
 
   // =========================================================================
   // Phase 2.6: Create training orchestration service
@@ -322,6 +316,18 @@ export function createServices(
     planModification,
   });
 
+  // =========================================================================
+  // Phase 5.5: Create chat orchestration service
+  // =========================================================================
+  const chat = createChatService({
+    message,
+    user,
+    workoutInstance,
+    training,
+    modification,
+    chatAgent,
+  });
+
   const chainRunner = createChainRunnerService(repos, {
     fitnessPlan,
     microcycle,
@@ -370,6 +376,10 @@ export function createServices(
     // Agent services
     workoutAgent,
     microcycleAgent,
+    chatAgent,
+
+    // Chat orchestration
+    chat,
 
     // Shared context
     contextService,

@@ -12,7 +12,7 @@ import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
 import { logAgentInvocation } from './logger';
-import type { PromptServiceInstance } from '@/server/services/prompts/promptService';
+import type { PromptServiceInstance } from '@/server/services/domain/prompts/promptService';
 
 // Lazy-loaded prompt service instance
 let _promptService: PromptServiceInstance | null = null;

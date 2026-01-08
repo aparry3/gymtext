@@ -1,5 +1,5 @@
 import type { WorkoutInstanceUpdate, NewWorkoutInstance, WorkoutInstance } from '@/server/models/workout';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 /**
  * WorkoutInstanceServiceInstance interface

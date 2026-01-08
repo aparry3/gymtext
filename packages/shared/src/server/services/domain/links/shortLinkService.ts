@@ -1,6 +1,6 @@
 import { ShortLink, CreateShortLinkOptions, ResolvedShortLink } from '@/server/models/shortLink';
 import { getShortLinksConfig } from '@/shared/config';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 // =============================================================================
 // Factory Pattern (Recommended)

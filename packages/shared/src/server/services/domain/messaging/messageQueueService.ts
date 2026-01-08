@@ -1,6 +1,6 @@
 import { Message } from '@/server/models/conversation';
 import { inngest } from '@/server/connections/inngest/client';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { MessageServiceInstance } from './messageService';
 import type { UserServiceInstance } from '../user/userService';

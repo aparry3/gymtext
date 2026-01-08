@@ -6,10 +6,10 @@ import { inngest } from '@/server/connections/inngest/client';
 import { getUrlsConfig } from '@/shared/config';
 import type { WorkoutAgentService } from '../agents/training';
 import type { RepositoryContainer } from '../../repositories/factory';
-import type { UserServiceInstance } from '../user/userService';
-import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
-import type { MessageQueueServiceInstance, QueuedMessage } from '../messaging/messageQueueService';
-import type { DayConfigServiceInstance } from '../calendar/dayConfigService';
+import type { UserServiceInstance } from '../domain/user/userService';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
+import type { MessageQueueServiceInstance, QueuedMessage } from '../domain/messaging/messageQueueService';
+import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { TrainingServiceInstance } from './trainingService';
 
 interface MessageResult {

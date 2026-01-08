@@ -1,19 +1,19 @@
-import { UserWithProfile } from '../../models/user';
-import { FitnessPlan } from '../../models/fitnessPlan';
-import { messagingClient } from '../../connections/messaging';
-import { inngest } from '../../connections/inngest/client';
-import { createWorkoutAgentService, type WorkoutAgentService } from '../agents/training';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '../../models/workout';
-import { Message } from '../../models/conversation';
+import { UserWithProfile } from '../../../models/user';
+import { FitnessPlan } from '../../../models/fitnessPlan';
+import { messagingClient } from '../../../connections/messaging';
+import { inngest } from '../../../connections/inngest/client';
+import { createWorkoutAgentService, type WorkoutAgentService } from '../../agents/training';
+import { WorkoutInstance, EnhancedWorkoutInstance } from '../../../models/workout';
+import { Message } from '../../../models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { getTwilioSecrets } from '@/server/config';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
-import type { ContextService } from '../context';
-import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+import type { ContextService } from '../../context';
+import type { MessagingAgentServiceInstance } from '../../agents/messaging/messagingAgentService';
 import type { MessageQueueServiceInstance } from './messageQueueService';
-import type { Json } from '../../models/_types';
+import type { Json } from '../../../models/_types';
 
 /**
  * Parameters for storing an inbound message
@@ -107,7 +107,7 @@ export function createMessageService(
 
   const getMessagingAgent = async (): Promise<MessagingAgentServiceInstance> => {
     if (!messagingAgent) {
-      const { createMessagingAgentService } = await import('../agents/messaging/messagingAgentService');
+      const { createMessagingAgentService } = await import('../../agents/messaging/messagingAgentService');
       messagingAgent = createMessagingAgentService();
     }
     return messagingAgent;
@@ -116,7 +116,7 @@ export function createMessageService(
   const getMessageQueue = async (): Promise<MessageQueueServiceInstance | null> => {
     if (!messageQueue) {
       // Lazy load message queue service if not provided
-      const { createServicesFromDb } = await import('../factory');
+      const { createServicesFromDb } = await import('../../factory');
       const { postgresDb } = await import('@/server/connections/postgres/postgres');
       const services = createServicesFromDb(postgresDb);
       messageQueue = services.messageQueue;

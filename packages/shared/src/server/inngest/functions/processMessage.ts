@@ -17,19 +17,11 @@
  */
 
 import { inngest } from '@/server/connections/inngest/client';
-import { createServicesFromDb, createChatService } from '@/server/services';
+import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
-const chatService = createChatService({
-  message: services.message,
-  user: services.user,
-  workoutInstance: services.workoutInstance,
-  training: services.training,
-  modification: services.modification,
-  contextService: services.contextService,
-});
 
 export const processMessageFunction = inngest.createFunction(
   {
@@ -61,7 +53,7 @@ export const processMessageFunction = inngest.createFunction(
       // - Splitting into pending vs context
       // - Aggregating pending message content
       // - Early return if no pending messages
-      const chatMessages = await chatService.handleIncomingMessage(user);
+      const chatMessages = await services.chat.handleIncomingMessage(user);
       console.log('[Inngest] Response(s) generated, count:', chatMessages.length);
       return chatMessages;
     });

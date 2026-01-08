@@ -1,8 +1,8 @@
 import type { UserWithProfile } from '@/server/models';
-import type { FitnessPlanServiceInstance } from '@/server/services/training/fitnessPlanService';
-import type { WorkoutInstanceServiceInstance } from '@/server/services/training/workoutInstanceService';
-import type { MicrocycleServiceInstance } from '@/server/services/training/microcycleService';
-import type { FitnessProfileServiceInstance } from '@/server/services/user/fitnessProfileService';
+import type { FitnessPlanServiceInstance } from '@/server/services/domain/training/fitnessPlanService';
+import type { WorkoutInstanceServiceInstance } from '@/server/services/domain/training/workoutInstanceService';
+import type { MicrocycleServiceInstance } from '@/server/services/domain/training/microcycleService';
+import type { FitnessProfileServiceInstance } from '@/server/services/domain/user/fitnessProfileService';
 import { ContextType, type ContextExtras, type ResolvedContextData } from './types';
 import { SnippetType } from './builders/experienceLevel';
 import * as builders from './builders';

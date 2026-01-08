@@ -5,7 +5,7 @@ import {
   MAX_REFERRAL_CREDITS,
   REFERRAL_CREDIT_AMOUNT_CENTS,
 } from '@/server/models/referral';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 // Stripe coupon ID for referee's first month free
 const REFERRAL_COUPON_ID = 'REFERRAL_FREE_MONTH';

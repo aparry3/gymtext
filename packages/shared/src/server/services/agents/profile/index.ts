@@ -15,9 +15,9 @@ import { StructuredProfileSchema } from '@/server/models/profile';
 import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from '../types/profile';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
-import type { UserServiceInstance } from '../../user/userService';
-import type { FitnessProfileServiceInstance } from '../../user/fitnessProfileService';
-import type { WorkoutInstanceServiceInstance } from '../../training/workoutInstanceService';
+import type { UserServiceInstance } from '../../domain/user/userService';
+import type { FitnessProfileServiceInstance } from '../../domain/user/fitnessProfileService';
+import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
 
 /**
  * ProfileServiceInstance interface

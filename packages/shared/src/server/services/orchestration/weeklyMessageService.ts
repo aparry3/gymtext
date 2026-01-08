@@ -1,9 +1,9 @@
 import { UserWithProfile } from '@/server/models/user';
 import { inngest } from '@/server/connections/inngest/client';
 import { now, getNextWeekStart } from '@/shared/utils/date';
-import type { UserServiceInstance } from '../user/userService';
-import type { MessageServiceInstance } from '../messaging/messageService';
-import type { FitnessPlanServiceInstance } from '../training/fitnessPlanService';
+import type { UserServiceInstance } from '../domain/user/userService';
+import type { MessageServiceInstance } from '../domain/messaging/messageService';
+import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 

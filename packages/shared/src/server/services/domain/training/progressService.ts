@@ -1,5 +1,5 @@
-import { FitnessPlan } from '../../models/fitnessPlan';
-import { Microcycle } from '../../models/microcycle';
+import { FitnessPlan } from '../../../models/fitnessPlan';
+import { Microcycle } from '../../../models/microcycle';
 import {
   parseDate,
   now,
@@ -8,7 +8,7 @@ import {
   diffInWeeks,
   getWeekday,
 } from '@/shared/utils/date';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 import type { MicrocycleServiceInstance } from './microcycleService';
 
 /**
@@ -49,7 +49,7 @@ export function createProgressService(
 
   const getMicrocycleService = async (): Promise<MicrocycleServiceInstance> => {
     if (!microcycleService) {
-      const { createServicesFromDb } = await import('../factory');
+      const { createServicesFromDb } = await import('../../factory');
       const { postgresDb } = await import('@/server/connections/postgres/postgres');
       const services = createServicesFromDb(postgresDb);
       microcycleService = services.microcycle;

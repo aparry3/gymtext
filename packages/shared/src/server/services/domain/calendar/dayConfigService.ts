@@ -4,7 +4,7 @@ import {
 } from '@/server/connections/storage/storage';
 import { DayConfigOptions, DayConfigWithTypedConfig } from '@/server/models/dayConfig';
 import { UploadedImage, NewUploadedImage } from '@/server/models/uploadedImage';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 /**
  * DayConfigServiceInstance interface

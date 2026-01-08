@@ -14,7 +14,7 @@
  * - **Advanced:** Optimize performance, manage fatigue, and pursue specific strength goals
  */
 
-import type { PromptServiceInstance } from '@/server/services/prompts/promptService';
+import type { PromptServiceInstance } from '@/server/services/domain/prompts/promptService';
 
 // Lazy-loaded prompt service instance
 let _promptService: PromptServiceInstance | null = null;

@@ -19,7 +19,7 @@ import type { MicrocycleServiceInstance } from './microcycleService';
 import type { WorkoutInstanceServiceInstance } from './workoutInstanceService';
 import type { UserServiceInstance } from '../user/userService';
 import type { FitnessProfileServiceInstance } from '../user/fitnessProfileService';
-import type { ContextService } from '../context/contextService';
+import type { ContextService } from '../../context/contextService';
 
 export type ChainOperation = 'full' | 'structured' | 'message';
 

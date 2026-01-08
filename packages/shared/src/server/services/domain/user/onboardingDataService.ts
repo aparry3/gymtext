@@ -1,5 +1,5 @@
 import type { OnboardingRecord, SignupData, OnboardingStatus } from '@/server/repositories/onboardingRepository';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 /**
  * OnboardingDataServiceInstance interface

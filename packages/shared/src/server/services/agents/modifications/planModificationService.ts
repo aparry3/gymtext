@@ -1,8 +1,8 @@
 import { createFitnessPlanAgentService, type FitnessPlanAgentService } from '../training';
 import { now, getDayOfWeek } from '@/shared/utils/date';
 import type { RepositoryContainer } from '@/server/repositories/factory';
-import type { UserServiceInstance } from '../../user/userService';
-import type { FitnessPlanServiceInstance } from '../../training/fitnessPlanService';
+import type { UserServiceInstance } from '../../domain/user/userService';
+import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
 import type { WorkoutModificationServiceInstance } from './workoutModificationService';
 import type { ContextService } from '../../context/contextService';
 

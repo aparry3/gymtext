@@ -1,6 +1,6 @@
 import { now, startOfWeek, endOfWeek } from '@/shared/utils/date';
 import { Microcycle } from '@/server/models/microcycle';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 /**
  * MicrocycleServiceInstance interface
@@ -100,7 +100,7 @@ export function createMicrocycleService(
       }
 
       // Import workoutInstanceService dynamically to avoid circular dependency
-      const { createServicesFromDb } = await import('../factory');
+      const { createServicesFromDb } = await import('../../factory');
       const { postgresDb } = await import('@/server/connections/postgres/postgres');
       const services = createServicesFromDb(postgresDb);
 

@@ -1,6 +1,6 @@
 import type { RepositoryContainer } from '../../repositories/factory';
-import type { OnboardingDataServiceInstance } from '../user/onboardingDataService';
-import type { UserServiceInstance } from '../user/userService';
+import type { OnboardingDataServiceInstance } from '../domain/user/onboardingDataService';
+import type { UserServiceInstance } from '../domain/user/userService';
 import type { OnboardingServiceInstance } from './onboardingService';
 
 // =============================================================================

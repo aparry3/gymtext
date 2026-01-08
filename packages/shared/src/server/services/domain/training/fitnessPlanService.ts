@@ -1,8 +1,8 @@
-import { FitnessPlan, FitnessPlanModel } from '../../models/fitnessPlan';
-import { UserWithProfile } from '../../models/user';
-import { createFitnessPlanAgentService, type FitnessPlanAgentService } from '../agents/training';
-import type { RepositoryContainer } from '../../repositories/factory';
-import type { ContextService } from '../context';
+import { FitnessPlan, FitnessPlanModel } from '../../../models/fitnessPlan';
+import { UserWithProfile } from '../../../models/user';
+import { createFitnessPlanAgentService, type FitnessPlanAgentService } from '../../agents/training';
+import type { RepositoryContainer } from '../../../repositories/factory';
+import type { ContextService } from '../../context';
 
 /**
  * FitnessPlanServiceInstance interface

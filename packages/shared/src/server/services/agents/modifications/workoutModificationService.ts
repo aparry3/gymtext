@@ -7,10 +7,10 @@ import {
 import type { ModifyWorkoutOutput, WorkoutGenerateOutput } from '@/server/services/agents/types/workouts';
 import { now, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import type { UserServiceInstance } from '../../user/userService';
-import type { MicrocycleServiceInstance } from '../../training/microcycleService';
-import type { WorkoutInstanceServiceInstance } from '../../training/workoutInstanceService';
-import type { FitnessPlanServiceInstance } from '../../training/fitnessPlanService';
+import type { UserServiceInstance } from '../../domain/user/userService';
+import type { MicrocycleServiceInstance } from '../../domain/training/microcycleService';
+import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
+import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
 import type { TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { ContextService } from '../../context/contextService';
 

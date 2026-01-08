@@ -23,79 +23,96 @@ export { createContextService } from './context/contextService';
 export type { ContextService } from './context/contextService';
 
 // =============================================================================
-// Service Factory Functions
+// Domain Service Factory Functions
 // =============================================================================
 
-export { createUserService } from './user/userService';
-export { createFitnessProfileService } from './user/fitnessProfileService';
-export { createOnboardingDataService } from './user/onboardingDataService';
-export { createMessageService } from './messaging/messageService';
-export { createFitnessPlanService } from './training/fitnessPlanService';
-export { createWorkoutInstanceService } from './training/workoutInstanceService';
-export { createMicrocycleService } from './training/microcycleService';
-export { createProgressService } from './training/progressService';
-export { createSubscriptionService } from './subscription/subscriptionService';
-export { createDayConfigService } from './calendar/dayConfigService';
-export { createShortLinkService } from './links/shortLinkService';
-export { createPromptService } from './prompts/promptService';
-export { createReferralService } from './referral/referralService';
-export { createAdminAuthService } from './auth/adminAuthService';
-export { createUserAuthService } from './auth/userAuthService';
-export { createMessageQueueService } from './messaging/messageQueueService';
+export { createUserService } from './domain/user/userService';
+export { createFitnessProfileService } from './domain/user/fitnessProfileService';
+export { createOnboardingDataService } from './domain/user/onboardingDataService';
+export { createMessageService } from './domain/messaging/messageService';
+export { createFitnessPlanService } from './domain/training/fitnessPlanService';
+export { createWorkoutInstanceService } from './domain/training/workoutInstanceService';
+export { createMicrocycleService } from './domain/training/microcycleService';
+export { createProgressService } from './domain/training/progressService';
+export { createSubscriptionService } from './domain/subscription/subscriptionService';
+export { createDayConfigService } from './domain/calendar/dayConfigService';
+export { createShortLinkService } from './domain/links/shortLinkService';
+export { createPromptService } from './domain/prompts/promptService';
+export { createReferralService } from './domain/referral/referralService';
+export { createAdminAuthService } from './domain/auth/adminAuthService';
+export { createUserAuthService } from './domain/auth/userAuthService';
+export { createMessageQueueService } from './domain/messaging/messageQueueService';
+export { createChainRunnerService } from './domain/training/chainRunnerService';
+
+// Orchestration service factory functions
 export { createDailyMessageService } from './orchestration/dailyMessageService';
 export { createWeeklyMessageService } from './orchestration/weeklyMessageService';
 export { createOnboardingService } from './orchestration/onboardingService';
 export { createOnboardingCoordinator } from './orchestration/onboardingCoordinator';
-export { createChainRunnerService } from './training/chainRunnerService';
-export { createMessagingAgentService } from './agents/messaging/messagingAgentService';
 export { createOnboardingSteps } from './orchestration/onboardingSteps';
 
+// Agent service factory functions
+export { createMessagingAgentService } from './agents/messaging/messagingAgentService';
+
 // =============================================================================
-// Service Instance Types
+// Domain Service Instance Types
 // =============================================================================
 
-export type { UserServiceInstance, CreateUserRequest } from './user/userService';
-export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './user/fitnessProfileService';
-export type { OnboardingDataServiceInstance } from './user/onboardingDataService';
-export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './messaging/messageService';
-export type { FitnessPlanServiceInstance } from './training/fitnessPlanService';
-export type { WorkoutInstanceServiceInstance } from './training/workoutInstanceService';
-export type { MicrocycleServiceInstance } from './training/microcycleService';
-export type { ProgressServiceInstance, ProgressInfo } from './training/progressService';
-export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './subscription/subscriptionService';
-export type { DayConfigServiceInstance } from './calendar/dayConfigService';
-export type { ShortLinkServiceInstance } from './links/shortLinkService';
-export type { PromptServiceInstance } from './prompts/promptService';
-export type { ReferralServiceInstance } from './referral/referralService';
-export type { AdminAuthServiceInstance } from './auth/adminAuthService';
-export type { UserAuthServiceInstance } from './auth/userAuthService';
-export type { MessageQueueServiceInstance, QueuedMessage } from './messaging/messageQueueService';
+export type { UserServiceInstance, CreateUserRequest } from './domain/user/userService';
+export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './domain/user/fitnessProfileService';
+export type { OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
+export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
+export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
+export type { WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
+export type { MicrocycleServiceInstance } from './domain/training/microcycleService';
+export type { ProgressServiceInstance, ProgressInfo } from './domain/training/progressService';
+export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './domain/subscription/subscriptionService';
+export type { DayConfigServiceInstance } from './domain/calendar/dayConfigService';
+export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
+export type { PromptServiceInstance } from './domain/prompts/promptService';
+export type { ReferralServiceInstance } from './domain/referral/referralService';
+export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
+export type { UserAuthServiceInstance } from './domain/auth/userAuthService';
+export type { MessageQueueServiceInstance, QueuedMessage } from './domain/messaging/messageQueueService';
+export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './domain/training/chainRunnerService';
+
+// Orchestration service instance types
 export type { DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 export type { WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
 export type { OnboardingServiceInstance } from './orchestration/onboardingService';
 export type { OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
-export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './training/chainRunnerService';
-export type { MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
 export type { OnboardingSteps } from './orchestration/onboardingSteps';
+
+// Agent service instance types
+export type { MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
+
+// =============================================================================
+// Orchestration Services
+// =============================================================================
+
+// Chat orchestration service
+export { createChatService } from './orchestration/chatService';
+export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatService';
 
 // =============================================================================
 // Agent Services
 // =============================================================================
 
-// Chat service
-export { createChatService, ChatService } from './agents/chat';
-export type { ChatServiceInstance, ChatServiceDeps } from './agents/chat';
+// Chat agent service
+export { createChatAgentService } from './agents/chat';
+export type { ChatAgentServiceInstance, ChatAgentResult } from './agents/chat';
 
-// Modification services
+// Modification orchestration service
+export { createModificationService } from './orchestration/modificationService';
+export type { ModificationServiceInstance, ModificationServiceDeps } from './orchestration/modificationService';
+
+// Modification agent services (helpers)
 export {
-  createModificationService,
   createWorkoutModificationService,
   createPlanModificationService,
   createModificationTools,
 } from './agents/modifications';
 export type {
-  ModificationServiceInstance,
-  ModificationServiceDeps,
   WorkoutModificationServiceInstance,
   WorkoutModificationServiceDeps,
   ModifyWorkoutResult,

@@ -1,5 +1,5 @@
 import type { PromptPair } from '@/server/models/prompt';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 interface CacheEntry<T> {
   data: T;

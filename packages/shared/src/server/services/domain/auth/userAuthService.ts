@@ -1,7 +1,7 @@
 import { encryptUserId } from '@/server/utils/sessionCrypto';
 import { getEnvironmentSettings } from '@/server/config';
 import { getAdminConfig } from '@/shared/config';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { AdminAuthServiceInstance } from './adminAuthService';
 

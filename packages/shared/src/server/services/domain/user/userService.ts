@@ -2,7 +2,7 @@ import { UserModel, CreateUserData, UserWithProfile, User } from '@/server/model
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import type { AdminUser, AdminUsersResponse, AdminUserDetailResponse, UserFilters, UserSort, Pagination } from '@/shared/types/admin';
 import { getTimezonesAtLocalTime } from '@/shared/utils/date';
-import type { RepositoryContainer } from '../../repositories/factory';
+import type { RepositoryContainer } from '../../../repositories/factory';
 
 export interface CreateUserRequest {
   name: string;
