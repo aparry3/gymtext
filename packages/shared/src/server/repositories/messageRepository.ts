@@ -258,4 +258,89 @@ export class MessageRepository extends BaseRepository {
       failed: Number(failed?.count ?? 0),
     };
   }
+
+  /**
+   * Get message stats for a specific date range (for dashboard charts)
+   */
+  async getStatsByDateRange(startDate: Date, endDate: Date): Promise<{
+    total: number;
+    delivered: number;
+    pending: number;
+    failed: number;
+  }> {
+    const baseQuery = this.db.selectFrom('messages')
+      .where('createdAt', '>=', startDate)
+      .where('createdAt', '<=', endDate);
+
+    const [total, delivered, pending, failed] = await Promise.all([
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('deliveryStatus', '=', 'delivered')
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('deliveryStatus', 'in', ['queued', 'sent'])
+        .executeTakeFirst(),
+      baseQuery
+        .select(({ fn }) => fn.count('id').as('count'))
+        .where('deliveryStatus', 'in', ['failed', 'undelivered'])
+        .executeTakeFirst(),
+    ]);
+
+    return {
+      total: Number(total?.count ?? 0),
+      delivered: Number(delivered?.count ?? 0),
+      pending: Number(pending?.count ?? 0),
+      failed: Number(failed?.count ?? 0),
+    };
+  }
+
+  /**
+   * Get daily message stats by delivery status for a date range
+   */
+  async getStatsByDay(startDate: Date, endDate: Date): Promise<{
+    date: string;
+    delivered: number;
+    pending: number;
+    failed: number;
+  }[]> {
+    const results = await this.db
+      .selectFrom('messages')
+      .select((eb) => [
+        eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]).as('day'),
+        eb.fn.count<number>(
+          eb.case()
+            .when('deliveryStatus', '=', 'delivered')
+            .then(eb.ref('id'))
+            .end()
+        ).as('delivered'),
+        eb.fn.count<number>(
+          eb.case()
+            .when('deliveryStatus', 'in', ['queued', 'sent'])
+            .then(eb.ref('id'))
+            .end()
+        ).as('pending'),
+        eb.fn.count<number>(
+          eb.case()
+            .when('deliveryStatus', 'in', ['failed', 'undelivered'])
+            .then(eb.ref('id'))
+            .end()
+        ).as('failed'),
+      ])
+      .where('createdAt', '>=', startDate)
+      .where('createdAt', '<=', endDate)
+      .groupBy((eb) => eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]))
+      .orderBy('day', 'asc')
+      .execute();
+
+    return results.map((r) => ({
+      date: new Date(r.day as string).toISOString().split('T')[0],
+      delivered: Number(r.delivered ?? 0),
+      pending: Number(r.pending ?? 0),
+      failed: Number(r.failed ?? 0),
+    }));
+  }
 }

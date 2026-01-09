@@ -154,4 +154,35 @@ export class SubscriptionRepository extends BaseRepository {
       .orderBy('createdAt', 'desc')
       .executeTakeFirst() ?? null;
   }
+
+  /**
+   * Count all active subscriptions (for dashboard)
+   */
+  async countActive(): Promise<number> {
+    const result = await this.db
+      .selectFrom('subscriptions')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where('status', '=', 'active')
+      .executeTakeFirst();
+
+    return Number(result?.count ?? 0);
+  }
+
+  /**
+   * Count active subscriptions as of a specific date
+   */
+  async countActiveAsOf(date: Date): Promise<number> {
+    const result = await this.db
+      .selectFrom('subscriptions')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where('status', '=', 'active')
+      .where('createdAt', '<=', date)
+      .where((eb) => eb.or([
+        eb('canceledAt', 'is', null),
+        eb('canceledAt', '>', date),
+      ]))
+      .executeTakeFirst();
+
+    return Number(result?.count ?? 0);
+  }
 }

@@ -1,9 +1,10 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 /**
- * Admin layout that enforces authentication
+ * Admin layout that enforces authentication and provides navigation sidebar
  *
  * This layout wraps all /admin/* routes (except /admin/login which has its own layout)
  * and ensures users are authenticated before rendering any admin pages.
@@ -22,5 +23,12 @@ export default async function AdminLayout({
     redirect('/login');
   }
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-gray-50/50">
+      <AdminSidebar />
+      <main className="md:pl-64 pt-16 md:pt-0">
+        {children}
+      </main>
+    </div>
+  );
 }

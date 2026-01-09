@@ -34,15 +34,13 @@ function PromptsEditorSkeleton() {
 
 function AdminPromptsPageContent() {
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-4 py-6 max-w-full">
-        <div className="space-y-2">
-          {/* Header */}
-          <AdminHeader title="Prompts Editor" subtitle="Manage AI agent prompts with version history" />
+    <div className="container mx-auto px-4 py-6 max-w-full">
+      <div className="space-y-2">
+        {/* Header */}
+        <AdminHeader title="Prompts Editor" subtitle="Manage AI agent prompts with version history" />
 
-          {/* Editor */}
-          <PromptsEditor />
-        </div>
+        {/* Editor */}
+        <PromptsEditor />
       </div>
     </div>
   );

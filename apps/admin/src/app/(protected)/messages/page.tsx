@@ -102,9 +102,8 @@ function AdminMessagesPageContent() {
   }, [fetchMessages, filters, currentPage]);
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="space-y-6">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="space-y-6">
           {/* Header */}
           <AdminHeader
             title="Messages"
@@ -190,7 +189,6 @@ function AdminMessagesPageContent() {
               itemsPerPage={50}
             />
           )}
-        </div>
       </div>
     </div>
   );

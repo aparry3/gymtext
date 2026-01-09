@@ -42,18 +42,16 @@ function CalendarSkeleton() {
 
 function AdminCalendarPageContent() {
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-4 py-6 max-w-5xl">
-        <div className="space-y-2">
-          <AdminHeader
-            title="Day Images Calendar"
-            subtitle="Set custom images for specific days (holidays, themes)"
-          />
+    <div className="container mx-auto px-4 py-6 max-w-5xl">
+      <div className="space-y-2">
+        <AdminHeader
+          title="Day Images Calendar"
+          subtitle="Set custom images for specific days (holidays, themes)"
+        />
 
-          <Suspense fallback={<CalendarSkeleton />}>
-            <CalendarView />
-          </Suspense>
-        </div>
+        <Suspense fallback={<CalendarSkeleton />}>
+          <CalendarView />
+        </Suspense>
       </div>
     </div>
   );

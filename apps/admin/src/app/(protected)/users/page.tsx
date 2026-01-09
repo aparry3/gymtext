@@ -103,9 +103,8 @@ function AdminUsersPageContent() {
   }, [fetchUsers, filters, currentPage, sort])
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="space-y-6">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="space-y-6">
         {/* Header */}
         <AdminHeader
           title="Users"
@@ -185,7 +184,6 @@ function AdminUsersPageContent() {
             itemsPerPage={10}
           />
         )}
-        </div>
       </div>
     </div>
   )

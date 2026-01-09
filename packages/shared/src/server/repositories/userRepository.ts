@@ -407,4 +407,70 @@ export class UserRepository extends BaseRepository {
       .selectAll()
       .executeTakeFirst());
   }
+
+  // ============================================
+  // Dashboard Analytics Methods
+  // ============================================
+
+  /**
+   * Count users created within a date range
+   */
+  async countByDateRange(startDate: Date, endDate: Date): Promise<number> {
+    const result = await this.db
+      .selectFrom('users')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where('createdAt', '>=', startDate)
+      .where('createdAt', '<=', endDate)
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * Get daily signup counts for a date range
+   */
+  async getSignupsByDay(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
+    const results = await this.db
+      .selectFrom('users')
+      .select((eb) => [
+        eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]).as('day'),
+        eb.fn.countAll<number>().as('count'),
+      ])
+      .where('createdAt', '>=', startDate)
+      .where('createdAt', '<=', endDate)
+      .groupBy((eb) => eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]))
+      .orderBy('day', 'asc')
+      .execute();
+
+    return results.map((r) => ({
+      date: new Date(r.day as string).toISOString().split('T')[0],
+      count: Number(r.count),
+    }));
+  }
+
+  /**
+   * Get most recent user signups
+   */
+  async getRecentSignups(limit: number = 5): Promise<UserWithProfile[]> {
+    const users = await this.db
+      .selectFrom('users')
+      .selectAll()
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .execute();
+
+    return users.map((u) => UserModel.fromDb(u)).filter((u) => u !== undefined) as UserWithProfile[];
+  }
+
+  /**
+   * Get total user count
+   */
+  async countTotal(): Promise<number> {
+    const result = await this.db
+      .selectFrom('users')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
 }
