@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import {
   type User,
@@ -432,18 +433,18 @@ export class UserRepository extends BaseRepository {
   async getSignupsByDay(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
     const results = await this.db
       .selectFrom('users')
-      .select((eb) => [
-        eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]).as('day'),
-        eb.fn.countAll<number>().as('count'),
+      .select([
+        sql<Date>`date_trunc('day', created_at)`.as('day'),
+        sql<number>`count(*)`.as('count'),
       ])
       .where('createdAt', '>=', startDate)
       .where('createdAt', '<=', endDate)
-      .groupBy((eb) => eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]))
-      .orderBy('day', 'asc')
+      .groupBy(sql`date_trunc('day', created_at)`)
+      .orderBy(sql`date_trunc('day', created_at)`, 'asc')
       .execute();
 
     return results.map((r) => ({
-      date: new Date(r.day as string).toISOString().split('T')[0],
+      date: new Date(r.day).toISOString().split('T')[0],
       count: Number(r.count),
     }));
   }

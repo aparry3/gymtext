@@ -1,7 +1,8 @@
+import { sql } from 'kysely';
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import type { 
-  Message, 
-  NewMessage, 
+import type {
+  Message,
+  NewMessage,
 } from '@/server/models/message';
 
 export class MessageRepository extends BaseRepository {
@@ -309,35 +310,20 @@ export class MessageRepository extends BaseRepository {
   }[]> {
     const results = await this.db
       .selectFrom('messages')
-      .select((eb) => [
-        eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]).as('day'),
-        eb.fn.count<number>(
-          eb.case()
-            .when('deliveryStatus', '=', 'delivered')
-            .then(eb.ref('id'))
-            .end()
-        ).as('delivered'),
-        eb.fn.count<number>(
-          eb.case()
-            .when('deliveryStatus', 'in', ['queued', 'sent'])
-            .then(eb.ref('id'))
-            .end()
-        ).as('pending'),
-        eb.fn.count<number>(
-          eb.case()
-            .when('deliveryStatus', 'in', ['failed', 'undelivered'])
-            .then(eb.ref('id'))
-            .end()
-        ).as('failed'),
+      .select([
+        sql<Date>`date_trunc('day', created_at)`.as('day'),
+        sql<number>`count(*) filter (where delivery_status = 'delivered')`.as('delivered'),
+        sql<number>`count(*) filter (where delivery_status in ('queued', 'sent'))`.as('pending'),
+        sql<number>`count(*) filter (where delivery_status in ('failed', 'undelivered'))`.as('failed'),
       ])
       .where('createdAt', '>=', startDate)
       .where('createdAt', '<=', endDate)
-      .groupBy((eb) => eb.fn('date_trunc', [eb.val('day'), eb.ref('createdAt')]))
-      .orderBy('day', 'asc')
+      .groupBy(sql`date_trunc('day', created_at)`)
+      .orderBy(sql`date_trunc('day', created_at)`, 'asc')
       .execute();
 
     return results.map((r) => ({
-      date: new Date(r.day as string).toISOString().split('T')[0],
+      date: new Date(r.day).toISOString().split('T')[0],
       delivered: Number(r.delivered ?? 0),
       pending: Number(r.pending ?? 0),
       failed: Number(r.failed ?? 0),
