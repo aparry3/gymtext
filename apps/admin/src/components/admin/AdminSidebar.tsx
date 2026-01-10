@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Calendar,
   FileText,
+  Presentation,
   Menu,
   ChevronLeft,
   LogOut,
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/users', label: 'Users', icon: Users },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/demos', label: 'Demos', icon: Presentation },
   { href: '/prompts', label: 'Prompts', icon: FileText },
 ];
 
