@@ -18,7 +18,7 @@ import type { EnvironmentMode } from './secrets';
 
 const ConfigSchema = z.object({
   // Production URLs
-  PROD_WEB_API_URL: z.string().min(1, 'PROD_WEB_API_URL is required'),
+  WEB_API_URL: z.string().min(1, 'WEB_API_URL is required'),
 
   // Sandbox URLs (optional, falls back to production)
   SANDBOX_WEB_API_URL: z.string().optional(),
@@ -70,7 +70,7 @@ export function getProductionConfig(): AdminAppConfig {
 
   return {
     urls: {
-      webApiUrl: env.PROD_WEB_API_URL,
+      webApiUrl: env.WEB_API_URL,
     },
   };
 }

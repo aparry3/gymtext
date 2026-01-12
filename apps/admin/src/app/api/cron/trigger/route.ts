@@ -15,9 +15,9 @@ export async function POST() {
     const cronSecret = secrets.cron.cronSecret;
 
     if (!webAppUrl) {
-      console.error('[ADMIN CRON] PROD_WEB_API_URL is not configured');
+      console.error('[ADMIN CRON] Web API Url is not configured');
       return NextResponse.json(
-        { success: false, error: 'PROD_WEB_API_URL is not configured' },
+        { success: false, error: 'Web API URL is not configured' },
         { status: 500 }
       );
     }
