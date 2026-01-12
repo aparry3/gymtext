@@ -24,6 +24,11 @@ import type { MicrocycleServiceInstance } from '../domain/training/microcycleSer
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
 
+// Program domain services
+import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
+import type { ProgramServiceInstance } from '../domain/program/programService';
+import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
+
 // Agent services
 import type { WorkoutAgentService } from '../agents/training/workoutAgentService';
 import type { MicrocycleAgentService } from '../agents/training/microcycleAgentService';
@@ -71,6 +76,11 @@ export interface TrainingServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   shortLink: ShortLinkServiceInstance;
 
+  // Program domain services
+  enrollment: EnrollmentServiceInstance;
+  program: ProgramServiceInstance;
+  programOwner: ProgramOwnerServiceInstance;
+
   // Agent services
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
@@ -92,6 +102,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     microcycle: microcycleService,
     workoutInstance: workoutInstanceService,
     shortLink: shortLinkService,
+    enrollment: enrollmentService,
+    program: programService,
+    programOwner: programOwnerService,
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
@@ -121,11 +134,37 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       providedMicrocycle?: Microcycle
     ): Promise<WorkoutInstance | null> {
       try {
-        // 1. Get current fitness plan
-        const plan = await fitnessPlanService.getCurrentPlan(user.id);
-        if (!plan) {
-          console.log(`[TrainingService] No fitness plan found for user ${user.id}`);
+        // 1. Get enrollment and linked fitness plan version
+        const enrollmentResult = await enrollmentService.getEnrollmentWithVersion(user.id);
+        if (!enrollmentResult) {
+          console.log(`[TrainingService] No active enrollment for user ${user.id}`);
           return null;
+        }
+
+        let { enrollment, version: plan } = enrollmentResult;
+
+        // For AI programs without a version, generate one
+        if (!plan) {
+          const prog = await programService.getById(enrollment.programId);
+          if (!prog) {
+            console.log(`[TrainingService] Program not found: ${enrollment.programId}`);
+            return null;
+          }
+
+          const owner = await programOwnerService.getById(prog.ownerId);
+          if (!owner) {
+            console.log(`[TrainingService] Program owner not found: ${prog.ownerId}`);
+            return null;
+          }
+
+          if (owner.ownerType === 'ai') {
+            console.log(`[TrainingService] AI program has no version, generating one for user ${user.id}`);
+            plan = await this.createFitnessPlan(user);
+            await enrollmentService.linkVersion(enrollment.id, plan.id!);
+          } else {
+            console.log(`[TrainingService] Non-AI program has no version for user ${user.id}`);
+            return null;
+          }
         }
 
         // 2. Get progress for the target date

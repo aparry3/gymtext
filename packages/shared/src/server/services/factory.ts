@@ -191,6 +191,9 @@ export function createServices(
     microcycle,
     workoutInstance,
     shortLink,
+    enrollment,
+    program,
+    programOwner,
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
@@ -294,6 +297,7 @@ export function createServices(
     training,
     fitnessPlan,
     messagingAgent,
+    enrollment,
   });
 
   const onboarding = createOnboardingService({

@@ -6,6 +6,7 @@ import type { MessageServiceInstance } from '../domain/messaging/messageService'
 import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
 
 interface MessageResult {
   success: boolean;
@@ -41,6 +42,7 @@ export interface WeeklyMessageServiceDeps {
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
+  enrollment: EnrollmentServiceInstance;
 }
 
 /**
@@ -58,6 +60,7 @@ export function createWeeklyMessageService(
     training: trainingService,
     fitnessPlan: fitnessPlanService,
     messagingAgent: messagingAgentService,
+    enrollment: enrollmentService,
   } = deps;
 
   return {
@@ -104,9 +107,16 @@ export function createWeeklyMessageService(
       try {
         console.log(`[WeeklyMessageService] Processing weekly message for user ${user.id}`);
 
-        const plan = await fitnessPlanService.getCurrentPlan(user.id);
+        // Get enrollment and linked fitness plan version
+        const enrollmentResult = await enrollmentService.getEnrollmentWithVersion(user.id);
+        if (!enrollmentResult) {
+          console.error(`[WeeklyMessageService] No active enrollment found for user ${user.id}`);
+          return { success: false, userId: user.id, error: 'No active enrollment found' };
+        }
+
+        const { enrollment, version: plan } = enrollmentResult;
         if (!plan) {
-          console.error(`[WeeklyMessageService] No fitness plan found for user ${user.id}`);
+          console.error(`[WeeklyMessageService] No fitness plan version found for user ${user.id}`);
           return { success: false, userId: user.id, error: 'No fitness plan found' };
         }
 
