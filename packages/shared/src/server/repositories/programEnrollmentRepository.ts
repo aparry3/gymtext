@@ -179,4 +179,25 @@ export class ProgramEnrollmentRepository extends BaseRepository {
 
     return Number(result?.count ?? 0);
   }
+
+  /**
+   * Count unique fitness plan versions for a program
+   */
+  async countVersionsByProgramId(programId: string): Promise<number> {
+    const result = await this.db
+      .selectFrom('programEnrollments')
+      .select((eb) => eb.fn.count('versionId').distinct().as('count'))
+      .where('programId', '=', programId)
+      .where('versionId', 'is not', null)
+      .executeTakeFirst();
+
+    return Number(result?.count ?? 0);
+  }
+
+  /**
+   * Update the status of an enrollment
+   */
+  async updateStatus(id: string, status: EnrollmentStatus): Promise<ProgramEnrollment | null> {
+    return this.update(id, { status });
+  }
 }

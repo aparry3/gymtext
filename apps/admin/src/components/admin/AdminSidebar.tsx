@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   LogOut,
   Building2,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEnvironment } from '@/context/EnvironmentContext';
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+  { href: '/programs', label: 'Programs', icon: ClipboardList },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },

@@ -81,6 +81,26 @@ export interface EnrollmentServiceInstance {
    * Count active enrollments for a program
    */
   countActiveEnrollments(programId: string): Promise<number>;
+
+  /**
+   * Count unique fitness plan versions for a program
+   */
+  countVersions(programId: string): Promise<number>;
+
+  /**
+   * List all enrollments for a program
+   */
+  listByProgram(programId: string): Promise<ProgramEnrollment[]>;
+
+  /**
+   * Update enrollment status
+   */
+  updateStatus(enrollmentId: string, status: EnrollmentStatus): Promise<ProgramEnrollment | null>;
+
+  /**
+   * Generic update for enrollment fields
+   */
+  update(enrollmentId: string, data: Partial<ProgramEnrollment>): Promise<ProgramEnrollment | null>;
 }
 
 /**
@@ -168,6 +188,22 @@ export function createEnrollmentService(
 
     async countActiveEnrollments(programId: string): Promise<number> {
       return repos.programEnrollment.countActiveByProgramId(programId);
+    },
+
+    async countVersions(programId: string): Promise<number> {
+      return repos.programEnrollment.countVersionsByProgramId(programId);
+    },
+
+    async listByProgram(programId: string): Promise<ProgramEnrollment[]> {
+      return repos.programEnrollment.findByProgramId(programId);
+    },
+
+    async updateStatus(enrollmentId: string, status: EnrollmentStatus): Promise<ProgramEnrollment | null> {
+      return repos.programEnrollment.updateStatus(enrollmentId, status);
+    },
+
+    async update(enrollmentId: string, data: Partial<ProgramEnrollment>): Promise<ProgramEnrollment | null> {
+      return repos.programEnrollment.update(enrollmentId, data);
     },
   };
 }
