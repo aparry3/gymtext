@@ -25,8 +25,6 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ServiceContainer } from '../factory';
-import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
-import type { ProgramServiceInstance } from '../domain/program/programService';
 
 // Return types for each step
 export interface LoadDataResult {

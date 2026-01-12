@@ -188,3 +188,83 @@ export interface AdminMessagesResponse {
   pagination: Pagination;
   stats: MessageStats;
 }
+
+// ============================================
+// Program Owner Admin Types
+// ============================================
+
+// Owner type enum
+export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer';
+
+// Admin-specific program owner type with stats
+export interface AdminProgramOwner {
+  id: string;
+  userId: string | null;
+  ownerType: OwnerType;
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  stripeConnectAccountId: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  // Stats
+  programCount: number;
+  enrollmentCount: number;
+}
+
+// Filter types for the program owners list
+export interface ProgramOwnerFilters {
+  search?: string;
+  ownerType?: OwnerType;
+  isActive?: boolean;
+}
+
+// Sorting options
+export interface ProgramOwnerSort {
+  field: 'displayName' | 'ownerType' | 'createdAt' | 'programCount' | 'enrollmentCount';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for the program owners page
+export interface ProgramOwnerStats {
+  totalOwners: number;
+  byType: {
+    ai: number;
+    coach: number;
+    trainer: number;
+    influencer: number;
+  };
+  activeOwners: number;
+  totalPrograms: number;
+  totalEnrollments: number;
+}
+
+// API Response type for list
+export interface AdminProgramOwnersResponse {
+  owners: AdminProgramOwner[];
+  pagination: Pagination;
+  stats: ProgramOwnerStats;
+}
+
+// API Response type for detail
+export interface AdminProgramOwnerDetailResponse {
+  owner: AdminProgramOwner;
+  programs: {
+    id: string;
+    name: string;
+    isActive: boolean;
+    enrollmentCount: number;
+    createdAt: Date;
+  }[];
+}
+
+// Form data for create/update
+export interface ProgramOwnerFormData {
+  displayName: string;
+  ownerType: OwnerType;
+  bio?: string;
+  avatarUrl?: string;
+  userId?: string;
+  isActive?: boolean;
+}
