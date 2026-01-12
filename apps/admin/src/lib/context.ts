@@ -21,8 +21,14 @@ import { createRepositories, type RepositoryContainer } from '@gymtext/shared/se
 import { createServices, type ServiceContainer } from '@gymtext/shared/server';
 import type { Kysely } from 'kysely';
 import type { DB } from '@gymtext/shared/server';
+import {
+  getSecretsForMode,
+  getProductionSecrets,
+  type EnvironmentMode,
+} from './secrets';
+import { getConfigForMode, getProductionConfig } from './config';
 
-export type EnvironmentMode = 'production' | 'sandbox';
+export type { EnvironmentMode } from './secrets';
 
 export interface AdminContext {
   /** Current environment mode */
@@ -51,7 +57,7 @@ function getOrCreateDb(url: string): Kysely<DB> {
  * Get the current environment mode from the request header
  * The header is set by middleware based on the gt_env cookie
  */
-async function getEnvironmentMode(): Promise<EnvironmentMode> {
+export async function getEnvironmentMode(): Promise<EnvironmentMode> {
   try {
     const headerStore = await headers();
     const envHeader = headerStore.get('x-gymtext-env');
@@ -79,25 +85,15 @@ async function getEnvironmentMode(): Promise<EnvironmentMode> {
  */
 export async function getAdminContext(): Promise<AdminContext> {
   const mode = await getEnvironmentMode();
-
-  // Select DB URL based on mode
-  const dbUrl =
-    mode === 'sandbox'
-      ? process.env.SANDBOX_DATABASE_URL || process.env.DATABASE_URL!
-      : process.env.DATABASE_URL!;
-
-  // Select web API URL based on mode
-  const webApiUrl =
-    mode === 'sandbox'
-      ? process.env.SANDBOX_WEB_API_URL || process.env.PROD_WEB_API_URL!
-      : process.env.PROD_WEB_API_URL!;
+  const secrets = getSecretsForMode(mode);
+  const config = getConfigForMode(mode);
 
   // Create context
-  const db = getOrCreateDb(dbUrl);
+  const db = getOrCreateDb(secrets.database.url);
   const repos = createRepositories(db);
   const services = createServices(repos);
 
-  return { mode, db, repos, services, webApiUrl };
+  return { mode, db, repos, services, webApiUrl: config.urls.webApiUrl };
 }
 
 /**
@@ -105,14 +101,14 @@ export async function getAdminContext(): Promise<AdminContext> {
  * Useful for operations that should always use production data
  */
 export async function getProductionContext(): Promise<AdminContext> {
-  const dbUrl = process.env.DATABASE_URL!;
-  const webApiUrl = process.env.PROD_WEB_API_URL!;
+  const secrets = getProductionSecrets();
+  const config = getProductionConfig();
 
-  const db = getOrCreateDb(dbUrl);
+  const db = getOrCreateDb(secrets.database.url);
   const repos = createRepositories(db);
   const services = createServices(repos);
 
-  return { mode: 'production', db, repos, services, webApiUrl };
+  return { mode: 'production', db, repos, services, webApiUrl: config.urls.webApiUrl };
 }
 
 /**

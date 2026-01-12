@@ -1,8 +1,8 @@
 /**
  * Environment Context
  *
- * This module provides the environment context system that enables
- * switching between sandbox and production environments in the admin app.
+ * This module provides the environment context system.
+ * Apps provide their own secrets and config - this module is environment-agnostic.
  */
 
 // Types
@@ -10,18 +10,18 @@ export type {
   EnvironmentMode,
   EnvironmentContext,
   EnvironmentSecrets,
-  EnvironmentSecretsConfig,
   DatabaseSecrets,
   TwilioSecrets,
   StripeSecrets,
   AISecrets,
   PineconeSecrets,
+  CronSecrets,
+  SecretsConfig,
+  EnvConfig,
+  // Deprecated - kept for backward compatibility
+  EnvironmentSecretsConfig,
 } from './types';
 
 // Context creation
-export {
-  createEnvContext,
-  createProductionContext,
-  clearContextCache,
-  isSandboxConfigured,
-} from './createEnvContext';
+export { createEnvContext, clearContextCache } from './createEnvContext';
+export type { CreateEnvContextOptions } from './createEnvContext';
