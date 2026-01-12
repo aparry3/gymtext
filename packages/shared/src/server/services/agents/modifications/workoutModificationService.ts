@@ -172,11 +172,14 @@ export function createWorkoutModificationService(
 
         const activityType = modifiedMicrocycle.structure?.days?.[targetDayIndex]?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
 
+        let workoutMessage: string | undefined;
+
         if (!workout) {
           console.log('[MODIFY_WEEK] No existing workout found, generating new one');
           const generatedWorkout = await trainingService.prepareWorkoutForDate(user, targetDate);
           if (generatedWorkout) {
             workout = generatedWorkout;
+            workoutMessage = generatedWorkout.message ?? undefined;
           }
         } else {
           console.log('[MODIFY_WEEK] Regenerating existing workout');
@@ -188,11 +191,12 @@ export function createWorkoutModificationService(
             message: workoutResult.message,
             sessionType: getWorkoutTypeFromTheme(dayOverview),
           });
+          workoutMessage = workoutResult.message;
         }
 
         const messages: string[] = [];
         const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
-        if (targetDay === currentDayOfWeek && workout?.message) messages.push(workout.message);
+        if (targetDay === currentDayOfWeek && workoutMessage) messages.push(workoutMessage);
 
         console.log('[MODIFY_WEEK] Week modification complete');
         return { success: true, modifiedDays: 1, modifications: modifiedMicrocycle.modifications, messages };
