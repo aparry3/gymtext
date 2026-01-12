@@ -58,6 +58,11 @@ import {
 } from './agents/training';
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 
+// Program domain services
+import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
+import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
+import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
+
 /**
  * External clients that can be injected for environment switching
  */
@@ -113,6 +118,11 @@ export interface ServiceContainer {
 
   // Shared context service for agents
   contextService: ContextService;
+
+  // Program domain services
+  programOwner: ProgramOwnerServiceInstance;
+  program: ProgramServiceInstance;
+  enrollment: EnrollmentServiceInstance;
 }
 
 /**
@@ -147,6 +157,11 @@ export function createServices(
   const dayConfig = createDayConfigService(repos);
   const shortLink = createShortLinkService(repos);
   const prompt = createPromptService(repos);
+
+  // Program domain services (repos-only)
+  const programOwner = createProgramOwnerService(repos);
+  const program = createProgramService(repos);
+  const enrollment = createEnrollmentService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -389,6 +404,11 @@ export function createServices(
 
     // Shared context
     contextService,
+
+    // Program domain services
+    programOwner,
+    program,
+    enrollment,
   };
 }
 
@@ -458,4 +478,9 @@ export type {
   // Agent services
   WorkoutAgentService,
   MicrocycleAgentService,
+
+  // Program domain services
+  ProgramOwnerServiceInstance,
+  ProgramServiceInstance,
+  EnrollmentServiceInstance,
 };

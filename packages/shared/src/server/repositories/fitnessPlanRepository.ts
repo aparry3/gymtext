@@ -17,7 +17,9 @@ export class FitnessPlanRepository extends BaseRepository {
     const result = await this.db
       .insertInto('fitnessPlans')
       .values({
-        clientId: fitnessPlan.clientId,
+        programId: fitnessPlan.programId ?? null,
+        legacyClientId: fitnessPlan.legacyClientId,
+        publishedAt: fitnessPlan.publishedAt ?? null,
         description: fitnessPlan.description,
         message: fitnessPlan.message,
         structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
@@ -45,12 +47,13 @@ export class FitnessPlanRepository extends BaseRepository {
 
   /**
    * Get the current (latest) fitness plan for a user
+   * Uses legacyClientId for backward compatibility
    */
   async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
     const result = await this.db
       .selectFrom('fitnessPlans')
       .selectAll()
-      .where('clientId', '=', userId)
+      .where('legacyClientId', '=', userId)
       .orderBy('createdAt', 'desc')
       .executeTakeFirst();
 
@@ -61,12 +64,13 @@ export class FitnessPlanRepository extends BaseRepository {
   /**
    * Get all fitness plans for a user (for history)
    * Returns plans ordered by creation date (newest first)
+   * Uses legacyClientId for backward compatibility
    */
   async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
     const results = await this.db
       .selectFrom('fitnessPlans')
       .selectAll()
-      .where('clientId', '=', userId)
+      .where('legacyClientId', '=', userId)
       .orderBy('createdAt', 'desc')
       .execute();
 
