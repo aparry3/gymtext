@@ -1,0 +1,66 @@
+/* Import Inter font for Anatomy page */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Anatomy page font overrides */
+.anatomy-page {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom colors - matching Anatomy brand */
+.bg-anatomy-black {
+  background-color: #050505;
+}
+
+.text-anatomy-black {
+  color: #050505;
+}
+
+.bg-anatomy-gray {
+  background-color: #1a1a1a;
+}
+
+.text-anatomy-gray {
+  color: #1a1a1a;
+}
+
+/* Extended letter spacing */
+.tracking-widest-plus {
+  letter-spacing: 0.2em;
+}
+
+/* Smooth scrolling */
+.anatomy-page {
+  scroll-behavior: smooth;
+}
+
+/* Selection styling for Anatomy page */
+.anatomy-page ::selection {
+  background-color: #fff;
+  color: #050505;
+}
+
+/* Hide scrollbars on phone mockup */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom animation for slide in from right */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-from-right {
+  animation: slide-in-from-right 0.3s ease-out;
+}
