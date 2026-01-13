@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getProductionSecrets } from '@/lib/secrets';
+import { getProductionConfig } from '@/lib/config';
 
 /**
  * Proxy endpoint to trigger the web app's daily message cron
@@ -6,13 +8,16 @@ import { NextResponse } from 'next/server';
  */
 export async function POST() {
   try {
-    const webAppUrl = process.env.WEB_APP_URL;
-    const cronSecret = process.env.CRON_SECRET;
+    const secrets = getProductionSecrets();
+    const config = getProductionConfig();
+
+    const webAppUrl = config.urls.webApiUrl;
+    const cronSecret = secrets.cron.cronSecret;
 
     if (!webAppUrl) {
-      console.error('[ADMIN CRON] WEB_APP_URL is not configured');
+      console.error('[ADMIN CRON] Web API Url is not configured');
       return NextResponse.json(
-        { success: false, error: 'WEB_APP_URL is not configured' },
+        { success: false, error: 'Web API URL is not configured' },
         { status: 500 }
       );
     }

@@ -81,10 +81,10 @@ export function createProgressService(
       }
 
       const ms = await getMicrocycleService();
-      let microcycle = await ms.getMicrocycleByDate(plan.clientId, targetDate);
+      let microcycle = await ms.getMicrocycleByDate(plan.legacyClientId, targetDate);
 
       if (!microcycle) {
-        microcycle = await ms.getMicrocycleByAbsoluteWeek(plan.clientId, absoluteWeek);
+        microcycle = await ms.getMicrocycleByAbsoluteWeek(plan.legacyClientId, absoluteWeek);
       }
 
       const dayOfWeek = getWeekday(targetDate, timezone);

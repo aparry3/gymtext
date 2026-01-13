@@ -20,6 +20,7 @@ import { createRepositories, type RepositoryContainer } from '@gymtext/shared/se
 import { createServices, type ServiceContainer } from '@gymtext/shared/server';
 import type { Kysely } from 'kysely';
 import type { DB } from '@gymtext/shared/server';
+import { getSecrets } from './secrets';
 
 // Singleton caches for production
 let _db: Kysely<DB> | null = null;
@@ -31,11 +32,8 @@ let _services: ServiceContainer | null = null;
  */
 export function getDb(): Kysely<DB> {
   if (!_db) {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('DATABASE_URL environment variable is required');
-    }
-    _db = createDatabase(databaseUrl);
+    const secrets = getSecrets();
+    _db = createDatabase(secrets.database.url);
   }
   return _db;
 }

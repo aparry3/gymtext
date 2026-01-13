@@ -45,6 +45,7 @@ export interface StripeSecrets {
 export interface AISecrets {
   openaiApiKey: string;
   googleApiKey: string;
+  xaiApiKey?: string;
 }
 
 /**
@@ -53,6 +54,15 @@ export interface AISecrets {
 export interface PineconeSecrets {
   apiKey: string;
   indexName: string;
+}
+
+/**
+ * Cron/background job credentials
+ */
+export interface CronSecrets {
+  cronSecret?: string;
+  inngestEventKey?: string;
+  inngestSigningKey?: string;
 }
 
 /**
@@ -65,6 +75,30 @@ export interface EnvironmentSecrets {
   // Shared across environments
   ai: AISecrets;
   pinecone: PineconeSecrets;
+  cron: CronSecrets;
+}
+
+/**
+ * Environment-agnostic secrets configuration.
+ * Apps load their own env vars and pass this to the shared package.
+ * The shared package doesn't know about SANDBOX_* vs production naming.
+ */
+export interface SecretsConfig {
+  database: DatabaseSecrets;
+  twilio: TwilioSecrets;
+  stripe: StripeSecrets;
+  ai: AISecrets;
+  pinecone: PineconeSecrets;
+  cron: CronSecrets;
+}
+
+/**
+ * Environment-agnostic config (non-secrets).
+ * For settings like URLs that vary by environment but aren't sensitive.
+ */
+export interface EnvConfig {
+  /** Base URL for the web API (used for callbacks, etc.) */
+  webApiBaseUrl?: string;
 }
 
 /**
@@ -90,6 +124,8 @@ export interface EnvironmentContext {
 
 /**
  * Configuration for loading environment secrets
+ * @deprecated Use SecretsConfig instead. Apps should load their own env vars
+ * and pass secrets to the shared package without sandbox/production naming.
  */
 export interface EnvironmentSecretsConfig {
   production: {

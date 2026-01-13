@@ -200,8 +200,8 @@ export function createChainRunnerService(
       const startTime = Date.now();
       const plan = await fitnessPlanService.getPlanById(planId);
       if (!plan) throw new Error(`Fitness plan not found: ${planId}`);
-      const user = await userService.getUser(plan.clientId);
-      if (!user) throw new Error(`User not found: ${plan.clientId}`);
+      const user = await userService.getUser(plan.legacyClientId);
+      if (!user) throw new Error(`User not found: ${plan.legacyClientId}`);
       let updatedPlan: FitnessPlan;
       switch (operation) {
         case 'full': updatedPlan = await runFullFitnessPlanChain(plan, user); break;

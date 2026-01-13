@@ -77,6 +77,8 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
     workoutInstance: workoutInstanceService,
     training: trainingService,
     onboardingCoordinator,
+    enrollment: enrollmentService,
+    program: programService,
   } = services;
 
   return {
@@ -135,13 +137,28 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
     /**
      * Step 3: Get or create fitness plan
      *
+     * Ensures user is enrolled in AI program and links the plan version.
+     *
      * @param forceCreate - When true, always creates new plan (for re-onboarding)
      */
     async getOrCreatePlan(user: UserWithProfile, forceCreate = false): Promise<PlanResult> {
+      // Ensure user is enrolled in AI program
+      let enrollment = await enrollmentService.getActiveEnrollment(user.id);
+      if (!enrollment) {
+        console.log(`[Onboarding] Step 3: Creating AI program enrollment for ${user.id}`);
+        const aiProgram = await programService.getAiProgram();
+        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id);
+      }
+
       // Only check for existing plan if not forcing creation
       if (!forceCreate) {
         const existingPlan = await fitnessPlanService.getCurrentPlan(user.id);
         if (existingPlan) {
+          // Link to enrollment if not already linked
+          if (!enrollment.versionId && existingPlan.id) {
+            console.log(`[Onboarding] Step 3: Linking existing plan to enrollment for ${user.id}`);
+            await enrollmentService.linkVersion(enrollment.id, existingPlan.id);
+          }
           console.log(`[Onboarding] Step 3: Plan already exists for ${user.id}`);
           return { plan: existingPlan, wasCreated: false };
         }
@@ -149,6 +166,11 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
 
       console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
       const plan = await trainingService.createFitnessPlan(user);
+
+      // Link the new plan to the enrollment
+      await enrollmentService.linkVersion(enrollment.id, plan.id!);
+      console.log(`[Onboarding] Step 3: Linked plan ${plan.id} to enrollment ${enrollment.id}`);
+
       return { plan, wasCreated: true };
     },
 

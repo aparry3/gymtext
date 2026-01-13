@@ -20,10 +20,17 @@ export type FitnessPlanUpdate = Updateable<FitnessPlans>;
  *
  * Plans are ongoing by default - no fixed duration.
  * All versions are kept (query latest by created_at).
+ *
+ * As of Phase 2, fitness plans are program versions:
+ * - programId: Links to the program this version belongs to
+ * - legacyClientId: Legacy field for backward compatibility (was client_id)
+ * - publishedAt: When this version was published (null = draft)
  */
 export interface FitnessPlan {
   id?: string;
-  clientId: string;
+  programId?: string | null;  // New: Links to program
+  legacyClientId: string;  // Renamed from clientId for backward compatibility
+  publishedAt?: Date | null;  // New: When published
   description: string;  // Structured text plan
   message?: string | null;
   structured?: PlanStructure | null;  // Parsed structured plan data
@@ -43,7 +50,9 @@ export interface FitnessPlanOverview {
 
 export class FitnessPlanModel implements FitnessPlan {
   id: string;
-  clientId: string;
+  programId: string | null;
+  legacyClientId: string;
+  publishedAt: Date | null;
   description: string;
   message: string | null;
   structured: PlanStructure | null;
@@ -53,7 +62,9 @@ export class FitnessPlanModel implements FitnessPlan {
 
   constructor(
     id: string,
-    clientId: string,
+    programId: string | null,
+    legacyClientId: string,
+    publishedAt: Date | null,
     description: string,
     message: string | null,
     structured: PlanStructure | null,
@@ -62,7 +73,9 @@ export class FitnessPlanModel implements FitnessPlan {
     updatedAt: Date
   ) {
     this.id = id;
-    this.clientId = clientId;
+    this.programId = programId;
+    this.legacyClientId = legacyClientId;
+    this.publishedAt = publishedAt;
     this.description = description;
     this.message = message;
     this.structured = structured;
@@ -74,7 +87,9 @@ export class FitnessPlanModel implements FitnessPlan {
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
     return {
       id: fitnessPlan.id,
-      clientId: fitnessPlan.clientId,
+      programId: fitnessPlan.programId,
+      legacyClientId: fitnessPlan.legacyClientId,
+      publishedAt: fitnessPlan.publishedAt ? new Date(fitnessPlan.publishedAt) : null,
       description: fitnessPlan.description || '',
       message: fitnessPlan.message,
       structured: fitnessPlan.structured as PlanStructure | null,
@@ -89,7 +104,7 @@ export class FitnessPlanModel implements FitnessPlan {
     fitnessPlanOverview: FitnessPlanOverview
   ): FitnessPlan {
     return {
-      clientId: user.id,
+      legacyClientId: user.id,
       description: fitnessPlanOverview.description,
       message: fitnessPlanOverview.message || null,
       structured: fitnessPlanOverview.structure || null,

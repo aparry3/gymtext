@@ -31,6 +31,9 @@ import { AdminActivityLogRepository } from './adminActivityLogRepository';
 import { UploadedImageRepository } from './uploadedImageRepository';
 import { ProfileUpdateRepository } from './profileUpdateRepository';
 import { UserAuthRepository } from './userAuthRepository';
+import { ProgramOwnerRepository } from './programOwnerRepository';
+import { ProgramRepository } from './programRepository';
+import { ProgramEnrollmentRepository } from './programEnrollmentRepository';
 
 /**
  * Container for all repository instances
@@ -54,6 +57,9 @@ export interface RepositoryContainer {
   uploadedImage: UploadedImageRepository;
   profileUpdate: ProfileUpdateRepository;
   userAuth: UserAuthRepository;
+  programOwner: ProgramOwnerRepository;
+  program: ProgramRepository;
+  programEnrollment: ProgramEnrollmentRepository;
 }
 
 // Cache repositories by database connection string (approximated by object identity)
@@ -92,6 +98,9 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     uploadedImage: new UploadedImageRepository(db),
     profileUpdate: new ProfileUpdateRepository(db),
     userAuth: new UserAuthRepository(db),
+    programOwner: new ProgramOwnerRepository(db),
+    program: new ProgramRepository(db),
+    programEnrollment: new ProgramEnrollmentRepository(db),
   };
 
   // Cache for reuse

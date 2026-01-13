@@ -188,3 +188,234 @@ export interface AdminMessagesResponse {
   pagination: Pagination;
   stats: MessageStats;
 }
+
+// ============================================
+// Program Owner Admin Types
+// ============================================
+
+// Owner type enum
+export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer';
+
+// Admin-specific program owner type with stats
+export interface AdminProgramOwner {
+  id: string;
+  userId: string | null;
+  ownerType: OwnerType;
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  stripeConnectAccountId: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  // Stats
+  programCount: number;
+  enrollmentCount: number;
+}
+
+// Filter types for the program owners list
+export interface ProgramOwnerFilters {
+  search?: string;
+  ownerType?: OwnerType;
+  isActive?: boolean;
+}
+
+// Sorting options
+export interface ProgramOwnerSort {
+  field: 'displayName' | 'ownerType' | 'createdAt' | 'programCount' | 'enrollmentCount';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for the program owners page
+export interface ProgramOwnerStats {
+  totalOwners: number;
+  byType: {
+    ai: number;
+    coach: number;
+    trainer: number;
+    influencer: number;
+  };
+  activeOwners: number;
+  totalPrograms: number;
+  totalEnrollments: number;
+}
+
+// API Response type for list
+export interface AdminProgramOwnersResponse {
+  owners: AdminProgramOwner[];
+  pagination: Pagination;
+  stats: ProgramOwnerStats;
+}
+
+// API Response type for detail
+export interface AdminProgramOwnerDetailResponse {
+  owner: AdminProgramOwner;
+  programs: {
+    id: string;
+    name: string;
+    isActive: boolean;
+    enrollmentCount: number;
+    createdAt: Date;
+  }[];
+}
+
+// Form data for create/update
+export interface ProgramOwnerFormData {
+  displayName: string;
+  ownerType: OwnerType;
+  bio?: string;
+  avatarUrl?: string;
+  userId?: string;
+  isActive?: boolean;
+}
+
+// ============================================
+// Program Admin Types
+// ============================================
+
+// Scheduling mode for programs
+export type SchedulingMode = 'rolling_start' | 'cohort';
+
+// Cadence type for programs
+export type ProgramCadence = 'calendar_days' | 'training_days_only';
+
+// Admin-specific program type with stats
+export interface AdminProgram {
+  id: string;
+  ownerId: string;
+  ownerName: string;                  // Denormalized for display
+  ownerType: OwnerType;               // For badge display
+  name: string;
+  description: string | null;
+  schedulingMode: SchedulingMode;
+  cadence: ProgramCadence;
+  isActive: boolean;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  // Stats
+  enrollmentCount: number;
+  versionCount: number;
+}
+
+// Filter types for the programs list
+export interface ProgramFilters {
+  search?: string;
+  ownerId?: string;
+  schedulingMode?: SchedulingMode;
+  isActive?: boolean;
+  isPublic?: boolean;
+}
+
+// Sorting options
+export interface ProgramSort {
+  field: 'name' | 'ownerName' | 'createdAt' | 'enrollmentCount';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for the programs page
+export interface ProgramStats {
+  totalPrograms: number;
+  bySchedulingMode: {
+    rolling_start: number;
+    cohort: number;
+  };
+  activePrograms: number;
+  publicPrograms: number;
+  totalEnrollments: number;
+}
+
+// API Response type for list
+export interface AdminProgramsResponse {
+  programs: AdminProgram[];
+  pagination: Pagination;
+  stats: ProgramStats;
+}
+
+// API Response type for detail
+export interface AdminProgramDetailResponse {
+  program: AdminProgram;
+  owner: {
+    id: string;
+    displayName: string;
+    ownerType: OwnerType;
+    avatarUrl: string | null;
+  };
+  enrollments: AdminEnrollment[];
+}
+
+// Form data for create/update
+export interface ProgramFormData {
+  name: string;
+  ownerId: string;
+  description?: string;
+  schedulingMode: SchedulingMode;
+  cadence: ProgramCadence;
+  isActive?: boolean;
+  isPublic?: boolean;
+}
+
+// ============================================
+// Enrollment Admin Types
+// ============================================
+
+// Enrollment status
+export type EnrollmentStatus = 'active' | 'paused' | 'completed' | 'cancelled';
+
+// Admin-specific enrollment type with denormalized data
+export interface AdminEnrollment {
+  id: string;
+  clientId: string;
+  clientName: string;                 // Denormalized
+  clientPhone: string;                // Denormalized
+  programId: string;
+  programName: string;                // Denormalized
+  versionId: string | null;
+  startDate: Date;
+  currentWeek: number;
+  status: EnrollmentStatus;
+  enrolledAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Filter types for enrollments
+export interface EnrollmentFilters {
+  status?: EnrollmentStatus;
+  search?: string;
+  programId?: string;
+}
+
+// Sorting options
+export interface EnrollmentSort {
+  field: 'clientName' | 'startDate' | 'enrolledAt' | 'currentWeek' | 'status';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for enrollments
+export interface EnrollmentStats {
+  total: number;
+  byStatus: {
+    active: number;
+    paused: number;
+    completed: number;
+    cancelled: number;
+  };
+}
+
+// API Response type for enrollments list
+export interface AdminEnrollmentsResponse {
+  enrollments: AdminEnrollment[];
+  pagination: Pagination;
+  stats: EnrollmentStats;
+}
+
+// Form data for enrollment actions
+export interface EnrollmentActionData {
+  action: 'pause' | 'resume' | 'cancel' | 'complete';
+}
+
+export interface EnrollmentUpdateData {
+  status?: EnrollmentStatus;
+  currentWeek?: number;
+}
