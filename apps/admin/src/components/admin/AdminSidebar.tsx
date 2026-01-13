@@ -128,17 +128,13 @@ function SidebarContent({
               <ChevronLeft className="h-5 w-5" />
             </button>
           )}
-          <Link href="/" className="flex items-center gap-2" onClick={onNavClick}>
+          <Link href="/" className="flex items-center" onClick={onNavClick}>
             <Image
-              src="/IconBG.png"
+              src="/WordmarkWhite.png"
               alt="GymText"
-              width={32}
-              height={32}
-              className="rounded-lg"
+              width={120}
+              height={28}
             />
-            <span className="text-lg font-bold text-[hsl(var(--sidebar-foreground))]">
-              GYMTEXT
-            </span>
           </Link>
         </div>
       </div>
@@ -209,18 +205,12 @@ export function AdminSidebar() {
             />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2">
-          <Image
-            src="/IconBG.png"
-            alt="GymText"
-            width={28}
-            height={28}
-            className="rounded-lg"
-          />
-          <span className="text-base font-bold text-[hsl(var(--sidebar-foreground))]">
-            GYMTEXT
-          </span>
-        </div>
+        <Image
+          src="/WordmarkWhite.png"
+          alt="GymText"
+          width={100}
+          height={24}
+        />
       </div>
 
       {/* Desktop sidebar - fixed */}
