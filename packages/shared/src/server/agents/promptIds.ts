@@ -35,6 +35,9 @@ export const PROMPT_IDS = {
 
   // Modifications
   MODIFICATIONS_ROUTER: 'modifications:router',
+
+  // Programs
+  PROGRAM_PARSE: 'program:parse',
 } as const;
 
 // Context prompts (role='context')

@@ -57,6 +57,7 @@ import {
   type FitnessPlanAgentService,
 } from './agents/training';
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
+import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -112,6 +113,7 @@ export interface ServiceContainer {
   microcycleAgent: MicrocycleAgentService;
   fitnessPlanAgent: FitnessPlanAgentService;
   chatAgent: ChatAgentServiceInstance;
+  programAgent: ProgramAgentServiceInstance;
 
   // Orchestration services
   chat: ChatServiceInstance;
@@ -180,6 +182,7 @@ export function createServices(
   const microcycleAgent = createMicrocycleAgentService(contextService);
   const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
   const chatAgent = createChatAgentService(contextService);
+  const programAgent = createProgramAgentService();
 
   // =========================================================================
   // Phase 2.6: Create training orchestration service
@@ -402,6 +405,7 @@ export function createServices(
     microcycleAgent,
     fitnessPlanAgent,
     chatAgent,
+    programAgent,
 
     // Chat orchestration
     chat,
@@ -482,6 +486,7 @@ export type {
   // Agent services
   WorkoutAgentService,
   MicrocycleAgentService,
+  ProgramAgentServiceInstance,
 
   // Program domain services
   ProgramOwnerServiceInstance,

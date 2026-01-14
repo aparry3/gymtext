@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseFile, validateFile } from '@gymtext/shared/server';
+import { parseFile, validateFile, createServicesFromDb, postgresDb } from '@gymtext/shared/server';
 
 export async function POST(request: Request) {
   try {
@@ -21,11 +21,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Parse the file to extract raw text
     const parseResult = await parseFile(file);
+
+    // Use the program agent to convert raw text to formatted markdown
+    const services = createServicesFromDb(postgresDb);
+    const { response: formattedProgram } = await services.programAgent.parseProgram(parseResult.text);
 
     return NextResponse.json({
       success: true,
-      data: parseResult,
+      data: {
+        ...parseResult,
+        formattedProgram, // Add the AI-formatted markdown
+      },
     });
   } catch (error) {
     console.error('Error parsing file:', error);
