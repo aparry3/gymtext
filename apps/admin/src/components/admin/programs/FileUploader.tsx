@@ -11,17 +11,10 @@ import {
   FileSpreadsheet,
   File,
 } from 'lucide-react';
+import type { ParseResult as SharedParseResult } from '@gymtext/shared/server';
 
-export interface ParseResult {
+export interface ParseResult extends SharedParseResult {
   success: boolean;
-  text: string;
-  fileName: string;
-  fileType: string;
-  metadata: {
-    pageCount?: number;
-    rowCount?: number;
-    sheetNames?: string[];
-  };
   error?: string;
 }
 
