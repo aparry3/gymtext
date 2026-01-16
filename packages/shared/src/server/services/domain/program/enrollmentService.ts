@@ -4,15 +4,6 @@ import type { FitnessPlan } from '../../../models/fitnessPlan';
 import type { ProgramVersion } from '../../../models/programVersion';
 
 /**
- * Result of getEnrollmentWithVersion
- * @deprecated Use getEnrollmentWithProgramVersion instead
- */
-export interface EnrollmentWithVersion {
-  enrollment: ProgramEnrollment;
-  version: FitnessPlan | null;
-}
-
-/**
  * Result of getEnrollmentWithProgramVersion
  */
 export interface EnrollmentWithProgramVersion {
@@ -45,21 +36,9 @@ export interface EnrollmentServiceInstance {
   getActiveEnrollment(clientId: string): Promise<ProgramEnrollment | null>;
 
   /**
-   * Get enrollment with its linked fitness plan version
-   * @deprecated Use getEnrollmentWithProgramVersion instead
-   */
-  getEnrollmentWithVersion(clientId: string): Promise<EnrollmentWithVersion | null>;
-
-  /**
    * Get enrollment with its program version and current plan instance
    */
   getEnrollmentWithProgramVersion(clientId: string): Promise<EnrollmentWithProgramVersion | null>;
-
-  /**
-   * Link a fitness plan version to an enrollment
-   * @deprecated Use linkProgramVersion instead
-   */
-  linkVersion(enrollmentId: string, versionId: string): Promise<ProgramEnrollment | null>;
 
   /**
    * Link a program version to an enrollment
@@ -117,12 +96,6 @@ export interface EnrollmentServiceInstance {
   countActiveEnrollmentsByVersion(programVersionId: string): Promise<number>;
 
   /**
-   * Count unique fitness plan versions for a program
-   * @deprecated Use countActiveEnrollmentsByVersion instead
-   */
-  countVersions(programId: string): Promise<number>;
-
-  /**
    * List all enrollments for a program
    */
   listByProgram(programId: string): Promise<ProgramEnrollment[]>;
@@ -176,20 +149,6 @@ export function createEnrollmentService(
       return repos.programEnrollment.findActiveByClientId(clientId);
     },
 
-    async getEnrollmentWithVersion(clientId: string): Promise<EnrollmentWithVersion | null> {
-      const enrollment = await repos.programEnrollment.findActiveByClientId(clientId);
-      if (!enrollment) {
-        return null;
-      }
-
-      let version: FitnessPlan | null = null;
-      if (enrollment.versionId) {
-        version = await repos.fitnessPlan.getFitnessPlan(enrollment.versionId);
-      }
-
-      return { enrollment, version };
-    },
-
     async getEnrollmentWithProgramVersion(clientId: string): Promise<EnrollmentWithProgramVersion | null> {
       const enrollment = await repos.programEnrollment.findActiveByClientId(clientId);
       if (!enrollment) {
@@ -205,10 +164,6 @@ export function createEnrollmentService(
       const currentPlanInstance = await repos.fitnessPlan.getCurrentPlan(clientId);
 
       return { enrollment, programVersion, currentPlanInstance };
-    },
-
-    async linkVersion(enrollmentId: string, versionId: string): Promise<ProgramEnrollment | null> {
-      return repos.programEnrollment.updateVersionId(enrollmentId, versionId);
     },
 
     async linkProgramVersion(enrollmentId: string, programVersionId: string): Promise<ProgramEnrollment | null> {
@@ -253,10 +208,6 @@ export function createEnrollmentService(
 
     async countActiveEnrollmentsByVersion(programVersionId: string): Promise<number> {
       return repos.programEnrollment.countActiveByProgramVersionId(programVersionId);
-    },
-
-    async countVersions(programId: string): Promise<number> {
-      return repos.programEnrollment.countVersionsByProgramId(programId);
     },
 
     async listByProgram(programId: string): Promise<ProgramEnrollment[]> {

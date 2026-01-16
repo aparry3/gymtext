@@ -131,15 +131,6 @@ export class ProgramEnrollmentRepository extends BaseRepository {
   }
 
   /**
-   * Update the version ID for an enrollment
-   * @deprecated Use updateProgramVersionId instead
-   * Used to link an enrollment to a specific fitness plan version
-   */
-  async updateVersionId(id: string, versionId: string): Promise<ProgramEnrollment | null> {
-    return this.update(id, { versionId });
-  }
-
-  /**
    * Update the program version ID for an enrollment
    * Links the enrollment to a specific program version
    */
@@ -212,20 +203,6 @@ export class ProgramEnrollmentRepository extends BaseRepository {
       .select((eb) => eb.fn.count('id').as('count'))
       .where('programId', '=', programId)
       .where('status', '=', 'active')
-      .executeTakeFirst();
-
-    return Number(result?.count ?? 0);
-  }
-
-  /**
-   * Count unique fitness plan versions for a program
-   */
-  async countVersionsByProgramId(programId: string): Promise<number> {
-    const result = await this.db
-      .selectFrom('programEnrollments')
-      .select((eb) => eb.fn.count('versionId').distinct().as('count'))
-      .where('programId', '=', programId)
-      .where('versionId', 'is not', null)
       .executeTakeFirst();
 
     return Number(result?.count ?? 0);
