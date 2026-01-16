@@ -1,4 +1,5 @@
 import type { WorkoutInstance, Microcycle } from '@/server/models';
+import type { ProgramVersion } from '@/server/models/programVersion';
 import type { ExperienceLevel, SnippetType } from './builders/experienceLevel';
 
 /**
@@ -15,6 +16,7 @@ export enum ContextType {
   CURRENT_MICROCYCLE = 'currentMicrocycle',
   EXPERIENCE_LEVEL = 'experienceLevel',
   DAY_FORMAT = 'dayFormat',
+  PROGRAM_VERSION = 'programVersion',
 }
 
 /**
@@ -68,4 +70,5 @@ export interface ResolvedContextData {
   activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
   dayFormatTemplate?: string | null;
   experienceSnippet?: string | null;
+  programVersion?: ProgramVersion | null;
 }

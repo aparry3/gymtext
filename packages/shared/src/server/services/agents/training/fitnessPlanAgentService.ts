@@ -90,9 +90,10 @@ export class FitnessPlanAgentService {
     structure: PlanStructure;
   }> {
     // Build context using ContextService
+    // PROGRAM_VERSION first (guides generation), then user context
     const context = await this.contextService.getContext(
       user,
-      [ContextType.USER, ContextType.USER_PROFILE]
+      [ContextType.PROGRAM_VERSION, ContextType.USER, ContextType.USER_PROFILE]
     );
 
     // Get sub-agents (lazy-initialized)

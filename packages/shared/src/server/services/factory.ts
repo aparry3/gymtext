@@ -179,6 +179,7 @@ export function createServices(
     workoutInstanceService: workoutInstance,
     microcycleService: microcycle,
     fitnessProfileService: fitnessProfile,
+    enrollmentService: enrollment,
   });
 
   // =========================================================================

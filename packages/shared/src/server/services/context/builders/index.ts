@@ -17,3 +17,4 @@ export {
   fetchDayFormat,
   type DayActivityType,
 } from './dayFormat';
+export { buildProgramVersionContext } from './programVersion';
