@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, X, FileText, Table, FileSpreadsheet } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ParseResult } from './FileUploader';
 
 interface TextPreviewProps {
@@ -44,14 +46,17 @@ function getFileTypeIcon(fileType: string) {
 export function TextPreview({ result, onClear }: TextPreviewProps) {
   const [copied, setCopied] = useState(false);
 
+  // Use formattedProgram if available, otherwise fall back to raw text
+  const displayText = result.formattedProgram || result.text;
+
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(result.text);
+    await navigator.clipboard.writeText(displayText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const wordCount = result.text.trim().split(/\s+/).filter(Boolean).length;
-  const charCount = result.text.length;
+  const wordCount = displayText.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = displayText.length;
 
   return (
     <div className="space-y-4">
@@ -111,9 +116,17 @@ export function TextPreview({ result, onClear }: TextPreviewProps) {
       </div>
 
       <div className="relative">
-        <pre className="p-4 bg-gray-50 border rounded-lg overflow-auto max-h-[500px] text-sm font-mono whitespace-pre-wrap break-words">
-          {result.text}
-        </pre>
+        {result.formattedProgram ? (
+          <div className="p-4 bg-gray-50 border rounded-lg overflow-auto max-h-[500px] prose prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {result.formattedProgram}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <pre className="p-4 bg-gray-50 border rounded-lg overflow-auto max-h-[500px] text-sm font-mono whitespace-pre-wrap break-words">
+            {result.text}
+          </pre>
+        )}
       </div>
     </div>
   );

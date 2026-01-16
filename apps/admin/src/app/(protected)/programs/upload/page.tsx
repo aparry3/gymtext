@@ -41,7 +41,7 @@ export default function FileUploadPage() {
 
         {parseResult && parseResult.success && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Extracted Text</h2>
+            <h2 className="text-lg font-semibold mb-4">Formatted Program</h2>
             <TextPreview
               result={parseResult}
               onClear={() => setParseResult(null)}

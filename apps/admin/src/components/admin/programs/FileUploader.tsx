@@ -16,6 +16,7 @@ import type { ParseResult as SharedParseResult } from '@gymtext/shared/server';
 export interface ParseResult extends SharedParseResult {
   success: boolean;
   error?: string;
+  formattedProgram?: string;
 }
 
 interface FileUploaderProps {
@@ -140,6 +141,7 @@ export function FileUploader({ onParseComplete }: FileUploaderProps) {
           fileName: data.data.fileName,
           fileType: data.data.fileType,
           metadata: data.data.metadata,
+          formattedProgram: data.data.formattedProgram,
         });
       } else {
         setError(data.message || 'Failed to parse file');

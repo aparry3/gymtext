@@ -84,6 +84,13 @@ export const PROMPT_DOMAINS: PromptDomain[] = [
       { id: 'modifications:router', label: 'Modifications Router', roles: ['system', 'user'] },
     ],
   },
+  {
+    id: 'program',
+    label: 'Programs',
+    agents: [
+      { id: 'program:parse', label: 'Program Parser', roles: ['system', 'user'] },
+    ],
+  },
 ];
 
 export const ROLE_LABELS: Record<PromptRole, string> = {
