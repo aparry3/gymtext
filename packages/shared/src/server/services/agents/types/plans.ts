@@ -7,6 +7,19 @@ import type { UserWithProfile } from '@/server/models/user';
 export type { PlanStructure };
 
 // =============================================================================
+// Message Types
+// =============================================================================
+
+/**
+ * Data for plan summary message generation
+ */
+export interface PlanMessageData {
+  userName: string;
+  userProfile: string;
+  overview: string;
+}
+
+// =============================================================================
 // Generate Operation Types
 // =============================================================================
 

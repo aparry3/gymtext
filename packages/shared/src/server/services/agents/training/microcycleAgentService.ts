@@ -2,10 +2,12 @@ import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
   MicrocycleGenerationOutputSchema,
-  microcycleMessageUserPrompt,
-  structuredMicrocycleUserPrompt,
   ModifyMicrocycleOutputSchema,
   type MicrocycleGenerationOutput,
+} from '@/server/services/agents/schemas/microcycles';
+import {
+  microcycleMessageUserPrompt,
+  structuredMicrocycleUserPrompt,
 } from '@/server/services/agents/prompts/microcycles';
 import type { MicrocycleGenerateOutput, ModifyMicrocycleOutput } from '@/server/services/agents/types/microcycles';
 import type { Microcycle } from '@/server/models/microcycle';

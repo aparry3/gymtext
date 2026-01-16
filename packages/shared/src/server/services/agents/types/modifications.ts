@@ -6,6 +6,14 @@ import type { AgentConfig } from '@/server/agents';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 
 /**
+ * Input for building the modifications user message
+ */
+export interface ModificationsUserMessageInput {
+  user: UserWithProfile;
+  message: string;
+}
+
+/**
  * Input for the Modifications Agent
  * Contains all context needed to process modification requests
  */

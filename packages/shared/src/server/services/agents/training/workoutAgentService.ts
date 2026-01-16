@@ -1,6 +1,6 @@
 import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/models/workout';
-import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/prompts/workouts';
+import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import type { ContextService } from '@/server/services/context';
 import { ContextType, SnippetType } from '@/server/services/context';
