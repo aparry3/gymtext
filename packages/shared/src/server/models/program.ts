@@ -20,6 +20,8 @@ export interface Program {
   lateJoinerPolicy: LateJoinerPolicy | null;
   billingModel: BillingModel | null;
   revenueSplitPercent: number | null;
+  /** ID of the currently published version */
+  publishedVersionId: string | null;
   isActive: boolean;
   isPublic: boolean;
   createdAt: Date;
@@ -38,6 +40,7 @@ export class ProgramModel {
       lateJoinerPolicy: row.lateJoinerPolicy as LateJoinerPolicy | null,
       billingModel: row.billingModel as BillingModel | null,
       revenueSplitPercent: row.revenueSplitPercent,
+      publishedVersionId: row.publishedVersionId,
       isActive: row.isActive,
       isPublic: row.isPublic,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),

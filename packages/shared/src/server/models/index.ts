@@ -20,7 +20,7 @@ export type {
 export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
   FitnessPlanDB, FitnessPlanOverview,
-  PlanStructure
+  PlanStructure, PlanStatus, PlanCurrentState
 } from './fitnessPlan';
 export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 
@@ -49,6 +49,34 @@ export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
 // Referral types
 export type { Referral, NewReferral, ReferralUpdate, ReferralStats } from './referral';
 export { MAX_REFERRAL_CREDITS, REFERRAL_CREDIT_AMOUNT_CENTS } from './referral';
+
+// Program types
+export type {
+  Program, NewProgram, ProgramUpdate,
+  SchedulingMode, Cadence, LateJoinerPolicy, BillingModel
+} from './program';
+export { ProgramModel } from './program';
+
+// Program enrollment types
+export type {
+  ProgramEnrollment, NewProgramEnrollment, ProgramEnrollmentUpdate, EnrollmentStatus
+} from './programEnrollment';
+export { ProgramEnrollmentModel } from './programEnrollment';
+
+// Program version types (the "recipe")
+export type {
+  ProgramVersion, NewProgramVersion, ProgramVersionUpdate,
+  ProgramVersionStatus, GenerationConfig, DifficultyMetadata
+} from './programVersion';
+export { ProgramVersionModel, AI_PROGRAM_VERSION_ID } from './programVersion';
+
+// Program family types (grouping)
+export type {
+  ProgramFamily, NewProgramFamily, ProgramFamilyUpdate,
+  ProgramFamilyProgram, NewProgramFamilyProgram, ProgramFamilyProgramUpdate,
+  FamilyType, FamilyVisibility, ProgramFamilyRole
+} from './programFamily';
+export { ProgramFamilyModel, ProgramFamilyProgramModel } from './programFamily';
 
 // Re-export database types from _types
 export * from './_types';

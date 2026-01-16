@@ -63,6 +63,8 @@ import { createProgramAgentService, type ProgramAgentServiceInstance } from './a
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
+import { createProgramVersionService, type ProgramVersionServiceInstance } from './domain/program/programVersionService';
+import { createPlanInstanceService, type PlanInstanceServiceInstance } from './domain/training/planInstanceService';
 
 /**
  * External clients that can be injected for environment switching
@@ -125,6 +127,8 @@ export interface ServiceContainer {
   programOwner: ProgramOwnerServiceInstance;
   program: ProgramServiceInstance;
   enrollment: EnrollmentServiceInstance;
+  programVersion: ProgramVersionServiceInstance;
+  planInstance: PlanInstanceServiceInstance;
 }
 
 /**
@@ -164,6 +168,8 @@ export function createServices(
   const programOwner = createProgramOwnerService(repos);
   const program = createProgramService(repos);
   const enrollment = createEnrollmentService(repos);
+  const programVersion = createProgramVersionService(repos);
+  const planInstance = createPlanInstanceService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -417,6 +423,8 @@ export function createServices(
     programOwner,
     program,
     enrollment,
+    programVersion,
+    planInstance,
   };
 }
 
@@ -492,4 +500,6 @@ export type {
   ProgramOwnerServiceInstance,
   ProgramServiceInstance,
   EnrollmentServiceInstance,
+  ProgramVersionServiceInstance,
+  PlanInstanceServiceInstance,
 };

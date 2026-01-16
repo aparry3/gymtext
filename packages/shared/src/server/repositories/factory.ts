@@ -34,6 +34,8 @@ import { UserAuthRepository } from './userAuthRepository';
 import { ProgramOwnerRepository } from './programOwnerRepository';
 import { ProgramRepository } from './programRepository';
 import { ProgramEnrollmentRepository } from './programEnrollmentRepository';
+import { ProgramVersionRepository } from './programVersionRepository';
+import { ProgramFamilyRepository } from './programFamilyRepository';
 
 /**
  * Container for all repository instances
@@ -60,6 +62,10 @@ export interface RepositoryContainer {
   programOwner: ProgramOwnerRepository;
   program: ProgramRepository;
   programEnrollment: ProgramEnrollmentRepository;
+  programVersion: ProgramVersionRepository;
+  programFamily: ProgramFamilyRepository;
+  // Direct db access for complex queries
+  db: Kysely<DB>;
 }
 
 // Cache repositories by database connection string (approximated by object identity)
@@ -101,6 +107,9 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     programOwner: new ProgramOwnerRepository(db),
     program: new ProgramRepository(db),
     programEnrollment: new ProgramEnrollmentRepository(db),
+    programVersion: new ProgramVersionRepository(db),
+    programFamily: new ProgramFamilyRepository(db),
+    db,
   };
 
   // Cache for reuse
