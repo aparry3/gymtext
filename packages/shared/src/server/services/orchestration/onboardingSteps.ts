@@ -147,7 +147,9 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       if (!enrollment) {
         console.log(`[Onboarding] Step 3: Creating AI program enrollment for ${user.id}`);
         const aiProgram = await programService.getAiProgram();
-        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id);
+        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id, {
+          programVersionId: aiProgram.publishedVersionId ?? undefined,
+        });
       }
 
       // Only check for existing plan if not forcing creation

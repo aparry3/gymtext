@@ -26,7 +26,21 @@ export function createProgramService(
 
   return {
     async create(data: NewProgram): Promise<Program> {
-      return repos.program.create(data);
+      const program = await repos.program.create(data);
+
+      // Auto-create initial draft version so every program has at least one version
+      await repos.programVersion.create({
+        programId: program.id,
+        versionNumber: 1,
+        status: 'draft',
+        templateMarkdown: null,
+        templateStructured: null,
+        generationConfig: null,
+        defaultDurationWeeks: null,
+        difficultyMetadata: null,
+      });
+
+      return program;
     },
 
     async getById(id: string): Promise<Program | null> {

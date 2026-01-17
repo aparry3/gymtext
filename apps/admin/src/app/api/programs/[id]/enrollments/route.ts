@@ -192,11 +192,14 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Create enrollment
+    // Create enrollment with the program's published version (if any)
     const enrollment = await services.enrollment.enrollClient(
       clientId,
       programId,
-      startDate ? { startDate: new Date(startDate) } : undefined
+      {
+        startDate: startDate ? new Date(startDate) : undefined,
+        programVersionId: program.publishedVersionId ?? undefined,
+      }
     );
 
     return NextResponse.json({
