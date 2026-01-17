@@ -14,9 +14,17 @@ Raw program text to parse:`;
 export async function up(db: Kysely<unknown>): Promise<void> {
   console.log('Updating program parse user prompt...');
 
+  // Use idempotent INSERT to avoid duplicate key violation if the prompt already exists
+  // Add 1 second offset to avoid timestamp collision with other migrations running in same batch
   await sql`
-    INSERT INTO prompts (id, role, value)
-    VALUES ('program:parse', 'user', ${FIXED_USER_PROMPT})
+    INSERT INTO prompts (id, role, value, created_at)
+    SELECT 'program:parse', 'user', ${FIXED_USER_PROMPT}, NOW() + interval '1 second'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM prompts
+      WHERE id = 'program:parse'
+        AND role = 'user'
+        AND value = ${FIXED_USER_PROMPT}
+    )
   `.execute(db);
 
   console.log('Program parse user prompt updated');
