@@ -1,10 +1,15 @@
 import { Kysely, sql } from 'kysely';
 
 /**
- * Consolidated Schema Migration
+ * Consolidated Schema Migration (IDEMPOTENT)
  *
  * This migration creates the complete GymText database schema from scratch.
  * It consolidates 51 individual migrations into a single file.
+ *
+ * IDEMPOTENT: This migration uses IF NOT EXISTS, CREATE OR REPLACE, and ON CONFLICT
+ * so it can run safely on both:
+ * - Fresh databases: Creates everything normally
+ * - Existing databases: Skips existing objects, records migration as applied
  *
  * Tables are created in FK-dependency order:
  * - Tier 1 (no FKs): users, prompts, page_visits, user_auth_codes, uploaded_images
@@ -556,7 +561,7 @@ const PROMPTS_TO_SEED = [
 // =============================================================================
 
 export async function up(db: Kysely<any>): Promise<void> {
-  console.log('Starting consolidated schema migration...');
+  console.log('Starting consolidated schema migration (idempotent)...');
 
   // ============================================
   // EXTENSIONS AND FUNCTIONS
@@ -581,109 +586,100 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log('Creating Tier 1 tables (no FKs)...');
 
   // 1. USERS TABLE
-  await db.schema
-    .createTable('users')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('name', 'varchar(255)', (col) => col.notNull())
-    .addColumn('phone_number', 'varchar(20)', (col) => col.notNull().unique())
-    .addColumn('age', 'integer')
-    .addColumn('gender', 'varchar(20)')
-    .addColumn('email', 'varchar(255)', (col) => col.unique())
-    .addColumn('stripe_customer_id', 'varchar(255)', (col) => col.unique())
-    .addColumn('preferred_send_hour', 'integer', (col) => col.defaultTo(8).notNull())
-    .addColumn('timezone', 'varchar(50)', (col) => col.defaultTo('America/New_York').notNull())
-    .addColumn('referral_code', 'varchar(8)', (col) => col.unique())
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
-
   await sql`
-    ALTER TABLE users
-    ADD CONSTRAINT check_preferred_send_hour
-    CHECK (preferred_send_hour >= 0 AND preferred_send_hour <= 23)
+    CREATE TABLE IF NOT EXISTS users (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      name varchar(255) NOT NULL,
+      phone_number varchar(20) NOT NULL UNIQUE,
+      age integer,
+      gender varchar(20),
+      email varchar(255) UNIQUE,
+      stripe_customer_id varchar(255) UNIQUE,
+      preferred_send_hour integer NOT NULL DEFAULT 8,
+      timezone varchar(50) NOT NULL DEFAULT 'America/New_York',
+      referral_code varchar(8) UNIQUE,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT check_preferred_send_hour CHECK (preferred_send_hour >= 0 AND preferred_send_hour <= 23)
+    )
   `.execute(db);
 
   await sql`
-    CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_users_updated_at') THEN
+        CREATE TRIGGER update_users_updated_at
+        BEFORE UPDATE ON users
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
   `.execute(db);
 
   // 2. PROMPTS TABLE
-  await db.schema
-    .createTable('prompts')
-    .addColumn('id', 'text', (col) => col.notNull())
-    .addColumn('role', 'text', (col) => col.notNull())
-    .addColumn('value', 'text', (col) => col.notNull())
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addPrimaryKeyConstraint('prompts_pkey', ['id', 'role', 'created_at'])
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS prompts (
+      id text NOT NULL,
+      role text NOT NULL,
+      value text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id, role, created_at)
+    )
+  `.execute(db);
 
-  await db.schema
-    .createIndex('prompts_id_role_created_idx')
-    .on('prompts')
-    .columns(['id', 'role', 'created_at'])
-    .execute();
+  await sql`CREATE INDEX IF NOT EXISTS prompts_id_role_created_idx ON prompts (id, role, created_at)`.execute(db);
 
   // 3. PAGE_VISITS TABLE
-  await db.schema
-    .createTable('page_visits')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('page', 'varchar(100)', (col) => col.notNull())
-    .addColumn('ip_address', 'varchar(45)')
-    .addColumn('user_agent', 'text')
-    .addColumn('referrer', 'text')
-    .addColumn('source', 'varchar(100)')
-    .addColumn('utm_source', 'varchar(255)')
-    .addColumn('utm_medium', 'varchar(255)')
-    .addColumn('utm_campaign', 'varchar(255)')
-    .addColumn('utm_content', 'varchar(255)')
-    .addColumn('utm_term', 'varchar(255)')
-    .addColumn('created_at', 'timestamptz', (col) => col.defaultTo(sql`now()`).notNull())
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS page_visits (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      page varchar(100) NOT NULL,
+      ip_address varchar(45),
+      user_agent text,
+      referrer text,
+      source varchar(100),
+      utm_source varchar(255),
+      utm_medium varchar(255),
+      utm_campaign varchar(255),
+      utm_content varchar(255),
+      utm_term varchar(255),
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_page_visits_source').on('page_visits').column('source').execute();
-  await db.schema.createIndex('idx_page_visits_created_at').on('page_visits').column('created_at').execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_page_visits_source ON page_visits (source)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_page_visits_created_at ON page_visits (created_at)`.execute(db);
 
   // 4. USER_AUTH_CODES TABLE
-  await db.schema
-    .createTable('user_auth_codes')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`uuid_generate_v4()`))
-    .addColumn('phone_number', 'text', (col) => col.notNull())
-    .addColumn('code', 'varchar(6)', (col) => col.notNull())
-    .addColumn('expires_at', 'timestamptz', (col) => col.notNull())
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_auth_codes (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      phone_number text NOT NULL,
+      code varchar(6) NOT NULL,
+      expires_at timestamptz NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema
-    .createIndex('user_auth_codes_phone_code_idx')
-    .on('user_auth_codes')
-    .columns(['phone_number', 'code', 'expires_at'])
-    .execute();
-
-  await db.schema
-    .createIndex('user_auth_codes_expires_at_idx')
-    .on('user_auth_codes')
-    .column('expires_at')
-    .execute();
+  await sql`CREATE INDEX IF NOT EXISTS user_auth_codes_phone_code_idx ON user_auth_codes (phone_number, code, expires_at)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS user_auth_codes_expires_at_idx ON user_auth_codes (expires_at)`.execute(db);
 
   // 5. UPLOADED_IMAGES TABLE
-  await db.schema
-    .createTable('uploaded_images')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('url', 'text', (col) => col.notNull())
-    .addColumn('filename', 'varchar(255)', (col) => col.notNull())
-    .addColumn('display_name', 'varchar(255)')
-    .addColumn('content_type', 'varchar(100)', (col) => col.notNull())
-    .addColumn('size_bytes', 'integer', (col) => col.notNull())
-    .addColumn('category', 'varchar(50)', (col) => col.defaultTo('general'))
-    .addColumn('tags', 'jsonb', (col) => col.defaultTo(sql`'[]'::jsonb`))
-    .addColumn('uploaded_by', 'varchar(50)')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS uploaded_images (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      url text NOT NULL,
+      filename varchar(255) NOT NULL,
+      display_name varchar(255),
+      content_type varchar(100) NOT NULL,
+      size_bytes integer NOT NULL,
+      category varchar(50) DEFAULT 'general',
+      tags jsonb DEFAULT '[]'::jsonb,
+      uploaded_by varchar(50),
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('uploaded_images_category_idx').on('uploaded_images').column('category').execute();
+  await sql`CREATE INDEX IF NOT EXISTS uploaded_images_category_idx ON uploaded_images (category)`.execute(db);
 
   // ============================================
   // TIER 2: TABLES WITH FK TO USERS
@@ -691,256 +687,263 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log('Creating Tier 2 tables (→users)...');
 
   // 6. PROFILES TABLE
-  await db.schema
-    .createTable('profiles')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('profile', 'text', (col) => col.notNull())
-    .addColumn('structured', 'jsonb')
-    .addColumn('created_at', 'timestamptz', (col) => col.defaultTo(sql`now()`).notNull())
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS profiles (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      profile text NOT NULL,
+      structured jsonb,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_profiles_client_created').on('profiles').columns(['client_id', 'created_at']).execute();
-  await db.schema.createIndex('idx_profiles_client').on('profiles').column('client_id').execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_profiles_client_created ON profiles (client_id, created_at)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_profiles_client ON profiles (client_id)`.execute(db);
 
   // 7. PROFILE_UPDATES TABLE
-  await db.schema
-    .createTable('profile_updates')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('patch', 'jsonb', (col) => col.notNull())
-    .addColumn('path', 'text')
-    .addColumn('source', 'text', (col) => col.notNull())
-    .addColumn('reason', 'text')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS profile_updates (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      patch jsonb NOT NULL,
+      path text,
+      source text NOT NULL,
+      reason text,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `.execute(db);
 
   // 8. SUBSCRIPTIONS TABLE
-  await db.schema
-    .createTable('subscriptions')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('stripe_subscription_id', 'varchar(255)', (col) => col.notNull().unique())
-    .addColumn('status', 'varchar(50)', (col) => col.notNull())
-    .addColumn('plan_type', 'varchar(50)', (col) => col.notNull())
-    .addColumn('current_period_start', 'timestamptz', (col) => col.notNull())
-    .addColumn('current_period_end', 'timestamptz', (col) => col.notNull())
-    .addColumn('canceled_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      stripe_subscription_id varchar(255) NOT NULL UNIQUE,
+      status varchar(50) NOT NULL,
+      plan_type varchar(50) NOT NULL,
+      current_period_start timestamptz NOT NULL,
+      current_period_end timestamptz NOT NULL,
+      canceled_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
   await sql`
-    CREATE TRIGGER update_subscriptions_updated_at
-    BEFORE UPDATE ON subscriptions
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_subscriptions_updated_at') THEN
+        CREATE TRIGGER update_subscriptions_updated_at
+        BEFORE UPDATE ON subscriptions
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
   `.execute(db);
 
   // 9. MESSAGES TABLE
-  await db.schema
-    .createTable('messages')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('conversation_id', 'uuid')
-    .addColumn('client_id', 'uuid', (col) => col.references('users.id').onDelete('cascade').notNull())
-    .addColumn('direction', 'varchar(10)', (col) => col.notNull().check(sql`direction IN ('inbound', 'outbound')`))
-    .addColumn('content', 'text', (col) => col.notNull())
-    .addColumn('phone_from', 'varchar(20)')
-    .addColumn('phone_to', 'varchar(20)')
-    .addColumn('provider_message_id', 'varchar(100)')
-    .addColumn('provider', 'varchar(20)', (col) => col.notNull().defaultTo('twilio'))
-    .addColumn('delivery_status', 'varchar(20)', (col) => col.notNull().defaultTo('pending'))
-    .addColumn('delivery_error', 'text')
-    .addColumn('delivery_attempts', 'integer', (col) => col.notNull().defaultTo(0))
-    .addColumn('last_delivery_attempt_at', 'timestamptz')
-    .addColumn('metadata', 'jsonb', (col) => col.defaultTo(sql`'{}'::jsonb`))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
-    .execute();
-
-  // 10. MICROCYCLES TABLE
-  await db.schema
-    .createTable('microcycles')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('absolute_week', 'integer', (col) => col.notNull().defaultTo(1))
-    .addColumn('start_date', 'timestamp', (col) => col.notNull())
-    .addColumn('end_date', 'timestamp', (col) => col.notNull())
-    .addColumn('days', sql`text[]`)
-    .addColumn('is_deload', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('is_active', 'boolean', (col) => col.defaultTo(true))
-    .addColumn('description', 'text')
-    .addColumn('message', 'text')
-    .addColumn('structured', 'jsonb')
-    .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
-    .addColumn('updated_at', 'timestamp', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
-    .execute();
-
   await sql`
-    CREATE TRIGGER update_microcycles_updated_at
-    BEFORE UPDATE ON microcycles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    CREATE TABLE IF NOT EXISTS messages (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      conversation_id uuid,
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      direction varchar(10) NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+      content text NOT NULL,
+      phone_from varchar(20),
+      phone_to varchar(20),
+      provider_message_id varchar(100),
+      provider varchar(20) NOT NULL DEFAULT 'twilio',
+      delivery_status varchar(20) NOT NULL DEFAULT 'pending',
+      delivery_error text,
+      delivery_attempts integer NOT NULL DEFAULT 0,
+      last_delivery_attempt_at timestamptz,
+      metadata jsonb DEFAULT '{}'::jsonb,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
   `.execute(db);
 
-  await db.schema
-    .createIndex('idx_microcycles_client_date')
-    .on('microcycles')
-    .columns(['client_id', 'start_date'])
-    .execute();
-
-  // 11. WORKOUT_INSTANCES TABLE
-  await db.schema
-    .createTable('workout_instances')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('microcycle_id', 'uuid', (col) => col.references('microcycles.id').onDelete('set null'))
-    .addColumn('date', 'date', (col) => col.notNull())
-    .addColumn('session_type', 'varchar(50)', (col) => col.notNull())
-    .addColumn('goal', 'text')
-    .addColumn('description', 'text')
-    .addColumn('reasoning', 'text')
-    .addColumn('message', 'text')
-    .addColumn('details', 'jsonb', (col) => col.notNull())
-    .addColumn('structured', 'jsonb')
-    .addColumn('completed_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  // 10. MICROCYCLES TABLE
+  await sql`
+    CREATE TABLE IF NOT EXISTS microcycles (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      absolute_week integer NOT NULL DEFAULT 1,
+      start_date timestamp NOT NULL,
+      end_date timestamp NOT NULL,
+      days text[],
+      is_deload boolean NOT NULL DEFAULT false,
+      is_active boolean DEFAULT true,
+      description text,
+      message text,
+      structured jsonb,
+      created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
   await sql`
-    CREATE TRIGGER update_workout_instances_updated_at
-    BEFORE UPDATE ON workout_instances
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_microcycles_updated_at') THEN
+        CREATE TRIGGER update_microcycles_updated_at
+        BEFORE UPDATE ON microcycles
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
+  `.execute(db);
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_microcycles_client_date ON microcycles (client_id, start_date)`.execute(db);
+
+  // 11. WORKOUT_INSTANCES TABLE
+  await sql`
+    CREATE TABLE IF NOT EXISTS workout_instances (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      microcycle_id uuid REFERENCES microcycles(id) ON DELETE SET NULL,
+      date date NOT NULL,
+      session_type varchar(50) NOT NULL,
+      goal text,
+      description text,
+      reasoning text,
+      message text,
+      details jsonb NOT NULL,
+      structured jsonb,
+      completed_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
+
+  await sql`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_workout_instances_updated_at') THEN
+        CREATE TRIGGER update_workout_instances_updated_at
+        BEFORE UPDATE ON workout_instances
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
   `.execute(db);
 
   // 12. USER_ONBOARDING TABLE
-  await db.schema
-    .createTable('user_onboarding')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.unique().notNull().references('users.id').onDelete('cascade'))
-    .addColumn('signup_data', 'jsonb')
-    .addColumn('status', 'text', (col) => col.notNull().defaultTo('pending'))
-    .addColumn('current_step', 'integer')
-    .addColumn('started_at', 'timestamptz')
-    .addColumn('completed_at', 'timestamptz')
-    .addColumn('error_message', 'text')
-    .addColumn('program_messages_sent', 'boolean', (col) => col.defaultTo(false))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_onboarding (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      signup_data jsonb,
+      status text NOT NULL DEFAULT 'pending',
+      current_step integer,
+      started_at timestamptz,
+      completed_at timestamptz,
+      error_message text,
+      program_messages_sent boolean DEFAULT false,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_user_onboarding_user_id').on('user_onboarding').column('client_id').execute();
-  await db.schema.createIndex('idx_user_onboarding_status').on('user_onboarding').column('status').execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_user_onboarding_user_id ON user_onboarding (client_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_user_onboarding_status ON user_onboarding (status)`.execute(db);
 
   await sql`
-    CREATE TRIGGER update_user_onboarding_updated_at
-    BEFORE UPDATE ON user_onboarding
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_onboarding_updated_at') THEN
+        CREATE TRIGGER update_user_onboarding_updated_at
+        BEFORE UPDATE ON user_onboarding
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
   `.execute(db);
 
   // 13. SHORT_LINKS TABLE
-  await db.schema
-    .createTable('short_links')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`uuid_generate_v4()`))
-    .addColumn('code', 'varchar(5)', (col) => col.notNull().unique())
-    .addColumn('target_path', 'text', (col) => col.notNull())
-    .addColumn('client_id', 'uuid', (col) => col.references('users.id').onDelete('cascade'))
-    .addColumn('expires_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('last_accessed_at', 'timestamptz')
-    .addColumn('access_count', 'integer', (col) => col.notNull().defaultTo(0))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS short_links (
+      id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      code varchar(5) NOT NULL UNIQUE,
+      target_path text NOT NULL,
+      client_id uuid REFERENCES users(id) ON DELETE CASCADE,
+      expires_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_accessed_at timestamptz,
+      access_count integer NOT NULL DEFAULT 0
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('short_links_code_idx').on('short_links').column('code').execute();
-  await db.schema.createIndex('short_links_user_id_idx').on('short_links').column('client_id').execute();
-  await db.schema.createIndex('short_links_expires_at_idx').on('short_links').column('expires_at').execute();
+  await sql`CREATE INDEX IF NOT EXISTS short_links_code_idx ON short_links (code)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS short_links_user_id_idx ON short_links (client_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS short_links_expires_at_idx ON short_links (expires_at)`.execute(db);
 
   // 14. ADMIN_ACTIVITY_LOGS TABLE
-  await db.schema
-    .createTable('admin_activity_logs')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('actor_client_id', 'uuid')
-    .addColumn('target_client_id', 'uuid', (col) => col.notNull())
-    .addColumn('action', 'text', (col) => col.notNull())
-    .addColumn('payload', 'jsonb', (col) => col.notNull().defaultTo(sql`'{}'::jsonb`))
-    .addColumn('result', 'text', (col) => col.notNull())
-    .addColumn('error_message', 'text')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS admin_activity_logs (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      actor_client_id uuid,
+      target_client_id uuid NOT NULL,
+      action text NOT NULL,
+      payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+      result text NOT NULL,
+      error_message text,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `.execute(db);
 
   // 15. REFERRALS TABLE
-  await db.schema
-    .createTable('referrals')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('referrer_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('referee_id', 'uuid', (col) => col.notNull().unique().references('users.id').onDelete('cascade'))
-    .addColumn('credit_applied', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('credit_amount_cents', 'integer', (col) => col.defaultTo(0))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('credited_at', 'timestamptz')
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS referrals (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      referrer_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      referee_id uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      credit_applied boolean NOT NULL DEFAULT false,
+      credit_amount_cents integer DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      credited_at timestamptz
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('referrals_referrer_id_idx').on('referrals').column('referrer_id').execute();
+  await sql`CREATE INDEX IF NOT EXISTS referrals_referrer_id_idx ON referrals (referrer_id)`.execute(db);
 
   // 16. DAY_CONFIGS TABLE
-  await db.schema
-    .createTable('day_configs')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('date', 'date', (col) => col.notNull())
-    .addColumn('scope_type', 'varchar(20)', (col) => col.notNull().defaultTo('global'))
-    .addColumn('scope_id', 'uuid')
-    .addColumn('config', 'jsonb', (col) => col.notNull().defaultTo(sql`'{}'::jsonb`))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addUniqueConstraint('day_configs_date_scope_unique', ['date', 'scope_type', 'scope_id'])
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS day_configs (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      date date NOT NULL,
+      scope_type varchar(20) NOT NULL DEFAULT 'global',
+      scope_id uuid,
+      config jsonb NOT NULL DEFAULT '{}'::jsonb,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT day_configs_date_scope_unique UNIQUE (date, scope_type, scope_id)
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('day_configs_date_idx').on('day_configs').column('date').execute();
-  await db.schema.createIndex('day_configs_scope_idx').on('day_configs').columns(['scope_type', 'scope_id']).execute();
+  await sql`CREATE INDEX IF NOT EXISTS day_configs_date_idx ON day_configs (date)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS day_configs_scope_idx ON day_configs (scope_type, scope_id)`.execute(db);
 
   // 17. MESSAGE_QUEUES TABLE
-  await db.schema
-    .createTable('message_queues')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('queue_name', 'varchar(50)', (col) => col.notNull())
-    .addColumn('sequence_number', 'integer', (col) => col.notNull())
-    .addColumn('message_content', 'text')
-    .addColumn('media_urls', 'jsonb')
-    .addColumn('status', 'varchar(20)', (col) =>
-      col.notNull().defaultTo('pending').check(sql`status IN ('pending', 'sent', 'delivered', 'failed')`)
+  await sql`
+    CREATE TABLE IF NOT EXISTS message_queues (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      queue_name varchar(50) NOT NULL,
+      sequence_number integer NOT NULL,
+      message_content text,
+      media_urls jsonb,
+      status varchar(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'delivered', 'failed')),
+      message_id uuid REFERENCES messages(id) ON DELETE SET NULL,
+      retry_count integer NOT NULL DEFAULT 0,
+      max_retries integer NOT NULL DEFAULT 3,
+      timeout_minutes integer NOT NULL DEFAULT 10,
+      error_message text,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      sent_at timestamptz,
+      delivered_at timestamptz
     )
-    .addColumn('message_id', 'uuid', (col) => col.references('messages.id').onDelete('set null'))
-    .addColumn('retry_count', 'integer', (col) => col.notNull().defaultTo(0))
-    .addColumn('max_retries', 'integer', (col) => col.notNull().defaultTo(3))
-    .addColumn('timeout_minutes', 'integer', (col) => col.notNull().defaultTo(10))
-    .addColumn('error_message', 'text')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('sent_at', 'timestamptz')
-    .addColumn('delivered_at', 'timestamptz')
-    .execute();
+  `.execute(db);
 
-  await db.schema
-    .createIndex('message_queues_user_queue_sequence_idx')
-    .on('message_queues')
-    .columns(['client_id', 'queue_name', 'sequence_number'])
-    .execute();
-
-  await db.schema
-    .createIndex('message_queues_user_status_idx')
-    .on('message_queues')
-    .columns(['client_id', 'status'])
-    .execute();
-
-  await db.schema.createIndex('message_queues_message_id_idx').on('message_queues').column('message_id').execute();
-
-  await db.schema
-    .createIndex('message_queues_sent_at_status_idx')
-    .on('message_queues')
-    .columns(['sent_at', 'status'])
-    .execute();
+  await sql`CREATE INDEX IF NOT EXISTS message_queues_user_queue_sequence_idx ON message_queues (client_id, queue_name, sequence_number)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS message_queues_user_status_idx ON message_queues (client_id, status)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS message_queues_message_id_idx ON message_queues (message_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS message_queues_sent_at_status_idx ON message_queues (sent_at, status)`.execute(db);
 
   // ============================================
   // TIER 3: PROGRAM-RELATED TABLES
@@ -948,194 +951,193 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log('Creating Tier 3 tables (programs)...');
 
   // 18. PROGRAM_OWNERS TABLE
-  await db.schema
-    .createTable('program_owners')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('user_id', 'uuid', (col) => col.references('users.id').onDelete('set null'))
-    .addColumn('owner_type', 'varchar(20)', (col) => col.notNull())
-    .addColumn('display_name', 'varchar(100)', (col) => col.notNull())
-    .addColumn('bio', 'text')
-    .addColumn('avatar_url', 'text')
-    .addColumn('stripe_connect_account_id', 'varchar(255)')
-    .addColumn('is_active', 'boolean', (col) => col.notNull().defaultTo(true))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS program_owners (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+      owner_type varchar(20) NOT NULL,
+      display_name varchar(100) NOT NULL,
+      bio text,
+      avatar_url text,
+      stripe_connect_account_id varchar(255),
+      is_active boolean NOT NULL DEFAULT true,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_program_owners_user_id').on('program_owners').column('user_id').execute();
-  await db.schema.createIndex('idx_program_owners_type').on('program_owners').column('owner_type').execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_owners_user_id ON program_owners (user_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_owners_type ON program_owners (owner_type)`.execute(db);
 
   // 19. PROGRAMS TABLE
-  await db.schema
-    .createTable('programs')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('owner_id', 'uuid', (col) => col.notNull().references('program_owners.id').onDelete('cascade'))
-    .addColumn('name', 'varchar(200)', (col) => col.notNull())
-    .addColumn('description', 'text')
-    .addColumn('scheduling_mode', 'varchar(20)', (col) => col.notNull().defaultTo('rolling_start'))
-    .addColumn('cadence', 'varchar(30)', (col) => col.notNull().defaultTo('calendar_days'))
-    .addColumn('late_joiner_policy', 'varchar(30)', (col) => col.defaultTo('start_from_beginning'))
-    .addColumn('billing_model', 'varchar(30)', (col) => col.defaultTo('subscription'))
-    .addColumn('revenue_split_percent', 'integer', (col) => col.defaultTo(70))
-    .addColumn('is_active', 'boolean', (col) => col.notNull().defaultTo(true))
-    .addColumn('is_public', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('published_version_id', 'uuid') // FK added after program_versions created
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS programs (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      owner_id uuid NOT NULL REFERENCES program_owners(id) ON DELETE CASCADE,
+      name varchar(200) NOT NULL,
+      description text,
+      scheduling_mode varchar(20) NOT NULL DEFAULT 'rolling_start',
+      cadence varchar(30) NOT NULL DEFAULT 'calendar_days',
+      late_joiner_policy varchar(30) DEFAULT 'start_from_beginning',
+      billing_model varchar(30) DEFAULT 'subscription',
+      revenue_split_percent integer DEFAULT 70,
+      is_active boolean NOT NULL DEFAULT true,
+      is_public boolean NOT NULL DEFAULT false,
+      published_version_id uuid,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_programs_owner_id').on('programs').column('owner_id').execute();
-  await db.schema.createIndex('idx_programs_active_public').on('programs').columns(['is_active', 'is_public']).execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_programs_owner_id ON programs (owner_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_programs_active_public ON programs (is_active, is_public)`.execute(db);
 
   // 20. PROGRAM_VERSIONS TABLE
-  await db.schema
-    .createTable('program_versions')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('program_id', 'uuid', (col) => col.notNull().references('programs.id').onDelete('cascade'))
-    .addColumn('version_number', 'integer', (col) => col.notNull())
-    .addColumn('status', 'varchar(20)', (col) => col.notNull().defaultTo('draft'))
-    .addColumn('template_markdown', 'text')
-    .addColumn('template_structured', 'jsonb')
-    .addColumn('generation_config', 'jsonb')
-    .addColumn('default_duration_weeks', 'integer')
-    .addColumn('difficulty_metadata', 'jsonb')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('published_at', 'timestamptz')
-    .addColumn('archived_at', 'timestamptz')
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS program_versions (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      program_id uuid NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+      version_number integer NOT NULL,
+      status varchar(20) NOT NULL DEFAULT 'draft',
+      template_markdown text,
+      template_structured jsonb,
+      generation_config jsonb,
+      default_duration_weeks integer,
+      difficulty_metadata jsonb,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      published_at timestamptz,
+      archived_at timestamptz
+    )
+  `.execute(db);
 
-  await db.schema
-    .createIndex('idx_program_versions_program_version')
-    .on('program_versions')
-    .columns(['program_id', 'version_number'])
-    .unique()
-    .execute();
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_program_versions_program_version ON program_versions (program_id, version_number)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_versions_program_id ON program_versions (program_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_versions_status ON program_versions (status)`.execute(db);
 
-  await db.schema.createIndex('idx_program_versions_program_id').on('program_versions').column('program_id').execute();
-  await db.schema.createIndex('idx_program_versions_status').on('program_versions').column('status').execute();
-
-  // Add FK from programs.published_version_id to program_versions
-  await sql`ALTER TABLE programs ADD CONSTRAINT fk_programs_published_version FOREIGN KEY (published_version_id) REFERENCES program_versions(id) ON DELETE SET NULL`.execute(db);
-  await db.schema.createIndex('idx_programs_published_version').on('programs').column('published_version_id').execute();
+  // Add FK from programs.published_version_id to program_versions (idempotent)
+  await sql`
+    DO $$ BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_programs_published_version'
+      ) THEN
+        ALTER TABLE programs ADD CONSTRAINT fk_programs_published_version
+        FOREIGN KEY (published_version_id) REFERENCES program_versions(id) ON DELETE SET NULL;
+      END IF;
+    END $$;
+  `.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_programs_published_version ON programs (published_version_id)`.execute(db);
 
   // 21. PROGRAM_FAMILIES TABLE
-  await db.schema
-    .createTable('program_families')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('owner_id', 'uuid', (col) => col.references('program_owners.id').onDelete('set null'))
-    .addColumn('family_type', 'varchar(30)', (col) => col.notNull())
-    .addColumn('name', 'varchar(200)', (col) => col.notNull())
-    .addColumn('slug', 'varchar(200)', (col) => col.notNull())
-    .addColumn('description', 'text')
-    .addColumn('visibility', 'varchar(20)', (col) => col.notNull().defaultTo('public'))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS program_families (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      owner_id uuid REFERENCES program_owners(id) ON DELETE SET NULL,
+      family_type varchar(30) NOT NULL,
+      name varchar(200) NOT NULL,
+      slug varchar(200) NOT NULL,
+      description text,
+      visibility varchar(20) NOT NULL DEFAULT 'public',
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema.createIndex('idx_program_families_owner_id').on('program_families').column('owner_id').execute();
-  await db.schema.createIndex('idx_program_families_slug').on('program_families').column('slug').unique().execute();
-  await db.schema.createIndex('idx_program_families_type').on('program_families').column('family_type').execute();
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_families_owner_id ON program_families (owner_id)`.execute(db);
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_program_families_slug ON program_families (slug)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_program_families_type ON program_families (family_type)`.execute(db);
 
   // 22. PROGRAM_FAMILY_PROGRAMS TABLE
-  await db.schema
-    .createTable('program_family_programs')
-    .addColumn('family_id', 'uuid', (col) => col.notNull().references('program_families.id').onDelete('cascade'))
-    .addColumn('program_id', 'uuid', (col) => col.notNull().references('programs.id').onDelete('cascade'))
-    .addColumn('sort_order', 'integer', (col) => col.notNull().defaultTo(0))
-    .addColumn('role', 'varchar(20)')
-    .addColumn('pinned', 'boolean', (col) => col.notNull().defaultTo(false))
-    .execute();
-
   await sql`
-    ALTER TABLE program_family_programs
-    ADD CONSTRAINT pk_program_family_programs
-    PRIMARY KEY (family_id, program_id)
+    CREATE TABLE IF NOT EXISTS program_family_programs (
+      family_id uuid NOT NULL REFERENCES program_families(id) ON DELETE CASCADE,
+      program_id uuid NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+      sort_order integer NOT NULL DEFAULT 0,
+      role varchar(20),
+      pinned boolean NOT NULL DEFAULT false,
+      PRIMARY KEY (family_id, program_id)
+    )
   `.execute(db);
 
-  await db.schema
-    .createIndex('idx_program_family_programs_sort')
-    .on('program_family_programs')
-    .columns(['family_id', 'sort_order'])
-    .unique()
-    .execute();
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_program_family_programs_sort ON program_family_programs (family_id, sort_order)`.execute(db);
 
   // 23. FITNESS_PLANS TABLE
-  await db.schema
-    .createTable('fitness_plans')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('legacy_client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('client_id', 'uuid', (col) => col.references('users.id').onDelete('cascade'))
-    .addColumn('program_id', 'uuid', (col) => col.references('programs.id').onDelete('cascade'))
-    .addColumn('program_version_id', 'uuid', (col) => col.references('program_versions.id').onDelete('set null'))
-    .addColumn('start_date', 'date', (col) => col.notNull())
-    .addColumn('description', 'text')
-    .addColumn('message', 'text')
-    .addColumn('structured', 'jsonb')
-    .addColumn('status', 'varchar(20)', (col) => col.defaultTo('active'))
-    .addColumn('personalization_snapshot', 'jsonb')
-    .addColumn('current_state', 'jsonb')
-    .addColumn('published_at', 'timestamptz')
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
-
   await sql`
-    CREATE TRIGGER update_fitness_plans_updated_at
-    BEFORE UPDATE ON fitness_plans
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    CREATE TABLE IF NOT EXISTS fitness_plans (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      legacy_client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_id uuid REFERENCES users(id) ON DELETE CASCADE,
+      program_id uuid REFERENCES programs(id) ON DELETE CASCADE,
+      program_version_id uuid REFERENCES program_versions(id) ON DELETE SET NULL,
+      start_date date NOT NULL,
+      description text,
+      message text,
+      structured jsonb,
+      status varchar(20) DEFAULT 'active',
+      personalization_snapshot jsonb,
+      current_state jsonb,
+      published_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
   `.execute(db);
 
-  await db.schema.createIndex('idx_fitness_plans_program_id').on('fitness_plans').column('program_id').execute();
-  await db.schema.createIndex('idx_fitness_plans_published_at').on('fitness_plans').column('published_at').execute();
-  await db.schema.createIndex('idx_fitness_plans_client_id').on('fitness_plans').column('client_id').execute();
-  await db.schema.createIndex('idx_fitness_plans_program_version_id').on('fitness_plans').column('program_version_id').execute();
-  await db.schema.createIndex('idx_fitness_plans_status').on('fitness_plans').column('status').execute();
+  await sql`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_fitness_plans_updated_at') THEN
+        CREATE TRIGGER update_fitness_plans_updated_at
+        BEFORE UPDATE ON fitness_plans
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END $$;
+  `.execute(db);
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_program_id ON fitness_plans (program_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_published_at ON fitness_plans (published_at)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_client_id ON fitness_plans (client_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_program_version_id ON fitness_plans (program_version_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_status ON fitness_plans (status)`.execute(db);
 
   // 24. PROGRAM_ENROLLMENTS TABLE
-  await db.schema
-    .createTable('program_enrollments')
-    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
-    .addColumn('client_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('cascade'))
-    .addColumn('program_id', 'uuid', (col) => col.notNull().references('programs.id').onDelete('cascade'))
-    .addColumn('program_version_id', 'uuid', (col) => col.references('program_versions.id').onDelete('set null'))
-    .addColumn('cohort_id', 'varchar(100)')
-    .addColumn('cohort_start_date', 'date')
-    .addColumn('start_date', 'date', (col) => col.notNull())
-    .addColumn('current_week', 'integer', (col) => col.notNull().defaultTo(1))
-    .addColumn('status', 'varchar(20)', (col) => col.notNull().defaultTo('active'))
-    .addColumn('enrolled_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`))
-    .execute();
+  await sql`
+    CREATE TABLE IF NOT EXISTS program_enrollments (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      program_id uuid NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+      program_version_id uuid REFERENCES program_versions(id) ON DELETE SET NULL,
+      cohort_id varchar(100),
+      cohort_start_date date,
+      start_date date NOT NULL,
+      current_week integer NOT NULL DEFAULT 1,
+      status varchar(20) NOT NULL DEFAULT 'active',
+      enrolled_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
 
-  await db.schema
-    .createIndex('idx_enrollments_client_program')
-    .on('program_enrollments')
-    .columns(['client_id', 'program_id'])
-    .unique()
-    .execute();
-
-  await db.schema.createIndex('idx_enrollments_client_id').on('program_enrollments').column('client_id').execute();
-  await db.schema.createIndex('idx_enrollments_program_id').on('program_enrollments').column('program_id').execute();
-  await db.schema.createIndex('idx_enrollments_status').on('program_enrollments').column('status').execute();
-  await db.schema.createIndex('idx_enrollments_cohort').on('program_enrollments').columns(['program_id', 'cohort_id']).execute();
-  await db.schema.createIndex('idx_enrollments_program_version_id').on('program_enrollments').column('program_version_id').execute();
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollments_client_program ON program_enrollments (client_id, program_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_client_id ON program_enrollments (client_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_program_id ON program_enrollments (program_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_status ON program_enrollments (status)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_cohort ON program_enrollments (program_id, cohort_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_program_version_id ON program_enrollments (program_version_id)`.execute(db);
 
   // ============================================
   // SEED SYSTEM DATA
   // ============================================
   console.log('Seeding system data...');
 
-  // Seed prompts
+  // Seed prompts (idempotent - ON CONFLICT DO NOTHING)
   console.log('Seeding prompts...');
   for (const prompt of PROMPTS_TO_SEED) {
     await sql`
       INSERT INTO prompts (id, role, value)
       VALUES (${prompt.id}, ${prompt.role}, ${prompt.value})
+      ON CONFLICT (id, role, created_at) DO NOTHING
     `.execute(db);
   }
 
-  // Seed AI program owner
+  // Seed AI program owner (idempotent)
   console.log('Seeding AI program owner...');
   await sql`
     INSERT INTO program_owners (id, user_id, owner_type, display_name, bio, is_active)
@@ -1150,7 +1152,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     ON CONFLICT (id) DO NOTHING
   `.execute(db);
 
-  // Seed AI program
+  // Seed AI program (idempotent)
   console.log('Seeding AI program...');
   await sql`
     INSERT INTO programs (id, owner_id, name, description, scheduling_mode, cadence, late_joiner_policy, billing_model, is_active, is_public)
@@ -1169,7 +1171,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     ON CONFLICT (id) DO NOTHING
   `.execute(db);
 
-  // Seed AI program version
+  // Seed AI program version (idempotent)
   console.log('Seeding AI program version...');
   await sql`
     INSERT INTO program_versions (id, program_id, version_number, status, template_markdown, generation_config, published_at)
@@ -1192,11 +1194,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     ON CONFLICT (id) DO NOTHING
   `.execute(db);
 
-  // Update AI program to point to version
+  // Update AI program to point to version (idempotent - only updates if not already set)
   await sql`
     UPDATE programs
     SET published_version_id = ${AI_VERSION_ID}::uuid
     WHERE id = ${AI_PROGRAM_ID}::uuid
+      AND (published_version_id IS NULL OR published_version_id != ${AI_VERSION_ID}::uuid)
   `.execute(db);
 
   console.log('Consolidated schema migration complete!');
