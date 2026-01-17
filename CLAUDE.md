@@ -375,7 +375,7 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 - Be sure that all tests pass when implementing new features, similar to build and lint
 
 ### Environment Variable Management
-- Use `source .env.local` for environment variables
+- **ALWAYS run `source .env.local` before running `pnpm build` or `pnpm lint`** - these commands require DATABASE_URL for db:codegen
 - Sandbox variables only needed for admin app environment switching
 
 ### Code Quality and Validation
