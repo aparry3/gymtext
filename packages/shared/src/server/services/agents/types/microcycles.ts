@@ -86,26 +86,3 @@ export interface ModifyMicrocycleAgentDeps {
   config?: ModelConfig;
 }
 
-// =============================================================================
-// Legacy Output Types (for backward compatibility with services)
-// =============================================================================
-
-/**
- * @deprecated Use MicrocycleGenerateOutput instead
- * Legacy output format maintained for service layer compatibility
- */
-export interface BaseMicrocycleAgentOutput {
-  days: string[];          // Array of 7 day overviews [Monday-Sunday]
-  description: string;     // Long-form narrative description of the weekly microcycle
-  isDeload: boolean;       // Whether this is a deload week (reduced volume and intensity)
-  wasModified?: boolean;   // Whether the microcycle was modified (only present for update operations)
-  modifications?: string;  // Explanation of changes made (only present for update operations when wasModified is true)
-}
-
-/**
- * @deprecated Use MicrocycleGenerateOutput instead
- */
-export interface MicrocycleAgentOutput extends BaseMicrocycleAgentOutput {
-  message: string;        // SMS-formatted weekly check-in/breakdown message
-  structure?: MicrocycleStructure; // Structured microcycle data
-}

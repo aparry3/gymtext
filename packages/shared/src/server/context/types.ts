@@ -122,24 +122,3 @@ export interface EnvironmentContext {
   stripeClient: Stripe;
 }
 
-/**
- * Configuration for loading environment secrets
- * @deprecated Use SecretsConfig instead. Apps should load their own env vars
- * and pass secrets to the shared package without sandbox/production naming.
- */
-export interface EnvironmentSecretsConfig {
-  production: {
-    database: DatabaseSecrets;
-    twilio: TwilioSecrets;
-    stripe: StripeSecrets;
-  };
-  sandbox: {
-    database: DatabaseSecrets;
-    twilio: TwilioSecrets;
-    stripe: StripeSecrets;
-  };
-  shared: {
-    ai: AISecrets;
-    pinecone: PineconeSecrets;
-  };
-}

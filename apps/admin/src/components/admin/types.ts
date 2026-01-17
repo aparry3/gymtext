@@ -370,7 +370,7 @@ export interface AdminEnrollment {
   clientPhone: string;                // Denormalized
   programId: string;
   programName: string;                // Denormalized
-  versionId: string | null;
+  programVersionId: string | null;    // The program version the user is enrolled in
   startDate: Date;
   currentWeek: number;
   status: EnrollmentStatus;

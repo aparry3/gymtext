@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       programs.map(async (program) => {
         const owner = ownerMap.get(program.ownerId);
         const enrollmentCount = await services.enrollment.countActiveEnrollments(program.id);
-        const versionCount = await services.enrollment.countVersions(program.id);
+        const versionCount = await services.programVersion.countByProgramId(program.id);
 
         return {
           ...program,

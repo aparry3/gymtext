@@ -7,6 +7,19 @@ import type { UserWithProfile } from '@/server/models/user';
 export type { PlanStructure };
 
 // =============================================================================
+// Message Types
+// =============================================================================
+
+/**
+ * Data for plan summary message generation
+ */
+export interface PlanMessageData {
+  userName: string;
+  userProfile: string;
+  overview: string;
+}
+
+// =============================================================================
 // Generate Operation Types
 // =============================================================================
 
@@ -65,21 +78,3 @@ export interface ModifyFitnessPlanAgentDeps {
   config?: ModelConfig;
 }
 
-// =============================================================================
-// Legacy Types (for backward compatibility with services)
-// =============================================================================
-
-/**
- * @deprecated Use FitnessPlanGenerateOutput instead
- */
-export interface FitnessPlanChainContext {
-  user: UserWithProfile;
-  fitnessPlan: string;
-}
-
-/**
- * @deprecated Use FitnessPlanGenerateAgentDeps instead
- */
-export interface FitnessProfileContextService {
-  config?: ModelConfig;
-}

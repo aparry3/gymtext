@@ -57,11 +57,14 @@ import {
   type FitnessPlanAgentService,
 } from './agents/training';
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
+import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
+import { createProgramVersionService, type ProgramVersionServiceInstance } from './domain/program/programVersionService';
+import { createPlanInstanceService, type PlanInstanceServiceInstance } from './domain/training/planInstanceService';
 
 /**
  * External clients that can be injected for environment switching
@@ -112,6 +115,7 @@ export interface ServiceContainer {
   microcycleAgent: MicrocycleAgentService;
   fitnessPlanAgent: FitnessPlanAgentService;
   chatAgent: ChatAgentServiceInstance;
+  programAgent: ProgramAgentServiceInstance;
 
   // Orchestration services
   chat: ChatServiceInstance;
@@ -123,6 +127,8 @@ export interface ServiceContainer {
   programOwner: ProgramOwnerServiceInstance;
   program: ProgramServiceInstance;
   enrollment: EnrollmentServiceInstance;
+  programVersion: ProgramVersionServiceInstance;
+  planInstance: PlanInstanceServiceInstance;
 }
 
 /**
@@ -162,6 +168,8 @@ export function createServices(
   const programOwner = createProgramOwnerService(repos);
   const program = createProgramService(repos);
   const enrollment = createEnrollmentService(repos);
+  const programVersion = createProgramVersionService(repos);
+  const planInstance = createPlanInstanceService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -171,6 +179,7 @@ export function createServices(
     workoutInstanceService: workoutInstance,
     microcycleService: microcycle,
     fitnessProfileService: fitnessProfile,
+    enrollmentService: enrollment,
   });
 
   // =========================================================================
@@ -180,6 +189,7 @@ export function createServices(
   const microcycleAgent = createMicrocycleAgentService(contextService);
   const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
   const chatAgent = createChatAgentService(contextService);
+  const programAgent = createProgramAgentService();
 
   // =========================================================================
   // Phase 2.6: Create training orchestration service
@@ -402,6 +412,7 @@ export function createServices(
     microcycleAgent,
     fitnessPlanAgent,
     chatAgent,
+    programAgent,
 
     // Chat orchestration
     chat,
@@ -413,6 +424,8 @@ export function createServices(
     programOwner,
     program,
     enrollment,
+    programVersion,
+    planInstance,
   };
 }
 
@@ -482,9 +495,12 @@ export type {
   // Agent services
   WorkoutAgentService,
   MicrocycleAgentService,
+  ProgramAgentServiceInstance,
 
   // Program domain services
   ProgramOwnerServiceInstance,
   ProgramServiceInstance,
   EnrollmentServiceInstance,
+  ProgramVersionServiceInstance,
+  PlanInstanceServiceInstance,
 };

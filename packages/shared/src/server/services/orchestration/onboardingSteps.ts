@@ -147,18 +147,15 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       if (!enrollment) {
         console.log(`[Onboarding] Step 3: Creating AI program enrollment for ${user.id}`);
         const aiProgram = await programService.getAiProgram();
-        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id);
+        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id, {
+          programVersionId: aiProgram.publishedVersionId ?? undefined,
+        });
       }
 
       // Only check for existing plan if not forcing creation
       if (!forceCreate) {
         const existingPlan = await fitnessPlanService.getCurrentPlan(user.id);
         if (existingPlan) {
-          // Link to enrollment if not already linked
-          if (!enrollment.versionId && existingPlan.id) {
-            console.log(`[Onboarding] Step 3: Linking existing plan to enrollment for ${user.id}`);
-            await enrollmentService.linkVersion(enrollment.id, existingPlan.id);
-          }
           console.log(`[Onboarding] Step 3: Plan already exists for ${user.id}`);
           return { plan: existingPlan, wasCreated: false };
         }
@@ -166,10 +163,6 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
 
       console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
       const plan = await trainingService.createFitnessPlan(user);
-
-      // Link the new plan to the enrollment
-      await enrollmentService.linkVersion(enrollment.id, plan.id!);
-      console.log(`[Onboarding] Step 3: Linked plan ${plan.id} to enrollment ${enrollment.id}`);
 
       return { plan, wasCreated: true };
     },

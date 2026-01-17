@@ -18,8 +18,6 @@ export type {
   CronSecrets,
   SecretsConfig,
   EnvConfig,
-  // Deprecated - kept for backward compatibility
-  EnvironmentSecretsConfig,
 } from './types';
 
 // Context creation

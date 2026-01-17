@@ -11,7 +11,8 @@ export interface ProgramEnrollment {
   id: string;
   clientId: string;
   programId: string;
-  versionId: string | null;
+  /** The program version the user is enrolled in */
+  programVersionId: string | null;
   cohortId: string | null;
   cohortStartDate: Date | null;
   startDate: Date;
@@ -28,7 +29,7 @@ export class ProgramEnrollmentModel {
       id: row.id,
       clientId: row.clientId,
       programId: row.programId,
-      versionId: row.versionId,
+      programVersionId: row.programVersionId,
       cohortId: row.cohortId,
       cohortStartDate: row.cohortStartDate ? new Date(row.cohortStartDate as unknown as string | number | Date) : null,
       startDate: new Date(row.startDate as unknown as string | number | Date),

@@ -134,14 +134,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       providedMicrocycle?: Microcycle
     ): Promise<WorkoutInstance | null> {
       try {
-        // 1. Get enrollment and linked fitness plan version
-        const enrollmentResult = await enrollmentService.getEnrollmentWithVersion(user.id);
+        // 1. Get enrollment and current fitness plan instance
+        const enrollmentResult = await enrollmentService.getEnrollmentWithProgramVersion(user.id);
         if (!enrollmentResult) {
           console.log(`[TrainingService] No active enrollment for user ${user.id}`);
           return null;
         }
 
-        let { enrollment, version: plan } = enrollmentResult;
+        let { enrollment, currentPlanInstance: plan } = enrollmentResult;
 
         // For AI programs without a version, generate one
         if (!plan) {
@@ -160,7 +160,6 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           if (owner.ownerType === 'ai') {
             console.log(`[TrainingService] AI program has no version, generating one for user ${user.id}`);
             plan = await this.createFitnessPlan(user);
-            await enrollmentService.linkVersion(enrollment.id, plan.id!);
           } else {
             console.log(`[TrainingService] Non-AI program has no version for user ${user.id}`);
             return null;

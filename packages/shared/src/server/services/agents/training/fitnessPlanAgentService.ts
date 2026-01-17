@@ -1,11 +1,13 @@
 import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
-  planSummaryMessageUserPrompt,
-  type PlanMessageData,
-  structuredPlanUserPrompt,
   ModifyFitnessPlanOutputSchema,
-  type ModifyFitnessPlanOutput,
+  type ModifyFitnessPlanSchemaOutput,
+} from '@/server/services/agents/schemas/plans';
+import type { PlanMessageData } from '@/server/services/agents/types/plans';
+import {
+  planSummaryMessageUserPrompt,
+  structuredPlanUserPrompt,
 } from '@/server/services/agents/prompts/plans';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -90,9 +92,10 @@ export class FitnessPlanAgentService {
     structure: PlanStructure;
   }> {
     // Build context using ContextService
+    // PROGRAM_VERSION first (guides generation), then user context
     const context = await this.contextService.getContext(
       user,
-      [ContextType.USER, ContextType.USER_PROFILE]
+      [ContextType.PROGRAM_VERSION, ContextType.USER, ContextType.USER_PROFILE]
     );
 
     // Get sub-agents (lazy-initialized)
@@ -165,9 +168,10 @@ export class FitnessPlanAgentService {
     structure: PlanStructure;
   }> {
     // Build context using ContextService
+    // PROGRAM_VERSION first (guides modification), then user context and current plan
     const context = await this.contextService.getContext(
       user,
-      [ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN],
+      [ContextType.PROGRAM_VERSION, ContextType.USER, ContextType.USER_PROFILE, ContextType.FITNESS_PLAN],
       { planText: currentPlan.description || '' }
     );
 
@@ -186,7 +190,7 @@ export class FitnessPlanAgentService {
 
     // Pass changeRequest directly as the message - it's the user's request, not context
     const result = await agent.invoke(changeRequest) as {
-      response: ModifyFitnessPlanOutput;
+      response: ModifyFitnessPlanSchemaOutput;
       structure?: PlanStructure;
       messages?: string[];
     };

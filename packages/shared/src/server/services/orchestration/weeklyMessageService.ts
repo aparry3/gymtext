@@ -107,14 +107,14 @@ export function createWeeklyMessageService(
       try {
         console.log(`[WeeklyMessageService] Processing weekly message for user ${user.id}`);
 
-        // Get enrollment and linked fitness plan version
-        const enrollmentResult = await enrollmentService.getEnrollmentWithVersion(user.id);
+        // Get enrollment and current fitness plan instance
+        const enrollmentResult = await enrollmentService.getEnrollmentWithProgramVersion(user.id);
         if (!enrollmentResult) {
           console.error(`[WeeklyMessageService] No active enrollment found for user ${user.id}`);
           return { success: false, userId: user.id, error: 'No active enrollment found' };
         }
 
-        const { enrollment, version: plan } = enrollmentResult;
+        const { currentPlanInstance: plan } = enrollmentResult;
         if (!plan) {
           console.error(`[WeeklyMessageService] No fitness plan version found for user ${user.id}`);
           return { success: false, userId: user.id, error: 'No fitness plan found' };
