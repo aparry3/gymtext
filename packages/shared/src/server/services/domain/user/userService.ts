@@ -254,10 +254,25 @@ export function createUserService(repos: RepositoryContainer): UserServiceInstan
         // Fetch signup data from onboarding
         const signupData = await repos.onboarding.getSignupData(id);
 
+        // Fetch subscription status
+        const subscriptions = await repos.subscription.findByClientId(id);
+        const latestSubscription = subscriptions[0]; // Already ordered by createdAt desc
+        let subscriptionStatus: 'active' | 'cancel_pending' | 'canceled' | 'none' = 'none';
+        if (latestSubscription) {
+          if (latestSubscription.status === 'active') {
+            subscriptionStatus = 'active';
+          } else if (latestSubscription.status === 'cancel_pending') {
+            subscriptionStatus = 'cancel_pending';
+          } else if (latestSubscription.status === 'canceled') {
+            subscriptionStatus = 'canceled';
+          }
+        }
+
         return {
           user: adminUser,
           profile: user.profile || null,
           signupData,
+          subscriptionStatus,
           recentActivity: {
             totalMessages: 0,
             totalWorkouts: 0,

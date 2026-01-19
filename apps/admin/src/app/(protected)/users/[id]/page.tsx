@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AdminUser, SignupData } from '@/components/admin/types'
+import { AdminUser, SignupData, SubscriptionStatus } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +37,7 @@ export default function AdminUserDetailPage() {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [profile, setProfile] = useState<string | null>(null)
   const [signupData, setSignupData] = useState<SignupData | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('none')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSendingWorkout, setIsSendingWorkout] = useState(false)
@@ -61,11 +62,12 @@ export default function AdminUserDetailPage() {
         throw new Error(result.message || 'Failed to fetch user')
       }
 
-      const { user: fetchedUser, profile: fetchedProfile, signupData: fetchedSignupData } = result.data
+      const { user: fetchedUser, profile: fetchedProfile, signupData: fetchedSignupData, subscriptionStatus: fetchedSubscriptionStatus } = result.data
 
       setUser(fetchedUser)
       setProfile(fetchedProfile || null)
       setSignupData(fetchedSignupData || null)
+      setSubscriptionStatus(fetchedSubscriptionStatus || 'none')
     } catch (err) {
       setError('Failed to load user')
       console.error('Error fetching user:', err)
@@ -298,15 +300,27 @@ export default function AdminUserDetailPage() {
                 <Send className={`h-4 w-4 ${isSendingWorkout ? 'animate-pulse' : ''}`} />
                 {isSendingWorkout ? 'Triggering...' : 'Trigger Daily Cron'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenUnsubscribeModal}
-                className="gap-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-              >
-                <UserX className="h-4 w-4" />
-                Unsubscribe
-              </Button>
+              {subscriptionStatus === 'active' || subscriptionStatus === 'cancel_pending' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenUnsubscribeModal}
+                  className="gap-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                >
+                  <UserX className="h-4 w-4" />
+                  Unsubscribe
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="gap-2"
+                >
+                  <UserX className="h-4 w-4" />
+                  No Subscription
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="sm"

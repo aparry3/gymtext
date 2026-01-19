@@ -80,10 +80,13 @@ export interface AdminUsersResponse {
   };
 }
 
+export type SubscriptionStatus = 'active' | 'cancel_pending' | 'canceled' | 'none';
+
 export interface AdminUserDetailResponse {
   user: AdminUser;
   profile: string | null;
   signupData: SignupData | null;
+  subscriptionStatus?: SubscriptionStatus;
   recentActivity?: {
     lastMessage?: string;
     lastWorkout?: string;
