@@ -14,6 +14,12 @@ export interface CancelResult {
   error?: string;
 }
 
+export interface ImmediateCancelResult {
+  success: boolean;
+  canceledAt?: Date;
+  error?: string;
+}
+
 export interface ReactivateResult {
   success: boolean;
   reactivated: boolean;
@@ -27,6 +33,7 @@ export interface ReactivateResult {
  */
 export interface SubscriptionServiceInstance {
   cancelSubscription(userId: string): Promise<CancelResult>;
+  immediatelyCancelSubscription(userId: string): Promise<ImmediateCancelResult>;
   reactivateSubscription(userId: string): Promise<ReactivateResult>;
   shouldReceiveMessages(userId: string): Promise<boolean>;
   hasActiveSubscription(userId: string): Promise<boolean>;
@@ -107,6 +114,46 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
         };
       } catch (error) {
         console.error('[SubscriptionService] Cancel failed:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
+
+    async immediatelyCancelSubscription(userId: string): Promise<ImmediateCancelResult> {
+      try {
+        // Find active or cancel_pending subscription
+        const subscriptions = await repos.subscription.findByClientId(userId);
+        const subscription = subscriptions.find(
+          (s) => s.status === 'active' || s.status === 'cancel_pending'
+        );
+
+        if (!subscription) {
+          // No subscription to cancel - treat as success for cleanup scenarios
+          console.log(`[SubscriptionService] No active subscription found for user ${userId}, treating as success`);
+          return { success: true };
+        }
+
+        // Immediately cancel in Stripe (with prorated refund by default)
+        await stripe.subscriptions.cancel(
+          subscription.stripeSubscriptionId,
+          { prorate: true }
+        );
+
+        const canceledAt = new Date();
+
+        // Update local DB
+        await repos.subscription.cancel(subscription.stripeSubscriptionId, canceledAt);
+
+        console.log(`[SubscriptionService] Subscription ${subscription.stripeSubscriptionId} immediately canceled for user ${userId}`);
+
+        return {
+          success: true,
+          canceledAt,
+        };
+      } catch (error) {
+        console.error('[SubscriptionService] Immediate cancel failed:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

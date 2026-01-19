@@ -237,6 +237,20 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
+   * Cancel all pending messages for a client across all queues
+   * Returns the count of deleted messages
+   */
+  async cancelAllPendingForClient(clientId: string): Promise<number> {
+    const result = await this.db
+      .deleteFrom('messageQueues')
+      .where('clientId', '=', clientId)
+      .where('status', '=', 'pending')
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows ?? 0);
+  }
+
+  /**
    * Get queue status summary
    */
   async getQueueStatus(clientId: string, queueName: string): Promise<{

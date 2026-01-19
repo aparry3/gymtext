@@ -33,6 +33,7 @@ export interface MessageQueueServiceInstance {
   checkStalledMessages(): Promise<void>;
   getQueueStatus(clientId: string, queueName: string): Promise<unknown>;
   clearQueue(clientId: string, queueName: string): Promise<void>;
+  cancelAllPendingMessages(clientId: string): Promise<number>;
 }
 
 export interface MessageQueueServiceDeps {
@@ -261,6 +262,13 @@ export function createMessageQueueService(
     async clearQueue(clientId: string, queueName: string): Promise<void> {
       console.log(`[MessageQueueService] Clearing completed queue '${queueName}' for client ${clientId}`);
       await repos.messageQueue.deleteCompleted(clientId, queueName);
+    },
+
+    async cancelAllPendingMessages(clientId: string): Promise<number> {
+      console.log(`[MessageQueueService] Canceling all pending messages for client ${clientId}`);
+      const count = await repos.messageQueue.cancelAllPendingForClient(clientId);
+      console.log(`[MessageQueueService] Canceled ${count} pending messages for client ${clientId}`);
+      return count;
     },
   };
 }
