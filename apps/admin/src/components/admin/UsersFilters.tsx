@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,8 @@ interface UsersFiltersProps {
 export function UsersFilters({ onFiltersChange, isLoading = false }: UsersFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+  const inputRef = useRef<HTMLInputElement>(null)
+
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '')
   const [filters, setFilters] = useState<UserFilters>({
     search: searchParams.get('search') || undefined,
@@ -30,7 +31,12 @@ export function UsersFilters({ onFiltersChange, isLoading = false }: UsersFilter
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
+      const wasFocused = document.activeElement === inputRef.current
       setFilters(prev => ({ ...prev, search: searchValue || undefined }))
+      // Restore focus if input was focused before the update
+      if (wasFocused) {
+        setTimeout(() => inputRef.current?.focus(), 0)
+      }
     }, 300)
 
     return () => clearTimeout(timer)
@@ -75,6 +81,7 @@ export function UsersFilters({ onFiltersChange, isLoading = false }: UsersFilter
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={inputRef}
             placeholder="Search users..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
