@@ -117,17 +117,17 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-6 border-b border-[hsl(var(--sidebar-border))]">
-        <div className="flex items-center gap-2">
-          {/* Close button - only shown in mobile sheet */}
-          {onNavClick && (
-            <button
-              onClick={onNavClick}
-              className="p-1 -ml-1 text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))] rounded"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          )}
+      <div className="p-6 border-b border-[hsl(var(--sidebar-border))] relative">
+        {/* Close button - only shown in mobile sheet */}
+        {onNavClick && (
+          <button
+            onClick={onNavClick}
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-1 text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))] rounded"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        <div className="flex justify-center">
           <Link href="/" className="flex items-center" onClick={onNavClick}>
             <Image
               src="/WordmarkWhite.png"
