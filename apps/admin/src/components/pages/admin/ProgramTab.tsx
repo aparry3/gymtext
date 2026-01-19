@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -145,6 +146,16 @@ export function ProgramTab({
           <OnboardingWorkoutsLoadingCard currentStep={currentStep} />
         ) : (
           <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} basePath={basePath} showAdminActions={showAdminActions} onWorkoutDeleted={fetchProgramData} />
+        )}
+        {recentWorkouts.length > 0 && (
+          <div className="text-center">
+            <Link
+              href={basePath === '/me' ? '/me/workouts' : `${basePath}/${userId}/workouts`}
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+            >
+              View all workouts →
+            </Link>
+          </div>
         )}
       </div>
     </div>
