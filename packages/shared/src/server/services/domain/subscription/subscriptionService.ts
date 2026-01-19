@@ -135,13 +135,19 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
           return { success: true };
         }
 
-        // Immediately cancel in Stripe (with prorated refund by default)
-        await stripe.subscriptions.cancel(
-          subscription.stripeSubscriptionId,
-          { prorate: true }
-        );
-
         const canceledAt = new Date();
+        const isLegacySubscription = subscription.stripeSubscriptionId.startsWith('free_legacy_');
+
+        if (isLegacySubscription) {
+          // Legacy subscriptions are not in Stripe - just update local DB
+          console.log(`[SubscriptionService] Legacy subscription ${subscription.stripeSubscriptionId} - skipping Stripe, updating local DB`);
+        } else {
+          // Immediately cancel in Stripe (with prorated refund by default)
+          await stripe.subscriptions.cancel(
+            subscription.stripeSubscriptionId,
+            { prorate: true }
+          );
+        }
 
         // Update local DB
         await repos.subscription.cancel(subscription.stripeSubscriptionId, canceledAt);
