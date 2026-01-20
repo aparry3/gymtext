@@ -71,7 +71,6 @@ export interface MessageServiceInstance {
   sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<Message>;
   sendWelcomeMessage(user: UserWithProfile): Promise<Message>;
   sendPlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<Message[]>;
-  sendWorkoutMessage(user: UserWithProfile, workout: WorkoutInstance | EnhancedWorkoutInstance): Promise<Message>;
 }
 
 /**
@@ -80,7 +79,6 @@ export interface MessageServiceInstance {
 export interface MessageServiceDeps {
   user: UserServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  workoutAgent?: WorkoutAgentService;
   contextService?: ContextService;
   messagingAgent?: MessagingAgentServiceInstance;
   messageQueue?: MessageQueueServiceInstance;
@@ -94,19 +92,8 @@ export function createMessageService(
   repos: RepositoryContainer,
   deps: MessageServiceDeps
 ): MessageServiceInstance {
-  let workoutAgent: WorkoutAgentService | null = deps.workoutAgent ?? null;
   let messagingAgent: MessagingAgentServiceInstance | null = deps.messagingAgent ?? null;
   let messageQueue: MessageQueueServiceInstance | null = deps.messageQueue ?? null;
-
-  const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) {
-      if (!deps.contextService) {
-        throw new Error('MessageService requires either workoutAgent or contextService to be provided');
-      }
-      workoutAgent = createWorkoutAgentService(deps.contextService);
-    }
-    return workoutAgent;
-  };
 
   const getMessagingAgent = async (): Promise<MessagingAgentServiceInstance> => {
     if (!messagingAgent) {
@@ -424,44 +411,6 @@ export function createMessageService(
       }
 
       return sentMessages;
-    },
-
-    async sendWorkoutMessage(
-      user: UserWithProfile,
-      workout: WorkoutInstance | EnhancedWorkoutInstance
-    ): Promise<Message> {
-      let message: string;
-      const workoutId = 'id' in workout ? workout.id : 'unknown';
-
-      if ('message' in workout && workout.message) {
-        console.log(`[MessageService] Using pre-generated message from workout ${workoutId}`);
-        message = workout.message;
-        return await this.sendMessage(user, message);
-      }
-
-      if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
-        console.log(`[MessageService] Generating fallback message for workout ${workoutId}`);
-
-        try {
-          const messageAgent = await getWorkoutAgent().getMessageAgent();
-          const result = await messageAgent.invoke(workout.description);
-          message = result.response;
-
-          if ('id' in workout && workout.id) {
-            await deps.workoutInstance.updateWorkoutMessage(workout.id, message);
-            console.log(`[MessageService] Saved fallback message to workout ${workout.id}`);
-          }
-
-          return await this.sendMessage(user, message);
-        } catch (error) {
-          console.error(`[MessageService] Failed to generate fallback message for workout ${workoutId}:`, error);
-          throw new Error('Failed to generate workout message');
-        }
-      }
-
-      throw new Error(
-        `Workout ${workoutId} missing required fields (description/reasoning or message) for SMS generation`
-      );
     },
   };
 

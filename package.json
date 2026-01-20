@@ -22,6 +22,8 @@
     "db:dump": "tsx scripts/db/dump-data.ts",
     "db:restore": "tsx scripts/db/restore-data.ts",
     "db:reset-migrations": "tsx scripts/db/reset-migration-history.ts",
+    "db:anonymize": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts",
+    "db:anonymize:dry": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts --dry-run",
     "test:user:create": "source .env.local && tsx scripts/test/user/create.ts",
     "test:user:profile": "source .env.local && tsx scripts/test/user/profile.ts",
     "test:user:get": "source .env.local && tsx scripts/test/user/get.ts",
@@ -112,6 +114,7 @@
     }
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.0.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/inquirer": "^9.0.9",
