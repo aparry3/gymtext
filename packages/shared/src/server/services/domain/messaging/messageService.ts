@@ -7,12 +7,14 @@ import { WorkoutInstance, EnhancedWorkoutInstance } from '../../../models/workou
 import { Message } from '../../../models/conversation';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
 import { getTwilioSecrets } from '@/server/config';
+import { isUnsubscribedError } from '@/server/utils/twilioErrors';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
 import type { ContextService } from '../../context';
 import type { MessagingAgentServiceInstance } from '../../agents/messaging/messagingAgentService';
 import type { MessageQueueServiceInstance } from './messageQueueService';
+import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 import type { Json } from '../../../models/_types';
 
 /**
@@ -82,6 +84,7 @@ export interface MessageServiceDeps {
   contextService?: ContextService;
   messagingAgent?: MessagingAgentServiceInstance;
   messageQueue?: MessageQueueServiceInstance;
+  subscription?: SubscriptionServiceInstance;
 }
 
 /**
@@ -316,27 +319,81 @@ export function createMessageService(
         throw new Error('Failed to store message');
       }
 
-      const result = await messagingClient.sendMessage(user, message, mediaUrls);
+      try {
+        const result = await messagingClient.sendMessage(user, message, mediaUrls);
 
-      if (result.messageId) {
-        try {
-          await repos.message.updateProviderMessageId(stored.id, result.messageId);
-          console.log('[MessageService] Updated message with provider ID:', {
-            messageId: stored.id,
-            providerMessageId: result.messageId,
-          });
-        } catch (error) {
-          console.error('[MessageService] Failed to update provider message ID:', error);
+        if (result.messageId) {
+          try {
+            await repos.message.updateProviderMessageId(stored.id, result.messageId);
+            console.log('[MessageService] Updated message with provider ID:', {
+              messageId: stored.id,
+              providerMessageId: result.messageId,
+            });
+          } catch (error) {
+            console.error('[MessageService] Failed to update provider message ID:', error);
+          }
         }
-      }
 
-      if (provider === 'local') {
-        simulateLocalDelivery(stored.id).catch((error) => {
-          console.error('[MessageService] Local delivery simulation failed:', error);
+        // Update delivery status from Twilio's initial response if available
+        if (result.status && result.status !== 'queued') {
+          try {
+            await repos.message.updateDeliveryStatus(stored.id, result.status as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered');
+          } catch (error) {
+            console.error('[MessageService] Failed to update delivery status:', error);
+          }
+        }
+
+        if (provider === 'local') {
+          simulateLocalDelivery(stored.id).catch((error) => {
+            console.error('[MessageService] Local delivery simulation failed:', error);
+          });
+        }
+
+        return stored;
+      } catch (sendError) {
+        // Handle Twilio send errors
+        const errorMessage = sendError instanceof Error ? sendError.message : String(sendError);
+        console.error('[MessageService] Twilio send failed:', {
+          messageId: stored.id,
+          userId: user.id,
+          error: errorMessage,
         });
-      }
 
-      return stored;
+        // Update message status to failed
+        try {
+          await repos.message.updateDeliveryStatus(stored.id, 'failed', errorMessage);
+        } catch (updateError) {
+          console.error('[MessageService] Failed to update message status to failed:', updateError);
+        }
+
+        // If this is a 21610 (user unsubscribed) error, cancel their subscription
+        if (isUnsubscribedError(errorMessage)) {
+          console.log('[MessageService] User has unsubscribed (21610), canceling subscription:', {
+            userId: user.id,
+            messageId: stored.id,
+          });
+
+          // Cancel the subscription - use lazy-loaded subscription service
+          try {
+            if (deps.subscription) {
+              await deps.subscription.immediatelyCancelSubscription(user.id);
+              console.log('[MessageService] Subscription canceled for unsubscribed user:', user.id);
+            } else {
+              // Lazy load subscription service if not provided
+              const { createServicesFromDb } = await import('../../factory');
+              const { postgresDb } = await import('@/server/connections/postgres/postgres');
+              const services = createServicesFromDb(postgresDb);
+              await services.subscription.immediatelyCancelSubscription(user.id);
+              console.log('[MessageService] Subscription canceled for unsubscribed user (lazy loaded):', user.id);
+            }
+          } catch (cancelError) {
+            console.error('[MessageService] Failed to cancel subscription for unsubscribed user:', cancelError);
+          }
+        }
+
+        // Re-throw the error so callers know the send failed
+        throw sendError;
+      }
     },
 
     async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {

@@ -4,6 +4,7 @@ import twilio from 'twilio';
 import { getTwilioSecrets } from '@/server/config';
 import { getUrlsConfig } from '@/shared/config';
 import { getServices, getRepositories } from '@/lib/context';
+import { isUnsubscribedError } from '@/server/utils/twilioErrors';
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,6 +101,31 @@ export async function POST(req: NextRequest) {
       console.log('[Twilio Status Callback] Message delivered, processing queue');
       await services.messageQueue.markMessageDelivered(message.id);
     } else if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+      // Check if this is a 21610 (user unsubscribed) error
+      if (isUnsubscribedError(deliveryError)) {
+        console.log('[Twilio Status Callback] User unsubscribed (21610), canceling subscription:', {
+          clientId: message.clientId,
+          messageId: message.id,
+          errorCode,
+        });
+
+        // Cancel the user's subscription
+        try {
+          await services.subscription.immediatelyCancelSubscription(message.clientId);
+          console.log('[Twilio Status Callback] Subscription canceled for unsubscribed user:', message.clientId);
+        } catch (cancelError) {
+          console.error('[Twilio Status Callback] Failed to cancel subscription:', cancelError);
+        }
+
+        // Cancel all pending messages for this user
+        try {
+          const cancelledCount = await services.messageQueue.cancelAllPendingMessages(message.clientId);
+          console.log(`[Twilio Status Callback] Cancelled ${cancelledCount} pending messages for unsubscribed user`);
+        } catch (cancelError) {
+          console.error('[Twilio Status Callback] Failed to cancel pending messages:', cancelError);
+        }
+      }
+
       // Handle failure in queue (retry or skip)
       console.log('[Twilio Status Callback] Message failed, handling in queue');
       await services.messageQueue.markMessageFailed(message.id, deliveryError);

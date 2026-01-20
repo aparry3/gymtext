@@ -176,17 +176,44 @@ export class MessageQueueRepository extends BaseRepository {
     timestamps?: { sentAt?: Date; deliveredAt?: Date },
     error?: string
   ): Promise<MessageQueue> {
+    const updateData: Record<string, unknown> = {
+      status,
+      ...(timestamps?.sentAt && { sentAt: timestamps.sentAt }),
+      ...(timestamps?.deliveredAt && { deliveredAt: timestamps.deliveredAt }),
+      ...(error && { errorMessage: error }),
+    };
+
     return await this.db
       .updateTable('messageQueues')
-      .set({
-        status,
-        ...(timestamps?.sentAt && { sentAt: timestamps.sentAt }),
-        ...(timestamps?.deliveredAt && { deliveredAt: timestamps.deliveredAt }),
-        ...(error && { errorMessage: error }),
-      })
+      .set(updateData)
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Delete a queue entry by ID
+   * Returns the deleted queue entry (with messageId for linking)
+   */
+  async deleteById(id: string): Promise<MessageQueue | undefined> {
+    return await this.db
+      .deleteFrom('messageQueues')
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+  }
+
+  /**
+   * Delete stale pending entries older than the cutoff date
+   * Returns the deleted entries (with messageIds for marking as cancelled)
+   */
+  async deleteStalePending(cutoffDate: Date): Promise<MessageQueue[]> {
+    return await this.db
+      .deleteFrom('messageQueues')
+      .where('status', '=', 'pending')
+      .where('createdAt', '<', cutoffDate)
+      .returningAll()
+      .execute();
   }
 
   /**

@@ -120,7 +120,8 @@ export type MessageDeliveryStatus =
   | 'sent'
   | 'delivered'
   | 'failed'
-  | 'undelivered';
+  | 'undelivered'
+  | 'cancelled';
 
 // Direction
 export type MessageDirection = 'inbound' | 'outbound';
@@ -134,6 +135,7 @@ export type MessageRowVariant =
   | 'outbound-delivered'
   | 'outbound-sent'
   | 'outbound-failed'
+  | 'outbound-cancelled'
   | 'queued';
 
 // Unified message item for display (messages + queue items)

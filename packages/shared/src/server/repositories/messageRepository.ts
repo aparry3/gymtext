@@ -113,6 +113,21 @@ export class MessageRepository extends BaseRepository {
   }
 
   /**
+   * Mark a message as cancelled
+   */
+  async markCancelled(messageId: string): Promise<Message> {
+    return await this.db
+      .updateTable('messages')
+      .set({
+        deliveryStatus: 'cancelled',
+        lastDeliveryAttemptAt: new Date(),
+      })
+      .where('id', '=', messageId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
    * Find all messages with user info for admin view
    * Supports filtering by direction, status, and search
    */

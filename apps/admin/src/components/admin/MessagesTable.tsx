@@ -3,26 +3,31 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { formatRelative } from '@/shared/utils/date';
 import type {
   AdminMessageItem,
   MessageRowVariant,
+  MessageSource,
 } from './types';
 
 interface MessagesTableProps {
   messages: AdminMessageItem[];
   isLoading?: boolean;
   showUserColumn?: boolean;
+  onCancelMessage?: (messageId: string, source: MessageSource) => Promise<void>;
 }
 
 export function MessagesTable({
   messages,
   isLoading = false,
   showUserColumn = true,
+  onCancelMessage,
 }: MessagesTableProps) {
   if (isLoading) {
-    return <MessagesTableSkeleton showUserColumn={showUserColumn} />;
+    return <MessagesTableSkeleton showUserColumn={showUserColumn} showActionsColumn={!!onCancelMessage} />;
   }
 
   if (messages.length === 0) {
@@ -58,6 +63,11 @@ export function MessagesTable({
               <th className="p-4 text-left font-medium text-sm text-muted-foreground">
                 Time
               </th>
+              {onCancelMessage && (
+                <th className="p-4 text-left font-medium text-sm text-muted-foreground">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -66,6 +76,7 @@ export function MessagesTable({
                 key={message.id}
                 message={message}
                 showUserColumn={showUserColumn}
+                onCancelMessage={onCancelMessage}
               />
             ))}
           </tbody>
@@ -78,12 +89,29 @@ export function MessagesTable({
 interface MessageRowProps {
   message: AdminMessageItem;
   showUserColumn: boolean;
+  onCancelMessage?: (messageId: string, source: MessageSource) => Promise<void>;
 }
 
-function MessageRow({ message, showUserColumn }: MessageRowProps) {
+function MessageRow({ message, showUserColumn, onCancelMessage }: MessageRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const variant = getRowVariant(message);
   const bgColor = getRowBackgroundColor(variant);
+  const isCancellable = canBeCancelled(message);
+
+  const handleCancel = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onCancelMessage || isCancelling) return;
+
+    setIsCancelling(true);
+    try {
+      await onCancelMessage(message.id, message.source);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const colSpan = showUserColumn ? (onCancelMessage ? 6 : 5) : (onCancelMessage ? 5 : 4);
 
   return (
     <>
@@ -135,12 +163,35 @@ function MessageRow({ message, showUserColumn }: MessageRowProps) {
             {formatRelative(message.createdAt)}
           </div>
         </td>
+
+        {onCancelMessage && (
+          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+            {isCancellable && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" disabled={isCancelling}>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-32 p-1">
+                  <button
+                    onClick={handleCancel}
+                    disabled={isCancelling}
+                    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 text-destructive"
+                  >
+                    {isCancelling ? 'Cancelling...' : 'Cancel'}
+                  </button>
+                </PopoverContent>
+              </Popover>
+            )}
+          </td>
+        )}
       </tr>
 
       {isExpanded && (
         <tr className={bgColor}>
           <td
-            colSpan={showUserColumn ? 5 : 4}
+            colSpan={colSpan}
             className="p-4 border-b border-gray-100"
           >
             <ExpandedContent message={message} />
@@ -149,6 +200,11 @@ function MessageRow({ message, showUserColumn }: MessageRowProps) {
       )}
     </>
   );
+}
+
+function canBeCancelled(message: AdminMessageItem): boolean {
+  // Can cancel pending, queued, or sent messages
+  return ['pending', 'queued', 'sent'].includes(message.deliveryStatus);
 }
 
 function ExpandedContent({ message }: { message: AdminMessageItem }) {
@@ -246,6 +302,10 @@ function StatusBadge({
       label: 'Undelivered',
       className: 'bg-red-100 text-red-700',
     },
+    cancelled: {
+      label: 'Cancelled',
+      className: 'bg-gray-200 text-gray-500',
+    },
   };
 
   const variant = variants[status] || variants.queued;
@@ -260,6 +320,9 @@ function StatusBadge({
 }
 
 function getRowVariant(message: AdminMessageItem): MessageRowVariant {
+  if (message.deliveryStatus === 'cancelled') {
+    return 'outbound-cancelled';
+  }
   if (message.source === 'queue' || message.deliveryStatus === 'pending') {
     return 'queued';
   }
@@ -287,6 +350,7 @@ function getRowBackgroundColor(variant: MessageRowVariant): string {
     'outbound-delivered': 'bg-blue-50 hover:bg-blue-100',
     'outbound-sent': 'bg-sky-50 hover:bg-sky-100',
     'outbound-failed': 'bg-red-50 hover:bg-red-100',
+    'outbound-cancelled': 'bg-gray-100 hover:bg-gray-150 opacity-60',
     queued: 'bg-gray-50 hover:bg-gray-100',
   };
   return colors[variant];
@@ -304,8 +368,10 @@ function formatPhone(phone: string): string {
 
 function MessagesTableSkeleton({
   showUserColumn,
+  showActionsColumn = false,
 }: {
   showUserColumn: boolean;
+  showActionsColumn?: boolean;
 }) {
   return (
     <div className="rounded-2xl bg-white shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.05]">
@@ -330,6 +396,11 @@ function MessagesTableSkeleton({
               <th className="p-4 text-left font-medium text-sm text-muted-foreground">
                 Time
               </th>
+              {showActionsColumn && (
+                <th className="p-4 text-left font-medium text-sm text-muted-foreground">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -355,6 +426,11 @@ function MessagesTableSkeleton({
                 <td className="p-4">
                   <Skeleton className="h-4 w-24" />
                 </td>
+                {showActionsColumn && (
+                  <td className="p-4">
+                    <Skeleton className="h-8 w-8" />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -395,6 +471,23 @@ const ArrowUpRight = ({ className }: { className?: string }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
+    />
+  </svg>
+);
+
+const MoreHorizontal = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
     />
   </svg>
 );

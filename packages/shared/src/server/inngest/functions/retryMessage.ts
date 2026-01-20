@@ -21,6 +21,7 @@ import { MessageRepository } from '@/server/repositories';
 import { createServicesFromDb } from '@/server/services';
 import { messagingClient } from '@/server/connections/messaging';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { isNonRetryableError, isUnsubscribedError } from '@/server/utils/twilioErrors';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
@@ -28,27 +29,6 @@ const services = createServicesFromDb(postgresDb);
 // Retry delays in seconds: [immediate, 5min, 30min]
 const RETRY_DELAYS = [0, 300, 1800];
 const MAX_ATTEMPTS = 4; // Initial + 3 retries
-
-/**
- * Check if an error is retryable
- * Some errors (like message too long) are deterministic and retrying won't help
- */
-function isRetryableError(error: string | undefined): boolean {
-  if (!error) return true;
-
-  // Non-retryable error patterns
-  const nonRetryablePatterns = [
-    /message.*too long/i,
-    /body.*exceeds/i,
-    /21617/,  // Twilio error code for message too long
-    /21602/,  // Twilio error code for message body required
-    /30004/,  // Twilio error code for message blocked
-    /30005/,  // Twilio error code for unknown destination
-    /30006/,  // Twilio error code for landline or unreachable carrier
-  ];
-
-  return !nonRetryablePatterns.some(pattern => pattern.test(error));
-}
 
 export const retryMessageFunction = inngest.createFunction(
   {
@@ -67,11 +47,26 @@ export const retryMessageFunction = inngest.createFunction(
     });
 
     // Check if the error is non-retryable (deterministic failure)
-    if (!isRetryableError(error)) {
+    if (isNonRetryableError(error)) {
       console.log('[Inngest Retry] Non-retryable error detected, skipping retry:', {
         messageId,
         error,
       });
+
+      // If this is a 21610 (user unsubscribed) error, cancel their subscription
+      if (isUnsubscribedError(error)) {
+        console.log('[Inngest Retry] User has unsubscribed (21610), canceling subscription:', {
+          userId,
+          messageId,
+        });
+        try {
+          await services.subscription.immediatelyCancelSubscription(userId);
+          console.log('[Inngest Retry] Subscription canceled for unsubscribed user:', userId);
+        } catch (cancelError) {
+          console.error('[Inngest Retry] Failed to cancel subscription for unsubscribed user:', cancelError);
+        }
+      }
+
       return {
         success: false,
         reason: 'non_retryable_error',

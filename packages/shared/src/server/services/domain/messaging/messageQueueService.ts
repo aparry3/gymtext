@@ -1,10 +1,12 @@
 import { Message } from '@/server/models/conversation';
 import { inngest } from '@/server/connections/inngest/client';
 import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
+import { isNonRetryableError, isUnsubscribedError } from '@/server/utils/twilioErrors';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { MessageServiceInstance } from './messageService';
 import type { UserServiceInstance } from '../user/userService';
+import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 
 /**
  * Represents a message to be queued
@@ -35,12 +37,14 @@ export interface MessageQueueServiceInstance {
   getQueueStatus(clientId: string, queueName: string): Promise<unknown>;
   clearQueue(clientId: string, queueName: string): Promise<void>;
   cancelAllPendingMessages(clientId: string): Promise<number>;
+  cancelQueueEntry(queueEntryId: string): Promise<{ success: boolean; error?: string }>;
 }
 
 export interface MessageQueueServiceDeps {
   message: MessageServiceInstance;
   user: UserServiceInstance;
   twilioClient: ITwilioClient;
+  subscription?: SubscriptionServiceInstance;
 }
 
 /**
@@ -98,6 +102,31 @@ export function createMessageQueueService(
 
     async processNextMessage(clientId: string, queueName: string): Promise<void> {
       console.log(`[MessageQueueService] Processing next message for client ${clientId} in queue '${queueName}'`);
+
+      // Delete stale pending messages older than 24 hours to avoid sending old content
+      // Mark any linked messages as cancelled in the messages table
+      const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      try {
+        const deletedEntries = await repos.messageQueue.deleteStalePending(staleCutoff);
+        if (deletedEntries.length > 0) {
+          console.log(`[MessageQueueService] Deleted ${deletedEntries.length} stale pending queue entries older than 24h`);
+
+          // Mark any linked messages as cancelled in the messages table
+          for (const entry of deletedEntries) {
+            if (entry.messageId) {
+              try {
+                await repos.message.markCancelled(entry.messageId);
+                console.log(`[MessageQueueService] Marked stale linked message ${entry.messageId} as cancelled`);
+              } catch (error) {
+                console.error(`[MessageQueueService] Failed to mark stale message as cancelled:`, error);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[MessageQueueService] Error deleting stale messages:', error);
+        // Continue processing even if cleanup fails
+      }
 
       const nextEntry = await repos.messageQueue.findNextPending(clientId, queueName);
 
@@ -190,18 +219,37 @@ export function createMessageQueueService(
 
       console.log(`[MessageQueueService] Message ${messageId} failed:`, error);
 
-      // Check if the error is non-retryable (deterministic failure)
-      const isNonRetryableError = error && (
-        /message.*too long/i.test(error) ||
-        /body.*exceeds/i.test(error) ||
-        /21617/.test(error) ||  // Twilio error code for message too long
-        /21602/.test(error) ||  // Twilio error code for message body required
-        /30004/.test(error) ||  // Twilio error code for message blocked
-        /30005/.test(error) ||  // Twilio error code for unknown destination
-        /30006/.test(error)     // Twilio error code for landline or unreachable carrier
-      );
+      // Handle user unsubscribed (21610) - cancel subscription and all pending messages
+      if (isUnsubscribedError(error)) {
+        console.log(`[MessageQueueService] User unsubscribed (21610), canceling subscription and pending messages:`, {
+          clientId: queueEntry.clientId,
+          messageId,
+        });
 
-      if (isNonRetryableError) {
+        // Cancel the user's subscription
+        try {
+          if (deps.subscription) {
+            await deps.subscription.immediatelyCancelSubscription(queueEntry.clientId);
+            console.log(`[MessageQueueService] Subscription canceled for unsubscribed user:`, queueEntry.clientId);
+          } else {
+            // Lazy load subscription service if not provided
+            const { createServicesFromDb } = await import('../../factory');
+            const { postgresDb } = await import('@/server/connections/postgres/postgres');
+            const services = createServicesFromDb(postgresDb);
+            await services.subscription.immediatelyCancelSubscription(queueEntry.clientId);
+            console.log(`[MessageQueueService] Subscription canceled for unsubscribed user (lazy loaded):`, queueEntry.clientId);
+          }
+        } catch (cancelError) {
+          console.error(`[MessageQueueService] Failed to cancel subscription for unsubscribed user:`, cancelError);
+        }
+
+        // Cancel all pending messages for this user
+        const cancelledCount = await repos.messageQueue.cancelAllPendingForClient(queueEntry.clientId);
+        console.log(`[MessageQueueService] Cancelled ${cancelledCount} pending messages for unsubscribed user:`, queueEntry.clientId);
+      }
+
+      // Check if the error is non-retryable (deterministic failure)
+      if (isNonRetryableError(error)) {
         console.log(`[MessageQueueService] Non-retryable error, marking as failed and moving to next`);
         await repos.messageQueue.updateStatus(queueEntry.id, 'failed', undefined, error || 'Non-retryable error');
         await inngest.send({
@@ -302,6 +350,56 @@ export function createMessageQueueService(
       const count = await repos.messageQueue.cancelAllPendingForClient(clientId);
       console.log(`[MessageQueueService] Canceled ${count} pending messages for client ${clientId}`);
       return count;
+    },
+
+    async cancelQueueEntry(queueEntryId: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const queueEntry = await repos.messageQueue.findById(queueEntryId);
+
+        if (!queueEntry) {
+          return { success: false, error: 'Queue entry not found' };
+        }
+
+        // Only allow cancellation of pending or sent entries
+        if (queueEntry.status !== 'pending' && queueEntry.status !== 'sent') {
+          return { success: false, error: `Cannot cancel entry with status: ${queueEntry.status}` };
+        }
+
+        console.log(`[MessageQueueService] Canceling queue entry ${queueEntryId}`);
+
+        // Store clientId and queueName before deleting
+        const { clientId, queueName, messageId } = queueEntry;
+
+        // Delete the queue entry (queue is transient - we delete, not mark as cancelled)
+        await repos.messageQueue.deleteById(queueEntryId);
+        console.log(`[MessageQueueService] Deleted queue entry ${queueEntryId}`);
+
+        // If there's a linked message, mark it as cancelled in the messages table
+        if (messageId) {
+          try {
+            await repos.message.markCancelled(messageId);
+            console.log(`[MessageQueueService] Marked linked message ${messageId} as cancelled`);
+          } catch (error) {
+            console.error(`[MessageQueueService] Failed to mark linked message as cancelled:`, error);
+            // Don't fail the whole operation if message update fails
+          }
+        }
+
+        // Trigger processing of next message in queue
+        await inngest.send({
+          name: 'message-queue/process-next',
+          data: { clientId, queueName },
+        });
+
+        console.log(`[MessageQueueService] Queue entry ${queueEntryId} cancelled successfully`);
+        return { success: true };
+      } catch (error) {
+        console.error(`[MessageQueueService] Error canceling queue entry ${queueEntryId}:`, error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     },
   };
 }

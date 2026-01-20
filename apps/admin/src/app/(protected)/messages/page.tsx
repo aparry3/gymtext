@@ -12,6 +12,7 @@ import type {
   AdminMessageItem,
   MessageFilters,
   MessageStats,
+  MessageSource,
 } from '@/components/admin/types';
 
 function AdminMessagesPageContent() {
@@ -101,6 +102,28 @@ function AdminMessagesPageContent() {
     fetchMessages(filters, currentPage);
   }, [fetchMessages, filters, currentPage]);
 
+  const handleCancelMessage = useCallback(async (messageId: string, source: MessageSource) => {
+    try {
+      const response = await fetch(`/api/messages/${messageId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to cancel message');
+      }
+
+      // Refresh the messages list after cancellation
+      fetchMessages(filters, currentPage);
+    } catch (err) {
+      console.error('Error cancelling message:', err);
+      setError(err instanceof Error ? err.message : 'Failed to cancel message');
+    }
+  }, [fetchMessages, filters, currentPage]);
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="space-y-6">
@@ -177,6 +200,7 @@ function AdminMessagesPageContent() {
             messages={messages}
             isLoading={isLoading}
             showUserColumn={true}
+            onCancelMessage={handleCancelMessage}
           />
 
           {/* Pagination */}
