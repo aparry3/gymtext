@@ -29,6 +29,27 @@ const services = createServicesFromDb(postgresDb);
 const RETRY_DELAYS = [0, 300, 1800];
 const MAX_ATTEMPTS = 4; // Initial + 3 retries
 
+/**
+ * Check if an error is retryable
+ * Some errors (like message too long) are deterministic and retrying won't help
+ */
+function isRetryableError(error: string | undefined): boolean {
+  if (!error) return true;
+
+  // Non-retryable error patterns
+  const nonRetryablePatterns = [
+    /message.*too long/i,
+    /body.*exceeds/i,
+    /21617/,  // Twilio error code for message too long
+    /21602/,  // Twilio error code for message body required
+    /30004/,  // Twilio error code for message blocked
+    /30005/,  // Twilio error code for unknown destination
+    /30006/,  // Twilio error code for landline or unreachable carrier
+  ];
+
+  return !nonRetryablePatterns.some(pattern => pattern.test(error));
+}
+
 export const retryMessageFunction = inngest.createFunction(
   {
     id: 'retry-failed-message',
@@ -44,6 +65,19 @@ export const retryMessageFunction = inngest.createFunction(
       userId,
       error,
     });
+
+    // Check if the error is non-retryable (deterministic failure)
+    if (!isRetryableError(error)) {
+      console.log('[Inngest Retry] Non-retryable error detected, skipping retry:', {
+        messageId,
+        error,
+      });
+      return {
+        success: false,
+        reason: 'non_retryable_error',
+        error,
+      };
+    }
 
     // Step 1: Load message and check attempts
     const messageCheck = await step.run('check-message', async () => {

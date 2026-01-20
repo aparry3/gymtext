@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { getUrlsConfig } from '@/shared/config';
-import type { WorkoutAgentService } from '../agents/training';
 import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
@@ -48,7 +47,6 @@ export interface DailyMessageServiceDeps {
   messageQueue: MessageQueueServiceInstance;
   dayConfig: DayConfigServiceInstance;
   training: TrainingServiceInstance;
-  workoutAgent: WorkoutAgentService;
 }
 
 /**
@@ -68,7 +66,6 @@ export function createDailyMessageService(
     messageQueue: messageQueueService,
     dayConfig: dayConfigService,
     training: trainingService,
-    workoutAgent,
   } = deps;
 
   return {
@@ -149,10 +146,9 @@ export function createDailyMessageService(
         let workoutMessage: string;
         if ('message' in workout && workout.message) {
           workoutMessage = workout.message;
-        } else if ('description' in workout && 'reasoning' in workout && workout.description && workout.reasoning) {
-          const messageAgent = await workoutAgent.getMessageAgent();
-          const result = await messageAgent.invoke(workout.description);
-          workoutMessage = result.response;
+        } else if ('description' in workout && workout.description) {
+          // Use trainingService to regenerate message with proper day format context
+          workoutMessage = await trainingService.regenerateWorkoutMessage(user, workout);
         } else {
           throw new Error('Workout missing required fields for message generation');
         }

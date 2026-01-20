@@ -1,5 +1,6 @@
 import { Message } from '@/server/models/conversation';
 import { inngest } from '@/server/connections/inngest/client';
+import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { ITwilioClient } from '@/server/connections/twilio/factory';
 import type { MessageServiceInstance } from './messageService';
@@ -64,6 +65,17 @@ export function createMessageQueueService(
       if (messages.length === 0) return;
 
       console.log(`[MessageQueueService] Enqueueing ${messages.length} messages for client ${clientId} in queue '${queueName}'`);
+
+      // Validate message lengths before enqueueing (safety net - should be handled by regeneration)
+      const maxLength = getSmsMaxLength();
+      for (const msg of messages) {
+        if (msg.content && isMessageTooLong(msg.content)) {
+          throw new Error(
+            `[MessageQueueService] Message too long (${msg.content.length} chars, max ${maxLength}). ` +
+            `This should have been handled by regeneration.`
+          );
+        }
+      }
 
       const queueEntries = messages.map((msg, index) => ({
         clientId,
@@ -177,6 +189,27 @@ export function createMessageQueueService(
       }
 
       console.log(`[MessageQueueService] Message ${messageId} failed:`, error);
+
+      // Check if the error is non-retryable (deterministic failure)
+      const isNonRetryableError = error && (
+        /message.*too long/i.test(error) ||
+        /body.*exceeds/i.test(error) ||
+        /21617/.test(error) ||  // Twilio error code for message too long
+        /21602/.test(error) ||  // Twilio error code for message body required
+        /30004/.test(error) ||  // Twilio error code for message blocked
+        /30005/.test(error) ||  // Twilio error code for unknown destination
+        /30006/.test(error)     // Twilio error code for landline or unreachable carrier
+      );
+
+      if (isNonRetryableError) {
+        console.log(`[MessageQueueService] Non-retryable error, marking as failed and moving to next`);
+        await repos.messageQueue.updateStatus(queueEntry.id, 'failed', undefined, error || 'Non-retryable error');
+        await inngest.send({
+          name: 'message-queue/process-next',
+          data: { clientId: queueEntry.clientId, queueName: queueEntry.queueName },
+        });
+        return;
+      }
 
       if (queueEntry.retryCount < queueEntry.maxRetries) {
         console.log(`[MessageQueueService] Retrying message (attempt ${queueEntry.retryCount + 1}/${queueEntry.maxRetries})`);

@@ -10,6 +10,7 @@
 import { DateTime } from 'luxon';
 import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
 import { normalizeWhitespace } from '@/server/utils/formatters';
+import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
 import type { UserWithProfile } from '@/server/models/user';
 import { FitnessPlanModel, type FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle, ActivityType } from '@/server/models/microcycle';
@@ -65,6 +66,19 @@ export interface TrainingServiceInstance {
     targetDate: Date,
     timezone?: string
   ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }>;
+
+  /**
+   * Regenerate a workout message with proper day format context
+   * Used when a workout exists but needs a new/shorter message
+   *
+   * @param user - User with profile
+   * @param workout - Existing workout instance
+   * @returns The regenerated message (already saved to database)
+   */
+  regenerateWorkoutMessage(
+    user: UserWithProfile,
+    workout: WorkoutInstance
+  ): Promise<string>;
 }
 
 export interface TrainingServiceDeps {
@@ -298,6 +312,61 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       );
 
       return { microcycle, progress: { ...progress, microcycle }, wasCreated: true };
+    },
+
+    async regenerateWorkoutMessage(
+      user: UserWithProfile,
+      workout: WorkoutInstance
+    ): Promise<string> {
+      const MAX_REGENERATION_ATTEMPTS = 3;
+      const maxLength = getSmsMaxLength();
+
+      // 1. Get activityType from microcycle (same pattern as prepareWorkoutForDate)
+      let activityType: ActivityType | undefined;
+
+      if (workout.microcycleId) {
+        const microcycle = await microcycleService.getMicrocycleById(workout.microcycleId);
+        if (microcycle?.structured?.days) {
+          const dayIndex = getWeekday(new Date(workout.date), user.timezone) - 1;
+          activityType = microcycle.structured.days[dayIndex]?.activityType as ActivityType;
+        }
+      }
+
+      // 2. Generate message, regenerating if too long
+      let message: string = '';
+      let attempt = 0;
+
+      while (attempt < MAX_REGENERATION_ATTEMPTS) {
+        attempt++;
+
+        // Get message agent with proper context (will use default TRAINING if no activityType)
+        const messageAgent = await workoutAgent.getMessageAgent(user, activityType);
+
+        // Add length constraint on retry attempts
+        const input = attempt === 1
+          ? workout.description || ''
+          : `${workout.description}\n\nIMPORTANT: Keep the message under ${maxLength} characters. Be more concise.`;
+
+        const result = await messageAgent.invoke(input);
+        message = result.response;
+
+        if (!isMessageTooLong(message)) {
+          console.log(`[TrainingService] Message generated successfully on attempt ${attempt} (${message.length} chars)`);
+          break;
+        }
+
+        console.warn(`[TrainingService] Message too long on attempt ${attempt} (${message.length} chars), regenerating...`);
+      }
+
+      // 3. Final check - if still too long after max attempts, throw error
+      if (isMessageTooLong(message)) {
+        throw new Error(`Failed to generate message under ${maxLength} chars after ${MAX_REGENERATION_ATTEMPTS} attempts`);
+      }
+
+      // 4. Save the regenerated message
+      await workoutInstanceService.updateWorkoutMessage(workout.id, message);
+
+      return message;
     },
   };
 }

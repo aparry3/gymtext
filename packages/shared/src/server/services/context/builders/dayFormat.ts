@@ -38,11 +38,10 @@ const ACTIVITY_TYPE_PROMPT_MAP: Record<DayActivityType, string> = {
 export const fetchDayFormat = async (
   activityType: DayActivityType | null | undefined
 ): Promise<string | null> => {
-  if (!activityType) {
-    return null;
-  }
+  // Default to TRAINING format if no activityType specified
+  const effectiveType = activityType || 'TRAINING';
 
-  const promptId = ACTIVITY_TYPE_PROMPT_MAP[activityType];
+  const promptId = ACTIVITY_TYPE_PROMPT_MAP[effectiveType];
   if (!promptId) {
     return null;
   }
@@ -51,7 +50,7 @@ export const fetchDayFormat = async (
     const promptService = await getPromptService();
     return await promptService.getContextPrompt(promptId);
   } catch (error) {
-    console.warn(`[dayFormat] Could not fetch format for ${activityType}:`, error);
+    console.warn(`[dayFormat] Could not fetch format for ${effectiveType}:`, error);
     return null;
   }
 };
@@ -67,11 +66,14 @@ export const buildDayFormatContext = (
   formatTemplate: string | null | undefined,
   activityType: DayActivityType | null | undefined
 ): string => {
-  if (!formatTemplate || !activityType) {
+  if (!formatTemplate) {
     return '';
   }
 
-  return `<DayFormatRules type="${activityType}">
+  // Default to TRAINING if not specified
+  const effectiveType = activityType || 'TRAINING';
+
+  return `<DayFormatRules type="${effectiveType}">
 ${formatTemplate.trim()}
 </DayFormatRules>`;
 };

@@ -298,7 +298,6 @@ export function createServices(
     messageQueue: getMessageQueue(),
     dayConfig,
     training,
-    workoutAgent,
   });
 
   const weeklyMessage = createWeeklyMessageService({
