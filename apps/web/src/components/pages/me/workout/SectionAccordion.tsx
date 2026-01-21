@@ -5,7 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Flame, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SectionAccordionProps {
@@ -16,6 +16,12 @@ interface SectionAccordionProps {
   children: React.ReactNode;
 }
 
+// Determine if this is a warmup/cooldown section
+const isWarmupOrCooldown = (title: string): boolean => {
+  const lower = title.toLowerCase();
+  return lower.includes('warm') || lower.includes('cool');
+};
+
 export function SectionAccordion({
   title,
   exerciseCount,
@@ -23,39 +29,48 @@ export function SectionAccordion({
   onToggle,
   children,
 }: SectionAccordionProps) {
+  const isWarmup = isWarmupOrCooldown(title);
+
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
-        <button className="w-full flex items-center gap-3 py-2 text-[hsl(var(--sidebar-foreground))]">
-          {/* Chevron in rounded box */}
-          <div
-            className={cn(
-              'flex items-center justify-center w-8 h-8 rounded-lg border transition-colors',
-              isOpen
-                ? 'bg-[hsl(var(--sidebar-accent))] border-[hsl(var(--sidebar-accent))]'
-                : 'bg-transparent border-[hsl(var(--sidebar-border))]'
-            )}
-          >
-            {isOpen ? (
-              <ChevronUp className="h-4 w-4 text-white" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
+        <button className="sticky top-0 z-10 w-full flex items-center gap-3 py-3 px-2 -mx-2 bg-[hsl(var(--sidebar-bg))]/95 backdrop-blur border-y border-[hsl(var(--sidebar-border))] text-[hsl(var(--sidebar-foreground))]">
+          {/* Section icon */}
+          {isWarmup ? (
+            <Flame className="h-4 w-4 text-orange-500 flex-shrink-0" />
+          ) : (
+            <Play className="h-4 w-4 text-blue-500 fill-blue-500 flex-shrink-0" />
+          )}
 
           {/* Title */}
-          <span className="text-sm font-medium uppercase tracking-wide">
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
             {title}
           </span>
 
           {/* Count badge */}
-          <span className="flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-medium rounded-full bg-[hsl(var(--sidebar-muted))] text-muted-foreground">
-            {exerciseCount}
+          <span className="ml-auto flex items-center justify-center px-2 py-0.5 text-xs rounded-full bg-[hsl(var(--sidebar-muted))] text-slate-500">
+            {exerciseCount} Exercises
           </span>
+
+          {/* Chevron */}
+          <div
+            className={cn(
+              'flex items-center justify-center w-6 h-6 rounded transition-colors flex-shrink-0',
+              isOpen
+                ? 'text-white'
+                : 'text-muted-foreground'
+            )}
+          >
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </div>
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-2 space-y-3">{children}</div>
+        <div className="pt-2 space-y-1">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );

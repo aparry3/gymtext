@@ -9,6 +9,7 @@ import {
   TrackOfDayCard,
   DashboardSkeleton,
   ReferralCard,
+  ReferralBanner,
 } from '@/components/pages/me/dashboard';
 import { WorkoutDetailSheet } from '@/components/pages/me/workout/WorkoutDetailSheet';
 import type { WorkoutStructure } from '@/server/models/workout';
@@ -200,6 +201,9 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
           weekNumber: dashboardData?.weekNumber,
         }}
       />
+
+      {/* Referral Banner */}
+      <ReferralBanner userId={userId} />
 
       {/* Today's Mission Section */}
       <div>
