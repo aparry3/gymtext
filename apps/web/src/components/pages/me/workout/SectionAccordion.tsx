@@ -34,7 +34,7 @@ export function SectionAccordion({
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
-        <button className="sticky top-0 z-10 w-full flex items-center gap-3 py-3 px-2 -mx-2 bg-[hsl(var(--sidebar-bg))]/95 backdrop-blur border-y border-[hsl(var(--sidebar-border))] text-[hsl(var(--sidebar-foreground))]">
+        <button className="sticky top-0 z-10 w-full flex items-center gap-3 py-3 px-4 bg-[hsl(var(--sidebar-bg))]/95 backdrop-blur border-y border-[hsl(var(--sidebar-border))] text-[hsl(var(--sidebar-foreground))]">
           {/* Section icon */}
           {isWarmup ? (
             <Flame className="h-4 w-4 text-orange-500 flex-shrink-0" />
