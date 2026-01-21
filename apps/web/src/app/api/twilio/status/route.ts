@@ -5,6 +5,7 @@ import { getTwilioSecrets } from '@/server/config';
 import { getUrlsConfig } from '@/shared/config';
 import { getServices, getRepositories } from '@/lib/context';
 import { isUnsubscribedError } from '@/server/utils/twilioErrors';
+import { MessageDeliveryStatus } from '@/server/models/message';
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     // Update the message status
     await repos.message.updateDeliveryStatus(
       message.id,
-      messageStatus as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+      messageStatus as MessageDeliveryStatus,
       deliveryError
     );
 

@@ -1,5 +1,5 @@
 import { UserWithProfile } from '../../models/user';
-import { Message } from '../../models/conversation';
+import { Message, MessageDeliveryStatus } from '../../models/message';
 import { inngest } from '../../connections/inngest/client';
 import { messagingClient } from '../../connections/messaging';
 import { isMessageTooLong, getSmsMaxLength } from '../../utils/smsValidation';
@@ -108,8 +108,8 @@ export interface MessagingOrchestratorInstance {
   getQueueStatus(clientId: string, queueName: string): Promise<{
     total: number;
     pending: number;
-    sent: number;
-    delivered: number;
+    processing: number;
+    completed: number;
     failed: number;
   }>;
 
@@ -309,7 +309,7 @@ export function createMessagingOrchestrator(
         if (result.status && result.status !== 'sent') {
           await messageService.updateDeliveryStatus(
             message.id,
-            result.status as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered'
+            result.status as MessageDeliveryStatus
           );
         }
 
@@ -689,8 +689,8 @@ export function createMessagingOrchestrator(
           return { success: false, error: 'Queue entry not found' };
         }
 
-        // Only allow cancellation of pending or sent (processing) entries
-        if (queueEntry.status !== 'pending' && queueEntry.status !== 'sent') {
+        // Only allow cancellation of pending or processing entries
+        if (queueEntry.status !== 'pending' && queueEntry.status !== 'processing') {
           return { success: false, error: `Cannot cancel entry with status: ${queueEntry.status}` };
         }
 

@@ -3,6 +3,7 @@ import { BaseRepository } from '@/server/repositories/baseRepository';
 import type {
   Message,
   NewMessage,
+  MessageDeliveryStatus,
 } from '@/server/models/message';
 
 export class MessageRepository extends BaseRepository {
@@ -84,7 +85,7 @@ export class MessageRepository extends BaseRepository {
 
   async updateDeliveryStatus(
     messageId: string,
-    status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+    status: MessageDeliveryStatus,
     error?: string
   ): Promise<Message> {
     return await this.db

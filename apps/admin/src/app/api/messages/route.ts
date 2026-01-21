@@ -95,9 +95,7 @@ export async function GET(request: Request) {
         providerMessageId: null,
         deliveryStatus: 'pending' as const,
         deliveryError: item.errorMessage,
-        metadata: item.mediaUrls
-          ? ({ mediaUrls: item.mediaUrls } as Record<string, unknown>)
-          : null,
+        metadata: null,
         createdAt: item.createdAt,
         source: 'queue' as const,
         queueName: item.queueName,

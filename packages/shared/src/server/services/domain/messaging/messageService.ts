@@ -1,5 +1,5 @@
 import { UserWithProfile } from '../../../models/user';
-import { Message } from '../../../models/conversation';
+import { Message, MessageDeliveryStatus } from '../../../models/message';
 import { inngest } from '../../../connections/inngest/client';
 import { getTwilioSecrets } from '@/server/config';
 import type { RepositoryContainer } from '../../../repositories/factory';
@@ -28,7 +28,7 @@ export interface StoreOutboundMessageParams {
   provider?: 'twilio' | 'local' | 'websocket';
   providerMessageId?: string;
   metadata?: Record<string, unknown>;
-  deliveryStatus?: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered';
+  deliveryStatus?: MessageDeliveryStatus;
 }
 
 /**
@@ -70,7 +70,7 @@ export interface MessageServiceInstance {
   ingestMessage(params: IngestMessageParams): Promise<IngestMessageResult>;
   updateDeliveryStatus(
     messageId: string,
-    status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+    status: MessageDeliveryStatus,
     error?: string
   ): Promise<Message>;
   updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message>;
@@ -249,7 +249,7 @@ export function createMessageService(
 
     async updateDeliveryStatus(
       messageId: string,
-      status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+      status: MessageDeliveryStatus,
       error?: string
     ): Promise<Message> {
       return await repos.message.updateDeliveryStatus(messageId, status, error);

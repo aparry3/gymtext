@@ -130,23 +130,20 @@ export class MessageQueueRepository extends BaseRepository {
     let query = this.db
       .selectFrom('messageQueues')
       .innerJoin('users', 'users.id', 'messageQueues.clientId')
-      .leftJoin('messages', 'messages.id', 'messageQueues.messageId')
+      .innerJoin('messages', 'messages.id', 'messageQueues.messageId')
       .select([
         'messageQueues.id',
         'messageQueues.clientId',
         'messageQueues.queueName',
         'messageQueues.sequenceNumber',
-        'messageQueues.messageContent',
-        'messageQueues.mediaUrls',
         'messageQueues.status',
         'messageQueues.messageId',
         'messageQueues.retryCount',
         'messageQueues.maxRetries',
-        'messageQueues.timeoutMinutes',
         'messageQueues.errorMessage',
         'messageQueues.createdAt',
-        'messageQueues.sentAt',
-        'messageQueues.deliveredAt',
+        'messageQueues.processedAt',
+        'messages.content as messageContent',
         'users.name as userName',
         'users.phoneNumber as userPhone',
       ])
@@ -161,7 +158,7 @@ export class MessageQueueRepository extends BaseRepository {
       .limit(params.limit || 100)
       .execute();
 
-    return results as (MessageQueue & { userName: string | null; userPhone: string; messageContent?: string })[];
+    return results as unknown as (MessageQueue & { userName: string | null; userPhone: string; messageContent?: string })[];
   }
 
   /**
@@ -183,26 +180,25 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
-   * Find stalled messages (sent but not delivered/failed after timeout)
+   * Find stalled messages (processing but not completed after timeout)
    */
   async findStalled(cutoffDate: Date): Promise<MessageQueue[]> {
     return await this.db
       .selectFrom('messageQueues')
       .selectAll()
-      .where('status', '=', 'sent')
-      .where('sentAt', '<', cutoffDate)
+      .where('status', '=', 'processing')
+      .where('createdAt', '<', cutoffDate)
       .execute();
   }
 
   /**
-   * Mark a queue entry as processing (sent status in current schema)
+   * Mark a queue entry as processing
    */
   async markProcessing(id: string): Promise<MessageQueue> {
     return await this.db
       .updateTable('messageQueues')
       .set({
-        status: 'sent',
-        sentAt: new Date(),
+        status: 'processing',
       })
       .where('id', '=', id)
       .returningAll()
@@ -210,14 +206,14 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
-   * Mark a queue entry as completed (delivered status in current schema)
+   * Mark a queue entry as completed
    */
   async markCompleted(id: string): Promise<MessageQueue> {
     return await this.db
       .updateTable('messageQueues')
       .set({
-        status: 'delivered',
-        deliveredAt: new Date(),
+        status: 'completed',
+        processedAt: new Date(),
       })
       .where('id', '=', id)
       .returningAll()
@@ -233,6 +229,7 @@ export class MessageQueueRepository extends BaseRepository {
       .set({
         status: 'failed',
         errorMessage: error || null,
+        processedAt: new Date(),
       })
       .where('id', '=', id)
       .returningAll()
@@ -244,15 +241,13 @@ export class MessageQueueRepository extends BaseRepository {
    */
   async updateStatus(
     id: string,
-    status: 'pending' | 'sent' | 'delivered' | 'failed',
-    timestamps?: { sentAt?: Date; deliveredAt?: Date },
+    status: 'pending' | 'processing' | 'completed' | 'failed',
     error?: string
   ): Promise<MessageQueue> {
     const updateData: Record<string, unknown> = {
       status,
-      ...(timestamps?.sentAt && { sentAt: timestamps.sentAt }),
-      ...(timestamps?.deliveredAt && { deliveredAt: timestamps.deliveredAt }),
       ...(error && { errorMessage: error }),
+      ...(status === 'completed' || status === 'failed' ? { processedAt: new Date() } : {}),
     };
 
     return await this.db
@@ -315,7 +310,7 @@ export class MessageQueueRepository extends BaseRepository {
       .deleteFrom('messageQueues')
       .where('clientId', '=', clientId)
       .where('queueName', '=', queueName)
-      .where('status', 'in', ['delivered', 'failed'])
+      .where('status', 'in', ['completed', 'failed'])
       .execute();
   }
 
@@ -339,8 +334,8 @@ export class MessageQueueRepository extends BaseRepository {
   async getQueueStatus(clientId: string, queueName: string): Promise<{
     total: number;
     pending: number;
-    sent: number;
-    delivered: number;
+    processing: number;
+    completed: number;
     failed: number;
   }> {
     const entries = await this.db
@@ -353,8 +348,8 @@ export class MessageQueueRepository extends BaseRepository {
     return {
       total: entries.length,
       pending: entries.filter((e) => e.status === 'pending').length,
-      sent: entries.filter((e) => e.status === 'sent').length,
-      delivered: entries.filter((e) => e.status === 'delivered').length,
+      processing: entries.filter((e) => e.status === 'processing').length,
+      completed: entries.filter((e) => e.status === 'completed').length,
       failed: entries.filter((e) => e.status === 'failed').length,
     };
   }

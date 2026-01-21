@@ -11,7 +11,7 @@ import type { MessageQueue, QueueEntryCreate } from '../../../repositories/messa
  * Responsibilities:
  * - Enqueue message references (message_id only)
  * - Track queue ordering (sequence numbers)
- * - Manage queue entry states (pending -> sent -> delivered/failed)
+ * - Manage queue entry states (pending -> processing -> completed/failed)
  * - Handle retry logic and backoff
  * - Cancel queue entries
  */
@@ -94,8 +94,8 @@ export interface QueueServiceInstance {
   getQueueStatus(clientId: string, queueName: string): Promise<{
     total: number;
     pending: number;
-    sent: number;
-    delivered: number;
+    processing: number;
+    completed: number;
     failed: number;
   }>;
 
@@ -115,7 +115,7 @@ export interface QueueServiceInstance {
   findByMessageId(messageId: string): Promise<MessageQueue | undefined>;
 
   /**
-   * Find stalled entries (sent but not delivered/failed after timeout)
+   * Find stalled entries (processing but not completed/failed after timeout)
    */
   findStalled(cutoffDate: Date): Promise<MessageQueue[]>;
 }
@@ -205,7 +205,7 @@ export function createQueueService(repos: RepositoryContainer): QueueServiceInst
       await repos.messageQueue.incrementRetry(entryId);
 
       // Then reset status to pending with error message
-      return await repos.messageQueue.updateStatus(entryId, 'pending', undefined, error);
+      return await repos.messageQueue.updateStatus(entryId, 'pending', error);
     },
 
     async cancelEntry(entryId: string): Promise<MessageQueue | undefined> {
