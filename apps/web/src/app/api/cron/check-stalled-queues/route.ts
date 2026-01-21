@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     // Check for stalled messages
     const services = getServices();
     const startTime = Date.now();
-    await services.messageQueue.checkStalledMessages();
+    await services.messagingOrchestrator.checkStalledMessages();
     const duration = Date.now() - startTime;
 
     console.log('[CRON] Stalled queue check completed:', {

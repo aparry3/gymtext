@@ -25,6 +25,7 @@ import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutI
 import type { TrainingServiceInstance } from './trainingService';
 import type { ModificationServiceInstance } from './modificationService';
 import type { ChatAgentServiceInstance } from '../agents/chat/chatAgentService';
+import type { MessagingOrchestratorInstance } from './messagingOrchestrator';
 
 // Configuration from shared config
 const { smsMaxLength: SMS_MAX_LENGTH, contextMinutes: CHAT_CONTEXT_MINUTES } = getChatConfig();
@@ -43,6 +44,7 @@ export interface ChatServiceDeps {
   training: TrainingServiceInstance;
   modification: ModificationServiceInstance;
   chatAgent: ChatAgentServiceInstance;
+  messagingOrchestrator: MessagingOrchestratorInstance;
 }
 
 /**
@@ -70,6 +72,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
     training: trainingService,
     modification: modificationService,
     chatAgent: chatAgentService,
+    messagingOrchestrator,
   } = deps;
 
   /**
@@ -173,10 +176,10 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
           ? user
           : await userService.getUser(user.id) || user;
 
-        // Callback for sending immediate messages
+        // Callback for sending immediate messages via MessagingOrchestrator
         const onSendMessage = async (immediateMessage: string) => {
           try {
-            await messageService.sendMessage(userWithProfile, immediateMessage);
+            await messagingOrchestrator.sendImmediate(userWithProfile, immediateMessage);
             console.log('[ChatService] Sent immediate message:', immediateMessage);
           } catch (error) {
             console.error('[ChatService] Failed to send immediate message:', error);

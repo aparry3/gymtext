@@ -7,7 +7,7 @@ import { getUrlsConfig } from '@/shared/config';
 import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
-import type { MessageQueueServiceInstance, QueuedMessage } from '../domain/messaging/messageQueueService';
+import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { TrainingServiceInstance } from './trainingService';
 
@@ -44,7 +44,7 @@ export interface DailyMessageServiceInstance {
 export interface DailyMessageServiceDeps {
   user: UserServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  messageQueue: MessageQueueServiceInstance;
+  messagingOrchestrator: MessagingOrchestratorInstance;
   dayConfig: DayConfigServiceInstance;
   training: TrainingServiceInstance;
 }
@@ -63,7 +63,7 @@ export function createDailyMessageService(
   const {
     user: userService,
     workoutInstance: workoutInstanceService,
-    messageQueue: messageQueueService,
+    messagingOrchestrator,
     dayConfig: dayConfigService,
     training: trainingService,
   } = deps;
@@ -169,12 +169,13 @@ export function createDailyMessageService(
           }
         }
 
-        const queuedMessages: QueuedMessage[] = [{ content: workoutMessage, mediaUrls }];
+        const queuedMessages: QueuedMessageContent[] = [{ content: workoutMessage, mediaUrls }];
 
-        await messageQueueService.enqueueMessages(user.id, queuedMessages, 'daily');
+        // Use messagingOrchestrator instead of messageQueueService
+        const result = await messagingOrchestrator.queueMessages(user, queuedMessages, 'daily');
         console.log(`Successfully queued daily messages for user ${user.id}`);
 
-        return { success: true, userId: user.id, messageId: undefined };
+        return { success: true, userId: user.id, messageId: result.messageIds[0] };
       } catch (error) {
         console.error(`Error sending daily message to user ${user.id}:`, error);
         return { success: false, userId: user.id, error: error instanceof Error ? error.message : 'Unknown error' };

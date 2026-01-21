@@ -30,6 +30,7 @@ export { createUserService } from './domain/user/userService';
 export { createFitnessProfileService } from './domain/user/fitnessProfileService';
 export { createOnboardingDataService } from './domain/user/onboardingDataService';
 export { createMessageService } from './domain/messaging/messageService';
+export { createQueueService } from './domain/messaging/queueService';
 export { createFitnessPlanService } from './domain/training/fitnessPlanService';
 export { createWorkoutInstanceService } from './domain/training/workoutInstanceService';
 export { createMicrocycleService } from './domain/training/microcycleService';
@@ -41,7 +42,6 @@ export { createPromptService } from './domain/prompts/promptService';
 export { createReferralService } from './domain/referral/referralService';
 export { createAdminAuthService } from './domain/auth/adminAuthService';
 export { createUserAuthService } from './domain/auth/userAuthService';
-export { createMessageQueueService } from './domain/messaging/messageQueueService';
 export { createChainRunnerService } from './domain/training/chainRunnerService';
 
 // Orchestration service factory functions
@@ -50,6 +50,7 @@ export { createWeeklyMessageService } from './orchestration/weeklyMessageService
 export { createOnboardingService } from './orchestration/onboardingService';
 export { createOnboardingCoordinator } from './orchestration/onboardingCoordinator';
 export { createOnboardingSteps } from './orchestration/onboardingSteps';
+export { createMessagingOrchestrator } from './orchestration/messagingOrchestrator';
 
 // Agent service factory functions
 export { createMessagingAgentService } from './agents/messaging/messagingAgentService';
@@ -62,6 +63,7 @@ export type { UserServiceInstance, CreateUserRequest } from './domain/user/userS
 export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './domain/user/fitnessProfileService';
 export type { OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
 export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
+export type { QueueServiceInstance } from './domain/messaging/queueService';
 export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
 export type { WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
 export type { MicrocycleServiceInstance } from './domain/training/microcycleService';
@@ -73,7 +75,6 @@ export type { PromptServiceInstance } from './domain/prompts/promptService';
 export type { ReferralServiceInstance } from './domain/referral/referralService';
 export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 export type { UserAuthServiceInstance } from './domain/auth/userAuthService';
-export type { MessageQueueServiceInstance, QueuedMessage } from './domain/messaging/messageQueueService';
 export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './domain/training/chainRunnerService';
 
 // Orchestration service instance types
@@ -82,6 +83,7 @@ export type { WeeklyMessageServiceInstance } from './orchestration/weeklyMessage
 export type { OnboardingServiceInstance } from './orchestration/onboardingService';
 export type { OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
 export type { OnboardingSteps } from './orchestration/onboardingSteps';
+export type { MessagingOrchestratorInstance, QueuedMessageContent, SendResult } from './orchestration/messagingOrchestrator';
 
 // Agent service instance types
 export type { MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';

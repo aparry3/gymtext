@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       ? `${errorCode}${errorMessage ? `: ${errorMessage}` : ''}`
       : undefined;
 
-    // Update the message
+    // Update the message status
     await repos.message.updateDeliveryStatus(
       message.id,
       messageStatus as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
@@ -95,11 +95,11 @@ export async function POST(req: NextRequest) {
       status: messageStatus,
     });
 
-    // Handle message queue processing
+    // Handle message queue processing via MessagingOrchestrator
     if (messageStatus === 'delivered') {
       // Mark as delivered in queue and trigger next message
       console.log('[Twilio Status Callback] Message delivered, processing queue');
-      await services.messageQueue.markMessageDelivered(message.id);
+      await services.messagingOrchestrator.handleDeliveryConfirmation(message.id);
     } else if (messageStatus === 'failed' || messageStatus === 'undelivered') {
       // Check if this is a 21610 (user unsubscribed) error
       if (isUnsubscribedError(deliveryError)) {
@@ -117,18 +117,18 @@ export async function POST(req: NextRequest) {
           console.error('[Twilio Status Callback] Failed to cancel subscription:', cancelError);
         }
 
-        // Cancel all pending messages for this user
+        // Cancel all pending messages for this user via orchestrator
         try {
-          const cancelledCount = await services.messageQueue.cancelAllPendingMessages(message.clientId);
+          const cancelledCount = await services.messagingOrchestrator.cancelAllPendingMessages(message.clientId);
           console.log(`[Twilio Status Callback] Cancelled ${cancelledCount} pending messages for unsubscribed user`);
         } catch (cancelError) {
           console.error('[Twilio Status Callback] Failed to cancel pending messages:', cancelError);
         }
       }
 
-      // Handle failure in queue (retry or skip)
+      // Handle failure in queue (retry or skip) via orchestrator
       console.log('[Twilio Status Callback] Message failed, handling in queue');
-      await services.messageQueue.markMessageFailed(message.id, deliveryError);
+      await services.messagingOrchestrator.handleDeliveryFailure(message.id, deliveryError);
 
       // Also trigger the existing retry mechanism for non-queued messages
       await inngest.send({

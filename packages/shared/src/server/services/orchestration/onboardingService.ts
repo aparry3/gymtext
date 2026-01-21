@@ -3,7 +3,7 @@ import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
 import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { DailyMessageServiceInstance } from './dailyMessageService';
 import type { TrainingServiceInstance } from './trainingService';
-import type { MessageQueueServiceInstance, QueuedMessage } from '../domain/messaging/messageQueueService';
+import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 
 // =============================================================================
@@ -24,7 +24,7 @@ export interface OnboardingServiceDeps {
   fitnessPlan: FitnessPlanServiceInstance;
   training: TrainingServiceInstance;
   dailyMessage: DailyMessageServiceInstance;
-  messageQueue: MessageQueueServiceInstance;
+  messagingOrchestrator: MessagingOrchestratorInstance;
   messagingAgent: MessagingAgentServiceInstance;
 }
 
@@ -38,7 +38,7 @@ export function createOnboardingService(
     fitnessPlan: fitnessPlanService,
     training: trainingService,
     dailyMessage: dailyMessageService,
-    messageQueue: messageQueueService,
+    messagingOrchestrator,
     messagingAgent: messagingAgentService,
   } = deps;
 
@@ -115,12 +115,13 @@ export function createOnboardingService(
         const planMicrocycleMessage = await prepareCombinedPlanMicrocycleMessage(user);
         const workoutMessage = await prepareWorkoutMessage(user);
 
-        const messages: QueuedMessage[] = [
+        const messages: QueuedMessageContent[] = [
           { content: planMicrocycleMessage },
           { content: workoutMessage }
         ];
 
-        await messageQueueService.enqueueMessages(user.id, messages, 'onboarding');
+        // Use messagingOrchestrator instead of messageQueueService
+        await messagingOrchestrator.queueMessages(user, messages, 'onboarding');
         console.log(`[Onboarding] Successfully queued onboarding messages for ${user.id}`);
       } catch (error) {
         console.error(`[Onboarding] Failed to send onboarding messages to ${user.id}:`, error);

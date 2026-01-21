@@ -11,7 +11,7 @@
  * Flow:
  * 1. Receive event with clientId and queueName
  * 2. Load next pending message from queue
- * 3. Send message via MessageQueueService
+ * 3. Send message via MessagingOrchestrator
  * 4. Wait for Twilio webhook to trigger next message
  */
 
@@ -37,7 +37,7 @@ export const processNextQueuedMessageFunction = inngest.createFunction(
 
     await step.run('process-next-message', async () => {
       console.log('[Inngest] Processing next queued message:', { clientId, queueName });
-      await services.messageQueue.processNextMessage(clientId, queueName);
+      await services.messagingOrchestrator.processNext(clientId, queueName);
     });
 
     return {
@@ -61,15 +61,16 @@ export const sendQueuedMessageFunction = inngest.createFunction(
   async ({ event, step }) => {
     const { queueEntryId, clientId, queueName } = event.data;
 
-    const message = await step.run('send-message', async () => {
+    const result = await step.run('send-message', async () => {
       console.log('[Inngest] Sending queued message:', { queueEntryId, clientId, queueName });
-      return await services.messageQueue.sendQueuedMessage(queueEntryId);
+      return await services.messagingOrchestrator.sendQueuedMessage(queueEntryId);
     });
 
     return {
-      success: true,
-      messageId: message.id,
+      success: result.success,
+      messageId: result.messageId,
       queueEntryId,
+      error: result.error,
     };
   }
 );

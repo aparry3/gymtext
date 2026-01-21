@@ -7,7 +7,7 @@
  * Flow:
  * 1. Load user with profile
  * 2. Generate response using ChatService (can be slow)
- * 3. Send response via MessageService
+ * 3. Send response via MessagingOrchestrator
  *
  * Benefits:
  * - Runs async (doesn't block webhook)
@@ -67,7 +67,7 @@ export const processMessageFunction = inngest.createFunction(
       };
     }
 
-    // Step 2: Send messages sequentially
+    // Step 2: Send messages sequentially via MessagingOrchestrator
     // Load user fresh again to avoid serialization issues
     const messageResults = await step.run('send-messages', async () => {
       console.log('[Inngest] Loading user and sending messages:', userId);
@@ -77,10 +77,10 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      // Send each message sequentially
+      // Send each message sequentially using messagingOrchestrator
       const results = [];
       for (const message of messages) {
-        const result = await services.message.sendMessage(user, message);
+        const result = await services.messagingOrchestrator.sendImmediate(user, message);
         results.push(result);
       }
 
@@ -90,12 +90,12 @@ export const processMessageFunction = inngest.createFunction(
     console.log('[Inngest] Message processing complete:', {
       userId,
       messageCount: messageResults.length,
-      messageIds: messageResults.map(r => r.id),
+      messageIds: messageResults.map((r) => r.messageId).filter(Boolean),
     });
 
     return {
       success: true,
-      messageIds: messageResults.map(r => r.id),
+      messageIds: messageResults.map((r) => r.messageId).filter(Boolean),
       messageCount: messageResults.length,
     };
   }

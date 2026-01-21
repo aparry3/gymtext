@@ -53,7 +53,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // Cancel the queue entry
-    const result = await services.messageQueue.cancelQueueEntry(queueEntryId);
+    const result = await services.messagingOrchestrator.cancelQueueEntry(queueEntryId);
 
     if (!result.success) {
       return NextResponse.json(

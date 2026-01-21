@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      await services.message.sendMessage(userWithProfile, confirmationMessage);
+      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      await services.message.sendMessage(userWithProfile, confirmationMessage);
+      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');

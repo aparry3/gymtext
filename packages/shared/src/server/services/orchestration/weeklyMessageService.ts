@@ -2,9 +2,9 @@ import { UserWithProfile } from '@/server/models/user';
 import { inngest } from '@/server/connections/inngest/client';
 import { now, getNextWeekStart } from '@/shared/utils/date';
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { MessageServiceInstance } from '../domain/messaging/messageService';
 import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { TrainingServiceInstance } from './trainingService';
+import type { MessagingOrchestratorInstance } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
 
@@ -38,7 +38,7 @@ export interface WeeklyMessageServiceInstance {
 
 export interface WeeklyMessageServiceDeps {
   user: UserServiceInstance;
-  message: MessageServiceInstance;
+  messagingOrchestrator: MessagingOrchestratorInstance;
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
@@ -56,9 +56,8 @@ export function createWeeklyMessageService(
 ): WeeklyMessageServiceInstance {
   const {
     user: userService,
-    message: messageService,
+    messagingOrchestrator,
     training: trainingService,
-    fitnessPlan: fitnessPlanService,
     messagingAgent: messagingAgentService,
     enrollment: enrollmentService,
   } = deps;
@@ -158,14 +157,19 @@ export function createWeeklyMessageService(
 
         const messageIds: string[] = [];
 
-        const feedbackMsg = await messageService.sendMessage(user, feedbackMessage);
-        messageIds.push(feedbackMsg.id);
+        // Use messagingOrchestrator.sendImmediate instead of messageService.sendMessage
+        const feedbackResult = await messagingOrchestrator.sendImmediate(user, feedbackMessage);
+        if (feedbackResult.messageId) {
+          messageIds.push(feedbackResult.messageId);
+        }
         console.log(`[WeeklyMessageService] Sent feedback message to user ${user.id}`);
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const breakdownMsg = await messageService.sendMessage(user, breakdownMessage);
-        messageIds.push(breakdownMsg.id);
+        const breakdownResult = await messagingOrchestrator.sendImmediate(user, breakdownMessage);
+        if (breakdownResult.messageId) {
+          messageIds.push(breakdownResult.messageId);
+        }
         console.log(`[WeeklyMessageService] Sent breakdown message to user ${user.id}`);
 
         console.log(`[WeeklyMessageService] Successfully sent weekly messages to user ${user.id}`);

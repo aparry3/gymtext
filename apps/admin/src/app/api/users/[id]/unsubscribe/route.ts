@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // Step 1: Cancel all pending messages first (prevents race conditions)
     let messagesCanceled = 0;
     try {
-      messagesCanceled = await services.messageQueue.cancelAllPendingMessages(userId);
+      messagesCanceled = await services.messagingOrchestrator.cancelAllPendingMessages(userId);
     } catch (error) {
       console.error(`[Unsubscribe] Error canceling messages for user ${userId}:`, error);
       // Continue with subscription cancellation even if message cleanup fails

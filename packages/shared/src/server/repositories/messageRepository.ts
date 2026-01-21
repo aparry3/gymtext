@@ -69,6 +69,19 @@ export class MessageRepository extends BaseRepository {
       .executeTakeFirst();
   }
 
+  /**
+   * Find multiple messages by their IDs
+   */
+  async findByIds(ids: string[]): Promise<Message[]> {
+    if (ids.length === 0) return [];
+
+    return await this.db
+      .selectFrom('messages')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute();
+  }
+
   async updateDeliveryStatus(
     messageId: string,
     status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',

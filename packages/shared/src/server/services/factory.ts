@@ -20,6 +20,7 @@ import { createUserService, type UserServiceInstance } from './domain/user/userS
 import { createFitnessProfileService, type FitnessProfileServiceInstance } from './domain/user/fitnessProfileService';
 import { createOnboardingDataService, type OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
 import { createMessageService, type MessageServiceInstance } from './domain/messaging/messageService';
+import { createQueueService, type QueueServiceInstance } from './domain/messaging/queueService';
 import { createFitnessPlanService, type FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
 import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
 import { createMicrocycleService, type MicrocycleServiceInstance } from './domain/training/microcycleService';
@@ -34,11 +35,11 @@ import { createPromptService, type PromptServiceInstance } from './domain/prompt
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
-import { createMessageQueueService, type MessageQueueServiceInstance } from './domain/messaging/messageQueueService';
 import { createDailyMessageService, type DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 import { createWeeklyMessageService, type WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
 import { createOnboardingService, type OnboardingServiceInstance } from './orchestration/onboardingService';
 import { createOnboardingCoordinator, type OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
+import { createMessagingOrchestrator, type MessagingOrchestratorInstance } from './orchestration/messagingOrchestrator';
 import { createChainRunnerService, type ChainRunnerServiceInstance } from './domain/training/chainRunnerService';
 import { createMessagingAgentService, type MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
 import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
@@ -83,6 +84,7 @@ export interface ServiceContainer {
   fitnessProfile: FitnessProfileServiceInstance;
   onboardingData: OnboardingDataServiceInstance;
   message: MessageServiceInstance;
+  queue: QueueServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
   microcycle: MicrocycleServiceInstance;
@@ -96,7 +98,7 @@ export interface ServiceContainer {
   referral: ReferralServiceInstance;
   adminAuth: AdminAuthServiceInstance;
   userAuth: UserAuthServiceInstance;
-  messageQueue: MessageQueueServiceInstance;
+  messagingOrchestrator: MessagingOrchestratorInstance;
   dailyMessage: DailyMessageServiceInstance;
   weeklyMessage: WeeklyMessageServiceInstance;
   onboarding: OnboardingServiceInstance;
@@ -163,6 +165,7 @@ export function createServices(
   const dayConfig = createDayConfigService(repos);
   const shortLink = createShortLinkService(repos);
   const prompt = createPromptService(repos);
+  const queue = createQueueService(repos);
 
   // Program domain services (repos-only)
   const programOwner = createProgramOwnerService(repos);
@@ -212,18 +215,13 @@ export function createServices(
   // =========================================================================
   // Phase 3: Create services that depend on other services
   // =========================================================================
-  const message = createMessageService(repos, {
-    user,
-    workoutInstance,
-    contextService,
-  });
+  const message = createMessageService(repos, { user });
 
   // Services needing external clients - use lazy initialization
-  // These will be initialized when first accessed if clients not provided
   let _referral: ReferralServiceInstance | null = null;
   let _adminAuth: AdminAuthServiceInstance | null = null;
   let _userAuth: UserAuthServiceInstance | null = null;
-  let _messageQueue: MessageQueueServiceInstance | null = null;
+  let _messagingOrchestrator: MessagingOrchestratorInstance | null = null;
 
   const getReferral = (): ReferralServiceInstance => {
     if (!_referral) {
@@ -271,20 +269,28 @@ export function createServices(
     return _userAuth;
   };
 
-  const getMessageQueue = (): MessageQueueServiceInstance => {
-    if (!_messageQueue) {
+  const getMessagingOrchestrator = (): MessagingOrchestratorInstance => {
+    if (!_messagingOrchestrator) {
       if (clients?.twilioClient) {
-        _messageQueue = createMessageQueueService(repos, {
+        _messagingOrchestrator = createMessagingOrchestrator({
           message,
+          queue,
           user,
-          twilioClient: clients.twilioClient
+          subscription,
+          twilioClient: clients.twilioClient,
         });
       } else {
         const { twilioClient } = require('../connections/twilio/twilio');
-        _messageQueue = createMessageQueueService(repos, { message, user, twilioClient });
+        _messagingOrchestrator = createMessagingOrchestrator({
+          message,
+          queue,
+          user,
+          subscription,
+          twilioClient,
+        });
       }
     }
-    return _messageQueue;
+    return _messagingOrchestrator;
   };
 
   // =========================================================================
@@ -295,14 +301,14 @@ export function createServices(
   const dailyMessage = createDailyMessageService(repos, {
     user,
     workoutInstance,
-    messageQueue: getMessageQueue(),
+    messagingOrchestrator: getMessagingOrchestrator(),
     dayConfig,
     training,
   });
 
   const weeklyMessage = createWeeklyMessageService({
     user,
-    message,
+    messagingOrchestrator: getMessagingOrchestrator(),
     training,
     fitnessPlan,
     messagingAgent,
@@ -313,7 +319,7 @@ export function createServices(
     fitnessPlan,
     training,
     dailyMessage,
-    messageQueue: getMessageQueue(),
+    messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
   });
 
@@ -359,6 +365,7 @@ export function createServices(
     training,
     modification,
     chatAgent,
+    messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   const chainRunner = createChainRunnerService(repos, {
@@ -379,6 +386,7 @@ export function createServices(
     fitnessProfile,
     onboardingData,
     message,
+    queue,
     fitnessPlan,
     workoutInstance,
     microcycle,
@@ -392,7 +400,7 @@ export function createServices(
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
-    get messageQueue() { return getMessageQueue(); },
+    get messagingOrchestrator() { return getMessagingOrchestrator(); },
     dailyMessage,
     weeklyMessage,
     onboarding,
@@ -463,6 +471,7 @@ export type {
   FitnessProfileServiceInstance,
   OnboardingDataServiceInstance,
   MessageServiceInstance,
+  QueueServiceInstance,
   FitnessPlanServiceInstance,
   WorkoutInstanceServiceInstance,
   MicrocycleServiceInstance,
@@ -477,7 +486,7 @@ export type {
   ReferralServiceInstance,
   AdminAuthServiceInstance,
   UserAuthServiceInstance,
-  MessageQueueServiceInstance,
+  MessagingOrchestratorInstance,
   DailyMessageServiceInstance,
   WeeklyMessageServiceInstance,
   OnboardingServiceInstance,

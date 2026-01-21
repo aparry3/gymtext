@@ -1,20 +1,9 @@
 import { UserWithProfile } from '../../../models/user';
-import { FitnessPlan } from '../../../models/fitnessPlan';
-import { messagingClient } from '../../../connections/messaging';
-import { inngest } from '../../../connections/inngest/client';
-import { createWorkoutAgentService, type WorkoutAgentService } from '../../agents/training';
-import { WorkoutInstance, EnhancedWorkoutInstance } from '../../../models/workout';
 import { Message } from '../../../models/conversation';
-import { CircuitBreaker } from '@/server/utils/circuitBreaker';
+import { inngest } from '../../../connections/inngest/client';
 import { getTwilioSecrets } from '@/server/config';
-import { isUnsubscribedError } from '@/server/utils/twilioErrors';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
-import type { WorkoutInstanceServiceInstance } from '../training/workoutInstanceService';
-import type { ContextService } from '../../context';
-import type { MessagingAgentServiceInstance } from '../../agents/messaging/messagingAgentService';
-import type { MessageQueueServiceInstance } from './messageQueueService';
-import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 import type { Json } from '../../../models/_types';
 
 /**
@@ -26,6 +15,20 @@ export interface StoreInboundMessageParams {
   to: string;
   content: string;
   twilioData?: Record<string, unknown>;
+}
+
+/**
+ * Parameters for storing an outbound message
+ */
+export interface StoreOutboundMessageParams {
+  clientId: string;
+  to: string;
+  content: string;
+  from?: string;
+  provider?: 'twilio' | 'local' | 'websocket';
+  providerMessageId?: string;
+  metadata?: Record<string, unknown>;
+  deliveryStatus?: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered';
 }
 
 /**
@@ -51,26 +54,27 @@ export interface IngestMessageResult {
 
 /**
  * MessageServiceInstance interface
+ *
+ * Domain service for message storage and retrieval.
+ * Does NOT handle sending - that's the MessagingOrchestrator's job.
  */
 export interface MessageServiceInstance {
   storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null>;
-  storeOutboundMessage(
-    clientId: string,
-    to: string,
-    messageContent: string,
-    from?: string,
-    provider?: 'twilio' | 'local' | 'websocket',
-    providerMessageId?: string,
-    metadata?: Record<string, unknown>
-  ): Promise<Message | null>;
+  storeOutboundMessage(params: StoreOutboundMessageParams): Promise<Message | null>;
   getMessages(clientId: string, limit?: number, offset?: number): Promise<Message[]>;
   getRecentMessages(clientId: string, limit?: number): Promise<Message[]>;
+  getMessageById(messageId: string): Promise<Message | undefined>;
+  getMessagesByIds(messageIds: string[]): Promise<Message[]>;
   splitMessages(messages: Message[], contextMinutes: number): { pending: Message[]; context: Message[] };
   getPendingMessages(clientId: string): Promise<Message[]>;
   ingestMessage(params: IngestMessageParams): Promise<IngestMessageResult>;
-  sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<Message>;
-  sendWelcomeMessage(user: UserWithProfile): Promise<Message>;
-  sendPlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<Message[]>;
+  updateDeliveryStatus(
+    messageId: string,
+    status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+    error?: string
+  ): Promise<Message>;
+  updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message>;
+  markCancelled(messageId: string): Promise<Message>;
 }
 
 /**
@@ -78,117 +82,71 @@ export interface MessageServiceInstance {
  */
 export interface MessageServiceDeps {
   user: UserServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
-  contextService?: ContextService;
-  messagingAgent?: MessagingAgentServiceInstance;
-  messageQueue?: MessageQueueServiceInstance;
-  subscription?: SubscriptionServiceInstance;
 }
 
 /**
  * Create a MessageService instance with injected dependencies
+ *
+ * This is a domain service focused on message storage and retrieval.
+ * It does NOT handle message sending - that responsibility belongs
+ * to the MessagingOrchestrator service.
  */
 export function createMessageService(
   repos: RepositoryContainer,
   deps: MessageServiceDeps
 ): MessageServiceInstance {
-  let messagingAgent: MessagingAgentServiceInstance | null = deps.messagingAgent ?? null;
-  let messageQueue: MessageQueueServiceInstance | null = deps.messageQueue ?? null;
-
-  const getMessagingAgent = async (): Promise<MessagingAgentServiceInstance> => {
-    if (!messagingAgent) {
-      const { createMessagingAgentService } = await import('../../agents/messaging/messagingAgentService');
-      messagingAgent = createMessagingAgentService();
-    }
-    return messagingAgent;
-  };
-
-  const getMessageQueue = async (): Promise<MessageQueueServiceInstance | null> => {
-    if (!messageQueue) {
-      // Lazy load message queue service if not provided
-      const { createServicesFromDb } = await import('../../factory');
-      const { postgresDb } = await import('@/server/connections/postgres/postgres');
-      const services = createServicesFromDb(postgresDb);
-      messageQueue = services.messageQueue;
-    }
-    return messageQueue;
-  };
-
-  const circuitBreaker = new CircuitBreaker({
-    failureThreshold: 5,
-    resetTimeout: 60000,
-    monitoringPeriod: 60000,
-  });
-
-  const simulateLocalDelivery = async (messageId: string): Promise<void> => {
-    const delay = 1500;
-    console.log(`[MessageService] Simulating local delivery in ${delay}ms for message ${messageId}`);
-
-    await new Promise((resolve) => setTimeout(resolve, delay));
-
-    await repos.message.updateDeliveryStatus(messageId, 'delivered');
-
-    const queue = await getMessageQueue();
-    if (queue) {
-      await queue.markMessageDelivered(messageId);
-    }
-
-    console.log(`[MessageService] Local delivery simulation complete for message ${messageId}`);
-  };
-
   const instance: MessageServiceInstance = {
     async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
-      return await circuitBreaker.execute(async () => {
-        const { clientId, from, to, content, twilioData } = params;
+      const { clientId, from, to, content, twilioData } = params;
 
-        const message = await repos.message.create({
-          conversationId: null,
-          clientId: clientId,
-          direction: 'inbound',
-          content,
-          phoneFrom: from,
-          phoneTo: to,
-          provider: 'twilio',
-          providerMessageId: (twilioData?.MessageSid as string) || null,
-          metadata: (twilioData || {}) as Json,
-        });
-
-        return message;
+      const message = await repos.message.create({
+        conversationId: null,
+        clientId: clientId,
+        direction: 'inbound',
+        content,
+        phoneFrom: from,
+        phoneTo: to,
+        provider: 'twilio',
+        providerMessageId: (twilioData?.MessageSid as string) || null,
+        metadata: (twilioData || {}) as Json,
       });
+
+      return message;
     },
 
-    async storeOutboundMessage(
-      clientId: string,
-      to: string,
-      messageContent: string,
-      from: string = getTwilioSecrets().phoneNumber,
-      provider: 'twilio' | 'local' | 'websocket' = 'twilio',
-      providerMessageId?: string,
-      metadata?: Record<string, unknown>
-    ): Promise<Message | null> {
-      return await circuitBreaker.execute(async () => {
-        const user = await deps.user.getUser(clientId);
-        if (!user) {
-          return null;
-        }
+    async storeOutboundMessage(params: StoreOutboundMessageParams): Promise<Message | null> {
+      const {
+        clientId,
+        to,
+        content,
+        from = getTwilioSecrets().phoneNumber,
+        provider = 'twilio',
+        providerMessageId,
+        metadata,
+        deliveryStatus = 'queued',
+      } = params;
 
-        const message = await repos.message.create({
-          conversationId: null,
-          clientId: clientId,
-          direction: 'outbound',
-          content: messageContent,
-          phoneFrom: from,
-          phoneTo: to,
-          provider,
-          providerMessageId: providerMessageId || null,
-          metadata: (metadata || {}) as Json,
-          deliveryStatus: 'queued',
-          deliveryAttempts: 1,
-          lastDeliveryAttemptAt: new Date(),
-        });
+      const user = await deps.user.getUser(clientId);
+      if (!user) {
+        return null;
+      }
 
-        return message;
+      const message = await repos.message.create({
+        conversationId: null,
+        clientId: clientId,
+        direction: 'outbound',
+        content,
+        phoneFrom: from,
+        phoneTo: to,
+        provider,
+        providerMessageId: providerMessageId || null,
+        metadata: (metadata || {}) as Json,
+        deliveryStatus,
+        deliveryAttempts: deliveryStatus === 'queued' ? 0 : 1,
+        lastDeliveryAttemptAt: deliveryStatus === 'queued' ? null : new Date(),
       });
+
+      return message;
     },
 
     async getMessages(clientId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
@@ -197,6 +155,14 @@ export function createMessageService(
 
     async getRecentMessages(clientId: string, limit: number = 10): Promise<Message[]> {
       return await repos.message.findRecentByClientId(clientId, limit);
+    },
+
+    async getMessageById(messageId: string): Promise<Message | undefined> {
+      return await repos.message.findById(messageId);
+    },
+
+    async getMessagesByIds(messageIds: string[]): Promise<Message[]> {
+      return await repos.message.findByIds(messageIds);
     },
 
     splitMessages(messages: Message[], contextMinutes: number): { pending: Message[]; context: Message[] } {
@@ -281,136 +247,20 @@ export function createMessageService(
       };
     },
 
-    async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<Message> {
-      const provider = messagingClient.provider;
-
-      let stored: Message | null = null;
-      try {
-        stored = await this.storeOutboundMessage(
-          user.id,
-          user.phoneNumber,
-          message || '[MMS only]',
-          undefined,
-          provider,
-          undefined,
-          mediaUrls ? { mediaUrls } : undefined
-        );
-        if (!stored) {
-          console.warn('Circuit breaker prevented storing outbound message');
-        }
-      } catch (error) {
-        console.error('Failed to store outbound message:', error);
-      }
-
-      if (!stored) {
-        throw new Error('Failed to store message');
-      }
-
-      try {
-        const result = await messagingClient.sendMessage(user, message, mediaUrls);
-
-        if (result.messageId) {
-          try {
-            await repos.message.updateProviderMessageId(stored.id, result.messageId);
-            console.log('[MessageService] Updated message with provider ID:', {
-              messageId: stored.id,
-              providerMessageId: result.messageId,
-            });
-          } catch (error) {
-            console.error('[MessageService] Failed to update provider message ID:', error);
-          }
-        }
-
-        // Update delivery status from Twilio's initial response if available
-        if (result.status && result.status !== 'queued') {
-          try {
-            await repos.message.updateDeliveryStatus(stored.id, result.status as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered');
-          } catch (error) {
-            console.error('[MessageService] Failed to update delivery status:', error);
-          }
-        }
-
-        if (provider === 'local') {
-          simulateLocalDelivery(stored.id).catch((error) => {
-            console.error('[MessageService] Local delivery simulation failed:', error);
-          });
-        }
-
-        return stored;
-      } catch (sendError) {
-        // Handle Twilio send errors
-        const errorMessage = sendError instanceof Error ? sendError.message : String(sendError);
-        console.error('[MessageService] Twilio send failed:', {
-          messageId: stored.id,
-          userId: user.id,
-          error: errorMessage,
-        });
-
-        // Update message status to failed
-        try {
-          await repos.message.updateDeliveryStatus(stored.id, 'failed', errorMessage);
-        } catch (updateError) {
-          console.error('[MessageService] Failed to update message status to failed:', updateError);
-        }
-
-        // If this is a 21610 (user unsubscribed) error, cancel their subscription
-        if (isUnsubscribedError(errorMessage)) {
-          console.log('[MessageService] User has unsubscribed (21610), canceling subscription:', {
-            userId: user.id,
-            messageId: stored.id,
-          });
-
-          // Cancel the subscription - use lazy-loaded subscription service
-          try {
-            if (deps.subscription) {
-              await deps.subscription.immediatelyCancelSubscription(user.id);
-              console.log('[MessageService] Subscription canceled for unsubscribed user:', user.id);
-            } else {
-              // Lazy load subscription service if not provided
-              const { createServicesFromDb } = await import('../../factory');
-              const { postgresDb } = await import('@/server/connections/postgres/postgres');
-              const services = createServicesFromDb(postgresDb);
-              await services.subscription.immediatelyCancelSubscription(user.id);
-              console.log('[MessageService] Subscription canceled for unsubscribed user (lazy loaded):', user.id);
-            }
-          } catch (cancelError) {
-            console.error('[MessageService] Failed to cancel subscription for unsubscribed user:', cancelError);
-          }
-        }
-
-        // Re-throw the error so callers know the send failed
-        throw sendError;
-      }
+    async updateDeliveryStatus(
+      messageId: string,
+      status: 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered',
+      error?: string
+    ): Promise<Message> {
+      return await repos.message.updateDeliveryStatus(messageId, status, error);
     },
 
-    async sendWelcomeMessage(user: UserWithProfile): Promise<Message> {
-      const agent = await getMessagingAgent();
-      const welcomeMessage = await agent.generateWelcomeMessage(user);
-      return await this.sendMessage(user, welcomeMessage);
+    async updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message> {
+      return await repos.message.updateProviderMessageId(messageId, providerMessageId);
     },
 
-    async sendPlanSummary(
-      user: UserWithProfile,
-      plan: FitnessPlan,
-      previousMessages?: Message[]
-    ): Promise<Message[]> {
-      const agent = await getMessagingAgent();
-      const generatedMessages = await agent.generatePlanSummary(user, plan, previousMessages);
-
-      const sentMessages: Message[] = [];
-      for (const message of generatedMessages) {
-        const storedMessage = await this.sendMessage(user, message);
-        sentMessages.push(storedMessage);
-        if (generatedMessages.length > 1) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-
-      if (sentMessages.length === 0) {
-        throw new Error('No messages were sent');
-      }
-
-      return sentMessages;
+    async markCancelled(messageId: string): Promise<Message> {
+      return await repos.message.markCancelled(messageId);
     },
   };
 

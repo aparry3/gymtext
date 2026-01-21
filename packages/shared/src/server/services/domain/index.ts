@@ -27,9 +27,9 @@ export type { OnboardingDataServiceInstance } from './user/onboardingDataService
 
 // Messaging services
 export { createMessageService } from './messaging/messageService';
-export { createMessageQueueService } from './messaging/messageQueueService';
+export { createQueueService } from './messaging/queueService';
 export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './messaging/messageService';
-export type { MessageQueueServiceInstance, QueuedMessage } from './messaging/messageQueueService';
+export type { QueueServiceInstance } from './messaging/queueService';
 
 // Auth services
 export { createAdminAuthService } from './auth/adminAuthService';

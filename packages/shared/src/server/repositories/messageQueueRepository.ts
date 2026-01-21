@@ -6,27 +6,53 @@ export type MessageQueue = Selectable<MessageQueues>;
 export type NewMessageQueue = Insertable<MessageQueues>;
 export type MessageQueueUpdate = Updateable<MessageQueues>;
 
+/**
+ * Entry for creating a queue item (message-first approach)
+ * The message must already exist in the messages table
+ */
+export interface QueueEntryCreate {
+  clientId: string;
+  messageId: string;
+  queueName: string;
+  sequenceNumber: number;
+}
+
 export class MessageQueueRepository extends BaseRepository {
   /**
-   * Create a new queue entry
+   * Create a new queue entry with a reference to an existing message
    */
-  async create(queueEntry: NewMessageQueue): Promise<MessageQueue> {
+  async create(entry: QueueEntryCreate): Promise<MessageQueue> {
     return await this.db
       .insertInto('messageQueues')
-      .values(queueEntry)
+      .values({
+        clientId: entry.clientId,
+        messageId: entry.messageId,
+        queueName: entry.queueName,
+        sequenceNumber: entry.sequenceNumber,
+        status: 'pending',
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
   }
 
   /**
    * Bulk insert multiple queue entries
+   * Each entry must reference an existing message
    */
-  async createMany(queueEntries: NewMessageQueue[]): Promise<MessageQueue[]> {
-    if (queueEntries.length === 0) return [];
+  async createMany(entries: QueueEntryCreate[]): Promise<MessageQueue[]> {
+    if (entries.length === 0) return [];
+
+    const values = entries.map((entry) => ({
+      clientId: entry.clientId,
+      messageId: entry.messageId,
+      queueName: entry.queueName,
+      sequenceNumber: entry.sequenceNumber,
+      status: 'pending' as const,
+    }));
 
     return await this.db
       .insertInto('messageQueues')
-      .values(queueEntries)
+      .values(values)
       .returningAll()
       .execute();
   }
@@ -100,10 +126,11 @@ export class MessageQueueRepository extends BaseRepository {
   async findAllPendingWithUserInfo(params: {
     limit?: number;
     clientId?: string;
-  }): Promise<(MessageQueue & { userName: string | null; userPhone: string })[]> {
+  }): Promise<(MessageQueue & { userName: string | null; userPhone: string; messageContent?: string })[]> {
     let query = this.db
       .selectFrom('messageQueues')
       .innerJoin('users', 'users.id', 'messageQueues.clientId')
+      .leftJoin('messages', 'messages.id', 'messageQueues.messageId')
       .select([
         'messageQueues.id',
         'messageQueues.clientId',
@@ -134,7 +161,7 @@ export class MessageQueueRepository extends BaseRepository {
       .limit(params.limit || 100)
       .execute();
 
-    return results as (MessageQueue & { userName: string | null; userPhone: string })[];
+    return results as (MessageQueue & { userName: string | null; userPhone: string; messageContent?: string })[];
   }
 
   /**
@@ -168,7 +195,52 @@ export class MessageQueueRepository extends BaseRepository {
   }
 
   /**
-   * Update queue entry status
+   * Mark a queue entry as processing (sent status in current schema)
+   */
+  async markProcessing(id: string): Promise<MessageQueue> {
+    return await this.db
+      .updateTable('messageQueues')
+      .set({
+        status: 'sent',
+        sentAt: new Date(),
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Mark a queue entry as completed (delivered status in current schema)
+   */
+  async markCompleted(id: string): Promise<MessageQueue> {
+    return await this.db
+      .updateTable('messageQueues')
+      .set({
+        status: 'delivered',
+        deliveredAt: new Date(),
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Mark a queue entry as failed
+   */
+  async markFailed(id: string, error?: string): Promise<MessageQueue> {
+    return await this.db
+      .updateTable('messageQueues')
+      .set({
+        status: 'failed',
+        errorMessage: error || null,
+      })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Update queue entry status (generic method)
    */
   async updateStatus(
     id: string,
@@ -193,7 +265,7 @@ export class MessageQueueRepository extends BaseRepository {
 
   /**
    * Delete a queue entry by ID
-   * Returns the deleted queue entry (with messageId for linking)
+   * Returns the deleted queue entry
    */
   async deleteById(id: string): Promise<MessageQueue | undefined> {
     return await this.db
@@ -214,22 +286,6 @@ export class MessageQueueRepository extends BaseRepository {
       .where('createdAt', '<', cutoffDate)
       .returningAll()
       .execute();
-  }
-
-  /**
-   * Link a queue entry to a sent message
-   */
-  async linkMessage(id: string, messageId: string): Promise<MessageQueue> {
-    return await this.db
-      .updateTable('messageQueues')
-      .set({
-        messageId,
-        status: 'sent',
-        sentAt: new Date(),
-      })
-      .where('id', '=', id)
-      .returningAll()
-      .executeTakeFirstOrThrow();
   }
 
   /**
@@ -296,10 +352,10 @@ export class MessageQueueRepository extends BaseRepository {
 
     return {
       total: entries.length,
-      pending: entries.filter(e => e.status === 'pending').length,
-      sent: entries.filter(e => e.status === 'sent').length,
-      delivered: entries.filter(e => e.status === 'delivered').length,
-      failed: entries.filter(e => e.status === 'failed').length,
+      pending: entries.filter((e) => e.status === 'pending').length,
+      sent: entries.filter((e) => e.status === 'sent').length,
+      delivered: entries.filter((e) => e.status === 'delivered').length,
+      failed: entries.filter((e) => e.status === 'failed').length,
     };
   }
 }

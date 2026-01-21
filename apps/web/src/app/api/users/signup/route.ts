@@ -226,7 +226,8 @@ async function completeSignupFlow(
   console.log('[Signup] Sending welcome SMS');
   const userWithProfile = await services.user.getUser(userId);
   if (userWithProfile) {
-    await services.message.sendWelcomeMessage(userWithProfile);
+    const welcomeMessage = await services.messagingAgent.generateWelcomeMessage(userWithProfile);
+    await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
   }
 
   // Trigger async Inngest onboarding job
