@@ -81,14 +81,13 @@ export function ReferralBanner({ userId }: ReferralBannerProps) {
 
   if (isLoading) {
     return (
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 shadow-lg animate-pulse">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex-1 text-center md:text-left space-y-3">
-            <div className="h-6 w-24 bg-white/20 rounded-full" />
-            <div className="h-8 w-64 bg-white/20 rounded" />
-            <div className="h-4 w-80 bg-white/20 rounded" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shadow-lg animate-pulse">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 space-y-2">
+            <div className="h-5 w-48 bg-white/20 rounded" />
+            <div className="h-3 w-32 bg-white/20 rounded" />
           </div>
-          <div className="h-12 w-48 bg-white/20 rounded-lg" />
+          <div className="h-9 w-24 bg-white/20 rounded-lg" />
         </div>
       </div>
     );
@@ -99,46 +98,37 @@ export function ReferralBanner({ userId }: ReferralBannerProps) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 shadow-lg">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 shadow-lg">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white opacity-10 blur-2xl" />
-      <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-24 w-24 rounded-full bg-blue-300 opacity-20 blur-xl" />
+      <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10 blur-2xl" />
 
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex-1 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/30 px-3 py-1 text-xs font-semibold text-white ring-1 ring-inset ring-blue-400/50">
-              <Sparkles className="w-3 h-3 text-yellow-300" />
-              Free Month
-            </span>
+      <div className="relative z-10 flex flex-col gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <Sparkles className="w-4 h-4 text-yellow-300 flex-shrink-0" />
+            <h2 className="text-base font-bold text-white">
+              Get a free month!
+            </h2>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Give a month, get a month free!
-          </h2>
-          <p className="text-blue-100 max-w-lg">
-            Invite your gym partner to GymText. When they sign up, you both get a premium month on us.
+          <p className="text-blue-100 text-sm">
+            Share your link — when a friend signs up, you both get a free month.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="flex items-center bg-blue-900/40 rounded-lg p-1 ring-1 ring-blue-400/30 w-full md:w-auto">
-            <div className="px-4 py-2 text-blue-100 font-mono text-sm select-all truncate max-w-[200px] md:max-w-xs">
-              {stats.referralLink}
-            </div>
-            <Button
-              onClick={handleCopy}
-              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-md transition-all active:scale-95 font-medium shadow-md whitespace-nowrap"
-            >
-              {copied ? <Check size={18} /> : <Copy size={18} />}
-              {copied ? 'Copied' : 'Copy'}
-            </Button>
-          </div>
+        <div className="flex items-center gap-2">
           <Button
             onClick={handleShare}
-            variant="ghost"
-            className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg ring-1 ring-white/30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium"
           >
-            <Share2 size={18} />
+            <Share2 size={16} />
+            Share Link
+          </Button>
+          <Button
+            onClick={handleCopy}
+            variant="ghost"
+            className="flex items-center justify-center p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg ring-1 ring-white/20 transition-colors"
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
           </Button>
         </div>
       </div>
