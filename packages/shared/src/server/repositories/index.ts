@@ -23,3 +23,5 @@ export * from './adminActivityLogRepository';
 export * from './uploadedImageRepository';
 export * from './profileUpdateRepository';
 export * from './userAuthRepository';
+export * from './exerciseRepository';
+export * from './exerciseAliasRepository';

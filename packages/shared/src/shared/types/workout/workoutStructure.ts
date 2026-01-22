@@ -10,6 +10,16 @@ import { z } from "zod";
  */
 
 /**
+ * Exercise resolution metadata
+ * Tracks how an exercise name was resolved to a canonical exercise
+ */
+export const ExerciseResolutionSchema = z.object({
+  method: z.enum(['exact', 'fuzzy', 'vector', 'llm', 'manual', 'unresolved']).default('unresolved'),
+  confidence: z.number().min(0).max(1).default(0),
+  version: z.number().default(1),
+});
+
+/**
  * Intensity descriptor for exercises
  * Default values used to ensure no nulls reach the UI.
  */
@@ -44,7 +54,12 @@ export const WorkoutActivitySchema = z.object({
   // Execution & Grouping
   notes: z.string().describe("Execution cues").default(''),
   tags: z.array(z.string()).default([]),
-  supersetId: z.string().default('')
+  supersetId: z.string().default(''),
+
+  // Exercise canonicalization (optional, for linking to canonical exercises)
+  exerciseId: z.string().uuid().nullable().optional().describe("FK to canonical exercise"),
+  nameRaw: z.string().optional().describe("Original LLM output for audit"),
+  resolution: ExerciseResolutionSchema.optional().describe("How the exercise was resolved"),
 });
 
 /**
@@ -83,3 +98,4 @@ export type WorkoutStructure = z.infer<typeof WorkoutStructureSchema>;
 export type WorkoutActivity = z.infer<typeof WorkoutActivitySchema>;
 export type WorkoutSection = z.infer<typeof WorkoutSectionSchema>;
 export type Intensity = z.infer<typeof IntensitySchema>;
+export type ExerciseResolution = z.infer<typeof ExerciseResolutionSchema>;

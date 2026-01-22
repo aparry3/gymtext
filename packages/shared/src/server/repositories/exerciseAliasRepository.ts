@@ -1,0 +1,146 @@
+/**
+ * Exercise Alias Repository
+ *
+ * Data access layer for exercise aliases.
+ * Primary lookup method for resolving exercise names to canonical exercises.
+ */
+
+import { BaseRepository } from '@/server/repositories/baseRepository';
+import type {
+  ExerciseAlias,
+  NewExerciseAlias,
+} from '@/server/models/exercise';
+
+export class ExerciseAliasRepository extends BaseRepository {
+  /**
+   * Create a new alias
+   */
+  async create(data: NewExerciseAlias): Promise<ExerciseAlias> {
+    return await this.db
+      .insertInto('exerciseAliases')
+      .values({
+        ...data,
+        createdAt: new Date(),
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Create multiple aliases at once
+   */
+  async createMany(aliases: NewExerciseAlias[]): Promise<ExerciseAlias[]> {
+    if (aliases.length === 0) {
+      return [];
+    }
+
+    const values = aliases.map((alias) => ({
+      ...alias,
+      createdAt: new Date(),
+    }));
+
+    return await this.db
+      .insertInto('exerciseAliases')
+      .values(values)
+      .returningAll()
+      .execute();
+  }
+
+  /**
+   * Find alias by normalized form (primary lookup method)
+   * This is the main entry point for resolving exercise names
+   */
+  async findByNormalizedAlias(normalizedAlias: string): Promise<ExerciseAlias | undefined> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('aliasNormalized', '=', normalizedAlias)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Check if a normalized alias already exists
+   */
+  async exists(normalizedAlias: string): Promise<boolean> {
+    const result = await this.db
+      .selectFrom('exerciseAliases')
+      .select('id')
+      .where('aliasNormalized', '=', normalizedAlias)
+      .executeTakeFirst();
+
+    return result !== undefined;
+  }
+
+  /**
+   * Find all aliases for a specific exercise
+   */
+  async findByExerciseId(exerciseId: string): Promise<ExerciseAlias[]> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('exerciseId', '=', exerciseId)
+      .orderBy('createdAt', 'asc')
+      .execute();
+  }
+
+  /**
+   * Find alias by ID
+   */
+  async findById(id: string): Promise<ExerciseAlias | undefined> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Delete an alias by ID
+   */
+  async delete(id: string): Promise<boolean> {
+    const result = await this.db
+      .deleteFrom('exerciseAliases')
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
+  }
+
+  /**
+   * Delete all aliases for a specific exercise
+   */
+  async deleteByExerciseId(exerciseId: string): Promise<number> {
+    const result = await this.db
+      .deleteFrom('exerciseAliases')
+      .where('exerciseId', '=', exerciseId)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows);
+  }
+
+  /**
+   * Count aliases for an exercise
+   */
+  async countByExerciseId(exerciseId: string): Promise<number> {
+    const result = await this.db
+      .selectFrom('exerciseAliases')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where('exerciseId', '=', exerciseId)
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
+
+  /**
+   * List aliases by source type
+   */
+  async listBySource(source: string, limit: number = 100): Promise<ExerciseAlias[]> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('source', '=', source)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .execute();
+  }
+}
