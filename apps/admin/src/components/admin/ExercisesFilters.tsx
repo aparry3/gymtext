@@ -118,7 +118,6 @@ export function ExercisesFilters({
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             className="pl-10"
-            disabled={isLoading}
           />
         </div>
 

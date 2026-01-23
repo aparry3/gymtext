@@ -31,14 +31,14 @@ export function normalizeExerciseName(name: string): string {
 }
 
 /**
- * Normalize a string for text search by stripping everything except lowercase a-z.
- * This mirrors the alias_searchable generated column in the database.
+ * Normalize a string for text search by stripping everything except lowercase a-z
+ * and digits 0-9. This mirrors the alias_searchable generated column in the database.
  *
  * @example
- * normalizeForSearch("Sit-Up") // "situp"
+ * normalizeForSearch("3/4 Sit-Up") // "34situp"
  * normalizeForSearch("Bench Press") // "benchpress"
  * normalizeForSearch("T-Bar Row (Landmine)") // "tbarrowlandmine"
  */
 export function normalizeForSearch(input: string): string {
-  return input.toLowerCase().replace(/[^a-z]/g, '');
+  return input.toLowerCase().replace(/[^a-z0-9]/g, '');
 }

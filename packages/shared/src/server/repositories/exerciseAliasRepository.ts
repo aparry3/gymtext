@@ -54,10 +54,14 @@ export class ExerciseAliasRepository extends BaseRepository {
    * This is the main entry point for resolving exercise names
    */
   async findByNormalizedAlias(normalizedAlias: string): Promise<ExerciseAlias | undefined> {
+    const searchable = normalizeForSearch(normalizedAlias);
     return await this.db
       .selectFrom('exerciseAliases')
       .selectAll()
-      .where('aliasNormalized', '=', normalizedAlias)
+      .where((eb) => eb.or([
+        eb('aliasNormalized', '=', normalizedAlias),
+        eb('aliasSearchable', '=', searchable),
+      ]))
       .executeTakeFirst();
   }
 
