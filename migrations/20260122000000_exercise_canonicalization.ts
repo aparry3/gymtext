@@ -9,10 +9,12 @@ import * as path from 'path';
  * - Stable progress tracking across workouts
  * - Exercise resolution from various naming conventions
  * - Rich exercise metadata for UI and analysis
+ * - Vector-based semantic search (pgvector)
+ * - Fuzzy trigram matching (pg_trgm)
  *
  * Tables:
- * - exercises: Canonical exercise definitions with metadata
- * - exercise_aliases: Normalized aliases for fast lookup
+ * - exercises: Canonical exercise definitions with metadata + embedding
+ * - exercise_aliases: Normalized aliases with searchable generated column
  *
  * Seeds 873 exercises from exercises.json with their canonical names as initial aliases.
  */
@@ -48,7 +50,13 @@ function normalizeExerciseName(name: string): string {
 export async function up(db: Kysely<unknown>): Promise<void> {
   console.log('Starting exercise canonicalization migration...');
 
-  // Step 1: Create exercises table
+  // Step 1: Create extensions
+  await sql`CREATE EXTENSION IF NOT EXISTS vector`.execute(db);
+  await sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`.execute(db);
+
+  console.log('Created extensions (vector, pg_trgm)');
+
+  // Step 2: Create exercises table (includes embedding column)
   await sql`
     CREATE TABLE exercises (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,6 +72,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       instructions text[],
       description text,
       tips text[],
+      embedding vector(1536),
       is_active boolean NOT NULL DEFAULT true,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
@@ -72,13 +81,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   console.log('Created exercises table');
 
-  // Step 2: Create exercise_aliases table
+  // Step 3: Create exercise_aliases table (includes alias_searchable generated column)
   await sql`
     CREATE TABLE exercise_aliases (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       exercise_id uuid NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
       alias varchar(200) NOT NULL,
       alias_normalized varchar(200) NOT NULL UNIQUE,
+      alias_searchable varchar(200) GENERATED ALWAYS AS (regexp_replace(lower(alias), '[^a-z0-9]', '', 'g')) STORED,
       source varchar(50) NOT NULL DEFAULT 'seed',
       confidence_score decimal(3,2),
       created_at timestamptz NOT NULL DEFAULT now()
@@ -87,15 +97,17 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   console.log('Created exercise_aliases table');
 
-  // Step 3: Create indexes
+  // Step 4: Create indexes
   await sql`CREATE INDEX idx_exercises_name ON exercises(name)`.execute(db);
   await sql`CREATE INDEX idx_exercises_category ON exercises(category)`.execute(db);
+  await sql`CREATE INDEX idx_exercises_embedding ON exercises USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)`.execute(db);
   await sql`CREATE INDEX idx_exercise_aliases_exercise_id ON exercise_aliases(exercise_id)`.execute(db);
-  // Note: alias_normalized already has UNIQUE constraint which creates an index
+  await sql`CREATE INDEX idx_exercise_aliases_trgm ON exercise_aliases USING gin (alias_normalized gin_trgm_ops)`.execute(db);
+  await sql`CREATE INDEX idx_exercise_aliases_searchable_trgm ON exercise_aliases USING gin (alias_searchable gin_trgm_ops)`.execute(db);
 
   console.log('Created indexes');
 
-  // Step 4: Seed data from exercises.json
+  // Step 5: Seed data from exercises.json
   const exercisesPath = path.join(process.cwd(), 'exercises.json');
 
   if (!fs.existsSync(exercisesPath)) {
@@ -182,6 +194,8 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   // Drop tables (indexes are dropped automatically)
   await sql`DROP TABLE IF EXISTS exercise_aliases`.execute(db);
   await sql`DROP TABLE IF EXISTS exercises`.execute(db);
+
+  // Leave extensions in place as other tables may use them
 
   console.log('Rollback complete');
 }

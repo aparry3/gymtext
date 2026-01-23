@@ -12,7 +12,7 @@ import type {
   ExerciseAlias,
   NewExerciseAlias,
 } from '@/server/models/exercise';
-import { normalizeForSearch } from '@/server/utils/exerciseNormalization';
+import { normalizeForSearch, normalizeForLex } from '@/server/utils/exerciseNormalization';
 
 export class ExerciseAliasRepository extends BaseRepository {
   /**
@@ -200,6 +200,46 @@ export class ExerciseAliasRepository extends BaseRepository {
       exerciseId: row.exercise_id,
       alias: row.alias,
       aliasNormalized: row.alias_normalized,
+      score: Number(row.similarity),
+    }));
+  }
+
+  /**
+   * Find alias by exact match on alias_lex column
+   */
+  async findByExactLex(lexQuery: string): Promise<ExerciseAlias | undefined> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('aliasLex', '=', lexQuery)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Find aliases by fuzzy similarity on alias_lex column using pg_trgm
+   */
+  async findByLexFuzzySimilarity(
+    lexQuery: string,
+    threshold: number = 0.3,
+    limit: number = 50
+  ): Promise<{ exerciseId: string; alias: string; aliasLex: string; score: number }[]> {
+    const results = await sql<{
+      exercise_id: string;
+      alias: string;
+      alias_lex: string;
+      similarity: number;
+    }>`
+      SELECT exercise_id, alias, alias_lex, similarity(alias_lex, ${lexQuery}) as similarity
+      FROM exercise_aliases
+      WHERE similarity(alias_lex, ${lexQuery}) > ${threshold}
+      ORDER BY similarity DESC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return results.rows.map((row) => ({
+      exerciseId: row.exercise_id,
+      alias: row.alias,
+      aliasLex: row.alias_lex,
       score: Number(row.similarity),
     }));
   }

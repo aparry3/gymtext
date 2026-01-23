@@ -88,6 +88,7 @@ export type {
 // Exercise resolution types
 export type {
   ExerciseMatchMethod,
+  SignalScores,
   ExerciseSearchResult,
   ExerciseResolutionResult,
   ResolutionOptions,

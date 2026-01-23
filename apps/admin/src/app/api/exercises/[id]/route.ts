@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import { normalizeExerciseName } from '@gymtext/shared/server';
+import { normalizeExerciseName, normalizeForLex } from '@gymtext/shared/server';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -142,6 +142,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         exerciseId: id,
         alias: newAlias.alias,
         aliasNormalized: normalizedAlias,
+        aliasLex: normalizeForLex(newAlias.alias),
         source: newAlias.source || 'manual',
         confidenceScore: newAlias.confidenceScore?.toString() || '1.00',
       });

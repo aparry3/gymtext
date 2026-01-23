@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 import type { ExerciseFilters, ExerciseSort } from '@/components/admin/types';
-import { normalizeExerciseName, generateEmbedding, composeExerciseEmbeddingText } from '@gymtext/shared/server';
+import { normalizeExerciseName, normalizeForLex } from '@gymtext/shared/server';
 
 export async function GET(request: Request) {
   try {
@@ -317,19 +317,10 @@ export async function POST(request: Request) {
       exerciseId: exercise.id,
       alias: name,
       aliasNormalized: normalizedAlias,
+      aliasLex: normalizeForLex(name),
       source: 'manual',
       confidenceScore: '1.00',
     });
-
-    // Generate and store embedding for the new exercise
-    try {
-      const embeddingText = composeExerciseEmbeddingText(exercise);
-      const embedding = await generateEmbedding(embeddingText);
-      await repos.exercise.updateEmbedding(exercise.id, embedding);
-    } catch (error) {
-      // Non-fatal: exercise is created, embedding can be generated later
-      console.error('Failed to generate embedding for new exercise:', error);
-    }
 
     return NextResponse.json({
       success: true,

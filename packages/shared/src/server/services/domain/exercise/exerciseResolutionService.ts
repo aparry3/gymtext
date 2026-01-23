@@ -1,14 +1,15 @@
 /**
  * Exercise Resolution Service
  *
- * Multi-tier exercise resolution: exact → fuzzy → vector → text.
+ * Multi-signal exercise resolution with weighted scoring.
  * Used by admin search and workout resolution.
  *
- * Tiers:
- * 1. Exact (confidence: 1.0) — Normalized alias lookup
- * 2. Fuzzy (confidence: 0.4–0.9) — pg_trgm similarity on aliases
- * 3. Vector (confidence: 0.2–0.7) — pgvector cosine similarity on exercises
- * 4. Text (confidence: 0.85) — ILIKE substring match on exercise name
+ * Signals:
+ * 1. Exact norm (weight: 3.0) — Exact match on alias_normalized
+ * 2. Exact lex (weight: 2.0) — Exact match on alias_lex
+ * 3. Trigram lex (weight: 1.5) — pg_trgm similarity on alias_lex
+ * 4. Trigram norm (weight: 1.0) — pg_trgm similarity on alias_normalized
+ * 5. Token overlap (weight: 1.0) — Jaccard similarity on lex tokens
  */
 
 import type { RepositoryContainer } from '@/server/repositories/factory';
@@ -17,31 +18,51 @@ import type {
   ExerciseResolutionResult,
   ResolutionOptions,
   ExerciseResolutionServiceInstance,
+  SignalScores,
 } from '@/server/models/exerciseResolution';
-import { normalizeExerciseName } from '@/server/utils/exerciseNormalization';
-import { generateEmbedding, composeExerciseEmbeddingText } from '@/server/utils/embeddings';
+import type { Exercise } from '@/server/models/exercise';
+import { normalizeExerciseName, normalizeForLex } from '@/server/utils/exerciseNormalization';
 
 export type { ExerciseResolutionServiceInstance } from '@/server/models/exerciseResolution';
 
 const DEFAULT_FUZZY_THRESHOLD = 0.3;
-const DEFAULT_SEMANTIC_THRESHOLD = 0.2;
 const DEFAULT_LIMIT = 10;
-const EMBEDDING_BATCH_SIZE = 20;
+
+// Signal weights for composite scoring
+const W_EXACT_NORM = 3.0;
+const W_EXACT_LEX = 2.0;
+const W_TRGM_LEX = 1.5;
+const W_TRGM_NORM = 1.0;
+const W_TOKEN_OVERLAP = 1.0;
+const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP; // 8.5
+
+type ExerciseMatchMethod = ExerciseSearchResult['method'];
 
 /**
- * Map a raw fuzzy score (0.3–1.0) to confidence range (0.4–0.9)
+ * Compute Jaccard similarity between two lex token sets
  */
-function mapFuzzyConfidence(score: number): number {
-  // Linear map from [0.3, 1.0] → [0.4, 0.9]
-  return 0.4 + ((score - 0.3) / 0.7) * 0.5;
+function tokenOverlap(queryLex: string, candidateLex: string): number {
+  if (!queryLex || !candidateLex) return 0;
+  const qTokens = new Set(queryLex.split(' '));
+  const cTokens = new Set(candidateLex.split(' '));
+  const intersection = [...qTokens].filter(t => cTokens.has(t)).length;
+  const union = new Set([...qTokens, ...cTokens]).size;
+  return union === 0 ? 0 : intersection / union;
 }
 
 /**
- * Map a raw vector score (0.2–1.0) to confidence range (0.2–0.7)
+ * Determine which signal contributed the highest weighted score
  */
-function mapVectorConfidence(score: number): number {
-  // Linear map from [0.2, 1.0] → [0.2, 0.7]
-  return 0.2 + ((score - 0.2) / 0.8) * 0.5;
+function dominantMethod(scores: SignalScores): ExerciseMatchMethod {
+  const weighted: [ExerciseMatchMethod, number][] = [
+    ['exact', scores.exactNorm * W_EXACT_NORM],
+    ['exact_lex', scores.exactLex * W_EXACT_LEX],
+    ['fuzzy_lex', scores.trgramLex * W_TRGM_LEX],
+    ['fuzzy', scores.trgramNorm * W_TRGM_NORM],
+    ['multi_signal', scores.tokenOverlap * W_TOKEN_OVERLAP],
+  ];
+  weighted.sort((a, b) => b[1] - a[1]);
+  return weighted[0][1] > 0 ? weighted[0][0] : 'multi_signal';
 }
 
 export function createExerciseResolutionService(
@@ -49,21 +70,18 @@ export function createExerciseResolutionService(
 ): ExerciseResolutionServiceInstance {
 
   /**
-   * Resolve a raw exercise name through exact → fuzzy → vector tiers
+   * Resolve a raw exercise name — short-circuits on exact matches,
+   * falls back to multi-signal scoring.
    */
   async function resolve(
     rawName: string,
     options: ResolutionOptions = {}
   ): Promise<ExerciseResolutionResult | null> {
-    const {
-      learnAlias = true,
-      fuzzyThreshold = DEFAULT_FUZZY_THRESHOLD,
-      semanticThreshold = DEFAULT_SEMANTIC_THRESHOLD,
-    } = options;
-
+    const { learnAlias = true } = options;
     const normalizedInput = normalizeExerciseName(rawName);
+    const lexInput = normalizeForLex(rawName);
 
-    // Tier 1: Exact alias lookup
+    // Short-circuit: exact match on alias_normalized
     const exactAlias = await repos.exerciseAlias.findByNormalizedAlias(normalizedInput);
     if (exactAlias) {
       const exercise = await repos.exercise.findById(exactAlias.exerciseId);
@@ -78,152 +96,192 @@ export function createExerciseResolutionService(
       }
     }
 
-    // Tier 2: Fuzzy similarity via pg_trgm
-    const fuzzyResults = await repos.exerciseAlias.findByFuzzySimilarity(
-      normalizedInput,
-      fuzzyThreshold,
-      1
-    );
-
-    if (fuzzyResults.length > 0) {
-      const best = fuzzyResults[0];
-      const exercise = await repos.exercise.findById(best.exerciseId);
+    // Short-circuit: exact match on alias_lex
+    const exactLex = await repos.exerciseAlias.findByExactLex(lexInput);
+    if (exactLex) {
+      const exercise = await repos.exercise.findById(exactLex.exerciseId);
       if (exercise && exercise.isActive) {
-        const confidence = mapFuzzyConfidence(best.score);
-
-        if (learnAlias) {
-          await learnNewAlias(normalizedInput, rawName, exercise.id, options.aliasSource || 'fuzzy', confidence);
-        }
-
         return {
           exercise,
-          method: 'fuzzy',
-          confidence,
-          matchedOn: best.alias,
+          method: 'exact_lex',
+          confidence: 0.98,
+          matchedOn: exactLex.alias,
           normalizedInput,
         };
       }
     }
 
-    // Tier 3: Vector similarity via pgvector
-    try {
-      const queryEmbedding = await generateEmbedding(rawName);
-      const vectorResults = await repos.exercise.findByVectorSimilarity(queryEmbedding, 1);
-
-      if (vectorResults.length > 0 && vectorResults[0].score >= semanticThreshold) {
-        const best = vectorResults[0];
-        const confidence = mapVectorConfidence(best.score);
-
-        if (learnAlias) {
-          await learnNewAlias(normalizedInput, rawName, best.exercise.id, options.aliasSource || 'vector', confidence);
-        }
-
-        return {
-          exercise: best.exercise,
-          method: 'vector',
-          confidence,
-          matchedOn: best.exercise.name,
-          normalizedInput,
-        };
+    // Multi-signal scoring (limit=1)
+    const results = await multiSignalSearch(rawName, normalizedInput, lexInput, { ...options, limit: 1 });
+    if (results.length > 0) {
+      const best = results[0];
+      if (learnAlias) {
+        await learnNewAlias(normalizedInput, rawName, best.exercise.id, options.aliasSource || best.method, best.confidence);
       }
-    } catch (error) {
-      // Vector search failure is non-fatal - just means no vector result
-      console.error('Vector search failed:', error);
+      return {
+        ...best,
+        normalizedInput,
+      };
     }
 
     return null;
   }
 
   /**
-   * Search across all tiers and return deduplicated results sorted by confidence
+   * Search across all signals and return deduplicated results ranked by composite score
    */
   async function search(
     query: string,
     options: ResolutionOptions = {}
   ): Promise<ExerciseSearchResult[]> {
+    const normalizedQuery = normalizeExerciseName(query);
+    const lexQuery = normalizeForLex(query);
+    return multiSignalSearch(query, normalizedQuery, lexQuery, options);
+  }
+
+  /**
+   * Core multi-signal scoring implementation
+   */
+  async function multiSignalSearch(
+    rawQuery: string,
+    normalizedQuery: string,
+    lexQuery: string,
+    options: ResolutionOptions = {}
+  ): Promise<ExerciseSearchResult[]> {
     const {
       fuzzyThreshold = DEFAULT_FUZZY_THRESHOLD,
-      semanticThreshold = DEFAULT_SEMANTIC_THRESHOLD,
       limit = DEFAULT_LIMIT,
     } = options;
 
-    const normalizedQuery = normalizeExerciseName(query);
-    const resultsMap = new Map<string, ExerciseSearchResult>();
+    // Candidate accumulator: exerciseId → { exercise, scores, matchedOn }
+    const candidates = new Map<string, {
+      exercise: Exercise;
+      scores: SignalScores;
+      matchedOn: string;
+    }>();
 
-    // Tier 1: Exact match
-    const exactAlias = await repos.exerciseAlias.findByNormalizedAlias(normalizedQuery);
+    function ensureCandidate(exercise: Exercise, matchedOn: string): SignalScores {
+      if (!candidates.has(exercise.id)) {
+        candidates.set(exercise.id, {
+          exercise,
+          scores: { exactNorm: 0, exactLex: 0, trgramLex: 0, trgramNorm: 0, tokenOverlap: 0 },
+          matchedOn,
+        });
+      }
+      return candidates.get(exercise.id)!.scores;
+    }
+
+    // Phase 1: Candidate Generation (parallel where possible)
+
+    // 1a. Exact match on alias_normalized/alias_searchable
+    const exactPromise = repos.exerciseAlias.findByNormalizedAlias(normalizedQuery);
+
+    // 1b. Exact match on alias_lex
+    const exactLexPromise = repos.exerciseAlias.findByExactLex(lexQuery);
+
+    // 1c. Fuzzy on alias_normalized
+    const fuzzyNormPromise = repos.exerciseAlias.findByFuzzySimilarity(
+      normalizedQuery, fuzzyThreshold, 50
+    );
+
+    // 1d. Fuzzy on alias_lex
+    const fuzzyLexPromise = repos.exerciseAlias.findByLexFuzzySimilarity(
+      lexQuery, fuzzyThreshold, 50
+    );
+
+    const [exactAlias, exactLexAlias, fuzzyNormResults, fuzzyLexResults] =
+      await Promise.all([exactPromise, exactLexPromise, fuzzyNormPromise, fuzzyLexPromise]);
+
+    // Phase 2: Populate scores
+
+    // Exact norm
     if (exactAlias) {
       const exercise = await repos.exercise.findById(exactAlias.exerciseId);
       if (exercise && exercise.isActive) {
-        resultsMap.set(exercise.id, {
-          exercise,
-          method: 'exact',
-          confidence: 1.0,
-          matchedOn: exactAlias.alias,
-        });
+        const scores = ensureCandidate(exercise, exactAlias.alias);
+        scores.exactNorm = 1.0;
       }
     }
-    console.log(`[ExerciseResolution] Tier 1 (exact): ${resultsMap.size} results for "${query}"`);
 
-    // Tier 2: Fuzzy matches
-    const fuzzyResults = await repos.exerciseAlias.findByFuzzySimilarity(
-      normalizedQuery,
-      fuzzyThreshold,
-      limit
-    );
-
-    for (const fuzzy of fuzzyResults) {
-      if (resultsMap.has(fuzzy.exerciseId)) continue;
-      const exercise = await repos.exercise.findById(fuzzy.exerciseId);
+    // Exact lex
+    if (exactLexAlias) {
+      const exercise = await repos.exercise.findById(exactLexAlias.exerciseId);
       if (exercise && exercise.isActive) {
-        resultsMap.set(exercise.id, {
-          exercise,
-          method: 'fuzzy',
-          confidence: mapFuzzyConfidence(fuzzy.score),
-          matchedOn: fuzzy.alias,
-        });
+        const scores = ensureCandidate(exercise, exactLexAlias.alias);
+        scores.exactLex = 1.0;
       }
     }
-    console.log(`[ExerciseResolution] Tier 2 (fuzzy): ${fuzzyResults.length} raw matches, ${resultsMap.size} total results (threshold: ${fuzzyThreshold})`);
 
-    // Tier 3: Vector matches
-    try {
-      const queryEmbedding = await generateEmbedding(query);
-      const vectorResults = await repos.exercise.findByVectorSimilarity(queryEmbedding, limit);
-      const vectorAdded = vectorResults.filter(v => v.score >= semanticThreshold && !resultsMap.has(v.exercise.id));
-
-      for (const vec of vectorResults) {
-        if (vec.score < semanticThreshold) continue;
-        if (resultsMap.has(vec.exercise.id)) continue;
-        resultsMap.set(vec.exercise.id, {
-          exercise: vec.exercise,
-          method: 'vector',
-          confidence: mapVectorConfidence(vec.score),
-          matchedOn: vec.exercise.name,
-        });
+    // Fuzzy norm — deduplicate by exerciseId, keep best score
+    const fuzzyNormByExercise = new Map<string, { alias: string; score: number }>();
+    for (const f of fuzzyNormResults) {
+      const existing = fuzzyNormByExercise.get(f.exerciseId);
+      if (!existing || f.score > existing.score) {
+        fuzzyNormByExercise.set(f.exerciseId, { alias: f.alias, score: f.score });
       }
-      console.log(`[ExerciseResolution] Tier 3 (vector): ${vectorAdded.length} new matches, ${resultsMap.size} total results (threshold: ${semanticThreshold}, top score: ${vectorResults[0]?.score?.toFixed(3) ?? 'n/a'})`);
-    } catch (error) {
-      console.error('[ExerciseResolution] Tier 3 (vector) failed:', error);
+    }
+    for (const [exerciseId, { alias, score }] of fuzzyNormByExercise) {
+      const exercise = await repos.exercise.findById(exerciseId);
+      if (exercise && exercise.isActive) {
+        const scores = ensureCandidate(exercise, alias);
+        scores.trgramNorm = Math.max(scores.trgramNorm, score);
+      }
     }
 
-    // Tier 4: Text (ILIKE) matches on alias_searchable column
-    const textResults = await repos.exerciseAlias.searchByText(query, limit);
-    let textAdded = 0;
-    for (const exercise of textResults) {
-      if (resultsMap.has(exercise.id)) continue;
-      resultsMap.set(exercise.id, {
-        exercise,
-        method: 'text',
-        confidence: 0.85,
-        matchedOn: exercise.name,
+    // Fuzzy lex — deduplicate by exerciseId, keep best score
+    const fuzzyLexByExercise = new Map<string, { alias: string; aliasLex: string; score: number }>();
+    for (const f of fuzzyLexResults) {
+      const existing = fuzzyLexByExercise.get(f.exerciseId);
+      if (!existing || f.score > existing.score) {
+        fuzzyLexByExercise.set(f.exerciseId, { alias: f.alias, aliasLex: f.aliasLex, score: f.score });
+      }
+    }
+    for (const [exerciseId, { alias, aliasLex, score }] of fuzzyLexByExercise) {
+      const exercise = await repos.exercise.findById(exerciseId);
+      if (exercise && exercise.isActive) {
+        const scores = ensureCandidate(exercise, alias);
+        scores.trgramLex = Math.max(scores.trgramLex, score);
+        // Also compute token overlap while we have the lex value
+        scores.tokenOverlap = Math.max(scores.tokenOverlap, tokenOverlap(lexQuery, aliasLex));
+      }
+    }
+
+    // For candidates that came in via exact or fuzzy_norm but not fuzzy_lex,
+    // compute token overlap if we can get their aliasLex from the matchedOn
+    for (const [, candidate] of candidates) {
+      if (candidate.scores.tokenOverlap === 0) {
+        // Use the exercise name as fallback for token overlap
+        const candidateLex = normalizeForLex(candidate.matchedOn);
+        candidate.scores.tokenOverlap = tokenOverlap(lexQuery, candidateLex);
+      }
+    }
+
+    // Phase 3: Compute composite scores and rank
+    const results: ExerciseSearchResult[] = [];
+    for (const [, candidate] of candidates) {
+      const { scores } = candidate;
+      const rawScore =
+        W_EXACT_NORM * scores.exactNorm +
+        W_EXACT_LEX * scores.exactLex +
+        W_TRGM_LEX * scores.trgramLex +
+        W_TRGM_NORM * scores.trgramNorm +
+        W_TOKEN_OVERLAP * scores.tokenOverlap;
+
+      const confidence = rawScore / MAX_SCORE;
+      const method = dominantMethod(scores);
+
+      results.push({
+        exercise: candidate.exercise,
+        method,
+        confidence,
+        matchedOn: candidate.matchedOn,
+        scores,
       });
-      textAdded++;
     }
-    console.log(`[ExerciseResolution] Tier 4 (text): ${textResults.length} raw matches, ${textAdded} new, ${resultsMap.size} total results`);
 
-    // Sort by confidence descending and limit
-    return Array.from(resultsMap.values())
+    console.log(`[ExerciseResolution] Multi-signal: ${candidates.size} candidates for "${rawQuery}" (limit: ${limit})`);
+
+    return results
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, limit);
   }
@@ -245,43 +303,14 @@ export function createExerciseResolutionService(
       exerciseId,
       alias: rawAlias,
       aliasNormalized: normalizedAlias,
+      aliasLex: normalizeForLex(rawAlias),
       source,
       confidenceScore: confidence.toFixed(2),
     });
   }
 
-  /**
-   * Seed embeddings for all active exercises that don't have one
-   */
-  async function seedAllEmbeddings(): Promise<{ seeded: number; errors: number }> {
-    let seeded = 0;
-    let errors = 0;
-
-    let batch = await repos.exercise.listMissingEmbeddings(EMBEDDING_BATCH_SIZE);
-
-    while (batch.length > 0) {
-      for (const exercise of batch) {
-        try {
-          const text = composeExerciseEmbeddingText(exercise);
-          const embedding = await generateEmbedding(text);
-          await repos.exercise.updateEmbedding(exercise.id, embedding);
-          seeded++;
-        } catch (error) {
-          console.error(`Failed to seed embedding for "${exercise.name}":`, error);
-          errors++;
-        }
-      }
-
-      batch = await repos.exercise.listMissingEmbeddings(EMBEDDING_BATCH_SIZE);
-    }
-
-    return { seeded, errors };
-  }
-
   return {
     resolve,
     search,
-    generateEmbedding,
-    seedAllEmbeddings,
   };
 }
