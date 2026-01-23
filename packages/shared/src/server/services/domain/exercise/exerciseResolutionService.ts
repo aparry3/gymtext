@@ -1,13 +1,14 @@
 /**
  * Exercise Resolution Service
  *
- * Multi-tier exercise resolution: exact → fuzzy → vector.
+ * Multi-tier exercise resolution: exact → fuzzy → vector → text.
  * Used by admin search and workout resolution.
  *
  * Tiers:
  * 1. Exact (confidence: 1.0) — Normalized alias lookup
- * 2. Fuzzy (confidence: 0.5–0.9) — pg_trgm similarity on aliases
- * 3. Vector (confidence: 0.3–0.7) — pgvector cosine similarity on exercises
+ * 2. Fuzzy (confidence: 0.4–0.9) — pg_trgm similarity on aliases
+ * 3. Vector (confidence: 0.2–0.7) — pgvector cosine similarity on exercises
+ * 4. Text (confidence: 0.85) — ILIKE substring match on exercise name
  */
 
 import type { RepositoryContainer } from '@/server/repositories/factory';
@@ -22,25 +23,25 @@ import { generateEmbedding, composeExerciseEmbeddingText } from '@/server/utils/
 
 export type { ExerciseResolutionServiceInstance } from '@/server/models/exerciseResolution';
 
-const DEFAULT_FUZZY_THRESHOLD = 0.6;
-const DEFAULT_SEMANTIC_THRESHOLD = 0.4;
+const DEFAULT_FUZZY_THRESHOLD = 0.3;
+const DEFAULT_SEMANTIC_THRESHOLD = 0.2;
 const DEFAULT_LIMIT = 10;
 const EMBEDDING_BATCH_SIZE = 20;
 
 /**
- * Map a raw fuzzy score (0.6–1.0) to confidence range (0.5–0.9)
+ * Map a raw fuzzy score (0.3–1.0) to confidence range (0.4–0.9)
  */
 function mapFuzzyConfidence(score: number): number {
-  // Linear map from [0.6, 1.0] → [0.5, 0.9]
-  return 0.5 + ((score - 0.6) / 0.4) * 0.4;
+  // Linear map from [0.3, 1.0] → [0.4, 0.9]
+  return 0.4 + ((score - 0.3) / 0.7) * 0.5;
 }
 
 /**
- * Map a raw vector score (0.4–1.0) to confidence range (0.3–0.7)
+ * Map a raw vector score (0.2–1.0) to confidence range (0.2–0.7)
  */
 function mapVectorConfidence(score: number): number {
-  // Linear map from [0.4, 1.0] → [0.3, 0.7]
-  return 0.3 + ((score - 0.4) / 0.6) * 0.4;
+  // Linear map from [0.2, 1.0] → [0.2, 0.7]
+  return 0.2 + ((score - 0.2) / 0.8) * 0.5;
 }
 
 export function createExerciseResolutionService(
@@ -162,6 +163,7 @@ export function createExerciseResolutionService(
         });
       }
     }
+    console.log(`[ExerciseResolution] Tier 1 (exact): ${resultsMap.size} results for "${query}"`);
 
     // Tier 2: Fuzzy matches
     const fuzzyResults = await repos.exerciseAlias.findByFuzzySimilarity(
@@ -182,11 +184,13 @@ export function createExerciseResolutionService(
         });
       }
     }
+    console.log(`[ExerciseResolution] Tier 2 (fuzzy): ${fuzzyResults.length} raw matches, ${resultsMap.size} total results (threshold: ${fuzzyThreshold})`);
 
     // Tier 3: Vector matches
     try {
       const queryEmbedding = await generateEmbedding(query);
       const vectorResults = await repos.exercise.findByVectorSimilarity(queryEmbedding, limit);
+      const vectorAdded = vectorResults.filter(v => v.score >= semanticThreshold && !resultsMap.has(v.exercise.id));
 
       for (const vec of vectorResults) {
         if (vec.score < semanticThreshold) continue;
@@ -198,9 +202,25 @@ export function createExerciseResolutionService(
           matchedOn: vec.exercise.name,
         });
       }
+      console.log(`[ExerciseResolution] Tier 3 (vector): ${vectorAdded.length} new matches, ${resultsMap.size} total results (threshold: ${semanticThreshold}, top score: ${vectorResults[0]?.score?.toFixed(3) ?? 'n/a'})`);
     } catch (error) {
-      console.error('Vector search failed:', error);
+      console.error('[ExerciseResolution] Tier 3 (vector) failed:', error);
     }
+
+    // Tier 4: Text (ILIKE) matches on alias_searchable column
+    const textResults = await repos.exerciseAlias.searchByText(query, limit);
+    let textAdded = 0;
+    for (const exercise of textResults) {
+      if (resultsMap.has(exercise.id)) continue;
+      resultsMap.set(exercise.id, {
+        exercise,
+        method: 'text',
+        confidence: 0.85,
+        matchedOn: exercise.name,
+      });
+      textAdded++;
+    }
+    console.log(`[ExerciseResolution] Tier 4 (text): ${textResults.length} raw matches, ${textAdded} new, ${resultsMap.size} total results`);
 
     // Sort by confidence descending and limit
     return Array.from(resultsMap.values())

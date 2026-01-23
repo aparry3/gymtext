@@ -8,9 +8,11 @@
 import { sql } from 'kysely';
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import type {
+  Exercise,
   ExerciseAlias,
   NewExerciseAlias,
 } from '@/server/models/exercise';
+import { normalizeForSearch } from '@/server/utils/exerciseNormalization';
 
 export class ExerciseAliasRepository extends BaseRepository {
   /**
@@ -143,6 +145,29 @@ export class ExerciseAliasRepository extends BaseRepository {
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
+  }
+
+  /**
+   * Search aliases by normalized text (ILIKE on alias_searchable column).
+   * Returns deduplicated active exercises matching the query.
+   */
+  async searchByText(query: string, limit: number = 10): Promise<Exercise[]> {
+    const normalized = normalizeForSearch(query);
+    if (!normalized) return [];
+
+    const like = `%${normalized}%`;
+
+    const results = await this.db
+      .selectFrom('exerciseAliases')
+      .innerJoin('exercises', 'exercises.id', 'exerciseAliases.exerciseId')
+      .selectAll('exercises')
+      .where('exerciseAliases.aliasSearchable', 'ilike', like)
+      .where('exercises.isActive', '=', true)
+      .distinctOn('exercises.id')
+      .limit(limit)
+      .execute();
+
+    return results as Exercise[];
   }
 
   /**

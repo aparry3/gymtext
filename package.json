@@ -17,6 +17,7 @@
     "db:migrate:down": "tsx scripts/migrations/run.ts down",
     "db:migrate:create": "tsx scripts/migrations/create.ts",
     "migrate:create": "tsx scripts/migrations/create.ts",
+    "seed:embeddings": "source .env.local && tsx scripts/seed-exercise-embeddings.ts",
     "migrate:up": "tsx scripts/migrations/run.ts up",
     "migrate:down": "tsx scripts/migrations/run.ts down",
     "db:dump": "tsx scripts/db/dump-data.ts",

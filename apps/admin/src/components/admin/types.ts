@@ -430,7 +430,7 @@ export interface EnrollmentUpdateData {
 // ============================================
 
 // Exercise match method from resolution service
-export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector';
+export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector' | 'text';
 
 // Admin exercise type for list display
 export interface AdminExercise {

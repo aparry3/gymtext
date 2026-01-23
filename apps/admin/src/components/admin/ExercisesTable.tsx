@@ -130,12 +130,14 @@ const matchMethodColors: Record<ExerciseMatchMethod, string> = {
   exact: 'bg-green-100 text-green-800',
   fuzzy: 'bg-yellow-100 text-yellow-800',
   vector: 'bg-blue-100 text-blue-800',
+  text: 'bg-purple-100 text-purple-800',
 }
 
 const matchMethodLabels: Record<ExerciseMatchMethod, string> = {
   exact: 'Exact',
   fuzzy: 'Fuzzy',
   vector: 'Vector',
+  text: 'Text',
 }
 
 function ExerciseRow({ exercise }: ExerciseRowProps) {

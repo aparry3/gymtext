@@ -3,13 +3,14 @@
  *
  * Types for the multi-tier exercise resolution system:
  * 1. Exact - normalized alias lookup (confidence: 1.0)
- * 2. Fuzzy - pg_trgm similarity (confidence: 0.5-0.9)
- * 3. Vector - pgvector cosine similarity (confidence: 0.3-0.7)
+ * 2. Fuzzy - pg_trgm similarity (confidence: 0.4-0.9)
+ * 3. Vector - pgvector cosine similarity (confidence: 0.2-0.7)
+ * 4. Text - ILIKE substring match (confidence: 0.85)
  */
 
 import type { Exercise } from './exercise';
 
-export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector';
+export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector' | 'text';
 
 export interface ExerciseSearchResult {
   exercise: Exercise;
@@ -27,9 +28,9 @@ export interface ResolutionOptions {
   learnAlias?: boolean;
   /** Source for learned alias (default: inferred from method) */
   aliasSource?: string;
-  /** Min fuzzy score (default: 0.6) */
+  /** Min fuzzy score (default: 0.3) */
   fuzzyThreshold?: number;
-  /** Min vector score (default: 0.4) */
+  /** Min vector score (default: 0.2) */
   semanticThreshold?: number;
   /** Max results for search (default: 10) */
   limit?: number;

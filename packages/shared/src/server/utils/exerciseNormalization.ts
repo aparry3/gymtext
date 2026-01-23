@@ -29,3 +29,16 @@ export function normalizeExerciseName(name: string): string {
     .replace(/\s+/g, ' ') // Collapse whitespace
     .trim();
 }
+
+/**
+ * Normalize a string for text search by stripping everything except lowercase a-z.
+ * This mirrors the alias_searchable generated column in the database.
+ *
+ * @example
+ * normalizeForSearch("Sit-Up") // "situp"
+ * normalizeForSearch("Bench Press") // "benchpress"
+ * normalizeForSearch("T-Bar Row (Landmine)") // "tbarrowlandmine"
+ */
+export function normalizeForSearch(input: string): string {
+  return input.toLowerCase().replace(/[^a-z]/g, '');
+}
