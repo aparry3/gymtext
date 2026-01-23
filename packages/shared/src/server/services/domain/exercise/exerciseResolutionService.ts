@@ -34,7 +34,8 @@ const W_EXACT_LEX = 2.0;
 const W_TRGM_LEX = 1.5;
 const W_TRGM_NORM = 1.0;
 const W_TOKEN_OVERLAP = 1.0;
-const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP; // 8.5
+const W_TEXT_MATCH = 1.5;
+const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP + W_TEXT_MATCH; // 10.0
 
 type ExerciseMatchMethod = ExerciseSearchResult['method'];
 
@@ -60,6 +61,7 @@ function dominantMethod(scores: SignalScores): ExerciseMatchMethod {
     ['fuzzy_lex', scores.trgramLex * W_TRGM_LEX],
     ['fuzzy', scores.trgramNorm * W_TRGM_NORM],
     ['multi_signal', scores.tokenOverlap * W_TOKEN_OVERLAP],
+    ['text', scores.textMatch * W_TEXT_MATCH],
   ];
   weighted.sort((a, b) => b[1] - a[1]);
   return weighted[0][1] > 0 ? weighted[0][0] : 'multi_signal';
@@ -97,18 +99,22 @@ export function createExerciseResolutionService(
     }
 
     // Short-circuit: exact match on alias_lex
-    const exactLex = await repos.exerciseAlias.findByExactLex(lexInput);
-    if (exactLex) {
-      const exercise = await repos.exercise.findById(exactLex.exerciseId);
-      if (exercise && exercise.isActive) {
-        return {
-          exercise,
-          method: 'exact_lex',
-          confidence: 0.98,
-          matchedOn: exactLex.alias,
-          normalizedInput,
-        };
+    try {
+      const exactLex = await repos.exerciseAlias.findByExactLex(lexInput);
+      if (exactLex) {
+        const exercise = await repos.exercise.findById(exactLex.exerciseId);
+        if (exercise && exercise.isActive) {
+          return {
+            exercise,
+            method: 'exact_lex',
+            confidence: 0.98,
+            matchedOn: exactLex.alias,
+            normalizedInput,
+          };
+        }
       }
+    } catch {
+      // alias_lex column may not exist — fall through to multi-signal
     }
 
     // Multi-signal scoring (limit=1)
@@ -164,7 +170,7 @@ export function createExerciseResolutionService(
       if (!candidates.has(exercise.id)) {
         candidates.set(exercise.id, {
           exercise,
-          scores: { exactNorm: 0, exactLex: 0, trgramLex: 0, trgramNorm: 0, tokenOverlap: 0 },
+          scores: { exactNorm: 0, exactLex: 0, trgramLex: 0, trgramNorm: 0, tokenOverlap: 0, textMatch: 0 },
           matchedOn,
         });
       }
@@ -189,8 +195,26 @@ export function createExerciseResolutionService(
       lexQuery, fuzzyThreshold, 50
     );
 
-    const [exactAlias, exactLexAlias, fuzzyNormResults, fuzzyLexResults] =
-      await Promise.all([exactPromise, exactLexPromise, fuzzyNormPromise, fuzzyLexPromise]);
+    // 1e. Text/ILIKE on alias_searchable
+    const textPromise = repos.exerciseAlias.searchByText(rawQuery, 50);
+
+    const settled = await Promise.allSettled([
+      exactPromise, exactLexPromise, fuzzyNormPromise, fuzzyLexPromise, textPromise
+    ]);
+    const exactAlias = settled[0].status === 'fulfilled' ? settled[0].value : undefined;
+    const exactLexAlias = settled[1].status === 'fulfilled' ? settled[1].value : undefined;
+    const fuzzyNormResults = settled[2].status === 'fulfilled' ? settled[2].value : [];
+    const fuzzyLexResults = settled[3].status === 'fulfilled' ? settled[3].value : [];
+    const textResults = settled[4].status === 'fulfilled' ? settled[4].value : [];
+
+    console.log(`[ExerciseResolution] Signal results for "${rawQuery}":`, {
+      exactNorm: exactAlias ? exactAlias.alias : null,
+      exactLex: exactLexAlias ? exactLexAlias.alias : null,
+      fuzzyNorm: fuzzyNormResults.length,
+      fuzzyLex: fuzzyLexResults.length,
+      text: textResults.length,
+      failures: settled.filter(s => s.status === 'rejected').length,
+    });
 
     // Phase 2: Populate scores
 
@@ -246,6 +270,21 @@ export function createExerciseResolutionService(
       }
     }
 
+    if (fuzzyNormResults.length > 0) {
+      console.log(`[ExerciseResolution] Fuzzy norm hits:`, fuzzyNormResults.slice(0, 5).map(f => ({ alias: f.alias, score: f.score.toFixed(3) })));
+    }
+    if (fuzzyLexResults.length > 0) {
+      console.log(`[ExerciseResolution] Fuzzy lex hits:`, fuzzyLexResults.slice(0, 5).map(f => ({ alias: f.alias, score: f.score.toFixed(3) })));
+    }
+
+    // Text match signal
+    for (const exercise of textResults) {
+      if (exercise.isActive) {
+        const scores = ensureCandidate(exercise, exercise.name);
+        scores.textMatch = 1.0;
+      }
+    }
+
     // For candidates that came in via exact or fuzzy_norm but not fuzzy_lex,
     // compute token overlap if we can get their aliasLex from the matchedOn
     for (const [, candidate] of candidates) {
@@ -256,6 +295,17 @@ export function createExerciseResolutionService(
       }
     }
 
+    // Log top candidates with per-signal scores
+    const topCandidates = [...candidates.entries()]
+      .map(([, c]) => ({ name: c.exercise.name, ...c.scores }))
+      .sort((a, b) => {
+        const scoreA = W_EXACT_NORM * a.exactNorm + W_EXACT_LEX * a.exactLex + W_TRGM_LEX * a.trgramLex + W_TRGM_NORM * a.trgramNorm + W_TOKEN_OVERLAP * a.tokenOverlap + W_TEXT_MATCH * a.textMatch;
+        const scoreB = W_EXACT_NORM * b.exactNorm + W_EXACT_LEX * b.exactLex + W_TRGM_LEX * b.trgramLex + W_TRGM_NORM * b.trgramNorm + W_TOKEN_OVERLAP * b.tokenOverlap + W_TEXT_MATCH * b.textMatch;
+        return scoreB - scoreA;
+      })
+      .slice(0, 5);
+    console.log(`[ExerciseResolution] Top candidates:`, JSON.stringify(topCandidates, null, 2));
+
     // Phase 3: Compute composite scores and rank
     const results: ExerciseSearchResult[] = [];
     for (const [, candidate] of candidates) {
@@ -265,7 +315,8 @@ export function createExerciseResolutionService(
         W_EXACT_LEX * scores.exactLex +
         W_TRGM_LEX * scores.trgramLex +
         W_TRGM_NORM * scores.trgramNorm +
-        W_TOKEN_OVERLAP * scores.tokenOverlap;
+        W_TOKEN_OVERLAP * scores.tokenOverlap +
+        W_TEXT_MATCH * scores.textMatch;
 
       const confidence = rawScore / MAX_SCORE;
       const method = dominantMethod(scores);

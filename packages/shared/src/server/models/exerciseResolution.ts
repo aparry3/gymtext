@@ -17,6 +17,7 @@ export interface SignalScores {
   trgramLex: number;
   trgramNorm: number;
   tokenOverlap: number;
+  textMatch: number;
 }
 
 export interface ExerciseSearchResult {
