@@ -424,3 +424,111 @@ export interface EnrollmentUpdateData {
   status?: EnrollmentStatus;
   currentWeek?: number;
 }
+
+// ============================================
+// Exercise Admin Types
+// ============================================
+
+// Exercise match method from resolution service
+export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector';
+
+// Admin exercise type for list display
+export interface AdminExercise {
+  id: string;
+  name: string;
+  category: string;
+  level: string;
+  equipment: string | null;
+  primaryMuscles: string[] | null;
+  secondaryMuscles: string[] | null;
+  force: string | null;
+  mechanic: string | null;
+  isActive: boolean;
+  aliasCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  // Resolution metadata (present when search uses resolution service)
+  matchMethod?: ExerciseMatchMethod;
+  matchConfidence?: number;
+  matchedOn?: string;
+}
+
+// Exercise alias for detail view
+export interface AdminExerciseAlias {
+  id: string;
+  alias: string;
+  aliasNormalized: string;
+  source: AliasSource;
+  confidenceScore: number | null;
+  createdAt: Date;
+}
+
+// Alias source type
+export type AliasSource = 'seed' | 'manual' | 'llm' | 'user' | 'fuzzy' | 'vector';
+
+// Exercise with aliases for detail view
+export interface AdminExerciseWithAliases extends AdminExercise {
+  description: string | null;
+  instructions: string[] | null;
+  tips: string[] | null;
+  aliases: AdminExerciseAlias[];
+}
+
+// Filter types for the exercises list
+export interface ExerciseFilters {
+  search?: string;
+  category?: string;
+  level?: string;
+  equipment?: string;
+  muscle?: string;
+  isActive?: boolean;
+}
+
+// Sorting options
+export interface ExerciseSort {
+  field: 'name' | 'category' | 'level' | 'createdAt';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for the exercises page
+export interface ExerciseStats {
+  total: number;
+  byCategory: Record<string, number>;
+  byLevel: Record<string, number>;
+  active: number;
+}
+
+// API Response type for list
+export interface AdminExercisesResponse {
+  exercises: AdminExercise[];
+  pagination: Pagination;
+  stats: ExerciseStats;
+}
+
+// API Response type for detail
+export interface AdminExerciseDetailResponse {
+  exercise: AdminExerciseWithAliases;
+}
+
+// Form data for create/update
+export interface ExerciseFormData {
+  name: string;
+  category: string;
+  level: string;
+  equipment?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  force?: string;
+  mechanic?: string;
+  description?: string;
+  instructions?: string[];
+  tips?: string[];
+  isActive?: boolean;
+}
+
+// Form data for creating a new alias
+export interface ExerciseAliasFormData {
+  alias: string;
+  source?: AliasSource;
+  confidenceScore?: number;
+}

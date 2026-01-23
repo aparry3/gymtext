@@ -5,6 +5,7 @@
  * Primary lookup method for resolving exercise names to canonical exercises.
  */
 
+import { sql } from 'kysely';
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import type {
   ExerciseAlias,
@@ -142,5 +143,35 @@ export class ExerciseAliasRepository extends BaseRepository {
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
+  }
+
+  /**
+   * Find aliases by fuzzy similarity using pg_trgm
+   * Returns aliases with similarity scores above threshold, ordered by similarity descending
+   */
+  async findByFuzzySimilarity(
+    normalizedQuery: string,
+    threshold: number = 0.6,
+    limit: number = 10
+  ): Promise<{ exerciseId: string; alias: string; aliasNormalized: string; score: number }[]> {
+    const results = await sql<{
+      exercise_id: string;
+      alias: string;
+      alias_normalized: string;
+      similarity: number;
+    }>`
+      SELECT exercise_id, alias, alias_normalized, similarity(alias_normalized, ${normalizedQuery}) as similarity
+      FROM exercise_aliases
+      WHERE similarity(alias_normalized, ${normalizedQuery}) > ${threshold}
+      ORDER BY similarity DESC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return results.rows.map((row) => ({
+      exerciseId: row.exercise_id,
+      alias: row.alias,
+      aliasNormalized: row.alias_normalized,
+      score: Number(row.similarity),
+    }));
   }
 }

@@ -206,4 +206,47 @@ export class ExerciseRepository extends BaseRepository {
 
     return results.map((r) => r.equipment).filter((e): e is string => e !== null);
   }
+
+  /**
+   * Update the embedding vector for an exercise
+   */
+  async updateEmbedding(id: string, embedding: number[]): Promise<void> {
+    const vectorStr = `[${embedding.join(',')}]`;
+    await sql`UPDATE exercises SET embedding = ${vectorStr}::vector WHERE id = ${id}`.execute(this.db);
+  }
+
+  /**
+   * Find exercises by vector cosine similarity
+   * Returns exercises with similarity score (1 - cosine distance)
+   */
+  async findByVectorSimilarity(
+    embedding: number[],
+    limit: number = 10
+  ): Promise<{ exercise: Exercise; score: number }[]> {
+    const vectorStr = `[${embedding.join(',')}]`;
+    const results = await sql<Exercise & { similarity: number }>`
+      SELECT *, 1 - (embedding <=> ${vectorStr}::vector) as similarity
+      FROM exercises
+      WHERE embedding IS NOT NULL AND is_active = true
+      ORDER BY embedding <=> ${vectorStr}::vector
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return results.rows.map((row) => ({
+      exercise: row,
+      score: Number(row.similarity),
+    }));
+  }
+
+  /**
+   * List all active exercises that are missing embeddings
+   */
+  async listMissingEmbeddings(limit: number = 100): Promise<Exercise[]> {
+    return await sql<Exercise>`
+      SELECT * FROM exercises
+      WHERE embedding IS NULL AND is_active = true
+      ORDER BY name ASC
+      LIMIT ${limit}
+    `.execute(this.db).then(r => r.rows);
+  }
 }

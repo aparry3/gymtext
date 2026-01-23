@@ -129,5 +129,9 @@ export type {
   ModificationToolDeps,
 } from './agents/modifications';
 
+// Exercise resolution service
+export { createExerciseResolutionService } from './domain/exercise/exerciseResolutionService';
+export type { ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
+
 // Profile service
 export { ProfileService } from './agents/profile';

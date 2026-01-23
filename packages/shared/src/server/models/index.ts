@@ -85,5 +85,13 @@ export type {
   AliasSource, ExerciseWithAliases
 } from './exercise';
 
+// Exercise resolution types
+export type {
+  ExerciseMatchMethod,
+  ExerciseSearchResult,
+  ExerciseResolutionResult,
+  ResolutionOptions,
+} from './exerciseResolution';
+
 // Re-export database types from _types
 export * from './_types';

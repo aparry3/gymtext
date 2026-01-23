@@ -47,6 +47,7 @@ import { createPlanModificationService, type PlanModificationServiceInstance } f
 import { createTrainingService, type TrainingServiceInstance } from './orchestration/trainingService';
 import { createModificationService, type ModificationServiceInstance } from './orchestration/modificationService';
 import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
+import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
 
 // Agent services
 import {
@@ -131,6 +132,9 @@ export interface ServiceContainer {
   enrollment: EnrollmentServiceInstance;
   programVersion: ProgramVersionServiceInstance;
   planInstance: PlanInstanceServiceInstance;
+
+  // Exercise resolution
+  exerciseResolution: ExerciseResolutionServiceInstance;
 }
 
 /**
@@ -173,6 +177,9 @@ export function createServices(
   const enrollment = createEnrollmentService(repos);
   const programVersion = createProgramVersionService(repos);
   const planInstance = createPlanInstanceService(repos);
+
+  // Exercise resolution (repos-only)
+  const exerciseResolution = createExerciseResolutionService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -433,6 +440,9 @@ export function createServices(
     enrollment,
     programVersion,
     planInstance,
+
+    // Exercise resolution
+    exerciseResolution,
   };
 }
 
@@ -511,4 +521,7 @@ export type {
   EnrollmentServiceInstance,
   ProgramVersionServiceInstance,
   PlanInstanceServiceInstance,
+
+  // Exercise resolution
+  ExerciseResolutionServiceInstance,
 };
