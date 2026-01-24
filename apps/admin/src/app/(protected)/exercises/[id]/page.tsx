@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AdminExerciseWithAliases, AdminExerciseAlias, AliasSource } from '@/components/admin/types'
+import { AdminExerciseWithAliases, AliasSource } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,16 +36,20 @@ import {
 
 interface EditFormState {
   name: string
-  category: string
-  level: string
-  equipment: string
+  type: string
+  mechanics: string
+  kineticChain: string
+  pressPlane: string
+  trainingGroups: string[]
+  movementPatterns: string[]
+  equipment: string[]
   primaryMuscles: string[]
   secondaryMuscles: string[]
-  force: string
-  mechanic: string
-  description: string
-  instructions: string[]
-  tips: string[]
+  modality: string
+  intensity: string
+  shortDescription: string
+  instructions: string
+  cues: string[]
   isActive: boolean
 }
 
@@ -62,16 +66,20 @@ export default function ExerciseDetailPage() {
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false)
   const [editForm, setEditForm] = useState<EditFormState>({
     name: '',
-    category: '',
-    level: '',
-    equipment: '',
+    type: '',
+    mechanics: '',
+    kineticChain: '',
+    pressPlane: '',
+    trainingGroups: [],
+    movementPatterns: [],
+    equipment: [],
     primaryMuscles: [],
     secondaryMuscles: [],
-    force: '',
-    mechanic: '',
-    description: '',
-    instructions: [],
-    tips: [],
+    modality: '',
+    intensity: '',
+    shortDescription: '',
+    instructions: '',
+    cues: [],
     isActive: true,
   })
 
@@ -92,16 +100,20 @@ export default function ExerciseDetailPage() {
       setExercise(data)
       setEditForm({
         name: data.name,
-        category: data.category,
-        level: data.level,
-        equipment: data.equipment || '',
+        type: data.type,
+        mechanics: data.mechanics || '',
+        kineticChain: data.kineticChain || '',
+        pressPlane: data.pressPlane || '',
+        trainingGroups: data.trainingGroups || [],
+        movementPatterns: data.movementPatterns || [],
+        equipment: data.equipment || [],
         primaryMuscles: data.primaryMuscles || [],
         secondaryMuscles: data.secondaryMuscles || [],
-        force: data.force || '',
-        mechanic: data.mechanic || '',
-        description: data.description || '',
-        instructions: data.instructions || [],
-        tips: data.tips || [],
+        modality: data.modality || '',
+        intensity: data.intensity || '',
+        shortDescription: data.shortDescription || '',
+        instructions: data.instructions || '',
+        cues: data.cues || [],
         isActive: data.isActive,
       })
     } catch (err) {
@@ -130,16 +142,20 @@ export default function ExerciseDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editForm.name,
-          category: editForm.category,
-          level: editForm.level,
-          equipment: editForm.equipment || null,
-          primaryMuscles: editForm.primaryMuscles.length > 0 ? editForm.primaryMuscles : null,
-          secondaryMuscles: editForm.secondaryMuscles.length > 0 ? editForm.secondaryMuscles : null,
-          force: editForm.force || null,
-          mechanic: editForm.mechanic || null,
-          description: editForm.description || null,
-          instructions: editForm.instructions.length > 0 ? editForm.instructions : null,
-          tips: editForm.tips.length > 0 ? editForm.tips : null,
+          type: editForm.type,
+          mechanics: editForm.mechanics || null,
+          kineticChain: editForm.kineticChain || null,
+          pressPlane: editForm.pressPlane || null,
+          trainingGroups: editForm.trainingGroups.length > 0 ? editForm.trainingGroups : [],
+          movementPatterns: editForm.movementPatterns.length > 0 ? editForm.movementPatterns : [],
+          equipment: editForm.equipment.length > 0 ? editForm.equipment : [],
+          primaryMuscles: editForm.primaryMuscles.length > 0 ? editForm.primaryMuscles : [],
+          secondaryMuscles: editForm.secondaryMuscles.length > 0 ? editForm.secondaryMuscles : [],
+          modality: editForm.modality || null,
+          intensity: editForm.intensity || null,
+          shortDescription: editForm.shortDescription || null,
+          instructions: editForm.instructions || null,
+          cues: editForm.cues.length > 0 ? editForm.cues : [],
           isActive: editForm.isActive,
         }),
       })
@@ -164,16 +180,20 @@ export default function ExerciseDetailPage() {
     if (exercise) {
       setEditForm({
         name: exercise.name,
-        category: exercise.category,
-        level: exercise.level,
-        equipment: exercise.equipment || '',
+        type: exercise.type,
+        mechanics: exercise.mechanics || '',
+        kineticChain: exercise.kineticChain || '',
+        pressPlane: exercise.pressPlane || '',
+        trainingGroups: exercise.trainingGroups || [],
+        movementPatterns: exercise.movementPatterns || [],
+        equipment: exercise.equipment || [],
         primaryMuscles: exercise.primaryMuscles || [],
         secondaryMuscles: exercise.secondaryMuscles || [],
-        force: exercise.force || '',
-        mechanic: exercise.mechanic || '',
-        description: exercise.description || '',
-        instructions: exercise.instructions || [],
-        tips: exercise.tips || [],
+        modality: exercise.modality || '',
+        intensity: exercise.intensity || '',
+        shortDescription: exercise.shortDescription || '',
+        instructions: exercise.instructions || '',
+        cues: exercise.cues || [],
         isActive: exercise.isActive,
       })
     }
@@ -281,7 +301,7 @@ export default function ExerciseDetailPage() {
     return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ')
   }
 
-  const categoryColors: Record<string, string> = {
+  const typeColors: Record<string, string> = {
     strength: 'bg-blue-100 text-blue-800',
     stretching: 'bg-green-100 text-green-800',
     cardio: 'bg-red-100 text-red-800',
@@ -289,12 +309,6 @@ export default function ExerciseDetailPage() {
     strongman: 'bg-orange-100 text-orange-800',
     powerlifting: 'bg-indigo-100 text-indigo-800',
     'olympic weightlifting': 'bg-yellow-100 text-yellow-800',
-  }
-
-  const levelColors: Record<string, string> = {
-    beginner: 'bg-green-100 text-green-800',
-    intermediate: 'bg-yellow-100 text-yellow-800',
-    expert: 'bg-red-100 text-red-800',
   }
 
   const sourceColors: Record<AliasSource, string> = {
@@ -341,39 +355,59 @@ export default function ExerciseDetailPage() {
               <>
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-2xl font-bold">{exercise.name}</h1>
-                  <Badge className={`${categoryColors[exercise.category] || 'bg-gray-100 text-gray-800'} border-0`}>
-                    {formatLabel(exercise.category)}
+                  <Badge className={`${typeColors[exercise.type] || 'bg-gray-100 text-gray-800'} border-0`}>
+                    {formatLabel(exercise.type)}
                   </Badge>
-                  <Badge className={`${levelColors[exercise.level] || 'bg-gray-100 text-gray-800'} border-0`}>
-                    {formatLabel(exercise.level)}
-                  </Badge>
+                  {exercise.mechanics && (
+                    <Badge variant="outline">
+                      {formatLabel(exercise.mechanics)}
+                    </Badge>
+                  )}
                   <Badge variant={exercise.isActive ? 'default' : 'secondary'}>
                     {exercise.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
 
-                {exercise.description && (
-                  <p className="text-muted-foreground">{exercise.description}</p>
+                {exercise.shortDescription && (
+                  <p className="text-muted-foreground">{exercise.shortDescription}</p>
                 )}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Equipment:</span>
-                    <div className="font-medium">{exercise.equipment ? formatLabel(exercise.equipment) : '-'}</div>
+                    <div className="font-medium">
+                      {exercise.equipment && exercise.equipment.length > 0
+                        ? exercise.equipment.map(formatLabel).join(', ')
+                        : '-'}
+                    </div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Force:</span>
-                    <div className="font-medium">{exercise.force ? formatLabel(exercise.force) : '-'}</div>
+                    <span className="text-muted-foreground">Kinetic Chain:</span>
+                    <div className="font-medium">{exercise.kineticChain ? formatLabel(exercise.kineticChain) : '-'}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Mechanic:</span>
-                    <div className="font-medium">{exercise.mechanic ? formatLabel(exercise.mechanic) : '-'}</div>
+                    <span className="text-muted-foreground">Press Plane:</span>
+                    <div className="font-medium">{exercise.pressPlane ? formatLabel(exercise.pressPlane) : '-'}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Aliases:</span>
                     <div className="font-medium">{exercise.aliases.length}</div>
                   </div>
                 </div>
+
+                {/* Training Groups */}
+                {exercise.trainingGroups && exercise.trainingGroups.length > 0 && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Training Groups: </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {exercise.trainingGroups.map((group) => (
+                        <Badge key={group} variant="outline" className="text-xs">
+                          {formatLabel(group)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Muscles */}
                 <div className="space-y-2">
@@ -458,38 +492,32 @@ export default function ExerciseDetailPage() {
         <Tabs defaultValue="instructions">
           <TabsList>
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
-            <TabsTrigger value="tips">Tips</TabsTrigger>
+            <TabsTrigger value="cues">Cues</TabsTrigger>
             <TabsTrigger value="aliases">Aliases ({exercise.aliases.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="instructions" className="mt-4">
             <Card className="p-6">
-              {exercise.instructions && exercise.instructions.length > 0 ? (
-                <ol className="list-decimal list-inside space-y-2">
-                  {exercise.instructions.map((instruction, index) => (
-                    <li key={index} className="text-sm leading-relaxed">
-                      {instruction}
-                    </li>
-                  ))}
-                </ol>
+              {exercise.instructions ? (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{exercise.instructions}</p>
               ) : (
                 <p className="text-muted-foreground text-sm">No instructions available.</p>
               )}
             </Card>
           </TabsContent>
 
-          <TabsContent value="tips" className="mt-4">
+          <TabsContent value="cues" className="mt-4">
             <Card className="p-6">
-              {exercise.tips && exercise.tips.length > 0 ? (
+              {exercise.cues && exercise.cues.length > 0 ? (
                 <ul className="list-disc list-inside space-y-2">
-                  {exercise.tips.map((tip, index) => (
+                  {exercise.cues.map((cue, index) => (
                     <li key={index} className="text-sm leading-relaxed">
-                      {tip}
+                      {cue}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground text-sm">No tips available.</p>
+                <p className="text-muted-foreground text-sm">No cues available.</p>
               )}
             </Card>
           </TabsContent>
@@ -575,10 +603,10 @@ interface EditFormProps {
 }
 
 function EditForm({ editForm, setEditForm }: EditFormProps) {
-  const levels = ['beginner', 'intermediate', 'expert']
-  const categories = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
-  const forces = ['push', 'pull', 'static']
-  const mechanics = ['compound', 'isolation']
+  const types = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
+  const mechanicsOptions = ['compound', 'isolation']
+  const kineticChainOptions = ['open', 'closed']
+  const pressPlaneOptions = ['horizontal', 'vertical', 'lateral']
 
   return (
     <div className="space-y-4">
@@ -592,81 +620,111 @@ function EditForm({ editForm, setEditForm }: EditFormProps) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Category</label>
+          <label className="text-sm font-medium text-gray-700">Type</label>
           <select
-            value={editForm.category}
-            onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+            value={editForm.type}
+            onChange={(e) => setEditForm(prev => ({ ...prev, type: e.target.value }))}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            {types.map((t) => (
+              <option key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Level</label>
+          <label className="text-sm font-medium text-gray-700">Mechanics</label>
           <select
-            value={editForm.level}
-            onChange={(e) => setEditForm(prev => ({ ...prev, level: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            {levels.map((level) => (
-              <option key={level} value={level}>
-                {level.charAt(0).toUpperCase() + level.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Equipment</label>
-          <Input
-            value={editForm.equipment}
-            onChange={(e) => setEditForm(prev => ({ ...prev, equipment: e.target.value }))}
-            className="mt-1"
-            placeholder="e.g., barbell, dumbbell"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Force</label>
-          <select
-            value={editForm.force}
-            onChange={(e) => setEditForm(prev => ({ ...prev, force: e.target.value }))}
+            value={editForm.mechanics}
+            onChange={(e) => setEditForm(prev => ({ ...prev, mechanics: e.target.value }))}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="">None</option>
-            {forces.map((force) => (
-              <option key={force} value={force}>
-                {force.charAt(0).toUpperCase() + force.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Mechanic</label>
-          <select
-            value={editForm.mechanic}
-            onChange={(e) => setEditForm(prev => ({ ...prev, mechanic: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">None</option>
-            {mechanics.map((mech) => (
+            {mechanicsOptions.map((mech) => (
               <option key={mech} value={mech}>
                 {mech.charAt(0).toUpperCase() + mech.slice(1)}
               </option>
             ))}
           </select>
         </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Kinetic Chain</label>
+          <select
+            value={editForm.kineticChain}
+            onChange={(e) => setEditForm(prev => ({ ...prev, kineticChain: e.target.value }))}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">None</option>
+            {kineticChainOptions.map((kc) => (
+              <option key={kc} value={kc}>
+                {kc.charAt(0).toUpperCase() + kc.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Press Plane</label>
+          <select
+            value={editForm.pressPlane}
+            onChange={(e) => setEditForm(prev => ({ ...prev, pressPlane: e.target.value }))}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">None</option>
+            {pressPlaneOptions.map((pp) => (
+              <option key={pp} value={pp}>
+                {pp.charAt(0).toUpperCase() + pp.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Equipment (comma-separated)</label>
+          <Input
+            value={editForm.equipment.join(', ')}
+            onChange={(e) => setEditForm(prev => ({
+              ...prev,
+              equipment: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+            }))}
+            className="mt-1"
+            placeholder="e.g., barbell, bench"
+          />
+        </div>
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-700">Description</label>
+        <label className="text-sm font-medium text-gray-700">Short Description</label>
         <textarea
-          value={editForm.description}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+          value={editForm.shortDescription}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditForm(prev => ({ ...prev, shortDescription: e.target.value }))}
           className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Training Groups (comma-separated)</label>
+        <Input
+          value={editForm.trainingGroups.join(', ')}
+          onChange={(e) => setEditForm(prev => ({
+            ...prev,
+            trainingGroups: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+          }))}
+          className="mt-1"
+          placeholder="e.g., push, chest"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">Movement Patterns (comma-separated)</label>
+        <Input
+          value={editForm.movementPatterns.join(', ')}
+          onChange={(e) => setEditForm(prev => ({
+            ...prev,
+            movementPatterns: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+          }))}
+          className="mt-1"
+          placeholder="e.g., horizontal press, push"
         />
       </div>
 

@@ -31,17 +31,17 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
 /**
  * Compose embedding text for an exercise (name + context)
- * Example: "barbell bench press | chest, shoulders | push | strength"
+ * Example: "barbell bench press | chest, shoulders | open | strength"
  */
 export function composeExerciseEmbeddingText(exercise: {
   name: string;
   primaryMuscles?: string[] | null;
-  force?: string | null;
-  category?: string | null;
+  kineticChain?: string | null;
+  type?: string | null;
 }): string {
   const parts = [exercise.name];
   if (exercise.primaryMuscles?.length) parts.push(exercise.primaryMuscles.join(', '));
-  if (exercise.force) parts.push(exercise.force);
-  if (exercise.category) parts.push(exercise.category);
+  if (exercise.kineticChain) parts.push(exercise.kineticChain);
+  if (exercise.type) parts.push(exercise.type);
   return parts.join(' | ');
 }

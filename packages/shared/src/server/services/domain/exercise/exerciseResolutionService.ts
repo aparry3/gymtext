@@ -10,7 +10,7 @@
  * 3. Trigram lex (weight: 1.5) — pg_trgm similarity on alias_lex
  * 4. Trigram norm (weight: 1.0) — pg_trgm similarity on alias_normalized
  * 5. Token overlap (weight: 1.0) — Jaccard similarity on lex tokens
- * 6. Text match (weight: 1.5) — ILIKE/text search on alias_searchable
+ * 6. Text match (weight: 1.5) — ILIKE/text search on alias_normalized
  * 7. Intent priority (weight: 2.5) — Popularity-based ranking boost
  */
 
@@ -23,7 +23,7 @@ import type {
   SignalScores,
 } from '@/server/models/exerciseResolution';
 import type { Exercise } from '@/server/models/exercise';
-import { normalizeExerciseName, normalizeForLex } from '@/server/utils/exerciseNormalization';
+import { normalizeForSearch, normalizeForLex } from '@/server/utils/exerciseNormalization';
 
 export type { ExerciseResolutionServiceInstance } from '@/server/models/exerciseResolution';
 
@@ -84,7 +84,7 @@ export function createExerciseResolutionService(
     options: ResolutionOptions = {}
   ): Promise<ExerciseResolutionResult | null> {
     const { learnAlias = true } = options;
-    const normalizedInput = normalizeExerciseName(rawName);
+    const normalizedInput = normalizeForSearch(rawName);
     const lexInput = normalizeForLex(rawName);
 
     // Short-circuit: exact match on alias_normalized
@@ -146,7 +146,7 @@ export function createExerciseResolutionService(
     query: string,
     options: ResolutionOptions = {}
   ): Promise<ExerciseSearchResult[]> {
-    const normalizedQuery = normalizeExerciseName(query);
+    const normalizedQuery = normalizeForSearch(query);
     const lexQuery = normalizeForLex(query);
     return multiSignalSearch(query, normalizedQuery, lexQuery, options);
   }
@@ -185,7 +185,7 @@ export function createExerciseResolutionService(
 
     // Phase 1: Candidate Generation (parallel where possible)
 
-    // 1a. Exact match on alias_normalized/alias_searchable
+    // 1a. Exact match on alias_normalized
     const exactPromise = repos.exerciseAlias.findByNormalizedAlias(normalizedQuery);
 
     // 1b. Exact match on alias_lex
@@ -201,7 +201,7 @@ export function createExerciseResolutionService(
       lexQuery, fuzzyThreshold, 50
     );
 
-    // 1e. Text/ILIKE on alias_searchable
+    // 1e. Text/ILIKE on alias_normalized
     const textPromise = repos.exerciseAlias.searchByText(rawQuery, 50);
 
     const settled = await Promise.allSettled([

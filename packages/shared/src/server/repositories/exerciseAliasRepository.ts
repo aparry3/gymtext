@@ -51,17 +51,14 @@ export class ExerciseAliasRepository extends BaseRepository {
 
   /**
    * Find alias by normalized form (primary lookup method)
-   * This is the main entry point for resolving exercise names
+   * This is the main entry point for resolving exercise names.
+   * alias_normalized stores the stripped alphanumeric form.
    */
   async findByNormalizedAlias(normalizedAlias: string): Promise<ExerciseAlias | undefined> {
-    const searchable = normalizeForSearch(normalizedAlias);
     return await this.db
       .selectFrom('exerciseAliases')
       .selectAll()
-      .where((eb) => eb.or([
-        eb('aliasNormalized', '=', normalizedAlias),
-        eb('aliasSearchable', '=', searchable),
-      ]))
+      .where('aliasNormalized', '=', normalizedAlias)
       .executeTakeFirst();
   }
 
@@ -152,7 +149,7 @@ export class ExerciseAliasRepository extends BaseRepository {
   }
 
   /**
-   * Search aliases by normalized text (ILIKE on alias_searchable column).
+   * Search aliases by normalized text (ILIKE on alias_normalized column).
    * Returns deduplicated active exercises matching the query.
    */
   async searchByText(query: string, limit: number = 10): Promise<Exercise[]> {
@@ -165,7 +162,7 @@ export class ExerciseAliasRepository extends BaseRepository {
       .selectFrom('exerciseAliases')
       .innerJoin('exercises', 'exercises.id', 'exerciseAliases.exerciseId')
       .selectAll('exercises')
-      .where('exerciseAliases.aliasSearchable', 'ilike', like)
+      .where('exerciseAliases.aliasNormalized', 'ilike', like)
       .where('exercises.isActive', '=', true)
       .distinctOn('exercises.id')
       .limit(limit)

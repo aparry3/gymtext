@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
-import { normalizeExerciseName, normalizeForLex } from '@gymtext/shared/server';
+import { normalizeForSearch, normalizeForLex } from '@gymtext/shared/server';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -26,16 +26,22 @@ export async function GET(request: Request, { params }: RouteParams) {
     const exerciseWithAliases = {
       id: exercise.id,
       name: exercise.name,
-      category: exercise.category,
-      level: exercise.level,
+      slug: exercise.slug,
+      type: exercise.type,
+      mechanics: exercise.mechanics,
+      kineticChain: exercise.kineticChain,
       equipment: exercise.equipment,
       primaryMuscles: exercise.primaryMuscles,
       secondaryMuscles: exercise.secondaryMuscles,
-      force: exercise.force,
-      mechanic: exercise.mechanic,
-      description: exercise.description,
+      trainingGroups: exercise.trainingGroups,
+      movementPatterns: exercise.movementPatterns,
+      pressPlane: exercise.pressPlane,
+      modality: exercise.modality,
+      intensity: exercise.intensity,
+      shortDescription: exercise.shortDescription,
       instructions: exercise.instructions,
-      tips: exercise.tips,
+      cues: exercise.cues,
+      popularity: Number(exercise.popularity) || 0,
       isActive: exercise.isActive,
       aliasCount: aliases.length,
       createdAt: exercise.createdAt,
@@ -77,16 +83,21 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const {
       name,
-      category,
-      level,
+      slug,
+      type,
+      mechanics,
+      kineticChain,
+      pressPlane,
+      trainingGroups,
+      movementPatterns,
       equipment,
       primaryMuscles,
       secondaryMuscles,
-      force,
-      mechanic,
-      description,
+      modality,
+      intensity,
+      shortDescription,
       instructions,
-      tips,
+      cues,
       isActive,
       // Action-based updates
       action,
@@ -127,7 +138,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     // Handle new alias creation
     if (newAlias) {
-      const normalizedAlias = normalizeExerciseName(newAlias.alias);
+      const normalizedAlias = normalizeForSearch(newAlias.alias);
 
       // Check if normalized alias already exists
       const existingAlias = await repos.exerciseAlias.findByNormalizedAlias(normalizedAlias);
@@ -162,17 +173,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ success: true, data: updated });
     }
 
-    // Validate level if provided
-    if (level) {
-      const validLevels = ['beginner', 'intermediate', 'expert'];
-      if (!validLevels.includes(level)) {
-        return NextResponse.json(
-          { success: false, message: 'level must be beginner, intermediate, or expert' },
-          { status: 400 }
-        );
-      }
-    }
-
     // If name is being changed, check for duplicates
     if (name && name !== existing.name) {
       const nameExists = await repos.exercise.findByName(name);
@@ -187,16 +187,21 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
-    if (category !== undefined) updates.category = category;
-    if (level !== undefined) updates.level = level;
+    if (slug !== undefined) updates.slug = slug;
+    if (type !== undefined) updates.type = type;
+    if (mechanics !== undefined) updates.mechanics = mechanics;
+    if (kineticChain !== undefined) updates.kineticChain = kineticChain;
+    if (pressPlane !== undefined) updates.pressPlane = pressPlane;
+    if (trainingGroups !== undefined) updates.trainingGroups = trainingGroups;
+    if (movementPatterns !== undefined) updates.movementPatterns = movementPatterns;
     if (equipment !== undefined) updates.equipment = equipment;
     if (primaryMuscles !== undefined) updates.primaryMuscles = primaryMuscles;
     if (secondaryMuscles !== undefined) updates.secondaryMuscles = secondaryMuscles;
-    if (force !== undefined) updates.force = force;
-    if (mechanic !== undefined) updates.mechanic = mechanic;
-    if (description !== undefined) updates.description = description;
+    if (modality !== undefined) updates.modality = modality;
+    if (intensity !== undefined) updates.intensity = intensity;
+    if (shortDescription !== undefined) updates.shortDescription = shortDescription;
     if (instructions !== undefined) updates.instructions = instructions;
-    if (tips !== undefined) updates.tips = tips;
+    if (cues !== undefined) updates.cues = cues;
     if (isActive !== undefined) updates.isActive = isActive;
 
     if (Object.keys(updates).length === 0) {

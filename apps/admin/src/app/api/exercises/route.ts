@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 import type { ExerciseFilters, ExerciseSort } from '@/components/admin/types';
-import { normalizeExerciseName, normalizeForLex } from '@gymtext/shared/server';
+import { normalizeForSearch, normalizeForLex } from '@gymtext/shared/server';
 
 export async function GET(request: Request) {
   try {
@@ -14,16 +14,16 @@ export async function GET(request: Request) {
       filters.search = searchParams.get('search')!;
     }
 
-    if (searchParams.get('category')) {
-      filters.category = searchParams.get('category')!;
+    if (searchParams.get('type')) {
+      filters.type = searchParams.get('type')!;
     }
 
-    if (searchParams.get('level')) {
-      filters.level = searchParams.get('level')!;
+    if (searchParams.get('mechanics')) {
+      filters.mechanics = searchParams.get('mechanics')!;
     }
 
-    if (searchParams.get('equipment')) {
-      filters.equipment = searchParams.get('equipment')!;
+    if (searchParams.get('trainingGroup')) {
+      filters.trainingGroup = searchParams.get('trainingGroup')!;
     }
 
     if (searchParams.get('muscle')) {
@@ -74,13 +74,15 @@ export async function GET(request: Request) {
       const exercisesWithMatch = searchResults.map(r => ({
         id: r.exercise.id,
         name: r.exercise.name,
-        category: r.exercise.category,
-        level: r.exercise.level,
+        slug: r.exercise.slug,
+        type: r.exercise.type,
+        mechanics: r.exercise.mechanics,
+        kineticChain: r.exercise.kineticChain,
         equipment: r.exercise.equipment,
         primaryMuscles: r.exercise.primaryMuscles,
         secondaryMuscles: r.exercise.secondaryMuscles,
-        force: r.exercise.force,
-        mechanic: r.exercise.mechanic,
+        trainingGroups: r.exercise.trainingGroups,
+        popularity: Number(r.exercise.popularity) || 0,
         isActive: r.exercise.isActive,
         aliasCount: aliasCounts.get(r.exercise.id) || 0,
         createdAt: r.exercise.createdAt,
@@ -102,8 +104,7 @@ export async function GET(request: Request) {
           },
           stats: {
             total: exercisesWithMatch.length,
-            byCategory: {},
-            byLevel: {},
+            byType: {},
             active: exercisesWithMatch.filter(e => e.isActive).length,
           },
         }
@@ -118,16 +119,18 @@ export async function GET(request: Request) {
       .orderBy('name', 'asc')
       .execute();
 
-    if (filters.category) {
-      exercises = exercises.filter(e => e.category === filters.category);
+    if (filters.type) {
+      exercises = exercises.filter(e => e.type === filters.type);
     }
 
-    if (filters.level) {
-      exercises = exercises.filter(e => e.level === filters.level);
+    if (filters.mechanics) {
+      exercises = exercises.filter(e => e.mechanics === filters.mechanics);
     }
 
-    if (filters.equipment) {
-      exercises = exercises.filter(e => e.equipment === filters.equipment);
+    if (filters.trainingGroup) {
+      exercises = exercises.filter(e =>
+        e.trainingGroups?.includes(filters.trainingGroup!)
+      );
     }
 
     if (filters.muscle) {
@@ -163,15 +166,16 @@ export async function GET(request: Request) {
     const exercisesWithStats = exercises.map(e => ({
       id: e.id,
       name: e.name,
-      category: e.category,
-      level: e.level,
+      slug: e.slug,
+      type: e.type,
+      mechanics: e.mechanics,
+      kineticChain: e.kineticChain,
       equipment: e.equipment,
       primaryMuscles: e.primaryMuscles,
       secondaryMuscles: e.secondaryMuscles,
-      force: e.force,
-      mechanic: e.mechanic,
-      isActive: e.isActive,
+      trainingGroups: e.trainingGroups,
       popularity: Number(e.popularity) || 0,
+      isActive: e.isActive,
       aliasCount: aliasCounts.get(e.id) || 0,
       createdAt: e.createdAt,
       updatedAt: e.updatedAt,
@@ -185,11 +189,8 @@ export async function GET(request: Request) {
           case 'name':
             comparison = a.name.localeCompare(b.name);
             break;
-          case 'category':
-            comparison = a.category.localeCompare(b.category);
-            break;
-          case 'level':
-            comparison = a.level.localeCompare(b.level);
+          case 'type':
+            comparison = a.type.localeCompare(b.type);
             break;
           case 'createdAt':
             comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -203,20 +204,17 @@ export async function GET(request: Request) {
     }
 
     // Calculate stats (before pagination)
-    const byCategory: Record<string, number> = {};
-    const byLevel: Record<string, number> = {};
+    const byType: Record<string, number> = {};
     let activeCount = 0;
 
     for (const e of exercisesWithStats) {
-      byCategory[e.category] = (byCategory[e.category] || 0) + 1;
-      byLevel[e.level] = (byLevel[e.level] || 0) + 1;
+      byType[e.type] = (byType[e.type] || 0) + 1;
       if (e.isActive) activeCount++;
     }
 
     const stats = {
       total: exercisesWithStats.length,
-      byCategory,
-      byLevel,
+      byType,
       active: activeCount,
     };
 
@@ -259,35 +257,37 @@ export async function POST(request: Request) {
 
     const {
       name,
-      category,
-      level,
+      slug,
+      type,
+      mechanics,
+      kineticChain,
+      pressPlane,
+      trainingGroups,
+      movementPatterns,
       equipment,
       primaryMuscles,
       secondaryMuscles,
-      force,
-      mechanic,
-      description,
+      modality,
+      intensity,
+      shortDescription,
       instructions,
-      tips,
+      cues,
       isActive
     } = body;
 
     // Validate required fields
-    if (!name || !category || !level) {
+    if (!name || !type) {
       return NextResponse.json(
-        { success: false, message: 'name, category, and level are required' },
+        { success: false, message: 'name and type are required' },
         { status: 400 }
       );
     }
 
-    // Validate level
-    const validLevels = ['beginner', 'intermediate', 'expert'];
-    if (!validLevels.includes(level)) {
-      return NextResponse.json(
-        { success: false, message: 'level must be beginner, intermediate, or expert' },
-        { status: 400 }
-      );
-    }
+    // Generate slug from name if not provided
+    const exerciseSlug = slug || name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
 
     const { repos } = await getAdminContext();
 
@@ -303,21 +303,26 @@ export async function POST(request: Request) {
     // Create the exercise
     const exercise = await repos.exercise.create({
       name,
-      category,
-      level,
-      equipment: equipment || null,
-      primaryMuscles: primaryMuscles || null,
-      secondaryMuscles: secondaryMuscles || null,
-      force: force || null,
-      mechanic: mechanic || null,
-      description: description || null,
-      instructions: instructions || null,
-      tips: tips || null,
+      slug: exerciseSlug,
+      type,
+      mechanics: mechanics || 'compound',
+      kineticChain: kineticChain || 'open',
+      pressPlane: pressPlane || '',
+      trainingGroups: trainingGroups || [],
+      movementPatterns: movementPatterns || [],
+      equipment: equipment || [],
+      primaryMuscles: primaryMuscles || [],
+      secondaryMuscles: secondaryMuscles || [],
+      modality: modality || '',
+      intensity: intensity || '',
+      shortDescription: shortDescription || '',
+      instructions: instructions || '',
+      cues: cues || [],
       isActive: isActive ?? true,
     });
 
     // Create initial alias (normalized name)
-    const normalizedAlias = normalizeExerciseName(name);
+    const normalizedAlias = normalizeForSearch(name);
     await repos.exerciseAlias.create({
       exerciseId: exercise.id,
       alias: name,

@@ -430,19 +430,21 @@ export interface EnrollmentUpdateData {
 // ============================================
 
 // Exercise match method from resolution service
-export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector' | 'text';
+export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector' | 'text' | 'exact_lex' | 'fuzzy_lex' | 'multi_signal';
 
 // Admin exercise type for list display
 export interface AdminExercise {
   id: string;
   name: string;
-  category: string;
-  level: string;
-  equipment: string | null;
-  primaryMuscles: string[] | null;
-  secondaryMuscles: string[] | null;
-  force: string | null;
-  mechanic: string | null;
+  slug: string;
+  type: string;
+  mechanics: string;
+  kineticChain: string;
+  equipment: string[];
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  trainingGroups: string[];
+  popularity: number;
   isActive: boolean;
   aliasCount: number;
   createdAt: Date;
@@ -468,33 +470,36 @@ export type AliasSource = 'seed' | 'manual' | 'llm' | 'user' | 'fuzzy' | 'vector
 
 // Exercise with aliases for detail view
 export interface AdminExerciseWithAliases extends AdminExercise {
-  description: string | null;
-  instructions: string[] | null;
-  tips: string[] | null;
+  shortDescription: string;
+  instructions: string;
+  cues: string[];
+  movementPatterns: string[];
+  pressPlane: string;
+  modality: string;
+  intensity: string;
   aliases: AdminExerciseAlias[];
 }
 
 // Filter types for the exercises list
 export interface ExerciseFilters {
   search?: string;
-  category?: string;
-  level?: string;
-  equipment?: string;
+  type?: string;
+  mechanics?: string;
+  trainingGroup?: string;
   muscle?: string;
   isActive?: boolean;
 }
 
 // Sorting options
 export interface ExerciseSort {
-  field: 'name' | 'category' | 'level' | 'createdAt' | 'popularity';
+  field: 'name' | 'type' | 'createdAt' | 'popularity';
   direction: 'asc' | 'desc';
 }
 
 // Stats for the exercises page
 export interface ExerciseStats {
   total: number;
-  byCategory: Record<string, number>;
-  byLevel: Record<string, number>;
+  byType: Record<string, number>;
   active: number;
 }
 
@@ -513,16 +518,21 @@ export interface AdminExerciseDetailResponse {
 // Form data for create/update
 export interface ExerciseFormData {
   name: string;
-  category: string;
-  level: string;
-  equipment?: string;
+  slug?: string;
+  type: string;
+  mechanics?: string;
+  kineticChain?: string;
+  pressPlane?: string;
+  trainingGroups?: string[];
+  movementPatterns?: string[];
+  equipment?: string[];
   primaryMuscles?: string[];
   secondaryMuscles?: string[];
-  force?: string;
-  mechanic?: string;
-  description?: string;
-  instructions?: string[];
-  tips?: string[];
+  modality?: string;
+  intensity?: string;
+  shortDescription?: string;
+  instructions?: string;
+  cues?: string[];
   isActive?: boolean;
 }
 

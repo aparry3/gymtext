@@ -14,10 +14,10 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 
-const levels = ['beginner', 'intermediate', 'expert']
-const categories = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
-const forces = ['push', 'pull', 'static']
-const mechanics = ['compound', 'isolation']
+const types = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
+const mechanicsOptions = ['compound', 'isolation']
+const kineticChainOptions = ['open', 'closed']
+const pressPlaneOptions = ['horizontal', 'vertical', 'lateral']
 
 export default function CreateExercisePage() {
   const router = useRouter()
@@ -26,16 +26,21 @@ export default function CreateExercisePage() {
 
   const [form, setForm] = useState({
     name: '',
-    category: 'strength',
-    level: 'intermediate',
+    slug: '',
+    type: 'strength',
+    mechanics: 'compound',
+    kineticChain: 'open',
+    pressPlane: '',
+    trainingGroups: '',
+    movementPatterns: '',
     equipment: '',
     primaryMuscles: '',
     secondaryMuscles: '',
-    force: '',
-    mechanic: '',
-    description: '',
+    modality: '',
+    intensity: '',
+    shortDescription: '',
     instructions: '',
-    tips: '',
+    cues: '',
     isActive: true,
   })
 
@@ -48,12 +53,8 @@ export default function CreateExercisePage() {
       setError('Exercise name is required')
       return
     }
-    if (!form.category) {
-      setError('Category is required')
-      return
-    }
-    if (!form.level) {
-      setError('Level is required')
+    if (!form.type) {
+      setError('Type is required')
       return
     }
 
@@ -71,13 +72,23 @@ export default function CreateExercisePage() {
         .map(s => s.trim().toLowerCase())
         .filter(Boolean)
 
-      // Parse instructions and tips (one per line)
-      const instructions = form.instructions
-        .split('\n')
-        .map(s => s.trim())
+      const equipment = form.equipment
+        .split(',')
+        .map(s => s.trim().toLowerCase())
         .filter(Boolean)
 
-      const tips = form.tips
+      const trainingGroups = form.trainingGroups
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+
+      const movementPatterns = form.movementPatterns
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+
+      // Parse cues (one per line)
+      const cues = form.cues
         .split('\n')
         .map(s => s.trim())
         .filter(Boolean)
@@ -87,16 +98,21 @@ export default function CreateExercisePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name.trim(),
-          category: form.category,
-          level: form.level,
-          equipment: form.equipment.trim() || undefined,
+          slug: form.slug.trim() || undefined,
+          type: form.type,
+          mechanics: form.mechanics || undefined,
+          kineticChain: form.kineticChain || undefined,
+          pressPlane: form.pressPlane || undefined,
+          trainingGroups: trainingGroups.length > 0 ? trainingGroups : undefined,
+          movementPatterns: movementPatterns.length > 0 ? movementPatterns : undefined,
+          equipment: equipment.length > 0 ? equipment : undefined,
           primaryMuscles: primaryMuscles.length > 0 ? primaryMuscles : undefined,
           secondaryMuscles: secondaryMuscles.length > 0 ? secondaryMuscles : undefined,
-          force: form.force || undefined,
-          mechanic: form.mechanic || undefined,
-          description: form.description.trim() || undefined,
-          instructions: instructions.length > 0 ? instructions : undefined,
-          tips: tips.length > 0 ? tips : undefined,
+          modality: form.modality.trim() || undefined,
+          intensity: form.intensity.trim() || undefined,
+          shortDescription: form.shortDescription.trim() || undefined,
+          instructions: form.instructions.trim() || undefined,
+          cues: cues.length > 0 ? cues : undefined,
           isActive: form.isActive,
         }),
       })
@@ -165,102 +181,151 @@ export default function CreateExercisePage() {
               />
             </div>
 
+            {/* Slug */}
+            <div className="space-y-2">
+              <label htmlFor="slug" className="text-sm font-medium">
+                Slug
+              </label>
+              <Input
+                id="slug"
+                value={form.slug}
+                onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))}
+                placeholder="Auto-generated from name if empty"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                URL-safe identifier. Leave empty to auto-generate from name.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Category */}
+              {/* Type */}
               <div className="space-y-2">
-                <label htmlFor="category" className="text-sm font-medium">
-                  Category <span className="text-destructive">*</span>
+                <label htmlFor="type" className="text-sm font-medium">
+                  Type <span className="text-destructive">*</span>
                 </label>
                 <select
-                  id="category"
-                  value={form.category}
-                  onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
+                  id="type"
+                  value={form.type}
+                  onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value }))}
                   disabled={isSubmitting}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {formatLabel(cat)}
+                  {types.map((t) => (
+                    <option key={t} value={t}>
+                      {formatLabel(t)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Level */}
+              {/* Mechanics */}
               <div className="space-y-2">
-                <label htmlFor="level" className="text-sm font-medium">
-                  Level <span className="text-destructive">*</span>
+                <label htmlFor="mechanics" className="text-sm font-medium">
+                  Mechanics
                 </label>
                 <select
-                  id="level"
-                  value={form.level}
-                  onChange={(e) => setForm(prev => ({ ...prev, level: e.target.value }))}
-                  disabled={isSubmitting}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {levels.map((level) => (
-                    <option key={level} value={level}>
-                      {formatLabel(level)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Equipment */}
-              <div className="space-y-2">
-                <label htmlFor="equipment" className="text-sm font-medium">
-                  Equipment
-                </label>
-                <Input
-                  id="equipment"
-                  value={form.equipment}
-                  onChange={(e) => setForm(prev => ({ ...prev, equipment: e.target.value }))}
-                  placeholder="e.g., barbell, dumbbell, machine"
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              {/* Force */}
-              <div className="space-y-2">
-                <label htmlFor="force" className="text-sm font-medium">
-                  Force
-                </label>
-                <select
-                  id="force"
-                  value={form.force}
-                  onChange={(e) => setForm(prev => ({ ...prev, force: e.target.value }))}
+                  id="mechanics"
+                  value={form.mechanics}
+                  onChange={(e) => setForm(prev => ({ ...prev, mechanics: e.target.value }))}
                   disabled={isSubmitting}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">None</option>
-                  {forces.map((force) => (
-                    <option key={force} value={force}>
-                      {formatLabel(force)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Mechanic */}
-              <div className="space-y-2">
-                <label htmlFor="mechanic" className="text-sm font-medium">
-                  Mechanic
-                </label>
-                <select
-                  id="mechanic"
-                  value={form.mechanic}
-                  onChange={(e) => setForm(prev => ({ ...prev, mechanic: e.target.value }))}
-                  disabled={isSubmitting}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">None</option>
-                  {mechanics.map((mech) => (
+                  {mechanicsOptions.map((mech) => (
                     <option key={mech} value={mech}>
                       {formatLabel(mech)}
                     </option>
                   ))}
                 </select>
               </div>
+
+              {/* Kinetic Chain */}
+              <div className="space-y-2">
+                <label htmlFor="kineticChain" className="text-sm font-medium">
+                  Kinetic Chain
+                </label>
+                <select
+                  id="kineticChain"
+                  value={form.kineticChain}
+                  onChange={(e) => setForm(prev => ({ ...prev, kineticChain: e.target.value }))}
+                  disabled={isSubmitting}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">None</option>
+                  {kineticChainOptions.map((kc) => (
+                    <option key={kc} value={kc}>
+                      {formatLabel(kc)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Press Plane */}
+              <div className="space-y-2">
+                <label htmlFor="pressPlane" className="text-sm font-medium">
+                  Press Plane
+                </label>
+                <select
+                  id="pressPlane"
+                  value={form.pressPlane}
+                  onChange={(e) => setForm(prev => ({ ...prev, pressPlane: e.target.value }))}
+                  disabled={isSubmitting}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">None</option>
+                  {pressPlaneOptions.map((pp) => (
+                    <option key={pp} value={pp}>
+                      {formatLabel(pp)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Equipment */}
+            <div className="space-y-2">
+              <label htmlFor="equipment" className="text-sm font-medium">
+                Equipment
+              </label>
+              <Input
+                id="equipment"
+                value={form.equipment}
+                onChange={(e) => setForm(prev => ({ ...prev, equipment: e.target.value }))}
+                placeholder="Comma-separated, e.g., barbell, bench"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Separate multiple items with commas
+              </p>
+            </div>
+
+            {/* Training Groups */}
+            <div className="space-y-2">
+              <label htmlFor="trainingGroups" className="text-sm font-medium">
+                Training Groups
+              </label>
+              <Input
+                id="trainingGroups"
+                value={form.trainingGroups}
+                onChange={(e) => setForm(prev => ({ ...prev, trainingGroups: e.target.value }))}
+                placeholder="Comma-separated, e.g., push, chest"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Movement Patterns */}
+            <div className="space-y-2">
+              <label htmlFor="movementPatterns" className="text-sm font-medium">
+                Movement Patterns
+              </label>
+              <Input
+                id="movementPatterns"
+                value={form.movementPatterns}
+                onChange={(e) => setForm(prev => ({ ...prev, movementPatterns: e.target.value }))}
+                placeholder="Comma-separated, e.g., horizontal press, push"
+                disabled={isSubmitting}
+              />
             </div>
 
             {/* Primary Muscles */}
@@ -275,9 +340,6 @@ export default function CreateExercisePage() {
                 placeholder="Comma-separated, e.g., chest, shoulders, triceps"
                 disabled={isSubmitting}
               />
-              <p className="text-xs text-muted-foreground">
-                Separate multiple muscles with commas
-              </p>
             </div>
 
             {/* Secondary Muscles */}
@@ -294,19 +356,19 @@ export default function CreateExercisePage() {
               />
             </div>
 
-            {/* Description */}
+            {/* Short Description */}
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Description
+              <label htmlFor="shortDescription" className="text-sm font-medium">
+                Short Description
               </label>
               <textarea
-                id="description"
-                value={form.description}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Optional description of the exercise..."
-                rows={3}
+                id="shortDescription"
+                value={form.shortDescription}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm(prev => ({ ...prev, shortDescription: e.target.value }))}
+                placeholder="Brief description of the exercise..."
+                rows={2}
                 disabled={isSubmitting}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
@@ -319,30 +381,30 @@ export default function CreateExercisePage() {
                 id="instructions"
                 value={form.instructions}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm(prev => ({ ...prev, instructions: e.target.value }))}
-                placeholder="One instruction per line..."
+                placeholder="Full instructions for performing the exercise..."
                 rows={5}
                 disabled={isSubmitting}
                 className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <p className="text-xs text-muted-foreground">
-                Enter each step on a new line
-              </p>
             </div>
 
-            {/* Tips */}
+            {/* Cues */}
             <div className="space-y-2">
-              <label htmlFor="tips" className="text-sm font-medium">
-                Tips
+              <label htmlFor="cues" className="text-sm font-medium">
+                Cues
               </label>
               <textarea
-                id="tips"
-                value={form.tips}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm(prev => ({ ...prev, tips: e.target.value }))}
-                placeholder="One tip per line..."
+                id="cues"
+                value={form.cues}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm(prev => ({ ...prev, cues: e.target.value }))}
+                placeholder="One cue per line..."
                 rows={3}
                 disabled={isSubmitting}
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
+              <p className="text-xs text-muted-foreground">
+                Enter each cue on a new line
+              </p>
             </div>
 
             {/* Active Checkbox */}

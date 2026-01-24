@@ -20,12 +20,10 @@ function ExercisesPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [exercises, setExercises] = useState<AdminExercise[]>([])
-  const [categories, setCategories] = useState<string[]>([])
-  const [equipment, setEquipment] = useState<string[]>([])
+  const [types, setTypes] = useState<string[]>([])
   const [stats, setStats] = useState<ExerciseStats>({
     total: 0,
-    byCategory: {},
-    byLevel: {},
+    byType: {},
     active: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
@@ -37,9 +35,9 @@ function ExercisesPageContent() {
   // Parse initial filters from search params
   const initialFilters: ExerciseFilters = {
     search: searchParams?.get('search') || undefined,
-    category: searchParams?.get('category') || undefined,
-    level: searchParams?.get('level') || undefined,
-    equipment: searchParams?.get('equipment') || undefined,
+    type: searchParams?.get('type') || undefined,
+    mechanics: searchParams?.get('mechanics') || undefined,
+    trainingGroup: searchParams?.get('trainingGroup') || undefined,
     muscle: searchParams?.get('muscle') || undefined,
     isActive: searchParams?.get('isActive') === 'true' ? true :
               searchParams?.get('isActive') === 'false' ? false : undefined,
@@ -61,9 +59,9 @@ function ExercisesPageContent() {
       const params = new URLSearchParams()
 
       if (filters.search) params.set('search', filters.search)
-      if (filters.category) params.set('category', filters.category)
-      if (filters.level) params.set('level', filters.level)
-      if (filters.equipment) params.set('equipment', filters.equipment)
+      if (filters.type) params.set('type', filters.type)
+      if (filters.mechanics) params.set('mechanics', filters.mechanics)
+      if (filters.trainingGroup) params.set('trainingGroup', filters.trainingGroup)
       if (filters.muscle) params.set('muscle', filters.muscle)
       if (filters.isActive !== undefined) params.set('isActive', String(filters.isActive))
 
@@ -85,16 +83,9 @@ function ExercisesPageContent() {
       setTotalPages(pagination.totalPages)
       setStats(fetchedStats)
 
-      // Extract unique categories and equipment for filters
-      const uniqueCategories = Object.keys(fetchedStats.byCategory).sort()
-      setCategories(uniqueCategories)
-
-      // Get equipment from first page
-      const equipmentSet = new Set<string>()
-      fetchedExercises.forEach((e: AdminExercise) => {
-        if (e.equipment) equipmentSet.add(e.equipment)
-      })
-      setEquipment(Array.from(equipmentSet).sort())
+      // Extract unique types for filters
+      const uniqueTypes = Object.keys(fetchedStats.byType).sort()
+      setTypes(uniqueTypes)
 
     } catch (err) {
       setError('Failed to load exercises')
@@ -130,8 +121,8 @@ function ExercisesPageContent() {
     router.push('/exercises/new')
   }, [router])
 
-  // Get top categories for stats display
-  const topCategories = Object.entries(stats.byCategory)
+  // Get top types for stats display
+  const topTypes = Object.entries(stats.byType)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
 
@@ -168,10 +159,10 @@ function ExercisesPageContent() {
             variant="success"
             isLoading={isLoading}
           />
-          {topCategories.map(([category, count], index) => (
+          {topTypes.map(([type, count], index) => (
             <StatsCard
-              key={category}
-              title={formatLabel(category)}
+              key={type}
+              title={formatLabel(type)}
               value={count}
               icon={<TagIcon className="h-5 w-5" />}
               variant={['info', 'warning', 'primary'][index] as 'info' | 'warning' | 'primary'}
@@ -199,8 +190,7 @@ function ExercisesPageContent() {
         <ExercisesFilters
           onFiltersChange={handleFiltersChange}
           isLoading={isLoading}
-          categories={categories}
-          equipment={equipment}
+          types={types}
         />
 
         {/* Exercises Table */}

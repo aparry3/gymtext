@@ -11,16 +11,20 @@ import { ExerciseFilters } from './types'
 interface ExercisesFiltersProps {
   onFiltersChange: (filters: ExerciseFilters) => void
   isLoading?: boolean
-  categories?: string[]
-  equipment?: string[]
+  types?: string[]
 }
 
-const levels = ['beginner', 'intermediate', 'expert']
-const levelLabels: Record<string, string> = {
-  beginner: 'Beginner',
-  intermediate: 'Intermediate',
-  expert: 'Expert',
-}
+const mechanicsOptions = ['compound', 'isolation']
+
+const trainingGroupOptions = [
+  'push',
+  'pull',
+  'legs',
+  'core',
+  'upper',
+  'lower',
+  'full_body',
+]
 
 const muscles = [
   'abdominals',
@@ -45,8 +49,7 @@ const muscles = [
 export function ExercisesFilters({
   onFiltersChange,
   isLoading = false,
-  categories = [],
-  equipment = []
+  types = []
 }: ExercisesFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -54,9 +57,9 @@ export function ExercisesFilters({
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '')
   const [filters, setFilters] = useState<ExerciseFilters>({
     search: searchParams.get('search') || undefined,
-    category: searchParams.get('category') || undefined,
-    level: searchParams.get('level') || undefined,
-    equipment: searchParams.get('equipment') || undefined,
+    type: searchParams.get('type') || undefined,
+    mechanics: searchParams.get('mechanics') || undefined,
+    trainingGroup: searchParams.get('trainingGroup') || undefined,
     muscle: searchParams.get('muscle') || undefined,
     isActive: searchParams.get('isActive') === 'true' ? true :
               searchParams.get('isActive') === 'false' ? false : undefined,
@@ -149,62 +152,60 @@ export function ExercisesFilters({
                 )}
               </div>
 
-              {/* Category Filter */}
-              {categories.length > 0 && (
+              {/* Type Filter */}
+              {types.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
+                  <label className="text-sm font-medium">Type</label>
                   <select
-                    value={filters.category || ''}
-                    onChange={(e) => handleFilterChange('category', e.target.value || undefined)}
+                    value={filters.type || ''}
+                    onChange={(e) => handleFilterChange('type', e.target.value || undefined)}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="">All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {formatLabel(cat)}
+                    <option value="">All Types</option>
+                    {types.map((t) => (
+                      <option key={t} value={t}>
+                        {formatLabel(t)}
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
-              {/* Level Filter */}
+              {/* Mechanics Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Level</label>
+                <label className="text-sm font-medium">Mechanics</label>
                 <div className="flex flex-wrap gap-2">
-                  {levels.map((level) => (
+                  {mechanicsOptions.map((mech) => (
                     <Button
-                      key={level}
-                      variant={filters.level === level ? "default" : "outline"}
+                      key={mech}
+                      variant={filters.mechanics === mech ? "default" : "outline"}
                       size="sm"
-                      onClick={() => handleFilterChange('level',
-                        filters.level === level ? undefined : level
+                      onClick={() => handleFilterChange('mechanics',
+                        filters.mechanics === mech ? undefined : mech
                       )}
                     >
-                      {levelLabels[level]}
+                      {formatLabel(mech)}
                     </Button>
                   ))}
                 </div>
               </div>
 
-              {/* Equipment Filter */}
-              {equipment.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Equipment</label>
-                  <select
-                    value={filters.equipment || ''}
-                    onChange={(e) => handleFilterChange('equipment', e.target.value || undefined)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">All Equipment</option>
-                    {equipment.map((eq) => (
-                      <option key={eq} value={eq}>
-                        {formatLabel(eq)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Training Group Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Training Group</label>
+                <select
+                  value={filters.trainingGroup || ''}
+                  onChange={(e) => handleFilterChange('trainingGroup', e.target.value || undefined)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All Groups</option>
+                  {trainingGroupOptions.map((group) => (
+                    <option key={group} value={group}>
+                      {formatLabel(group)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Muscle Filter */}
               <div className="space-y-2">
@@ -262,22 +263,22 @@ export function ExercisesFilters({
               onRemove={() => removeFilter('search')}
             />
           )}
-          {filters.category && (
+          {filters.type && (
             <FilterBadge
-              label={`Category: ${formatLabel(filters.category)}`}
-              onRemove={() => removeFilter('category')}
+              label={`Type: ${formatLabel(filters.type)}`}
+              onRemove={() => removeFilter('type')}
             />
           )}
-          {filters.level && (
+          {filters.mechanics && (
             <FilterBadge
-              label={`Level: ${levelLabels[filters.level]}`}
-              onRemove={() => removeFilter('level')}
+              label={`Mechanics: ${formatLabel(filters.mechanics)}`}
+              onRemove={() => removeFilter('mechanics')}
             />
           )}
-          {filters.equipment && (
+          {filters.trainingGroup && (
             <FilterBadge
-              label={`Equipment: ${formatLabel(filters.equipment)}`}
-              onRemove={() => removeFilter('equipment')}
+              label={`Group: ${formatLabel(filters.trainingGroup)}`}
+              onRemove={() => removeFilter('trainingGroup')}
             />
           )}
           {filters.muscle && (

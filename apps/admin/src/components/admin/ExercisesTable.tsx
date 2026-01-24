@@ -5,7 +5,6 @@ import { AdminExercise, ExerciseSort, ExerciseMatchMethod } from './types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatRelative } from '@/shared/utils/date'
 
 interface ExercisesTableProps {
   exercises: AdminExercise[]
@@ -63,16 +62,8 @@ export function ExercisesTable({
               </th>
               <th className="p-4 text-left">
                 <SortableHeader
-                  label="Category"
-                  field="category"
-                  currentSort={sort}
-                  onSort={handleSort}
-                />
-              </th>
-              <th className="hidden md:table-cell p-4 text-left">
-                <SortableHeader
-                  label="Level"
-                  field="level"
+                  label="Type"
+                  field="type"
                   currentSort={sort}
                   onSort={handleSort}
                 />
@@ -131,6 +122,9 @@ const matchMethodColors: Record<ExerciseMatchMethod, string> = {
   fuzzy: 'bg-yellow-100 text-yellow-800',
   vector: 'bg-blue-100 text-blue-800',
   text: 'bg-purple-100 text-purple-800',
+  exact_lex: 'bg-green-100 text-green-800',
+  fuzzy_lex: 'bg-yellow-100 text-yellow-800',
+  multi_signal: 'bg-indigo-100 text-indigo-800',
 }
 
 const matchMethodLabels: Record<ExerciseMatchMethod, string> = {
@@ -138,6 +132,9 @@ const matchMethodLabels: Record<ExerciseMatchMethod, string> = {
   fuzzy: 'Fuzzy',
   vector: 'Vector',
   text: 'Text',
+  exact_lex: 'Lex Exact',
+  fuzzy_lex: 'Lex Fuzzy',
+  multi_signal: 'Multi',
 }
 
 function ExerciseRow({ exercise }: ExerciseRowProps) {
@@ -147,7 +144,7 @@ function ExerciseRow({ exercise }: ExerciseRowProps) {
     router.push(`/exercises/${exercise.id}`)
   }
 
-  const categoryColors: Record<string, string> = {
+  const typeColors: Record<string, string> = {
     strength: 'bg-blue-100 text-blue-800',
     stretching: 'bg-green-100 text-green-800',
     cardio: 'bg-red-100 text-red-800',
@@ -155,12 +152,6 @@ function ExerciseRow({ exercise }: ExerciseRowProps) {
     strongman: 'bg-orange-100 text-orange-800',
     powerlifting: 'bg-indigo-100 text-indigo-800',
     'olympic weightlifting': 'bg-yellow-100 text-yellow-800',
-  }
-
-  const levelColors: Record<string, string> = {
-    beginner: 'bg-green-100 text-green-800',
-    intermediate: 'bg-yellow-100 text-yellow-800',
-    expert: 'bg-red-100 text-red-800',
   }
 
   const formatLabel = (str: string) => {
@@ -201,20 +192,16 @@ function ExerciseRow({ exercise }: ExerciseRowProps) {
       </td>
 
       <td className="p-4">
-        <Badge className={`${categoryColors[exercise.category] || 'bg-gray-100 text-gray-800'} border-0 text-xs`}>
-          {formatLabel(exercise.category)}
-        </Badge>
-      </td>
-
-      <td className="hidden md:table-cell p-4">
-        <Badge className={`${levelColors[exercise.level] || 'bg-gray-100 text-gray-800'} border-0 text-xs`}>
-          {formatLabel(exercise.level)}
+        <Badge className={`${typeColors[exercise.type] || 'bg-gray-100 text-gray-800'} border-0 text-xs`}>
+          {formatLabel(exercise.type)}
         </Badge>
       </td>
 
       <td className="hidden md:table-cell p-4">
         <span className="text-sm">
-          {exercise.equipment ? formatLabel(exercise.equipment) : '-'}
+          {exercise.equipment && exercise.equipment.length > 0
+            ? exercise.equipment.map(formatLabel).join(', ')
+            : '-'}
         </span>
       </td>
 
@@ -253,8 +240,7 @@ function ExercisesTableSkeleton() {
           <thead>
             <tr className="border-b border-gray-100">
               <th className="p-4 text-left">Exercise</th>
-              <th className="p-4 text-left">Category</th>
-              <th className="hidden md:table-cell p-4 text-left">Level</th>
+              <th className="p-4 text-left">Type</th>
               <th className="hidden md:table-cell p-4 text-left">Equipment</th>
               <th className="hidden lg:table-cell p-4 text-left">Muscles</th>
               <th className="hidden md:table-cell p-4 text-left">Status</th>
@@ -271,9 +257,6 @@ function ExercisesTableSkeleton() {
                 </td>
                 <td className="p-4">
                   <Skeleton className="h-5 w-20" />
-                </td>
-                <td className="hidden md:table-cell p-4">
-                  <Skeleton className="h-5 w-24" />
                 </td>
                 <td className="hidden md:table-cell p-4">
                   <Skeleton className="h-4 w-20" />

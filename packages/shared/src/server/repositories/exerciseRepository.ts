@@ -103,13 +103,13 @@ export class ExerciseRepository extends BaseRepository {
   }
 
   /**
-   * List exercises by category
+   * List exercises by type
    */
-  async listByCategory(category: string, limit: number = 50): Promise<Exercise[]> {
+  async listByType(type: string, limit: number = 50): Promise<Exercise[]> {
     return await this.db
       .selectFrom('exercises')
       .selectAll()
-      .where('category', '=', category)
+      .where('type', '=', type)
       .where('isActive', '=', true)
       .orderBy('name', 'asc')
       .limit(limit)
@@ -177,74 +177,28 @@ export class ExerciseRepository extends BaseRepository {
   }
 
   /**
-   * Get all unique categories
+   * Get all unique types
    */
-  async getCategories(): Promise<string[]> {
+  async getTypes(): Promise<string[]> {
     const results = await this.db
       .selectFrom('exercises')
-      .select('category')
+      .select('type')
       .where('isActive', '=', true)
       .distinct()
-      .orderBy('category', 'asc')
+      .orderBy('type', 'asc')
       .execute();
 
-    return results.map((r) => r.category);
+    return results.map((r) => r.type);
   }
 
-  /**
-   * Get all unique equipment types
-   */
-  async getEquipmentTypes(): Promise<string[]> {
-    const results = await this.db
-      .selectFrom('exercises')
-      .select('equipment')
-      .where('isActive', '=', true)
-      .where('equipment', 'is not', null)
-      .distinct()
-      .orderBy('equipment', 'asc')
-      .execute();
-
-    return results.map((r) => r.equipment).filter((e): e is string => e !== null);
-  }
-
-  /**
-   * Update the embedding vector for an exercise
-   */
-  async updateEmbedding(id: string, embedding: number[]): Promise<void> {
-    const vectorStr = `[${embedding.join(',')}]`;
-    await sql`UPDATE exercises SET embedding = ${vectorStr}::vector WHERE id = ${id}`.execute(this.db);
-  }
-
-  /**
-   * Find exercises by vector cosine similarity
-   * Returns exercises with similarity score (1 - cosine distance)
-   */
-  async findByVectorSimilarity(
-    embedding: number[],
-    limit: number = 10
-  ): Promise<{ exercise: Exercise; score: number }[]> {
-    const vectorStr = `[${embedding.join(',')}]`;
-    const results = await sql<Exercise & { similarity: number }>`
-      SELECT *, 1 - (embedding <=> ${vectorStr}::vector) as similarity
-      FROM exercises
-      WHERE embedding IS NOT NULL AND is_active = true
-      ORDER BY embedding <=> ${vectorStr}::vector
-      LIMIT ${limit}
-    `.execute(this.db);
-
-    return results.rows.map((row) => ({
-      exercise: row,
-      score: Number(row.similarity),
-    }));
-  }
 
   /**
    * List active exercises with popularity at or above a threshold
    */
-  async listActiveAbovePopularity(threshold: number): Promise<Pick<Exercise, 'id' | 'name' | 'description' | 'popularity'>[]> {
+  async listActiveAbovePopularity(threshold: number): Promise<Pick<Exercise, 'id' | 'name' | 'shortDescription' | 'popularity'>[]> {
     return await this.db
       .selectFrom('exercises')
-      .select(['id', 'name', 'description', 'popularity'])
+      .select(['id', 'name', 'shortDescription', 'popularity'])
       .where('isActive', '=', true)
       .where('popularity', '>=', String(threshold))
       .orderBy('name', 'asc')
@@ -258,7 +212,7 @@ export class ExerciseRepository extends BaseRepository {
     return await this.db
       .updateTable('exercises')
       .set(() => ({
-        popularity: sql`LEAST(1.000, GREATEST(0.000, CAST(popularity + ${delta} AS NUMERIC(4,3))))`,
+        popularity: sql`LEAST(1000.000, GREATEST(0.000, CAST(popularity + ${delta} AS NUMERIC(7,3))))`,
       }))
       .where('id', '=', id)
       .returning(['id', 'popularity'])
@@ -277,15 +231,4 @@ export class ExerciseRepository extends BaseRepository {
     return Number(result.numUpdatedRows);
   }
 
-  /**
-   * List all active exercises that are missing embeddings
-   */
-  async listMissingEmbeddings(limit: number = 100): Promise<Exercise[]> {
-    return await sql<Exercise>`
-      SELECT * FROM exercises
-      WHERE embedding IS NULL AND is_active = true
-      ORDER BY name ASC
-      LIMIT ${limit}
-    `.execute(this.db).then(r => r.rows);
-  }
 }
