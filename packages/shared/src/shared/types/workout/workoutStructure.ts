@@ -58,8 +58,8 @@ export const WorkoutActivitySchema = z.object({
 
   // Exercise canonicalization (optional, for linking to canonical exercises)
   exerciseId: z.string().uuid().nullable().optional().describe("FK to canonical exercise"),
-  nameRaw: z.string().optional().describe("Original LLM output for audit"),
-  resolution: ExerciseResolutionSchema.optional().describe("How the exercise was resolved"),
+  nameRaw: z.string().nullable().optional().describe("Original LLM output for audit"),
+  resolution: ExerciseResolutionSchema.nullable().optional().describe("How the exercise was resolved"),
 });
 
 /**

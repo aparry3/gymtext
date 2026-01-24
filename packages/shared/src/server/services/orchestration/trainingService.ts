@@ -35,6 +35,10 @@ import type { WorkoutAgentService } from '../agents/training/workoutAgentService
 import type { MicrocycleAgentService } from '../agents/training/microcycleAgentService';
 import type { FitnessPlanAgentService } from '../agents/training/fitnessPlanAgentService';
 
+// Exercise resolution
+import type { ExerciseResolutionServiceInstance } from '../domain/exercise/exerciseResolutionService';
+import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -99,6 +103,10 @@ export interface TrainingServiceDeps {
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
   fitnessPlanAgent: FitnessPlanAgentService;
+
+  // Exercise resolution (optional — skipped if not provided)
+  exerciseResolution?: ExerciseResolutionServiceInstance;
+  exerciseUse?: ExerciseUseRepository;
 }
 
 // =============================================================================
@@ -122,6 +130,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
+    exerciseResolution,
+    exerciseUse,
   } = deps;
 
   return {
@@ -217,6 +227,48 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           microcycle.isDeload ?? false,
           activityType
         );
+
+        // 5b. Resolve exercise names to canonical IDs and track usage
+        if (structure?.sections && exerciseResolution) {
+          for (const section of structure.sections) {
+            for (const activity of section.exercises) {
+              try {
+                const result = await exerciseResolution.resolve(activity.name, {
+                  learnAlias: true,
+                  aliasSource: 'ai',
+                });
+                if (result) {
+                  activity.nameRaw = activity.name;
+                  activity.exerciseId = result.exercise.id;
+                  activity.resolution = {
+                    method: result.method === 'exact' || result.method === 'exact_lex' ? 'exact' : 'fuzzy',
+                    confidence: result.confidence,
+                    version: 1,
+                  };
+                  // Track exercise usage for popularity scoring
+                  if (exerciseUse) {
+                    exerciseUse.trackUse(result.exercise.id, user.id, 'workout').catch(() => {});
+                  }
+                } else {
+                  activity.nameRaw = activity.name;
+                  activity.resolution = {
+                    method: 'unresolved',
+                    confidence: 0,
+                    version: 1,
+                  };
+                }
+              } catch (err) {
+                console.warn(`[TrainingService] Exercise resolution failed for "${activity.name}":`, err);
+                activity.nameRaw = activity.name;
+                activity.resolution = {
+                  method: 'unresolved',
+                  confidence: 0,
+                  version: 1,
+                };
+              }
+            }
+          }
+        }
 
         const theme = structure?.title || 'Workout';
         const details = { theme };

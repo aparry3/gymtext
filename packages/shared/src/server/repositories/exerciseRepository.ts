@@ -206,6 +206,19 @@ export class ExerciseRepository extends BaseRepository {
   }
 
   /**
+   * List all active exercise names (lightweight, no pagination)
+   * Used for providing exercise context to LLM agents.
+   */
+  async listActiveNames(): Promise<Pick<Exercise, 'id' | 'name'>[]> {
+    return await this.db
+      .selectFrom('exercises')
+      .select(['id', 'name'])
+      .where('isActive', '=', true)
+      .orderBy('name', 'asc')
+      .execute();
+  }
+
+  /**
    * Adjust an exercise's popularity by a delta, clamped to [0, 1]
    */
   async adjustPopularity(id: string, delta: number): Promise<{ id: string; popularity: string } | undefined> {

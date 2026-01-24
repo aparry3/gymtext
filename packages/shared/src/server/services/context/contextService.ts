@@ -4,6 +4,7 @@ import type { WorkoutInstanceServiceInstance } from '@/server/services/domain/tr
 import type { MicrocycleServiceInstance } from '@/server/services/domain/training/microcycleService';
 import type { FitnessProfileServiceInstance } from '@/server/services/domain/user/fitnessProfileService';
 import type { EnrollmentServiceInstance } from '@/server/services/domain/program/enrollmentService';
+import type { ExerciseRepository } from '@/server/repositories/exerciseRepository';
 import { ContextType, type ContextExtras, type ResolvedContextData } from './types';
 import { SnippetType } from './builders/experienceLevel';
 import * as builders from './builders';
@@ -19,6 +20,7 @@ export interface ContextServiceDeps {
   microcycleService: MicrocycleServiceInstance;
   fitnessProfileService: FitnessProfileServiceInstance;
   enrollmentService: EnrollmentServiceInstance;
+  exerciseRepo?: ExerciseRepository;
 }
 
 /**
@@ -75,16 +77,18 @@ export class ContextService {
     const needsDayFormat = types.includes(ContextType.DAY_FORMAT) && extras.activityType !== undefined;
     const needsExperienceSnippet = types.includes(ContextType.EXPERIENCE_LEVEL);
     const needsProgramVersion = types.includes(ContextType.PROGRAM_VERSION);
+    const needsExercises = types.includes(ContextType.AVAILABLE_EXERCISES) && !!this.deps.exerciseRepo;
 
     // Fetch required data in parallel (phase 1: data that doesn't depend on other fetches)
     const targetDate = extras.date || today(user.timezone);
-    const [fitnessPlan, workout, microcycle, structuredProfile, dayFormatTemplate, enrollmentWithVersion] = await Promise.all([
+    const [fitnessPlan, workout, microcycle, structuredProfile, dayFormatTemplate, enrollmentWithVersion, exercises] = await Promise.all([
       needsFitnessPlan ? this.deps.fitnessPlanService.getCurrentPlan(user.id) : null,
       needsWorkout ? this.deps.workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate) : null,
       needsMicrocycle ? this.deps.microcycleService.getMicrocycleByDate(user.id, targetDate) : null,
       needsExperienceLevel ? this.deps.fitnessProfileService.getCurrentStructuredProfile(user.id) : null,
       needsDayFormat ? builders.fetchDayFormat(extras.activityType) : null,
       needsProgramVersion ? this.deps.enrollmentService.getEnrollmentWithProgramVersion(user.id) : null,
+      needsExercises ? this.deps.exerciseRepo!.listActiveNames() : null,
     ]);
 
     // Resolve experience level (needed for experience snippet fetch)
@@ -117,6 +121,7 @@ export class ContextService {
       dayFormatTemplate: dayFormatTemplate,
       experienceSnippet: experienceSnippet,
       programVersion: enrollmentWithVersion?.programVersion ?? null,
+      exercises: exercises ?? undefined,
     };
 
     // Build context strings for each requested type
@@ -160,6 +165,8 @@ export class ContextService {
         return builders.buildDayFormatContext(data.dayFormatTemplate, data.activityType);
       case ContextType.PROGRAM_VERSION:
         return builders.buildProgramVersionContext(data.programVersion);
+      case ContextType.AVAILABLE_EXERCISES:
+        return builders.buildExercisesContext(data.exercises);
       default:
         return '';
     }

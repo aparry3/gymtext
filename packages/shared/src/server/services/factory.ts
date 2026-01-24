@@ -190,6 +190,7 @@ export function createServices(
     microcycleService: microcycle,
     fitnessProfileService: fitnessProfile,
     enrollmentService: enrollment,
+    exerciseRepo: repos.exercise,
   });
 
   // =========================================================================
@@ -217,6 +218,8 @@ export function createServices(
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   // =========================================================================

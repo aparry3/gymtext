@@ -68,10 +68,30 @@ export class WorkoutAgentService {
   }
 
   /**
-   * Get the structured sub-agent (lazy-initialized)
-   * Prompts fetched from DB based on agent name
+   * Get the structured sub-agent
+   * When user is provided, creates a context-aware agent with exercise catalog (not cached).
+   * Without user, returns a cached singleton (for modification flows).
+   *
+   * @param user - Optional user for exercise context injection
    */
-  public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
+  public async getStructuredAgent(
+    user?: UserWithProfile
+  ): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
+    // If user provided, create agent with exercise context (not cached)
+    if (user) {
+      const exerciseContext = await this.contextService.getContext(
+        user,
+        [ContextType.AVAILABLE_EXERCISES],
+        {}
+      );
+      return createAgent({
+        name: PROMPT_IDS.WORKOUT_STRUCTURED,
+        context: exerciseContext,
+        schema: WorkoutStructureSchema,
+      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+    }
+
+    // Otherwise, use cached singleton (no exercise context)
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
         name: PROMPT_IDS.WORKOUT_STRUCTURED,
@@ -115,7 +135,7 @@ export class WorkoutAgentService {
     // Get sub-agents (message agent with day format context if activityType provided)
     const [messageAgent, structuredAgent] = await Promise.all([
       this.getMessageAgent(user, activityType),
-      this.getStructuredAgent(),
+      this.getStructuredAgent(user),
     ]);
 
     // Create main agent with context (prompts fetched from DB)
