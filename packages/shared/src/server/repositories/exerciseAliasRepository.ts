@@ -184,9 +184,9 @@ export class ExerciseAliasRepository extends BaseRepository {
     limit: number = 10
   ): Promise<{ exerciseId: string; alias: string; aliasNormalized: string; score: number }[]> {
     const results = await sql<{
-      exercise_id: string;
+      exerciseId: string;
       alias: string;
-      alias_normalized: string;
+      aliasNormalized: string;
       similarity: number;
     }>`
       SELECT exercise_id, alias, alias_normalized, similarity(alias_normalized, ${normalizedQuery}) as similarity
@@ -197,9 +197,9 @@ export class ExerciseAliasRepository extends BaseRepository {
     `.execute(this.db);
 
     return results.rows.map((row) => ({
-      exerciseId: row.exercise_id,
+      exerciseId: row.exerciseId,
       alias: row.alias,
-      aliasNormalized: row.alias_normalized,
+      aliasNormalized: row.aliasNormalized,
       score: Number(row.similarity),
     }));
   }
@@ -224,9 +224,9 @@ export class ExerciseAliasRepository extends BaseRepository {
     limit: number = 50
   ): Promise<{ exerciseId: string; alias: string; aliasLex: string; score: number }[]> {
     const results = await sql<{
-      exercise_id: string;
+      exerciseId: string;
       alias: string;
-      alias_lex: string;
+      aliasLex: string;
       similarity: number;
     }>`
       SELECT exercise_id, alias, alias_lex, similarity(alias_lex, ${lexQuery}) as similarity
@@ -237,9 +237,9 @@ export class ExerciseAliasRepository extends BaseRepository {
     `.execute(this.db);
 
     return results.rows.map((row) => ({
-      exerciseId: row.exercise_id,
+      exerciseId: row.exerciseId,
       alias: row.alias,
-      aliasLex: row.alias_lex,
+      aliasLex: row.aliasLex,
       score: Number(row.similarity),
     }));
   }
