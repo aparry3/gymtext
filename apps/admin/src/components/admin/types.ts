@@ -486,7 +486,7 @@ export interface ExerciseFilters {
 
 // Sorting options
 export interface ExerciseSort {
-  field: 'name' | 'category' | 'level' | 'createdAt';
+  field: 'name' | 'category' | 'level' | 'createdAt' | 'popularity';
   direction: 'asc' | 'desc';
 }
 

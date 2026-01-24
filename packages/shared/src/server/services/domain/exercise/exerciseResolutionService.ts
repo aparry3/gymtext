@@ -10,6 +10,8 @@
  * 3. Trigram lex (weight: 1.5) — pg_trgm similarity on alias_lex
  * 4. Trigram norm (weight: 1.0) — pg_trgm similarity on alias_normalized
  * 5. Token overlap (weight: 1.0) — Jaccard similarity on lex tokens
+ * 6. Text match (weight: 1.5) — ILIKE/text search on alias_searchable
+ * 7. Intent priority (weight: 2.5) — Popularity-based ranking boost
  */
 
 import type { RepositoryContainer } from '@/server/repositories/factory';
@@ -35,8 +37,8 @@ const W_TRGM_LEX = 1.5;
 const W_TRGM_NORM = 1.0;
 const W_TOKEN_OVERLAP = 1.0;
 const W_TEXT_MATCH = 1.5;
-const W_INTENT_PRIORITY = 0.5;
-const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP + W_TEXT_MATCH + W_INTENT_PRIORITY; // 10.5
+const W_INTENT_PRIORITY = 2.5;
+const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP + W_TEXT_MATCH + W_INTENT_PRIORITY; // 12.5
 
 type ExerciseMatchMethod = ExerciseSearchResult['method'];
 

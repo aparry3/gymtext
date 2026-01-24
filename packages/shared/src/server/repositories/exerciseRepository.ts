@@ -239,6 +239,45 @@ export class ExerciseRepository extends BaseRepository {
   }
 
   /**
+   * List active exercises with popularity at or above a threshold
+   */
+  async listActiveAbovePopularity(threshold: number): Promise<Pick<Exercise, 'id' | 'name' | 'description' | 'popularity'>[]> {
+    return await this.db
+      .selectFrom('exercises')
+      .select(['id', 'name', 'description', 'popularity'])
+      .where('isActive', '=', true)
+      .where('popularity', '>=', String(threshold))
+      .orderBy('name', 'asc')
+      .execute();
+  }
+
+  /**
+   * Adjust an exercise's popularity by a delta, clamped to [0, 1]
+   */
+  async adjustPopularity(id: string, delta: number): Promise<{ id: string; popularity: string } | undefined> {
+    return await this.db
+      .updateTable('exercises')
+      .set(() => ({
+        popularity: sql`LEAST(1.000, GREATEST(0.000, CAST(popularity + ${delta} AS NUMERIC(4,3))))`,
+      }))
+      .where('id', '=', id)
+      .returning(['id', 'popularity'])
+      .executeTakeFirst();
+  }
+
+  /**
+   * Reset all exercises' popularity to 0
+   */
+  async resetAllPopularity(): Promise<number> {
+    const result = await this.db
+      .updateTable('exercises')
+      .set({ popularity: '0.000' })
+      .where('isActive', '=', true)
+      .executeTakeFirst();
+    return Number(result.numUpdatedRows);
+  }
+
+  /**
    * List all active exercises that are missing embeddings
    */
   async listMissingEmbeddings(limit: number = 100): Promise<Exercise[]> {

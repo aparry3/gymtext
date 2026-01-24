@@ -114,6 +114,7 @@ export async function GET(request: Request) {
     let exercises = await repos.db
       .selectFrom('exercises')
       .selectAll()
+      .orderBy('popularity', 'desc')
       .orderBy('name', 'asc')
       .execute();
 
@@ -170,6 +171,7 @@ export async function GET(request: Request) {
       force: e.force,
       mechanic: e.mechanic,
       isActive: e.isActive,
+      popularity: Number(e.popularity) || 0,
       aliasCount: aliasCounts.get(e.id) || 0,
       createdAt: e.createdAt,
       updatedAt: e.updatedAt,
@@ -191,6 +193,9 @@ export async function GET(request: Request) {
             break;
           case 'createdAt':
             comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            break;
+          case 'popularity':
+            comparison = a.popularity - b.popularity;
             break;
         }
         return sort!.direction === 'asc' ? comparison : -comparison;
