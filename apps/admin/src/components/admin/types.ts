@@ -438,8 +438,7 @@ export interface AdminExercise {
   name: string;
   slug: string;
   type: string;
-  mechanics: string;
-  kineticChain: string;
+  mechanics: string | null;
   equipment: string[];
   primaryMuscles: string[];
   secondaryMuscles: string[];
@@ -477,9 +476,8 @@ export interface AdminExerciseWithAliases extends Omit<AdminExercise, 'movementS
   instructions: string;
   cues: string[];
   movementPatterns: string[];
-  pressPlane: string;
-  modality: string;
-  intensity: string;
+  modality: string | null;
+  intensity: string | null;
   movementId: string | null;
   movementSlug: string | null;
   movementName: string | null;
@@ -528,8 +526,6 @@ export interface ExerciseFormData {
   slug?: string;
   type: string;
   mechanics?: string;
-  kineticChain?: string;
-  pressPlane?: string;
   trainingGroups?: string[];
   movementPatterns?: string[];
   equipment?: string[];

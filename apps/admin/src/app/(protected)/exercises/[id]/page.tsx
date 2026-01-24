@@ -38,8 +38,6 @@ interface EditFormState {
   name: string
   type: string
   mechanics: string
-  kineticChain: string
-  pressPlane: string
   movementSlug: string
   trainingGroups: string[]
   movementPatterns: string[]
@@ -71,8 +69,6 @@ export default function ExerciseDetailPage() {
     name: '',
     type: '',
     mechanics: '',
-    kineticChain: '',
-    pressPlane: '',
     movementSlug: '',
     trainingGroups: [],
     movementPatterns: [],
@@ -109,8 +105,6 @@ export default function ExerciseDetailPage() {
         name: data.name,
         type: data.type,
         mechanics: data.mechanics || '',
-        kineticChain: data.kineticChain || '',
-        pressPlane: data.pressPlane || '',
         movementSlug: data.movementSlug || '',
         trainingGroups: data.trainingGroups || [],
         movementPatterns: data.movementPatterns || [],
@@ -152,8 +146,6 @@ export default function ExerciseDetailPage() {
           name: editForm.name,
           type: editForm.type,
           mechanics: editForm.mechanics || null,
-          kineticChain: editForm.kineticChain || null,
-          pressPlane: editForm.pressPlane || null,
           movementSlug: editForm.movementSlug || null,
           trainingGroups: editForm.trainingGroups.length > 0 ? editForm.trainingGroups : [],
           movementPatterns: editForm.movementPatterns.length > 0 ? editForm.movementPatterns : [],
@@ -162,8 +154,8 @@ export default function ExerciseDetailPage() {
           secondaryMuscles: editForm.secondaryMuscles.length > 0 ? editForm.secondaryMuscles : [],
           modality: editForm.modality || null,
           intensity: editForm.intensity || null,
-          shortDescription: editForm.shortDescription || null,
-          instructions: editForm.instructions || null,
+          shortDescription: editForm.shortDescription || '',
+          instructions: editForm.instructions || '',
           cues: editForm.cues.length > 0 ? editForm.cues : [],
           isActive: editForm.isActive,
         }),
@@ -191,8 +183,6 @@ export default function ExerciseDetailPage() {
         name: exercise.name,
         type: exercise.type,
         mechanics: exercise.mechanics || '',
-        kineticChain: exercise.kineticChain || '',
-        pressPlane: exercise.pressPlane || '',
         movementSlug: exercise.movementSlug || '',
         trainingGroups: exercise.trainingGroups || [],
         movementPatterns: exercise.movementPatterns || [],
@@ -411,7 +401,7 @@ export default function ExerciseDetailPage() {
                   <p className="text-muted-foreground">{exercise.shortDescription}</p>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Movement:</span>
                     <div className="font-medium">{exercise.movementName ? formatLabel(exercise.movementName) : '-'}</div>
@@ -423,14 +413,6 @@ export default function ExerciseDetailPage() {
                         ? exercise.equipment.map(formatLabel).join(', ')
                         : '-'}
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Kinetic Chain:</span>
-                    <div className="font-medium">{exercise.kineticChain ? formatLabel(exercise.kineticChain) : '-'}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Press Plane:</span>
-                    <div className="font-medium">{exercise.pressPlane ? formatLabel(exercise.pressPlane) : '-'}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Aliases:</span>
@@ -687,8 +669,6 @@ interface EditFormProps {
 function EditForm({ editForm, setEditForm, movements = [] }: EditFormProps) {
   const types = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
   const mechanicsOptions = ['compound', 'isolation']
-  const kineticChainOptions = ['open', 'closed']
-  const pressPlaneOptions = ['horizontal', 'vertical', 'lateral']
 
   return (
     <div className="space-y-4">
@@ -726,36 +706,6 @@ function EditForm({ editForm, setEditForm, movements = [] }: EditFormProps) {
             {mechanicsOptions.map((mech) => (
               <option key={mech} value={mech}>
                 {mech.charAt(0).toUpperCase() + mech.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Kinetic Chain</label>
-          <select
-            value={editForm.kineticChain}
-            onChange={(e) => setEditForm(prev => ({ ...prev, kineticChain: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">None</option>
-            {kineticChainOptions.map((kc) => (
-              <option key={kc} value={kc}>
-                {kc.charAt(0).toUpperCase() + kc.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Press Plane</label>
-          <select
-            value={editForm.pressPlane}
-            onChange={(e) => setEditForm(prev => ({ ...prev, pressPlane: e.target.value }))}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">None</option>
-            {pressPlaneOptions.map((pp) => (
-              <option key={pp} value={pp}>
-                {pp.charAt(0).toUpperCase() + pp.slice(1)}
               </option>
             ))}
           </select>

@@ -36,12 +36,10 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export function composeExerciseEmbeddingText(exercise: {
   name: string;
   primaryMuscles?: string[] | null;
-  kineticChain?: string | null;
   type?: string | null;
 }): string {
   const parts = [exercise.name];
   if (exercise.primaryMuscles?.length) parts.push(exercise.primaryMuscles.join(', '));
-  if (exercise.kineticChain) parts.push(exercise.kineticChain);
   if (exercise.type) parts.push(exercise.type);
   return parts.join(' | ');
 }

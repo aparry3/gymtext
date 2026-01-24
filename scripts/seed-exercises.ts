@@ -34,8 +34,6 @@ interface Exercise {
   status: string;
   type: string;
   mechanics: string;
-  kinetic_chain: string;
-  press_plane: string;
   training_groups: string[];
   movement_patterns: string[];
   primary_muscles: string[];
@@ -105,7 +103,7 @@ STRICT OUTPUT RULES:
 - Do NOT include explanations, comments, markdown, or extra keys.
 - Do NOT invent enum values.
 - Do NOT omit any required fields.
-- Use empty string "" for string fields that do not apply (e.g. mechanics, press_plane, modality, intensity for exercises where they are irrelevant).
+- Use empty string "" for string fields that do not apply (e.g. mechanics, modality, intensity for exercises where they are irrelevant).
 - All arrays must be present, even if empty.
 - Do NOT repeat exercises already provided in the input.
 
@@ -132,8 +130,7 @@ ALIAS RULES:
 - Do not include aliases that clearly belong to a different exercise.
 
 CLASSIFICATION RULES:
-- Correctly assign training_groups, movement_patterns, muscles, equipment, and press_plane when applicable.
-- Pressing movements must use press_plane where appropriate.
+- Correctly assign training_groups, movement_patterns, muscles, and equipment when applicable.
 - Conditioning, cardio, and endurance exercises should use modality and intensity when applicable.
 - Sport-specific exercises should still be classified by their primary movement patterns and muscles.
 - If a string field does not apply, set it to "" (empty string).

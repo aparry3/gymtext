@@ -18,8 +18,6 @@ interface ExerciseJson {
   status: string;
   type: string;
   mechanics: string;
-  kinetic_chain: string;
-  press_plane: string;
   training_groups: string[];
   movement_patterns: string[];
   primary_muscles: string[];
@@ -83,7 +81,7 @@ async function main() {
       // Insert exercise
       const result = await sql`
         INSERT INTO exercises (
-          name, slug, status, type, mechanics, kinetic_chain, press_plane,
+          name, slug, status, type, mechanics,
           training_groups, movement_patterns, primary_muscles, secondary_muscles,
           equipment, modality, intensity, short_description, instructions,
           cues, aliases, popularity, is_active, movement_id
@@ -92,9 +90,7 @@ async function main() {
           ${ex.slug},
           ${ex.status},
           ${ex.type},
-          ${ex.mechanics},
-          ${ex.kinetic_chain},
-          ${ex.press_plane},
+          ${ex.mechanics || null},
           ${sql.raw(`ARRAY[${ex.training_groups.map(v => `'${v.replace(/'/g, "''")}'`).join(',')}]::text[]`)},
           ${sql.raw(`ARRAY[${ex.movement_patterns.map(v => `'${v.replace(/'/g, "''")}'`).join(',')}]::text[]`)},
           ${sql.raw(`ARRAY[${ex.primary_muscles.map(v => `'${v.replace(/'/g, "''")}'`).join(',')}]::text[]`)},

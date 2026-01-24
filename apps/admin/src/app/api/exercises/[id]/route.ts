@@ -43,13 +43,11 @@ export async function GET(request: Request, { params }: RouteParams) {
       slug: exercise.slug,
       type: exercise.type,
       mechanics: exercise.mechanics,
-      kineticChain: exercise.kineticChain,
       equipment: exercise.equipment,
       primaryMuscles: exercise.primaryMuscles,
       secondaryMuscles: exercise.secondaryMuscles,
       trainingGroups: exercise.trainingGroups,
       movementPatterns: exercise.movementPatterns,
-      pressPlane: exercise.pressPlane,
       modality: exercise.modality,
       intensity: exercise.intensity,
       shortDescription: exercise.shortDescription,
@@ -105,8 +103,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       slug,
       type,
       mechanics,
-      kineticChain,
-      pressPlane,
       trainingGroups,
       movementPatterns,
       equipment,
@@ -260,8 +256,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (slug !== undefined) updates.slug = slug;
     if (type !== undefined) updates.type = type;
     if (mechanics !== undefined) updates.mechanics = mechanics;
-    if (kineticChain !== undefined) updates.kineticChain = kineticChain;
-    if (pressPlane !== undefined) updates.pressPlane = pressPlane;
     if (trainingGroups !== undefined) updates.trainingGroups = trainingGroups;
     if (movementPatterns !== undefined) updates.movementPatterns = movementPatterns;
     if (equipment !== undefined) updates.equipment = equipment;

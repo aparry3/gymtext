@@ -36,8 +36,6 @@ interface ExerciseJson {
   status: string;
   type: string;
   mechanics: string;
-  kinetic_chain: string;
-  press_plane: string;
   training_groups: string[];
   movement_patterns: string[];
   primary_muscles: string[];

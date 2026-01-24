@@ -16,8 +16,6 @@ import {
 
 const types = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
 const mechanicsOptions = ['compound', 'isolation']
-const kineticChainOptions = ['open', 'closed']
-const pressPlaneOptions = ['horizontal', 'vertical', 'lateral']
 
 export default function CreateExercisePage() {
   const router = useRouter()
@@ -28,9 +26,7 @@ export default function CreateExercisePage() {
     name: '',
     slug: '',
     type: 'strength',
-    mechanics: 'compound',
-    kineticChain: 'open',
-    pressPlane: '',
+    mechanics: '',
     trainingGroups: '',
     movementPatterns: '',
     equipment: '',
@@ -101,8 +97,6 @@ export default function CreateExercisePage() {
           slug: form.slug.trim() || undefined,
           type: form.type,
           mechanics: form.mechanics || undefined,
-          kineticChain: form.kineticChain || undefined,
-          pressPlane: form.pressPlane || undefined,
           trainingGroups: trainingGroups.length > 0 ? trainingGroups : undefined,
           movementPatterns: movementPatterns.length > 0 ? movementPatterns : undefined,
           equipment: equipment.length > 0 ? equipment : undefined,
@@ -240,47 +234,6 @@ export default function CreateExercisePage() {
                 </select>
               </div>
 
-              {/* Kinetic Chain */}
-              <div className="space-y-2">
-                <label htmlFor="kineticChain" className="text-sm font-medium">
-                  Kinetic Chain
-                </label>
-                <select
-                  id="kineticChain"
-                  value={form.kineticChain}
-                  onChange={(e) => setForm(prev => ({ ...prev, kineticChain: e.target.value }))}
-                  disabled={isSubmitting}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">None</option>
-                  {kineticChainOptions.map((kc) => (
-                    <option key={kc} value={kc}>
-                      {formatLabel(kc)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Press Plane */}
-              <div className="space-y-2">
-                <label htmlFor="pressPlane" className="text-sm font-medium">
-                  Press Plane
-                </label>
-                <select
-                  id="pressPlane"
-                  value={form.pressPlane}
-                  onChange={(e) => setForm(prev => ({ ...prev, pressPlane: e.target.value }))}
-                  disabled={isSubmitting}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">None</option>
-                  {pressPlaneOptions.map((pp) => (
-                    <option key={pp} value={pp}>
-                      {formatLabel(pp)}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             {/* Equipment */}
