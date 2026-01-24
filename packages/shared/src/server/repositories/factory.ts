@@ -39,6 +39,7 @@ import { ProgramFamilyRepository } from './programFamilyRepository';
 import { ExerciseRepository } from './exerciseRepository';
 import { ExerciseAliasRepository } from './exerciseAliasRepository';
 import { ExerciseUseRepository } from './exerciseUseRepository';
+import { MovementRepository } from './movementRepository';
 
 /**
  * Container for all repository instances
@@ -70,6 +71,7 @@ export interface RepositoryContainer {
   exercise: ExerciseRepository;
   exerciseAlias: ExerciseAliasRepository;
   exerciseUse: ExerciseUseRepository;
+  movement: MovementRepository;
   // Direct db access for complex queries
   db: Kysely<DB>;
 }
@@ -118,6 +120,7 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     exercise: new ExerciseRepository(db),
     exerciseAlias: new ExerciseAliasRepository(db),
     exerciseUse: new ExerciseUseRepository(db),
+    movement: new MovementRepository(db),
     db,
   };
 

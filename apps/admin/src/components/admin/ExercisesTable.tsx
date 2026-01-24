@@ -68,6 +68,7 @@ export function ExercisesTable({
                   onSort={handleSort}
                 />
               </th>
+              <th className="hidden md:table-cell p-4 text-left">Movement</th>
               <th className="hidden md:table-cell p-4 text-left">Equipment</th>
               <th className="hidden lg:table-cell p-4 text-left">Muscles</th>
               <th className="hidden md:table-cell p-4 text-left">Status</th>
@@ -198,6 +199,16 @@ function ExerciseRow({ exercise }: ExerciseRowProps) {
       </td>
 
       <td className="hidden md:table-cell p-4">
+        {exercise.movementName ? (
+          <Badge variant="outline" className="text-xs">
+            {formatLabel(exercise.movementName)}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )}
+      </td>
+
+      <td className="hidden md:table-cell p-4">
         <span className="text-sm">
           {exercise.equipment && exercise.equipment.length > 0
             ? exercise.equipment.map(formatLabel).join(', ')
@@ -241,6 +252,7 @@ function ExercisesTableSkeleton() {
             <tr className="border-b border-gray-100">
               <th className="p-4 text-left">Exercise</th>
               <th className="p-4 text-left">Type</th>
+              <th className="hidden md:table-cell p-4 text-left">Movement</th>
               <th className="hidden md:table-cell p-4 text-left">Equipment</th>
               <th className="hidden lg:table-cell p-4 text-left">Muscles</th>
               <th className="hidden md:table-cell p-4 text-left">Status</th>
@@ -257,6 +269,9 @@ function ExercisesTableSkeleton() {
                 </td>
                 <td className="p-4">
                   <Skeleton className="h-5 w-20" />
+                </td>
+                <td className="hidden md:table-cell p-4">
+                  <Skeleton className="h-5 w-16" />
                 </td>
                 <td className="hidden md:table-cell p-4">
                   <Skeleton className="h-4 w-20" />

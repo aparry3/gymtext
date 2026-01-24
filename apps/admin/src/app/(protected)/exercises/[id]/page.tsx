@@ -40,6 +40,7 @@ interface EditFormState {
   mechanics: string
   kineticChain: string
   pressPlane: string
+  movementSlug: string
   trainingGroups: string[]
   movementPatterns: string[]
   equipment: string[]
@@ -64,12 +65,15 @@ export default function ExerciseDetailPage() {
   const [newAlias, setNewAlias] = useState('')
   const [isAddingAlias, setIsAddingAlias] = useState(false)
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false)
+  const [movements, setMovements] = useState<{ slug: string; name: string }[]>([])
+  const [defaultAliasTarget, setDefaultAliasTarget] = useState<{ id: string; alias: string } | null>(null)
   const [editForm, setEditForm] = useState<EditFormState>({
     name: '',
     type: '',
     mechanics: '',
     kineticChain: '',
     pressPlane: '',
+    movementSlug: '',
     trainingGroups: [],
     movementPatterns: [],
     equipment: [],
@@ -98,12 +102,16 @@ export default function ExerciseDetailPage() {
 
       const data = result.data.exercise
       setExercise(data)
+      if (result.data.movements) {
+        setMovements(result.data.movements)
+      }
       setEditForm({
         name: data.name,
         type: data.type,
         mechanics: data.mechanics || '',
         kineticChain: data.kineticChain || '',
         pressPlane: data.pressPlane || '',
+        movementSlug: data.movementSlug || '',
         trainingGroups: data.trainingGroups || [],
         movementPatterns: data.movementPatterns || [],
         equipment: data.equipment || [],
@@ -146,6 +154,7 @@ export default function ExerciseDetailPage() {
           mechanics: editForm.mechanics || null,
           kineticChain: editForm.kineticChain || null,
           pressPlane: editForm.pressPlane || null,
+          movementSlug: editForm.movementSlug || null,
           trainingGroups: editForm.trainingGroups.length > 0 ? editForm.trainingGroups : [],
           movementPatterns: editForm.movementPatterns.length > 0 ? editForm.movementPatterns : [],
           equipment: editForm.equipment.length > 0 ? editForm.equipment : [],
@@ -184,6 +193,7 @@ export default function ExerciseDetailPage() {
         mechanics: exercise.mechanics || '',
         kineticChain: exercise.kineticChain || '',
         pressPlane: exercise.pressPlane || '',
+        movementSlug: exercise.movementSlug || '',
         trainingGroups: exercise.trainingGroups || [],
         movementPatterns: exercise.movementPatterns || [],
         equipment: exercise.equipment || [],
@@ -251,6 +261,29 @@ export default function ExerciseDetailPage() {
       setError(err instanceof Error ? err.message : 'Failed to add alias')
     } finally {
       setIsAddingAlias(false)
+    }
+  }
+
+  const handleSetDefaultAlias = async (aliasId: string) => {
+    if (!exercise) return
+
+    try {
+      const response = await fetch(`/api/exercises/${exercise.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setDefaultAlias: aliasId }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to set default alias')
+      }
+
+      setDefaultAliasTarget(null)
+      await fetchExercise(exercise.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to set default alias')
     }
   }
 
@@ -350,6 +383,7 @@ export default function ExerciseDetailPage() {
               <EditForm
                 editForm={editForm}
                 setEditForm={setEditForm}
+                movements={movements}
               />
             ) : (
               <>
@@ -363,6 +397,11 @@ export default function ExerciseDetailPage() {
                       {formatLabel(exercise.mechanics)}
                     </Badge>
                   )}
+                  {exercise.movementName && (
+                    <Badge className="bg-teal-100 text-teal-800 border-0">
+                      {formatLabel(exercise.movementName)}
+                    </Badge>
+                  )}
                   <Badge variant={exercise.isActive ? 'default' : 'secondary'}>
                     {exercise.isActive ? 'Active' : 'Inactive'}
                   </Badge>
@@ -372,7 +411,11 @@ export default function ExerciseDetailPage() {
                   <p className="text-muted-foreground">{exercise.shortDescription}</p>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Movement:</span>
+                    <div className="font-medium">{exercise.movementName ? formatLabel(exercise.movementName) : '-'}</div>
+                  </div>
                   <div>
                     <span className="text-muted-foreground">Equipment:</span>
                     <div className="font-medium">
@@ -557,7 +600,16 @@ export default function ExerciseDetailPage() {
                     <tbody>
                       {exercise.aliases.map((alias) => (
                         <tr key={alias.id} className="border-b">
-                          <td className="p-2 text-sm">{alias.alias}</td>
+                          <td className="p-2 text-sm">
+                            <span className="flex items-center gap-2">
+                              {alias.alias}
+                              {alias.isDefault && (
+                                <Badge className="bg-teal-100 text-teal-800 border-0 text-xs">
+                                  Default
+                                </Badge>
+                              )}
+                            </span>
+                          </td>
                           <td className="p-2 text-sm text-muted-foreground font-mono text-xs">
                             {alias.aliasNormalized}
                           </td>
@@ -571,7 +623,16 @@ export default function ExerciseDetailPage() {
                               <span className="font-mono">{(alias.confidenceScore * 100).toFixed(0)}%</span>
                             ) : '-'}
                           </td>
-                          <td className="p-2 text-right">
+                          <td className="p-2 text-right space-x-1">
+                            {!alias.isDefault && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDefaultAliasTarget({ id: alias.id, alias: alias.alias })}
+                              >
+                                Set Default
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -591,6 +652,26 @@ export default function ExerciseDetailPage() {
               )}
             </Card>
           </TabsContent>
+
+          {/* Set Default Alias Confirmation Dialog */}
+          <Dialog open={!!defaultAliasTarget} onOpenChange={(open) => !open && setDefaultAliasTarget(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Set Default Alias?</DialogTitle>
+                <DialogDescription>
+                  This will rename the exercise to &quot;{defaultAliasTarget?.alias}&quot;. The exercise name and slug will be updated. Continue?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDefaultAliasTarget(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => defaultAliasTarget && handleSetDefaultAlias(defaultAliasTarget.id)}>
+                  Confirm
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </Tabs>
       </div>
     </div>
@@ -600,9 +681,10 @@ export default function ExerciseDetailPage() {
 interface EditFormProps {
   editForm: EditFormState
   setEditForm: React.Dispatch<React.SetStateAction<EditFormState>>
+  movements?: { slug: string; name: string }[]
 }
 
-function EditForm({ editForm, setEditForm }: EditFormProps) {
+function EditForm({ editForm, setEditForm, movements = [] }: EditFormProps) {
   const types = ['strength', 'stretching', 'cardio', 'plyometrics', 'strongman', 'powerlifting', 'olympic weightlifting']
   const mechanicsOptions = ['compound', 'isolation']
   const kineticChainOptions = ['open', 'closed']
@@ -674,6 +756,21 @@ function EditForm({ editForm, setEditForm }: EditFormProps) {
             {pressPlaneOptions.map((pp) => (
               <option key={pp} value={pp}>
                 {pp.charAt(0).toUpperCase() + pp.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Movement</label>
+          <select
+            value={editForm.movementSlug}
+            onChange={(e) => setEditForm(prev => ({ ...prev, movementSlug: e.target.value }))}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">None</option>
+            {movements.map((m) => (
+              <option key={m.slug} value={m.slug}>
+                {m.name.charAt(0).toUpperCase() + m.name.slice(1)}
               </option>
             ))}
           </select>

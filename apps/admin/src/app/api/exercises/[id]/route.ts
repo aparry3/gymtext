@@ -19,8 +19,22 @@ export async function GET(request: Request, { params }: RouteParams) {
       );
     }
 
+    // Get movement data if present
+    let movementSlug: string | null = null;
+    let movementName: string | null = null;
+    if (exercise.movementId) {
+      const movement = await repos.movement.findById(exercise.movementId);
+      if (movement) {
+        movementSlug = movement.slug;
+        movementName = movement.name;
+      }
+    }
+
     // Get aliases for the exercise
     const aliases = await repos.exerciseAlias.findByExerciseId(id);
+
+    // Get all movements for the edit dropdown
+    const allMovements = await repos.movement.findAll();
 
     // Format response
     const exerciseWithAliases = {
@@ -44,6 +58,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       popularity: Number(exercise.popularity) || 0,
       isActive: exercise.isActive,
       aliasCount: aliases.length,
+      movementId: exercise.movementId,
+      movementSlug,
+      movementName,
       createdAt: exercise.createdAt,
       updatedAt: exercise.updatedAt,
       aliases: aliases.map(a => ({
@@ -52,6 +69,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         aliasNormalized: a.aliasNormalized,
         source: a.source,
         confidenceScore: a.confidenceScore ? parseFloat(a.confidenceScore) : null,
+        isDefault: a.isDefault,
         createdAt: a.createdAt,
       })),
     };
@@ -60,6 +78,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       success: true,
       data: {
         exercise: exerciseWithAliases,
+        movements: allMovements.map(m => ({ slug: m.slug, name: m.name })),
       }
     });
 
@@ -103,7 +122,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       action,
       // Alias management
       newAlias,
-      deleteAliasId
+      deleteAliasId,
+      // Movement assignment
+      movementSlug,
+      // Default alias
+      setDefaultAlias,
     } = body;
 
     const { repos } = await getAdminContext();
@@ -161,6 +184,36 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ success: true, data: alias }, { status: 201 });
     }
 
+    // Handle setting default alias
+    if (setDefaultAlias) {
+      const alias = await repos.exerciseAlias.findById(setDefaultAlias);
+      if (!alias) {
+        return NextResponse.json(
+          { success: false, message: 'Alias not found' },
+          { status: 404 }
+        );
+      }
+      if (alias.exerciseId !== id) {
+        return NextResponse.json(
+          { success: false, message: 'Alias does not belong to this exercise' },
+          { status: 400 }
+        );
+      }
+
+      // Set this alias as default (clears previous default)
+      await repos.exerciseAlias.setDefault(id, setDefaultAlias);
+
+      // Update exercise name and slug to match the alias
+      const newSlug = alias.alias
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      await repos.exercise.update(id, { name: alias.alias, slug: newSlug });
+
+      const updated = await repos.exercise.findById(id);
+      return NextResponse.json({ success: true, data: updated });
+    }
+
     // Handle action-based updates
     if (action === 'deactivate') {
       await repos.exercise.deactivate(id);
@@ -181,6 +234,23 @@ export async function PATCH(request: Request, { params }: RouteParams) {
           { success: false, message: 'An exercise with this name already exists' },
           { status: 409 }
         );
+      }
+    }
+
+    // Handle movement assignment by slug
+    if (movementSlug !== undefined) {
+      if (movementSlug === null || movementSlug === '') {
+        // Clear movement
+        await repos.exercise.update(id, { movementId: null });
+      } else {
+        const movement = await repos.movement.findBySlug(movementSlug);
+        if (!movement) {
+          return NextResponse.json(
+            { success: false, message: `Movement not found: ${movementSlug}` },
+            { status: 400 }
+          );
+        }
+        await repos.exercise.update(id, { movementId: movement.id });
       }
     }
 
@@ -205,6 +275,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (isActive !== undefined) updates.isActive = isActive;
 
     if (Object.keys(updates).length === 0) {
+      // If movementSlug was handled above, we already updated - return success
+      if (movementSlug !== undefined) {
+        const updated = await repos.exercise.findById(id);
+        return NextResponse.json({ success: true, data: updated });
+      }
       return NextResponse.json(
         { success: false, message: 'No valid fields to update' },
         { status: 400 }

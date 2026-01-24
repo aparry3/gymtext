@@ -447,6 +447,8 @@ export interface AdminExercise {
   popularity: number;
   isActive: boolean;
   aliasCount: number;
+  movementSlug?: string;
+  movementName?: string;
   createdAt: Date;
   updatedAt: Date;
   // Resolution metadata (present when search uses resolution service)
@@ -462,6 +464,7 @@ export interface AdminExerciseAlias {
   aliasNormalized: string;
   source: AliasSource;
   confidenceScore: number | null;
+  isDefault: boolean;
   createdAt: Date;
 }
 
@@ -469,7 +472,7 @@ export interface AdminExerciseAlias {
 export type AliasSource = 'seed' | 'manual' | 'llm' | 'user' | 'fuzzy' | 'vector';
 
 // Exercise with aliases for detail view
-export interface AdminExerciseWithAliases extends AdminExercise {
+export interface AdminExerciseWithAliases extends Omit<AdminExercise, 'movementSlug' | 'movementName'> {
   shortDescription: string;
   instructions: string;
   cues: string[];
@@ -477,6 +480,9 @@ export interface AdminExerciseWithAliases extends AdminExercise {
   pressPlane: string;
   modality: string;
   intensity: string;
+  movementId: string | null;
+  movementSlug: string | null;
+  movementName: string | null;
   aliases: AdminExerciseAlias[];
 }
 
@@ -487,6 +493,7 @@ export interface ExerciseFilters {
   mechanics?: string;
   trainingGroup?: string;
   muscle?: string;
+  movement?: string;
   isActive?: boolean;
 }
 

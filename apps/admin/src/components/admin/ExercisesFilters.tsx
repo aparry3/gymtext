@@ -12,6 +12,7 @@ interface ExercisesFiltersProps {
   onFiltersChange: (filters: ExerciseFilters) => void
   isLoading?: boolean
   types?: string[]
+  movements?: { slug: string; name: string }[]
 }
 
 const mechanicsOptions = ['compound', 'isolation']
@@ -49,7 +50,8 @@ const muscles = [
 export function ExercisesFilters({
   onFiltersChange,
   isLoading = false,
-  types = []
+  types = [],
+  movements = []
 }: ExercisesFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -61,6 +63,7 @@ export function ExercisesFilters({
     mechanics: searchParams.get('mechanics') || undefined,
     trainingGroup: searchParams.get('trainingGroup') || undefined,
     muscle: searchParams.get('muscle') || undefined,
+    movement: searchParams.get('movement') || undefined,
     isActive: searchParams.get('isActive') === 'true' ? true :
               searchParams.get('isActive') === 'false' ? false : undefined,
   })
@@ -224,6 +227,25 @@ export function ExercisesFilters({
                 </select>
               </div>
 
+              {/* Movement Filter */}
+              {movements.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Movement</label>
+                  <select
+                    value={filters.movement || ''}
+                    onChange={(e) => handleFilterChange('movement', e.target.value || undefined)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">All Movements</option>
+                    {movements.map((m) => (
+                      <option key={m.slug} value={m.slug}>
+                        {formatLabel(m.name)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Active Status Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
@@ -285,6 +307,12 @@ export function ExercisesFilters({
             <FilterBadge
               label={`Muscle: ${formatLabel(filters.muscle)}`}
               onRemove={() => removeFilter('muscle')}
+            />
+          )}
+          {filters.movement && (
+            <FilterBadge
+              label={`Movement: ${formatLabel(filters.movement)}`}
+              onRemove={() => removeFilter('movement')}
             />
           )}
           {filters.isActive !== undefined && (

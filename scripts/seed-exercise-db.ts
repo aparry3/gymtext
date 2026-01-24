@@ -34,6 +34,7 @@ interface ExerciseJson {
   variation_label: string;
   aliases: string[];
   popularity: number;
+  movement_slug?: string;
 }
 
 interface ExercisesFile {
@@ -59,6 +60,11 @@ async function main() {
   const exercises = data.exercises;
   console.log(`Found ${exercises.length} exercises`);
 
+  // Load movements for slug -> id lookup
+  const movementRows = await sql<{ id: string; slug: string }>`SELECT id, slug FROM movements`.execute(db);
+  const movementMap = new Map(movementRows.rows.map(m => [m.slug, m.id]));
+  console.log(`Loaded ${movementRows.rows.length} movements`);
+
   // Clear existing data
   console.log('Truncating exercises (cascade)...');
   await sql`TRUNCATE exercises CASCADE`.execute(db);
@@ -71,13 +77,16 @@ async function main() {
     const batch = exercises.slice(i, i + BATCH_SIZE);
 
     for (const ex of batch) {
+      // Resolve movement_id from slug
+      const movementId = ex.movement_slug ? (movementMap.get(ex.movement_slug) || null) : null;
+
       // Insert exercise
       const result = await sql`
         INSERT INTO exercises (
           name, slug, status, type, mechanics, kinetic_chain, press_plane,
           training_groups, movement_patterns, primary_muscles, secondary_muscles,
           equipment, modality, intensity, short_description, instructions,
-          cues, aliases, popularity, is_active
+          cues, aliases, popularity, is_active, movement_id
         ) VALUES (
           ${ex.name},
           ${ex.slug},
@@ -98,7 +107,8 @@ async function main() {
           ${sql.raw(`ARRAY[${ex.cues.map(v => `'${v.replace(/'/g, "''")}'`).join(',')}]::text[]`)},
           ${sql.raw(`ARRAY[${ex.aliases.map(v => `'${v.replace(/'/g, "''")}'`).join(',')}]::text[]`)},
           ${ex.popularity},
-          ${ex.status === 'active'}
+          ${ex.status === 'active'},
+          ${movementId}
         )
         RETURNING id
       `.execute(db);

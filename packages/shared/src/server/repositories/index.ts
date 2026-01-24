@@ -25,3 +25,4 @@ export * from './profileUpdateRepository';
 export * from './userAuthRepository';
 export * from './exerciseRepository';
 export * from './exerciseAliasRepository';
+export * from './movementRepository';

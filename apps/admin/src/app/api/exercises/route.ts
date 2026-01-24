@@ -30,6 +30,10 @@ export async function GET(request: Request) {
       filters.muscle = searchParams.get('muscle')!;
     }
 
+    if (searchParams.get('movement')) {
+      filters.movement = searchParams.get('movement')!;
+    }
+
     if (searchParams.get('isActive') !== null && searchParams.get('isActive') !== '') {
       filters.isActive = searchParams.get('isActive') === 'true';
     }
@@ -55,9 +59,10 @@ export async function GET(request: Request) {
         limit: parseInt(searchParams.get('pageSize') || '20', 10),
       });
 
-      // Get alias counts for matched exercises
+      // Get alias counts and movement data for matched exercises
       const matchedIds = searchResults.map(r => r.exercise.id);
       const aliasCounts = new Map<string, number>();
+      const movementMap = new Map<string, { slug: string; name: string }>();
       if (matchedIds.length > 0) {
         const aliasCountResults = await repos.db
           .selectFrom('exerciseAliases')
@@ -69,28 +74,44 @@ export async function GET(request: Request) {
         for (const row of aliasCountResults) {
           aliasCounts.set(row.exerciseId, Number(row.count));
         }
+
+        // Get movement data for matched exercises
+        const movementResults = await repos.db
+          .selectFrom('exercises')
+          .innerJoin('movements', 'movements.id', 'exercises.movementId')
+          .select(['exercises.id', 'movements.slug', 'movements.name'])
+          .where('exercises.id', 'in', matchedIds)
+          .execute();
+        for (const row of movementResults) {
+          movementMap.set(row.id, { slug: row.slug, name: row.name });
+        }
       }
 
-      const exercisesWithMatch = searchResults.map(r => ({
-        id: r.exercise.id,
-        name: r.exercise.name,
-        slug: r.exercise.slug,
-        type: r.exercise.type,
-        mechanics: r.exercise.mechanics,
-        kineticChain: r.exercise.kineticChain,
-        equipment: r.exercise.equipment,
-        primaryMuscles: r.exercise.primaryMuscles,
-        secondaryMuscles: r.exercise.secondaryMuscles,
-        trainingGroups: r.exercise.trainingGroups,
-        popularity: Number(r.exercise.popularity) || 0,
-        isActive: r.exercise.isActive,
-        aliasCount: aliasCounts.get(r.exercise.id) || 0,
-        createdAt: r.exercise.createdAt,
-        updatedAt: r.exercise.updatedAt,
-        matchMethod: r.method,
-        matchConfidence: r.confidence,
-        matchedOn: r.matchedOn,
-      }));
+      const exercisesWithMatch = searchResults.map(r => {
+        const movement = movementMap.get(r.exercise.id);
+        return {
+          id: r.exercise.id,
+          name: r.exercise.name,
+          slug: r.exercise.slug,
+          type: r.exercise.type,
+          mechanics: r.exercise.mechanics,
+          kineticChain: r.exercise.kineticChain,
+          equipment: r.exercise.equipment,
+          primaryMuscles: r.exercise.primaryMuscles,
+          secondaryMuscles: r.exercise.secondaryMuscles,
+          trainingGroups: r.exercise.trainingGroups,
+          popularity: Number(r.exercise.popularity) || 0,
+          isActive: r.exercise.isActive,
+          aliasCount: aliasCounts.get(r.exercise.id) || 0,
+          movementSlug: movement?.slug,
+          movementName: movement?.name,
+          createdAt: r.exercise.createdAt,
+          updatedAt: r.exercise.updatedAt,
+          matchMethod: r.method,
+          matchConfidence: r.confidence,
+          matchedOn: r.matchedOn,
+        };
+      });
 
       return NextResponse.json({
         success: true,
@@ -111,12 +132,18 @@ export async function GET(request: Request) {
       });
     }
 
+    // Fetch all movements for filter dropdown
+    const allMovements = await repos.movement.findAll();
+    const movementsList = allMovements.map(m => ({ slug: m.slug, name: m.name }));
+
     // No search term: standard listing with filters
     let exercises = await repos.db
       .selectFrom('exercises')
-      .selectAll()
-      .orderBy('popularity', 'desc')
-      .orderBy('name', 'asc')
+      .leftJoin('movements', 'movements.id', 'exercises.movementId')
+      .selectAll('exercises')
+      .select(['movements.slug as movementSlug', 'movements.name as movementName'])
+      .orderBy('exercises.popularity', 'desc')
+      .orderBy('exercises.name', 'asc')
       .execute();
 
     if (filters.type) {
@@ -137,6 +164,12 @@ export async function GET(request: Request) {
       exercises = exercises.filter(e =>
         e.primaryMuscles?.includes(filters.muscle!) ||
         e.secondaryMuscles?.includes(filters.muscle!)
+      );
+    }
+
+    if (filters.movement) {
+      exercises = exercises.filter(e =>
+        (e as typeof exercises[0] & { movementSlug: string | null }).movementSlug === filters.movement
       );
     }
 
@@ -162,24 +195,29 @@ export async function GET(request: Request) {
       }
     }
 
-    // Enrich exercises with alias count
-    const exercisesWithStats = exercises.map(e => ({
-      id: e.id,
-      name: e.name,
-      slug: e.slug,
-      type: e.type,
-      mechanics: e.mechanics,
-      kineticChain: e.kineticChain,
-      equipment: e.equipment,
-      primaryMuscles: e.primaryMuscles,
-      secondaryMuscles: e.secondaryMuscles,
-      trainingGroups: e.trainingGroups,
-      popularity: Number(e.popularity) || 0,
-      isActive: e.isActive,
-      aliasCount: aliasCounts.get(e.id) || 0,
-      createdAt: e.createdAt,
-      updatedAt: e.updatedAt,
-    }));
+    // Enrich exercises with alias count and movement data
+    const exercisesWithStats = exercises.map(e => {
+      const ex = e as typeof e & { movementSlug: string | null; movementName: string | null };
+      return {
+        id: e.id,
+        name: e.name,
+        slug: e.slug,
+        type: e.type,
+        mechanics: e.mechanics,
+        kineticChain: e.kineticChain,
+        equipment: e.equipment,
+        primaryMuscles: e.primaryMuscles,
+        secondaryMuscles: e.secondaryMuscles,
+        trainingGroups: e.trainingGroups,
+        popularity: Number(e.popularity) || 0,
+        isActive: e.isActive,
+        aliasCount: aliasCounts.get(e.id) || 0,
+        movementSlug: ex.movementSlug || undefined,
+        movementName: ex.movementName || undefined,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+      };
+    });
 
     // Apply sorting
     if (sort) {
@@ -235,6 +273,7 @@ export async function GET(request: Request) {
           totalPages,
         },
         stats,
+        movements: movementsList,
       }
     });
 

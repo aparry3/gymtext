@@ -85,6 +85,9 @@ export type {
   AliasSource, ExerciseWithAliases
 } from './exercise';
 
+// Movement types (progress tracking groupings)
+export type { Movement, NewMovement, MovementUpdate, MetricType } from './movement';
+
 // Exercise resolution types
 export type {
   ExerciseMatchMethod,

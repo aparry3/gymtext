@@ -21,6 +21,7 @@ function ExercisesPageContent() {
   const router = useRouter()
   const [exercises, setExercises] = useState<AdminExercise[]>([])
   const [types, setTypes] = useState<string[]>([])
+  const [movements, setMovements] = useState<{ slug: string; name: string }[]>([])
   const [stats, setStats] = useState<ExerciseStats>({
     total: 0,
     byType: {},
@@ -39,6 +40,7 @@ function ExercisesPageContent() {
     mechanics: searchParams?.get('mechanics') || undefined,
     trainingGroup: searchParams?.get('trainingGroup') || undefined,
     muscle: searchParams?.get('muscle') || undefined,
+    movement: searchParams?.get('movement') || undefined,
     isActive: searchParams?.get('isActive') === 'true' ? true :
               searchParams?.get('isActive') === 'false' ? false : undefined,
   }
@@ -63,6 +65,7 @@ function ExercisesPageContent() {
       if (filters.mechanics) params.set('mechanics', filters.mechanics)
       if (filters.trainingGroup) params.set('trainingGroup', filters.trainingGroup)
       if (filters.muscle) params.set('muscle', filters.muscle)
+      if (filters.movement) params.set('movement', filters.movement)
       if (filters.isActive !== undefined) params.set('isActive', String(filters.isActive))
 
       params.set('page', String(page))
@@ -77,7 +80,7 @@ function ExercisesPageContent() {
         throw new Error(result.message || 'Failed to fetch exercises')
       }
 
-      const { exercises: fetchedExercises, pagination, stats: fetchedStats } = result.data
+      const { exercises: fetchedExercises, pagination, stats: fetchedStats, movements: fetchedMovements } = result.data
 
       setExercises(fetchedExercises)
       setTotalPages(pagination.totalPages)
@@ -86,6 +89,11 @@ function ExercisesPageContent() {
       // Extract unique types for filters
       const uniqueTypes = Object.keys(fetchedStats.byType).sort()
       setTypes(uniqueTypes)
+
+      // Set movements for filter dropdown
+      if (fetchedMovements) {
+        setMovements(fetchedMovements)
+      }
 
     } catch (err) {
       setError('Failed to load exercises')
@@ -191,6 +199,7 @@ function ExercisesPageContent() {
           onFiltersChange={handleFiltersChange}
           isLoading={isLoading}
           types={types}
+          movements={movements}
         />
 
         {/* Exercises Table */}

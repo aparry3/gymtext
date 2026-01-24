@@ -213,6 +213,42 @@ export class ExerciseAliasRepository extends BaseRepository {
   }
 
   /**
+   * Set an alias as the default for an exercise.
+   * Clears any existing default, then sets the specified alias.
+   */
+  async setDefault(exerciseId: string, aliasId: string): Promise<void> {
+    await this.db.transaction().execute(async (trx) => {
+      // Clear all defaults for this exercise
+      await trx
+        .updateTable('exerciseAliases')
+        .set({ isDefault: false })
+        .where('exerciseId', '=', exerciseId)
+        .where('isDefault', '=', true)
+        .execute();
+
+      // Set the specified alias as default
+      await trx
+        .updateTable('exerciseAliases')
+        .set({ isDefault: true })
+        .where('id', '=', aliasId)
+        .where('exerciseId', '=', exerciseId)
+        .execute();
+    });
+  }
+
+  /**
+   * Find the default alias for an exercise
+   */
+  async findDefault(exerciseId: string): Promise<ExerciseAlias | undefined> {
+    return await this.db
+      .selectFrom('exerciseAliases')
+      .selectAll()
+      .where('exerciseId', '=', exerciseId)
+      .where('isDefault', '=', true)
+      .executeTakeFirst();
+  }
+
+  /**
    * Find aliases by fuzzy similarity on alias_lex column using pg_trgm
    */
   async findByLexFuzzySimilarity(

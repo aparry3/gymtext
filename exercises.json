@@ -44,7 +44,8 @@
         "strict pull-up",
         "dead hang pull-up"
       ],
-      "popularity": 980
+      "popularity": 980,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Chin-Up",
@@ -89,7 +90,8 @@
         "underhand pull-up",
         "supinated pull-up"
       ],
-      "popularity": 950
+      "popularity": 950,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Lat Pulldown",
@@ -178,7 +180,8 @@
         "seated row",
         "close grip cable row"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "row"
     },
     {
       "name": "Bent-Over Barbell Row",
@@ -227,7 +230,8 @@
         "bent row",
         "bent-over row"
       ],
-      "popularity": 930
+      "popularity": 930,
+      "movement_slug": "row"
     },
     {
       "name": "One-Arm Dumbbell Row",
@@ -273,7 +277,8 @@
         "db row",
         "one-arm row"
       ],
-      "popularity": 910
+      "popularity": 910,
+      "movement_slug": "row"
     },
     {
       "name": "Chest-Supported Dumbbell Row",
@@ -318,7 +323,8 @@
         "supported dumbbell row",
         "chest supported row"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "row"
     },
     {
       "name": "Inverted Row",
@@ -366,7 +372,8 @@
         "australian pull-up",
         "inverted pull-up"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "row"
     },
     {
       "name": "T-Bar Row (Chest Supported)",
@@ -410,7 +417,8 @@
         "tbar row machine",
         "supported t-bar row"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "row"
     },
     {
       "name": "Machine High Row",
@@ -454,7 +462,8 @@
         "plate loaded high row",
         "iso-lateral high row"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "row"
     },
     {
       "name": "Straight-Arm Cable Pulldown",
@@ -540,7 +549,8 @@
         "cable face pull",
         "band face pull"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "row"
     },
     {
       "name": "Reverse Pec Deck Fly",
@@ -582,7 +592,8 @@
         "reverse fly machine",
         "reverse pec deck"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "row"
     },
     {
       "name": "Barbell Curl",
@@ -835,7 +846,8 @@
         "banded pull-up",
         "band assist pullup"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Assisted Pull-Up (Machine)",
@@ -879,7 +891,8 @@
         "machine pull-up assist",
         "gravitron pull-up"
       ],
-      "popularity": 800
+      "popularity": 800,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Front Plank",
@@ -924,7 +937,8 @@
         "forearm plank",
         "standard plank"
       ],
-      "popularity": 980
+      "popularity": 980,
+      "movement_slug": "core"
     },
     {
       "name": "Side Plank",
@@ -967,7 +981,8 @@
         "side plank hold",
         "forearm side plank"
       ],
-      "popularity": 930
+      "popularity": 930,
+      "movement_slug": "core"
     },
     {
       "name": "Dead Bug",
@@ -1009,7 +1024,8 @@
         "deadbug",
         "dead bug exercise"
       ],
-      "popularity": 880
+      "popularity": 880,
+      "movement_slug": "core"
     },
     {
       "name": "Bird Dog",
@@ -1052,7 +1068,8 @@
         "bird-dog",
         "quadruped opposite arm/leg raise"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "core"
     },
     {
       "name": "Hollow Body Hold",
@@ -1095,7 +1112,8 @@
         "hollow body",
         "banana hold"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "core"
     },
     {
       "name": "Ab Wheel Rollout",
@@ -1139,7 +1157,8 @@
         "ab wheel",
         "kneeling ab rollout"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "core"
     },
     {
       "name": "Pallof Press",
@@ -1185,7 +1204,8 @@
         "anti-rotation press",
         "band pallof press"
       ],
-      "popularity": 790
+      "popularity": 790,
+      "movement_slug": "core"
     },
     {
       "name": "Cable Wood Chop",
@@ -1229,7 +1249,8 @@
         "woodchop",
         "wood chop"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "core"
     },
     {
       "name": "Cable Crunch",
@@ -1271,7 +1292,8 @@
         "kneeling cable crunch",
         "rope cable crunch"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "core"
     },
     {
       "name": "Hanging Knee Raise",
@@ -1315,7 +1337,8 @@
         "hanging knees",
         "hanging knee lift"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "core"
     },
     {
       "name": "Hanging Leg Raise",
@@ -1359,7 +1382,8 @@
         "hanging leg raises",
         "straight leg raise hang"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "core"
     },
     {
       "name": "Lying Leg Raise",
@@ -1401,7 +1425,8 @@
         "lying leg raises",
         "floor leg raise"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "core"
     },
     {
       "name": "Reverse Crunch",
@@ -1443,7 +1468,8 @@
         "reverse crunches",
         "hip lift crunch"
       ],
-      "popularity": 830
+      "popularity": 830,
+      "movement_slug": "core"
     },
     {
       "name": "Bicycle Crunch",
@@ -1486,7 +1512,8 @@
         "bicycle abs",
         "bicycle crunches"
       ],
-      "popularity": 870
+      "popularity": 870,
+      "movement_slug": "core"
     },
     {
       "name": "Russian Twist",
@@ -1528,7 +1555,8 @@
         "russian twists",
         "seated twist"
       ],
-      "popularity": 790
+      "popularity": 790,
+      "movement_slug": "core"
     },
     {
       "name": "Back Extension",
@@ -1614,7 +1642,8 @@
         "superman",
         "prone superman hold"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "core"
     },
     {
       "name": "Glute Bridge March",
@@ -1658,7 +1687,8 @@
         "bridge march",
         "glute bridge marching"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "hip_thrust"
     },
     {
       "name": "Suitcase Carry",
@@ -1704,7 +1734,8 @@
         "single arm carry",
         "offset carry"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "carry"
     },
     {
       "name": "Farmer's Carry",
@@ -1753,7 +1784,8 @@
         "farmer carry",
         "loaded carry"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "carry"
     },
     {
       "name": "Sprint (Flat, Max Effort)",
@@ -1805,7 +1837,8 @@
         "flat sprint",
         "all-out sprint"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "run"
     },
     {
       "name": "Acceleration Sprint (10–30 m)",
@@ -1854,7 +1887,8 @@
         "30m acceleration",
         "short acceleration sprint"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "run"
     },
     {
       "name": "Flying Sprint (Build + Fly)",
@@ -1903,7 +1937,8 @@
         "fly sprint",
         "build and sprint"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "run"
     },
     {
       "name": "Hill Sprint",
@@ -1950,7 +1985,8 @@
         "hill accelerations",
         "short hill sprints"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "run"
     },
     {
       "name": "Tempo Run (Track)",
@@ -1999,7 +2035,8 @@
         "steady tempo",
         "comfortably hard run"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "run"
     },
     {
       "name": "Interval Run (400 m Repeats)",
@@ -2048,7 +2085,8 @@
         "4x400",
         "400m intervals"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "run"
     },
     {
       "name": "Fartlek Run",
@@ -2095,7 +2133,8 @@
         "fartlek intervals",
         "surge run"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "run"
     },
     {
       "name": "Long Run",
@@ -2143,7 +2182,8 @@
         "LSD run",
         "easy long run"
       ],
-      "popularity": 900
+      "popularity": 900,
+      "movement_slug": "run"
     },
     {
       "name": "Easy Run (Recovery Run)",
@@ -2189,7 +2229,8 @@
         "easy jog",
         "easy run"
       ],
-      "popularity": 880
+      "popularity": 880,
+      "movement_slug": "run"
     },
     {
       "name": "Strides (100 m)",
@@ -2236,7 +2277,8 @@
         "run strides",
         "striders"
       ],
-      "popularity": 830
+      "popularity": 830,
+      "movement_slug": "run"
     },
     {
       "name": "A-Skip",
@@ -2473,7 +2515,8 @@
         "carioca drill",
         "karaoke drill"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "core"
     },
     {
       "name": "Bounding (Running Bounds)",
@@ -2523,7 +2566,8 @@
         "bounds",
         "bounding drill"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "jump"
     },
     {
       "name": "Ankling (Ankle Dribbles)",
@@ -2618,7 +2662,8 @@
         "three-point start",
         "3pt sprint start"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "run"
     },
     {
       "name": "Relay Handoff Drill (4x100)",
@@ -2764,7 +2809,8 @@
         "BB bench",
         "barbell flat bench"
       ],
-      "popularity": 990
+      "popularity": 990,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Dumbbell Bench Press",
@@ -2811,7 +2857,8 @@
         "dumbbell flat bench",
         "dumbbell press"
       ],
-      "popularity": 940
+      "popularity": 940,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Incline Barbell Bench Press",
@@ -2857,7 +2904,8 @@
         "incline BB bench",
         "barbell incline press"
       ],
-      "popularity": 900
+      "popularity": 900,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Incline Dumbbell Bench Press",
@@ -2904,7 +2952,8 @@
         "incline dumbbell press",
         "incline dumbbell bench"
       ],
-      "popularity": 870
+      "popularity": 870,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Decline Barbell Bench Press",
@@ -2950,7 +2999,8 @@
         "decline BB bench",
         "barbell decline press"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Seated Dumbbell Shoulder Press",
@@ -2996,7 +3046,8 @@
         "dumbbell overhead press seated",
         "seated DB OHP"
       ],
-      "popularity": 880
+      "popularity": 880,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Standing Barbell Overhead Press",
@@ -3045,7 +3096,8 @@
         "standing barbell press",
         "military press"
       ],
-      "popularity": 930
+      "popularity": 930,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Push-Up",
@@ -3093,7 +3145,8 @@
         "pushup",
         "bodyweight push up"
       ],
-      "popularity": 995
+      "popularity": 995,
+      "movement_slug": "push_up"
     },
     {
       "name": "Close-Grip Barbell Bench Press",
@@ -3139,7 +3192,8 @@
         "close grip bench",
         "close-grip bench press"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Dips (Chest Lean)",
@@ -3229,7 +3283,8 @@
         "seated chest press",
         "machine bench press"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Smith Machine Bench Press",
@@ -3274,7 +3329,8 @@
         "Smith machine bench",
         "smith flat press"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Cable Chest Fly",
@@ -3406,7 +3462,8 @@
         "Arnold DB press",
         "arnold dumbbell press"
       ],
-      "popularity": 680
+      "popularity": 680,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Dumbbell Floor Press",
@@ -3451,7 +3508,8 @@
         "dumbbell floor press",
         "floor press dumbbells"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Barbell Floor Press",
@@ -3496,7 +3554,8 @@
         "barbell floorpress",
         "floor press"
       ],
-      "popularity": 480
+      "popularity": 480,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Landmine Press (Single-Arm)",
@@ -3544,7 +3603,8 @@
         "one-arm landmine press",
         "landmine shoulder press"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "core"
     },
     {
       "name": "Cable Triceps Pushdown",
@@ -3677,7 +3737,8 @@
         "back squat barbell",
         "squat"
       ],
-      "popularity": 980
+      "popularity": 980,
+      "movement_slug": "squat"
     },
     {
       "name": "Front Squat",
@@ -3724,7 +3785,8 @@
         "barbell front squat",
         "front squat barbell"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "squat"
     },
     {
       "name": "Goblet Squat",
@@ -3770,7 +3832,8 @@
         "dumbbell goblet squat",
         "kettlebell goblet squat"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "squat"
     },
     {
       "name": "Box Squat",
@@ -3817,7 +3880,8 @@
         "bb box squat",
         "squat to box"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "squat"
     },
     {
       "name": "Bulgarian Split Squat",
@@ -3865,7 +3929,8 @@
         "RFESS",
         "bulgarian split squat bw"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "lunge"
     },
     {
       "name": "Walking Lunge",
@@ -3913,7 +3978,8 @@
         "alternating walking lunge",
         "bw walking lunge"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "lunge"
     },
     {
       "name": "Reverse Lunge",
@@ -3960,7 +4026,8 @@
         "backward lunge",
         "step-back lunge"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "lunge"
     },
     {
       "name": "Barbell Romanian Deadlift",
@@ -4008,7 +4075,8 @@
         "RDL",
         "romanian deadlift"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Conventional Deadlift",
@@ -4059,7 +4127,8 @@
         "bb deadlift",
         "conventional DL"
       ],
-      "popularity": 990
+      "popularity": 990,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Sumo Deadlift",
@@ -4110,7 +4179,8 @@
         "sumo deadlift barbell",
         "wide stance deadlift"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Trap Bar Deadlift",
@@ -4160,7 +4230,8 @@
         "trap bar DL",
         "hex deadlift"
       ],
-      "popularity": 840
+      "popularity": 840,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Good Morning",
@@ -4254,7 +4325,8 @@
         "bb hip thrust",
         "hip thrusts"
       ],
-      "popularity": 870
+      "popularity": 870,
+      "movement_slug": "hip_thrust"
     },
     {
       "name": "Glute Bridge",
@@ -4298,7 +4370,8 @@
         "bw glute bridge",
         "bridges"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "hip_thrust"
     },
     {
       "name": "Step-Up",
@@ -4345,7 +4418,8 @@
         "bench step up",
         "step ups"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "lunge"
     },
     {
       "name": "Barbell Walking Lunge",
@@ -4394,7 +4468,8 @@
         "barbell lunges walking",
         "walking lunge with barbell"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "lunge"
     },
     {
       "name": "Smith Machine Squat",
@@ -4441,7 +4516,8 @@
         "smith machine back squat",
         "machine squat smith"
       ],
-      "popularity": 610
+      "popularity": 610,
+      "movement_slug": "squat"
     },
     {
       "name": "Leg Press",
@@ -4486,7 +4562,8 @@
         "45 degree leg press",
         "sled press"
       ],
-      "popularity": 930
+      "popularity": 930,
+      "movement_slug": "squat"
     },
     {
       "name": "Hack Squat (Machine)",
@@ -4531,7 +4608,8 @@
         "hack squat",
         "hack squat machine"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "squat"
     },
     {
       "name": "Leg Extension",
@@ -4622,7 +4700,8 @@
         "rowing machine intervals",
         "erg HIIT"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Air Bike Sprint Intervals",
@@ -4672,7 +4751,8 @@
         "fan bike sprints",
         "air bike HIIT"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "run"
     },
     {
       "name": "Treadmill Sprint Intervals",
@@ -4719,7 +4799,8 @@
         "treadmill sprints",
         "running intervals (treadmill)"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "run"
     },
     {
       "name": "Incline Treadmill Hill Intervals",
@@ -4766,7 +4847,8 @@
         "hill intervals (treadmill)",
         "incline HIIT"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "run"
     },
     {
       "name": "Stationary Bike HIIT Intervals",
@@ -4812,7 +4894,8 @@
         "exercise bike intervals",
         "bike sprints"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "bike"
     },
     {
       "name": "Ski Erg Intervals",
@@ -4860,7 +4943,8 @@
         "ski erg HIIT",
         "ski machine intervals"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Stair Climber Intervals",
@@ -4907,7 +4991,8 @@
         "stair climber HIIT",
         "stepmill intervals"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "stair_climber"
     },
     {
       "name": "Elliptical HIIT Intervals",
@@ -4956,7 +5041,8 @@
         "elliptical HIIT",
         "cross trainer intervals"
       ],
-      "popularity": 680
+      "popularity": 680,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Arc Trainer Intervals",
@@ -5002,7 +5088,8 @@
         "arc trainer intervals",
         "adaptive motion trainer intervals"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Rowing Machine Tabata",
@@ -5051,7 +5138,8 @@
         "rower tabata",
         "rowing tabata"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Air Bike Tabata",
@@ -5098,7 +5186,8 @@
         "airdyne tabata",
         "fan bike tabata"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "bike"
     },
     {
       "name": "Treadmill HIIT (1:1 Intervals)",
@@ -5145,7 +5234,8 @@
         "treadmill 60/60s",
         "run/walk intervals (treadmill)"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "run"
     },
     {
       "name": "Bike Hill Climb Intervals (Resistance)",
@@ -5191,7 +5281,8 @@
         "bike resistance intervals",
         "climb intervals"
       ],
-      "popularity": 540
+      "popularity": 540,
+      "movement_slug": "bike"
     },
     {
       "name": "Rowing Machine Pyramid Intervals",
@@ -5240,7 +5331,8 @@
         "rowing pyramid intervals",
         "erg pyramid"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Treadmill Incline Walk Intervals",
@@ -5286,7 +5378,8 @@
         "treadmill hill walk HIIT",
         "incline walk HIIT"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "run"
     },
     {
       "name": "Rowing Machine Steady-State",
@@ -5336,7 +5429,8 @@
         "rower LISS",
         "aerobic rowing"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Stationary Bike Steady-State",
@@ -5382,7 +5476,8 @@
         "bike LISS",
         "zone 2 cycling (stationary)"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "bike"
     },
     {
       "name": "Treadmill Steady-State Jog",
@@ -5429,7 +5524,8 @@
         "treadmill LISS",
         "easy treadmill jog"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "run"
     },
     {
       "name": "Elliptical Steady-State",
@@ -5476,7 +5572,8 @@
         "steady elliptical",
         "cross trainer steady state"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Stair Climber Steady-State",
@@ -5523,7 +5620,8 @@
         "stepmill steady",
         "stair climber LISS"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "stair_climber"
     },
     {
       "name": "Steady-State Run",
@@ -5571,7 +5669,8 @@
         "zone 2 run",
         "steady run"
       ],
-      "popularity": 980
+      "popularity": 980,
+      "movement_slug": "run"
     },
     {
       "name": "Tempo Run",
@@ -5617,7 +5716,8 @@
         "T run",
         "cruise run"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "run"
     },
     {
       "name": "Interval Run",
@@ -5663,7 +5763,8 @@
         "track intervals",
         "speed intervals"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "run"
     },
     {
       "name": "Hill Repeats (Running)",
@@ -5710,7 +5811,8 @@
         "hill intervals",
         "uphill repeats"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "run"
     },
     {
       "name": "Indoor Cycling (Steady Ride)",
@@ -5756,7 +5858,8 @@
         "spin bike steady ride",
         "easy ride"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "bike"
     },
     {
       "name": "Cycling Intervals",
@@ -5802,7 +5905,8 @@
         "spin intervals",
         "HIIT cycling"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "bike"
     },
     {
       "name": "Outdoor Road Cycling",
@@ -5849,7 +5953,8 @@
         "outdoor cycling",
         "endurance ride"
       ],
-      "popularity": 900
+      "popularity": 900,
+      "movement_slug": "bike"
     },
     {
       "name": "Assault Bike (Steady Ride)",
@@ -5897,7 +6002,8 @@
         "fan bike steady",
         "assault bike aerobic"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "bike"
     },
     {
       "name": "Rowing Machine (Steady Row)",
@@ -5946,7 +6052,8 @@
         "erg steady state",
         "rower steady"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Rowing Intervals",
@@ -5995,7 +6102,8 @@
         "rower sprints",
         "HIIT rowing"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Swim Freestyle (Steady)",
@@ -6043,7 +6151,8 @@
         "front crawl",
         "lap swimming freestyle"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "swim"
     },
     {
       "name": "Swim Intervals",
@@ -6091,7 +6200,8 @@
         "pool intervals",
         "lap intervals"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "swim"
     },
     {
       "name": "Swim Breaststroke (Steady)",
@@ -6139,7 +6249,8 @@
         "steady breaststroke",
         "breaststroke laps"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "swim"
     },
     {
       "name": "Treadmill Run (Steady)",
@@ -6185,7 +6296,8 @@
         "treadmill jog",
         "TM run"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "run"
     },
     {
       "name": "Treadmill Incline Walk",
@@ -6231,7 +6343,8 @@
         "treadmill hike",
         "12-3-30"
       ],
-      "popularity": 880
+      "popularity": 880,
+      "movement_slug": "run"
     },
     {
       "name": "Cycling Cadence Drills",
@@ -6277,7 +6390,8 @@
         "high cadence drills",
         "cadence intervals"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "bike"
     },
     {
       "name": "Rowing Technique Drill (Pause Row)",
@@ -6326,7 +6440,8 @@
         "erg pause drill",
         "rowing pause drill"
       ],
-      "popularity": 260
+      "popularity": 260,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Open Water Swim",
@@ -6375,7 +6490,8 @@
         "ocean swim",
         "lake swim"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "swim"
     },
     {
       "name": "Brick Workout (Bike to Run)",
@@ -6423,7 +6539,8 @@
         "triathlon brick",
         "transition workout"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "run"
     },
     {
       "name": "Handstand (Wall Assisted)",
@@ -6474,7 +6591,8 @@
         "handstand against wall",
         "wall-assisted handstand"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "core"
     },
     {
       "name": "Freestanding Handstand Hold",
@@ -6524,7 +6642,8 @@
         "free handstand",
         "freestanding handstand"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "core"
     },
     {
       "name": "L-Sit (Parallettes)",
@@ -6572,7 +6691,8 @@
         "L-sit hold",
         "parallette L-sit"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "core"
     },
     {
       "name": "Tuck Planche Hold",
@@ -6623,7 +6743,8 @@
         "planche tuck hold",
         "tuck planche on parallettes"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "core"
     },
     {
       "name": "Frog Stand",
@@ -6670,7 +6791,8 @@
         "frog balance",
         "frog stand hold"
       ],
-      "popularity": 540
+      "popularity": 540,
+      "movement_slug": "core"
     },
     {
       "name": "Front Lever Tuck Hold",
@@ -6722,7 +6844,8 @@
         "front lever tuck hold",
         "tucked front lever"
       ],
-      "popularity": 450
+      "popularity": 450,
+      "movement_slug": "core"
     },
     {
       "name": "Back Lever Tuck Hold",
@@ -6774,7 +6897,8 @@
         "back lever tuck hold",
         "tucked back lever"
       ],
-      "popularity": 320
+      "popularity": 320,
+      "movement_slug": "core"
     },
     {
       "name": "Muscle-Up (Bar)",
@@ -6826,7 +6950,8 @@
         "muscleup",
         "MU"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Skin the Cat (Rings)",
@@ -6876,7 +7001,8 @@
         "skin the cat",
         "ring skin the cat"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "core"
     },
     {
       "name": "German Hang (Rings)",
@@ -6925,7 +7051,8 @@
         "rings german hang",
         "back hang"
       ],
-      "popularity": 260
+      "popularity": 260,
+      "movement_slug": "core"
     },
     {
       "name": "Ring Support Hold (Top Support)",
@@ -6975,7 +7102,8 @@
         "top support on rings",
         "ring support"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "core"
     },
     {
       "name": "Ring Dip (Strict)",
@@ -7071,7 +7199,8 @@
         "rings inverted row",
         "ring body row"
       ],
-      "popularity": 680
+      "popularity": 680,
+      "movement_slug": "row"
     },
     {
       "name": "Tuck Front Lever Row",
@@ -7122,7 +7251,8 @@
         "tuck FL row",
         "tucked front lever rows"
       ],
-      "popularity": 280
+      "popularity": 280,
+      "movement_slug": "core"
     },
     {
       "name": "Pistol Squat (Assisted)",
@@ -7170,7 +7300,8 @@
         "supported pistol squat",
         "band-assisted pistol squat"
       ],
-      "popularity": 610
+      "popularity": 610,
+      "movement_slug": "squat"
     },
     {
       "name": "Pistol Squat (Unassisted)",
@@ -7217,7 +7348,8 @@
         "single-leg squat pistol",
         "bodyweight pistol"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "squat"
     },
     {
       "name": "V-Sit Hold",
@@ -7266,7 +7398,8 @@
         "V-sit hold",
         "v-sit"
       ],
-      "popularity": 340
+      "popularity": 340,
+      "movement_slug": "core"
     },
     {
       "name": "Arch Body Hold (Superman Hold)",
@@ -7311,7 +7444,8 @@
         "arch hold",
         "prone arch hold"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "core"
     },
     {
       "name": "Cartwheel",
@@ -7359,7 +7493,8 @@
         "side cartwheel",
         "gymnastics cartwheel"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "core"
     },
     {
       "name": "Cross-Country Skiing (Classic)",
@@ -7570,7 +7705,8 @@
         "bump skiing",
         "mogul run"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "jump"
     },
     {
       "name": "Ski Touring (Uphill Skinning)",
@@ -7822,7 +7958,8 @@
         "jump turns skiing",
         "hop turns"
       ],
-      "popularity": 240
+      "popularity": 240,
+      "movement_slug": "core"
     },
     {
       "name": "Ski Side-Stepping (Uphill)",
@@ -7872,7 +8009,8 @@
         "sidestepping on skis",
         "ski sidestep uphill"
       ],
-      "popularity": 180
+      "popularity": 180,
+      "movement_slug": "lunge"
     },
     {
       "name": "Skating Stride Drills (Off-Snow)",
@@ -7974,7 +8112,8 @@
         "speed skaters",
         "skaters"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "jump"
     },
     {
       "name": "Slide Board Lateral Stride",
@@ -8077,7 +8216,8 @@
         "side sled drag",
         "sled side drag"
       ],
-      "popularity": 250
+      "popularity": 250,
+      "movement_slug": "carry"
     },
     {
       "name": "Shuttle Runs (Lateral)",
@@ -8225,7 +8365,8 @@
         "pizza turns",
         "wedge turns"
       ],
-      "popularity": 460
+      "popularity": 460,
+      "movement_slug": "core"
     },
     {
       "name": "Hockey Stops (Ice Skating Drill)",
@@ -8276,7 +8417,8 @@
         "hockey stops",
         "skate stops"
       ],
-      "popularity": 380
+      "popularity": 380,
+      "movement_slug": "core"
     },
     {
       "name": "Ski Poling (Double Pole Drill)",
@@ -8574,7 +8716,8 @@
         "defensive drop step",
         "hip turn drill"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "lunge"
     },
     {
       "name": "Basketball Backpedal to Sprint Transition Drill",
@@ -8621,7 +8764,8 @@
         "defensive recovery drill",
         "backpedal turn and go"
       ],
-      "popularity": 590
+      "popularity": 590,
+      "movement_slug": "run"
     },
     {
       "name": "Basketball Lateral Cone Shuffle Drill",
@@ -8860,7 +9004,8 @@
         "two-foot stop",
         "jump stop drill basketball"
       ],
-      "popularity": 670
+      "popularity": 670,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Tuck Jump Drill",
@@ -8907,7 +9052,8 @@
         "knee tuck jumps",
         "tuck jump plyo"
       ],
-      "popularity": 540
+      "popularity": 540,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Depth Jump (Box Drop Jump)",
@@ -8952,7 +9098,8 @@
         "drop jumps",
         "box drop jump"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Lateral Bound (Skater Jump)",
@@ -9002,7 +9149,8 @@
         "lateral bounds",
         "side-to-side bounds"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Broad Jump (Standing Long Jump)",
@@ -9049,7 +9197,8 @@
         "broad jumps",
         "two-foot broad jump"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Split Squat Jump",
@@ -9097,7 +9246,8 @@
         "split jumps",
         "alternating lunge jumps"
       ],
-      "popularity": 610
+      "popularity": 610,
+      "movement_slug": "lunge"
     },
     {
       "name": "Basketball Rim Touch Jumps",
@@ -9143,7 +9293,8 @@
         "rim touch jumps",
         "backboard touches"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Quick Feet Line Hops",
@@ -9189,7 +9340,8 @@
         "quick hops",
         "ankle hops over line"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "jump"
     },
     {
       "name": "Basketball Agility Ladder Drill (In-In-Out-Out)",
@@ -9333,7 +9485,8 @@
         "weave drill",
         "slalom sprint drill"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "run"
     },
     {
       "name": "Basketball Rebound Jump Drill",
@@ -9382,7 +9535,8 @@
         "rebound jumps",
         "basketball rebounding drill"
       ],
-      "popularity": 570
+      "popularity": 570,
+      "movement_slug": "jump"
     },
     {
       "name": "World's Greatest Stretch",
@@ -9432,7 +9586,8 @@
         "lunge with rotation and hamstring",
         "spiderman stretch with rotation"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "core"
     },
     {
       "name": "Cat-Cow Stretch",
@@ -9478,7 +9633,8 @@
         "cat cow stretch",
         "spinal flexion extension"
       ],
-      "popularity": 900
+      "popularity": 900,
+      "movement_slug": "core"
     },
     {
       "name": "Child's Pose",
@@ -9524,7 +9680,8 @@
         "prayer stretch",
         "kneeling lat stretch"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "core"
     },
     {
       "name": "Thread the Needle Stretch",
@@ -9569,7 +9726,8 @@
         "t-spine thread the needle",
         "quadruped thoracic rotation stretch"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "core"
     },
     {
       "name": "Couch Stretch",
@@ -9614,7 +9772,8 @@
         "wall quad stretch",
         "kneeling quad hip flexor stretch"
       ],
-      "popularity": 860
+      "popularity": 860,
+      "movement_slug": "lunge"
     },
     {
       "name": "90/90 Hip Stretch",
@@ -9660,7 +9819,8 @@
         "shin box stretch",
         "hip rotation stretch"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "core"
     },
     {
       "name": "Pigeon Pose",
@@ -9706,7 +9866,8 @@
         "figure four pigeon",
         "eka pada rajakapotasana"
       ],
-      "popularity": 840
+      "popularity": 840,
+      "movement_slug": "core"
     },
     {
       "name": "Standing Calf Stretch (Wall)",
@@ -9835,7 +9996,8 @@
         "third world squat",
         "malasana hold"
       ],
-      "popularity": 740
+      "popularity": 740,
+      "movement_slug": "squat"
     },
     {
       "name": "Doorway Pec Stretch",
@@ -10302,7 +10464,8 @@
         "dead stop row",
         "barbell dead-stop row"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "row"
     },
     {
       "name": "Meadows Row",
@@ -10349,7 +10512,8 @@
         "landmine row (one arm)",
         "one-arm landmine barbell row"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "row"
     },
     {
       "name": "Barbell Shrug",
@@ -10390,7 +10554,8 @@
         "barbell shrugs",
         "BB shrug"
       ],
-      "popularity": 780
+      "popularity": 780,
+      "movement_slug": "row"
     },
     {
       "name": "Dumbbell Shrug",
@@ -10431,7 +10596,8 @@
         "DB shrug",
         "dumbbell shrugs"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "row"
     },
     {
       "name": "Rack Pull (Above Knee)",
@@ -10524,7 +10690,8 @@
         "DB RDL",
         "dumbbell Romanian deadlift"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Cable Rope Hammer Curl",
@@ -11086,7 +11253,8 @@
         "plank shoulder taps",
         "high plank shoulder tap"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "core"
     },
     {
       "name": "Body Saw (Forearm Plank)",
@@ -11129,7 +11297,8 @@
         "forearm body saw",
         "body saw plank"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "core"
     },
     {
       "name": "Stir-the-Pot (Stability Ball)",
@@ -11173,7 +11342,8 @@
         "stir-the-pot plank",
         "swiss ball stir the pot"
       ],
-      "popularity": 300
+      "popularity": 300,
+      "movement_slug": "core"
     },
     {
       "name": "Stability Ball Rollout",
@@ -11216,7 +11386,8 @@
         "exercise ball rollout",
         "stability ball ab rollout"
       ],
-      "popularity": 470
+      "popularity": 470,
+      "movement_slug": "core"
     },
     {
       "name": "V-Up",
@@ -11258,7 +11429,8 @@
         "jackknife sit-up",
         "jackknife"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "core"
     },
     {
       "name": "Sit-Up",
@@ -11299,7 +11471,8 @@
         "basic sit-up",
         "floor sit-up"
       ],
-      "popularity": 920
+      "popularity": 920,
+      "movement_slug": "core"
     },
     {
       "name": "Toe Touch Crunch",
@@ -11340,7 +11513,8 @@
         "toe touch abs",
         "toe-touch crunches"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "core"
     },
     {
       "name": "Flutter Kick",
@@ -11382,7 +11556,8 @@
         "scissor kicks (flutter)",
         "flutter kick abs"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "core"
     },
     {
       "name": "Scissor Kick",
@@ -11424,7 +11599,8 @@
         "scissor kick abs",
         "leg scissors"
       ],
-      "popularity": 480
+      "popularity": 480,
+      "movement_slug": "core"
     },
     {
       "name": "Mountain Climber",
@@ -11469,7 +11645,8 @@
         "plank runners",
         "running plank"
       ],
-      "popularity": 880
+      "popularity": 880,
+      "movement_slug": "core"
     },
     {
       "name": "Hip Dip (Side Plank)",
@@ -11513,7 +11690,8 @@
         "hip dips",
         "side plank hip dip"
       ],
-      "popularity": 500
+      "popularity": 500,
+      "movement_slug": "core"
     },
     {
       "name": "Side Plank Reach-Through",
@@ -11557,7 +11735,8 @@
         "side plank thread the needle",
         "reach-through side plank"
       ],
-      "popularity": 340
+      "popularity": 340,
+      "movement_slug": "core"
     },
     {
       "name": "RKC Plank",
@@ -11600,7 +11779,8 @@
         "RKC plank hold",
         "irradiation plank"
       ],
-      "popularity": 310
+      "popularity": 310,
+      "movement_slug": "core"
     },
     {
       "name": "Hanging Windshield Wiper",
@@ -11644,7 +11824,8 @@
         "hanging wipers",
         "windshield wiper abs"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "core"
     },
     {
       "name": "Dragon Flag",
@@ -11687,7 +11868,8 @@
         "dragon flag raises",
         "bench dragon flag"
       ],
-      "popularity": 260
+      "popularity": 260,
+      "movement_slug": "core"
     },
     {
       "name": "Barbell Rollout",
@@ -11730,7 +11912,8 @@
         "barbell rollouts",
         "bar rollout"
       ],
-      "popularity": 390
+      "popularity": 390,
+      "movement_slug": "core"
     },
     {
       "name": "Cable Pallof Press Hold",
@@ -11773,7 +11956,8 @@
         "isometric pallof press",
         "pallof press hold"
       ],
-      "popularity": 410
+      "popularity": 410,
+      "movement_slug": "core"
     },
     {
       "name": "Cable Reverse Crunch",
@@ -11815,7 +11999,8 @@
         "cable knee tuck",
         "cable knee raise lying"
       ],
-      "popularity": 220
+      "popularity": 220,
+      "movement_slug": "core"
     },
     {
       "name": "Machine Ab Crunch",
@@ -11856,7 +12041,8 @@
         "seated ab crunch machine",
         "machine crunch"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "core"
     },
     {
       "name": "Decline Dumbbell Bench Press",
@@ -11900,7 +12086,8 @@
         "decline dumbbell press",
         "decline bench dumbbell press"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Dumbbell Shoulder Press (Standing)",
@@ -11946,7 +12133,8 @@
         "standing dumbbell OHP",
         "DB overhead press standing"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Seated Barbell Overhead Press",
@@ -11991,7 +12179,8 @@
         "seated barbell shoulder press",
         "seated military press"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Seated Machine Shoulder Press",
@@ -12034,7 +12223,8 @@
         "machine OHP",
         "seated shoulder press machine"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Cable Crossover (High-to-Low)",
@@ -12206,7 +12396,8 @@
         "cable standing chest press",
         "cable press"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Svend Press",
@@ -12295,7 +12486,8 @@
         "triangle push-up",
         "close hand push-up"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "push_up"
     },
     {
       "name": "Push-Up (Decline)",
@@ -12342,7 +12534,8 @@
         "feet elevated push-up",
         "elevated push-up (feet)"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "push_up"
     },
     {
       "name": "Handstand Push-Up (Wall-Assisted)",
@@ -12389,7 +12582,8 @@
         "wall-assisted handstand push-up",
         "handstand pushup (wall)"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "push_up"
     },
     {
       "name": "Pike Push-Up",
@@ -12434,7 +12628,8 @@
         "pike pushup",
         "downward dog push-up"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "push_up"
     },
     {
       "name": "Dumbbell Lateral Raise",
@@ -12735,7 +12930,8 @@
         "barbell split lunge",
         "static lunge (barbell)"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "lunge"
     },
     {
       "name": "Dumbbell Split Squat",
@@ -12782,7 +12978,8 @@
         "dumbbell static lunge",
         "static split squat"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "lunge"
     },
     {
       "name": "Dumbbell Reverse Lunge",
@@ -12828,7 +13025,8 @@
         "DB reverse lunge",
         "dumbbell back lunge"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "lunge"
     },
     {
       "name": "Curtsy Lunge",
@@ -12875,7 +13073,8 @@
         "cross-back lunge",
         "cross behind lunge"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "lunge"
     },
     {
       "name": "Lateral Lunge",
@@ -12921,7 +13120,8 @@
         "side lunge",
         "side-to-side lunge"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "lunge"
     },
     {
       "name": "Dumbbell Step-Up",
@@ -12968,7 +13168,8 @@
         "dumbbell box step-up",
         "weighted step-up (dumbbell)"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "lunge"
     },
     {
       "name": "Barbell Step-Up",
@@ -13015,7 +13216,8 @@
         "BB step-up",
         "barbell step up"
       ],
-      "popularity": 480
+      "popularity": 480,
+      "movement_slug": "lunge"
     },
     {
       "name": "Single-Leg Romanian Deadlift (Dumbbell)",
@@ -13062,7 +13264,8 @@
         "single leg RDL",
         "single-leg deadlift (dumbbell)"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Single-Leg Deadlift (Kettlebell)",
@@ -13109,7 +13312,8 @@
         "kettlebell single leg RDL",
         "single leg KB deadlift"
       ],
-      "popularity": 540
+      "popularity": 540,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Kettlebell Swing",
@@ -13256,7 +13460,8 @@
         "machine deadlift",
         "deadlift machine"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Seated Leg Curl (Machine)",
@@ -13429,7 +13634,8 @@
         "bodyweight sissy squat",
         "assisted sissy squat"
       ],
-      "popularity": 260
+      "popularity": 260,
+      "movement_slug": "squat"
     },
     {
       "name": "Belt Squat (Machine)",
@@ -13474,7 +13680,8 @@
         "machine belt squat",
         "belt squat"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "squat"
     },
     {
       "name": "Smith Machine Reverse Lunge",
@@ -13519,7 +13726,8 @@
         "Smith reverse lunge",
         "Smith machine back lunge"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "lunge"
     },
     {
       "name": "Cable Pull-Through",
@@ -13609,7 +13817,8 @@
         "BB in-place lunge",
         "static lunge (barbell)"
       ],
-      "popularity": 390
+      "popularity": 390,
+      "movement_slug": "lunge"
     },
     {
       "name": "Assault Bike Steady-State",
@@ -13657,7 +13866,8 @@
         "Airdyne steady state",
         "Assault bike cardio"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "bike"
     },
     {
       "name": "Rower Sprints (Max Effort)",
@@ -13708,7 +13918,8 @@
         "Erg sprints",
         "Concept2 sprints"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Bike Tabata (Airdyne/Assault Bike)",
@@ -13757,7 +13968,8 @@
         "Airdyne Tabata",
         "Tabata bike"
       ],
-      "popularity": 680
+      "popularity": 680,
+      "movement_slug": "bike"
     },
     {
       "name": "Elliptical Reverse Intervals",
@@ -13802,7 +14014,8 @@
         "Backward elliptical intervals",
         "Elliptical backwards HIIT"
       ],
-      "popularity": 350
+      "popularity": 350,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Stair Climber Steady-State (Low-Impact)",
@@ -13847,7 +14060,8 @@
         "Stair climber steady state",
         "Steady stairs"
       ],
-      "popularity": 600
+      "popularity": 600,
+      "movement_slug": "stair_climber"
     },
     {
       "name": "Uphill Treadmill Run Intervals",
@@ -13892,7 +14106,8 @@
         "Incline run intervals",
         "Treadmill hill repeats"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "run"
     },
     {
       "name": "Stationary Bike Cadence Pyramids",
@@ -13937,7 +14152,8 @@
         "Stationary bike pyramid intervals",
         "RPM pyramid"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "bike"
     },
     {
       "name": "Ski Erg Steady-State",
@@ -14030,7 +14246,8 @@
         "Arc trainer steady state",
         "Cybex Arc Trainer steady"
       ],
-      "popularity": 400
+      "popularity": 400,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Treadmill Progression Run",
@@ -14076,7 +14293,8 @@
         "Treadmill progressive run",
         "Negative split treadmill run"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "run"
     },
     {
       "name": "Rowing Machine EMOM Calories",
@@ -14126,7 +14344,8 @@
         "Calories EMOM row",
         "Rowing EMOM"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Bike Erg Intervals (Concept2 BikeErg)",
@@ -14171,7 +14390,8 @@
         "Concept2 bike intervals",
         "Erg bike intervals"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "bike"
     },
     {
       "name": "Elliptical Incline Intervals",
@@ -14216,7 +14436,8 @@
         "Elliptical incline HIIT",
         "Elliptical hill intervals"
       ],
-      "popularity": 480
+      "popularity": 480,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Stair Climber Sprint Intervals",
@@ -14261,7 +14482,8 @@
         "Stair climber sprints",
         "Stairmaster intervals"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "run"
     },
     {
       "name": "Treadmill Walk-Run Intervals",
@@ -14307,7 +14529,8 @@
         "Treadmill run/walk intervals",
         "Run walk intervals treadmill"
       ],
-      "popularity": 700
+      "popularity": 700,
+      "movement_slug": "run"
     },
     {
       "name": "Rowing Machine 30:30 Intervals",
@@ -14357,7 +14580,8 @@
         "Rowing 30-30 intervals",
         "Erg 30:30"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "row_erg"
     },
     {
       "name": "Stationary Bike Sprint Intervals",
@@ -14402,7 +14626,8 @@
         "Spin bike sprint intervals",
         "Stationary bike HIIT sprints"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "run"
     },
     {
       "name": "Assault Bike Power Intervals (Calories)",
@@ -14450,7 +14675,8 @@
         "Air bike calorie intervals",
         "Airdyne calorie intervals"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "bike"
     },
     {
       "name": "Elliptical Tabata",
@@ -14495,7 +14721,8 @@
         "Tabata on elliptical",
         "Elliptical 20/10"
       ],
-      "popularity": 450
+      "popularity": 450,
+      "movement_slug": "elliptical"
     },
     {
       "name": "Stair Climber Pyramid Intervals",
@@ -14540,7 +14767,8 @@
         "Stair climber ladder intervals",
         "Stair climber build-down intervals"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "stair_climber"
     },
     {
       "name": "Treadmill Incline Power Walk (Steady-State)",
@@ -14585,7 +14813,8 @@
         "Incline power walking",
         "Treadmill hill walk"
       ],
-      "popularity": 820
+      "popularity": 820,
+      "movement_slug": "run"
     },
     {
       "name": "Single-Arm Cable Row",
@@ -14632,7 +14861,8 @@
         "single arm cable row",
         "cable unilateral row"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "row"
     },
     {
       "name": "Standing Cable Row",
@@ -14677,7 +14907,8 @@
         "standing cable row",
         "cable row standing"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "row"
     },
     {
       "name": "Smith Machine Bent-Over Row",
@@ -14722,7 +14953,8 @@
         "smith machine row",
         "smith bent over row"
       ],
-      "popularity": 510
+      "popularity": 510,
+      "movement_slug": "row"
     },
     {
       "name": "Machine Seated Row (Plate-Loaded)",
@@ -14766,7 +14998,8 @@
         "machine seated row",
         "lever row"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "row"
     },
     {
       "name": "Chest-Supported Machine Row",
@@ -14809,7 +15042,8 @@
         "supported machine row",
         "machine row chest supported"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "row"
     },
     {
       "name": "Cable Rear Delt Row",
@@ -14853,7 +15087,8 @@
         "high row to chest",
         "cable high row"
       ],
-      "popularity": 420
+      "popularity": 420,
+      "movement_slug": "row"
     },
     {
       "name": "Ring Chin-Up",
@@ -14898,7 +15133,8 @@
         "rings chin up",
         "ring chinup"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Ring Pull-Up (Neutral Grip)",
@@ -14944,7 +15180,8 @@
         "rings pull-up",
         "ring pullup"
       ],
-      "popularity": 540
+      "popularity": 540,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Towel Pull-Up",
@@ -14989,7 +15226,8 @@
         "towel pullup",
         "towel grip pull-up"
       ],
-      "popularity": 260
+      "popularity": 260,
+      "movement_slug": "pull_up"
     },
     {
       "name": "Band Lat Pulldown (Anchored)",
@@ -15528,7 +15766,8 @@
         "palms-in dumbbell bench press",
         "DB bench neutral grip"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Incline Machine Chest Press",
@@ -15572,7 +15811,8 @@
         "incline press machine",
         "machine incline press"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Hammer Strength Chest Press",
@@ -15616,7 +15856,8 @@
         "hammer press",
         "hammer strength bench press"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Machine Pec Fly (Standing / Rear-Entry)",
@@ -15796,7 +16037,8 @@
         "single arm cable press",
         "SA cable press"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Barbell Push Press",
@@ -15843,7 +16085,8 @@
         "barbell pushpress",
         "OHP push press"
       ],
-      "popularity": 760
+      "popularity": 760,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Seated Dumbbell Overhead Press (Neutral Grip)",
@@ -15888,7 +16131,8 @@
         "palms-in shoulder press",
         "DB overhead press neutral grip"
       ],
-      "popularity": 610
+      "popularity": 610,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Dumbbell Z Press",
@@ -15935,7 +16179,8 @@
         "z-press dumbbells",
         "seated floor dumbbell press"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "core"
     },
     {
       "name": "Barbell Z Press",
@@ -15982,7 +16227,8 @@
         "z press barbell",
         "seated floor press"
       ],
-      "popularity": 320
+      "popularity": 320,
+      "movement_slug": "core"
     },
     {
       "name": "Single-Arm Dumbbell Overhead Press (Standing)",
@@ -16029,7 +16275,8 @@
         "single arm DB press",
         "standing SA shoulder press"
       ],
-      "popularity": 580
+      "popularity": 580,
+      "movement_slug": "overhead_press"
     },
     {
       "name": "Kettlebell Strict Press",
@@ -16077,7 +16324,8 @@
         "kettlebell overhead press",
         "kettlebell military press"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "core"
     },
     {
       "name": "Barbell Pin Press (Bench Press from Pins)",
@@ -16123,7 +16371,8 @@
         "bench press from pins",
         "rack press bench"
       ],
-      "popularity": 340
+      "popularity": 340,
+      "movement_slug": "bench_press"
     },
     {
       "name": "Spoto Press (Barbell)",
@@ -16433,7 +16682,8 @@
         "Barbell Zercher squat",
         "Zercher back squat"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "squat"
     },
     {
       "name": "Overhead Squat",
@@ -16483,7 +16733,8 @@
         "Barbell overhead squat",
         "Snatch grip overhead squat"
       ],
-      "popularity": 460
+      "popularity": 460,
+      "movement_slug": "squat"
     },
     {
       "name": "Pause Back Squat",
@@ -16530,7 +16781,8 @@
         "Back squat pause",
         "Back squat (paused)"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "squat"
     },
     {
       "name": "Safety Bar Squat",
@@ -16577,7 +16829,8 @@
         "Safety squat bar squat",
         "Safety bar back squat"
       ],
-      "popularity": 610
+      "popularity": 610,
+      "movement_slug": "squat"
     },
     {
       "name": "Barbell Split Squat (Rear-Foot Elevated)",
@@ -16625,7 +16878,8 @@
         "Rear foot elevated split squat (barbell)",
         "RFESS (barbell)"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "lunge"
     },
     {
       "name": "Barbell Reverse Lunge",
@@ -16672,7 +16926,8 @@
         "Barbell step-back lunge",
         "Barbell back lunge"
       ],
-      "popularity": 520
+      "popularity": 520,
+      "movement_slug": "lunge"
     },
     {
       "name": "Barbell Hip Thrust (Feet Elevated)",
@@ -16718,7 +16973,8 @@
         "Feet-elevated hip thrust",
         "Elevated feet hip thrust (barbell)"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "hip_thrust"
     },
     {
       "name": "Deficit Deadlift",
@@ -16768,7 +17024,8 @@
         "Deficit conventional deadlift",
         "Deadlift from deficit"
       ],
-      "popularity": 510
+      "popularity": 510,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Stiff-Leg Deadlift",
@@ -16817,7 +17074,8 @@
         "Barbell stiff leg deadlift",
         "Straight-leg deadlift"
       ],
-      "popularity": 620
+      "popularity": 620,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Snatch-Grip Deadlift",
@@ -16868,7 +17126,8 @@
         "SGDL",
         "Wide-grip deadlift"
       ],
-      "popularity": 470
+      "popularity": 470,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Kettlebell Deadlift",
@@ -16915,7 +17174,8 @@
         "Kettlebell DL",
         "Kettlebell sumo deadlift"
       ],
-      "popularity": 650
+      "popularity": 650,
+      "movement_slug": "deadlift"
     },
     {
       "name": "Dumbbell Sumo Squat",
@@ -16963,7 +17223,8 @@
         "Wide-stance goblet squat",
         "DB sumo squat"
       ],
-      "popularity": 560
+      "popularity": 560,
+      "movement_slug": "squat"
     },
     {
       "name": "Cossack Squat",
@@ -17012,7 +17273,8 @@
         "Side-to-side squat",
         "Lateral squat (Cossack)"
       ],
-      "popularity": 430
+      "popularity": 430,
+      "movement_slug": "squat"
     },
     {
       "name": "Skater Squat",
@@ -17060,7 +17322,8 @@
         "Rear-foot reach squat",
         "Single-leg skater squat"
       ],
-      "popularity": 320
+      "popularity": 320,
+      "movement_slug": "squat"
     },
     {
       "name": "Barbell Lateral Lunge",
@@ -17107,7 +17370,8 @@
         "Barbell side lunge",
         "Barbell lateral lunge"
       ],
-      "popularity": 360
+      "popularity": 360,
+      "movement_slug": "lunge"
     },
     {
       "name": "Dumbbell Walking Lunge",
@@ -17156,7 +17420,8 @@
         "Dumbbell lunge walk",
         "Walking lunges (dumbbells)"
       ],
-      "popularity": 720
+      "popularity": 720,
+      "movement_slug": "lunge"
     },
     {
       "name": "Smith Machine Hip Thrust",
@@ -17203,7 +17468,8 @@
         "Smith machine barbell hip thrust",
         "Hip thrust (Smith)"
       ],
-      "popularity": 640
+      "popularity": 640,
+      "movement_slug": "hip_thrust"
     },
     {
       "name": "Reverse Hyperextension (Machine)",
