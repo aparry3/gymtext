@@ -303,7 +303,7 @@ export function createExerciseResolutionService(
 
     // Popularity signal — use exercise.popularity as intent priority
     for (const [, candidate] of candidates) {
-      candidate.scores.intentPriority = Number(candidate.exercise.popularity) || 0.5;
+      candidate.scores.intentPriority = (Number(candidate.exercise.popularity) || 0) / 1000;
     }
 
     // Log top candidates with per-signal scores
