@@ -18,6 +18,7 @@ export interface SignalScores {
   trgramNorm: number;
   tokenOverlap: number;
   textMatch: number;
+  intentPriority: number;
 }
 
 export interface ExerciseSearchResult {

@@ -35,7 +35,8 @@ const W_TRGM_LEX = 1.5;
 const W_TRGM_NORM = 1.0;
 const W_TOKEN_OVERLAP = 1.0;
 const W_TEXT_MATCH = 1.5;
-const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP + W_TEXT_MATCH; // 10.0
+const W_INTENT_PRIORITY = 0.5;
+const MAX_SCORE = W_EXACT_NORM + W_EXACT_LEX + W_TRGM_LEX + W_TRGM_NORM + W_TOKEN_OVERLAP + W_TEXT_MATCH + W_INTENT_PRIORITY; // 10.5
 
 type ExerciseMatchMethod = ExerciseSearchResult['method'];
 
@@ -62,6 +63,7 @@ function dominantMethod(scores: SignalScores): ExerciseMatchMethod {
     ['fuzzy', scores.trgramNorm * W_TRGM_NORM],
     ['multi_signal', scores.tokenOverlap * W_TOKEN_OVERLAP],
     ['text', scores.textMatch * W_TEXT_MATCH],
+    ['multi_signal', scores.intentPriority * W_INTENT_PRIORITY],
   ];
   weighted.sort((a, b) => b[1] - a[1]);
   return weighted[0][1] > 0 ? weighted[0][0] : 'multi_signal';
@@ -124,6 +126,8 @@ export function createExerciseResolutionService(
       if (learnAlias) {
         await learnNewAlias(normalizedInput, rawName, best.exercise.id, options.aliasSource || best.method, best.confidence);
       }
+      // Track usage (fire-and-forget)
+      repos.exerciseUse.trackUse(best.exercise.id, null, 'search').catch(() => {});
       return {
         ...best,
         normalizedInput,
@@ -170,7 +174,7 @@ export function createExerciseResolutionService(
       if (!candidates.has(exercise.id)) {
         candidates.set(exercise.id, {
           exercise,
-          scores: { exactNorm: 0, exactLex: 0, trgramLex: 0, trgramNorm: 0, tokenOverlap: 0, textMatch: 0 },
+          scores: { exactNorm: 0, exactLex: 0, trgramLex: 0, trgramNorm: 0, tokenOverlap: 0, textMatch: 0, intentPriority: 0 },
           matchedOn,
         });
       }
@@ -295,12 +299,17 @@ export function createExerciseResolutionService(
       }
     }
 
+    // Popularity signal — use exercise.popularity as intent priority
+    for (const [, candidate] of candidates) {
+      candidate.scores.intentPriority = Number(candidate.exercise.popularity) || 0.5;
+    }
+
     // Log top candidates with per-signal scores
     const topCandidates = [...candidates.entries()]
       .map(([, c]) => ({ name: c.exercise.name, ...c.scores }))
       .sort((a, b) => {
-        const scoreA = W_EXACT_NORM * a.exactNorm + W_EXACT_LEX * a.exactLex + W_TRGM_LEX * a.trgramLex + W_TRGM_NORM * a.trgramNorm + W_TOKEN_OVERLAP * a.tokenOverlap + W_TEXT_MATCH * a.textMatch;
-        const scoreB = W_EXACT_NORM * b.exactNorm + W_EXACT_LEX * b.exactLex + W_TRGM_LEX * b.trgramLex + W_TRGM_NORM * b.trgramNorm + W_TOKEN_OVERLAP * b.tokenOverlap + W_TEXT_MATCH * b.textMatch;
+        const scoreA = W_EXACT_NORM * a.exactNorm + W_EXACT_LEX * a.exactLex + W_TRGM_LEX * a.trgramLex + W_TRGM_NORM * a.trgramNorm + W_TOKEN_OVERLAP * a.tokenOverlap + W_TEXT_MATCH * a.textMatch + W_INTENT_PRIORITY * a.intentPriority;
+        const scoreB = W_EXACT_NORM * b.exactNorm + W_EXACT_LEX * b.exactLex + W_TRGM_LEX * b.trgramLex + W_TRGM_NORM * b.trgramNorm + W_TOKEN_OVERLAP * b.tokenOverlap + W_TEXT_MATCH * b.textMatch + W_INTENT_PRIORITY * b.intentPriority;
         return scoreB - scoreA;
       })
       .slice(0, 5);
@@ -316,7 +325,8 @@ export function createExerciseResolutionService(
         W_TRGM_LEX * scores.trgramLex +
         W_TRGM_NORM * scores.trgramNorm +
         W_TOKEN_OVERLAP * scores.tokenOverlap +
-        W_TEXT_MATCH * scores.textMatch;
+        W_TEXT_MATCH * scores.textMatch +
+        W_INTENT_PRIORITY * scores.intentPriority;
 
       const confidence = rawScore / MAX_SCORE;
       const method = dominantMethod(scores);

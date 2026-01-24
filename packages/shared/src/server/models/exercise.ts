@@ -6,7 +6,7 @@
  */
 
 import type { Selectable, Insertable, Updateable } from 'kysely';
-import type { Exercises, ExerciseAliases } from './_types';
+import type { Exercises, ExerciseAliases, ExerciseUses } from './_types';
 
 // Base types from database
 export type Exercise = Selectable<Exercises>;
@@ -16,6 +16,11 @@ export type ExerciseUpdate = Updateable<Exercises>;
 export type ExerciseAlias = Selectable<ExerciseAliases>;
 export type NewExerciseAlias = Insertable<ExerciseAliases>;
 export type ExerciseAliasUpdate = Updateable<ExerciseAliases>;
+
+export type ExerciseUse = Selectable<ExerciseUses>;
+export type NewExerciseUse = Insertable<ExerciseUses>;
+
+export type ExerciseUseType = 'search' | 'ai' | 'workout';
 
 /**
  * Source of how an alias was created/resolved
