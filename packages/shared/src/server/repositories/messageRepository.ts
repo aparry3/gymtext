@@ -329,6 +329,21 @@ export class MessageRepository extends BaseRepository {
   }
 
   /**
+   * Find messages stuck in 'queued' or 'sent' status older than the cutoff date
+   * These are messages that never received delivery confirmation from Twilio
+   */
+  async findStuckMessages(cutoffDate: Date, limit: number = 100): Promise<Message[]> {
+    return await this.db
+      .selectFrom('messages')
+      .selectAll()
+      .where('deliveryStatus', 'in', ['queued', 'sent'])
+      .where('createdAt', '<', cutoffDate)
+      .orderBy('createdAt', 'asc')
+      .limit(limit)
+      .execute();
+  }
+
+  /**
    * Get daily message stats by delivery status for a date range
    */
   async getStatsByDay(startDate: Date, endDate: Date): Promise<{

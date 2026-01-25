@@ -93,6 +93,12 @@ export interface MessagingOrchestratorInstance {
   checkStalledMessages(): Promise<void>;
 
   /**
+   * Clean up messages stuck in 'queued' or 'sent' status
+   * Queries Twilio for actual status and updates accordingly
+   */
+  cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number }>;
+
+  /**
    * Cancel all pending messages for a client
    */
   cancelAllPendingMessages(clientId: string): Promise<number>;
@@ -654,6 +660,80 @@ export function createMessagingOrchestrator(
           await this.processNext(entry.clientId, entry.queueName);
         }
       }
+    },
+
+    async cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number }> {
+      // 24-hour threshold for stuck messages
+      const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const batchSize = 100;
+
+      console.log('[MessagingOrchestrator] Looking for stuck messages older than:', cutoffDate.toISOString());
+
+      const stuckMessages = await messageService.findStuckMessages(cutoffDate, batchSize);
+
+      if (stuckMessages.length === 0) {
+        console.log('[MessagingOrchestrator] No stuck messages found');
+        return { cleaned: 0, delivered: 0, failed: 0 };
+      }
+
+      console.log(`[MessagingOrchestrator] Found ${stuckMessages.length} stuck messages to clean up`);
+
+      let delivered = 0;
+      let failed = 0;
+
+      for (const message of stuckMessages) {
+        try {
+          // If no provider message ID, we never sent it successfully - mark as failed
+          if (!message.providerMessageId) {
+            console.log(`[MessagingOrchestrator] Message ${message.id} has no provider ID, marking as failed`);
+            await messageService.updateDeliveryStatus(message.id, 'failed', 'No provider message ID - never sent');
+            failed++;
+            continue;
+          }
+
+          // Query Twilio for actual status
+          console.log(`[MessagingOrchestrator] Checking Twilio status for message ${message.id} (${message.providerMessageId})`);
+          const twilioMessage = await twilioClient.getMessageStatus(message.providerMessageId);
+
+          if (twilioMessage.status === 'delivered') {
+            console.log(`[MessagingOrchestrator] Message ${message.id} confirmed delivered by Twilio`);
+            await messageService.updateDeliveryStatus(message.id, 'delivered');
+            delivered++;
+          } else if (twilioMessage.status === 'failed' || twilioMessage.status === 'undelivered') {
+            console.log(`[MessagingOrchestrator] Message ${message.id} confirmed failed by Twilio: ${twilioMessage.status}`);
+            await messageService.updateDeliveryStatus(
+              message.id,
+              twilioMessage.status as 'failed' | 'undelivered',
+              `Twilio status: ${twilioMessage.status}`
+            );
+            failed++;
+          } else if (twilioMessage.status === 'sent' || twilioMessage.status === 'queued') {
+            // Still in transit after 24 hours - assume delivered (Twilio webhook missed)
+            console.log(`[MessagingOrchestrator] Message ${message.id} still shows ${twilioMessage.status} after 24h, assuming delivered`);
+            await messageService.updateDeliveryStatus(message.id, 'delivered');
+            delivered++;
+          } else {
+            // Unknown status - mark as delivered to clear it
+            console.log(`[MessagingOrchestrator] Message ${message.id} has unknown status ${twilioMessage.status}, marking as delivered`);
+            await messageService.updateDeliveryStatus(message.id, 'delivered');
+            delivered++;
+          }
+        } catch (error) {
+          console.error(`[MessagingOrchestrator] Error cleaning up message ${message.id}:`, error);
+          // Mark as failed if we can't check Twilio (e.g., message not found)
+          try {
+            await messageService.updateDeliveryStatus(message.id, 'failed', 'Failed to verify with Twilio');
+            failed++;
+          } catch (updateError) {
+            console.error(`[MessagingOrchestrator] Failed to update message status:`, updateError);
+          }
+        }
+      }
+
+      const cleaned = delivered + failed;
+      console.log(`[MessagingOrchestrator] Cleanup complete:`, { cleaned, delivered, failed });
+
+      return { cleaned, delivered, failed };
     },
 
     async cancelAllPendingMessages(clientId: string): Promise<number> {

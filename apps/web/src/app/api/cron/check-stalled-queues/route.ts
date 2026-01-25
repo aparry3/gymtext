@@ -35,21 +35,39 @@ export async function GET(request: Request) {
       timestamp: executionTime.toISOString(),
     });
 
-    // Check for stalled messages
+    // Check for stalled queue entries (processing status)
     const services = getServices();
     const startTime = Date.now();
     await services.messagingOrchestrator.checkStalledMessages();
-    const duration = Date.now() - startTime;
+    const stalledDuration = Date.now() - startTime;
 
     console.log('[CRON] Stalled queue check completed:', {
-      duration: `${duration}ms`,
+      duration: `${stalledDuration}ms`,
       timestamp: executionTime.toISOString(),
     });
+
+    // Clean up stuck messages (queued/sent status older than 24 hours)
+    const cleanupStartTime = Date.now();
+    const cleanupResult = await services.messagingOrchestrator.cleanupStuckMessages();
+    const cleanupDuration = Date.now() - cleanupStartTime;
+
+    console.log('[CRON] Stuck message cleanup completed:', {
+      duration: `${cleanupDuration}ms`,
+      cleaned: cleanupResult.cleaned,
+      delivered: cleanupResult.delivered,
+      failed: cleanupResult.failed,
+      timestamp: executionTime.toISOString(),
+    });
+
+    const totalDuration = Date.now() - startTime;
 
     // Return success response with metrics
     return NextResponse.json({
       success: true,
-      duration,
+      duration: totalDuration,
+      stalledDuration,
+      cleanupDuration,
+      cleanupResult,
       timestamp: executionTime.toISOString(),
     });
 

@@ -75,6 +75,7 @@ export interface MessageServiceInstance {
   ): Promise<Message>;
   updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message>;
   markCancelled(messageId: string): Promise<Message>;
+  findStuckMessages(cutoffDate: Date, limit?: number): Promise<Message[]>;
 }
 
 /**
@@ -261,6 +262,10 @@ export function createMessageService(
 
     async markCancelled(messageId: string): Promise<Message> {
       return await repos.message.markCancelled(messageId);
+    },
+
+    async findStuckMessages(cutoffDate: Date, limit: number = 100): Promise<Message[]> {
+      return await repos.message.findStuckMessages(cutoffDate, limit);
     },
   };
 
