@@ -239,6 +239,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
                 });
                 if (result) {
                   activity.nameRaw = activity.name;
+                  activity.name = result.exercise.name;
                   activity.exerciseId = result.exercise.id;
                   activity.resolution = {
                     method: result.method === 'exact' || result.method === 'exact_lex' ? 'exact' : 'fuzzy',
