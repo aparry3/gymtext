@@ -349,6 +349,8 @@ export function createServices(
     training,
     fitnessPlan,
     contextService,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   const planModification = createPlanModificationService(repos, {
@@ -385,6 +387,8 @@ export function createServices(
     user,
     fitnessProfile,
     contextService,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   // =========================================================================

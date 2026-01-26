@@ -11,8 +11,10 @@ import type { UserServiceInstance } from '../../domain/user/userService';
 import type { MicrocycleServiceInstance } from '../../domain/training/microcycleService';
 import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
 import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
-import type { TrainingServiceInstance } from '../../orchestration/trainingService';
+import { resolveExercisesInStructure, type TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { ContextService } from '../../context/contextService';
+import type { ExerciseResolutionServiceInstance } from '../../domain/exercise/exerciseResolutionService';
+import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
 
 export interface ModifyWorkoutParams {
   userId: string;
@@ -62,6 +64,9 @@ export interface WorkoutModificationServiceDeps {
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   contextService: ContextService;
+  // Exercise resolution (optional — skipped if not provided)
+  exerciseResolution?: ExerciseResolutionServiceInstance;
+  exerciseUse?: ExerciseUseRepository;
 }
 
 /**
@@ -77,6 +82,8 @@ export function createWorkoutModificationService(
     training: trainingService,
     fitnessPlan: fitnessPlanService,
     contextService,
+    exerciseResolution,
+    exerciseUse,
   } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
@@ -118,6 +125,17 @@ export function createWorkoutModificationService(
         if (!workout) return { success: false, messages: [], error: 'No workout found for that date' };
 
         const modifiedWorkout = await getWorkoutAgent().modifyWorkout(user, workout, changeRequest);
+
+        // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
+        if (modifiedWorkout.structure && exerciseResolution) {
+          await resolveExercisesInStructure(
+            modifiedWorkout.structure,
+            exerciseResolution,
+            exerciseUse,
+            userId
+          );
+        }
+
         const updated = await workoutInstanceService.updateWorkout(workout.id, {
           description: modifiedWorkout.response.overview,
           structured: modifiedWorkout.structure,
@@ -184,6 +202,17 @@ export function createWorkoutModificationService(
         } else {
           console.log('[MODIFY_WEEK] Regenerating existing workout');
           const workoutResult = await getWorkoutAgent().generateWorkout(user, dayOverview, modifiedMicrocycle.isDeload, activityType);
+
+          // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
+          if (workoutResult.structure && exerciseResolution) {
+            await resolveExercisesInStructure(
+              workoutResult.structure,
+              exerciseResolution,
+              exerciseUse,
+              userId
+            );
+          }
+
           await workoutInstanceService.updateWorkout(workout.id, {
             goal: dayOverview,
             description: workoutResult.response,

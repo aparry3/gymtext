@@ -99,3 +99,57 @@ export type WorkoutActivity = z.infer<typeof WorkoutActivitySchema>;
 export type WorkoutSection = z.infer<typeof WorkoutSectionSchema>;
 export type Intensity = z.infer<typeof IntensitySchema>;
 export type ExerciseResolution = z.infer<typeof ExerciseResolutionSchema>;
+
+// =============================================================================
+// LLM-Safe Schemas
+// =============================================================================
+
+/**
+ * LLM-safe schema for workout activities
+ * Strips fields that should only be set by the resolution service or post-processing:
+ * - id: Generated programmatically, not by LLM (LLM creates nonsense like "ex1", "ex4")
+ * - exerciseId: FK to canonical exercise, set by resolution service
+ * - nameRaw: Original LLM output, set by resolution service
+ * - resolution: Resolution metadata, set by resolution service
+ *
+ * NOTE: The UI (WorkoutDetailSheet.tsx) has a fallback for missing `id`:
+ * `const exerciseKey = exercise.id || \`${sectionIdx}-${exerciseIdx}\`;`
+ */
+export const WorkoutActivityLLMSchema = WorkoutActivitySchema.omit({
+  id: true,
+  exerciseId: true,
+  nameRaw: true,
+  resolution: true,
+});
+
+/**
+ * LLM-safe section schema using the stripped activity schema
+ */
+export const WorkoutSectionLLMSchema = z.object({
+  title: z.string().describe("e.g. 'Warm Up', 'Main Lift'"),
+  overview: z.string().describe("Brief goal of this section").default(''),
+  exercises: z.array(WorkoutActivityLLMSchema).default([])
+});
+
+/**
+ * LLM-safe complete workout structure schema
+ * Uses stripped schemas for sections/exercises to prevent LLM from hallucinating
+ * exercise IDs or resolution metadata
+ */
+export const WorkoutStructureLLMSchema = z.object({
+  title: z.string().describe("Concise workout name, 2-4 words max (e.g. 'Pull A', 'Upper Strength', 'Leg Day')"),
+  focus: z.string().describe("Brief focus area, 1-3 words (e.g. 'Back & Biceps', 'Quads', 'Push')").default(''),
+  description: z.string().default(''),
+  quote: z.object({
+    text: z.string().default(''),
+    author: z.string().default('')
+  }).default({ text: '', author: '' }),
+  sections: z.array(WorkoutSectionLLMSchema).default([]),
+  estimatedDurationMin: z.number().describe("Estimated minutes").default(-1),
+  intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate")
+});
+
+// LLM-safe types
+export type WorkoutStructureLLM = z.infer<typeof WorkoutStructureLLMSchema>;
+export type WorkoutActivityLLM = z.infer<typeof WorkoutActivityLLMSchema>;
+export type WorkoutSectionLLM = z.infer<typeof WorkoutSectionLLMSchema>;

@@ -21,6 +21,11 @@ import type { UserServiceInstance } from '../user/userService';
 import type { FitnessProfileServiceInstance } from '../user/fitnessProfileService';
 import type { ContextService } from '../../context/contextService';
 
+// Exercise resolution
+import { resolveExercisesInStructure } from '../../orchestration/trainingService';
+import type { ExerciseResolutionServiceInstance } from '../exercise/exerciseResolutionService';
+import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
+
 export type ChainOperation = 'full' | 'structured' | 'message';
 
 export interface ChainRunResult<T> {
@@ -57,6 +62,8 @@ export interface ChainRunnerServiceDeps {
   user: UserServiceInstance;
   fitnessProfile: FitnessProfileServiceInstance;
   contextService: ContextService;
+  exerciseResolution?: ExerciseResolutionServiceInstance;
+  exerciseUse?: ExerciseUseRepository;
 }
 
 /**
@@ -66,7 +73,7 @@ export function createChainRunnerService(
   repos: RepositoryContainer,
   deps: ChainRunnerServiceDeps
 ): ChainRunnerServiceInstance {
-  const { fitnessPlan: fitnessPlanService, microcycle: microcycleService, workoutInstance: workoutService, user: userService, fitnessProfile: fitnessProfileService, contextService } = deps;
+  const { fitnessPlan: fitnessPlanService, microcycle: microcycleService, workoutInstance: workoutService, user: userService, fitnessProfile: fitnessProfileService, contextService, exerciseResolution, exerciseUse } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
   let microcycleAgent: MicrocycleAgentService | null = null;
@@ -162,20 +169,26 @@ export function createChainRunnerService(
     return updated;
   };
 
-  const runWorkoutStructuredChain = async (workout: WorkoutInstance): Promise<WorkoutInstance> => {
+  const runWorkoutStructuredChain = async (workout: WorkoutInstance, user: UserWithProfile): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running structured chain for workout ${workout.id}`);
     if (!workout.description) throw new Error(`Workout ${workout.id} has no description to parse`);
-    const agent = await getWorkoutAgent().getStructuredAgent();
+    const agent = await getWorkoutAgent().getStructuredAgent(user);
     const result = await agent.invoke(workout.description);
+
+    // Resolve exercises to canonical IDs
+    if (result.response && exerciseResolution) {
+      await resolveExercisesInStructure(result.response, exerciseResolution, exerciseUse, user.id);
+    }
+
     const updated = await workoutService.updateWorkout(workout.id, { structured: result.response });
     if (!updated) throw new Error(`Failed to update workout: ${workout.id}`);
     return updated;
   };
 
-  const runWorkoutMessageChain = async (workout: WorkoutInstance): Promise<WorkoutInstance> => {
+  const runWorkoutMessageChain = async (workout: WorkoutInstance, user: UserWithProfile): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running message chain for workout ${workout.id}`);
     if (!workout.description) throw new Error(`Workout ${workout.id} has no description to create message from`);
-    const agent = await getWorkoutAgent().getMessageAgent();
+    const agent = await getWorkoutAgent().getMessageAgent(user);
     const result = await agent.invoke(workout.description);
     const updated = await workoutService.updateWorkout(workout.id, { message: result.response });
     if (!updated) throw new Error(`Failed to update workout: ${workout.id}`);
@@ -241,8 +254,8 @@ export function createChainRunnerService(
       let updatedWorkout: WorkoutInstance;
       switch (operation) {
         case 'full': updatedWorkout = await runFullWorkoutChain(workout, user, microcycle); break;
-        case 'structured': updatedWorkout = await runWorkoutStructuredChain(workout); break;
-        case 'message': updatedWorkout = await runWorkoutMessageChain(workout); break;
+        case 'structured': updatedWorkout = await runWorkoutStructuredChain(workout, user); break;
+        case 'message': updatedWorkout = await runWorkoutMessageChain(workout, user); break;
         default: throw new Error(`Unknown operation: ${operation}`);
       }
       return { success: true, data: updatedWorkout, executionTimeMs: Date.now() - startTime, operation };
