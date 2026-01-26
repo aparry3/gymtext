@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     let totalCleaned = 0;
     let totalDelivered = 0;
     let totalFailed = 0;
+    let totalCancelled = 0;
     let batchesProcessed = 0;
 
     // Process in batches with delays to avoid rate limits
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       totalCleaned += result.cleaned;
       totalDelivered += result.delivered;
       totalFailed += result.failed;
+      totalCancelled += result.cancelled;
       batchesProcessed++;
 
       console.log(`[Admin] Batch ${batch + 1} complete:`, result);
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
       totalCleaned,
       totalDelivered,
       totalFailed,
+      totalCancelled,
     });
 
     return NextResponse.json({
@@ -66,6 +69,7 @@ export async function POST(request: Request) {
         totalCleaned,
         totalDelivered,
         totalFailed,
+        totalCancelled,
       },
     });
   } catch (error) {

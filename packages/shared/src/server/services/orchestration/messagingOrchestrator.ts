@@ -96,7 +96,7 @@ export interface MessagingOrchestratorInstance {
    * Clean up messages stuck in 'queued' or 'sent' status
    * Queries Twilio for actual status and updates accordingly
    */
-  cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number }>;
+  cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number; cancelled: number }>;
 
   /**
    * Cancel all pending messages for a client
@@ -662,7 +662,7 @@ export function createMessagingOrchestrator(
       }
     },
 
-    async cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number }> {
+    async cleanupStuckMessages(): Promise<{ cleaned: number; delivered: number; failed: number; cancelled: number }> {
       // 24-hour threshold for stuck messages
       const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const batchSize = 100;
@@ -673,21 +673,22 @@ export function createMessagingOrchestrator(
 
       if (stuckMessages.length === 0) {
         console.log('[MessagingOrchestrator] No stuck messages found');
-        return { cleaned: 0, delivered: 0, failed: 0 };
+        return { cleaned: 0, delivered: 0, failed: 0, cancelled: 0 };
       }
 
       console.log(`[MessagingOrchestrator] Found ${stuckMessages.length} stuck messages to clean up`);
 
       let delivered = 0;
       let failed = 0;
+      let cancelled = 0;
 
       for (const message of stuckMessages) {
         try {
-          // If no provider message ID, we never sent it successfully - mark as failed
+          // If no provider message ID, we never sent it - mark as cancelled
           if (!message.providerMessageId) {
-            console.log(`[MessagingOrchestrator] Message ${message.id} has no provider ID, marking as failed`);
-            await messageService.updateDeliveryStatus(message.id, 'failed', 'No provider message ID - never sent');
-            failed++;
+            console.log(`[MessagingOrchestrator] Message ${message.id} has no provider ID, marking as cancelled`);
+            await messageService.markCancelled(message.id);
+            cancelled++;
             continue;
           }
 
@@ -730,10 +731,10 @@ export function createMessagingOrchestrator(
         }
       }
 
-      const cleaned = delivered + failed;
-      console.log(`[MessagingOrchestrator] Cleanup complete:`, { cleaned, delivered, failed });
+      const cleaned = delivered + failed + cancelled;
+      console.log(`[MessagingOrchestrator] Cleanup complete:`, { cleaned, delivered, failed, cancelled });
 
-      return { cleaned, delivered, failed };
+      return { cleaned, delivered, failed, cancelled };
     },
 
     async cancelAllPendingMessages(clientId: string): Promise<number> {

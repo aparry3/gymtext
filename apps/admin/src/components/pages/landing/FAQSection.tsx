@@ -18,7 +18,7 @@ const faqs = [
   {
     question: 'Can I cancel anytime?',
     answer:
-      'Absolutely. No contracts, no commitment. Cancel with a simple text message.',
+      'Absolutely. No contracts, no commitment. Cancel with one simple text message: STOP.',
   },
   {
     question: 'What if I miss a day?',

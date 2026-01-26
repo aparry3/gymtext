@@ -56,6 +56,7 @@ export async function GET(request: Request) {
       cleaned: cleanupResult.cleaned,
       delivered: cleanupResult.delivered,
       failed: cleanupResult.failed,
+      cancelled: cleanupResult.cancelled,
       timestamp: executionTime.toISOString(),
     });
 
