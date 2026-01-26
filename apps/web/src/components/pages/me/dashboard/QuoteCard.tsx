@@ -1,7 +1,5 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-
 interface QuoteCardProps {
   text?: string;
   author?: string;
@@ -27,13 +25,13 @@ const DEFAULT_QUOTES = [
 export function QuoteCard({ text, author, isLoading = false }: QuoteCardProps) {
   if (isLoading) {
     return (
-      <Card className="p-4 bg-card animate-pulse">
+      <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 animate-pulse">
         <div className="space-y-3">
-          <div className="h-4 w-full bg-muted rounded" />
-          <div className="h-4 w-3/4 bg-muted rounded" />
-          <div className="h-3 w-24 bg-muted rounded mt-2" />
+          <div className="h-4 w-full bg-slate-800 rounded" />
+          <div className="h-4 w-3/4 bg-slate-800 rounded" />
+          <div className="h-3 w-24 bg-slate-800 rounded mt-2" />
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -43,21 +41,13 @@ export function QuoteCard({ text, author, isLoading = false }: QuoteCardProps) {
     : DEFAULT_QUOTES[Math.floor(Math.random() * DEFAULT_QUOTES.length)];
 
   return (
-    <Card className="p-4 bg-card">
-      <div className="relative">
-        {/* Quote marks */}
-        <div className="absolute -top-1 -left-1 text-4xl text-[hsl(var(--sidebar-accent))]/20 font-serif">
-          &ldquo;
-        </div>
-
-        <p className="text-sm italic text-foreground leading-relaxed pl-4">
-          {quote.text}
-        </p>
-
-        <p className="text-xs text-[hsl(var(--sidebar-accent))] font-medium mt-3 pl-4">
-          &mdash; {quote.author}
-        </p>
-      </div>
-    </Card>
+    <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-center">
+      <p className="text-sm italic text-slate-300 leading-relaxed mb-2">
+        &ldquo;{quote.text}&rdquo;
+      </p>
+      <p className="text-xs text-slate-500">
+        &mdash; {quote.author}
+      </p>
+    </div>
   );
 }

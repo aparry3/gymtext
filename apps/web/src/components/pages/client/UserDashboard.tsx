@@ -207,8 +207,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       {/* Today's Mission Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Today&apos;s Mission</h2>
-          <span className="text-sm font-medium text-[hsl(var(--sidebar-accent))]">
+          <h2 className="text-lg font-semibold text-white">Today&apos;s Mission</h2>
+          <span className="text-sm font-bold text-blue-400 uppercase tracking-wide">
             {dayLabel}
           </span>
         </div>
