@@ -5,7 +5,7 @@ import { getTwilioSecrets } from '@/server/config';
 
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
-const START_KEYWORDS = ['START', 'YES', 'UNSTOP', 'RESUME'];
+const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
 
 function isStopCommand(message: string): boolean {
   const normalized = message.trim().toUpperCase();
