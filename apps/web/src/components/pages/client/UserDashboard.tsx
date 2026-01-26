@@ -134,11 +134,22 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         }
       }
 
+      // Helper to determine if a day is a rest day
+      // Priority: microcycle activityType > workout sessionType > default to training
+      const isRestDay = (focus: DayFocus | undefined, workout: WorkoutData | null): boolean => {
+        // If we have microcycle focus data, use its activityType as source of truth
+        if (focus?.activityType) {
+          return focus.activityType === 'REST';
+        }
+        // Otherwise, only mark as rest if workout explicitly says so
+        return workout?.sessionType === 'rest';
+      };
+
       setDashboardData({
         todayWorkout,
         tomorrowWorkout,
-        isRestDayToday: todayFocus?.activityType === 'REST' || (todayWorkout?.sessionType === 'rest' || !todayWorkout),
-        isRestDayTomorrow: tomorrowFocus?.activityType === 'REST' || (tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout),
+        isRestDayToday: isRestDay(todayFocus, todayWorkout),
+        isRestDayTomorrow: isRestDay(tomorrowFocus, tomorrowWorkout),
         weekNumber,
         programPhase,
         quote: todayWorkout?.structure?.quote,
