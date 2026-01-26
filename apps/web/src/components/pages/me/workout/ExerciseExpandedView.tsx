@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { PlayCircle, Info, CheckCircle2, Timer, MapPin } from 'lucide-react';
+import { CheckCircle2, Timer, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type {
   SetTrackingData,
@@ -29,12 +28,11 @@ interface ExerciseExpandedViewProps {
   onUpdateCardio?: (field: keyof CardioTrackingData, value: string | boolean) => void;
   onUpdateMobility?: (field: keyof MobilityTrackingData, value: string | boolean) => void;
   onBlur?: () => void;
+  units?: 'imperial' | 'metric';
 }
 
 export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
   const {
-    tags = [],
-    notes,
     activityType,
     trackingData,
     cardioData,
@@ -43,60 +41,37 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
     onUpdateCardio,
     onUpdateMobility,
     onBlur,
+    units = 'imperial',
   } = props;
-  const [showVideo, setShowVideo] = useState(false);
 
-  // Default notes if none provided
-  const displayNotes = notes || 'Focus on controlled movement and proper form throughout each rep.';
+  // Handle weight input change with auto-complete logic
+  const handleWeightChange = (set: SetTrackingData, newWeight: string) => {
+    onUpdateSet(set.id, 'weight', newWeight);
+    // Auto-complete when both weight and reps have values
+    const hasWeight = newWeight !== '';
+    const hasReps = set.reps !== '';
+    if (hasWeight && hasReps && !set.completed) {
+      onUpdateSet(set.id, 'completed', true);
+    } else if ((!hasWeight || !hasReps) && set.completed) {
+      onUpdateSet(set.id, 'completed', false);
+    }
+  };
+
+  // Handle reps input change with auto-complete logic
+  const handleRepsChange = (set: SetTrackingData, newReps: string) => {
+    onUpdateSet(set.id, 'reps', newReps);
+    // Auto-complete when both weight and reps have values
+    const hasWeight = set.weight !== '';
+    const hasReps = newReps !== '';
+    if (hasWeight && hasReps && !set.completed) {
+      onUpdateSet(set.id, 'completed', true);
+    } else if ((!hasWeight || !hasReps) && set.completed) {
+      onUpdateSet(set.id, 'completed', false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Media & Tips Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Video Player Placeholder */}
-        <div className="relative aspect-video bg-slate-900 rounded-lg overflow-hidden group cursor-pointer border border-slate-700">
-          {showVideo ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
-              <p className="text-slate-500 text-sm">Video Coming Soon</p>
-            </div>
-          ) : (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 opacity-60 group-hover:opacity-40 transition-opacity" />
-              <div
-                className="absolute inset-0 flex items-center justify-center"
-                onClick={() => setShowVideo(true)}
-              >
-                <PlayCircle
-                  size={48}
-                  className="text-white drop-shadow-lg scale-95 group-hover:scale-110 transition-transform"
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Instructions / Performance Notes */}
-        <div className="flex flex-col justify-center text-sm text-slate-300 bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-          <div className="flex items-center gap-2 text-blue-400 font-semibold mb-2">
-            <Info size={16} />
-            <span>Performance Notes</span>
-          </div>
-          <p className="leading-relaxed">{displayNotes}</p>
-          {tags.length > 0 && (
-            <div className="mt-auto pt-4 flex gap-2 flex-wrap">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-400 capitalize"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Cardio Tracking */}
       {activityType === 'cardio' && cardioData && onUpdateCardio && (
         <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50 p-4 space-y-4">
@@ -253,12 +228,10 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
       {activityType === 'strength' && trackingData.length > 0 && (
         <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50">
           {/* Table Header */}
-          <div className="grid grid-cols-[30px_1fr_1fr_1fr_40px] gap-2 p-2 bg-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider text-center items-center">
-            <span>#</span>
-            <span>Prev</span>
-            <span>lbs</span>
+          <div className="grid grid-cols-[40px_1fr_1fr] gap-2 p-2 bg-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider text-center items-center">
+            <span>Set</span>
+            <span>{units === 'imperial' ? 'LBS' : 'KG'}</span>
             <span>Reps</span>
-            <span></span>
           </div>
 
           {/* Table Rows */}
@@ -267,7 +240,7 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
               <div
                 key={set.id}
                 className={cn(
-                  'grid grid-cols-[30px_1fr_1fr_1fr_40px] gap-2 p-3 items-center transition-colors',
+                  'grid grid-cols-[40px_1fr_1fr] gap-2 p-3 items-center transition-colors',
                   set.completed && 'bg-green-900/10'
                 )}
               >
@@ -278,23 +251,18 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
                   </span>
                 </div>
 
-                {/* Previous Data */}
-                <div className="text-center text-xs text-slate-500">
-                  {set.prevWeight ? `${set.prevWeight} x ${set.prevReps}` : '-'}
-                </div>
-
                 {/* Weight Input */}
                 <div>
                   <input
                     type="number"
                     placeholder={set.prevWeight?.toString() || '-'}
                     value={set.weight}
-                    onChange={(e) => onUpdateSet(set.id, 'weight', e.target.value)}
+                    onChange={(e) => handleWeightChange(set, e.target.value)}
                     onBlur={onBlur}
                     className={cn(
-                      'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors',
+                      'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
                       set.completed
-                        ? 'border-green-800/50 text-green-400'
+                        ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
                         : 'border-slate-700 text-white'
                     )}
                   />
@@ -306,37 +274,15 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
                     type="number"
                     placeholder={set.targetReps}
                     value={set.reps}
-                    onChange={(e) => onUpdateSet(set.id, 'reps', e.target.value)}
+                    onChange={(e) => handleRepsChange(set, e.target.value)}
                     onBlur={onBlur}
                     className={cn(
-                      'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors',
+                      'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
                       set.completed
-                        ? 'border-green-800/50 text-green-400'
+                        ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
                         : 'border-slate-700 text-white'
                     )}
                   />
-                </div>
-
-                {/* Completion Toggle */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      onUpdateSet(set.id, 'completed', !set.completed);
-                      onBlur?.();
-                    }}
-                    className={cn(
-                      'w-8 h-8 rounded flex items-center justify-center transition-all',
-                      set.completed
-                        ? 'bg-green-500 text-white scale-110'
-                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-                    )}
-                  >
-                    {set.completed ? (
-                      <CheckCircle2 size={18} />
-                    ) : (
-                      <div className="w-4 h-4 rounded-full border-2 border-slate-400" />
-                    )}
-                  </button>
                 </div>
               </div>
             ))}

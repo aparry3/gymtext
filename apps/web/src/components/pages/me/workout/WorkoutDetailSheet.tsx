@@ -29,6 +29,7 @@ interface WorkoutDetailSheetProps {
   workoutId: string | null;
   userId: string;
   dayLabel: string;
+  units?: 'imperial' | 'metric';
 }
 
 interface WorkoutData {
@@ -164,6 +165,7 @@ export function WorkoutDetailSheet({
   workoutId,
   userId,
   dayLabel,
+  units = 'imperial',
 }: WorkoutDetailSheetProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [workout, setWorkout] = useState<WorkoutData | null>(null);
@@ -294,7 +296,7 @@ export function WorkoutDetailSheet({
             sets: exerciseState.sets.map((set) => ({
               setNumber: set.setNumber,
               weight: set.weight ? parseFloat(set.weight) : null,
-              weightUnit: 'lbs' as const,
+              weightUnit: (units === 'imperial' ? 'lbs' : 'kg') as 'lbs' | 'kg',
               reps: set.reps ? parseInt(set.reps, 10) : null,
               completed: set.completed,
             })),
@@ -315,7 +317,7 @@ export function WorkoutDetailSheet({
         setIsSaving(false);
       }
     },
-    [workoutId, userId]
+    [workoutId, userId, units]
   );
 
   // Debounced save on blur
@@ -595,6 +597,7 @@ export function WorkoutDetailSheet({
                                 updateMobilityData(exerciseKey, field, value)
                               }
                               onBlur={() => handleSaveOnBlur(exerciseKey)}
+                              units={units}
                             />
                           </ExerciseAccordionCard>
                         );

@@ -125,9 +125,8 @@ export class UserRepository extends BaseRepository {
   }
 
   async create(userData: CreateUserData): Promise<UserWithProfile | undefined> {
-    const user = await this.db
-    .insertInto('users')
-    .values({
+    // Build values object - units field added after migration 20260126000000
+    const values = {
       name: userData.name,
       phoneNumber: userData.phoneNumber,
       age: userData.age || null,
@@ -138,9 +137,14 @@ export class UserRepository extends BaseRepository {
       preferredSendHour: userData.preferredSendHour,
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
+    };
+
+    const user = await this.db
+      .insertInto('users')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .values(values as any)
+      .returningAll()
+      .executeTakeFirstOrThrow();
     return UserModel.fromDb(user);
   }
 
