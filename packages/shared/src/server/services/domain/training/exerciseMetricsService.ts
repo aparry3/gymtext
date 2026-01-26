@@ -1,6 +1,7 @@
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type {
   UserExerciseMetric,
+  UserExerciseMetricWithExercise,
   ExerciseMetricData,
 } from '../../../repositories/exerciseMetricsRepository';
 
@@ -48,6 +49,16 @@ export interface ExerciseMetricsServiceInstance {
     clientId: string,
     exerciseId: string
   ): Promise<UserExerciseMetric | undefined>;
+
+  /**
+   * Get historical metrics for all exercises that share a movement
+   * (e.g., "show me my bench press history" across all bench variations)
+   */
+  getMovementHistory(
+    clientId: string,
+    movementId: string,
+    limit?: number
+  ): Promise<UserExerciseMetricWithExercise[]>;
 }
 
 /**
@@ -101,12 +112,21 @@ export function createExerciseMetricsService(
       const history = await repos.exerciseMetrics.getByExerciseId(clientId, exerciseId, 1);
       return history[0];
     },
+
+    async getMovementHistory(
+      clientId: string,
+      movementId: string,
+      limit: number = 50
+    ): Promise<UserExerciseMetricWithExercise[]> {
+      return await repos.exerciseMetrics.getByMovementId(clientId, movementId, limit);
+    },
   };
 }
 
 // Re-export types for convenience
 export type {
   UserExerciseMetric,
+  UserExerciseMetricWithExercise,
   ExerciseMetricData,
   StrengthMetricData,
   StrengthSetData,

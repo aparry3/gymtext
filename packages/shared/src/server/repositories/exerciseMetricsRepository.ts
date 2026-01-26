@@ -22,6 +22,13 @@ export interface NewUserExerciseMetric {
 }
 
 /**
+ * UserExerciseMetric with joined exercise data
+ */
+export interface UserExerciseMetricWithExercise extends UserExerciseMetric {
+  exerciseName: string;
+}
+
+/**
  * The data stored in the JSONB column
  */
 export type ExerciseMetricData = StrengthMetricData | CardioMetricData | MobilityMetricData;
@@ -147,6 +154,40 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .execute();
 
     return results.map((r) => this.mapToUserExerciseMetric(r));
+  }
+
+  /**
+   * Get metrics for all exercises that share a movement (e.g., all bench press variations)
+   * Joins through exercises table to filter by movement_id
+   */
+  async getByMovementId(
+    clientId: string,
+    movementId: string,
+    limit: number = 50
+  ): Promise<UserExerciseMetricWithExercise[]> {
+    const results = await this.db
+      .selectFrom('userExerciseMetrics')
+      .innerJoin('exercises', 'userExerciseMetrics.exerciseId', 'exercises.id')
+      .where('userExerciseMetrics.clientId', '=', clientId)
+      .where('exercises.movementId', '=', movementId)
+      .orderBy('userExerciseMetrics.createdAt', 'desc')
+      .limit(limit)
+      .select([
+        'userExerciseMetrics.id',
+        'userExerciseMetrics.clientId',
+        'userExerciseMetrics.workoutId',
+        'userExerciseMetrics.exerciseId',
+        'userExerciseMetrics.data',
+        'userExerciseMetrics.createdAt',
+        'userExerciseMetrics.updatedAt',
+        'exercises.name as exerciseName',
+      ])
+      .execute();
+
+    return results.map((r) => ({
+      ...this.mapToUserExerciseMetric(r),
+      exerciseName: r.exerciseName,
+    }));
   }
 
   /**
