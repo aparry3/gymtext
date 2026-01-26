@@ -48,6 +48,7 @@ import { createTrainingService, type TrainingServiceInstance } from './orchestra
 import { createModificationService, type ModificationServiceInstance } from './orchestration/modificationService';
 import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
 import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
+import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
 
 // Agent services
 import {
@@ -135,6 +136,9 @@ export interface ServiceContainer {
 
   // Exercise resolution
   exerciseResolution: ExerciseResolutionServiceInstance;
+
+  // Exercise metrics (workout tracking)
+  exerciseMetrics: ExerciseMetricsServiceInstance;
 }
 
 /**
@@ -180,6 +184,9 @@ export function createServices(
 
   // Exercise resolution (repos-only)
   const exerciseResolution = createExerciseResolutionService(repos);
+
+  // Exercise metrics (repos-only)
+  const exerciseMetrics = createExerciseMetricsService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -450,6 +457,9 @@ export function createServices(
 
     // Exercise resolution
     exerciseResolution,
+
+    // Exercise metrics
+    exerciseMetrics,
   };
 }
 
@@ -531,4 +541,7 @@ export type {
 
   // Exercise resolution
   ExerciseResolutionServiceInstance,
+
+  // Exercise metrics
+  ExerciseMetricsServiceInstance,
 };

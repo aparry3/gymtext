@@ -1,9 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { PlayCircle, Info, CheckCircle2 } from 'lucide-react';
+import { PlayCircle, Info, CheckCircle2, Timer, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { SetTrackingData } from './types';
+import type {
+  SetTrackingData,
+  ActivityType,
+  CardioTrackingData,
+  MobilityTrackingData,
+} from './types';
 
 interface ExerciseExpandedViewProps {
   tags?: string[];
@@ -16,14 +21,29 @@ interface ExerciseExpandedViewProps {
     description?: string;
   };
   notes?: string;
+  activityType: ActivityType;
   trackingData: SetTrackingData[];
+  cardioData?: CardioTrackingData;
+  mobilityData?: MobilityTrackingData;
   onUpdateSet: (setId: string, field: keyof SetTrackingData, value: string | boolean) => void;
+  onUpdateCardio?: (field: keyof CardioTrackingData, value: string | boolean) => void;
+  onUpdateMobility?: (field: keyof MobilityTrackingData, value: string | boolean) => void;
+  onBlur?: () => void;
 }
 
 export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
-  // Note: sets, reps, rest, intensity are kept in the interface for backwards compatibility
-  // but are no longer directly displayed - tracking data shows this info instead.
-  const { tags = [], notes, trackingData, onUpdateSet } = props;
+  const {
+    tags = [],
+    notes,
+    activityType,
+    trackingData,
+    cardioData,
+    mobilityData,
+    onUpdateSet,
+    onUpdateCardio,
+    onUpdateMobility,
+    onBlur,
+  } = props;
   const [showVideo, setShowVideo] = useState(false);
 
   // Default notes if none provided
@@ -77,8 +97,160 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
         </div>
       </div>
 
-      {/* Tracking Table */}
-      {trackingData.length > 0 && (
+      {/* Cardio Tracking */}
+      {activityType === 'cardio' && cardioData && onUpdateCardio && (
+        <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50 p-4 space-y-4">
+          {/* Duration Input */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <Timer size={14} />
+              Duration
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                placeholder="0"
+                value={cardioData.durationMinutes}
+                onChange={(e) => onUpdateCardio('durationMinutes', e.target.value)}
+                onBlur={onBlur}
+                className="w-20 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-slate-400 text-sm">min</span>
+              <input
+                type="number"
+                placeholder="0"
+                value={cardioData.durationSeconds}
+                onChange={(e) => onUpdateCardio('durationSeconds', e.target.value)}
+                onBlur={onBlur}
+                className="w-20 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-slate-400 text-sm">sec</span>
+            </div>
+          </div>
+
+          {/* Distance Input */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <MapPin size={14} />
+              Distance
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.1"
+                placeholder="0.0"
+                value={cardioData.distance}
+                onChange={(e) => onUpdateCardio('distance', e.target.value)}
+                onBlur={onBlur}
+                className="w-24 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <select
+                value={cardioData.distanceUnit}
+                onChange={(e) => {
+                  onUpdateCardio('distanceUnit', e.target.value);
+                  onBlur?.();
+                }}
+                className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="km">km</option>
+                <option value="mi">mi</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Completion Toggle */}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => {
+                onUpdateCardio('completed', !cardioData.completed);
+                onBlur?.();
+              }}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+                cardioData.completed
+                  ? 'bg-green-500 text-white'
+                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+              )}
+            >
+              {cardioData.completed ? (
+                <>
+                  <CheckCircle2 size={18} />
+                  Completed
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-slate-400" />
+                  Mark Complete
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobility Tracking */}
+      {activityType === 'mobility' && mobilityData && onUpdateMobility && (
+        <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50 p-4 space-y-4">
+          {/* Duration Input */}
+          <div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <Timer size={14} />
+              Duration
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                placeholder="0"
+                value={mobilityData.durationMinutes}
+                onChange={(e) => onUpdateMobility('durationMinutes', e.target.value)}
+                onBlur={onBlur}
+                className="w-20 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-slate-400 text-sm">min</span>
+              <input
+                type="number"
+                placeholder="0"
+                value={mobilityData.durationSeconds}
+                onChange={(e) => onUpdateMobility('durationSeconds', e.target.value)}
+                onBlur={onBlur}
+                className="w-20 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-center text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-slate-400 text-sm">sec</span>
+            </div>
+          </div>
+
+          {/* Completion Toggle */}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => {
+                onUpdateMobility('completed', !mobilityData.completed);
+                onBlur?.();
+              }}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+                mobilityData.completed
+                  ? 'bg-green-500 text-white'
+                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+              )}
+            >
+              {mobilityData.completed ? (
+                <>
+                  <CheckCircle2 size={18} />
+                  Completed
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-slate-400" />
+                  Mark Complete
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Strength Tracking Table */}
+      {activityType === 'strength' && trackingData.length > 0 && (
         <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50">
           {/* Table Header */}
           <div className="grid grid-cols-[30px_1fr_1fr_1fr_40px] gap-2 p-2 bg-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider text-center items-center">
@@ -118,6 +290,7 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
                     placeholder={set.prevWeight?.toString() || '-'}
                     value={set.weight}
                     onChange={(e) => onUpdateSet(set.id, 'weight', e.target.value)}
+                    onBlur={onBlur}
                     className={cn(
                       'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors',
                       set.completed
@@ -134,6 +307,7 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
                     placeholder={set.targetReps}
                     value={set.reps}
                     onChange={(e) => onUpdateSet(set.id, 'reps', e.target.value)}
+                    onBlur={onBlur}
                     className={cn(
                       'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors',
                       set.completed
@@ -146,7 +320,10 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
                 {/* Completion Toggle */}
                 <div className="flex justify-center">
                   <button
-                    onClick={() => onUpdateSet(set.id, 'completed', !set.completed)}
+                    onClick={() => {
+                      onUpdateSet(set.id, 'completed', !set.completed);
+                      onBlur?.();
+                    }}
                     className={cn(
                       'w-8 h-8 rounded flex items-center justify-center transition-all',
                       set.completed
