@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Last updated: December 10, 2025
+            Last updated: January 27, 2026
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -157,6 +157,13 @@ export default function PrivacyPage() {
                 <li>
                   <strong>Comply with Legal Obligations:</strong> Fulfill our legal
                   and regulatory requirements
+                </li>
+                <li>
+                  <strong>Internal Review:</strong> Our team may review your
+                  conversations and profile information to improve our AI coaching
+                  quality, identify issues, and enhance the overall user experience.
+                  This data is only reviewed internally for product improvement
+                  purposes.
                 </li>
               </ul>
             </section>
@@ -377,8 +384,10 @@ export default function PrivacyPage() {
                 from this data.
               </p>
               <p className="mb-4 text-muted-foreground leading-relaxed">
-                <strong>We Do Not Sell Personal Information:</strong> GymText does not
-                sell your personal information to third parties.
+                <strong>We Do Not Sell or Share Personal Information:</strong> GymText
+                does not sell or share your personal information, including your
+                conversations and profile data, with third parties. Your data is used
+                solely to provide and improve our Service.
               </p>
             </section>
 
