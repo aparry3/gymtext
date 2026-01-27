@@ -8,7 +8,7 @@ import {
   QuoteCard,
   TrackOfDayCard,
   DashboardSkeleton,
-  ReferralCard,
+  ReferralBanner,
 } from '@/components/pages/me/dashboard';
 import { WorkoutDetailSheet } from '@/components/pages/me/workout/WorkoutDetailSheet';
 import type { WorkoutStructure } from '@/server/models/workout';
@@ -134,11 +134,22 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         }
       }
 
+      // Helper to determine if a day is a rest day
+      // Priority: microcycle activityType > workout sessionType > default to training
+      const isRestDay = (focus: DayFocus | undefined, workout: WorkoutData | null): boolean => {
+        // If we have microcycle focus data, use its activityType as source of truth
+        if (focus?.activityType) {
+          return focus.activityType === 'REST';
+        }
+        // Otherwise, only mark as rest if workout explicitly says so
+        return workout?.sessionType === 'rest';
+      };
+
       setDashboardData({
         todayWorkout,
         tomorrowWorkout,
-        isRestDayToday: todayFocus?.activityType === 'REST' || (todayWorkout?.sessionType === 'rest' || !todayWorkout),
-        isRestDayTomorrow: tomorrowFocus?.activityType === 'REST' || (tomorrowWorkout?.sessionType === 'rest' || !tomorrowWorkout),
+        isRestDayToday: isRestDay(todayFocus, todayWorkout),
+        isRestDayTomorrow: isRestDay(tomorrowFocus, tomorrowWorkout),
         weekNumber,
         programPhase,
         quote: todayWorkout?.structure?.quote,
@@ -201,45 +212,42 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         }}
       />
 
+      {/* Referral Banner */}
+      <ReferralBanner userId={userId} />
+
       {/* Today's Mission Section */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Today&apos;s Mission</h2>
-          <span className="text-sm font-medium text-[hsl(var(--sidebar-accent))]">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Today&apos;s Mission</h2>
+          <span className="text-sm font-bold text-blue-400 uppercase tracking-wide">
             {dayLabel}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Main workout card - spans 2 columns on large screens */}
-          <div className="lg:col-span-2">
-            <TodaysMissionCard
-              dayLabel={dayLabel}
-              workoutTitle={dashboardData?.todayFocus?.focus || dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayWorkout?.goal || 'Workout'}
-              workoutFocus={dashboardData?.todayFocus?.activityType || dashboardData?.todayWorkout?.structure?.focus}
-              isRestDay={dashboardData?.isRestDayToday}
-              onStartWorkout={handleStartWorkout}
-            />
-          </div>
+        {/* Hero workout card - full width */}
+        <TodaysMissionCard
+          dayLabel={dayLabel}
+          workoutTitle={dashboardData?.todayFocus?.focus || dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayWorkout?.goal || 'Workout'}
+          workoutFocus={dashboardData?.todayFocus?.activityType || dashboardData?.todayWorkout?.structure?.focus}
+          isRestDay={dashboardData?.isRestDayToday}
+          onStartWorkout={handleStartWorkout}
+        />
 
-          {/* Sidebar cards */}
-          <div className="space-y-4">
-            <TomorrowPreviewCard
-              title={dashboardData?.tomorrowFocus?.focus || dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowWorkout?.goal || undefined}
-              focus={dashboardData?.tomorrowFocus?.activityType || dashboardData?.tomorrowWorkout?.structure?.focus}
-              description={dashboardData?.tomorrowWorkout?.structure?.description}
-              isRestDay={dashboardData?.isRestDayTomorrow}
-            />
+        {/* Widget cards - 3 column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <TomorrowPreviewCard
+            title={dashboardData?.tomorrowFocus?.focus || dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowWorkout?.goal || undefined}
+            focus={dashboardData?.tomorrowFocus?.activityType || dashboardData?.tomorrowWorkout?.structure?.focus}
+            description={dashboardData?.tomorrowWorkout?.structure?.description}
+            isRestDay={dashboardData?.isRestDayTomorrow}
+          />
 
-            <QuoteCard
-              text={dashboardData?.quote?.text}
-              author={dashboardData?.quote?.author}
-            />
+          <QuoteCard
+            text={dashboardData?.quote?.text}
+            author={dashboardData?.quote?.author}
+          />
 
-            <TrackOfDayCard />
-
-            <ReferralCard userId={userId} />
-          </div>
+          <TrackOfDayCard />
         </div>
       </div>
 

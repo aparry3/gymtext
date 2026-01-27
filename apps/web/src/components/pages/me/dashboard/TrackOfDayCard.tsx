@@ -1,5 +1,7 @@
 'use client';
 
+import { Music, PlayCircle } from 'lucide-react';
+
 interface TrackOfDayCardProps {
   title?: string;
   subtitle?: string;
@@ -9,8 +11,8 @@ interface TrackOfDayCardProps {
 
 // Default playlist info
 const DEFAULT_TRACK = {
-  title: 'Track of the Day',
-  subtitle: 'GymText Curated Playlist',
+  title: 'GymText Curated',
+  subtitle: 'High Energy Mix Vol. 4',
   spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP', // Beast Mode playlist
 };
 
@@ -22,13 +24,14 @@ export function TrackOfDayCard({
 }: TrackOfDayCardProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl p-4 bg-[#1DB954] text-white animate-pulse shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-white/20 rounded-full" />
-          <div className="space-y-2">
-            <div className="h-4 w-24 bg-white/20 rounded" />
-            <div className="h-3 w-32 bg-white/20 rounded" />
+      <div className="rounded-xl p-5 bg-gradient-to-br from-green-600 to-emerald-700 text-white animate-pulse shadow-lg">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 bg-white/20 rounded-full" />
+            <div className="h-3 w-24 bg-white/20 rounded" />
           </div>
+          <div className="h-5 w-32 bg-white/20 rounded" />
+          <div className="h-4 w-40 bg-white/20 rounded" />
         </div>
       </div>
     );
@@ -41,17 +44,21 @@ export function TrackOfDayCard({
       rel="noopener noreferrer"
       className="block"
     >
-      <div className="rounded-2xl p-4 bg-[#1DB954] text-white hover:bg-[#1aa34a] transition-colors cursor-pointer shadow-lg">
-        <div className="flex items-center gap-3">
-          <img
-            src="/spotify-logo-white.svg"
-            alt="Spotify"
-            className="h-8 w-8"
-          />
-          <div>
-            <p className="font-semibold">{title}</p>
-            <p className="text-sm opacity-80">{subtitle}</p>
+      <div className="relative rounded-xl p-5 bg-gradient-to-br from-green-600 to-emerald-700 text-white hover:from-green-500 hover:to-emerald-600 transition-colors cursor-pointer shadow-lg overflow-hidden">
+        {/* Music icon watermark */}
+        <div className="absolute top-0 right-0 p-4 opacity-20">
+          <Music className="w-10 h-10" />
+        </div>
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 bg-white/20 rounded-full backdrop-blur-sm">
+              <PlayCircle className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-green-100">Track of the Day</span>
           </div>
+          <h4 className="text-lg font-bold">{title}</h4>
+          <p className="text-sm text-green-100 opacity-90">{subtitle}</p>
         </div>
       </div>
     </a>

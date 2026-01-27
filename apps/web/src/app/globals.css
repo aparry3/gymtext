@@ -149,6 +149,27 @@ body {
   transition: transform 300ms ease-out;
 }
 
+/* Dark theme for /me dashboard */
+.me-dark {
+  --background: 222 47% 5%;
+  --foreground: 210 17% 95%;
+
+  --card: 222 47% 8%;
+  --card-foreground: 210 17% 95%;
+
+  --popover: 222 47% 8%;
+  --popover-foreground: 210 17% 95%;
+
+  --muted: 217 33% 15%;
+  --muted-foreground: 215 20% 55%;
+
+  --accent: 217 33% 15%;
+  --accent-foreground: 210 17% 95%;
+
+  --border: 217 33% 15%;
+  --input: 217 33% 15%;
+}
+
 /* Color utilities */
 .text-primary-color {
   color: hsl(var(--primary));
@@ -201,4 +222,20 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+}
+
+/* Fade in animation for expanded content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
 }

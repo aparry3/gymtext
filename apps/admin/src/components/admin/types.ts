@@ -424,3 +424,124 @@ export interface EnrollmentUpdateData {
   status?: EnrollmentStatus;
   currentWeek?: number;
 }
+
+// ============================================
+// Exercise Admin Types
+// ============================================
+
+// Exercise match method from resolution service
+export type ExerciseMatchMethod = 'exact' | 'fuzzy' | 'vector' | 'text' | 'exact_lex' | 'fuzzy_lex' | 'multi_signal';
+
+// Admin exercise type for list display
+export interface AdminExercise {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  mechanics: string | null;
+  equipment: string[];
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  trainingGroups: string[];
+  popularity: number;
+  isActive: boolean;
+  aliasCount: number;
+  movementSlug?: string;
+  movementName?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  // Resolution metadata (present when search uses resolution service)
+  matchMethod?: ExerciseMatchMethod;
+  matchConfidence?: number;
+  matchedOn?: string;
+}
+
+// Exercise alias for detail view
+export interface AdminExerciseAlias {
+  id: string;
+  alias: string;
+  aliasNormalized: string;
+  source: AliasSource;
+  confidenceScore: number | null;
+  isDefault: boolean;
+  createdAt: Date;
+}
+
+// Alias source type
+export type AliasSource = 'seed' | 'manual' | 'llm' | 'user' | 'fuzzy' | 'vector';
+
+// Exercise with aliases for detail view
+export interface AdminExerciseWithAliases extends Omit<AdminExercise, 'movementSlug' | 'movementName'> {
+  shortDescription: string;
+  instructions: string;
+  cues: string[];
+  movementPatterns: string[];
+  modality: string | null;
+  intensity: string | null;
+  movementId: string | null;
+  movementSlug: string | null;
+  movementName: string | null;
+  aliases: AdminExerciseAlias[];
+}
+
+// Filter types for the exercises list
+export interface ExerciseFilters {
+  search?: string;
+  type?: string;
+  mechanics?: string;
+  trainingGroup?: string;
+  muscle?: string;
+  movement?: string;
+  isActive?: boolean;
+}
+
+// Sorting options
+export interface ExerciseSort {
+  field: 'name' | 'type' | 'createdAt' | 'popularity';
+  direction: 'asc' | 'desc';
+}
+
+// Stats for the exercises page
+export interface ExerciseStats {
+  total: number;
+  byType: Record<string, number>;
+  active: number;
+}
+
+// API Response type for list
+export interface AdminExercisesResponse {
+  exercises: AdminExercise[];
+  pagination: Pagination;
+  stats: ExerciseStats;
+}
+
+// API Response type for detail
+export interface AdminExerciseDetailResponse {
+  exercise: AdminExerciseWithAliases;
+}
+
+// Form data for create/update
+export interface ExerciseFormData {
+  name: string;
+  slug?: string;
+  type: string;
+  mechanics?: string;
+  trainingGroups?: string[];
+  movementPatterns?: string[];
+  equipment?: string[];
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  modality?: string;
+  intensity?: string;
+  shortDescription?: string;
+  instructions?: string;
+  cues?: string[];
+  isActive?: boolean;
+}
+
+// Form data for creating a new alias
+export interface ExerciseAliasFormData {
+  alias: string;
+  source?: AliasSource;
+  confidenceScore?: number;
+}

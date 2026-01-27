@@ -22,6 +22,7 @@ import {
   LogOut,
   Building2,
   ClipboardList,
+  Dumbbell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEnvironment } from '@/context/EnvironmentContext';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/users', label: 'Users', icon: Users },
   { href: '/program-owners', label: 'Program Owners', icon: Building2 },
   { href: '/programs', label: 'Programs', icon: ClipboardList },
+  { href: '/exercises', label: 'Exercises', icon: Dumbbell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },

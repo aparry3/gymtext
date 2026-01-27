@@ -18,3 +18,4 @@ export {
   type DayActivityType,
 } from './dayFormat';
 export { buildProgramVersionContext } from './programVersion';
+export { buildExercisesContext } from './exercises';

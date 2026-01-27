@@ -47,6 +47,8 @@ import { createPlanModificationService, type PlanModificationServiceInstance } f
 import { createTrainingService, type TrainingServiceInstance } from './orchestration/trainingService';
 import { createModificationService, type ModificationServiceInstance } from './orchestration/modificationService';
 import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
+import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
+import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
 
 // Agent services
 import {
@@ -131,6 +133,12 @@ export interface ServiceContainer {
   enrollment: EnrollmentServiceInstance;
   programVersion: ProgramVersionServiceInstance;
   planInstance: PlanInstanceServiceInstance;
+
+  // Exercise resolution
+  exerciseResolution: ExerciseResolutionServiceInstance;
+
+  // Exercise metrics (workout tracking)
+  exerciseMetrics: ExerciseMetricsServiceInstance;
 }
 
 /**
@@ -174,6 +182,12 @@ export function createServices(
   const programVersion = createProgramVersionService(repos);
   const planInstance = createPlanInstanceService(repos);
 
+  // Exercise resolution (repos-only)
+  const exerciseResolution = createExerciseResolutionService(repos);
+
+  // Exercise metrics (repos-only)
+  const exerciseMetrics = createExerciseMetricsService(repos);
+
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
   // =========================================================================
@@ -183,6 +197,7 @@ export function createServices(
     microcycleService: microcycle,
     fitnessProfileService: fitnessProfile,
     enrollmentService: enrollment,
+    exerciseRepo: repos.exercise,
   });
 
   // =========================================================================
@@ -210,6 +225,8 @@ export function createServices(
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   // =========================================================================
@@ -339,6 +356,8 @@ export function createServices(
     training,
     fitnessPlan,
     contextService,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   const planModification = createPlanModificationService(repos, {
@@ -375,6 +394,8 @@ export function createServices(
     user,
     fitnessProfile,
     contextService,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
   });
 
   // =========================================================================
@@ -433,6 +454,12 @@ export function createServices(
     enrollment,
     programVersion,
     planInstance,
+
+    // Exercise resolution
+    exerciseResolution,
+
+    // Exercise metrics
+    exerciseMetrics,
   };
 }
 
@@ -511,4 +538,10 @@ export type {
   EnrollmentServiceInstance,
   ProgramVersionServiceInstance,
   PlanInstanceServiceInstance,
+
+  // Exercise resolution
+  ExerciseResolutionServiceInstance,
+
+  // Exercise metrics
+  ExerciseMetricsServiceInstance,
 };

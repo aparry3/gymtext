@@ -1,0 +1,228 @@
+{
+  "type": "object",
+  "properties": {
+    "exercises": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the exercise.",
+            "default": ""
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable identifier used in code (lowercase snake_case).",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deprecated",
+              "merged"
+            ],
+            "default": ""
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "strength",
+              "conditioning",
+              "mobility",
+              "skill",
+              "sport"
+            ],
+            "default": ""
+          },
+          "mechanics": {
+            "type": "string",
+            "default": ""
+          },
+          "kinetic_chain": {
+            "type": "string",
+            "default": ""
+          },
+          "press_plane": {
+            "type": "string",
+            "default": ""
+          },
+          "training_groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "push",
+                "pull",
+                "legs",
+                "core",
+                "conditioning",
+                "full"
+              ]
+            },
+            "default": []
+          },
+          "movement_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "press",
+                "row",
+                "pullup",
+                "pulldown",
+                "squat",
+                "hinge",
+                "lunge",
+                "step_up",
+                "carry",
+                "rotation",
+                "anti_rotation",
+                "anti_extension",
+                "anti_lateral_flexion",
+                "gait",
+                "jump",
+                "throw"
+              ]
+            },
+            "default": []
+          },
+          "primary_muscles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "chest",
+                "back",
+                "shoulders",
+                "triceps",
+                "biceps",
+                "forearms",
+                "quads",
+                "hamstrings",
+                "glutes",
+                "calves",
+                "abs",
+                "obliques",
+                "lower_back",
+                "hip_flexors",
+                "adductors",
+                "abductors",
+                "traps",
+                "lats"
+              ]
+            },
+            "default": []
+          },
+          "secondary_muscles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "bodyweight",
+                "dumbbell",
+                "barbell",
+                "kettlebell",
+                "cable",
+                "machine",
+                "smith",
+                "bands",
+                "chains",
+                "bench",
+                "pullup_bar",
+                "rings",
+                "treadmill",
+                "bike",
+                "rower",
+                "assault_bike",
+                "sled",
+                "medicine_ball",
+                "trap_bar"
+              ]
+            },
+            "default": []
+          },
+          "modality": {
+            "type": "string",
+            "default": ""
+          },
+          "intensity": {
+            "type": "string",
+            "default": ""
+          },
+          "short_description": {
+            "type": "string",
+            "default": ""
+          },
+          "instructions": {
+            "type": "string",
+            "default": ""
+          },
+          "cues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "parent_exercise_slug": {
+            "type": "string",
+            "default": ""
+          },
+          "variation_label": {
+            "type": "string",
+            "default": ""
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "popularity": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "status",
+          "type",
+          "mechanics",
+          "kinetic_chain",
+          "press_plane",
+          "training_groups",
+          "movement_patterns",
+          "primary_muscles",
+          "secondary_muscles",
+          "equipment",
+          "modality",
+          "intensity",
+          "short_description",
+          "instructions",
+          "cues",
+          "parent_exercise_slug",
+          "variation_label",
+          "aliases",
+          "popularity"
+        ],
+        "additionalProperties": false
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "exercises"
+  ],
+  "title": "ExerciseOutput"
+}

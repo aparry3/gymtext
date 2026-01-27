@@ -1,6 +1,6 @@
 'use client';
 
-import { Dumbbell, Moon } from 'lucide-react';
+import { Dumbbell, Moon, ArrowRight } from 'lucide-react';
 
 interface TodaysMissionCardProps {
   dayLabel: string;
@@ -59,7 +59,7 @@ export function TodaysMissionCard({
       onKeyDown={(e) => e.key === 'Enter' && onStartWorkout?.()}
       role="button"
       tabIndex={0}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(213,94%,58%)] to-[hsl(213,94%,48%)] p-6 text-white cursor-pointer hover:from-[hsl(213,94%,62%)] hover:to-[hsl(213,94%,52%)] transition-colors"
+      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(213,94%,58%)] to-[hsl(213,94%,48%)] p-6 text-white cursor-pointer hover:from-[hsl(213,94%,62%)] hover:to-[hsl(213,94%,52%)] transition-all shadow-lg hover:shadow-xl"
     >
       {/* Dumbbell watermark */}
       <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-1/4 translate-y-1/4">
@@ -79,9 +79,10 @@ export function TodaysMissionCard({
           <p className="text-sm opacity-80 mb-4">{workoutFocus}</p>
         )}
 
-        <p className="text-sm mt-6 opacity-70">
-          Tap to view full breakdown and tracking details.
-        </p>
+        <div className="flex items-center gap-2 mt-6 text-sm font-semibold">
+          <span>Start Workout</span>
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </div>
       </div>
     </div>
   );

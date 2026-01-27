@@ -1,12 +1,11 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle2, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExerciseAccordionCardProps {
@@ -17,6 +16,9 @@ interface ExerciseAccordionCardProps {
   isOpen: boolean;
   onToggle: () => void;
   children?: React.ReactNode;
+  completedSets?: number;
+  totalSets?: number;
+  isFullyComplete?: boolean;
 }
 
 export function ExerciseAccordionCard({
@@ -27,6 +29,9 @@ export function ExerciseAccordionCard({
   isOpen,
   onToggle,
   children,
+  completedSets = 0,
+  totalSets = 0,
+  isFullyComplete = false,
 }: ExerciseAccordionCardProps) {
   // Get first 2 tags for collapsed view
   const displayTags = tags.slice(0, 2);
@@ -35,56 +40,82 @@ export function ExerciseAccordionCard({
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <div
         className={cn(
-          'border rounded-xl transition-colors',
-          isOpen ? 'border-[hsl(var(--sidebar-accent))]/30 bg-card' : 'border-border bg-card'
+          'border-b border-slate-700/50 bg-slate-800/50 hover:bg-slate-800 transition-colors',
+          isFullyComplete && 'opacity-70'
         )}
       >
         <CollapsibleTrigger asChild>
-          <button className="w-full p-4 flex items-center justify-between text-left hover:bg-muted/30 transition-colors rounded-xl">
-            <div className="flex items-center gap-3 min-w-0">
-              {/* Exercise number */}
-              <span className="text-sm text-muted-foreground font-mono">
-                #{number.toString().padStart(2, '0')}
-              </span>
+          <button className="w-full p-4 flex items-center justify-between text-left cursor-pointer">
+            <div className="flex items-center gap-4 min-w-0">
+              {/* Progress indicator */}
+              <div
+                className={cn(
+                  'flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-colors flex-shrink-0',
+                  isFullyComplete
+                    ? 'bg-green-500 text-white'
+                    : completedSets > 0
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-600 text-white'
+                )}
+              >
+                {isFullyComplete ? (
+                  <CheckCircle2 size={20} />
+                ) : completedSets > 0 ? (
+                  completedSets
+                ) : (
+                  totalSets || number
+                )}
+              </div>
 
               {/* Exercise name and details */}
               <div className="min-w-0">
-                <h4 className={cn("font-semibold text-foreground", !isOpen && "truncate")}>{name}</h4>
+                <h3
+                  className={cn(
+                    'font-semibold text-lg',
+                    isFullyComplete
+                      ? 'text-slate-400 line-through'
+                      : 'text-slate-100',
+                    !isOpen && 'truncate'
+                  )}
+                >
+                  {name}
+                </h3>
 
-                {/* Collapsed view: sets x reps + tags */}
+                {/* Collapsed view: metadata */}
                 {!isOpen && (
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {setsReps && (
-                      <span className="text-sm font-medium text-[hsl(var(--sidebar-accent))]">
-                        {setsReps}
-                      </span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mt-1 flex-wrap">
+                    {displayTags.length > 0 && (
+                      <>
+                        <span className="uppercase tracking-wider font-medium text-blue-400">
+                          {displayTags[0]}
+                        </span>
+                        <span>•</span>
+                      </>
                     )}
-                    {displayTags.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+                    {setsReps && (
+                      <>
+                        <span>{setsReps}</span>
+                        <span>•</span>
+                      </>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Timer size={12} />
+                      60s
+                    </span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Chevron */}
-            <ChevronDown
-              className={cn(
-                'h-5 w-5 text-muted-foreground transition-transform flex-shrink-0',
-                isOpen && 'rotate-180'
-              )}
-            />
+            <div className="text-slate-400 hover:text-white transition-colors flex-shrink-0">
+              {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           </button>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pb-4">{children}</div>
+          <div className="px-4 pb-6 animate-fadeIn">{children}</div>
         </CollapsibleContent>
       </div>
     </Collapsible>

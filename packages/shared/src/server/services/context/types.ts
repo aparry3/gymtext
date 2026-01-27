@@ -17,6 +17,7 @@ export enum ContextType {
   EXPERIENCE_LEVEL = 'experienceLevel',
   DAY_FORMAT = 'dayFormat',
   PROGRAM_VERSION = 'programVersion',
+  AVAILABLE_EXERCISES = 'availableExercises',
 }
 
 /**
@@ -71,4 +72,5 @@ export interface ResolvedContextData {
   dayFormatTemplate?: string | null;
   experienceSnippet?: string | null;
   programVersion?: ProgramVersion | null;
+  exercises?: { id: string; name: string }[];
 }

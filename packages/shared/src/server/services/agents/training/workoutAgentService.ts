@@ -1,5 +1,6 @@
 import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
-import { WorkoutStructureSchema, type WorkoutStructure } from '@/server/models/workout';
+import type { WorkoutStructure } from '@/server/models/workout';
+import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
 import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import type { ContextService } from '@/server/services/context';
@@ -26,59 +27,60 @@ import type { ActivityType } from '@/shared/types/microcycle/schema';
 export class WorkoutAgentService {
   private contextService: ContextService;
 
-  // Lazy-initialized sub-agents (promises cached after first creation)
-  private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
-  private structuredAgentPromise: Promise<ConfigurableAgent<{ response: WorkoutStructure }>> | null = null;
-
   constructor(contextService: ContextService) {
     this.contextService = contextService;
   }
 
   /**
-   * Get the message sub-agent (lazy-initialized for basic use, or with context)
+   * Get the message sub-agent with user context
    * Prompts fetched from DB based on agent name
    *
-   * @param user - Optional user for context-aware agent (required when activityType is provided)
+   * @param user - User for context-aware agent (required)
    * @param activityType - Optional activity type for day format context injection
    */
   public async getMessageAgent(
-    user?: UserWithProfile,
+    user: UserWithProfile,
     activityType?: ActivityType
   ): Promise<ConfigurableAgent<{ response: string }>> {
-    // If activityType is provided, create a new agent with day format context
-    if (activityType && user) {
-      const dayFormatContext = await this.contextService.getContext(
-        user,
-        [ContextType.DAY_FORMAT],
-        { activityType }
-      );
-      return createAgent({
-        name: PROMPT_IDS.WORKOUT_MESSAGE,
-        context: dayFormatContext,
-      }, { model: 'gpt-5-nano' });
-    }
+    // Create agent with day format context if activityType provided
+    const dayFormatContext = activityType
+      ? await this.contextService.getContext(user, [ContextType.DAY_FORMAT], { activityType })
+      : [];
 
-    // Otherwise, use the cached singleton
-    if (!this.messageAgentPromise) {
-      this.messageAgentPromise = createAgent({
-        name: PROMPT_IDS.WORKOUT_MESSAGE,
-      }, { model: 'gpt-5-nano' });
-    }
-    return this.messageAgentPromise;
+    return createAgent({
+      name: PROMPT_IDS.WORKOUT_MESSAGE,
+      context: dayFormatContext,
+    }, { model: 'gpt-5-nano' });
   }
 
   /**
-   * Get the structured sub-agent (lazy-initialized)
-   * Prompts fetched from DB based on agent name
+   * Get the structured sub-agent with exercise context
+   *
+   * IMPORTANT: Uses WorkoutStructureLLMSchema which strips id, exerciseId, nameRaw,
+   * and resolution fields to prevent LLM from hallucinating fake exercise IDs.
+   * These fields are populated by the exercise resolution service post-generation.
+   *
+   * @param user - User for exercise context injection (required)
    */
-  public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
-    if (!this.structuredAgentPromise) {
-      this.structuredAgentPromise = createAgent({
-        name: PROMPT_IDS.WORKOUT_STRUCTURED,
-        schema: WorkoutStructureSchema,
-      }, { model: 'gpt-5-nano', maxTokens: 32000 });
-    }
-    return this.structuredAgentPromise;
+  public async getStructuredAgent(
+    user: UserWithProfile
+  ): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
+    const exerciseContext = await this.contextService.getContext(
+      user,
+      [ContextType.AVAILABLE_EXERCISES],
+      {}
+    );
+
+    console.log('[WorkoutAgentService] Exercise context for structured agent:',
+      exerciseContext.length > 0 ? `${exerciseContext.length} items` : 'No exercises');
+
+    // Use LLM-safe schema that omits id, exerciseId, nameRaw, and resolution
+    // These fields are populated by exercise resolution service after generation
+    return createAgent({
+      name: PROMPT_IDS.WORKOUT_STRUCTURED,
+      context: exerciseContext,
+      schema: WorkoutStructureLLMSchema,
+    }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure }>>;
   }
 
   /**
@@ -115,7 +117,7 @@ export class WorkoutAgentService {
     // Get sub-agents (message agent with day format context if activityType provided)
     const [messageAgent, structuredAgent] = await Promise.all([
       this.getMessageAgent(user, activityType),
-      this.getStructuredAgent(),
+      this.getStructuredAgent(user),
     ]);
 
     // Create main agent with context (prompts fetched from DB)
@@ -152,10 +154,10 @@ export class WorkoutAgentService {
       { workout }
     );
 
-    // Get sub-agents (lazy-initialized)
+    // Get sub-agents with user context
     const [messageAgent, structuredAgent] = await Promise.all([
-      this.getMessageAgent(),
-      this.getStructuredAgent(),
+      this.getMessageAgent(user),
+      this.getStructuredAgent(user),
     ]);
 
     // Transform to extract overview from JSON response for sub-agents

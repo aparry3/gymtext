@@ -129,5 +129,21 @@ export type {
   ModificationToolDeps,
 } from './agents/modifications';
 
+// Exercise resolution service
+export { createExerciseResolutionService } from './domain/exercise/exerciseResolutionService';
+export type { ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
+
+// Exercise metrics service
+export { createExerciseMetricsService } from './domain/training/exerciseMetricsService';
+export type {
+  ExerciseMetricsServiceInstance,
+  ExerciseMetricData,
+  StrengthMetricData,
+  StrengthSetData,
+  CardioMetricData,
+  MobilityMetricData,
+  UserExerciseMetric,
+} from './domain/training/exerciseMetricsService';
+
 // Profile service
 export { ProfileService } from './agents/profile';

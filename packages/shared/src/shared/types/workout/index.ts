@@ -15,10 +15,12 @@ export {
   WorkoutActivitySchema,
   WorkoutSectionSchema,
   WorkoutStructureSchema,
+  ExerciseResolutionSchema,
   type WorkoutStructure,
   type WorkoutActivity,
   type WorkoutSection,
   type Intensity,
+  type ExerciseResolution,
 } from './workoutStructure';
 
 // ============================================================================

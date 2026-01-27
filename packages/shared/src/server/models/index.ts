@@ -27,9 +27,9 @@ export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 // Workout types (DB types + shared types)
 export type {
   WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
-  WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity
+  WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity, ExerciseResolution
 } from './workout';
-export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, IntensitySchema } from './workout';
+export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, IntensitySchema, ExerciseResolutionSchema } from './workout';
 
 // Microcycle types
 export type { Microcycle, MicrocycleStructure, MicrocycleDay } from './microcycle';
@@ -77,6 +77,25 @@ export type {
   FamilyType, FamilyVisibility, ProgramFamilyRole
 } from './programFamily';
 export { ProgramFamilyModel, ProgramFamilyProgramModel } from './programFamily';
+
+// Exercise types (canonical exercises and aliases)
+export type {
+  Exercise, NewExercise, ExerciseUpdate,
+  ExerciseAlias, NewExerciseAlias, ExerciseAliasUpdate,
+  AliasSource, ExerciseWithAliases
+} from './exercise';
+
+// Movement types (progress tracking groupings)
+export type { Movement, NewMovement, MovementUpdate, MetricType } from './movement';
+
+// Exercise resolution types
+export type {
+  ExerciseMatchMethod,
+  SignalScores,
+  ExerciseSearchResult,
+  ExerciseResolutionResult,
+  ResolutionOptions,
+} from './exerciseResolution';
 
 // Re-export database types from _types
 export * from './_types';

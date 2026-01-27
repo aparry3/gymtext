@@ -39,6 +39,21 @@ const command = process.argv[2];
 
 async function main() {
   if (command === 'up') {
+    const { error, results } = await migrator.migrateUp();
+    results?.forEach((it) => {
+      if (it.status === 'Success') {
+        console.log(`migration "${it.migrationName}" was executed successfully`);
+      } else if (it.status === 'Error') {
+        console.error(`failed to execute migration "${it.migrationName}"`);
+      }
+    });
+
+    if (error) {
+      console.error('failed to migrate');
+      console.error(error);
+      process.exit(1);
+    }
+  } else if (command === 'latest') {
     const { error, results } = await migrator.migrateToLatest();
     results?.forEach((it) => {
       if (it.status === 'Success') {
@@ -69,7 +84,7 @@ async function main() {
       process.exit(1);
     }
   } else {
-    console.error('Please provide a command: up or down');
+    console.error('Please provide a command: up, latest, or down');
     process.exit(1);
   }
 

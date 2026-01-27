@@ -109,17 +109,14 @@ function SidebarContent({
               <ChevronLeft className="h-5 w-5" />
             </button>
           )}
-          <Link href={basePath} className="flex items-center gap-2" onClick={onNavClick}>
+          <Link href={basePath} className="flex items-center" onClick={onNavClick}>
             <Image
-              src="/IconBG.png"
+              src="/WordmarkWhite.png"
               alt="GymText"
-              width={32}
-              height={32}
-              className="rounded-lg"
+              width={100}
+              height={24}
+              className="h-6 w-auto"
             />
-            <span className="text-lg font-bold text-[hsl(var(--sidebar-foreground))]">
-              GYMTEXT
-            </span>
           </Link>
         </div>
       </div>
@@ -241,18 +238,13 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
             />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2">
-          <Image
-            src="/IconBG.png"
-            alt="GymText"
-            width={28}
-            height={28}
-            className="rounded-lg"
-          />
-          <span className="text-base font-bold text-[hsl(var(--sidebar-foreground))]">
-            GYMTEXT
-          </span>
-        </div>
+        <Image
+          src="/WordmarkWhite.png"
+          alt="GymText"
+          width={100}
+          height={24}
+          className="h-5 w-auto"
+        />
       </div>
 
       {/* Desktop sidebar - fixed */}

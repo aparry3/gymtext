@@ -144,6 +144,10 @@ export const FitnessProfileSchema = z.object({
   activities: ActivityDataSchema.nullish(),
 });
 
+// Units preference type
+export const UnitsSchema = z.enum(['imperial', 'metric']);
+export type Units = z.infer<typeof UnitsSchema>;
+
 // Schema for creating a new user
 export const CreateUserSchema = z.object({
   name: z.string().nullish(),
@@ -158,6 +162,7 @@ export const CreateUserSchema = z.object({
   stripeCustomerId: z.string().nullish(),
   preferredSendHour: z.number().int().min(0).max(23).nullish(),
   timezone: z.string().nullish(),
+  units: UnitsSchema.default('imperial'),
 });
 
 // Schema for updating a user

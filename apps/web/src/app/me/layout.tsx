@@ -41,7 +41,7 @@ export default async function MeLayout({ children }: MeLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="me-dark min-h-screen bg-[hsl(var(--background))]">
       <MeSidebar
         user={{
           name: userName,

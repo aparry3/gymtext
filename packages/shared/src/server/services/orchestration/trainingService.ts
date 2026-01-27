@@ -35,6 +35,79 @@ import type { WorkoutAgentService } from '../agents/training/workoutAgentService
 import type { MicrocycleAgentService } from '../agents/training/microcycleAgentService';
 import type { FitnessPlanAgentService } from '../agents/training/fitnessPlanAgentService';
 
+// Exercise resolution
+import type { ExerciseResolutionServiceInstance } from '../domain/exercise/exerciseResolutionService';
+import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
+
+// Workout structure types
+import type { WorkoutStructure } from '@/server/models/workout';
+
+// =============================================================================
+// Exported Helpers
+// =============================================================================
+
+/**
+ * Resolve exercise names in a workout structure to canonical IDs
+ * Extracted as a reusable function for use by trainingService and workoutModificationService
+ *
+ * @param structure - The workout structure containing exercises to resolve
+ * @param exerciseResolution - The exercise resolution service instance
+ * @param exerciseUse - Optional exercise use repository for tracking usage
+ * @param userId - Optional user ID for tracking exercise usage
+ */
+export async function resolveExercisesInStructure(
+  structure: WorkoutStructure,
+  exerciseResolution: ExerciseResolutionServiceInstance,
+  exerciseUse?: ExerciseUseRepository,
+  userId?: string
+): Promise<void> {
+  if (!structure?.sections) return;
+
+  for (const section of structure.sections) {
+    for (const activity of section.exercises) {
+      try {
+        const result = await exerciseResolution.resolve(activity.name, {
+          learnAlias: true,
+          aliasSource: 'ai',
+        });
+        if (result) {
+          activity.nameRaw = activity.name;
+          activity.name = result.exercise.name;
+          activity.exerciseId = result.exercise.id;
+          activity.resolution = {
+            method: result.method === 'exact' || result.method === 'exact_lex' ? 'exact' : 'fuzzy',
+            confidence: result.confidence,
+            version: 1,
+          };
+          // Track exercise usage for popularity scoring
+          if (exerciseUse && userId) {
+            exerciseUse.trackUse(result.exercise.id, userId, 'workout').catch(() => {});
+          }
+        } else {
+          // Clear any LLM-generated fake IDs and mark as unresolved
+          activity.nameRaw = activity.name;
+          activity.exerciseId = null;
+          activity.resolution = {
+            method: 'unresolved',
+            confidence: 0,
+            version: 1,
+          };
+        }
+      } catch (err) {
+        console.warn(`[TrainingService] Exercise resolution failed for "${activity.name}":`, err);
+        // Clear any LLM-generated fake IDs on error
+        activity.nameRaw = activity.name;
+        activity.exerciseId = null;
+        activity.resolution = {
+          method: 'unresolved',
+          confidence: 0,
+          version: 1,
+        };
+      }
+    }
+  }
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -99,6 +172,10 @@ export interface TrainingServiceDeps {
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
   fitnessPlanAgent: FitnessPlanAgentService;
+
+  // Exercise resolution (optional — skipped if not provided)
+  exerciseResolution?: ExerciseResolutionServiceInstance;
+  exerciseUse?: ExerciseUseRepository;
 }
 
 // =============================================================================
@@ -122,6 +199,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
+    exerciseResolution,
+    exerciseUse,
   } = deps;
 
   return {
@@ -217,6 +296,11 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           microcycle.isDeload ?? false,
           activityType
         );
+
+        // 5b. Resolve exercise names to canonical IDs and track usage
+        if (structure && exerciseResolution) {
+          await resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, user.id);
+        }
 
         const theme = structure?.title || 'Workout';
         const details = { theme };
