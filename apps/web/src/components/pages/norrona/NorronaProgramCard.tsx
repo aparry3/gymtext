@@ -15,6 +15,7 @@ export const NorronaProgramCard: React.FC<Props> = ({ program }) => {
           src={program.image}
           alt={program.title}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[10%]"
+          style={program.imagePosition ? { objectPosition: program.imagePosition } : undefined}
         />
         <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
       </div>
