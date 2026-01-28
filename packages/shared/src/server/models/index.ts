@@ -50,6 +50,12 @@ export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
 export type { Referral, NewReferral, ReferralUpdate, ReferralStats } from './referral';
 export { MAX_REFERRAL_CREDITS, REFERRAL_CREDIT_AMOUNT_CENTS } from './referral';
 
+// Program owner types
+export type {
+  ProgramOwner, NewProgramOwner, ProgramOwnerUpdate, OwnerType
+} from './programOwner';
+export { ProgramOwnerModel } from './programOwner';
+
 // Program types
 export type {
   Program, NewProgram, ProgramUpdate,
@@ -66,7 +72,8 @@ export { ProgramEnrollmentModel } from './programEnrollment';
 // Program version types (the "recipe")
 export type {
   ProgramVersion, NewProgramVersion, ProgramVersionUpdate,
-  ProgramVersionStatus, GenerationConfig, DifficultyMetadata
+  ProgramVersionStatus, GenerationConfig, DifficultyMetadata,
+  ProgramQuestion
 } from './programVersion';
 export { ProgramVersionModel, AI_PROGRAM_VERSION_ID } from './programVersion';
 

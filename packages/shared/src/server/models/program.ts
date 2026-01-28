@@ -22,6 +22,8 @@ export interface Program {
   revenueSplitPercent: number | null;
   /** ID of the currently published version */
   publishedVersionId: string | null;
+  /** ID of the cover image for this program */
+  coverImageId: string | null;
   isActive: boolean;
   isPublic: boolean;
   createdAt: Date;
@@ -41,6 +43,7 @@ export class ProgramModel {
       billingModel: row.billingModel as BillingModel | null,
       revenueSplitPercent: row.revenueSplitPercent,
       publishedVersionId: row.publishedVersionId,
+      coverImageId: row.coverImageId ?? null,
       isActive: row.isActive,
       isPublic: row.isPublic,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),

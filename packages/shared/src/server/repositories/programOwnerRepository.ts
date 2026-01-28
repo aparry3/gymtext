@@ -50,6 +50,19 @@ export class ProgramOwnerRepository extends BaseRepository {
   }
 
   /**
+   * Find a program owner by their phone number
+   */
+  async findByPhone(phone: string): Promise<ProgramOwner | null> {
+    const result = await this.db
+      .selectFrom('programOwners')
+      .selectAll()
+      .where('phone', '=', phone)
+      .executeTakeFirst();
+
+    return result ? ProgramOwnerModel.fromDB(result) : null;
+  }
+
+  /**
    * Find the system AI owner
    */
   async findAiOwner(): Promise<ProgramOwner | null> {

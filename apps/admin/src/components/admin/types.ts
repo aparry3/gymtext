@@ -210,6 +210,7 @@ export interface AdminProgramOwner {
   bio: string | null;
   avatarUrl: string | null;
   stripeConnectAccountId: string | null;
+  phone: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

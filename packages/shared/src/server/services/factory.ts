@@ -35,6 +35,7 @@ import { createPromptService, type PromptServiceInstance } from './domain/prompt
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
+import { createProgramOwnerAuthService, type ProgramOwnerAuthServiceInstance } from './domain/auth/programOwnerAuthService';
 import { createDailyMessageService, type DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 import { createWeeklyMessageService, type WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';
 import { createOnboardingService, type OnboardingServiceInstance } from './orchestration/onboardingService';
@@ -100,6 +101,7 @@ export interface ServiceContainer {
   referral: ReferralServiceInstance;
   adminAuth: AdminAuthServiceInstance;
   userAuth: UserAuthServiceInstance;
+  programOwnerAuth: ProgramOwnerAuthServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   dailyMessage: DailyMessageServiceInstance;
   weeklyMessage: WeeklyMessageServiceInstance;
@@ -238,6 +240,7 @@ export function createServices(
   let _referral: ReferralServiceInstance | null = null;
   let _adminAuth: AdminAuthServiceInstance | null = null;
   let _userAuth: UserAuthServiceInstance | null = null;
+  let _programOwnerAuth: ProgramOwnerAuthServiceInstance | null = null;
   let _messagingOrchestrator: MessagingOrchestratorInstance | null = null;
 
   const getReferral = (): ReferralServiceInstance => {
@@ -284,6 +287,18 @@ export function createServices(
       }
     }
     return _userAuth;
+  };
+
+  const getProgramOwnerAuth = (): ProgramOwnerAuthServiceInstance => {
+    if (!_programOwnerAuth) {
+      if (clients?.twilioClient) {
+        _programOwnerAuth = createProgramOwnerAuthService(repos, { twilioClient: clients.twilioClient });
+      } else {
+        const { twilioClient } = require('../connections/twilio/twilio');
+        _programOwnerAuth = createProgramOwnerAuthService(repos, { twilioClient });
+      }
+    }
+    return _programOwnerAuth;
   };
 
   const getMessagingOrchestrator = (): MessagingOrchestratorInstance => {
@@ -421,6 +436,7 @@ export function createServices(
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
+    get programOwnerAuth() { return getProgramOwnerAuth(); },
     get messagingOrchestrator() { return getMessagingOrchestrator(); },
     dailyMessage,
     weeklyMessage,
@@ -513,6 +529,7 @@ export type {
   ReferralServiceInstance,
   AdminAuthServiceInstance,
   UserAuthServiceInstance,
+  ProgramOwnerAuthServiceInstance,
   MessagingOrchestratorInstance,
   DailyMessageServiceInstance,
   WeeklyMessageServiceInstance,

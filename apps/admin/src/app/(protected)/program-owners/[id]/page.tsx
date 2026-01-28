@@ -41,6 +41,7 @@ export default function ProgramOwnerDetailPage() {
     displayName: '',
     bio: '',
     avatarUrl: '',
+    phone: '',
     isActive: true,
   })
 
@@ -59,10 +60,18 @@ export default function ProgramOwnerDetailPage() {
 
       const data: AdminProgramOwnerDetailResponse = result.data
       setOwner({ ...data.owner, programs: data.programs })
+      // Format phone for display
+      const phone = data.owner.phone || '';
+      const cleaned = phone.replace(/\D/g, '').replace(/^1/, '');
+      let formattedPhone = '';
+      if (cleaned.length === 10) {
+        formattedPhone = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+      }
       setEditForm({
         displayName: data.owner.displayName,
         bio: data.owner.bio || '',
         avatarUrl: data.owner.avatarUrl || '',
+        phone: formattedPhone,
         isActive: data.owner.isActive,
       })
     } catch (err) {
@@ -86,10 +95,17 @@ export default function ProgramOwnerDetailPage() {
     setError(null)
 
     try {
+      // Format phone number to E.164
+      const cleanedPhone = editForm.phone.replace(/\D/g, '');
+      const formattedPhone = cleanedPhone.length === 10 ? `+1${cleanedPhone}` : null;
+
       const response = await fetch(`/api/program-owners/${owner.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          phone: formattedPhone,
+        }),
       })
 
       const result = await response.json()
@@ -110,10 +126,18 @@ export default function ProgramOwnerDetailPage() {
 
   const handleCancel = () => {
     if (owner) {
+      // Format phone for display
+      const phone = owner.phone || '';
+      const cleaned = phone.replace(/\D/g, '').replace(/^1/, '');
+      let formattedPhone = '';
+      if (cleaned.length === 10) {
+        formattedPhone = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+      }
       setEditForm({
         displayName: owner.displayName,
         bio: owner.bio || '',
         avatarUrl: owner.avatarUrl || '',
+        phone: formattedPhone,
         isActive: owner.isActive,
       })
     }
@@ -220,6 +244,31 @@ export default function ProgramOwnerDetailPage() {
                       className="mt-1"
                       placeholder="https://..."
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                    <Input
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, '');
+                        let formatted = cleaned;
+                        if (cleaned.length <= 3) {
+                          formatted = cleaned;
+                        } else if (cleaned.length <= 6) {
+                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+                        } else {
+                          formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+                        }
+                        setEditForm(prev => ({ ...prev, phone: formatted }));
+                      }}
+                      className="mt-1"
+                      placeholder="(555) 123-4567"
+                      maxLength={14}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for Programs Portal access
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input

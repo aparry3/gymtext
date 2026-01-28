@@ -40,6 +40,29 @@ export interface GenerationConfig {
 }
 
 /**
+ * Custom question for program enrollment
+ *
+ * Program owners can define custom questions to collect from users
+ * during the enrollment process.
+ */
+export interface ProgramQuestion {
+  /** Unique identifier for this question */
+  id: string;
+  /** The question text to display to users */
+  questionText: string;
+  /** Type of input to collect */
+  questionType: 'text' | 'select' | 'multiselect' | 'scale' | 'boolean';
+  /** Options for select/multiselect question types */
+  options?: string[];
+  /** Whether this question must be answered */
+  isRequired: boolean;
+  /** Optional help text to clarify the question */
+  helpText?: string;
+  /** Order in which to display this question */
+  sortOrder: number;
+}
+
+/**
  * Difficulty metadata for program versions
  */
 export interface DifficultyMetadata {
@@ -77,6 +100,8 @@ export interface ProgramVersion {
   defaultDurationWeeks: number | null;
   /** Difficulty/requirements metadata */
   difficultyMetadata: DifficultyMetadata | null;
+  /** Custom questions for enrollment */
+  questions: ProgramQuestion[] | null;
   createdAt: Date;
   publishedAt: Date | null;
   archivedAt: Date | null;
@@ -94,6 +119,7 @@ export class ProgramVersionModel {
       generationConfig: row.generationConfig as GenerationConfig | null,
       defaultDurationWeeks: row.defaultDurationWeeks,
       difficultyMetadata: row.difficultyMetadata as DifficultyMetadata | null,
+      questions: row.questions as ProgramQuestion[] | null,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
       publishedAt: row.publishedAt ? new Date(row.publishedAt as unknown as string | number | Date) : null,
       archivedAt: row.archivedAt ? new Date(row.archivedAt as unknown as string | number | Date) : null,

@@ -114,6 +114,7 @@ export function createProgramVersionService(
         generationConfig: data.generationConfig ?? null,
         defaultDurationWeeks: data.defaultDurationWeeks ?? null,
         difficultyMetadata: data.difficultyMetadata ?? null,
+        questions: data.questions ?? null,
       };
 
       return repos.programVersion.create(versionData);

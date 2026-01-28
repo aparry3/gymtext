@@ -106,6 +106,25 @@
         "INNGEST_EVENT_KEY",
         "INNGEST_SIGNING_KEY"
       ]
+    },
+    "programs#build": {
+      "dependsOn": ["@gymtext/shared#build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "DATABASE_URL",
+        "SESSION_ENCRYPTION_KEY",
+        "NODE_ENV",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_NUMBER",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PRICE_ID",
+        "OPENAI_API_KEY",
+        "GOOGLE_API_KEY",
+        "PINECONE_API_KEY",
+        "PINECONE_INDEX"
+      ]
     }
   }
 }

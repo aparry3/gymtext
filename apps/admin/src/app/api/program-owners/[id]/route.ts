@@ -106,6 +106,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (body.displayName !== undefined) updateData.displayName = body.displayName;
     if (body.bio !== undefined) updateData.bio = body.bio;
     if (body.avatarUrl !== undefined) updateData.avatarUrl = body.avatarUrl;
+    if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.userId !== undefined) updateData.userId = body.userId;
 

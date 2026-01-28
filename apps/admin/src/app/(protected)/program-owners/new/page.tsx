@@ -25,6 +25,7 @@ export default function CreateProgramOwnerPage() {
     ownerType: 'coach' as OwnerType,
     bio: '',
     avatarUrl: '',
+    phone: '',
     isActive: true,
   })
 
@@ -47,6 +48,10 @@ export default function CreateProgramOwnerPage() {
     setIsSubmitting(true)
 
     try {
+      // Format phone number to E.164
+      const cleanedPhone = form.phone.replace(/\D/g, '');
+      const formattedPhone = cleanedPhone.length === 10 ? `+1${cleanedPhone}` : null;
+
       const response = await fetch('/api/program-owners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,6 +60,7 @@ export default function CreateProgramOwnerPage() {
           ownerType: form.ownerType,
           bio: form.bio.trim() || null,
           avatarUrl: form.avatarUrl.trim() || null,
+          phone: formattedPhone,
           isActive: form.isActive,
         }),
       })
@@ -167,6 +173,36 @@ export default function CreateProgramOwnerPage() {
                 placeholder="https://..."
                 disabled={isSubmitting}
               />
+            </div>
+
+            {/* Phone Number */}
+            <div className="space-y-2">
+              <label htmlFor="phone" className="text-sm font-medium">
+                Phone Number
+              </label>
+              <Input
+                id="phone"
+                type="tel"
+                value={form.phone}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '');
+                  let formatted = cleaned;
+                  if (cleaned.length <= 3) {
+                    formatted = cleaned;
+                  } else if (cleaned.length <= 6) {
+                    formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+                  } else {
+                    formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+                  }
+                  setForm(prev => ({ ...prev, phone: formatted }));
+                }}
+                placeholder="(555) 123-4567"
+                disabled={isSubmitting}
+                maxLength={14}
+              />
+              <p className="text-xs text-muted-foreground">
+                Required for owner to access Programs Portal
+              </p>
             </div>
 
             {/* Active Checkbox */}
