@@ -153,7 +153,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { displayName, ownerType, bio, avatarUrl, userId, phone, isActive } = body;
+    const { displayName, ownerType, bio, avatarUrl, wordmarkUrl, userId, phone, isActive } = body;
 
     // Validate required fields
     if (!displayName || !ownerType) {
@@ -179,6 +179,7 @@ export async function POST(request: Request) {
       ownerType,
       bio: bio || null,
       avatarUrl: avatarUrl || null,
+      wordmarkUrl: wordmarkUrl || null,
       userId: userId || null,
       phone: phone || null,
       isActive: isActive ?? true,

@@ -5,6 +5,10 @@ import { ChevronDown } from 'lucide-react';
 
 const heroImages = [
   {
+    url: "https://res.cloudinary.com/norrona/image/upload/x_4225,y_3514,w_8449,h_4753,c_crop,g_xy_center/b_rgb:fcfcfc/c_pad,f_auto,d_imgmissing.jpg,fl_progressive.lossy,q_auto,w_3200/Auto%2FFW2324-senja-Nordmarka-DSC02177-updated.jpg",
+    alt: "Trail running in the mountains"
+  },
+  {
     url: "https://images.unsplash.com/photo-1551524559-8af4e6624178?q=80&w=2626&auto=format&fit=crop",
     alt: "Ski touring in the mountains"
   },
@@ -58,7 +62,7 @@ export const NorronaHero: React.FC = () => {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 font-light max-w-xl mb-10 leading-relaxed">
-            One text at a time. Professional ski and hiking coaching delivered directly to your messages.
+            One text at a time. Professional running, ski, boarding, and hiking coaching delivered directly to your messages.
           </p>
 
           <a
