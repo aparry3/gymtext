@@ -22,7 +22,7 @@ function ProgramOwnersPageContent() {
   const [owners, setOwners] = useState<AdminProgramOwner[]>([])
   const [stats, setStats] = useState<ProgramOwnerStats>({
     totalOwners: 0,
-    byType: { ai: 0, coach: 0, trainer: 0, influencer: 0 },
+    byType: { ai: 0, coach: 0, trainer: 0, influencer: 0, brand: 0 },
     activeOwners: 0,
     totalPrograms: 0,
     totalEnrollments: 0,
