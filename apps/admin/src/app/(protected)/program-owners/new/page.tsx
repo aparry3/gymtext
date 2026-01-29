@@ -33,6 +33,7 @@ export default function CreateProgramOwnerPage() {
     { value: 'coach', label: 'Coach' },
     { value: 'trainer', label: 'Trainer' },
     { value: 'influencer', label: 'Influencer' },
+    { value: 'brand', label: 'Brand' },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {

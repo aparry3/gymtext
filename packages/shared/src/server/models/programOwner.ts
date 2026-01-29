@@ -5,7 +5,7 @@ export type ProgramOwnerDB = Selectable<ProgramOwners>;
 export type NewProgramOwner = Insertable<ProgramOwners>;
 export type ProgramOwnerUpdate = Updateable<ProgramOwners>;
 
-export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer';
+export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer' | 'brand';
 
 export interface ProgramOwner {
   id: string;

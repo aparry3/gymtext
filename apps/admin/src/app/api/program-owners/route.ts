@@ -109,6 +109,7 @@ export async function GET(request: Request) {
         coach: ownersWithStats.filter(o => o.ownerType === 'coach').length,
         trainer: ownersWithStats.filter(o => o.ownerType === 'trainer').length,
         influencer: ownersWithStats.filter(o => o.ownerType === 'influencer').length,
+        brand: ownersWithStats.filter(o => o.ownerType === 'brand').length,
       },
       activeOwners: ownersWithStats.filter(o => o.isActive).length,
       totalPrograms: ownersWithStats.reduce((sum, o) => sum + o.programCount, 0),
@@ -163,10 +164,10 @@ export async function POST(request: Request) {
     }
 
     // Validate ownerType
-    const validTypes: OwnerType[] = ['coach', 'trainer', 'influencer'];
+    const validTypes: OwnerType[] = ['coach', 'trainer', 'influencer', 'brand'];
     if (!validTypes.includes(ownerType)) {
       return NextResponse.json(
-        { success: false, message: 'ownerType must be coach, trainer, or influencer' },
+        { success: false, message: 'ownerType must be coach, trainer, influencer, or brand' },
         { status: 400 }
       );
     }

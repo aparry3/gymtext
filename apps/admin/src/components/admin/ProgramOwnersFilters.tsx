@@ -66,7 +66,7 @@ export function ProgramOwnersFilters({ onFiltersChange, isLoading = false }: Pro
 
   const activeFiltersCount = Object.values(filters).filter(v => v !== undefined && v !== '').length
 
-  const ownerTypes: OwnerType[] = ['ai', 'coach', 'trainer', 'influencer']
+  const ownerTypes: OwnerType[] = ['ai', 'coach', 'trainer', 'influencer', 'brand']
 
   return (
     <div className="space-y-4">

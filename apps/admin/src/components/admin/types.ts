@@ -199,7 +199,7 @@ export interface AdminMessagesResponse {
 // ============================================
 
 // Owner type enum
-export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer';
+export type OwnerType = 'ai' | 'coach' | 'trainer' | 'influencer' | 'brand';
 
 // Admin-specific program owner type with stats
 export interface AdminProgramOwner {
@@ -240,6 +240,7 @@ export interface ProgramOwnerStats {
     coach: number;
     trainer: number;
     influencer: number;
+    brand: number;
   };
   activeOwners: number;
   totalPrograms: number;
