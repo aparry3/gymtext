@@ -1,16 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { MessageSquare, Dumbbell, DollarSign } from 'lucide-react';
 
 export function HeroSection() {
-  const scrollToSignup = () => {
-    const signupSection = document.getElementById('signup');
-    if (signupSection) {
-      signupSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <section className="container mx-auto px-4 py-12 md:py-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
@@ -56,13 +49,12 @@ export function HeroSection() {
 
           {/* CTA Button */}
           <div className="pt-4">
-            <Button
-              onClick={scrollToSignup}
-              size="lg"
-              className="w-full sm:w-auto text-base px-8 py-6 h-auto"
+            <Link
+              href="/start"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] w-full sm:w-auto text-base px-8 py-6 h-auto"
             >
               Start Working Out Today
-            </Button>
+            </Link>
           </div>
         </div>
 

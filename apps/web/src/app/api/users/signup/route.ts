@@ -327,6 +327,7 @@ async function completeSignupFlow(
  */
 function extractSignupData(formData: Record<string, unknown>): SignupData {
   return {
+    // Fitness data (optional - may not be present for program signups)
     primaryGoals: formData.primaryGoals as SignupData['primaryGoals'],
     goalsElaboration: formData.goalsElaboration as string | undefined,
     experienceLevel: formData.experienceLevel as SignupData['experienceLevel'],
@@ -336,5 +337,9 @@ function extractSignupData(formData: Record<string, unknown>): SignupData {
     equipment: formData.equipment as string[],
     injuries: formData.injuries as string | undefined,
     acceptedRisks: formData.acceptedRisks as boolean,
+
+    // Program-specific data
+    programId: formData.programId as string | undefined,
+    programAnswers: formData.programAnswers as Record<string, string | string[]> | undefined,
   };
 }

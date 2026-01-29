@@ -104,6 +104,14 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.pb-safe-offset-8 {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+.pb-safe-offset-12 {
+  padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
+}
+
 .mb-safe {
   margin-bottom: env(safe-area-inset-bottom);
 }
@@ -168,6 +176,18 @@ body {
 
   --border: 217 33% 15%;
   --input: 217 33% 15%;
+}
+
+/* Questionnaire dark theme */
+.questionnaire-theme {
+  --questionnaire-bg: 222 47% 5%;
+  --questionnaire-surface: 222 47% 8%;
+  --questionnaire-foreground: 210 17% 95%;
+  --questionnaire-muted: 217 33% 15%;
+  --questionnaire-muted-foreground: 215 20% 55%;
+  --questionnaire-accent: 213 94% 68%;
+  --questionnaire-accent-foreground: 0 0% 100%;
+  --questionnaire-border: 217 33% 20%;
 }
 
 /* Color utilities */

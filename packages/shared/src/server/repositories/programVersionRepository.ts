@@ -19,9 +19,18 @@ export class ProgramVersionRepository extends BaseRepository {
    * Create a new program version
    */
   async create(data: NewProgramVersion): Promise<ProgramVersion> {
+    // Stringify JSON fields for JSONB columns - Kysely doesn't auto-serialize
+    const insertData = {
+      ...data,
+      templateStructured: data.templateStructured ? JSON.stringify(data.templateStructured) : null,
+      generationConfig: data.generationConfig ? JSON.stringify(data.generationConfig) : null,
+      difficultyMetadata: data.difficultyMetadata ? JSON.stringify(data.difficultyMetadata) : null,
+      questions: data.questions ? JSON.stringify(data.questions) : null,
+    };
+
     const result = await this.db
       .insertInto('programVersions')
-      .values(data)
+      .values(insertData as typeof data)
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -105,9 +114,26 @@ export class ProgramVersionRepository extends BaseRepository {
    * Update a program version
    */
   async update(id: string, data: ProgramVersionUpdate): Promise<ProgramVersion | null> {
+    // Stringify JSON fields if they're being updated - Kysely doesn't auto-serialize
+    const updateData = {
+      ...data,
+      ...(data.templateStructured !== undefined && {
+        templateStructured: data.templateStructured ? JSON.stringify(data.templateStructured) : null,
+      }),
+      ...(data.generationConfig !== undefined && {
+        generationConfig: data.generationConfig ? JSON.stringify(data.generationConfig) : null,
+      }),
+      ...(data.difficultyMetadata !== undefined && {
+        difficultyMetadata: data.difficultyMetadata ? JSON.stringify(data.difficultyMetadata) : null,
+      }),
+      ...(data.questions !== undefined && {
+        questions: data.questions ? JSON.stringify(data.questions) : null,
+      }),
+    };
+
     const result = await this.db
       .updateTable('programVersions')
-      .set(data)
+      .set(updateData as typeof data)
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
