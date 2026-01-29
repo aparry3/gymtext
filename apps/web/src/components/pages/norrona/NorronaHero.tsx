@@ -51,7 +51,8 @@ export const NorronaHero: React.FC = () => {
       <div className="relative z-10 flex h-full flex-col justify-end pb-24 px-6 md:px-12 lg:px-24 max-w-7xl mx-auto">
         <div className="max-w-3xl">
           <div className="flex items-center gap-4 mb-6 text-white/90">
-            <span className="uppercase tracking-[0.2em] text-xs md:text-sm font-semibold">Norrøna</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Norrona.png" alt="Norrøna" className="h-4 md:h-5" />
             <span className="h-px w-8 bg-white/50"></span>
             <span className="uppercase tracking-[0.2em] text-xs md:text-sm font-semibold">Gymtext</span>
           </div>

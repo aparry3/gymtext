@@ -20,7 +20,13 @@ export const NorronaHeader: React.FC = () => {
 
         {/* Logo Area */}
         <div className="flex items-center gap-3">
-          <span className="text-xl md:text-2xl font-bold tracking-tighter uppercase">Norrøna</span>
+          <Image
+            src="/Norrona.png"
+            alt="Norrøna"
+            width={100}
+            height={24}
+            className={`h-6 w-auto ${scrolled ? 'invert' : ''}`}
+          />
           <span className="text-lg opacity-50">×</span>
           <Image
             src={scrolled ? "/Wordmark.png" : "/WordmarkWhite.png"}
