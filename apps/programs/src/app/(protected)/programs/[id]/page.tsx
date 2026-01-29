@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import type { Program, ProgramVersion, ProgramQuestion } from '@gymtext/shared/server';
 
@@ -294,6 +295,15 @@ export default function ProgramDetailPage() {
           >
             {program.isPublic ? 'Make Private' : 'Make Public'}
           </Button>
+          <a
+            href={`https://gymtext.com/start?program=${program.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 shadow-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md hover:border-gray-300 h-10 px-4 py-2"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Signup Page
+          </a>
         </div>
 
         {/* Content Tabs */}

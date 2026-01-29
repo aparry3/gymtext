@@ -11,7 +11,8 @@ const programs: TrainingProgram[] = [
     focusAreas: ['Cardio Endurance', 'Leg Power', 'Ankle Stability', 'Hill Training', 'Recovery'],
     image: 'https://res.cloudinary.com/norrona/image/upload/x_4225,y_3514,w_8449,h_4753,c_crop,g_xy_center/b_rgb:fcfcfc/c_pad,f_auto,d_imgmissing.jpg,fl_progressive.lossy,q_auto,w_3200/Auto%2FFW2324-senja-Nordmarka-DSC02177-updated.jpg',
     imagePosition: 'left center',
-    cta: 'Start Running Program'
+    cta: 'Start Running Program',
+    link: 'https://gymtext.co/start?program=d7264e99-acc8-4bad-b275-ea53026dfddf'
   },
   {
     id: 'ski',
@@ -20,7 +21,8 @@ const programs: TrainingProgram[] = [
     description: 'Prepare your body for the demands of the slopes. This program focuses on explosive power, stability, and injury prevention to keep you on the snow longer.',
     focusAreas: ['Leg Strength', 'Core Stability', 'Balance', 'Injury Prevention', 'Endurance'],
     image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=80&w=2070&auto=format&fit=crop',
-    cta: 'Start Ski/Snowboard Program'
+    cta: 'Coming Soon',
+    comingSoon: true
   },
   {
     id: 'hike',
@@ -29,7 +31,8 @@ const programs: TrainingProgram[] = [
     description: 'Built for long days on the trail. Build the resilience needed for elevation gain, heavy packs, and multi-day treks.',
     focusAreas: ['Joint Resilience', 'Leg Endurance', 'Pack Carry', 'Recovery', 'Cardio Base'],
     image: 'https://res.cloudinary.com/norrona/image/upload/x_3303,y_2009,w_3960,h_2227,c_crop,g_xy_center/b_rgb:fcfcfc/c_pad,f_auto,d_imgmissing.jpg,fl_progressive.lossy,q_auto,w_3200/Auto%2FEvent-Series-MorganBodet-MB_02495.jpg',
-    cta: 'Start Hiking Program'
+    cta: 'Coming Soon',
+    comingSoon: true
   }
 ];
 
