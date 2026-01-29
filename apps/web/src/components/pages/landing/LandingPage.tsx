@@ -82,7 +82,7 @@ export function LandingPage() {
 
               <div className="flex items-center gap-4">
                 <a
-                  href="#signup"
+                  href="/start"
                   className="hidden md:block text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   Sign up
@@ -154,7 +154,7 @@ export function LandingPage() {
                   </li>
                   <li>
                     <a
-                      href="#signup"
+                      href="/start"
                       onClick={handleNavClick}
                       className="block text-sm font-semibold text-primary transition-colors hover:text-primary/80 py-2"
                     >
@@ -196,6 +196,7 @@ export function LandingPage() {
         </section>
       </div>
 
+      {/* Signup form temporarily disabled - using /start questionnaire instead
       <section
         id="signup"
         className="bg-white pb-16 md:pb-24 scroll-mt-24 md:scroll-mt-32"
@@ -208,6 +209,7 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      */}
 
       <footer className="border-t border-border bg-muted py-12">
         <div className="container mx-auto px-4">

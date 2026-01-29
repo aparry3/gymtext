@@ -56,58 +56,215 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 type ParsedContent = ParseMetadata & { text: string };
 
 /**
- * Groups PDF text items into rows based on Y position,
- * then sorts each row by X position to reconstruct reading order.
- * Detects table structures and formats as tab-separated rows.
+ * Detect column boundaries by clustering X positions of text items.
+ * Uses a simple clustering approach: items with X positions within tolerance
+ * are considered part of the same column.
  */
-function reconstructTableStructure(items: PDFTextItem[], yTolerance = 5): string {
-  if (items.length === 0) return '';
+function detectColumnBoundaries(items: PDFTextItem[], tolerance = 30): number[] {
+  if (items.length === 0) return [];
 
-  // Sort items by y then x
-  const sortedItems = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  // Get unique X positions (use left edge of each item)
+  const xPositions = items.map(i => i.x).sort((a, b) => a - b);
 
-  // Group items into rows based on Y proximity
+  // Cluster X positions
+  const clusters: { center: number; count: number }[] = [];
+
+  for (const x of xPositions) {
+    const nearestCluster = clusters.find(c => Math.abs(c.center - x) < tolerance);
+    if (nearestCluster) {
+      // Update cluster center as weighted average
+      nearestCluster.center = (nearestCluster.center * nearestCluster.count + x) / (nearestCluster.count + 1);
+      nearestCluster.count++;
+    } else {
+      clusters.push({ center: x, count: 1 });
+    }
+  }
+
+  // Sort clusters by position and filter out noise (clusters with very few items)
+  const minClusterSize = Math.max(2, items.length * 0.02);
+  const significantClusters = clusters
+    .filter(c => c.count >= minClusterSize)
+    .sort((a, b) => a.center - b.center);
+
+  // Calculate boundaries as midpoints between clusters
+  const boundaries: number[] = [0]; // Start boundary
+  for (let i = 0; i < significantClusters.length - 1; i++) {
+    boundaries.push((significantClusters[i].center + significantClusters[i + 1].center) / 2);
+  }
+  boundaries.push(Infinity); // End boundary
+
+  return boundaries;
+}
+
+/**
+ * Assign a column index to an item based on its X position and column boundaries.
+ */
+function getColumnIndex(x: number, boundaries: number[]): number {
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    if (x >= boundaries[i] && x < boundaries[i + 1]) {
+      return i;
+    }
+  }
+  return boundaries.length - 2; // Last column
+}
+
+/**
+ * Group items into logical rows based on Y-position proximity.
+ * Items within yTolerance of each other are considered same row.
+ */
+function groupIntoRows(items: PDFTextItem[], yTolerance = 8): PDFTextItem[][] {
+  if (items.length === 0) return [];
+
+  // Sort by Y position
+  const sortedItems = [...items].sort((a, b) => a.y - b.y);
+
   const rows: PDFTextItem[][] = [];
-  let currentRow: PDFTextItem[] = [];
+  let currentRow: PDFTextItem[] = [sortedItems[0]];
   let currentY = sortedItems[0].y;
 
-  for (const item of sortedItems) {
-    if (Math.abs(item.y - currentY) > yTolerance) {
-      // New row
-      if (currentRow.length > 0) {
-        rows.push(currentRow);
-      }
+  for (let i = 1; i < sortedItems.length; i++) {
+    const item = sortedItems[i];
+    if (Math.abs(item.y - currentY) <= yTolerance) {
+      currentRow.push(item);
+    } else {
+      rows.push(currentRow);
       currentRow = [item];
       currentY = item.y;
-    } else {
-      currentRow.push(item);
     }
   }
   if (currentRow.length > 0) {
     rows.push(currentRow);
   }
 
-  // Detect if this looks like a table (multiple rows with similar column counts)
-  const columnCounts = rows.map(r => r.length);
-  const avgColumns = columnCounts.reduce((a, b) => a + b, 0) / rows.length;
-  const isLikelyTable = avgColumns >= 3 && rows.length >= 3;
+  return rows;
+}
 
-  // Format output
+/**
+ * Detect if text looks like a header (ALL CAPS, short, or common header patterns).
+ */
+function looksLikeHeader(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return false;
+
+  // Check for ALL CAPS (with allowance for numbers and punctuation)
+  const alphaChars = trimmed.replace(/[^a-zA-Z]/g, '');
+  if (alphaChars.length > 2 && alphaChars === alphaChars.toUpperCase()) {
+    return true;
+  }
+
+  // Common header patterns
+  const headerPatterns = [
+    /^(week|day|date|time|workout|exercise|session|phase|notes?|am|pm|rest)$/i,
+    /^(mon|tue|wed|thu|fri|sat|sun)/i,
+    /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i,
+  ];
+
+  return headerPatterns.some(p => p.test(trimmed));
+}
+
+/**
+ * Format a table as markdown.
+ */
+function formatAsMarkdownTable(cells: string[][], columnCount: number): string {
+  if (cells.length === 0) return '';
+
   const lines: string[] = [];
-  for (const row of rows) {
-    // Sort row items by x position
-    row.sort((a, b) => a.x - b.x);
 
-    if (isLikelyTable) {
-      // Use tab separation for table-like content
-      lines.push(row.map(item => item.str.trim()).join('\t'));
-    } else {
-      // Use space separation for regular text
-      lines.push(row.map(item => item.str).join(' '));
+  // Normalize all rows to have the same number of columns
+  const normalizedCells = cells.map(row => {
+    const normalized = [...row];
+    while (normalized.length < columnCount) {
+      normalized.push('');
     }
+    return normalized.slice(0, columnCount);
+  });
+
+  // Build header row
+  const headerRow = normalizedCells[0];
+  lines.push('| ' + headerRow.map(c => c.replace(/\|/g, '\\|').replace(/\n/g, ' ').trim() || ' ').join(' | ') + ' |');
+
+  // Build separator row
+  lines.push('|' + headerRow.map(() => '---').join('|') + '|');
+
+  // Build data rows
+  for (let i = 1; i < normalizedCells.length; i++) {
+    const row = normalizedCells[i];
+    lines.push('| ' + row.map(c => c.replace(/\|/g, '\\|').replace(/\n/g, ' ').trim() || ' ').join(' | ') + ' |');
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Reconstruct table structure from PDF text items using column-aware algorithm.
+ *
+ * Algorithm:
+ * 1. Detect column boundaries by clustering X positions
+ * 2. Group items into rows by Y position proximity
+ * 3. Assign each item to a cell based on (row, column)
+ * 4. Concatenate items in same cell
+ * 5. Format as markdown table if table-like, otherwise as plain text
+ */
+function reconstructTableStructure(items: PDFTextItem[], yTolerance = 8): string {
+  if (items.length === 0) return '';
+
+  // First, group into rows to check if this looks like a table
+  const rows = groupIntoRows(items, yTolerance);
+
+  // Detect column boundaries
+  const columnBoundaries = detectColumnBoundaries(items);
+  const columnCount = columnBoundaries.length - 1;
+
+  // Check if this looks like a table (multiple columns and rows)
+  const isLikelyTable = columnCount >= 2 && rows.length >= 3;
+
+  if (!isLikelyTable) {
+    // Format as plain text
+    const lines: string[] = [];
+    for (const row of rows) {
+      row.sort((a, b) => a.x - b.x);
+      lines.push(row.map(item => item.str).join(' '));
+    }
+    return lines.join('\n');
+  }
+
+  // Build table cells
+  const tableCells: string[][] = [];
+
+  for (const row of rows) {
+    // Sort items in row by X position
+    row.sort((a, b) => a.x - b.x);
+
+    // Initialize cell contents for this row
+    const cellContents: string[] = new Array(columnCount).fill('');
+
+    for (const item of row) {
+      const colIndex = getColumnIndex(item.x, columnBoundaries);
+      if (colIndex >= 0 && colIndex < columnCount) {
+        // Append to cell, adding space if there's already content
+        if (cellContents[colIndex]) {
+          cellContents[colIndex] += ' ' + item.str.trim();
+        } else {
+          cellContents[colIndex] = item.str.trim();
+        }
+      }
+    }
+
+    tableCells.push(cellContents);
+  }
+
+  // Check if first row looks like headers
+  const firstRowContent = tableCells[0] || [];
+  const hasHeaderRow = firstRowContent.some(cell => looksLikeHeader(cell));
+
+  if (hasHeaderRow) {
+    return formatAsMarkdownTable(tableCells, columnCount);
+  }
+
+  // If no clear headers, still format as markdown but with generic headers
+  const genericHeaders = new Array(columnCount).fill(0).map((_, i) => `Col ${i + 1}`);
+  const withHeaders = [genericHeaders, ...tableCells];
+  return formatAsMarkdownTable(withHeaders, columnCount);
 }
 
 async function parsePDF(buffer: Buffer): Promise<ParsedContent> {

@@ -209,7 +209,7 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
       </header>
 
       {/* Main content */}
-      <main className="flex flex-1 flex-col justify-center px-6 py-8 pb-safe">
+      <main className="flex flex-1 flex-col justify-center px-6 pt-8 pb-safe-offset-12">
         <div className="mx-auto w-full max-w-md">
           {error && (
             <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4">
