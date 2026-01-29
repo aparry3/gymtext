@@ -175,7 +175,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
   return (
     <div className="questionnaire-theme flex min-h-screen-safe flex-col bg-[hsl(var(--questionnaire-bg))]">
       {/* Branding header */}
-      <div className="flex flex-col items-center gap-1 pt-safe py-4">
+      <div className="flex flex-col items-center gap-1 pt-safe mt-6 py-4">
         {ownerWordmarkUrl ? (
           <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
         ) : (
