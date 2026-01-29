@@ -14,6 +14,7 @@ export interface ProgramOwner {
   displayName: string;
   bio: string | null;
   avatarUrl: string | null;
+  wordmarkUrl: string | null;
   stripeConnectAccountId: string | null;
   phone: string | null;
   isActive: boolean;
@@ -30,6 +31,7 @@ export class ProgramOwnerModel {
       displayName: row.displayName,
       bio: row.bio,
       avatarUrl: row.avatarUrl,
+      wordmarkUrl: row.wordmarkUrl ?? null,
       stripeConnectAccountId: row.stripeConnectAccountId,
       phone: row.phone ?? null,
       isActive: row.isActive,

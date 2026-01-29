@@ -213,6 +213,7 @@ export interface AdminProgramOwner {
   displayName: string;
   bio: string | null;
   avatarUrl: string | null;
+  wordmarkUrl: string | null;
   stripeConnectAccountId: string | null;
   phone: string | null;
   isActive: boolean;
