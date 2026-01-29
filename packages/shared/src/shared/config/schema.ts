@@ -66,9 +66,12 @@ export const ShortLinksConfigSchema = z.object({
 
 // ============================================================================
 // Stripe Configuration (non-secret)
+// TODO: Refactor config system to use modular loading where apps declare which
+// config sections they require, rather than validating all sections globally.
+// This would allow apps like 'programs' to skip Stripe config entirely.
 // ============================================================================
 export const StripeConfigSchema = z.object({
-  priceId: z.string().min(1),
+  priceId: z.string().min(1).optional(),
 });
 
 // ============================================================================
