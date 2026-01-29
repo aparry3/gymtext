@@ -6,9 +6,6 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { Bebas_Neue } from 'next/font/google';
-
-const bn = Bebas_Neue({ weight: '400', subsets: ['latin'] });
 
 type LoginStep = 'phone' | 'code';
 
@@ -123,36 +120,29 @@ function ProgramsLoginForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Image
-              src="/IconInverse.png"
-              alt="GymText Logo"
-              width={48}
-              height={48}
-              className="h-12 w-12"
-            />
-            <Image
-              src="/WordmarkWhite.png"
-              alt="GymText"
-              width={160}
-              height={40}
-            />
-          </div>
-          <p className="text-gray-300 text-lg font-semibold mb-1">
-            Program Owner Portal
-          </p>
-          <p className="text-gray-400 text-sm">
-            {step === 'phone' ? 'Enter your registered phone number' : 'Enter your verification code'}
-          </p>
-        </div>
-
         {/* Card */}
-        <Card className="p-8 bg-gray-800/50 border-gray-700 backdrop-blur">
+        <Card className="p-8 bg-white border-gray-200 shadow-xl rounded-3xl">
+          {/* Header inside card */}
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Wordmark.png"
+                alt="GymText"
+                width={160}
+                height={40}
+              />
+            </div>
+            <p className="text-gray-700 text-lg font-semibold mb-1">
+              Program Owner Portal
+            </p>
+            <p className="text-gray-500 text-sm">
+              {step === 'phone' ? 'Enter your registered phone number' : 'Enter your verification code'}
+            </p>
+          </div>
+
           {error && (
-            <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
-              <p className="text-sm text-red-200">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
@@ -160,7 +150,7 @@ function ProgramsLoginForm() {
             <form onSubmit={handleRequestCode}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium mb-2 text-gray-200">
+                  <label htmlFor="phone" className="block text-sm font-medium mb-2 text-gray-700">
                     Phone Number
                   </label>
                   <input
@@ -169,17 +159,17 @@ function ProgramsLoginForm() {
                     value={phoneNumber}
                     onChange={handlePhoneChange}
                     placeholder="(555) 123-4567"
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                    className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                     disabled={isLoading}
                     autoComplete="tel"
                     maxLength={14}
                   />
-                  <p className="mt-2 text-xs text-gray-400">
+                  <p className="mt-2 text-xs text-gray-500">
                     Only registered program owners can access this portal
                   </p>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -195,7 +185,7 @@ function ProgramsLoginForm() {
             <form onSubmit={handleVerifyCode}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="code" className="block text-sm font-medium mb-2 text-gray-200">
+                  <label htmlFor="code" className="block text-sm font-medium mb-2 text-gray-700">
                     Verification Code
                   </label>
                   <input
@@ -204,20 +194,20 @@ function ProgramsLoginForm() {
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                     placeholder="123456"
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white text-center text-2xl tracking-widest font-mono"
+                    className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-center text-2xl tracking-widest font-mono"
                     disabled={isLoading}
                     autoComplete="one-time-code"
                     maxLength={6}
                     autoFocus
                   />
-                  <p className="mt-2 text-xs text-gray-400 text-center">
+                  <p className="mt-2 text-xs text-gray-500 text-center">
                     Check your phone for a 6-digit code
                   </p>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   disabled={isLoading || code.length !== 6}
                 >
                   {isLoading ? (
@@ -233,7 +223,7 @@ function ProgramsLoginForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="w-full border-gray-300 text-gray-600 hover:bg-gray-50"
                   onClick={handleBackToPhone}
                   disabled={isLoading}
                 >

@@ -43,14 +43,7 @@ export function ProgramsSidebar({ owner }: ProgramsSidebarProps) {
     <>
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 text-white z-50 flex items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/IconInverse.png"
-            alt="GymText"
-            width={24}
-            height={24}
-            className="h-6 w-6"
-          />
+        <Link href="/" className="flex items-center">
           <Image
             src="/WordmarkWhite.png"
             alt="GymText"
@@ -82,23 +75,14 @@ export function ProgramsSidebar({ owner }: ProgramsSidebarProps) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-gray-800">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex flex-col">
               <Image
-                src="/IconInverse.png"
+                src="/WordmarkWhite.png"
                 alt="GymText"
-                width={32}
-                height={32}
-                className="h-8 w-8"
+                width={120}
+                height={28}
               />
-              <div>
-                <Image
-                  src="/WordmarkWhite.png"
-                  alt="GymText"
-                  width={120}
-                  height={28}
-                />
-                <p className="text-xs text-gray-400">Programs Portal</p>
-              </div>
+              <p className="text-xs text-gray-400 mt-1">Programs Portal</p>
             </Link>
           </div>
 
