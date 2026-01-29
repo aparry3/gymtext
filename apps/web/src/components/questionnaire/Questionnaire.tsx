@@ -19,10 +19,12 @@ import { BooleanQuestion } from './questions/BooleanQuestion';
 
 interface QuestionnaireProps {
   programId?: string;
+  programName?: string;
+  ownerWordmarkUrl?: string;
   questions: QuestionnaireQuestion[];
 }
 
-export function Questionnaire({ programId, questions }: QuestionnaireProps) {
+export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,8 +174,20 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
 
   return (
     <div className="questionnaire-theme flex min-h-screen-safe flex-col bg-[hsl(var(--questionnaire-bg))]">
+      {/* Branding header */}
+      <div className="flex flex-col items-center gap-1 pt-safe py-4">
+        {ownerWordmarkUrl ? (
+          <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
+        ) : (
+          <img src="/WordmarkWhite.png" alt="GymText" className="h-8 object-contain" />
+        )}
+        <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+          {programName || 'Sign Up'}
+        </span>
+      </div>
+
       {/* Header with progress */}
-      <header className="flex-shrink-0 pt-safe">
+      <header className="flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-4">
           {/* Close button - always visible */}
           <Link
