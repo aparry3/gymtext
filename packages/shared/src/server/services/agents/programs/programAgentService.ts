@@ -42,6 +42,11 @@ export function createProgramAgentService(): ProgramAgentServiceInstance {
         maxTokens: 32000, // Programs can be lengthy
       });
 
+      console.log('[ProgramAgentService] Invoking with text:', {
+        length: rawText.length,
+        preview: rawText.slice(0, 500) + (rawText.length > 500 ? '...' : ''),
+      });
+
       // Invoke with raw text
       const result = await agent.invoke(rawText);
 

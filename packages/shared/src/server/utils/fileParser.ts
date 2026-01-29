@@ -1,11 +1,39 @@
-import PDFParser from 'pdf2json';
+import "server-only";
+
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
+import { getDocumentProxy } from 'unpdf';
+
+// PDF text item with layout coordinates
+export interface PDFTextItem {
+  str: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontName?: string;
+}
+
+// PDF page data with text and layout items
+export interface PDFPageData {
+  pageNumber: number;
+  text: string;
+  items: PDFTextItem[];
+}
+
+// Extended PDF data for rich processing
+export interface PDFData {
+  pages: PDFPageData[];
+  heuristics: {
+    likelyScanned: boolean;
+  };
+}
 
 export interface ParseMetadata {
   pageCount?: number;
   rowCount?: number;
   sheetNames?: string[];
+  pdfData?: PDFData;
 }
 
 export interface ParseResult {
@@ -27,38 +55,129 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 type ParsedContent = ParseMetadata & { text: string };
 
+/**
+ * Groups PDF text items into rows based on Y position,
+ * then sorts each row by X position to reconstruct reading order.
+ * Detects table structures and formats as tab-separated rows.
+ */
+function reconstructTableStructure(items: PDFTextItem[], yTolerance = 5): string {
+  if (items.length === 0) return '';
+
+  // Sort items by y then x
+  const sortedItems = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+
+  // Group items into rows based on Y proximity
+  const rows: PDFTextItem[][] = [];
+  let currentRow: PDFTextItem[] = [];
+  let currentY = sortedItems[0].y;
+
+  for (const item of sortedItems) {
+    if (Math.abs(item.y - currentY) > yTolerance) {
+      // New row
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+      }
+      currentRow = [item];
+      currentY = item.y;
+    } else {
+      currentRow.push(item);
+    }
+  }
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+
+  // Detect if this looks like a table (multiple rows with similar column counts)
+  const columnCounts = rows.map(r => r.length);
+  const avgColumns = columnCounts.reduce((a, b) => a + b, 0) / rows.length;
+  const isLikelyTable = avgColumns >= 3 && rows.length >= 3;
+
+  // Format output
+  const lines: string[] = [];
+  for (const row of rows) {
+    // Sort row items by x position
+    row.sort((a, b) => a.x - b.x);
+
+    if (isLikelyTable) {
+      // Use tab separation for table-like content
+      lines.push(row.map(item => item.str.trim()).join('\t'));
+    } else {
+      // Use space separation for regular text
+      lines.push(row.map(item => item.str).join(' '));
+    }
+  }
+
+  return lines.join('\n');
+}
+
 async function parsePDF(buffer: Buffer): Promise<ParsedContent> {
-  return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser();
+  const data = new Uint8Array(buffer);
+  const doc = await getDocumentProxy(data);
 
-    pdfParser.on('pdfParser_dataError', (errData) => {
-      const errorMessage =
-        errData instanceof Error
-          ? errData.message
-          : errData.parserError?.message || 'PDF parse error';
-      reject(new Error(errorMessage));
+  const pages: PDFPageData[] = [];
+  let fullText = '';
+  let totalChars = 0;
+
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const textContent = await page.getTextContent();
+    const viewport = page.getViewport({ scale: 1.0 });
+
+    const items: PDFTextItem[] = [];
+    let pageText = '';
+
+    for (const item of textContent.items) {
+      if ('str' in item && item.str) {
+        const transform = item.transform as number[];
+        const x = transform[4];
+        // Flip Y to top-left origin (PDF uses bottom-left)
+        const y = viewport.height - transform[5];
+
+        items.push({
+          str: item.str,
+          x,
+          y,
+          width: item.width,
+          height: item.height,
+          fontName: item.fontName,
+        });
+
+        pageText += item.str + ' ';
+        totalChars += item.str.length;
+      }
+    }
+
+    // Reconstruct table structure from coordinates
+    const structuredText = reconstructTableStructure(items);
+
+    pages.push({
+      pageNumber: i,
+      text: structuredText,
+      items,
     });
 
-    pdfParser.on('pdfParser_dataReady', (pdfData) => {
-      const text = pdfData.Pages.map((page) =>
-        page.Texts.map((t) => {
-          const rawText = t.R.map((r) => r.T).join('');
-          try {
-            return decodeURIComponent(rawText);
-          } catch {
-            return rawText;
-          }
-        }).join(' ')
-      ).join('\n\n');
+    fullText += `--- Page ${i} ---\n${structuredText}\n\n`;
+  }
 
-      resolve({
-        text,
-        pageCount: pdfData.Pages.length,
-      });
-    });
+  // Heuristic: flag as likely scanned if < 50 chars/page average
+  const avgCharsPerPage = totalChars / doc.numPages;
+  const likelyScanned = avgCharsPerPage < 50;
 
-    pdfParser.parseBuffer(buffer);
-  });
+  console.log('[FileParser] PDF parsed:', JSON.stringify({
+    pageCount: doc.numPages,
+    textLength: fullText.length,
+    likelyScanned,
+    pdfData: { pages, heuristics: { likelyScanned } },
+  }, null, 2));
+
+  return {
+    text: fullText.trim(),
+    pageCount: doc.numPages,
+    pdfData: {
+      pages,
+      heuristics: { likelyScanned },
+    },
+  };
 }
 
 function parseCSV(text: string): ParsedContent {
@@ -196,6 +315,7 @@ export async function parseFile(file: File): Promise<ParseResult> {
       pageCount: result.pageCount,
       rowCount: result.rowCount,
       sheetNames: result.sheetNames,
+      pdfData: result.pdfData,
     },
   };
 }
