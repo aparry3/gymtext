@@ -55,6 +55,11 @@ const ServerEnvSchema = z.object({
   // -------------------------------------------------------------------------
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   APP_ENV: z.enum(['development', 'staging', 'production']).optional(),
+
+  // -------------------------------------------------------------------------
+  // Dev Bypass (for Vercel preview deployments)
+  // -------------------------------------------------------------------------
+  ENABLE_DEV_BYPASS: z.string().optional(),
 });
 
 // =============================================================================

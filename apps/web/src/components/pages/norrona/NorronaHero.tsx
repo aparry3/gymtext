@@ -5,6 +5,10 @@ import { ChevronDown } from 'lucide-react';
 
 const heroImages = [
   {
+    url: "https://res.cloudinary.com/norrona/image/upload/x_4225,y_3514,w_8449,h_4753,c_crop,g_xy_center/b_rgb:fcfcfc/c_pad,f_auto,d_imgmissing.jpg,fl_progressive.lossy,q_auto,w_3200/Auto%2FFW2324-senja-Nordmarka-DSC02177-updated.jpg",
+    alt: "Trail running in the mountains"
+  },
+  {
     url: "https://images.unsplash.com/photo-1551524559-8af4e6624178?q=80&w=2626&auto=format&fit=crop",
     alt: "Ski touring in the mountains"
   },
@@ -47,7 +51,8 @@ export const NorronaHero: React.FC = () => {
       <div className="relative z-10 flex h-full flex-col justify-end pb-24 px-6 md:px-12 lg:px-24 max-w-7xl mx-auto">
         <div className="max-w-3xl">
           <div className="flex items-center gap-4 mb-6 text-white/90">
-            <span className="uppercase tracking-[0.2em] text-xs md:text-sm font-semibold">Norrøna</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Norrona.png" alt="Norrøna" className="h-4 md:h-5" />
             <span className="h-px w-8 bg-white/50"></span>
             <span className="uppercase tracking-[0.2em] text-xs md:text-sm font-semibold">Gymtext</span>
           </div>
@@ -58,7 +63,7 @@ export const NorronaHero: React.FC = () => {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 font-light max-w-xl mb-10 leading-relaxed">
-            One text at a time. Professional ski and hiking coaching delivered directly to your messages.
+            One text at a time. Professional running, ski, boarding, and hiking coaching delivered directly to your messages.
           </p>
 
           <a

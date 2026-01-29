@@ -41,7 +41,7 @@ export function createUserAuthService(
   const RATE_LIMIT_WINDOW_MINUTES = 15;
   const CODE_EXPIRY_MINUTES = 10;
   const CODE_LENGTH = 6;
-  const isDev = !getEnvironmentSettings().isProduction;
+  const isDev = getEnvironmentSettings().enableDevBypass;
   const devBypassCode = getAdminConfig().devBypassCode || '000000';
 
   const generateCode = (): string => {

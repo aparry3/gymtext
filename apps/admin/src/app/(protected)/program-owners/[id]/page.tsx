@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { AdminProgramOwner, AdminProgramOwnerDetailResponse } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
@@ -29,6 +29,14 @@ interface OwnerDetail extends AdminProgramOwner {
   }[]
 }
 
+type ImageInputMode = 'file' | 'url'
+
+interface ImageUploadState {
+  mode: ImageInputMode
+  isUploading: boolean
+  previewUrl: string
+}
+
 export default function ProgramOwnerDetailPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -41,9 +49,25 @@ export default function ProgramOwnerDetailPage() {
     displayName: '',
     bio: '',
     avatarUrl: '',
+    wordmarkUrl: '',
     phone: '',
     isActive: true,
   })
+
+  const [avatarUpload, setAvatarUpload] = useState<ImageUploadState>({
+    mode: 'file',
+    isUploading: false,
+    previewUrl: '',
+  })
+
+  const [wordmarkUpload, setWordmarkUpload] = useState<ImageUploadState>({
+    mode: 'file',
+    isUploading: false,
+    previewUrl: '',
+  })
+
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const wordmarkInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch owner data
   const fetchOwner = useCallback(async (ownerId: string) => {
@@ -71,9 +95,18 @@ export default function ProgramOwnerDetailPage() {
         displayName: data.owner.displayName,
         bio: data.owner.bio || '',
         avatarUrl: data.owner.avatarUrl || '',
+        wordmarkUrl: data.owner.wordmarkUrl || '',
         phone: formattedPhone,
         isActive: data.owner.isActive,
       })
+      setAvatarUpload(prev => ({
+        ...prev,
+        previewUrl: data.owner.avatarUrl || '',
+      }))
+      setWordmarkUpload(prev => ({
+        ...prev,
+        previewUrl: data.owner.wordmarkUrl || '',
+      }))
     } catch (err) {
       setError('Failed to load program owner')
       console.error('Error fetching program owner:', err)
@@ -87,6 +120,67 @@ export default function ProgramOwnerDetailPage() {
       fetchOwner(id as string)
     }
   }, [id, fetchOwner])
+
+  const handleImageUpload = async (file: File, type: 'avatar' | 'wordmark') => {
+    if (!owner) return
+
+    const setUploadState = type === 'avatar' ? setAvatarUpload : setWordmarkUpload
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      setError('File must be an image')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB')
+      return
+    }
+
+    setUploadState(prev => ({ ...prev, isUploading: true }))
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', type)
+
+      const response = await fetch(`/api/program-owners/${owner.id}/image`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to upload image')
+      }
+
+      // Update preview and form
+      const url = result.data.url
+      setUploadState(prev => ({ ...prev, previewUrl: url }))
+
+      if (type === 'avatar') {
+        setEditForm(prev => ({ ...prev, avatarUrl: url }))
+      } else {
+        setEditForm(prev => ({ ...prev, wordmarkUrl: url }))
+      }
+
+      // Refresh owner data
+      await fetchOwner(owner.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image')
+    } finally {
+      setUploadState(prev => ({ ...prev, isUploading: false }))
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'wordmark') => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleImageUpload(file, type)
+    }
+  }
 
   const handleSave = async () => {
     if (!owner) return
@@ -137,9 +231,18 @@ export default function ProgramOwnerDetailPage() {
         displayName: owner.displayName,
         bio: owner.bio || '',
         avatarUrl: owner.avatarUrl || '',
+        wordmarkUrl: owner.wordmarkUrl || '',
         phone: formattedPhone,
         isActive: owner.isActive,
       })
+      setAvatarUpload(prev => ({
+        ...prev,
+        previewUrl: owner.avatarUrl || '',
+      }))
+      setWordmarkUpload(prev => ({
+        ...prev,
+        previewUrl: owner.wordmarkUrl || '',
+      }))
     }
     setIsEditing(false)
   }
@@ -236,15 +339,158 @@ export default function ProgramOwnerDetailPage() {
                       rows={3}
                     />
                   </div>
+
+                  {/* Avatar Upload */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Avatar URL</label>
-                    <Input
-                      value={editForm.avatarUrl}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, avatarUrl: e.target.value }))}
-                      className="mt-1"
-                      placeholder="https://..."
-                    />
+                    <label className="text-sm font-medium text-gray-700">Avatar</label>
+                    <div className="mt-1 space-y-2">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={avatarUpload.mode === 'file' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setAvatarUpload(prev => ({ ...prev, mode: 'file' }))}
+                        >
+                          Upload File
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={avatarUpload.mode === 'url' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setAvatarUpload(prev => ({ ...prev, mode: 'url' }))}
+                        >
+                          Enter URL
+                        </Button>
+                      </div>
+
+                      {avatarUpload.mode === 'file' ? (
+                        <div className="flex items-center gap-3">
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileSelect(e, 'avatar')}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={avatarUpload.isUploading}
+                          >
+                            {avatarUpload.isUploading ? 'Uploading...' : 'Choose File'}
+                          </Button>
+                          {avatarUpload.previewUrl && (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={avatarUpload.previewUrl}
+                                alt="Avatar preview"
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                              <span className="text-sm text-muted-foreground">Current avatar</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Input
+                            value={editForm.avatarUrl}
+                            onChange={(e) => {
+                              setEditForm(prev => ({ ...prev, avatarUrl: e.target.value }))
+                              setAvatarUpload(prev => ({ ...prev, previewUrl: e.target.value }))
+                            }}
+                            placeholder="https://..."
+                            className="flex-1"
+                          />
+                          {avatarUpload.previewUrl && (
+                            <img
+                              src={avatarUpload.previewUrl}
+                              alt="Avatar preview"
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Wordmark Upload */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Wordmark</label>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Logo displayed in the questionnaire header
+                    </p>
+                    <div className="mt-1 space-y-2">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={wordmarkUpload.mode === 'file' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setWordmarkUpload(prev => ({ ...prev, mode: 'file' }))}
+                        >
+                          Upload File
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={wordmarkUpload.mode === 'url' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setWordmarkUpload(prev => ({ ...prev, mode: 'url' }))}
+                        >
+                          Enter URL
+                        </Button>
+                      </div>
+
+                      {wordmarkUpload.mode === 'file' ? (
+                        <div className="flex items-center gap-3">
+                          <input
+                            ref={wordmarkInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFileSelect(e, 'wordmark')}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => wordmarkInputRef.current?.click()}
+                            disabled={wordmarkUpload.isUploading}
+                          >
+                            {wordmarkUpload.isUploading ? 'Uploading...' : 'Choose File'}
+                          </Button>
+                          {wordmarkUpload.previewUrl && (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={wordmarkUpload.previewUrl}
+                                alt="Wordmark preview"
+                                className="h-10 max-w-[120px] object-contain"
+                              />
+                              <span className="text-sm text-muted-foreground">Current wordmark</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Input
+                            value={editForm.wordmarkUrl}
+                            onChange={(e) => {
+                              setEditForm(prev => ({ ...prev, wordmarkUrl: e.target.value }))
+                              setWordmarkUpload(prev => ({ ...prev, previewUrl: e.target.value }))
+                            }}
+                            placeholder="https://..."
+                            className="flex-1"
+                          />
+                          {wordmarkUpload.previewUrl && (
+                            <img
+                              src={wordmarkUpload.previewUrl}
+                              alt="Wordmark preview"
+                              className="h-10 max-w-[120px] object-contain"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm font-medium text-gray-700">Phone Number</label>
                     <Input
@@ -296,6 +542,16 @@ export default function ProgramOwnerDetailPage() {
                   </div>
                   {owner.bio && (
                     <p className="text-muted-foreground">{owner.bio}</p>
+                  )}
+                  {owner.wordmarkUrl && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Wordmark:</span>
+                      <img
+                        src={owner.wordmarkUrl}
+                        alt="Wordmark"
+                        className="h-8 max-w-[120px] object-contain"
+                      />
+                    </div>
                   )}
                   <div className="text-sm text-muted-foreground">
                     Created {formatRelative(owner.createdAt)}

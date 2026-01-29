@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Settings,
   Eye,
+  Upload,
 } from 'lucide-react';
 import type { ProgramQuestion } from '@gymtext/shared/server';
 
@@ -47,6 +48,9 @@ export default function CreateProgramPage() {
   const [step, setStep] = useState<WizardStep>('info');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const [form, setForm] = useState<ProgramForm>({
     name: '',
@@ -109,6 +113,36 @@ export default function CreateProgramPage() {
       ...prev,
       questions: prev.questions.filter(q => q.id !== id),
     }));
+  };
+
+  const handleGenerateTemplate = async () => {
+    if (!uploadedFile) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+
+      const response = await fetch('/api/programs/generate-template', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setForm(prev => ({ ...prev, templateMarkdown: result.data.templateMarkdown }));
+        setUploadedFile(null);
+      } else {
+        setGenerateError(result.message);
+      }
+    } catch {
+      setGenerateError('Failed to generate template');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async (asDraft: boolean) => {
@@ -343,6 +377,9 @@ export default function CreateProgramPage() {
                               <Input
                                 value={question.options?.join(', ') || ''}
                                 onChange={(e) => updateQuestion(question.id, {
+                                  options: e.target.value.split(',').map(s => s.trimStart())
+                                })}
+                                onBlur={(e) => updateQuestion(question.id, {
                                   options: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                                 })}
                                 placeholder="Option 1, Option 2, Option 3"
@@ -380,6 +417,53 @@ export default function CreateProgramPage() {
                   Describe the workout plan in markdown format. This will be used to generate personalized plans.
                 </p>
               </div>
+
+              {/* File Upload Section */}
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload a workout program file to auto-generate a template
+                </p>
+                <input
+                  type="file"
+                  accept=".pdf,.csv,.xlsx,.xls,.txt"
+                  onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                  id="template-file"
+                />
+                <label
+                  htmlFor="template-file"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 shadow-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md hover:border-gray-300 h-10 px-4 py-2 cursor-pointer"
+                >
+                  Select File
+                </label>
+                <p className="text-xs text-muted-foreground mt-2">
+                  PDF, CSV, Excel, or Text files
+                </p>
+              </div>
+
+              {uploadedFile && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <span className="text-sm">{uploadedFile.name}</span>
+                  </div>
+                  <Button onClick={handleGenerateTemplate} disabled={isGenerating}>
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate Template'
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {generateError && (
+                <p className="text-sm text-destructive">{generateError}</p>
+              )}
 
               <Tabs defaultValue="edit">
                 <TabsList>

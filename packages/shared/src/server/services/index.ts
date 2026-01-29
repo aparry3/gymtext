@@ -147,3 +147,7 @@ export type {
 
 // Profile service
 export { ProfileService } from './agents/profile';
+
+// Program agent service
+export { createProgramAgentService } from './agents/programs';
+export type { ProgramAgentServiceInstance, ProgramParseResult } from './agents/programs';

@@ -21,6 +21,10 @@ export interface SignupData {
   trainingLocation?: 'home' | 'commercial_gym' | 'bodyweight';
   equipment?: string[];
   acceptedRisks?: boolean;
+
+  // Program-specific data (for program signups)
+  programId?: string;
+  programAnswers?: Record<string, string | string[]>;
 }
 
 // Pagination
@@ -209,6 +213,7 @@ export interface AdminProgramOwner {
   displayName: string;
   bio: string | null;
   avatarUrl: string | null;
+  wordmarkUrl: string | null;
   stripeConnectAccountId: string | null;
   phone: string | null;
   isActive: boolean;
