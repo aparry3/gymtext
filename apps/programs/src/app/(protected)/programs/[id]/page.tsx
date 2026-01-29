@@ -21,6 +21,8 @@ import {
   EyeOff,
   Loader2,
   ExternalLink,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import type { Program, ProgramVersion, ProgramQuestion } from '@gymtext/shared/server';
 
@@ -29,6 +31,14 @@ interface ProgramDetailData {
   versions: ProgramVersion[];
   enrollmentCount: number;
 }
+
+const questionTypes = [
+  { value: 'text', label: 'Text Input' },
+  { value: 'select', label: 'Single Choice' },
+  { value: 'multiselect', label: 'Multiple Choice' },
+  { value: 'scale', label: 'Scale (1-10)' },
+  { value: 'boolean', label: 'Yes/No' },
+] as const;
 
 export default function ProgramDetailPage() {
   const params = useParams();
@@ -42,6 +52,9 @@ export default function ProgramDetailPage() {
     name: '',
     description: '',
   });
+  const [isEditingQuestions, setIsEditingQuestions] = useState(false);
+  const [editQuestions, setEditQuestions] = useState<ProgramQuestion[]>([]);
+  const [isSavingQuestions, setIsSavingQuestions] = useState(false);
 
   const fetchProgram = useCallback(async () => {
     try {
@@ -141,6 +154,74 @@ export default function ProgramDetailPage() {
       setError(err instanceof Error ? err.message : 'Failed to update program');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleStartEditingQuestions = () => {
+    const latestVer = data?.versions[0];
+    const currentQuestions = (latestVer?.questions as ProgramQuestion[] | null) ?? [];
+    setEditQuestions(JSON.parse(JSON.stringify(currentQuestions)));
+    setIsEditingQuestions(true);
+  };
+
+  const handleCancelEditingQuestions = () => {
+    setEditQuestions([]);
+    setIsEditingQuestions(false);
+  };
+
+  const addQuestion = () => {
+    const newQuestion: ProgramQuestion = {
+      id: crypto.randomUUID(),
+      questionType: 'text',
+      questionText: '',
+      isRequired: false,
+      options: undefined,
+      helpText: undefined,
+      sortOrder: editQuestions.length,
+    };
+    setEditQuestions(prev => [...prev, newQuestion]);
+  };
+
+  const updateQuestion = (id: string, updates: Partial<ProgramQuestion>) => {
+    setEditQuestions(prev =>
+      prev.map(q => (q.id === id ? { ...q, ...updates } : q))
+    );
+  };
+
+  const removeQuestion = (id: string) => {
+    setEditQuestions(prev => prev.filter(q => q.id !== id));
+  };
+
+  const handleSaveQuestions = async () => {
+    const latestVer = data?.versions[0];
+    if (!latestVer) return;
+
+    setIsSavingQuestions(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/programs/${params.id}/versions/${latestVer.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questions: editQuestions }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to save questions');
+      }
+
+      await fetchProgram();
+      setIsEditingQuestions(false);
+      setEditQuestions([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save questions');
+    } finally {
+      setIsSavingQuestions(false);
     }
   };
 
@@ -331,8 +412,152 @@ export default function ProgramDetailPage() {
 
           <TabsContent value="questions">
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Enrollment Questions</h3>
-              {((latestVersion?.questions as ProgramQuestion[] | null)?.length ?? 0) > 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Enrollment Questions</h3>
+                {!isEditingQuestions ? (
+                  <Button variant="outline" size="sm" onClick={handleStartEditingQuestions}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Edit Questions
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={addQuestion}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Question
+                  </Button>
+                )}
+              </div>
+
+              {isEditingQuestions ? (
+                <div className="space-y-4">
+                  {editQuestions.length === 0 ? (
+                    <p className="text-muted-foreground italic text-center py-8">
+                      No questions yet. Click &quot;Add Question&quot; to create one.
+                    </p>
+                  ) : (
+                    editQuestions.map((q, i) => (
+                      <div key={q.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Q{i + 1}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeQuestion(q.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Type</label>
+                            <select
+                              value={q.questionType}
+                              onChange={(e) =>
+                                updateQuestion(q.id, {
+                                  questionType: e.target.value as ProgramQuestion['questionType'],
+                                  options: ['select', 'multiselect'].includes(e.target.value)
+                                    ? q.options ?? []
+                                    : undefined,
+                                })
+                              }
+                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              {questionTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                  {type.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2 pt-6">
+                            <input
+                              type="checkbox"
+                              id={`required-${q.id}`}
+                              checked={q.isRequired}
+                              onChange={(e) =>
+                                updateQuestion(q.id, { isRequired: e.target.checked })
+                              }
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <label htmlFor={`required-${q.id}`} className="text-sm font-medium">
+                              Required
+                            </label>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Question Text</label>
+                          <Input
+                            value={q.questionText}
+                            onChange={(e) =>
+                              updateQuestion(q.id, { questionText: e.target.value })
+                            }
+                            placeholder="Enter your question..."
+                          />
+                        </div>
+
+                        {['select', 'multiselect'].includes(q.questionType) && (
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">
+                              Options (comma-separated)
+                            </label>
+                            <Input
+                              value={(q.options ?? []).join(', ')}
+                              onChange={(e) =>
+                                updateQuestion(q.id, {
+                                  options: e.target.value
+                                    .split(',')
+                                    .map((s) => s.trim())
+                                    .filter(Boolean),
+                                })
+                              }
+                              placeholder="Option 1, Option 2, Option 3"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">
+                            Help Text (optional)
+                          </label>
+                          <Input
+                            value={q.helpText ?? ''}
+                            onChange={(e) =>
+                              updateQuestion(q.id, {
+                                helpText: e.target.value || undefined,
+                              })
+                            }
+                            placeholder="Additional instructions for this question..."
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      onClick={handleSaveQuestions}
+                      disabled={isSavingQuestions}
+                    >
+                      {isSavingQuestions ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      <span className="ml-2">Save Questions</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelEditingQuestions}
+                      disabled={isSavingQuestions}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="ml-2">Cancel</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : ((latestVersion?.questions as ProgramQuestion[] | null)?.length ?? 0) > 0 ? (
                 <div className="space-y-3">
                   {(latestVersion?.questions as ProgramQuestion[]).map((q, i) => (
                     <div key={q.id} className="p-3 border rounded-lg">
