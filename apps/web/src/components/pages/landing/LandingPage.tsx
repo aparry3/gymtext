@@ -8,7 +8,7 @@ import { BenefitsSection } from '@/components/pages/landing/BenefitsSection';
 import { TestimonialsSection } from '@/components/pages/landing/TestimonialsSection';
 import { ComparisonTable } from '@/components/pages/landing/ComparisonTable';
 import { FAQSection } from '@/components/pages/landing/FAQSection';
-import { MultiStepSignupForm } from '@/components/pages/landing/MultiStepSignupForm';
+// import { MultiStepSignupForm } from '@/components/pages/landing/MultiStepSignupForm';
 import { FixedCTA } from '@/components/pages/landing/FixedCTA';
 
 export function LandingPage() {

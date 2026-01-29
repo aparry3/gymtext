@@ -6,7 +6,7 @@
 
 import type { ProgramQuestion } from '@gymtext/shared/server';
 import type { QuestionnaireQuestion, QuestionOption } from './types';
-import { baseQuestions, getProgramQuestionsInsertIndex } from './baseQuestions';
+import { programBaseQuestions, getProgramQuestionsInsertIndexForProgramBase } from './baseQuestions';
 
 /**
  * Convert ProgramQuestion to QuestionnaireQuestion format
@@ -48,12 +48,16 @@ function convertProgramQuestion(pq: ProgramQuestion): QuestionnaireQuestion {
 }
 
 /**
- * Merge base questions with program-specific questions.
- * Program questions are inserted after equipment and before name/phone.
+ * Merge program base questions with program-specific questions.
+ * For program signups, uses the minimal programBaseQuestions (name, age, gender, phone).
+ * Program questions are inserted after gender and before phone.
  */
 export function mergeQuestions(programQuestions: ProgramQuestion[] | null): QuestionnaireQuestion[] {
+  // Start with minimal program base questions
+  const result = [...programBaseQuestions];
+
   if (!programQuestions || programQuestions.length === 0) {
-    return [...baseQuestions];
+    return result;
   }
 
   // Sort program questions by sortOrder
@@ -62,9 +66,8 @@ export function mergeQuestions(programQuestions: ProgramQuestion[] | null): Ques
   // Convert to questionnaire format
   const convertedQuestions = sortedProgramQuestions.map(convertProgramQuestion);
 
-  // Insert at the right position
-  const insertIndex = getProgramQuestionsInsertIndex();
-  const result = [...baseQuestions];
+  // Insert after gender, before phone
+  const insertIndex = getProgramQuestionsInsertIndexForProgramBase();
   result.splice(insertIndex, 0, ...convertedQuestions);
 
   return result;

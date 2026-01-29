@@ -2,11 +2,16 @@
  * Base Questions
  *
  * Static question definitions for the signup questionnaire.
- * Order: fitness-focused first, bio (name, phone) at end.
+ * - baseQuestions: Full list for non-program signup (goals, experience, days, location, equipment, name, phone)
+ * - programBaseQuestions: Minimal list for program signup (name, age, gender, phone)
  */
 
 import type { QuestionnaireQuestion } from './types';
 
+/**
+ * Full base questions for non-program signup.
+ * Order: fitness-focused first, bio (name, phone) at end.
+ */
 export const baseQuestions: QuestionnaireQuestion[] = [
   {
     id: 'goals',
@@ -96,10 +101,65 @@ export const baseQuestions: QuestionnaireQuestion[] = [
 ];
 
 /**
+ * Minimal base questions for program signup.
+ * Only essential user info - program-specific questions are inserted before phone.
+ * Order: name, age, gender, [program questions], phone
+ */
+export const programBaseQuestions: QuestionnaireQuestion[] = [
+  {
+    id: 'name',
+    questionText: "What's your name?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your first name',
+    source: 'base',
+  },
+  {
+    id: 'age',
+    questionText: "What's your age?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your age',
+    source: 'base',
+  },
+  {
+    id: 'gender',
+    questionText: "What's your gender?",
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    ],
+    source: 'base',
+  },
+  {
+    id: 'phone',
+    questionText: "What's your phone number?",
+    type: 'phone',
+    required: true,
+    helpText: "We'll text you your workouts",
+    placeholder: '(555) 555-5555',
+    source: 'base',
+  },
+];
+
+/**
  * Get the index where program questions should be inserted.
  * After equipment, before name.
  */
 export function getProgramQuestionsInsertIndex(): number {
   const equipmentIndex = baseQuestions.findIndex((q) => q.id === 'equipment');
   return equipmentIndex + 1;
+}
+
+/**
+ * Get the index where program questions should be inserted in program base questions.
+ * After gender, before phone.
+ */
+export function getProgramQuestionsInsertIndexForProgramBase(): number {
+  const genderIndex = programBaseQuestions.findIndex((q) => q.id === 'gender');
+  return genderIndex + 1;
 }

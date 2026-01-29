@@ -21,6 +21,10 @@ export interface SignupData {
   trainingLocation?: 'home' | 'commercial_gym' | 'bodyweight';
   equipment?: string[];
   acceptedRisks?: boolean;
+
+  // Program-specific data (for program signups)
+  programId?: string;
+  programAnswers?: Record<string, string | string[]>;
 }
 
 // Pagination

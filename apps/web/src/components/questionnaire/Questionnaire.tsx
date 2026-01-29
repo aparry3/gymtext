@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { QuestionnaireQuestion } from '@/lib/questionnaire/types';
 import { useQuestionnaire, clearQuestionnaireState } from '@/lib/questionnaire/useQuestionnaire';
 import { QuestionnaireProgress } from './QuestionnaireProgress';
@@ -23,7 +23,6 @@ interface QuestionnaireProps {
 }
 
 export function Questionnaire({ programId, questions }: QuestionnaireProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,20 +65,22 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
         }
       });
 
+      // Build form data - fitness fields are optional for program signups
       const formData = {
         // User info
         name: answers.name as string,
         phoneNumber,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         preferredSendHour: 8,
-        gender: 'prefer_not_to_say',
+        gender: (answers.gender as string) || 'prefer_not_to_say',
+        ...(answers.age && { age: parseInt(answers.age as string, 10) }),
 
-        // Fitness data
-        primaryGoals: answers.goals as string[],
-        experienceLevel: answers.experience as string,
-        desiredDaysPerWeek: answers.days as string,
-        trainingLocation: answers.location as string,
-        equipment: answers.equipment as string[],
+        // Fitness data (optional - only present for non-program signups)
+        ...(answers.goals && { primaryGoals: answers.goals as string[] }),
+        ...(answers.experience && { experienceLevel: answers.experience as string }),
+        ...(answers.days && { desiredDaysPerWeek: answers.days as string }),
+        ...(answers.location && { trainingLocation: answers.location as string }),
+        ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
         // Program info
@@ -174,6 +175,28 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
       {/* Header with progress */}
       <header className="flex-shrink-0 pt-safe">
         <div className="flex items-center justify-between px-4 py-4">
+          {/* Close button - always visible */}
+          <Link
+            href="/"
+            className="rounded-full p-2 transition-opacity hover:opacity-70"
+            aria-label="Close and return to home"
+          >
+            <svg
+              className="h-6 w-6 text-[hsl(var(--questionnaire-foreground))]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Link>
+
+          {/* Question counter */}
+          <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+            {currentIndex + 1} of {totalQuestions}
+          </span>
+
           {/* Back button */}
           <button
             type="button"
@@ -181,7 +204,7 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
             disabled={!canGoBack}
             className={`
               rounded-full p-2 transition-opacity
-              ${canGoBack ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+              ${canGoBack ? 'opacity-100 hover:opacity-70' : 'opacity-0 pointer-events-none'}
             `}
             aria-label="Go back"
           >
@@ -195,14 +218,6 @@ export function Questionnaire({ programId, questions }: QuestionnaireProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-
-          {/* Question counter */}
-          <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
-            {currentIndex + 1} of {totalQuestions}
-          </span>
-
-          {/* Placeholder for balance */}
-          <div className="w-10" />
         </div>
 
         <QuestionnaireProgress currentIndex={currentIndex} totalQuestions={totalQuestions} />
