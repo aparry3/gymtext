@@ -71,7 +71,7 @@ export function HeroSection({ onScrollToSection }: HeroSectionProps) {
               {['A', 'B', 'C', 'D'].map((initial, i) => (
                 <div
                   key={i}
-                  className="w-10 h-10 rounded-full border-2 border-slate-950 bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-sm"
+                  className="w-10 h-10 rounded-full border-2 border-slate-950 bg-gradient-to-br from-[#5BA3FF] to-[#1B81FF] flex items-center justify-center text-white font-bold text-sm"
                 >
                   {initial}
                 </div>

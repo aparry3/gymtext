@@ -112,7 +112,7 @@ export function LandingPage() {
             </button>
             <Link
               href="/start"
-              className="bg-brand-600 text-white px-6 py-4 rounded-xl font-bold text-center w-full"
+              className="bg-[#1B81FF] text-white px-6 py-4 rounded-xl font-bold text-center w-full"
             >
               Start Training
             </Link>
