@@ -125,12 +125,25 @@ export class WorkoutAgentService {
         validation: {
           agent: validationAgent,
           // Transform uses BOTH params: mainResult (structured output) + parentInput (generate output)
-          transform: (mainResult, parentInput) => JSON.stringify({
-            // mainResult = the structured agent's output (WorkoutStructure)
-            // parentInput = the generate agent's output (full workout description)
-            input: parentInput ? safeJsonParse(parentInput) : {},
-            output: mainResult,
-          }),
+          transform: (mainResult, parentInput) => {
+            const parsedInput = parentInput ? safeJsonParse(parentInput) : {};
+            const validationPayload = {
+              // mainResult = the structured agent's output (WorkoutStructure)
+              // parentInput = the generate agent's output (full workout description)
+              input: parsedInput,
+              output: mainResult,
+            };
+
+            // Log inputs to validation agent for debugging
+            console.log('\n========== VALIDATION AGENT INPUT ==========');
+            console.log('[Validation] Generate agent output (input):');
+            console.log(JSON.stringify(parsedInput, null, 2));
+            console.log('\n[Validation] Structured agent output (output):');
+            console.log(JSON.stringify(mainResult, null, 2));
+            console.log('=============================================\n');
+
+            return JSON.stringify(validationPayload);
+          },
         },
       }],
     }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
@@ -186,7 +199,18 @@ export class WorkoutAgentService {
           // Validate checks the validation sub-agent's result
           validate: (result) => {
             const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
-            return typedResult.validation?.isValid === true;
+            const isValid = typedResult.validation?.isValid === true;
+
+            // Log validation result for debugging
+            console.log('\n========== VALIDATION RESULT ==========');
+            console.log('[Validation] isValid:', isValid);
+            console.log('[Validation] Full validation response:', JSON.stringify(typedResult.validation, null, 2));
+            if (!isValid && typedResult.validation?.errors) {
+              console.log('[Validation] Errors:', typedResult.validation.errors);
+            }
+            console.log('========================================\n');
+
+            return isValid;
           },
           maxRetries: 3,
         },
