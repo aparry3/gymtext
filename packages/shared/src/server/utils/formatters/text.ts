@@ -6,6 +6,7 @@
 
 /**
  * Normalizes whitespace in text by:
+ * - Removing trailing whitespace from each line
  * - Replacing 2+ consecutive blank lines with a single blank line
  * - Trimming leading/trailing whitespace
  *
@@ -14,6 +15,9 @@
  */
 export function normalizeWhitespace(text: string): string {
   return text
-    .replace(/\n{3,}/g, '\n\n') // Replace 3+ newlines with 2 (one blank line)
+    .split('\n')
+    .map(line => line.trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
