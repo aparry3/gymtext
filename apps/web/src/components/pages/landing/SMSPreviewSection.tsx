@@ -7,7 +7,7 @@ export function SMSPreviewSection() {
     <section id="demo" className="py-24 bg-gradient-to-b from-slate-950 to-slate-900 overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-16">
-          <div className="lg:w-1/2 order-2 lg:order-1 flex justify-center">
+          <div className="lg:w-1/2 flex justify-center">
             {/* Phone Mockup with Video */}
             <div className="relative w-full max-w-sm mx-auto">
               <div className="relative w-full">
@@ -32,7 +32,7 @@ export function SMSPreviewSection() {
             </div>
           </div>
 
-          <div className="lg:w-1/2 order-1 lg:order-2 text-center lg:text-left">
+          <div className="lg:w-1/2 text-center lg:text-left">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
               Real Coaching. <br />
               <span className="text-[#1B81FF]">In Your Pocket.</span>
