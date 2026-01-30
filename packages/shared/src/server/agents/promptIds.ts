@@ -26,6 +26,7 @@ export const PROMPT_IDS = {
   WORKOUT_STRUCTURED: 'workout:structured',
   WORKOUT_MESSAGE: 'workout:message',
   WORKOUT_MODIFY: 'workout:modify',
+  WORKOUT_VALIDATION: 'workout:validation',
 
   // Microcycles
   MICROCYCLE_GENERATE: 'microcycle:generate',

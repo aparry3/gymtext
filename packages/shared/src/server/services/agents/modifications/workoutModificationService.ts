@@ -126,10 +126,18 @@ export function createWorkoutModificationService(
 
         const modifiedWorkout = await getWorkoutAgent().modifyWorkout(user, workout, changeRequest);
 
+        // Log validation result
+        if (!modifiedWorkout.validation.isComplete) {
+          console.warn(`[MODIFY_WORKOUT] Workout validation found missing exercises: ${modifiedWorkout.validation.missingExercises.join(', ')}`);
+        }
+
+        // Use validated structure (corrected if needed)
+        const validatedStructure = modifiedWorkout.validation.validatedStructure;
+
         // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-        if (modifiedWorkout.structure && exerciseResolution) {
+        if (validatedStructure && exerciseResolution) {
           await resolveExercisesInStructure(
-            modifiedWorkout.structure,
+            validatedStructure,
             exerciseResolution,
             exerciseUse,
             userId
@@ -138,7 +146,7 @@ export function createWorkoutModificationService(
 
         const updated = await workoutInstanceService.updateWorkout(workout.id, {
           description: modifiedWorkout.response.overview,
-          structured: modifiedWorkout.structure,
+          structured: validatedStructure,
           message: modifiedWorkout.message,
         });
         if (!updated) return { success: false, messages: [], error: 'Failed to update workout' };
@@ -203,10 +211,18 @@ export function createWorkoutModificationService(
           console.log('[MODIFY_WEEK] Regenerating existing workout');
           const workoutResult = await getWorkoutAgent().generateWorkout(user, dayOverview, modifiedMicrocycle.isDeload, activityType);
 
+          // Log validation result
+          if (!workoutResult.validation.isComplete) {
+            console.warn(`[MODIFY_WEEK] Workout validation found missing exercises: ${workoutResult.validation.missingExercises.join(', ')}`);
+          }
+
+          // Use validated structure (corrected if needed)
+          const validatedStructure = workoutResult.validation.validatedStructure;
+
           // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-          if (workoutResult.structure && exerciseResolution) {
+          if (validatedStructure && exerciseResolution) {
             await resolveExercisesInStructure(
-              workoutResult.structure,
+              validatedStructure,
               exerciseResolution,
               exerciseUse,
               userId
@@ -216,7 +232,7 @@ export function createWorkoutModificationService(
           await workoutInstanceService.updateWorkout(workout.id, {
             goal: dayOverview,
             description: workoutResult.response,
-            structured: workoutResult.structure ?? undefined,
+            structured: validatedStructure ?? undefined,
             message: workoutResult.message,
             sessionType: getWorkoutTypeFromTheme(dayOverview),
           });

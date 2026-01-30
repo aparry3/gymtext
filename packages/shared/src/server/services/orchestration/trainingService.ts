@@ -290,12 +290,20 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const activityType = structuredDay?.activityType as ActivityType | undefined;
 
         // 5. Generate workout via AI agent
-        const { response: description, message, structure } = await workoutAgent.generateWorkout(
+        const { response: description, message, validation } = await workoutAgent.generateWorkout(
           user,
           dayOverview,
           microcycle.isDeload ?? false,
           activityType
         );
+
+        // Log validation result
+        if (!validation.isComplete) {
+          console.warn(`[TrainingService] Workout validation found missing exercises: ${validation.missingExercises.join(', ')}`);
+        }
+
+        // Use validated structure (corrected if needed)
+        const structure = validation.validatedStructure;
 
         // 5b. Resolve exercise names to canonical IDs and track usage
         if (structure && exerciseResolution) {

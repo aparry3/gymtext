@@ -57,8 +57,8 @@ export async function executeSubAgents(
 
       // Determine agent, condition, and transform based on entry type
       let agent: ConfigurableAgent<unknown>;
-      let condition: ((r: unknown) => boolean) | undefined;
-      let transform: ((r: unknown) => string) | undefined;
+      let condition: ((r: unknown, acc?: Record<string, unknown>) => boolean) | undefined;
+      let transform: ((r: unknown, acc?: Record<string, unknown>) => string) | undefined;
 
       if (isSubAgentConfig(entry)) {
         // Extended config: { agent, transform?, condition? }
@@ -70,15 +70,15 @@ export async function executeSubAgents(
         agent = entry as ConfigurableAgent<unknown>;
       }
 
-      // Check condition - skip if condition returns false
-      if (condition && !condition(mainResult)) {
+      // Check condition - skip if condition returns false (pass accumulated results)
+      if (condition && !condition(mainResult, accumulatedResults)) {
         console.log(`[${parentName}:${key}] Skipped (condition not met)`);
         return { key, result: null, skipped: true };
       }
 
-      // Determine input: use transform if provided, otherwise default input
+      // Determine input: use transform if provided, otherwise default input (pass accumulated results)
       const agentInput = transform
-        ? transform(mainResult)
+        ? transform(mainResult, accumulatedResults)
         : input;
 
       const startTime = Date.now();
