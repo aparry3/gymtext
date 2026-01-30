@@ -4,7 +4,7 @@ import { CheckCircle2, Zap, ClipboardList } from 'lucide-react';
 
 export function SMSPreviewSection() {
   return (
-    <section id="demo" className="py-24 bg-slate-900 overflow-hidden">
+    <section id="demo" className="py-24 bg-gradient-to-b from-slate-950 to-slate-900 overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-1/2 order-2 lg:order-1 flex justify-center">

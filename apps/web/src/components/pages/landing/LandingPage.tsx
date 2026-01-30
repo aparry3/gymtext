@@ -121,8 +121,8 @@ export function LandingPage() {
       </nav>
 
       <HeroSection onScrollToSection={scrollToSection} />
-      <HowItWorksSection />
       <SMSPreviewSection />
+      <HowItWorksSection />
       <FeaturesSection />
       <CTASection />
       <FooterSection />
