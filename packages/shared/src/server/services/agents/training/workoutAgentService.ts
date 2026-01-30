@@ -1,8 +1,8 @@
 import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
-import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
-import type { WorkoutGenerateOutput, ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
+import { ModifyWorkoutGenerationOutputSchema, WorkoutValidationSchema } from '@/server/services/agents/schemas/workouts';
+import type { WorkoutGenerateOutput, ModifyWorkoutOutput, WorkoutValidationResult } from '@/server/services/agents/types/workouts';
 import type { ContextService } from '@/server/services/context';
 import { ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
@@ -84,13 +84,29 @@ export class WorkoutAgentService {
   }
 
   /**
+   * Get the validation sub-agent
+   *
+   * This agent validates that the structured workout output contains all exercises
+   * from the original workout description. It compares the description with the
+   * structured output and flags any missing exercises.
+   *
+   * @returns Validation agent
+   */
+  public async getValidationAgent(): Promise<ConfigurableAgent<{ response: WorkoutValidationResult }>> {
+    return createAgent({
+      name: PROMPT_IDS.WORKOUT_VALIDATION,
+      schema: WorkoutValidationSchema,
+    }, { model: 'gpt-5-nano', maxTokens: 16000 }) as Promise<ConfigurableAgent<{ response: WorkoutValidationResult }>>;
+  }
+
+  /**
    * Generate a workout for a specific day
    *
    * @param user - User with profile
    * @param dayOverview - Day overview from microcycle (e.g., "Upper body push focus")
    * @param isDeload - Whether this is a deload week
    * @param activityType - Optional activity type for day format context (TRAINING, ACTIVE_RECOVERY, REST)
-   * @returns WorkoutGenerateOutput with response, message, and structure
+   * @returns WorkoutGenerateOutput with response, message, structure, and validation
    */
   async generateWorkout(
     user: UserWithProfile,
@@ -115,16 +131,35 @@ export class WorkoutAgentService {
     );
 
     // Get sub-agents (message agent with day format context if activityType provided)
-    const [messageAgent, structuredAgent] = await Promise.all([
+    const [messageAgent, structuredAgent, validationAgent] = await Promise.all([
       this.getMessageAgent(user, activityType),
       this.getStructuredAgent(user),
+      this.getValidationAgent(),
     ]);
 
     // Create main agent with context (prompts fetched from DB)
+    // Batch 1: Generate message and structure in parallel
+    // Batch 2: Validate the structured output against the original description
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
-      subAgents: [{ message: messageAgent, structure: structuredAgent }],
+      subAgents: [
+        // Batch 1: Message and structured agents run in parallel
+        { message: messageAgent, structure: structuredAgent },
+        // Batch 2: Validation agent runs after batch 1, receives both description and structure
+        {
+          validation: {
+            agent: validationAgent,
+            transform: (mainResult, accumulated) => {
+              // Pass both the original description and the structured output to the validation agent
+              return JSON.stringify({
+                description: mainResult,
+                structure: accumulated?.structure,
+              });
+            },
+          },
+        },
+      ],
     }, { model: 'gpt-5.1' });
 
     // Empty input - DB user prompt provides the instructions
@@ -137,7 +172,7 @@ export class WorkoutAgentService {
    * @param user - User with profile
    * @param workout - Current workout instance to modify
    * @param changeRequest - User's modification request (e.g., "I hurt my shoulder")
-   * @returns ModifyWorkoutOutput with response, message, and structure
+   * @returns ModifyWorkoutOutput with response, message, structure, and validation
    */
   async modifyWorkout(
     user: UserWithProfile,
@@ -155,9 +190,10 @@ export class WorkoutAgentService {
     );
 
     // Get sub-agents with user context
-    const [messageAgent, structuredAgent] = await Promise.all([
+    const [messageAgent, structuredAgent, validationAgent] = await Promise.all([
       this.getMessageAgent(user),
       this.getStructuredAgent(user),
+      this.getValidationAgent(),
     ]);
 
     // Transform to extract overview from JSON response for sub-agents
@@ -172,14 +208,33 @@ export class WorkoutAgentService {
     };
 
     // Prompts fetched from DB based on agent name
+    // Batch 1: Generate message and structure in parallel
+    // Batch 2: Validate the structured output against the overview
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_MODIFY,
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
-      subAgents: [{
-        message: { agent: messageAgent, transform: extractOverview },
-        structure: { agent: structuredAgent, transform: extractOverview },
-      }],
+      subAgents: [
+        // Batch 1: Message and structured agents run in parallel
+        {
+          message: { agent: messageAgent, transform: extractOverview },
+          structure: { agent: structuredAgent, transform: extractOverview },
+        },
+        // Batch 2: Validation agent runs after batch 1
+        {
+          validation: {
+            agent: validationAgent,
+            transform: (mainResult, accumulated) => {
+              // Extract overview from main result for validation
+              const overview = extractOverview(mainResult);
+              return JSON.stringify({
+                description: overview,
+                structure: accumulated?.structure,
+              });
+            },
+          },
+        },
+      ],
     }, { model: 'gpt-5-mini' });
 
     // Pass changeRequest directly as the message - it's the user's request, not context

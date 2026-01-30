@@ -85,10 +85,10 @@ export interface ConfigurableAgent<TOutput> {
 export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = ConfigurableAgent<any>> {
   /** The subAgent to execute */
   agent: TAgent;
-  /** Transform main result to string input for this subAgent */
-  transform?: (mainResult: unknown) => string;
+  /** Transform main result to string input for this subAgent (receives accumulated results from previous batches) */
+  transform?: (mainResult: unknown, accumulatedResults?: Record<string, unknown>) => string;
   /** Condition to run this subAgent (default: always run) */
-  condition?: (mainResult: unknown) => boolean;
+  condition?: (mainResult: unknown, accumulatedResults?: Record<string, unknown>) => boolean;
 }
 
 /**

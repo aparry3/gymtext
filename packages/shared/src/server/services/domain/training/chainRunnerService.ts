@@ -164,7 +164,20 @@ export function createChainRunnerService(
       activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     }
     const result = await getWorkoutAgent().generateWorkout(user, dayOverview, microcycle?.isDeload || false, activityType);
-    const updated = await workoutService.updateWorkout(workout.id, { description: result.response, message: result.message, structured: result.structure });
+
+    // Log validation result for monitoring
+    if (!result.validation.isComplete) {
+      console.warn(`[ChainRunner] Workout validation found missing exercises: ${result.validation.missingExercises.join(', ')}`);
+    } else {
+      console.log(`[ChainRunner] Workout validation passed - structure is complete`);
+    }
+
+    // Use validated structure (corrected if needed)
+    const updated = await workoutService.updateWorkout(workout.id, {
+      description: result.response,
+      message: result.message,
+      structured: result.validation.validatedStructure
+    });
     if (!updated) throw new Error(`Failed to update workout: ${workout.id}`);
     return updated;
   };

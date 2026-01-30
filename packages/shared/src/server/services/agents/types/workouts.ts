@@ -35,12 +35,22 @@ export interface WorkoutGenerateInput {
 }
 
 /**
+ * Validation result from workout validation agent
+ */
+export interface WorkoutValidationResult {
+  isComplete: boolean;
+  missingExercises: string[];
+  validatedStructure: WorkoutStructure;
+}
+
+/**
  * Output from workout generation (flattened subAgent results)
  */
 export interface WorkoutGenerateOutput {
   response: string;
   message: string;
   structure: WorkoutStructure;
+  validation: WorkoutValidationResult;
 }
 
 /**
@@ -78,6 +88,7 @@ export interface ModifyWorkoutOutput {
   };
   message: string;
   structure: WorkoutStructure;
+  validation: WorkoutValidationResult;
 }
 
 /**
