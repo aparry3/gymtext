@@ -47,6 +47,10 @@ export function HeroSection({ onScrollToSection, theme = 'dark' }: HeroSectionPr
             ? 'from-white via-transparent to-transparent'
             : 'from-slate-950 via-transparent to-transparent'
         }`}></div>
+        {/* Gradient Overlay - Bottom-left corner for extra text contrast (light mode only) */}
+        {isLight && (
+          <div className="absolute inset-0 bg-gradient-to-tr from-white via-white/30 to-transparent"></div>
+        )}
       </div>
 
       <div className="relative z-10 container mx-auto px-6 mt-16 md:mt-0">
@@ -61,7 +65,7 @@ export function HeroSection({ onScrollToSection, theme = 'dark' }: HeroSectionPr
           </h1>
 
           <p className={`text-base md:text-xl mb-8 md:mb-10 max-w-2xl leading-relaxed ${
-            isLight ? 'text-gray-600' : 'text-slate-300'
+            isLight ? 'text-gray-700' : 'text-slate-300'
           }`}>
             GymText delivers personalized workouts, coaching, and accountability
             through simple daily text messages. No apps. No dashboards. Just
