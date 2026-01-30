@@ -38,7 +38,7 @@ export function HeroSection({ onScrollToSection, theme = 'dark' }: HeroSectionPr
         {/* Gradient Overlay - Left-to-right for text readability */}
         <div className={`absolute inset-0 bg-gradient-to-r ${
           isLight
-            ? 'from-white via-white/50 to-transparent md:from-white md:via-white/40 md:to-transparent'
+            ? 'from-white via-white/30 to-transparent md:from-white md:via-white/20 md:to-transparent'
             : 'from-slate-950/80 via-slate-950/40 to-transparent md:from-slate-950/90 md:via-slate-950/50 md:to-slate-950/20'
         }`}></div>
         {/* Gradient Overlay - Bottom only for section transition */}
@@ -49,7 +49,7 @@ export function HeroSection({ onScrollToSection, theme = 'dark' }: HeroSectionPr
         }`}></div>
         {/* Gradient Overlay - Bottom-left corner for extra text contrast (light mode only) */}
         {isLight && (
-          <div className="absolute inset-0 bg-gradient-to-tr from-white via-white/30 to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_white_0%,_white_30%,_transparent_70%)]"></div>
         )}
       </div>
 

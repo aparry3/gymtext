@@ -9,6 +9,7 @@ import { ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
+import { normalizeWhitespace } from '@/server/utils/formatters';
 
 /**
  * Schema for workout validation agent output
@@ -234,7 +235,7 @@ export class WorkoutAgentService {
 
     return {
       response: typedResult.response,
-      message: typedResult.message,
+      message: normalizeWhitespace(typedResult.message),
       structure: typedResult.structure.response,
     };
   }
@@ -291,7 +292,11 @@ export class WorkoutAgentService {
     }, { model: 'gpt-5-mini' });
 
     // Pass changeRequest directly as the message - it's the user's request, not context
-    return agent.invoke(changeRequest) as Promise<ModifyWorkoutOutput>;
+    const result = await agent.invoke(changeRequest) as ModifyWorkoutOutput;
+    return {
+      ...result,
+      message: normalizeWhitespace(result.message),
+    };
   }
 }
 
