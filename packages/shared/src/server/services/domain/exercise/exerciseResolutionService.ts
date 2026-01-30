@@ -213,16 +213,7 @@ export function createExerciseResolutionService(
     const fuzzyLexResults = settled[3].status === 'fulfilled' ? settled[3].value : [];
     const textResults = settled[4].status === 'fulfilled' ? settled[4].value : [];
 
-    console.log(`[ExerciseResolution] Signal results for "${rawQuery}":`, {
-      exactNorm: exactAlias ? exactAlias.alias : null,
-      exactLex: exactLexAlias ? exactLexAlias.alias : null,
-      fuzzyNorm: fuzzyNormResults.length,
-      fuzzyLex: fuzzyLexResults.length,
-      text: textResults.length,
-      failures: settled.filter(s => s.status === 'rejected').length,
-    });
-
-    // Phase 2: Populate scores
+// Phase 2: Populate scores
 
     // Exact norm
     if (exactAlias) {
@@ -276,14 +267,7 @@ export function createExerciseResolutionService(
       }
     }
 
-    if (fuzzyNormResults.length > 0) {
-      console.log(`[ExerciseResolution] Fuzzy norm hits:`, fuzzyNormResults.slice(0, 5).map(f => ({ alias: f.alias, score: f.score.toFixed(3) })));
-    }
-    if (fuzzyLexResults.length > 0) {
-      console.log(`[ExerciseResolution] Fuzzy lex hits:`, fuzzyLexResults.slice(0, 5).map(f => ({ alias: f.alias, score: f.score.toFixed(3) })));
-    }
-
-    // Text match signal
+// Text match signal
     for (const exercise of textResults) {
       if (exercise.isActive) {
         const scores = ensureCandidate(exercise, exercise.name);
@@ -306,18 +290,7 @@ export function createExerciseResolutionService(
       candidate.scores.intentPriority = (Number(candidate.exercise.popularity) || 0) / 1000;
     }
 
-    // Log top candidates with per-signal scores
-    const topCandidates = [...candidates.entries()]
-      .map(([, c]) => ({ name: c.exercise.name, ...c.scores }))
-      .sort((a, b) => {
-        const scoreA = W_EXACT_NORM * a.exactNorm + W_EXACT_LEX * a.exactLex + W_TRGM_LEX * a.trgramLex + W_TRGM_NORM * a.trgramNorm + W_TOKEN_OVERLAP * a.tokenOverlap + W_TEXT_MATCH * a.textMatch + W_INTENT_PRIORITY * a.intentPriority;
-        const scoreB = W_EXACT_NORM * b.exactNorm + W_EXACT_LEX * b.exactLex + W_TRGM_LEX * b.trgramLex + W_TRGM_NORM * b.trgramNorm + W_TOKEN_OVERLAP * b.tokenOverlap + W_TEXT_MATCH * b.textMatch + W_INTENT_PRIORITY * b.intentPriority;
-        return scoreB - scoreA;
-      })
-      .slice(0, 5);
-    console.log(`[ExerciseResolution] Top candidates:`, JSON.stringify(topCandidates, null, 2));
-
-    // Phase 3: Compute composite scores and rank
+// Phase 3: Compute composite scores and rank
     const results: ExerciseSearchResult[] = [];
     for (const [, candidate] of candidates) {
       const { scores } = candidate;
@@ -342,9 +315,7 @@ export function createExerciseResolutionService(
       });
     }
 
-    console.log(`[ExerciseResolution] Multi-signal: ${candidates.size} candidates for "${rawQuery}" (limit: ${limit})`);
-
-    return results
+return results
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, limit);
   }
