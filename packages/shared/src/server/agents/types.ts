@@ -85,10 +85,24 @@ export interface ConfigurableAgent<TOutput> {
 export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = ConfigurableAgent<any>> {
   /** The subAgent to execute */
   agent: TAgent;
-  /** Transform main result to string input for this subAgent */
-  transform?: (mainResult: unknown) => string;
+  /**
+   * Transform main result to string input for this subAgent
+   * @param mainResult - The main agent's result (stringified response)
+   * @param parentInput - Optional: The original input passed to the parent agent
+   */
+  transform?: (mainResult: unknown, parentInput?: string) => string;
   /** Condition to run this subAgent (default: always run) */
   condition?: (mainResult: unknown) => boolean;
+  /**
+   * Post-execution validation function
+   * If provided and returns false, the agent will retry (up to maxRetries)
+   */
+  validate?: (result: unknown) => boolean;
+  /**
+   * Maximum number of retry attempts if validation fails
+   * Default: 1 (no retry - single attempt only)
+   */
+  maxRetries?: number;
 }
 
 /**

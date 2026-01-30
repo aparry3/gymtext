@@ -66,6 +66,7 @@ export const PROMPT_DOMAINS: PromptDomain[] = [
       { id: 'workout:generate:experience:intermediate', label: 'Intermediate Experience', roles: ['context'] },
       { id: 'workout:generate:experience:advanced', label: 'Advanced Experience', roles: ['context'] },
       { id: 'workout:structured', label: 'Structured Workout', roles: ['system', 'user'] },
+      { id: 'workout:structured:validate', label: 'Validate Structured Workout', roles: ['system', 'user'] },
       { id: 'workout:message', label: 'Workout Message', roles: ['system', 'user'] },
       { id: 'workout:modify', label: 'Modify Workout', roles: ['system', 'user'] },
       { id: 'workout:message:format:training', label: 'Training Format', roles: ['context'] },

@@ -7,6 +7,8 @@ export interface SubAgentExecutorConfig {
   batches: SubAgentBatch[];
   /** String input passed to each subAgent (typically parent agent's response) */
   input: string;
+  /** Original input to the parent agent (for transform functions that need it) */
+  parentInput: string;
   previousResults: Record<string, unknown>;
   parentName: string;
 }
@@ -36,7 +38,7 @@ function isSubAgentConfig(entry: unknown): entry is SubAgentConfig {
 export async function executeSubAgents(
   config: SubAgentExecutorConfig
 ): Promise<Record<string, unknown>> {
-  const { batches, input, previousResults, parentName } = config;
+  const { batches, input, parentInput, previousResults, parentName } = config;
 
   // Main result for condition/transform functions
   const mainResult = previousResults.response;
@@ -55,16 +57,20 @@ export async function executeSubAgents(
     const batchPromises = batchKeys.map(async (key) => {
       const entry = batch[key];
 
-      // Determine agent, condition, and transform based on entry type
+      // Determine agent, condition, transform, validate, and maxRetries based on entry type
       let agent: ConfigurableAgent<unknown>;
       let condition: ((r: unknown) => boolean) | undefined;
-      let transform: ((r: unknown) => string) | undefined;
+      let transform: ((r: unknown, parentInput?: string) => string) | undefined;
+      let validateFn: ((r: unknown) => boolean) | undefined;
+      let maxRetries = 1;
 
       if (isSubAgentConfig(entry)) {
-        // Extended config: { agent, transform?, condition? }
+        // Extended config: { agent, transform?, condition?, validate?, maxRetries? }
         agent = entry.agent;
         condition = entry.condition;
         transform = entry.transform;
+        validateFn = entry.validate;
+        maxRetries = entry.maxRetries ?? 1;
       } else {
         // Simple config: bare agent
         agent = entry as ConfigurableAgent<unknown>;
@@ -77,18 +83,34 @@ export async function executeSubAgents(
       }
 
       // Determine input: use transform if provided, otherwise default input
+      // Transform receives mainResult + optional parentInput (backwards compatible)
       const agentInput = transform
-        ? transform(mainResult)
+        ? transform(mainResult, parentInput)
         : input;
 
       const startTime = Date.now();
       console.log(`[${parentName}:${key}] Starting`);
 
-      const result = await agent.invoke(agentInput);
+      // Execute with retry loop if validation is configured
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const result = await agent.invoke(agentInput);
 
-      console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms`);
+        // If no validation or validation passes, return
+        if (!validateFn || validateFn(result)) {
+          console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms${attempt > 1 ? ` (attempt ${attempt})` : ''}`);
+          return { key, result, skipped: false };
+        }
 
-      return { key, result, skipped: false };
+        // Validation failed
+        console.log(`[${parentName}:${key}] Validation failed, attempt ${attempt}/${maxRetries}`);
+
+        if (attempt === maxRetries) {
+          throw new Error(`${key} validation failed after ${maxRetries} attempts`);
+        }
+      }
+
+      // Should never reach here, but TypeScript needs it
+      throw new Error(`${key} execution failed unexpectedly`);
     });
 
     // Wait for all agents in batch (will throw on first failure)

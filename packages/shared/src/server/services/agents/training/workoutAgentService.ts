@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
@@ -8,6 +9,27 @@ import { ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
+
+/**
+ * Schema for workout validation agent output
+ */
+const WorkoutValidationOutputSchema = z.object({
+  isValid: z.boolean().describe('Whether the structured workout is valid and complete'),
+  errors: z.array(z.string()).describe('List of validation errors if invalid'),
+});
+
+type WorkoutValidationOutput = z.infer<typeof WorkoutValidationOutputSchema>;
+
+/**
+ * Safe JSON parse helper - returns parsed object or original string
+ */
+function safeJsonParse(str: string): unknown {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return str;
+  }
+}
 
 /**
  * WorkoutAgentService - Handles all workout-related AI operations
@@ -54,17 +76,33 @@ export class WorkoutAgentService {
   }
 
   /**
-   * Get the structured sub-agent with exercise context
+   * Get the validation sub-agent for checking workout completeness
+   *
+   * This agent compares the generate agent's output (full workout intent) with
+   * the structured agent's output (WorkoutStructure) to ensure nothing was lost.
+   */
+  public async getValidationAgent(): Promise<ConfigurableAgent<{ response: WorkoutValidationOutput }>> {
+    return createAgent({
+      name: PROMPT_IDS.WORKOUT_STRUCTURED_VALIDATE,
+      schema: WorkoutValidationOutputSchema,
+    }, { model: 'gpt-5-nano' });
+  }
+
+  /**
+   * Get the structured sub-agent with exercise context and validation
    *
    * IMPORTANT: Uses WorkoutStructureLLMSchema which strips id, exerciseId, nameRaw,
    * and resolution fields to prevent LLM from hallucinating fake exercise IDs.
    * These fields are populated by the exercise resolution service post-generation.
    *
+   * The structured agent includes a validation sub-agent that checks completeness
+   * by comparing against the generate agent's output.
+   *
    * @param user - User for exercise context injection (required)
    */
   public async getStructuredAgent(
     user: UserWithProfile
-  ): Promise<ConfigurableAgent<{ response: WorkoutStructure }>> {
+  ): Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>> {
     const exerciseContext = await this.contextService.getContext(
       user,
       [ContextType.AVAILABLE_EXERCISES],
@@ -74,13 +112,28 @@ export class WorkoutAgentService {
     console.log('[WorkoutAgentService] Exercise context for structured agent:',
       exerciseContext.length > 0 ? `${exerciseContext.length} items` : 'No exercises');
 
+    const validationAgent = await this.getValidationAgent();
+
     // Use LLM-safe schema that omits id, exerciseId, nameRaw, and resolution
     // These fields are populated by exercise resolution service after generation
+    // Validation sub-agent receives both structured output and generate output for comparison
     return createAgent({
       name: PROMPT_IDS.WORKOUT_STRUCTURED,
       context: exerciseContext,
       schema: WorkoutStructureLLMSchema,
-    }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure }>>;
+      subAgents: [{
+        validation: {
+          agent: validationAgent,
+          // Transform uses BOTH params: mainResult (structured output) + parentInput (generate output)
+          transform: (mainResult, parentInput) => JSON.stringify({
+            // mainResult = the structured agent's output (WorkoutStructure)
+            // parentInput = the generate agent's output (full workout description)
+            input: parentInput ? safeJsonParse(parentInput) : {},
+            output: mainResult,
+          }),
+        },
+      }],
+    }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
   }
 
   /**
@@ -121,14 +174,40 @@ export class WorkoutAgentService {
     ]);
 
     // Create main agent with context (prompts fetched from DB)
+    // The structured agent has validation built-in via sub-agent
+    // We configure validate + maxRetries here to retry on validation failure
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
-      subAgents: [{ message: messageAgent, structure: structuredAgent }],
+      subAgents: [{
+        message: messageAgent,
+        structure: {
+          agent: structuredAgent,
+          // Validate checks the validation sub-agent's result
+          validate: (result) => {
+            const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
+            return typedResult.validation?.isValid === true;
+          },
+          maxRetries: 3,
+        },
+      }],
     }, { model: 'gpt-5.1' });
 
     // Empty input - DB user prompt provides the instructions
-    return agent.invoke('') as Promise<WorkoutGenerateOutput>;
+    const result = await agent.invoke('');
+
+    // Extract the structure from the nested result (strip validation metadata)
+    const typedResult = result as {
+      response: string;
+      message: string;
+      structure: { response: WorkoutStructure; validation: WorkoutValidationOutput };
+    };
+
+    return {
+      response: typedResult.response,
+      message: typedResult.message,
+      structure: typedResult.structure.response,
+    };
   }
 
   /**

@@ -178,6 +178,7 @@ export async function createAgent<
       const subAgentResults = await executeSubAgents({
         batches: subAgents,
         input: responseString,
+        parentInput: input,  // Pass the original input for transform functions that need it
         previousResults: { response: mainResult },
         parentName: name,
       });

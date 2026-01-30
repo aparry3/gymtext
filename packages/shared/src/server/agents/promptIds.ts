@@ -24,6 +24,7 @@ export const PROMPT_IDS = {
   // Workouts
   WORKOUT_GENERATE: 'workout:generate',
   WORKOUT_STRUCTURED: 'workout:structured',
+  WORKOUT_STRUCTURED_VALIDATE: 'workout:structured:validate',
   WORKOUT_MESSAGE: 'workout:message',
   WORKOUT_MODIFY: 'workout:modify',
 
