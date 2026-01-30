@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent, type ValidationResult } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
@@ -95,8 +95,9 @@ export class WorkoutAgentService {
    * and resolution fields to prevent LLM from hallucinating fake exercise IDs.
    * These fields are populated by the exercise resolution service post-generation.
    *
-   * The structured agent includes a validation sub-agent that checks completeness
-   * by comparing against the generate agent's output.
+   * The structured agent includes:
+   * 1. A validation sub-agent that checks completeness by comparing against the generate agent's output
+   * 2. Built-in validation with retry logic - if validation fails, retries with error feedback
    *
    * @param user - User for exercise context injection (required)
    */
@@ -117,6 +118,7 @@ export class WorkoutAgentService {
     // Use LLM-safe schema that omits id, exerciseId, nameRaw, and resolution
     // These fields are populated by exercise resolution service after generation
     // Validation sub-agent receives both structured output and generate output for comparison
+    // Validation + retry is now on the agent itself, with error feedback in message history
     return createAgent({
       name: PROMPT_IDS.WORKOUT_STRUCTURED,
       context: exerciseContext,
@@ -146,6 +148,28 @@ export class WorkoutAgentService {
           },
         },
       }],
+
+      // Validation on the agent itself - handles retries with error feedback internally
+      validate: (result): ValidationResult => {
+        const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
+        const isValid = typedResult.validation?.isValid === true;
+
+        // Log validation result for debugging
+        console.log('\n========== VALIDATION RESULT ==========');
+        console.log('[Validation] isValid:', isValid);
+        console.log('[Validation] Full validation response:', JSON.stringify(typedResult.validation, null, 2));
+        if (!isValid && typedResult.validation?.errors) {
+          console.log('[Validation] Errors:', typedResult.validation.errors);
+        }
+        console.log('========================================\n');
+
+        return {
+          isValid,
+          errors: typedResult.validation?.errors ?? [],
+          failedOutput: typedResult.response,  // The structured workout that failed
+        };
+      },
+      maxRetries: 3,
     }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
   }
 
@@ -187,33 +211,14 @@ export class WorkoutAgentService {
     ]);
 
     // Create main agent with context (prompts fetched from DB)
-    // The structured agent has validation built-in via sub-agent
-    // We configure validate + maxRetries here to retry on validation failure
+    // The structured agent has validation built-in with retry logic and error feedback
+    // When structuredAgent.invoke() is called internally, it handles retries automatically
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
       subAgents: [{
         message: messageAgent,
-        structure: {
-          agent: structuredAgent,
-          // Validate checks the validation sub-agent's result
-          validate: (result) => {
-            const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
-            const isValid = typedResult.validation?.isValid === true;
-
-            // Log validation result for debugging
-            console.log('\n========== VALIDATION RESULT ==========');
-            console.log('[Validation] isValid:', isValid);
-            console.log('[Validation] Full validation response:', JSON.stringify(typedResult.validation, null, 2));
-            if (!isValid && typedResult.validation?.errors) {
-              console.log('[Validation] Errors:', typedResult.validation.errors);
-            }
-            console.log('========================================\n');
-
-            return isValid;
-          },
-          maxRetries: 3,
-        },
+        structure: structuredAgent,  // Validation is now built into the agent itself
       }],
     }, { model: 'gpt-5.1' });
 

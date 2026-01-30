@@ -1,10 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import type { Theme } from './LandingPage';
 
-export function CTASection() {
+interface CTASectionProps {
+  theme?: Theme;
+}
+
+export function CTASection({ theme = 'dark' }: CTASectionProps) {
+  const isLight = theme === 'light';
+
   return (
-    <section className="py-24 bg-gradient-to-b from-slate-900 to-slate-950 relative overflow-hidden">
+    <section className={`py-24 relative overflow-hidden ${
+      isLight
+        ? 'bg-gradient-to-b from-gray-50 to-white'
+        : 'bg-gradient-to-b from-slate-900 to-slate-950'
+    }`}>
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
         <div className="absolute top-10 left-10 w-64 h-64 bg-brand-600 rounded-full blur-[100px]"></div>
@@ -12,11 +23,11 @@ export function CTASection() {
       </div>
 
       <div className="container mx-auto px-6 relative z-10 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+        <h2 className={`text-4xl md:text-5xl font-extrabold mb-6 ${isLight ? 'text-gray-900' : 'text-white'}`}>
           Train Smarter.{' '}
           <span className="text-[#1B81FF]">No App Required.</span>
         </h2>
-        <p className="text-xl text-slate-300 mb-10 max-w-xl mx-auto">
+        <p className={`text-xl mb-10 max-w-xl mx-auto ${isLight ? 'text-gray-600' : 'text-slate-300'}`}>
           Join the athletes who have simplified their fitness with GymText.
         </p>
         <Link
@@ -25,7 +36,7 @@ export function CTASection() {
         >
           Get Started Today
         </Link>
-        <p className="mt-6 text-sm text-slate-500">
+        <p className={`mt-6 text-sm ${isLight ? 'text-gray-400' : 'text-slate-500'}`}>
           No credit card required for 7-day trial. Cancel anytime.
         </p>
       </div>
