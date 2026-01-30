@@ -1,97 +1,86 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { MessageSquare, Dumbbell, DollarSign } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
-export function HeroSection() {
-  return (
-    <section className="container mx-auto px-4 py-12 md:py-20">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-        {/* Content */}
-        <div className="space-y-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-foreground">
-            Your <span className="text-primary-color">Personal Trainer</span> is Now{' '}
-            <span className="text-primary">Always in Your <span className="text-primary-color">Pocket</span></span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-            Get <strong className="text-primary-color">personalized workouts</strong>, <strong className="text-primary-color">24/7 coaching</strong>,
-            and <strong className="text-primary-color">real results</strong> - all through simple text messages.
-            No app downloads, no gym required.
-          </p>
-
-          {/* Key Benefits */}
-          <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="h-6 w-6 text-primary flex-shrink-0" />
-              <div>
-                <div className="font-semibold text-sm">All via Text</div>
-                <div className="text-xs text-muted-foreground">No apps, no hassle</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Dumbbell className="h-6 w-6 text-primary flex-shrink-0" />
-              <div>
-                <div className="font-semibold text-sm">Tailored to You</div>
-                <div className="text-xs text-muted-foreground">Your goals, your pace</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <DollarSign className="h-6 w-6 text-primary flex-shrink-0" />
-              <div>
-                <div className="font-semibold text-sm">$19.99/month</div>
-                <div className="text-xs text-muted-foreground">vs $200+ for trainers</div>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <div className="pt-4">
-            <Link
-              href="/start"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-[1.02] w-full sm:w-auto text-base px-8 py-6 h-auto"
-            >
-              Start Working Out Today
-            </Link>
-          </div>
-        </div>
-
-        {/* Phone Mockup */}
-        <div className="relative flex justify-center lg:justify-end">
-          <div className="relative w-full max-w-sm">
-            <PhoneMockupVisual />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+interface HeroSectionProps {
+  onScrollToSection?: (id: string) => void;
 }
 
-function PhoneMockupVisual() {
-  return (
-    <div className="relative w-full max-w-sm mx-auto">
-      {/* Container uses intrinsic image ratio to lock proportions */}
-      <div className="relative w-full">
-        {/* Bezel defines aspect ratio */}
-        <img
-          src="/iPhone bezel.png"
-          alt="iPhone frame"
-          className="block w-full h-auto pointer-events-none z-10 relative"
-        />
+export function HeroSection({ onScrollToSection }: HeroSectionProps) {
+  const handleScrollClick = () => {
+    if (onScrollToSection) {
+      onScrollToSection('how-it-works');
+    } else {
+      const element = document.getElementById('how-it-works');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
-        {/* Video overlay — positioned with measured offsets */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute top-[3.7%] left-[6.9%] w-[86.2%] h-[93%] object-cover rounded-[2.3rem] z-0"
-        >
-          <source src="/GymTextDemo.mp4" type="video/mp4" />
-        </video>
+  return (
+    <header className="relative w-full h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/hero.jpg"
+          alt="Athlete training"
+          fill
+          className="object-cover object-center"
+          priority
+        />
+        {/* Gradient Overlay - Darker for readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/60 to-slate-950/20 md:from-slate-950/90 md:via-slate-950/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
       </div>
-    </div>
+
+      <div className="relative z-10 container mx-auto px-6 mt-16 md:mt-0">
+        <div className="max-w-3xl flex flex-col items-center md:items-start text-center md:text-left">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]">
+            Personal Training. <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5BA3FF] to-[#1B81FF]">
+              Texted to You.
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl leading-relaxed">
+            GymText delivers personalized workouts, coaching, and accountability
+            through simple daily text messages. No apps. No dashboards. Just
+            training that works.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <Link
+              href="/start"
+              className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+            >
+              Start Training <ArrowRight size={20} />
+            </Link>
+            <button
+              onClick={handleScrollClick}
+              className="bg-slate-900/90 hover:bg-slate-800 text-white px-8 py-4 rounded-full font-bold text-lg transition-all backdrop-blur flex items-center justify-center"
+            >
+              See How It Works
+            </button>
+          </div>
+
+          <div className="mt-12 flex items-center gap-4 text-sm text-slate-400">
+            <div className="flex -space-x-3">
+              {['A', 'B', 'C', 'D'].map((initial, i) => (
+                <div
+                  key={i}
+                  className="w-10 h-10 rounded-full border-2 border-slate-950 bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-sm"
+                >
+                  {initial}
+                </div>
+              ))}
+            </div>
+            <p>Trusted by 1,000+ athletes</p>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
