@@ -66,7 +66,7 @@ export function HeroSection({ onScrollToSection }: HeroSectionProps) {
             </button>
           </div>
 
-          <div className="mt-12 flex items-center gap-4 text-sm text-slate-400">
+          {/* <div className="mt-12 flex items-center gap-4 text-sm text-slate-400">
             <div className="flex -space-x-3">
               {['A', 'B', 'C', 'D'].map((initial, i) => (
                 <div
@@ -78,7 +78,7 @@ export function HeroSection({ onScrollToSection }: HeroSectionProps) {
               ))}
             </div>
             <p>Trusted by 1,000+ athletes</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </header>
