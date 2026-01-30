@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { LandingPage } from '@/components/pages/landing/LandingPage';
+import { OldLandingPage } from '@/components/pages/landing-old/OldLandingPage';
 
 export const metadata: Metadata = {
   title: 'GymText - 24/7 Personal Training via Text Message',
@@ -18,5 +18,5 @@ export const metadata: Metadata = {
 
 // Page visits are now tracked centrally via middleware
 export default async function Home() {
-  return <LandingPage />;
+  return <OldLandingPage />;
 }
