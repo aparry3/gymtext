@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { HeroSection } from '@/components/pages/landing/HeroSection';
 import { HowItWorksSection } from '@/components/pages/landing/HowItWorksSection';
 import { SMSPreviewSection } from '@/components/pages/landing/SMSPreviewSection';
@@ -11,9 +11,14 @@ import { FeaturesSection } from '@/components/pages/landing/FeaturesSection';
 import { CTASection } from '@/components/pages/landing/CTASection';
 import { FooterSection } from '@/components/pages/landing/FooterSection';
 
+export type Theme = 'light' | 'dark';
+
 export function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  const isLight = theme === 'light';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,20 +36,26 @@ export function LandingPage() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <main className="landing-dark min-h-screen flex flex-col font-sans">
+    <main className={`min-h-screen flex flex-col font-sans ${isLight ? 'bg-white' : 'landing-dark'}`}>
       {/* Navbar */}
       <nav
         className={`fixed w-full z-50 transition-all duration-300 border-b border-transparent ${
           isScrolled || isMobileMenuOpen
-            ? 'bg-slate-950/90 backdrop-blur-md border-slate-800 py-3'
+            ? isLight
+              ? 'bg-white/90 backdrop-blur-md border-gray-200 py-3'
+              : 'bg-slate-950/90 backdrop-blur-md border-slate-800 py-3'
             : 'bg-transparent py-5'
         }`}
       >
         <div className="container mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center">
             <Image
-              src="/WordmarkWhite.png"
+              src={isLight ? '/Wordmark.png' : '/WordmarkWhite.png'}
               alt="GymText"
               width={135}
               height={30}
@@ -53,28 +64,30 @@ export function LandingPage() {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+          <div className={`hidden md:flex items-center gap-8 text-sm font-medium transition-colors ${
+            isLight && isScrolled ? 'text-gray-600' : 'text-white'
+          }`}>
             <button
               onClick={() => scrollToSection('how-it-works')}
-              className="hover:text-white transition-colors"
+              className={`transition-colors ${isLight && isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
             >
               How It Works
             </button>
             <button
               onClick={() => scrollToSection('features')}
-              className="hover:text-white transition-colors"
+              className={`transition-colors ${isLight && isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
             >
               Why GymText
             </button>
             <button
               onClick={() => scrollToSection('demo')}
-              className="hover:text-white transition-colors"
+              className={`transition-colors ${isLight && isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
             >
               Demo
             </button>
             <Link
               href="/start"
-              className="text-white hover:opacity-80 transition-all font-semibold"
+              className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-5 py-2 rounded-full font-semibold transition-all"
             >
               Start Training
             </Link>
@@ -82,7 +95,7 @@ export function LandingPage() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-white"
+            className={`md:hidden ${isLight && isScrolled ? 'text-gray-900' : 'text-white'}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -91,22 +104,32 @@ export function LandingPage() {
 
         {/* Mobile Nav */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-slate-950 border-b border-slate-800 p-6 flex flex-col gap-6 shadow-2xl">
+          <div className={`md:hidden absolute top-full left-0 w-full p-6 flex flex-col gap-6 shadow-2xl ${
+            isLight
+              ? 'bg-white border-b border-gray-200'
+              : 'bg-slate-950 border-b border-slate-800'
+          }`}>
             <button
               onClick={() => scrollToSection('how-it-works')}
-              className="text-lg text-slate-300 hover:text-white text-left"
+              className={`text-lg text-left ${
+                isLight ? 'text-gray-600 hover:text-gray-900' : 'text-slate-300 hover:text-white'
+              }`}
             >
               How It Works
             </button>
             <button
               onClick={() => scrollToSection('features')}
-              className="text-lg text-slate-300 hover:text-white text-left"
+              className={`text-lg text-left ${
+                isLight ? 'text-gray-600 hover:text-gray-900' : 'text-slate-300 hover:text-white'
+              }`}
             >
               Why GymText
             </button>
             <button
               onClick={() => scrollToSection('demo')}
-              className="text-lg text-slate-300 hover:text-white text-left"
+              className={`text-lg text-left ${
+                isLight ? 'text-gray-600 hover:text-gray-900' : 'text-slate-300 hover:text-white'
+              }`}
             >
               Demo
             </button>
@@ -120,12 +143,28 @@ export function LandingPage() {
         )}
       </nav>
 
-      <HeroSection onScrollToSection={scrollToSection} />
-      <SMSPreviewSection />
-      <HowItWorksSection />
-      <FeaturesSection />
-      <CTASection />
-      <FooterSection />
+      <HeroSection onScrollToSection={scrollToSection} theme={theme} />
+      <SMSPreviewSection theme={theme} />
+      <HowItWorksSection theme={theme} />
+      <FeaturesSection theme={theme} />
+      <CTASection theme={theme} />
+
+      {/* Theme Toggle */}
+      <div className={`py-8 text-center ${isLight ? 'bg-gray-50' : 'bg-slate-950'}`}>
+        <button
+          onClick={toggleTheme}
+          className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${
+            isLight
+              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          {isLight ? <Moon size={18} /> : <Sun size={18} />}
+          Switch to {isLight ? 'Dark' : 'Light'} Mode
+        </button>
+      </div>
+
+      <FooterSection theme={theme} />
     </main>
   );
 }

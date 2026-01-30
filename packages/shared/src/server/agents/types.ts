@@ -2,6 +2,37 @@ import type { z, ZodSchema } from 'zod';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 
 // ============================================
+// Validation Types
+// ============================================
+
+/**
+ * Standard validation result interface
+ * All validate functions should return this shape
+ */
+export interface ValidationResult {
+  /** Whether the output passed validation */
+  isValid: boolean;
+  /** Validation errors explaining what's wrong (used for retry feedback) */
+  errors?: string[];
+  /** The output that failed validation (for negative example in retry) */
+  failedOutput?: unknown;
+}
+
+/**
+ * Context for retry attempts with validation feedback
+ * Used internally - passed to agent invoke on retries
+ */
+export interface RetryContext {
+  /** Current attempt number (1-indexed) */
+  attempt: number;
+  /** Previous failed attempts with their outputs and errors */
+  previousAttempts: Array<{
+    output: unknown;
+    errors: string[];
+  }>;
+}
+
+// ============================================
 // Base Agent Types (from base.ts)
 // ============================================
 
@@ -73,13 +104,21 @@ export type ModelId =
  * or passed to userPrompt transformer if defined
  */
 export interface ConfigurableAgent<TOutput> {
-  invoke(input: string): Promise<TOutput>;
+  /**
+   * Invoke the agent with input string
+   * @param input - The input string (used as user message or transformed via userPrompt)
+   * @param retryContext - Optional retry context with previous failed attempts (for internal retry handling)
+   */
+  invoke(input: string, retryContext?: RetryContext): Promise<TOutput>;
   /** The agent's name for logging */
   name: string;
 }
 
 /**
  * Extended subAgent configuration with optional transform and condition
+ *
+ * NOTE: Validation is now on AgentDefinition, not SubAgentConfig.
+ * When a sub-agent has validation, it handles retries internally via its own invoke().
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = ConfigurableAgent<any>> {
@@ -93,16 +132,6 @@ export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = Configur
   transform?: (mainResult: unknown, parentInput?: string) => string;
   /** Condition to run this subAgent (default: always run) */
   condition?: (mainResult: unknown) => boolean;
-  /**
-   * Post-execution validation function
-   * If provided and returns false, the agent will retry (up to maxRetries)
-   */
-  validate?: (result: unknown) => boolean;
-  /**
-   * Maximum number of retry attempts if validation fails
-   * Default: 1 (no retry - single attempt only)
-   */
-  maxRetries?: number;
 }
 
 /**
@@ -152,6 +181,19 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
 
   /** SubAgents to execute after main agent - batches run sequentially, agents within batch run in parallel */
   subAgents?: SubAgentBatch[];
+
+  /**
+   * Validation for the agent output
+   * If validation fails and maxRetries > 1, agent retries with error feedback in message history
+   * The previous failed output and errors are automatically injected as negative examples
+   */
+  validate?: (result: unknown) => ValidationResult;
+
+  /**
+   * Maximum number of retry attempts if validation fails
+   * Default: 1 (no retry - single attempt only)
+   */
+  maxRetries?: number;
 }
 
 /**

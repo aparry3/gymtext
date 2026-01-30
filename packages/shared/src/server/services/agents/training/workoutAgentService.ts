@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent, type ValidationResult } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
@@ -9,6 +9,7 @@ import { ContextType, SnippetType } from '@/server/services/context';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
+import { normalizeWhitespace } from '@/server/utils/formatters';
 
 /**
  * Schema for workout validation agent output
@@ -95,8 +96,9 @@ export class WorkoutAgentService {
    * and resolution fields to prevent LLM from hallucinating fake exercise IDs.
    * These fields are populated by the exercise resolution service post-generation.
    *
-   * The structured agent includes a validation sub-agent that checks completeness
-   * by comparing against the generate agent's output.
+   * The structured agent includes:
+   * 1. A validation sub-agent that checks completeness by comparing against the generate agent's output
+   * 2. Built-in validation with retry logic - if validation fails, retries with error feedback
    *
    * @param user - User for exercise context injection (required)
    */
@@ -117,6 +119,7 @@ export class WorkoutAgentService {
     // Use LLM-safe schema that omits id, exerciseId, nameRaw, and resolution
     // These fields are populated by exercise resolution service after generation
     // Validation sub-agent receives both structured output and generate output for comparison
+    // Validation + retry is now on the agent itself, with error feedback in message history
     return createAgent({
       name: PROMPT_IDS.WORKOUT_STRUCTURED,
       context: exerciseContext,
@@ -125,14 +128,49 @@ export class WorkoutAgentService {
         validation: {
           agent: validationAgent,
           // Transform uses BOTH params: mainResult (structured output) + parentInput (generate output)
-          transform: (mainResult, parentInput) => JSON.stringify({
-            // mainResult = the structured agent's output (WorkoutStructure)
-            // parentInput = the generate agent's output (full workout description)
-            input: parentInput ? safeJsonParse(parentInput) : {},
-            output: mainResult,
-          }),
+          transform: (mainResult, parentInput) => {
+            const parsedInput = parentInput ? safeJsonParse(parentInput) : {};
+            const validationPayload = {
+              // mainResult = the structured agent's output (WorkoutStructure)
+              // parentInput = the generate agent's output (full workout description)
+              input: parsedInput,
+              output: mainResult,
+            };
+
+            // Log inputs to validation agent for debugging
+            console.log('\n========== VALIDATION AGENT INPUT ==========');
+            console.log('[Validation] Generate agent output (input):');
+            console.log(JSON.stringify(parsedInput, null, 2));
+            console.log('\n[Validation] Structured agent output (output):');
+            console.log(JSON.stringify(mainResult, null, 2));
+            console.log('=============================================\n');
+
+            return JSON.stringify(validationPayload);
+          },
         },
       }],
+
+      // Validation on the agent itself - handles retries with error feedback internally
+      validate: (result): ValidationResult => {
+        const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
+        const isValid = typedResult.validation?.isValid === true;
+
+        // Log validation result for debugging
+        console.log('\n========== VALIDATION RESULT ==========');
+        console.log('[Validation] isValid:', isValid);
+        console.log('[Validation] Full validation response:', JSON.stringify(typedResult.validation, null, 2));
+        if (!isValid && typedResult.validation?.errors) {
+          console.log('[Validation] Errors:', typedResult.validation.errors);
+        }
+        console.log('========================================\n');
+
+        return {
+          isValid,
+          errors: typedResult.validation?.errors ?? [],
+          failedOutput: typedResult.response,  // The structured workout that failed
+        };
+      },
+      maxRetries: 3,
     }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
   }
 
@@ -174,22 +212,14 @@ export class WorkoutAgentService {
     ]);
 
     // Create main agent with context (prompts fetched from DB)
-    // The structured agent has validation built-in via sub-agent
-    // We configure validate + maxRetries here to retry on validation failure
+    // The structured agent has validation built-in with retry logic and error feedback
+    // When structuredAgent.invoke() is called internally, it handles retries automatically
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_GENERATE,
       context,
       subAgents: [{
         message: messageAgent,
-        structure: {
-          agent: structuredAgent,
-          // Validate checks the validation sub-agent's result
-          validate: (result) => {
-            const typedResult = result as { response: WorkoutStructure; validation: WorkoutValidationOutput };
-            return typedResult.validation?.isValid === true;
-          },
-          maxRetries: 3,
-        },
+        structure: structuredAgent,  // Validation is now built into the agent itself
       }],
     }, { model: 'gpt-5.1' });
 
@@ -205,7 +235,7 @@ export class WorkoutAgentService {
 
     return {
       response: typedResult.response,
-      message: typedResult.message,
+      message: normalizeWhitespace(typedResult.message),
       structure: typedResult.structure.response,
     };
   }
@@ -262,7 +292,11 @@ export class WorkoutAgentService {
     }, { model: 'gpt-5-mini' });
 
     // Pass changeRequest directly as the message - it's the user's request, not context
-    return agent.invoke(changeRequest) as Promise<ModifyWorkoutOutput>;
+    const result = await agent.invoke(changeRequest) as ModifyWorkoutOutput;
+    return {
+      ...result,
+      message: normalizeWhitespace(result.message),
+    };
   }
 }
 

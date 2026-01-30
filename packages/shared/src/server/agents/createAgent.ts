@@ -7,6 +7,8 @@ import type {
   InferSchemaOutput,
   AgentComposedOutput,
   SubAgentBatch,
+  RetryContext,
+  Message,
 } from './types';
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
@@ -85,6 +87,8 @@ export async function createAgent<
     tools,
     schema,
     subAgents = [],
+    validate,
+    maxRetries = 1,
   } = definition;
 
   // Fetch prompts from database if systemPrompt not provided directly
@@ -110,9 +114,19 @@ export async function createAgent<
     ? initializeModel(undefined, config, { tools })
     : initializeModel(schema, config);
 
-  const invoke = async (input: string): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+  /**
+   * Internal invoke function that handles RetryContext for error feedback
+   * On retries, previous failed outputs and errors are injected into message history
+   */
+  const invokeInternal = async (
+    input: string,
+    retryContext?: RetryContext
+  ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
     const startTime = Date.now();
-    console.log(`[${name}] Starting execution`);
+    const attemptInfo = retryContext && retryContext.attempt > 1
+      ? ` (attempt ${retryContext.attempt})`
+      : '';
+    console.log(`[${name}] Starting execution${attemptInfo}`);
 
     try {
       // Determine the final user message:
@@ -130,12 +144,35 @@ export async function createAgent<
         evaluatedUserPrompt = input;
       }
 
-      // Build messages with context and previous conversation history
+      // Build retry feedback messages if we have previous failed attempts
+      const retryMessages: Message[] = [];
+
+      if (retryContext && retryContext.previousAttempts.length > 0) {
+        for (const attempt of retryContext.previousAttempts) {
+          // Add the failed output as an assistant message
+          retryMessages.push({
+            role: 'assistant',
+            content: typeof attempt.output === 'string'
+              ? attempt.output
+              : JSON.stringify(attempt.output),
+          });
+
+          // Add error feedback as a user message
+          const errorList = attempt.errors.map(e => `- ${e}`).join('\n');
+          retryMessages.push({
+            role: 'user',
+            content: `The previous output failed validation:\n${errorList}\n\nPlease fix these issues.`,
+          });
+        }
+      }
+
+      // Build messages with context, retry feedback, and previous conversation history
+      // Retry messages go before previousMessages so they're part of the "context"
       const messages = buildMessages({
         systemPrompt,
         userPrompt: evaluatedUserPrompt,
         context,
-        previousMessages,
+        previousMessages: [...retryMessages, ...previousMessages],
       });
 
       // Execute main agent
@@ -159,7 +196,7 @@ export async function createAgent<
       // Log the agent invocation (fire-and-forget, won't block execution)
       logAgentInvocation(name, input, messages, mainResult);
 
-      console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms`);
+      console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms${attemptInfo}`);
 
       // If no subAgents, return main result wrapped in response (with messages if any)
       if (!subAgents || subAgents.length === 0) {
@@ -183,7 +220,7 @@ export async function createAgent<
         parentName: name,
       });
 
-      console.log(`[${name}] Total execution time: ${Date.now() - startTime}ms`);
+      console.log(`[${name}] Total execution time: ${Date.now() - startTime}ms${attemptInfo}`);
 
       // Combine main result with subAgent results (and messages if any)
       return {
@@ -196,6 +233,56 @@ export async function createAgent<
       console.error(`[${name}] Execution failed:`, error);
       throw error;
     }
+  };
+
+  /**
+   * Public invoke function - wraps invokeInternal with validation and retry logic
+   * If validate is defined, runs retry loop with error feedback on failures
+   */
+  const invoke = async (
+    input: string,
+    retryContext?: RetryContext
+  ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+    // If no validation on this agent, just invoke directly
+    if (!validate) {
+      return invokeInternal(input, retryContext);
+    }
+
+    // Run with validation + retry
+    // Merge any incoming retryContext with our own tracking
+    const previousAttempts: Array<{ output: unknown; errors: string[] }> = [];
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      // Build current retry context (merge with any parent context)
+      const currentContext: RetryContext | undefined = previousAttempts.length > 0
+        ? { attempt, previousAttempts }
+        : retryContext;
+
+      const result = await invokeInternal(input, currentContext);
+      const validation = validate(result);
+
+      if (validation.isValid) {
+        return result;
+      }
+
+      // Validation failed - store for retry feedback
+      previousAttempts.push({
+        output: validation.failedOutput ?? result,
+        errors: validation.errors ?? ['Validation failed (no specific errors provided)'],
+      });
+
+      console.log(`[${name}] Validation failed, attempt ${attempt}/${maxRetries}`);
+
+      if (attempt === maxRetries) {
+        // Log final errors before throwing
+        console.error(`[${name}] Validation failed after ${maxRetries} attempts. Final errors:`,
+          validation.errors);
+        throw new Error(`${name} validation failed after ${maxRetries} attempts: ${validation.errors?.join(', ') ?? 'Unknown error'}`);
+      }
+    }
+
+    // TypeScript needs this even though it's unreachable
+    throw new Error(`${name} execution failed unexpectedly`);
   };
 
   return {

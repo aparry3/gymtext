@@ -60,6 +60,10 @@ export type {
   SubAgentConfig,
   ModelId,
 
+  // Validation types
+  ValidationResult,
+  RetryContext,
+
   // Output types
   InferSchemaOutput,
   AgentComposedOutput,

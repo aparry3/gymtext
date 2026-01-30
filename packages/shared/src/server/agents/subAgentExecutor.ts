@@ -32,6 +32,10 @@ function isSubAgentConfig(entry: unknown): entry is SubAgentConfig {
  * - Supports extended config with transform and condition per agent
  * - Fails fast if any agent throws
  *
+ * NOTE: Validation is now handled by agents internally via their own invoke().
+ * When a sub-agent has validate + maxRetries on its AgentDefinition,
+ * it handles retries with error feedback automatically.
+ *
  * @param config - Executor configuration
  * @returns Combined results from all subAgents (excluding 'response' key)
  */
@@ -57,20 +61,16 @@ export async function executeSubAgents(
     const batchPromises = batchKeys.map(async (key) => {
       const entry = batch[key];
 
-      // Determine agent, condition, transform, validate, and maxRetries based on entry type
+      // Determine agent, condition, and transform based on entry type
       let agent: ConfigurableAgent<unknown>;
       let condition: ((r: unknown) => boolean) | undefined;
       let transform: ((r: unknown, parentInput?: string) => string) | undefined;
-      let validateFn: ((r: unknown) => boolean) | undefined;
-      let maxRetries = 1;
 
       if (isSubAgentConfig(entry)) {
-        // Extended config: { agent, transform?, condition?, validate?, maxRetries? }
+        // Extended config: { agent, transform?, condition? }
         agent = entry.agent;
         condition = entry.condition;
         transform = entry.transform;
-        validateFn = entry.validate;
-        maxRetries = entry.maxRetries ?? 1;
       } else {
         // Simple config: bare agent
         agent = entry as ConfigurableAgent<unknown>;
@@ -91,26 +91,11 @@ export async function executeSubAgents(
       const startTime = Date.now();
       console.log(`[${parentName}:${key}] Starting`);
 
-      // Execute with retry loop if validation is configured
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const result = await agent.invoke(agentInput);
+      // Execute the agent - validation is handled internally by the agent
+      const result = await agent.invoke(agentInput);
 
-        // If no validation or validation passes, return
-        if (!validateFn || validateFn(result)) {
-          console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms${attempt > 1 ? ` (attempt ${attempt})` : ''}`);
-          return { key, result, skipped: false };
-        }
-
-        // Validation failed
-        console.log(`[${parentName}:${key}] Validation failed, attempt ${attempt}/${maxRetries}`);
-
-        if (attempt === maxRetries) {
-          throw new Error(`${key} validation failed after ${maxRetries} attempts`);
-        }
-      }
-
-      // Should never reach here, but TypeScript needs it
-      throw new Error(`${key} execution failed unexpectedly`);
+      console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms`);
+      return { key, result, skipped: false };
     });
 
     // Wait for all agents in batch (will throw on first failure)
