@@ -28,7 +28,7 @@ export function HeroSection({ onScrollToSection }: HeroSectionProps) {
           src="/hero.jpg"
           alt="Athlete training"
           fill
-          className="object-cover object-left md:object-center"
+          className="object-cover object-right md:object-center"
           priority
         />
         {/* Gradient Overlay - Darker for readability */}
