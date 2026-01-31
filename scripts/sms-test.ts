@@ -3,9 +3,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { table } from 'table';
-import { TestDatabase } from '../../utils/db';
-import { TestConfig } from '../../utils/config';
-import { Timer, formatDuration, success, error, warning, info, displayHeader } from '../../utils/common';
+import { TestDatabase } from './utils/db';
+import { TestConfig } from './utils/config';
+import { Timer, formatDuration, success, error, warning, info, displayHeader } from './utils/common';
 
 interface SmsTestOptions {
   phone: string;
@@ -163,10 +163,10 @@ class SmsConversationTester {
 async function sendTestSMS(options: SmsTestOptions) {
   const timer = new Timer();
   timer.start();
-  
+
   const tester = new SmsConversationTester();
   const config = TestConfig.getInstance();
-  
+
   // Default values
   const messageId = options.sid || generateMessageSid();
   const apiUrl = options.url || config.getApiUrl('/sms');
@@ -176,7 +176,7 @@ async function sendTestSMS(options: SmsTestOptions) {
     displayHeader('SMS Conversation Test');
     info(`From: ${options.phone}`);
     info(`Message: "${options.message}"`);
-    
+
     if (options.verbose) {
       console.log(chalk.gray(`Message SID: ${messageId}`));
       console.log(chalk.gray(`Endpoint: ${apiUrl}`));
@@ -224,10 +224,10 @@ async function sendTestSMS(options: SmsTestOptions) {
     }
 
     const responseText = await response.text();
-    
+
     // Parse the response
     const messageContent = parseTwiMLResponse(responseText);
-    
+
     if (options.json) {
       const result = {
         success: true,
@@ -241,7 +241,7 @@ async function sendTestSMS(options: SmsTestOptions) {
           duration,
         },
       };
-      
+
       // Add context if requested
       if (options.context) {
         const context = await tester.getConversationContext(options.phone);
@@ -249,17 +249,17 @@ async function sendTestSMS(options: SmsTestOptions) {
           (result as any).context = context;
         }
       }
-      
+
       console.log(JSON.stringify(result, null, 2));
     } else {
       if (options.verbose) {
         console.log(chalk.gray('\nRaw TwiML Response:'));
         console.log(chalk.gray(responseText));
       }
-      
+
       success(`Response received (${formatDuration(duration)}):`);
       console.log(chalk.white(`\n"${messageContent}"\n`));
-      
+
       // Show updated context if requested
       if (options.context) {
         console.log(chalk.cyan('Updated context:'));
@@ -273,23 +273,23 @@ async function sendTestSMS(options: SmsTestOptions) {
 
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    
+
     if (options.json) {
-      console.log(JSON.stringify({ 
-        success: false, 
+      console.log(JSON.stringify({
+        success: false,
         error: errorMessage,
         duration: timer.elapsed(),
       }));
     } else {
       error(`Failed: ${errorMessage}`);
-      
+
       if (errorMessage.includes('ECONNREFUSED')) {
         console.log(chalk.yellow('Is your local server running? Try: pnpm dev'));
       } else if (errorMessage.includes('fetch failed')) {
         console.log(chalk.yellow('Network error. Check your connection and server status.'));
       }
     }
-    
+
     process.exit(1);
   } finally {
     await tester.cleanup();
@@ -340,19 +340,19 @@ if (process.argv.length === 2) {
   program.outputHelp();
   console.log(chalk.gray('\nExamples:'));
   console.log(chalk.gray('  # Send a simple test message'));
-  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "What\'s my workout today?"');
+  console.log('  $ pnpm sms:test -p "+1234567890" -m "What\'s my workout today?"');
   console.log();
   console.log(chalk.gray('  # Send with conversation context'));
-  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "I completed it!" --context');
+  console.log('  $ pnpm sms:test -p "+1234567890" -m "I completed it!" --context');
   console.log();
   console.log(chalk.gray('  # Use specific conversation ID'));
-  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "Next exercise?" --conversation-id "conv_123"');
+  console.log('  $ pnpm sms:test -p "+1234567890" -m "Next exercise?" --conversation-id "conv_123"');
   console.log();
   console.log(chalk.gray('  # Verbose output with context'));
-  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "How many sets?" --context --verbose');
+  console.log('  $ pnpm sms:test -p "+1234567890" -m "How many sets?" --context --verbose');
   console.log();
   console.log(chalk.gray('  # JSON output for automation'));
-  console.log('  $ pnpm test:messages:sms -p "+1234567890" -m "Help" --json --context');
+  console.log('  $ pnpm sms:test -p "+1234567890" -m "Help" --json --context');
 }
 
 // Parse command line arguments

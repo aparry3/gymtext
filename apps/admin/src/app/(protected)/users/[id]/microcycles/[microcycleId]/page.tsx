@@ -7,7 +7,12 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { parseDate, formatDate } from '@/shared/utils/date'
+import {
+  formatMessageAgentInput,
+  formatStructuredAgentInput
+} from '@gymtext/shared/shared/utils/microcyclePrompts'
 import { StructuredMicrocycleRenderer } from '@/components/pages/shared/StructuredMicrocycleRenderer'
 import type { MicrocycleStructure } from '@/server/models/microcycle'
 import {
@@ -51,6 +56,13 @@ export default function MicrocycleDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [copiedTab, setCopiedTab] = useState<'message' | 'structured' | 'sms' | null>(null)
+
+  const copyToClipboard = async (text: string, tab: 'message' | 'structured' | 'sms') => {
+    await navigator.clipboard.writeText(text)
+    setCopiedTab(tab)
+    setTimeout(() => setCopiedTab(null), 2000)
+  }
 
   const fetchMicrocycleData = useCallback(async () => {
     setIsLoading(true)
@@ -253,7 +265,17 @@ export default function MicrocycleDetailPage() {
           {microcycle.message && (
             <Card className="p-6">
               <h3 className="font-semibold mb-3 text-muted-foreground text-sm uppercase tracking-wide">SMS Message</h3>
-              <p className="text-sm whitespace-pre-wrap font-mono bg-muted/50 p-4 rounded-md">{microcycle.message}</p>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 right-2 z-10"
+                  onClick={() => copyToClipboard(microcycle.message!, 'sms')}
+                >
+                  {copiedTab === 'sms' ? 'Copied!' : 'Copy'}
+                </Button>
+                <p className="text-sm whitespace-pre-wrap font-mono bg-muted/50 p-4 pr-20 rounded-md">{microcycle.message}</p>
+              </div>
             </Card>
           )}
 
@@ -261,6 +283,73 @@ export default function MicrocycleDetailPage() {
           <Card className="p-6">
             <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">Weekly Pattern</h3>
             <StructuredMicrocycleRenderer structure={microcycle.structured} showHeader={false} />
+          </Card>
+
+          {/* Agent Inputs Section */}
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">
+              Agent Inputs
+            </h3>
+            <Tabs defaultValue="message">
+              <TabsList>
+                <TabsTrigger value="message">Message Agent</TabsTrigger>
+                <TabsTrigger value="structured">Structured Agent</TabsTrigger>
+              </TabsList>
+              <TabsContent value="message">
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 z-10"
+                    onClick={() => copyToClipboard(
+                      formatMessageAgentInput({
+                        overview: microcycle.description || '',
+                        days: microcycle.days || [],
+                        isDeload: microcycle.isDeload
+                      }),
+                      'message'
+                    )}
+                  >
+                    {copiedTab === 'message' ? 'Copied!' : 'Copy'}
+                  </Button>
+                  <pre className="text-xs whitespace-pre-wrap font-mono bg-muted/50 p-4 pr-20 rounded-md overflow-auto max-h-96">
+                    {formatMessageAgentInput({
+                      overview: microcycle.description || '',
+                      days: microcycle.days || [],
+                      isDeload: microcycle.isDeload
+                    })}
+                  </pre>
+                </div>
+              </TabsContent>
+              <TabsContent value="structured">
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 z-10"
+                    onClick={() => copyToClipboard(
+                      formatStructuredAgentInput(
+                        microcycle.description || '',
+                        microcycle.days || [],
+                        microcycle.absoluteWeek,
+                        microcycle.isDeload
+                      ),
+                      'structured'
+                    )}
+                  >
+                    {copiedTab === 'structured' ? 'Copied!' : 'Copy'}
+                  </Button>
+                  <pre className="text-xs whitespace-pre-wrap font-mono bg-muted/50 p-4 pr-20 rounded-md overflow-auto max-h-96">
+                    {formatStructuredAgentInput(
+                      microcycle.description || '',
+                      microcycle.days || [],
+                      microcycle.absoluteWeek,
+                      microcycle.isDeload
+                    )}
+                  </pre>
+                </div>
+              </TabsContent>
+            </Tabs>
           </Card>
 
           {/* Workouts Table */}
