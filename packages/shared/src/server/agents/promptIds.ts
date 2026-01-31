@@ -39,6 +39,10 @@ export const PROMPT_IDS = {
 
   // Programs
   PROGRAM_PARSE: 'program:parse',
+
+  // Messaging
+  MESSAGING_PLAN_SUMMARY: 'messaging:plan-summary',
+  MESSAGING_PLAN_READY: 'messaging:plan-ready',
 } as const;
 
 // Context prompts (role='context')
