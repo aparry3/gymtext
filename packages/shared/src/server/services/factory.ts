@@ -205,7 +205,7 @@ export function createServices(
   // =========================================================================
   // Phase 2.5: Create agent services (need contextService)
   // =========================================================================
-  const workoutAgent = createWorkoutAgentService(contextService);
+  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog);
   const microcycleAgent = createMicrocycleAgentService(contextService);
   const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
   const chatAgent = createChatAgentService(contextService);

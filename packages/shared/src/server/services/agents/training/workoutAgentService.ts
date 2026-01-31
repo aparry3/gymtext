@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createAgent, PROMPT_IDS, type ConfigurableAgent, type ValidationResult } from '@/server/agents';
+import { createAgent, PROMPT_IDS, type ConfigurableAgent, type ValidationResult, type AgentLoggingContext } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
@@ -10,6 +10,7 @@ import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
 import { normalizeWhitespace } from '@/server/utils/formatters';
+import type { EventLogRepository } from '@/server/repositories/eventLogRepository';
 
 /**
  * Schema for workout validation agent output
@@ -49,9 +50,11 @@ function safeJsonParse(str: string): unknown {
  */
 export class WorkoutAgentService {
   private contextService: ContextService;
+  private eventLogRepo?: EventLogRepository;
 
-  constructor(contextService: ContextService) {
+  constructor(contextService: ContextService, eventLogRepo?: EventLogRepository) {
     this.contextService = contextService;
+    this.eventLogRepo = eventLogRepo;
   }
 
   /**
@@ -116,6 +119,9 @@ export class WorkoutAgentService {
 
     const validationAgent = await this.getValidationAgent();
 
+    // Build logging context for tracking validation failures
+    const loggingContext = this.buildLoggingContext(user.id, 'workout:structured', 'gpt-5-nano');
+
     // Use LLM-safe schema that omits id, exerciseId, nameRaw, and resolution
     // These fields are populated by exercise resolution service after generation
     // Validation sub-agent receives both structured output and generate output for comparison
@@ -171,7 +177,63 @@ export class WorkoutAgentService {
         };
       },
       maxRetries: 3,
+      loggingContext,
     }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
+  }
+
+  /**
+   * Build logging context for agent validation tracking
+   * Creates callbacks that log to the event_logs table
+   */
+  private buildLoggingContext(
+    userId: string,
+    entityId: string,
+    model: string
+  ): AgentLoggingContext | undefined {
+    if (!this.eventLogRepo) {
+      return undefined;
+    }
+
+    const chainId = crypto.randomUUID();
+    const repo = this.eventLogRepo;
+
+    return {
+      userId,
+      chainId,
+      entityId,
+      model,
+      onValidationFailure: (entry) => {
+        // Fire-and-forget - don't await
+        repo.log({
+          eventName: 'validation_failed',
+          userId,
+          entityId,
+          chainId,
+          data: {
+            attempt: entry.attempt,
+            errors: entry.errors,
+            durationMs: entry.durationMs,
+            model,
+          },
+        }).catch((e) => console.error('[WorkoutAgentService] Failed to log validation_failed:', e));
+      },
+      onChainFailure: (entry) => {
+        // Fire-and-forget - don't await
+        repo.log({
+          eventName: 'chain_failed',
+          userId,
+          entityId,
+          chainId,
+          data: {
+            attempt: entry.attempt,
+            errors: entry.errors,
+            durationMs: entry.durationMs,
+            model,
+            totalAttempts: entry.totalAttempts,
+          },
+        }).catch((e) => console.error('[WorkoutAgentService] Failed to log chain_failed:', e));
+      },
+    };
   }
 
   /**
@@ -304,8 +366,12 @@ export class WorkoutAgentService {
  * Factory function to create a WorkoutAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param eventLogRepo - Optional EventLogRepository for logging validation failures
  * @returns A new WorkoutAgentService instance
  */
-export function createWorkoutAgentService(contextService: ContextService): WorkoutAgentService {
-  return new WorkoutAgentService(contextService);
+export function createWorkoutAgentService(
+  contextService: ContextService,
+  eventLogRepo?: EventLogRepository
+): WorkoutAgentService {
+  return new WorkoutAgentService(contextService, eventLogRepo);
 }

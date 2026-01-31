@@ -54,16 +54,15 @@ export class MicrocycleAgentService {
 
   /**
    * Get the message sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
+   * System prompt and user prompt fetched from DB
+   * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
       this.messageAgentPromise = createAgent({
         name: PROMPT_IDS.MICROCYCLE_MESSAGE,
-        userPrompt: (input: string) => {
-          const data = JSON.parse(input) as MicrocycleGenerationOutput;
-          return microcycleMessageUserPrompt(data);
-        },
+        // No userPrompt - DB user prompt provides static instructions
+        // Transform in sub-agent config provides formatted microcycle data
       }, { model: 'gpt-5-nano' });
     }
     return this.messageAgentPromise;
@@ -71,21 +70,15 @@ export class MicrocycleAgentService {
 
   /**
    * Get the structured sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
+   * System prompt and user prompt fetched from DB
+   * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> {
     if (!this.structuredAgentPromise) {
       this.structuredAgentPromise = createAgent({
         name: PROMPT_IDS.MICROCYCLE_STRUCTURED,
-        userPrompt: (input: string) => {
-          const data = JSON.parse(input) as MicrocycleGenerationOutput & { absoluteWeek?: number };
-          return structuredMicrocycleUserPrompt(
-            data.overview,
-            data.days,
-            data.absoluteWeek ?? 1,
-            data.isDeload
-          );
-        },
+        // No userPrompt - DB user prompt provides static instructions
+        // Transform in sub-agent config provides formatted microcycle data
         schema: MicrocycleStructureSchema,
       }, { model: 'gpt-5-nano', maxTokens: 32000 });
     }
@@ -136,25 +129,24 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Transform to inject absoluteWeek into the JSON for structured agent
-    const injectWeekNumber = (mainResult: unknown): string => {
-      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
-      try {
-        const parsed = JSON.parse(jsonString);
-        return JSON.stringify({ ...parsed, absoluteWeek });
-      } catch {
-        return jsonString;
-      }
-    };
-
     // Create main agent with context (prompts fetched from DB)
+    // Sub-agents use transform to format main agent output → sub-agent input
     const agent = await createAgent({
       name: PROMPT_IDS.MICROCYCLE_GENERATE,
       context,
       schema: MicrocycleGenerationOutputSchema,
       subAgents: [{
-        message: messageAgent,
-        structure: { agent: structuredAgent, transform: injectWeekNumber },
+        message: {
+          agent: messageAgent,
+          transform: (mainResult) => microcycleMessageUserPrompt(mainResult as MicrocycleGenerationOutput),
+        },
+        structure: {
+          agent: structuredAgent,
+          transform: (mainResult) => {
+            const data = mainResult as MicrocycleGenerationOutput;
+            return structuredMicrocycleUserPrompt(data.overview, data.days, absoluteWeek, data.isDeload);
+          },
+        },
       }],
     }, { model: 'gpt-5.1' });
 
@@ -258,25 +250,28 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Transform to inject absoluteWeek into the JSON for structured agent
-    const injectWeekNumber = (mainResult: unknown): string => {
-      const jsonString = typeof mainResult === 'string' ? mainResult : JSON.stringify(mainResult);
-      try {
-        const parsed = JSON.parse(jsonString);
-        return JSON.stringify({ ...parsed, absoluteWeek });
-      } catch {
-        return jsonString;
-      }
-    };
-
     // Prompts fetched from DB based on agent name
+    // Sub-agents use transform to format main agent output → sub-agent input
     const agent = await createAgent({
       name: PROMPT_IDS.MICROCYCLE_MODIFY,
       context,
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{
-        message: messageAgent,
-        structure: { agent: structuredAgent, transform: injectWeekNumber },
+        message: {
+          agent: messageAgent,
+          transform: (mainResult) => {
+            // ModifyMicrocycleOutput has same structure as MicrocycleGenerationOutput
+            const data = mainResult as MicrocycleGenerationOutput;
+            return microcycleMessageUserPrompt(data);
+          },
+        },
+        structure: {
+          agent: structuredAgent,
+          transform: (mainResult) => {
+            const data = mainResult as MicrocycleGenerationOutput;
+            return structuredMicrocycleUserPrompt(data.overview, data.days, absoluteWeek, data.isDeload);
+          },
+        },
       }],
     }, { model: 'gpt-5.1' });
 

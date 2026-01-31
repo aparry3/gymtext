@@ -148,13 +148,21 @@ export function ProgramTab({
           <RecentWorkoutsTable workouts={recentWorkouts} userId={userId} basePath={basePath} showAdminActions={showAdminActions} onWorkoutDeleted={fetchProgramData} />
         )}
         {recentWorkouts.length > 0 && (
-          <div className="text-center">
+          <div className="text-center flex justify-center gap-6">
             <Link
               href={basePath === '/me' ? '/me/workouts' : `${basePath}/${userId}/workouts`}
               className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
             >
               View all workouts →
             </Link>
+            {showAdminActions && (
+              <Link
+                href={`${basePath}/${userId}/microcycles`}
+                className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+              >
+                View microcycles →
+              </Link>
+            )}
           </div>
         )}
       </div>
