@@ -145,9 +145,6 @@ export function createWeeklyMessageService(
           console.log(`[WeeklyMessageService] User ${user.id} is entering a deload week (week ${nextWeekMicrocycle.absoluteWeek})`);
         }
 
-        const feedbackMessage = await messagingAgentService.generateWeeklyMessage(
-          user, isDeload, nextWeekMicrocycle.absoluteWeek
-        );
 
         const breakdownMessage = nextWeekMicrocycle.message;
         if (!breakdownMessage) {
@@ -156,13 +153,6 @@ export function createWeeklyMessageService(
         }
 
         const messageIds: string[] = [];
-
-        // Use messagingOrchestrator.sendImmediate instead of messageService.sendMessage
-        const feedbackResult = await messagingOrchestrator.sendImmediate(user, feedbackMessage);
-        if (feedbackResult.messageId) {
-          messageIds.push(feedbackResult.messageId);
-        }
-        console.log(`[WeeklyMessageService] Sent feedback message to user ${user.id}`);
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 

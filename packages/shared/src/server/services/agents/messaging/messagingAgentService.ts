@@ -11,30 +11,6 @@ import type { MicrocycleGenerationOutput } from '@/server/services/agents/schema
 // System Prompts
 // =============================================================================
 
-const WEEKLY_MESSAGE_SYSTEM_PROMPT = `You are a fitness coach sending a weekly check-in message via SMS.
-
-Your task is to generate a FEEDBACK MESSAGE asking how their workouts went this past week.
-
-MESSAGE REQUIREMENTS:
-- Warm, conversational greeting using their first name
-- Ask about their training progress this past week
-- Keep it encouraging and supportive
-- If next week is a deload week, acknowledge it positively (recovery is important!)
-- Keep it around 20-40 words total
-- SMS-friendly format
-
-Tone:
-- Supportive and motivating
-- Concise (SMS format)
-- Professional but friendly
-- Personal and caring
-
-Format:
-Return a JSON object with one field:
-{
-  "feedbackMessage": "..."
-}`;
-
 const PLAN_READY_SYSTEM_PROMPT = `
 You are a fitness coach sending a friendly "your plan is ready" message to a new client.
 
@@ -204,7 +180,6 @@ STRICT RULES
  */
 export interface MessagingAgentServiceInstance {
   generateWelcomeMessage(user: UserWithProfile): Promise<string>;
-  generateWeeklyMessage(user: UserWithProfile, isDeload: boolean, absoluteWeek: number): Promise<string>;
   generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]>;
   generatePlanMicrocycleCombinedMessage(fitnessPlan: string, weekOne: string, currentWeekday: DayOfWeek): Promise<string>;
   generateUpdatedMicrocycleMessage(modifiedMicrocycle: MicrocycleGenerationOutput, modifications: string, currentWeekday: DayOfWeek): Promise<string>;
@@ -238,33 +213,6 @@ Now, as your first workout sends, the bots cheer…then back to work…and we at
 Welcome to GymText.
 
 Text me anytime with questions about your workouts, your plan, or if you just need a little extra help!`;
-    },
-
-    async generateWeeklyMessage(user: UserWithProfile, isDeload: boolean, absoluteWeek: number): Promise<string> {
-      const model = initializeModel<{ feedbackMessage: string }>(WeeklyMessageSchema);
-      const firstName = user.name.split(' ')[0];
-
-      const userPrompt = `Generate a weekly feedback check-in message for the user.
-
-User Information:
-- Name: ${user.name}
-- First Name: ${firstName}
-- Week: ${absoluteWeek} of their program
-
-${isDeload ? `IMPORTANT: Next week is a DELOAD week - a planned recovery week with reduced intensity.
-Acknowledge this positively and remind them that recovery is part of the training process.` : 'This is a regular training week.'}
-
-Generate the feedback message now.`;
-
-      console.log(`[MessagingAgentService] Weekly message user prompt: ${userPrompt}`);
-
-      const prompt = [
-        { role: 'system' as const, content: WEEKLY_MESSAGE_SYSTEM_PROMPT },
-        { role: 'user' as const, content: userPrompt }
-      ];
-
-      const result = await model.invoke(prompt);
-      return result.feedbackMessage;
     },
 
     async generatePlanSummary(user: UserWithProfile, plan: FitnessPlan, previousMessages?: Message[]): Promise<string[]> {
