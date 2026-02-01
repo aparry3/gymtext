@@ -25,6 +25,22 @@ interface SchedulingResult {
   errors: Array<{ userId: string; error: string }>;
 }
 
+export interface TriggerOptions {
+  forceImmediate: boolean;
+}
+
+export interface TriggerResult {
+  success: boolean;
+  scheduled: boolean;
+  reason?: string;
+  inngestEventId?: string;
+}
+
+export interface EligibilityResult {
+  eligible: boolean;
+  reason: string;
+}
+
 // =============================================================================
 // Factory Pattern (Recommended)
 // =============================================================================
@@ -39,6 +55,8 @@ export interface DailyMessageServiceInstance {
   sendDailyMessage(user: UserWithProfile): Promise<MessageResult>;
   getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null>;
   generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null>;
+  triggerForUser(userId: string, options: TriggerOptions): Promise<TriggerResult>;
+  checkUserEligibility(userId: string): Promise<EligibilityResult>;
 }
 
 export interface DailyMessageServiceDeps {
@@ -190,6 +208,83 @@ export function createDailyMessageService(
 
     async generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null> {
       return trainingService.prepareWorkoutForDate(user, targetDate);
+    },
+
+    async checkUserEligibility(userId: string): Promise<EligibilityResult> {
+      try {
+        const user = await userService.getUser(userId);
+        if (!user) {
+          return { eligible: false, reason: 'User not found' };
+        }
+
+        // Get user's current local time
+        const userNow = now(user.timezone);
+        const localHour = userNow.hour;
+
+        // Check if current local time >= preferred send hour
+        if (localHour < user.preferredSendHour) {
+          return {
+            eligible: false,
+            reason: `Current local time (${localHour}:00) is before preferred send hour (${user.preferredSendHour}:00)`,
+          };
+        }
+
+        // Check if workout already exists for today
+        const todayStart = userNow.startOf('day').toJSDate();
+        const todayEnd = userNow.startOf('day').plus({ days: 1 }).toJSDate();
+        const userIdsWithWorkouts = await repos.workoutInstance.findUserIdsWithWorkoutsForUserDates([
+          { userId, startOfDay: todayStart, endOfDay: todayEnd },
+        ]);
+
+        if (userIdsWithWorkouts.has(userId)) {
+          return { eligible: false, reason: 'User already has a workout for today' };
+        }
+
+        return { eligible: true, reason: 'User is eligible for daily message' };
+      } catch (error) {
+        console.error(`[DailyMessageService] Error checking eligibility for user ${userId}:`, error);
+        return { eligible: false, reason: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    },
+
+    async triggerForUser(userId: string, options: TriggerOptions): Promise<TriggerResult> {
+      try {
+        const user = await userService.getUser(userId);
+        if (!user) {
+          return { success: false, scheduled: false, reason: 'User not found' };
+        }
+
+        // If not forcing immediate, check eligibility
+        if (!options.forceImmediate) {
+          const eligibility = await this.checkUserEligibility(userId);
+          if (!eligibility.eligible) {
+            return { success: true, scheduled: false, reason: eligibility.reason };
+          }
+        }
+
+        // Schedule the Inngest event
+        const targetDate = now(user.timezone).startOf('day').toISO();
+        const { ids } = await inngest.send({
+          name: 'workout/scheduled',
+          data: { userId, targetDate },
+        });
+
+        console.log(`[DailyMessageService] Triggered daily message for user ${userId}, event ID: ${ids[0]}`);
+
+        return {
+          success: true,
+          scheduled: true,
+          inngestEventId: ids[0],
+          reason: options.forceImmediate ? 'Force triggered' : 'Eligible and triggered',
+        };
+      } catch (error) {
+        console.error(`[DailyMessageService] Error triggering for user ${userId}:`, error);
+        return {
+          success: false,
+          scheduled: false,
+          reason: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     },
   };
 }

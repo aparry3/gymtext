@@ -8,6 +8,8 @@ import { UsersTable } from '@/components/admin/UsersTable'
 import { Pagination } from '@/components/ui/pagination'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { AdminUser, UserFilters, UserSort } from '@/components/admin/types'
 
 
@@ -25,6 +27,10 @@ function AdminUsersPageContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [sort, setSort] = useState<UserSort>({ field: 'createdAt', direction: 'desc' })
+  const [forceImmediate, setForceImmediate] = useState(false)
+  const [isTriggeringDaily, setIsTriggeringDaily] = useState(false)
+  const [isTriggeringWeekly, setIsTriggeringWeekly] = useState(false)
+  const [triggerResult, setTriggerResult] = useState<{ type: string; message: string } | null>(null)
 
   // Parse initial filters from search params
   const initialFilters: UserFilters = {
@@ -102,6 +108,41 @@ function AdminUsersPageContent() {
     fetchUsers(filters, currentPage, sort)
   }, [fetchUsers, filters, currentPage, sort])
 
+  const handleGlobalTrigger = useCallback(async (type: 'daily' | 'weekly') => {
+    const setLoading = type === 'daily' ? setIsTriggeringDaily : setIsTriggeringWeekly
+    setLoading(true)
+    setTriggerResult(null)
+
+    try {
+      const response = await fetch('/api/cron/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, forceImmediate }),
+      })
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to trigger')
+      }
+
+      setTriggerResult({
+        type: 'success',
+        message: `${type === 'daily' ? 'Daily' : 'Weekly'} cron triggered successfully${result.scheduled ? ` (${result.scheduled} users)` : ''}`,
+      })
+
+      console.log(`Global ${type} cron triggered:`, result)
+    } catch (err) {
+      console.error(`Failed to trigger global ${type}:`, err)
+      setTriggerResult({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to trigger',
+      })
+    } finally {
+      setLoading(false)
+      setTimeout(() => setTriggerResult(null), 5000)
+    }
+  }, [forceImmediate])
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="space-y-6">
@@ -111,7 +152,46 @@ function AdminUsersPageContent() {
           subtitle={`${stats.totalUsers} total users`}
           onRefresh={handleRefresh}
           isLoading={isLoading}
+          actions={
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Switch checked={forceImmediate} onCheckedChange={setForceImmediate} />
+                <span className="hidden md:inline">Force all</span>
+              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleGlobalTrigger('daily')}
+                disabled={isTriggeringDaily || isTriggeringWeekly}
+                className="gap-2"
+              >
+                <SendIcon className={`h-4 w-4 ${isTriggeringDaily ? 'animate-pulse' : ''}`} />
+                <span className="hidden sm:inline">{isTriggeringDaily ? 'Triggering...' : 'Daily Cron'}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleGlobalTrigger('weekly')}
+                disabled={isTriggeringDaily || isTriggeringWeekly}
+                className="gap-2"
+              >
+                <CalendarIcon className={`h-4 w-4 ${isTriggeringWeekly ? 'animate-pulse' : ''}`} />
+                <span className="hidden sm:inline">{isTriggeringWeekly ? 'Triggering...' : 'Weekly Cron'}</span>
+              </Button>
+            </div>
+          }
         />
+
+        {/* Trigger Result Message */}
+        {triggerResult && (
+          <div className={`p-3 rounded-lg text-sm ${
+            triggerResult.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+            triggerResult.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+            'bg-blue-50 text-blue-800 border border-blue-200'
+          }`}>
+            {triggerResult.message}
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -256,6 +336,18 @@ const UserIcon = ({ className }: { className?: string }) => (
 const ActivityIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+  </svg>
+)
+
+const SendIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+  </svg>
+)
+
+const CalendarIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
   </svg>
 )
 
