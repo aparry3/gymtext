@@ -2,12 +2,30 @@ import { NextResponse } from 'next/server';
 import { getProductionSecrets } from '@/lib/secrets';
 import { getProductionConfig } from '@/lib/config';
 
+interface TriggerRequest {
+  type?: 'daily' | 'weekly';
+  forceImmediate?: boolean;
+}
+
 /**
- * Proxy endpoint to trigger the web app's daily message cron
+ * Proxy endpoint to trigger the web app's daily or weekly message cron
  * This allows admins to manually trigger the cron job from the admin dashboard
+ *
+ * @param type - 'daily' or 'weekly' (defaults to 'daily')
+ * @param forceImmediate - If true, triggers for ALL users regardless of time settings
  */
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    let body: TriggerRequest = {};
+    try {
+      body = await request.json();
+    } catch {
+      // Empty body is fine, use defaults
+    }
+
+    const type = body.type ?? 'daily';
+    const forceImmediate = body.forceImmediate ?? false;
+
     const secrets = getProductionSecrets();
     const config = getProductionConfig();
 
@@ -36,10 +54,18 @@ export async function POST() {
       : '***too-short***';
     console.log('[ADMIN CRON] Using CRON_SECRET:', obfuscated, 'length:', cronSecret.length);
 
-    const cronUrl = `${webAppUrl}/api/cron/daily-messages`;
-    console.log('[ADMIN CRON] Triggering daily messages cron:', cronUrl);
+    // Determine the endpoint based on type
+    const endpoint = type === 'weekly' ? 'weekly-messages' : 'daily-messages';
+    const cronUrl = `${webAppUrl}/api/cron/${endpoint}`;
 
-    const response = await fetch(cronUrl, {
+    // Add forceImmediate as query param if true
+    const urlWithParams = forceImmediate
+      ? `${cronUrl}?forceImmediate=true`
+      : cronUrl;
+
+    console.log(`[ADMIN CRON] Triggering ${type} messages cron:`, urlWithParams);
+
+    const response = await fetch(urlWithParams, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${cronSecret}`,
@@ -56,9 +82,11 @@ export async function POST() {
       );
     }
 
-    console.log('[ADMIN CRON] Cron triggered successfully:', result);
+    console.log(`[ADMIN CRON] ${type} cron triggered successfully:`, result);
     return NextResponse.json({
       success: true,
+      type,
+      forceImmediate,
       ...result,
     });
 

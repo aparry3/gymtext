@@ -27,17 +27,16 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // For API routes, inject the environment header
-  if (pathname.startsWith('/api/')) {
-    const response = NextResponse.next();
+  // Clone request headers and add environment header
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-gymtext-env', envMode);
 
-    // Set the environment header for downstream context creation
-    response.headers.set('x-gymtext-env', envMode);
-
-    return response;
-  }
-
-  return NextResponse.next();
+  // Pass modified request headers to the next handler
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

@@ -9,6 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { ProgramTab } from '@/components/pages/admin/ProgramTab'
 import { ChainToolsTab } from '@/components/pages/admin/ChainToolsTab'
 import { formatRelative } from '@/shared/utils/date'
@@ -40,7 +47,10 @@ export default function AdminUserDetailPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('none')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isSendingWorkout, setIsSendingWorkout] = useState(false)
+  const [forceImmediate, setForceImmediate] = useState(true)
+  const [isTriggeringDaily, setIsTriggeringDaily] = useState(false)
+  const [isTriggeringWeekly, setIsTriggeringWeekly] = useState(false)
+  const [triggerResult, setTriggerResult] = useState<{ type: string; message: string } | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [phoneConfirmation, setPhoneConfirmation] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -96,29 +106,48 @@ export default function AdminUserDetailPage() {
     }
   }, [user])
 
-  const handleTriggerDailyCron = useCallback(async () => {
-    setIsSendingWorkout(true)
-    try {
-      const response = await fetch('/api/cron/trigger', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+  const handleTriggerCron = useCallback(async (type: 'daily' | 'weekly') => {
+    const setLoading = type === 'daily' ? setIsTriggeringDaily : setIsTriggeringWeekly
+    setLoading(true)
+    setTriggerResult(null)
 
+    try {
+      const response = await fetch(`/api/users/${id}/cron/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forceImmediate }),
+      })
       const result = await response.json()
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to trigger daily cron')
+      if (!result.success) {
+        throw new Error(result.reason || 'Failed to trigger')
       }
 
-      console.log('Daily cron triggered:', result)
+      if (result.scheduled) {
+        setTriggerResult({
+          type: 'success',
+          message: `${type === 'daily' ? 'Daily workout' : 'Weekly check-in'} triggered successfully`,
+        })
+      } else {
+        setTriggerResult({
+          type: 'info',
+          message: result.reason || 'Not scheduled',
+        })
+      }
+
+      console.log(`${type} cron triggered:`, result)
     } catch (err) {
-      console.error('Failed to trigger daily cron:', err)
+      console.error(`Failed to trigger ${type}:`, err)
+      setTriggerResult({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to trigger',
+      })
     } finally {
-      setIsSendingWorkout(false)
+      setLoading(false)
+      // Clear the result after 5 seconds
+      setTimeout(() => setTriggerResult(null), 5000)
     }
-  }, [])
+  }, [id, forceImmediate])
 
   const handleDeleteUser = useCallback(async () => {
     if (!user) return
@@ -291,15 +320,27 @@ export default function AdminUserDetailPage() {
                 <EyeIcon className="h-4 w-4" />
                 View as User
               </Button>
-              <Button
-                size="sm"
-                onClick={handleTriggerDailyCron}
-                disabled={isSendingWorkout}
-                className="gap-2"
-              >
-                <Send className={`h-4 w-4 ${isSendingWorkout ? 'animate-pulse' : ''}`} />
-                {isSendingWorkout ? 'Triggering...' : 'Trigger Daily Cron'}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" disabled={isTriggeringDaily || isTriggeringWeekly} className="gap-2">
+                    <Send className={`h-4 w-4 ${isTriggeringDaily || isTriggeringWeekly ? 'animate-pulse' : ''}`} />
+                    {isTriggeringDaily ? 'Triggering...' : isTriggeringWeekly ? 'Triggering...' : 'Trigger Message'}
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleTriggerCron('daily')}>
+                    Daily Workout
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTriggerCron('weekly')}>
+                    Weekly Check-in
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Switch checked={forceImmediate} onCheckedChange={setForceImmediate} />
+                <span className="hidden md:inline">Force Send</span>
+              </label>
               {subscriptionStatus === 'active' || subscriptionStatus === 'cancel_pending' ? (
                 <Button
                   variant="outline"
@@ -332,6 +373,17 @@ export default function AdminUserDetailPage() {
               </Button>
             </div>
           </div>
+
+          {/* Trigger Result Message */}
+          {triggerResult && (
+            <div className={`mt-4 p-3 rounded-lg text-sm ${
+              triggerResult.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+              triggerResult.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+              'bg-blue-50 text-blue-800 border border-blue-200'
+            }`}>
+              {triggerResult.message}
+            </div>
+          )}
         </Card>
 
         {/* Quick Facts */}
@@ -736,5 +788,11 @@ const Trash2 = ({ className }: { className?: string }) => (
 const UserX = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+  </svg>
+)
+
+const ChevronDown = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
   </svg>
 )

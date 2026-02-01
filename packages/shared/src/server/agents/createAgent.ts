@@ -89,6 +89,7 @@ export async function createAgent<
     subAgents = [],
     validate,
     maxRetries = 1,
+    loggingContext,
   } = definition;
 
   // Fetch prompts from database if systemPrompt not provided directly
@@ -253,6 +254,9 @@ export async function createAgent<
     const previousAttempts: Array<{ output: unknown; errors: string[] }> = [];
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      // Track attempt timing for logging
+      const attemptStartTime = Date.now();
+
       // Build current retry context (merge with any parent context)
       const currentContext: RetryContext | undefined = previousAttempts.length > 0
         ? { attempt, previousAttempts }
@@ -265,15 +269,42 @@ export async function createAgent<
         return result;
       }
 
+      // Calculate duration for this attempt
+      const durationMs = Date.now() - attemptStartTime;
+      const errors = validation.errors ?? ['Validation failed (no specific errors provided)'];
+
       // Validation failed - store for retry feedback
       previousAttempts.push({
         output: validation.failedOutput ?? result,
-        errors: validation.errors ?? ['Validation failed (no specific errors provided)'],
+        errors,
       });
 
       console.log(`[${name}] Validation failed, attempt ${attempt}/${maxRetries}`);
 
+      // Fire-and-forget: log validation failure
+      if (loggingContext?.onValidationFailure) {
+        try {
+          loggingContext.onValidationFailure({ attempt, errors, durationMs });
+        } catch (e) {
+          console.error(`[${name}] Failed to log validation failure:`, e);
+        }
+      }
+
       if (attempt === maxRetries) {
+        // Fire-and-forget: log chain failure (all retries exhausted)
+        if (loggingContext?.onChainFailure) {
+          try {
+            loggingContext.onChainFailure({
+              attempt,
+              errors,
+              durationMs,
+              totalAttempts: maxRetries,
+            });
+          } catch (e) {
+            console.error(`[${name}] Failed to log chain failure:`, e);
+          }
+        }
+
         // Log final errors before throwing
         console.error(`[${name}] Validation failed after ${maxRetries} attempts. Final errors:`,
           validation.errors);

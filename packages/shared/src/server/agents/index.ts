@@ -72,6 +72,11 @@ export type {
   Message,
   ToolCall,
   ToolExecutionResult,
+
+  // Logging types
+  AgentLoggingContext,
+  ValidationFailureEntry,
+  ChainFailureEntry,
 } from './types';
 
 // ============================================

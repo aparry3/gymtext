@@ -16,3 +16,6 @@ export * from './microcycles';
 
 // Workouts agent schemas (ModifyWorkoutGenerationOutputSchema)
 export * from './workouts';
+
+// Messaging agent schemas (PlanSummarySchema)
+export * from './messaging';

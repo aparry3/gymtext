@@ -22,6 +22,22 @@ interface SchedulingResult {
   errors: Array<{ userId: string; error: string }>;
 }
 
+export interface TriggerOptions {
+  forceImmediate: boolean;
+}
+
+export interface TriggerResult {
+  success: boolean;
+  scheduled: boolean;
+  reason?: string;
+  inngestEventId?: string;
+}
+
+export interface EligibilityResult {
+  eligible: boolean;
+  reason: string;
+}
+
 // =============================================================================
 // Factory Pattern (Recommended)
 // =============================================================================
@@ -34,6 +50,8 @@ interface SchedulingResult {
 export interface WeeklyMessageServiceInstance {
   scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult>;
   sendWeeklyMessage(user: UserWithProfile): Promise<MessageResult>;
+  triggerForUser(userId: string, options: TriggerOptions): Promise<TriggerResult>;
+  checkUserEligibility(userId: string): Promise<EligibilityResult>;
 }
 
 export interface WeeklyMessageServiceDeps {
@@ -145,9 +163,6 @@ export function createWeeklyMessageService(
           console.log(`[WeeklyMessageService] User ${user.id} is entering a deload week (week ${nextWeekMicrocycle.absoluteWeek})`);
         }
 
-        const feedbackMessage = await messagingAgentService.generateWeeklyMessage(
-          user, isDeload, nextWeekMicrocycle.absoluteWeek
-        );
 
         const breakdownMessage = nextWeekMicrocycle.message;
         if (!breakdownMessage) {
@@ -156,13 +171,6 @@ export function createWeeklyMessageService(
         }
 
         const messageIds: string[] = [];
-
-        // Use messagingOrchestrator.sendImmediate instead of messageService.sendMessage
-        const feedbackResult = await messagingOrchestrator.sendImmediate(user, feedbackMessage);
-        if (feedbackResult.messageId) {
-          messageIds.push(feedbackResult.messageId);
-        }
-        console.log(`[WeeklyMessageService] Sent feedback message to user ${user.id}`);
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -177,6 +185,82 @@ export function createWeeklyMessageService(
       } catch (error) {
         console.error(`[WeeklyMessageService] Error sending weekly message to user ${user.id}:`, error);
         return { success: false, userId: user.id, error: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    },
+
+    async checkUserEligibility(userId: string): Promise<EligibilityResult> {
+      try {
+        const user = await userService.getUser(userId);
+        if (!user) {
+          return { eligible: false, reason: 'User not found' };
+        }
+
+        // Get user's current local time
+        const userNow = now(user.timezone);
+        const localHour = userNow.hour;
+        const dayOfWeek = userNow.weekday; // 1 = Monday, 7 = Sunday
+
+        // Weekly messages are sent at 5pm on Sundays
+        const targetHour = 17; // 5pm
+        const targetDay = 7; // Sunday
+
+        if (dayOfWeek !== targetDay) {
+          return {
+            eligible: false,
+            reason: `Today is not Sunday (current day: ${userNow.weekdayLong})`,
+          };
+        }
+
+        if (localHour < targetHour) {
+          return {
+            eligible: false,
+            reason: `Current local time (${localHour}:00) is before target send hour (${targetHour}:00)`,
+          };
+        }
+
+        return { eligible: true, reason: 'User is eligible for weekly message' };
+      } catch (error) {
+        console.error(`[WeeklyMessageService] Error checking eligibility for user ${userId}:`, error);
+        return { eligible: false, reason: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    },
+
+    async triggerForUser(userId: string, options: TriggerOptions): Promise<TriggerResult> {
+      try {
+        const user = await userService.getUser(userId);
+        if (!user) {
+          return { success: false, scheduled: false, reason: 'User not found' };
+        }
+
+        // If not forcing immediate, check eligibility
+        if (!options.forceImmediate) {
+          const eligibility = await this.checkUserEligibility(userId);
+          if (!eligibility.eligible) {
+            return { success: true, scheduled: false, reason: eligibility.reason };
+          }
+        }
+
+        // Schedule the Inngest event
+        const { ids } = await inngest.send({
+          name: 'weekly/scheduled',
+          data: { userId },
+        });
+
+        console.log(`[WeeklyMessageService] Triggered weekly message for user ${userId}, event ID: ${ids[0]}`);
+
+        return {
+          success: true,
+          scheduled: true,
+          inngestEventId: ids[0],
+          reason: options.forceImmediate ? 'Force triggered' : 'Eligible and triggered',
+        };
+      } catch (error) {
+        console.error(`[WeeklyMessageService] Error triggering for user ${userId}:`, error);
+        return {
+          success: false,
+          scheduled: false,
+          reason: error instanceof Error ? error.message : 'Unknown error',
+        };
       }
     },
   };

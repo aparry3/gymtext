@@ -194,6 +194,12 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
    * Default: 1 (no retry - single attempt only)
    */
   maxRetries?: number;
+
+  /**
+   * Optional logging context for tracking validation/chain failures
+   * Callbacks are fire-and-forget (non-blocking)
+   */
+  loggingContext?: AgentLoggingContext;
 }
 
 /**
@@ -268,4 +274,48 @@ export interface ToolExecutionResult {
   toolType?: 'query' | 'action';
   response: string;
   messages?: string[];
+}
+
+// ============================================
+// Agent Logging Types
+// ============================================
+
+/**
+ * Validation failure entry for logging
+ */
+export interface ValidationFailureEntry {
+  attempt: number;
+  errors: string[];
+  durationMs: number;
+}
+
+/**
+ * Chain failure entry for logging (all retries exhausted)
+ */
+export interface ChainFailureEntry {
+  attempt: number;
+  errors: string[];
+  durationMs: number;
+  totalAttempts: number;
+}
+
+/**
+ * Context for agent logging - tracks validation failures and chain failures
+ *
+ * This allows services to inject logging callbacks into agents without
+ * the agent needing to know about the logging infrastructure.
+ */
+export interface AgentLoggingContext {
+  /** User ID for correlation */
+  userId: string;
+  /** Unique ID to correlate related events (e.g., retry attempts) */
+  chainId: string;
+  /** Entity identifier (e.g., 'workout:structured') */
+  entityId: string;
+  /** Model being used */
+  model: string;
+  /** Called on each validation failure (fire-and-forget) */
+  onValidationFailure?: (entry: ValidationFailureEntry) => void;
+  /** Called when all retries are exhausted (fire-and-forget) */
+  onChainFailure?: (entry: ChainFailureEntry) => void;
 }

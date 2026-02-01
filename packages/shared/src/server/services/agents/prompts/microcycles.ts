@@ -6,55 +6,38 @@
  * Zod schemas are in schemas/microcycles.ts.
  */
 
-import { DAY_NAMES } from '@/shared/utils/date';
+import {
+  formatMessageAgentInput,
+  formatStructuredAgentInput,
+  type MicrocyclePromptInput
+} from '@/shared/utils/microcyclePrompts';
 import type { MicrocycleGenerationOutput } from '../schemas/microcycles';
+
+// Re-export types for backwards compatibility
+export type { MicrocyclePromptInput };
 
 // =============================================================================
 // Message Template Functions
 // =============================================================================
 
-export const microcycleMessageUserPrompt = (microcycle: MicrocycleGenerationOutput) => {
-  const daysFormatted = microcycle.days
-    .map((day, index) => `${DAY_NAMES[index]}:\n${day}`)
-    .join('\n\n');
-
-  return `
-Generate a weekly breakdown SMS message based on the following structured microcycle pattern.
-
-Focus on summarizing the week's training theme and providing a clear, easy-to-read breakdown of training days and rest days for the client.
-
-WEEKLY OVERVIEW:
-${microcycle.overview}
-
-IS DELOAD WEEK: ${microcycle.isDeload}
-
-DAILY BREAKDOWNS:
-
-${daysFormatted}
-
-Output only the message text (no JSON wrapper) as specified in your system instructions.
-`.trim();
+/**
+ * Format microcycle for message agent
+ * Wraps the shared formatMessageAgentInput to accept MicrocycleGenerationOutput
+ */
+export const microcycleMessageUserPrompt = (microcycle: MicrocycleGenerationOutput): string => {
+  return formatMessageAgentInput({
+    overview: microcycle.overview,
+    days: microcycle.days,
+    isDeload: microcycle.isDeload
+  });
 };
 
 // =============================================================================
 // Structured Template Functions
 // =============================================================================
 
-export const structuredMicrocycleUserPrompt = (
-  overview: string,
-  days: string[],
-  absoluteWeek: number,
-  isDeload: boolean
-): string => `Parse the following microcycle into structured format:
-
-Week Number: ${absoluteWeek}
-Is Deload: ${isDeload}
-
-Weekly Overview:
-${overview}
-
-Day Overviews:
-${days.map((day, i) => {
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  return `${dayNames[i]}: ${day}`;
-}).join('\n\n')}`;
+/**
+ * Format microcycle for structured parsing agent
+ * Re-exports the shared function for backwards compatibility
+ */
+export const structuredMicrocycleUserPrompt = formatStructuredAgentInput;

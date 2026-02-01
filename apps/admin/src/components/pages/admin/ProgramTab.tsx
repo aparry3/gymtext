@@ -28,6 +28,16 @@ interface WorkoutInstance {
   goal: string | null
 }
 
+interface Microcycle {
+  id: string
+  absoluteWeek: number
+  description: string | null
+  isDeload: boolean
+  isActive: boolean
+  startDate: Date
+  endDate: Date
+}
+
 interface ProgramTabProps {
   userId: string
   basePath?: string
@@ -45,6 +55,7 @@ export function ProgramTab({
 }: ProgramTabProps) {
   const [fitnessPlan, setFitnessPlan] = useState<FitnessPlan | null>(null)
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutInstance[]>([])
+  const [recentMicrocycles, setRecentMicrocycles] = useState<Microcycle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,9 +64,10 @@ export function ProgramTab({
     setError(null)
 
     try {
-      const [planResponse, workoutsResponse] = await Promise.all([
+      const [planResponse, workoutsResponse, microcyclesResponse] = await Promise.all([
         fetch(`/api/users/${userId}/fitness-plan`),
-        fetch(`/api/users/${userId}/workouts?limit=5`)
+        fetch(`/api/users/${userId}/workouts?limit=5`),
+        fetch(`/api/users/${userId}/microcycles?limit=5`)
       ])
 
       // Handle fitness plan response - 404 is expected during onboarding
@@ -82,6 +94,22 @@ export function ProgramTab({
         }
       } else if (workoutsResponse.status !== 404) {
         throw new Error('Failed to fetch workouts')
+      }
+
+      // Handle microcycles response - empty results are expected during onboarding
+      if (microcyclesResponse.ok) {
+        const microcyclesResult = await microcyclesResponse.json()
+        if (microcyclesResult.success) {
+          // Parse date strings to Date objects when loading
+          const microcycles = microcyclesResult.data.map((m: Microcycle) => ({
+            ...m,
+            startDate: parseDate(m.startDate),
+            endDate: parseDate(m.endDate)
+          }))
+          setRecentMicrocycles(microcycles)
+        }
+      } else if (microcyclesResponse.status !== 404) {
+        throw new Error('Failed to fetch microcycles')
       }
     } catch (err) {
       setError('Failed to load program data')
@@ -158,6 +186,24 @@ export function ProgramTab({
           </div>
         )}
       </div>
+
+      {/* Recent Microcycles - Admin only */}
+      {showAdminActions && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Recent Microcycles</h3>
+          <RecentMicrocyclesTable microcycles={recentMicrocycles} userId={userId} basePath={basePath} />
+          {recentMicrocycles.length > 0 && (
+            <div className="text-center">
+              <Link
+                href={`${basePath}/${userId}/microcycles`}
+                className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+              >
+                View all microcycles →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -349,6 +395,80 @@ function RecentWorkoutsTable({ workouts, userId, basePath, showAdminActions, onW
                       </Button>
                     </td>
                   )}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  )
+}
+
+interface RecentMicrocyclesTableProps {
+  microcycles: Microcycle[]
+  userId: string
+  basePath: string
+}
+
+function RecentMicrocyclesTable({ microcycles, userId, basePath }: RecentMicrocyclesTableProps) {
+  const router = useRouter()
+
+  if (microcycles.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-muted-foreground">No microcycles found</p>
+      </Card>
+    )
+  }
+
+  // Helper to check if microcycle is current week
+  const isCurrentWeek = (startDate: Date, endDate: Date) => {
+    const now = new Date()
+    return now >= startDate && now <= endDate
+  }
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="border-b bg-muted/50">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-medium">Week</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Date Range</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {microcycles.map((microcycle) => {
+              const isCurrent = isCurrentWeek(microcycle.startDate, microcycle.endDate)
+              return (
+                <tr
+                  key={microcycle.id}
+                  onClick={() => router.push(`${basePath}/${userId}/microcycles/${microcycle.id}`)}
+                  className={`hover:bg-muted/30 cursor-pointer ${isCurrent ? 'bg-primary/5 ring-2 ring-primary ring-inset' : ''}`}
+                >
+                  <td className={`px-4 py-3 text-sm ${isCurrent ? 'font-semibold' : ''}`}>
+                    Week {microcycle.absoluteWeek}
+                    {isCurrent && <span className="ml-2 text-xs text-primary">(Current)</span>}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {formatDate(microcycle.startDate)} - {formatDate(microcycle.endDate)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-48 truncate">
+                    {microcycle.description || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex gap-2">
+                      {microcycle.isDeload && (
+                        <Badge variant="secondary">Deload</Badge>
+                      )}
+                      {microcycle.isActive && (
+                        <Badge variant={isCurrent ? "default" : "outline"}>Active</Badge>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               )
             })}
