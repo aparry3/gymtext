@@ -38,6 +38,8 @@ export interface ResolutionOptions {
   learnAlias?: boolean;
   /** Source for learned alias (default: inferred from method) */
   aliasSource?: string;
+  /** Min confidence to learn alias (default: 0.7) */
+  minLearnConfidence?: number;
   /** Min fuzzy score (default: 0.3) */
   fuzzyThreshold?: number;
   /** Max results for search (default: 10) */
