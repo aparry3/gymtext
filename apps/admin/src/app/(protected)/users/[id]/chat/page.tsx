@@ -21,6 +21,7 @@ interface Message {
   timestamp: string
   from: string
   to: string
+  mediaUrls?: string[]
 }
 
 export default function AdminChatPage() {
@@ -174,6 +175,7 @@ export default function AdminChatPage() {
             timestamp: data.message.timestamp,
             from: data.message.from,
             to: data.message.to,
+            mediaUrls: data.message.mediaUrls,
           }
 
           setMessages(prev => {
@@ -415,6 +417,18 @@ function MessageBubble({ message }: MessageBubbleProps) {
             : 'bg-white border border-gray-200 text-gray-900 rounded-bl-sm'
         }`}
       >
+        {message.mediaUrls && message.mediaUrls.length > 0 && (
+          <div className="mb-2 space-y-2">
+            {message.mediaUrls.map((url, index) => (
+              <img
+                key={index}
+                src={url}
+                alt={`Attachment ${index + 1}`}
+                className="max-w-full rounded-lg"
+              />
+            ))}
+          </div>
+        )}
         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
         <p
           className={`text-xs mt-1 ${

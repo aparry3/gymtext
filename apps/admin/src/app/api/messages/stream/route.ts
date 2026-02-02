@@ -48,6 +48,7 @@ export async function GET(request: NextRequest): Promise<Response> {
             from: message.from,
             content: message.content,
             timestamp: message.timestamp,
+            mediaUrls: message.mediaUrls,
           },
         };
 

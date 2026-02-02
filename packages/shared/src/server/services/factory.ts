@@ -346,6 +346,7 @@ export function createServices(
     fitnessPlan,
     messagingAgent,
     enrollment,
+    dayConfig,
   });
 
   const onboarding = createOnboardingService({
