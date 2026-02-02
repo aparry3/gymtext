@@ -111,5 +111,13 @@ export type {
 } from './blogPost';
 export { BlogPostModel } from './blogPost';
 
+// Organization types
+export type {
+  Organization, NewOrganization, OrganizationUpdate,
+  OrganizationMember, NewOrganizationMember, OrganizationMemberUpdate,
+  OrganizationRole, OrganizationMemberWithOwner, OrganizationWithStats
+} from './organization';
+export { OrganizationModel, OrganizationMemberModel } from './organization';
+
 // Re-export database types from _types
 export * from './_types';

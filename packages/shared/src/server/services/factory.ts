@@ -51,6 +51,7 @@ import { createChatService, type ChatServiceInstance } from './orchestration/cha
 import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
 import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
 import { createBlogService, type BlogServiceInstance } from './domain/blog/blogService';
+import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 
 // Agent services
 import {
@@ -146,6 +147,9 @@ export interface ServiceContainer {
 
   // Blog
   blog: BlogServiceInstance;
+
+  // Organization
+  organization: OrganizationServiceInstance;
 }
 
 /**
@@ -197,6 +201,9 @@ export function createServices(
 
   // Blog (repos-only)
   const blog = createBlogService(repos);
+
+  // Organization (repos-only)
+  const organization = createOrganizationService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -495,6 +502,9 @@ export function createServices(
 
     // Blog
     blog,
+
+    // Organization
+    organization,
   };
 }
 
@@ -583,4 +593,7 @@ export type {
 
   // Blog
   BlogServiceInstance,
+
+  // Organization
+  OrganizationServiceInstance,
 };

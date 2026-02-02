@@ -15,6 +15,8 @@ export type BlogPostStatus = 'draft' | 'published' | 'archived';
 export interface BlogPost {
   id: string;
   ownerId: string;
+  /** Optional organization for public attribution (displays as "By [Organization]" when set) */
+  organizationId: string | null;
   slug: string;
   title: string;
   description: string | null;
@@ -75,6 +77,7 @@ export class BlogPostModel {
     return {
       id: row.id,
       ownerId: row.ownerId,
+      organizationId: row.organizationId ?? null,
       slug: row.slug,
       title: row.title,
       description: row.description,

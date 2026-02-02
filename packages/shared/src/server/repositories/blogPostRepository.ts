@@ -62,6 +62,7 @@ export class BlogPostRepository extends BaseRepository {
       .select([
         'blogPosts.id',
         'blogPosts.ownerId',
+        'blogPosts.organizationId',
         'blogPosts.slug',
         'blogPosts.title',
         'blogPosts.description',

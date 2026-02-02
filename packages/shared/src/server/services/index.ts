@@ -156,3 +156,11 @@ export type { ProgramAgentServiceInstance, ProgramParseResult } from './agents/p
 // Blog agent service
 export { createBlogMetadataAgentService } from './agents/blog';
 export type { BlogMetadataAgentServiceInstance, BlogMetadataResult } from './agents/blog';
+
+// Organization service
+export { createOrganizationService } from './domain/organization/organizationService';
+export type {
+  OrganizationServiceInstance,
+  CreateOrganizationInput,
+  UpdateOrganizationInput,
+} from './domain/organization/organizationService';
