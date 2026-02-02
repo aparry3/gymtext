@@ -84,7 +84,15 @@ export function createProgressService(
       let microcycle = await ms.getMicrocycleByDate(plan.legacyClientId, targetDate);
 
       if (!microcycle) {
-        microcycle = await ms.getMicrocycleByAbsoluteWeek(plan.legacyClientId, absoluteWeek);
+        const candidate = await ms.getMicrocycleByAbsoluteWeek(plan.legacyClientId, absoluteWeek);
+        // Validate that the candidate microcycle belongs to the current plan's date range.
+        // A microcycle is valid if its start date is on or after the plan's start week.
+        // This prevents old microcycles from previous plans being reused for new plans.
+        if (candidate && new Date(candidate.startDate) >= planStart) {
+          microcycle = candidate;
+        }
+        // If candidate is invalid (from old plan), microcycle stays null
+        // and trainingService.prepareMicrocycleForDate() will create a new one
       }
 
       const dayOfWeek = getWeekday(targetDate, timezone);
