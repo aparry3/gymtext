@@ -19,3 +19,6 @@ export * from './workouts';
 
 // Messaging agent schemas (PlanSummarySchema)
 export * from './messaging';
+
+// Blog agent schemas (BlogMetadataSchema)
+export * from './blog';

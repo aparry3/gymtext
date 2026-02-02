@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminProgram, AdminEnrollment, OwnerType, EnrollmentSort } from '@/components/admin/types'
 import { EnrollmentsTable } from '@/components/admin/EnrollmentsTable'
 import { Card } from '@/components/ui/card'
@@ -38,6 +39,7 @@ interface ProgramDetail extends AdminProgram {
 export default function ProgramDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { mode } = useEnvironment()
   const [program, setProgram] = useState<ProgramDetail | null>(null)
   const [enrollments, setEnrollments] = useState<AdminEnrollment[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -86,7 +88,7 @@ export default function ProgramDetailPage() {
     if (id) {
       fetchProgram(id as string)
     }
-  }, [id, fetchProgram])
+  }, [id, fetchProgram, mode])
 
   const handleSave = async () => {
     if (!program) return

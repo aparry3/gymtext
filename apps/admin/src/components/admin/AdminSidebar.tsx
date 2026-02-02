@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   LogOut,
   Building2,
+  Landmark,
   ClipboardList,
   Dumbbell,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+  { href: '/organizations', label: 'Organizations', icon: Landmark },
   { href: '/programs', label: 'Programs', icon: ClipboardList },
   { href: '/exercises', label: 'Exercises', icon: Dumbbell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },

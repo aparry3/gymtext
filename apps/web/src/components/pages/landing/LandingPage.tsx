@@ -86,6 +86,12 @@ export function LandingPage() {
               Demo
             </button>
             <Link
+              href="/blog"
+              className={`transition-colors ${isLight && isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
+            >
+              Blog
+            </Link>
+            <Link
               href="/start"
               className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-5 py-2 rounded-full font-semibold transition-all"
             >
@@ -133,6 +139,15 @@ export function LandingPage() {
             >
               Demo
             </button>
+            <Link
+              href="/blog"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-lg text-left ${
+                isLight ? 'text-gray-600 hover:text-gray-900' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              Blog
+            </Link>
             <Link
               href="/start"
               className="bg-[#1B81FF] text-white px-6 py-4 rounded-xl font-bold text-center w-full"

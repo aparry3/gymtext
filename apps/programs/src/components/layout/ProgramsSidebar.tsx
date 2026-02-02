@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ProgramOwner } from '@gymtext/shared/server';
 
@@ -15,6 +15,7 @@ interface ProgramsSidebarProps {
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/programs', label: 'Programs', icon: FileText },
+  { href: '/blog', label: 'Blog', icon: Newspaper },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -50,6 +50,8 @@ import { createModificationService, type ModificationServiceInstance } from './o
 import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
 import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
 import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
+import { createBlogService, type BlogServiceInstance } from './domain/blog/blogService';
+import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 
 // Agent services
 import {
@@ -142,6 +144,12 @@ export interface ServiceContainer {
 
   // Exercise metrics (workout tracking)
   exerciseMetrics: ExerciseMetricsServiceInstance;
+
+  // Blog
+  blog: BlogServiceInstance;
+
+  // Organization
+  organization: OrganizationServiceInstance;
 }
 
 /**
@@ -190,6 +198,12 @@ export function createServices(
 
   // Exercise metrics (repos-only)
   const exerciseMetrics = createExerciseMetricsService(repos);
+
+  // Blog (repos-only)
+  const blog = createBlogService(repos);
+
+  // Organization (repos-only)
+  const organization = createOrganizationService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -485,6 +499,12 @@ export function createServices(
 
     // Exercise metrics
     exerciseMetrics,
+
+    // Blog
+    blog,
+
+    // Organization
+    organization,
   };
 }
 
@@ -570,4 +590,10 @@ export type {
 
   // Exercise metrics
   ExerciseMetricsServiceInstance,
+
+  // Blog
+  BlogServiceInstance,
+
+  // Organization
+  OrganizationServiceInstance,
 };

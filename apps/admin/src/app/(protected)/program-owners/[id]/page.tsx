@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminProgramOwner, AdminProgramOwnerDetailResponse } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ interface ImageUploadState {
 export default function ProgramOwnerDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { mode } = useEnvironment()
   const [owner, setOwner] = useState<OwnerDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -119,7 +121,7 @@ export default function ProgramOwnerDetailPage() {
     if (id) {
       fetchOwner(id as string)
     }
-  }, [id, fetchOwner])
+  }, [id, fetchOwner, mode])
 
   const handleImageUpload = async (file: File, type: 'avatar' | 'wordmark') => {
     if (!owner) return

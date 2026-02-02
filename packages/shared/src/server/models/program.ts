@@ -13,6 +13,8 @@ export type BillingModel = 'subscription' | 'one_time' | 'free';
 export interface Program {
   id: string;
   ownerId: string;
+  /** Optional organization for public attribution (displays as "By [Organization]" when set) */
+  organizationId: string | null;
   name: string;
   description: string | null;
   schedulingMode: SchedulingMode;
@@ -35,6 +37,7 @@ export class ProgramModel {
     return {
       id: row.id,
       ownerId: row.ownerId,
+      organizationId: row.organizationId ?? null,
       name: row.name,
       description: row.description,
       schedulingMode: row.schedulingMode as SchedulingMode,

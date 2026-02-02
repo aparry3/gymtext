@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { UsersFilters } from '@/components/admin/UsersFilters'
 import { UsersTable } from '@/components/admin/UsersTable'
@@ -15,6 +16,7 @@ import { AdminUser, UserFilters, UserSort } from '@/components/admin/types'
 
 function AdminUsersPageContent() {
   const searchParams = useSearchParams()
+  const { mode } = useEnvironment()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -86,10 +88,10 @@ function AdminUsersPageContent() {
     }
   }, [])
 
-  // Fetch data when filters, page, or sort changes
+  // Fetch data when filters, page, sort, or environment mode changes
   useEffect(() => {
     fetchUsers(filters, currentPage, sort)
-  }, [fetchUsers, filters, currentPage, sort])
+  }, [fetchUsers, filters, currentPage, sort, mode])
 
   const handleFiltersChange = useCallback((newFilters: UserFilters) => {
     setFilters(newFilters)

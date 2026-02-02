@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { ProgramsFilters } from '@/components/admin/ProgramsFilters'
 import { ProgramsTable } from '@/components/admin/ProgramsTable'
@@ -20,6 +21,7 @@ import {
 function ProgramsPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { mode } = useEnvironment()
   const [programs, setPrograms] = useState<AdminProgram[]>([])
   const [owners, setOwners] = useState<AdminProgramOwner[]>([])
   const [stats, setStats] = useState<ProgramStats>({
@@ -106,15 +108,15 @@ function ProgramsPageContent() {
     }
   }, [])
 
-  // Fetch owners on mount
+  // Fetch owners on mount or when environment mode changes
   useEffect(() => {
     fetchOwners()
-  }, [fetchOwners])
+  }, [fetchOwners, mode])
 
-  // Fetch data when filters, page, or sort changes
+  // Fetch data when filters, page, sort, or environment mode changes
   useEffect(() => {
     fetchPrograms(filters, currentPage, sort)
-  }, [fetchPrograms, filters, currentPage, sort])
+  }, [fetchPrograms, filters, currentPage, sort, mode])
 
   const handleFiltersChange = useCallback((newFilters: ProgramFilters) => {
     setFilters(newFilters)

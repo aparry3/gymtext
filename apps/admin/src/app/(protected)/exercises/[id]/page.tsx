@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminExerciseWithAliases, AliasSource } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,7 @@ interface EditFormState {
 export default function ExerciseDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { mode } = useEnvironment()
   const [exercise, setExercise] = useState<AdminExerciseWithAliases | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -130,7 +132,7 @@ export default function ExerciseDetailPage() {
     if (id) {
       fetchExercise(id as string)
     }
-  }, [id, fetchExercise])
+  }, [id, fetchExercise, mode])
 
   const handleSave = async () => {
     if (!exercise) return

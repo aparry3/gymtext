@@ -43,6 +43,9 @@ export const PROMPT_IDS = {
   // Messaging
   MESSAGING_PLAN_SUMMARY: 'messaging:plan-summary',
   MESSAGING_PLAN_READY: 'messaging:plan-ready',
+
+  // Blog
+  BLOG_METADATA: 'blog:metadata',
 } as const;
 
 // Context prompts (role='context')

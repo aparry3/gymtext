@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useEnvironment } from '@/context/EnvironmentContext';
 import { DayPicker } from 'react-day-picker';
 import { format, startOfMonth, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
@@ -26,6 +27,7 @@ interface CalendarViewState {
 }
 
 export function CalendarView() {
+  const { mode } = useEnvironment();
   const [state, setState] = useState<CalendarViewState>({
     currentMonth: startOfMonth(new Date()),
     configs: [],
@@ -68,7 +70,7 @@ export function CalendarView() {
 
   useEffect(() => {
     fetchConfigs();
-  }, [fetchConfigs]);
+  }, [fetchConfigs, mode]);
 
   const handleDayClick = (date: Date) => {
     setState((s) => ({ ...s, selectedDate: date }));
