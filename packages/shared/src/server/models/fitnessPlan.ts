@@ -39,17 +39,12 @@ export interface PlanCurrentState {
 /**
  * FitnessPlan type - User Plan Instance
  *
- * As of Phase 3, fitness plans are user-specific instances of program versions:
+ * Fitness plans are user-specific instances of program versions:
  * - programVersionId: The version this was compiled from (the "recipe")
  * - clientId: The user this plan belongs to
  * - status: Instance lifecycle status
  * - personalizationSnapshot: Frozen user profile at creation time
  * - currentState: Progress tracking within the plan
- *
- * Legacy fields maintained for backward compatibility:
- * - programId: Direct FK for convenience queries
- * - legacyClientId: Original client_id field
- * - publishedAt: When this plan iteration was created
  *
  * Plan Versioning Model: Multiple fitness_plan records can exist for the same
  * user + program_version. Each represents a point-in-time snapshot.
@@ -57,15 +52,14 @@ export interface PlanCurrentState {
  */
 export interface FitnessPlan {
   id?: string;
-  // New instance-specific fields
-  clientId?: string | null;  // Explicit user reference
+  // Instance-specific fields
+  clientId: string;  // User reference (required)
   programVersionId?: string | null;  // The version this was compiled from
   status?: PlanStatus | null;  // Instance lifecycle status
   personalizationSnapshot?: StructuredProfile | null;  // Frozen user profile at creation
   currentState?: PlanCurrentState | null;  // Progress tracking
-  // Legacy/convenience fields
+  // Convenience fields
   programId?: string | null;  // Direct FK for convenience queries
-  legacyClientId: string;  // Backward compatibility (was client_id)
   publishedAt?: Date | null;  // When this plan iteration was created
   // Plan content
   description: string;  // Structured text plan
@@ -87,13 +81,12 @@ export interface FitnessPlanOverview {
 
 export class FitnessPlanModel implements FitnessPlan {
   id: string;
-  clientId: string | null;
+  clientId: string;
   programVersionId: string | null;
   status: PlanStatus | null;
   personalizationSnapshot: StructuredProfile | null;
   currentState: PlanCurrentState | null;
   programId: string | null;
-  legacyClientId: string;
   publishedAt: Date | null;
   description: string;
   message: string | null;
@@ -104,13 +97,12 @@ export class FitnessPlanModel implements FitnessPlan {
 
   constructor(
     id: string,
-    clientId: string | null,
+    clientId: string,
     programVersionId: string | null,
     status: PlanStatus | null,
     personalizationSnapshot: StructuredProfile | null,
     currentState: PlanCurrentState | null,
     programId: string | null,
-    legacyClientId: string,
     publishedAt: Date | null,
     description: string,
     message: string | null,
@@ -126,7 +118,6 @@ export class FitnessPlanModel implements FitnessPlan {
     this.personalizationSnapshot = personalizationSnapshot;
     this.currentState = currentState;
     this.programId = programId;
-    this.legacyClientId = legacyClientId;
     this.publishedAt = publishedAt;
     this.description = description;
     this.message = message;
@@ -137,15 +128,21 @@ export class FitnessPlanModel implements FitnessPlan {
   }
 
   public static fromDB(fitnessPlan: FitnessPlanDB): FitnessPlan {
+    // Handle both old schema (legacyClientId) and new schema (clientId only)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbRow = fitnessPlan as any;
+    const clientId = fitnessPlan.clientId ?? dbRow.legacyClientId;
+    if (!clientId) {
+      throw new Error('FitnessPlan must have a clientId');
+    }
     return {
       id: fitnessPlan.id,
-      clientId: fitnessPlan.clientId,
+      clientId,
       programVersionId: fitnessPlan.programVersionId,
       status: fitnessPlan.status as PlanStatus | null,
       personalizationSnapshot: fitnessPlan.personalizationSnapshot as StructuredProfile | null,
       currentState: fitnessPlan.currentState as PlanCurrentState | null,
       programId: fitnessPlan.programId,
-      legacyClientId: fitnessPlan.legacyClientId,
       publishedAt: fitnessPlan.publishedAt ? new Date(fitnessPlan.publishedAt) : null,
       description: fitnessPlan.description || '',
       message: fitnessPlan.message,
@@ -166,7 +163,6 @@ export class FitnessPlanModel implements FitnessPlan {
   ): FitnessPlan {
     return {
       clientId: user.id,
-      legacyClientId: user.id,
       programVersionId: options?.programVersionId ?? null,
       programId: options?.programId ?? null,
       status: 'active',

@@ -83,7 +83,7 @@ export function createPlanModificationService(
         console.log('[MODIFY_PLAN] Plan was modified - saving new version');
 
         const newPlan = await repos.fitnessPlan.insertFitnessPlan({
-          legacyClientId: userId,
+          clientId: userId,
           description: planResult.description,
           structured: planResult.structure,
           startDate: new Date(),

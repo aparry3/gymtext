@@ -254,30 +254,3 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
     },
   };
 }
-
-// Legacy class-based export for backward compatibility during migration
-// TODO: Remove after all consumers migrate to createProfileService
-export class ProfileService {
-  private static _instance: ProfileServiceInstance | null = null;
-
-  /**
-   * Update profile and user fields from a user message
-   * @deprecated Use createProfileService(deps).updateProfile() instead
-   */
-  static async updateProfile(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
-    // Lazy initialization using factory pattern internally
-    if (!ProfileService._instance) {
-      console.warn('[ProfileService] Using deprecated static class. Migrate to createProfileService(deps).');
-      // Dynamic import to avoid circular dependencies
-      const { createServicesFromDb } = await import('../../factory');
-      const { postgresDb } = await import('@/server/connections/postgres/postgres');
-      const services = createServicesFromDb(postgresDb);
-      ProfileService._instance = createProfileService({
-        user: services.user,
-        fitnessProfile: services.fitnessProfile,
-        workoutInstance: services.workoutInstance,
-      });
-    }
-    return ProfileService._instance.updateProfile(userId, message, previousMessages);
-  }
-}

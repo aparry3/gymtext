@@ -125,7 +125,9 @@ export function createExerciseResolutionService(
     const results = await multiSignalSearch(rawName, normalizedInput, lexInput, { ...options, limit: 1 });
     if (results.length > 0) {
       const best = results[0];
-      if (learnAlias) {
+      // Only learn aliases with high confidence (>= 70%) to avoid polluting the alias table
+      const minLearnConfidence = options.minLearnConfidence ?? 0.7;
+      if (learnAlias && best.confidence >= minLearnConfidence) {
         await learnNewAlias(normalizedInput, rawName, best.exercise.id, options.aliasSource || best.method, best.confidence);
       }
       // Track usage (fire-and-forget)

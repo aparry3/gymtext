@@ -213,20 +213,3 @@ export function exerciseToEmbeddingText(exercise: ExerciseForEmbedding): string 
 
   return lines.join('\n');
 }
-
-/**
- * @deprecated Use exerciseToEmbeddingText instead.
- * Kept for backwards compatibility.
- */
-export function composeExerciseEmbeddingText(exercise: {
-  name: string;
-  primaryMuscles?: string[] | null;
-  type?: string | null;
-}): string {
-  // Redirect to new function with minimal fields
-  return exerciseToEmbeddingText({
-    name: exercise.name,
-    type: exercise.type || 'Exercise',
-    primaryMuscles: exercise.primaryMuscles,
-  });
-}

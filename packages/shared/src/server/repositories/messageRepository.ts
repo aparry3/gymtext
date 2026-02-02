@@ -162,7 +162,6 @@ export class MessageRepository extends BaseRepository {
       .select([
         'messages.id',
         'messages.clientId',
-        'messages.conversationId',
         'messages.direction',
         'messages.content',
         'messages.phoneFrom',
