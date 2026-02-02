@@ -104,5 +104,12 @@ export type {
   ResolutionOptions,
 } from './exerciseResolution';
 
+// Blog post types
+export type {
+  BlogPost, NewBlogPost, BlogPostUpdate,
+  BlogPostWithAuthor, BlogPostListItem, BlogPostStatus
+} from './blogPost';
+export { BlogPostModel } from './blogPost';
+
 // Re-export database types from _types
 export * from './_types';
