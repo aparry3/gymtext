@@ -16,6 +16,7 @@ export interface LocalMessage {
   from: string;
   content: string;
   timestamp: Date;
+  mediaUrls?: string[];
 }
 
 export class LocalMessagingClient implements IMessagingClient {
@@ -40,6 +41,7 @@ export class LocalMessagingClient implements IMessagingClient {
       from: 'local-system',
       content: message || '[MMS only - no text]',
       timestamp,
+      mediaUrls,
     };
 
     // Emit the message event for SSE listeners
