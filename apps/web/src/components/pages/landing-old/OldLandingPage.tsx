@@ -8,7 +8,6 @@ import { BenefitsSection } from './BenefitsSection';
 import { TestimonialsSection } from './TestimonialsSection';
 import { ComparisonTable } from './ComparisonTable';
 import { FAQSection } from './FAQSection';
-import { FixedCTA } from './FixedCTA';
 
 export function OldLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -19,7 +18,6 @@ export function OldLandingPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <FixedCTA />
       <div className="relative">
         <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 py-4 backdrop-blur-sm">
           <div className="container mx-auto px-4">
