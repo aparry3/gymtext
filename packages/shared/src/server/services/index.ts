@@ -146,7 +146,8 @@ export type {
 } from './domain/training/exerciseMetricsService';
 
 // Profile service
-export { ProfileService } from './agents/profile';
+export { createProfileService } from './agents/profile';
+export type { ProfileServiceInstance, ProfileServiceDeps } from './agents/profile';
 
 // Program agent service
 export { createProgramAgentService } from './agents/programs';

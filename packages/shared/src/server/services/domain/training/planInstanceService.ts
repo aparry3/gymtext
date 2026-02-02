@@ -135,10 +135,10 @@ export function createPlanInstanceService(
         startDate = new Date(),
       } = options;
 
-      // Build the plan data using both new and legacy fields for compatibility
-      const planData: NewFitnessPlan = {
+      // Build the plan data - handle both old schema (legacyClientId) and new schema (clientId only)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const planData: any = {
         clientId,
-        legacyClientId: clientId, // Keep both for backward compatibility
         programVersionId,
         programId: programId ?? null,
         description,
@@ -154,6 +154,8 @@ export function createPlanInstanceService(
         status: 'active',
         startDate,
         publishedAt: new Date(),
+        // Add legacyClientId for backward compatibility during migration
+        legacyClientId: clientId,
       };
 
       const result = await repos.db
@@ -167,8 +169,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,
@@ -201,8 +202,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,
@@ -237,8 +237,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,
@@ -264,8 +263,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,
@@ -296,8 +294,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,
@@ -328,8 +325,7 @@ export function createPlanInstanceService(
         programId: result.programId,
         programVersionId: result.programVersionId,
         clientId: result.clientId,
-        legacyClientId: result.legacyClientId,
-        publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
+                publishedAt: result.publishedAt ? new Date(result.publishedAt as any) : null,
         description: result.description ?? '',
         message: result.message,
         structured: result.structured as PlanStructure | null,

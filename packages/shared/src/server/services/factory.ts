@@ -62,6 +62,7 @@ import {
 } from './agents/training';
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
+import { createProfileService, type ProfileServiceInstance } from './agents/profile';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -390,8 +391,14 @@ export function createServices(
   });
 
   // =========================================================================
-  // Phase 5.5: Create chat orchestration service
+  // Phase 5.5: Create profile and chat orchestration services
   // =========================================================================
+  const profile = createProfileService({
+    user,
+    fitnessProfile,
+    workoutInstance,
+  });
+
   const chat = createChatService({
     message,
     user,
@@ -400,6 +407,7 @@ export function createServices(
     modification,
     chatAgent,
     messagingOrchestrator: getMessagingOrchestrator(),
+    profile,
   });
 
   const chainRunner = createChainRunnerService(repos, {

@@ -14,17 +14,25 @@ export class FitnessPlanRepository extends BaseRepository {
    * Insert a new fitness plan
    */
   async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
+    // Build insert values - handle both old schema (legacyClientId) and new schema (clientId only)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const insertValues: any = {
+      programId: fitnessPlan.programId ?? null,
+      clientId: fitnessPlan.clientId,
+      publishedAt: fitnessPlan.publishedAt ?? null,
+      description: fitnessPlan.description,
+      message: fitnessPlan.message,
+      structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
+      startDate: fitnessPlan.startDate,
+    };
+
+    // Add legacyClientId for backward compatibility during migration
+    // This will be ignored after the column is dropped
+    insertValues.legacyClientId = fitnessPlan.clientId;
+
     const result = await this.db
       .insertInto('fitnessPlans')
-      .values({
-        programId: fitnessPlan.programId ?? null,
-        legacyClientId: fitnessPlan.legacyClientId,
-        publishedAt: fitnessPlan.publishedAt ?? null,
-        description: fitnessPlan.description,
-        message: fitnessPlan.message,
-        structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
-        startDate: fitnessPlan.startDate,
-      })
+      .values(insertValues)
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -47,13 +55,12 @@ export class FitnessPlanRepository extends BaseRepository {
 
   /**
    * Get the current (latest) fitness plan for a user
-   * Uses legacyClientId for backward compatibility
    */
   async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
     const result = await this.db
       .selectFrom('fitnessPlans')
       .selectAll()
-      .where('legacyClientId', '=', userId)
+      .where('clientId', '=', userId)
       .orderBy('createdAt', 'desc')
       .executeTakeFirst();
 
@@ -64,13 +71,12 @@ export class FitnessPlanRepository extends BaseRepository {
   /**
    * Get all fitness plans for a user (for history)
    * Returns plans ordered by creation date (newest first)
-   * Uses legacyClientId for backward compatibility
    */
   async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
     const results = await this.db
       .selectFrom('fitnessPlans')
       .selectAll()
-      .where('legacyClientId', '=', userId)
+      .where('clientId', '=', userId)
       .orderBy('createdAt', 'desc')
       .execute();
 

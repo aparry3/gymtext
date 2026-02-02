@@ -101,7 +101,6 @@ export function createMessageService(
       const { clientId, from, to, content, twilioData } = params;
 
       const message = await repos.message.create({
-        conversationId: null,
         clientId: clientId,
         direction: 'inbound',
         content,
@@ -133,7 +132,6 @@ export function createMessageService(
       }
 
       const message = await repos.message.create({
-        conversationId: null,
         clientId: clientId,
         direction: 'outbound',
         content,

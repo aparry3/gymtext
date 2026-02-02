@@ -17,7 +17,6 @@ import { now } from '@/shared/utils/date';
 import { getChatConfig } from '@/shared/config';
 import { getEnvironmentSettings } from '@/server/config';
 import { createChatTools } from '../agents/chat/tools';
-import { ProfileService } from '../agents/profile';
 import type { ToolResult } from '../agents/types/shared';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
 import type { UserServiceInstance } from '../domain/user/userService';
@@ -26,6 +25,7 @@ import type { TrainingServiceInstance } from './trainingService';
 import type { ModificationServiceInstance } from './modificationService';
 import type { ChatAgentServiceInstance } from '../agents/chat/chatAgentService';
 import type { MessagingOrchestratorInstance } from './messagingOrchestrator';
+import type { ProfileServiceInstance } from '../agents/profile';
 
 // Configuration from shared config
 const { smsMaxLength: SMS_MAX_LENGTH, contextMinutes: CHAT_CONTEXT_MINUTES } = getChatConfig();
@@ -45,6 +45,7 @@ export interface ChatServiceDeps {
   modification: ModificationServiceInstance;
   chatAgent: ChatAgentServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
+  profile: ProfileServiceInstance;
 }
 
 /**
@@ -73,6 +74,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
     modification: modificationService,
     chatAgent: chatAgentService,
     messagingOrchestrator,
+    profile: profileService,
   } = deps;
 
   /**
@@ -199,7 +201,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
           {
             makeModification: modificationService.makeModification.bind(modificationService),
             getWorkout: getWorkoutForToday,
-            updateProfile: ProfileService.updateProfile,
+            updateProfile: profileService.updateProfile.bind(profileService),
           },
           onSendMessage,
         );
