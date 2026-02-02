@@ -6,12 +6,13 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Sparkles } from 'lucide-react';
 import { TipTapEditor } from '@/components/blog/TipTapEditor';
 
 export default function NewBlogPostPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
@@ -38,6 +39,46 @@ export default function NewBlogPostPage() {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 200);
+  };
+
+  const handleGenerateMetadata = async () => {
+    // Check content length (strip HTML for accurate count)
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (textContent.length < 100) {
+      setError('Write at least 100 characters of content before generating metadata');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/blog/generate-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to generate metadata');
+      }
+
+      // Populate all fields from generated metadata
+      const { title: genTitle, description: genDescription, tags: genTags, metaTitle: genMetaTitle, metaDescription: genMetaDescription } = result.data;
+
+      setTitle(genTitle);
+      setSlug(generateSlug(genTitle));
+      setDescription(genDescription);
+      setTags(genTags.join(', '));
+      setMetaTitle(genMetaTitle);
+      setMetaDescription(genMetaDescription);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate metadata');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,6 +201,28 @@ export default function NewBlogPostPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Content *</label>
                 <TipTapEditor content={content} onChange={setContent} />
+              </div>
+
+              {/* Generate Metadata Button */}
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGenerateMetadata}
+                  disabled={isGenerating || isSubmitting}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Metadata
+                    </>
+                  )}
+                </Button>
               </div>
 
               <div>

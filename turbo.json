@@ -120,7 +120,9 @@
         "OPENAI_API_KEY",
         "GOOGLE_API_KEY",
         "PINECONE_API_KEY",
-        "PINECONE_INDEX"
+        "PINECONE_INDEX",
+        "NEXT_PUBLIC_BASE_URL",
+        "NEXT_PUBLIC_WEB_BASE_URL"
       ]
     }
   }

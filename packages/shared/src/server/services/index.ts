@@ -152,3 +152,7 @@ export type { ProfileServiceInstance, ProfileServiceDeps } from './agents/profil
 // Program agent service
 export { createProgramAgentService } from './agents/programs';
 export type { ProgramAgentServiceInstance, ProgramParseResult } from './agents/programs';
+
+// Blog agent service
+export { createBlogMetadataAgentService } from './agents/blog';
+export type { BlogMetadataAgentServiceInstance, BlogMetadataResult } from './agents/blog';
