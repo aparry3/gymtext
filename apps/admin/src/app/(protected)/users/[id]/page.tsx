@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useEnvironment } from '@/context/EnvironmentContext'
 import { AdminUser, SignupData, SubscriptionStatus } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -41,6 +42,7 @@ import { Input } from '@/components/ui/input'
 export default function AdminUserDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { mode } = useEnvironment()
   const [user, setUser] = useState<AdminUser | null>(null)
   const [profile, setProfile] = useState<string | null>(null)
   const [signupData, setSignupData] = useState<SignupData | null>(null)
@@ -90,7 +92,7 @@ export default function AdminUserDetailPage() {
     if (id) {
       fetchUser(id as string)
     }
-  }, [id, fetchUser])
+  }, [id, fetchUser, mode])
 
   const handleCopyContact = useCallback(async () => {
     if (!user) return
