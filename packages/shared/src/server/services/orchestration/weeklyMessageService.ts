@@ -1,12 +1,14 @@
 import { UserWithProfile } from '@/server/models/user';
 import { inngest } from '@/server/connections/inngest/client';
 import { now, getNextWeekStart } from '@/shared/utils/date';
+import { getUrlsConfig } from '@/shared/config';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { TrainingServiceInstance } from './trainingService';
-import type { MessagingOrchestratorInstance } from './messagingOrchestrator';
+import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
+import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 
 interface MessageResult {
   success: boolean;
@@ -61,6 +63,7 @@ export interface WeeklyMessageServiceDeps {
   fitnessPlan: FitnessPlanServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
   enrollment: EnrollmentServiceInstance;
+  dayConfig: DayConfigServiceInstance;
 }
 
 /**
@@ -78,6 +81,7 @@ export function createWeeklyMessageService(
     training: trainingService,
     messagingAgent: messagingAgentService,
     enrollment: enrollmentService,
+    dayConfig: dayConfigService,
   } = deps;
 
   return {
@@ -170,18 +174,31 @@ export function createWeeklyMessageService(
           return { success: false, userId: user.id, error: 'No breakdown message found for next week\'s microcycle' };
         }
 
-        const messageIds: string[] = [];
+        // Get image URL (custom or default)
+        const customImageUrl = await dayConfigService.getImageUrlForDate(nextSundayDate);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        let mediaUrls: string[] | undefined;
+        if (customImageUrl) {
+          mediaUrls = [customImageUrl];
+          console.log(`[WeeklyMessageService] Using custom day image for ${nextSundayDate.toISOString()}`);
+        } else {
+          const { publicBaseUrl, baseUrl } = getUrlsConfig();
+          const resolvedBaseUrl = publicBaseUrl || baseUrl;
+          mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
 
-        const breakdownResult = await messagingOrchestrator.sendImmediate(user, breakdownMessage);
-        if (breakdownResult.messageId) {
-          messageIds.push(breakdownResult.messageId);
+          if (!resolvedBaseUrl) {
+            console.warn('[WeeklyMessageService] BASE_URL not configured - sending weekly message without logo image');
+          }
         }
-        console.log(`[WeeklyMessageService] Sent breakdown message to user ${user.id}`);
 
-        console.log(`[WeeklyMessageService] Successfully sent weekly messages to user ${user.id}`);
-        return { success: true, userId: user.id, messageIds };
+        const queuedMessages: QueuedMessageContent[] = [{ content: breakdownMessage, mediaUrls }];
+
+        // Queue the message instead of sending immediately
+        const result = await messagingOrchestrator.queueMessages(user, queuedMessages, 'weekly');
+        console.log(`[WeeklyMessageService] Queued weekly message for user ${user.id}`);
+
+        console.log(`[WeeklyMessageService] Successfully queued weekly message for user ${user.id}`);
+        return { success: true, userId: user.id, messageIds: result.messageIds };
       } catch (error) {
         console.error(`[WeeklyMessageService] Error sending weekly message to user ${user.id}:`, error);
         return { success: false, userId: user.id, error: error instanceof Error ? error.message : 'Unknown error' };
