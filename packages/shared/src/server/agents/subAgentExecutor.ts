@@ -1,4 +1,4 @@
-import type { SubAgentBatch, SubAgentConfig, ConfigurableAgent } from './types';
+import type { SubAgentBatch, SubAgentConfig, ConfigurableAgent, SubAgentCompleteContext } from './types';
 
 /**
  * Configuration for subAgent execution
@@ -11,6 +11,8 @@ export interface SubAgentExecutorConfig {
   parentInput: string;
   previousResults: Record<string, unknown>;
   parentName: string;
+  /** Callback fired when an individual sub-agent completes (fire-and-forget) */
+  onSubAgentComplete?: (context: SubAgentCompleteContext) => void | Promise<void>;
 }
 
 /**
@@ -42,7 +44,7 @@ function isSubAgentConfig(entry: unknown): entry is SubAgentConfig {
 export async function executeSubAgents(
   config: SubAgentExecutorConfig
 ): Promise<Record<string, unknown>> {
-  const { batches, input, parentInput, previousResults, parentName } = config;
+  const { batches, input, parentInput, previousResults, parentName, onSubAgentComplete } = config;
 
   // Main result for condition/transform functions
   const mainResult = previousResults.response;
@@ -95,6 +97,22 @@ export async function executeSubAgents(
       const result = await agent.invoke(agentInput);
 
       console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms`);
+
+      // Fire onSubAgentComplete callback (non-blocking)
+      if (onSubAgentComplete) {
+        try {
+          const callbackResult = onSubAgentComplete({ key, result, input: parentInput });
+          // If callback returns a promise, don't await it - let it run in background
+          if (callbackResult instanceof Promise) {
+            callbackResult.catch(err =>
+              console.error(`[${parentName}:${key}] onSubAgentComplete callback error:`, err)
+            );
+          }
+        } catch (err) {
+          console.error(`[${parentName}:${key}] onSubAgentComplete callback error:`, err);
+        }
+      }
+
       return { key, result, skipped: false };
     });
 

@@ -23,10 +23,18 @@ import type { WorkoutModificationServiceInstance } from '../agents/modifications
 import type { PlanModificationServiceInstance } from '../agents/modifications/planModificationService';
 
 /**
+ * Options for modification requests
+ */
+export interface ModificationOptions {
+  /** Callback fired as soon as a workout message is ready (enables fire-early patterns) */
+  onMessageReady?: (message: string) => void | Promise<void>;
+}
+
+/**
  * ModificationServiceInstance interface
  */
 export interface ModificationServiceInstance {
-  makeModification(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult>;
+  makeModification(userId: string, message: string, previousMessages?: Message[], options?: ModificationOptions): Promise<ToolResult>;
 }
 
 export interface ModificationServiceDeps {
@@ -57,9 +65,10 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
      * @param userId - The user's ID
      * @param message - The user's modification request message
      * @param previousMessages - Optional conversation history for context
+     * @param options - Optional configuration (e.g., onMessageReady callback)
      * @returns ToolResult with response summary and optional messages
      */
-    async makeModification(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
+    async makeModification(userId: string, message: string, previousMessages?: Message[], options?: ModificationOptions): Promise<ToolResult> {
       console.log('[MODIFICATION_SERVICE] Processing modification request:', {
         userId,
         message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
@@ -92,6 +101,8 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
             message,
             workoutDate: today,
             targetDay,
+            // Pass through onMessageReady callback for fire-early patterns
+            onMessageReady: options?.onMessageReady,
           },
           {
             modifyWorkout: workoutModificationService.modifyWorkout.bind(workoutModificationService),

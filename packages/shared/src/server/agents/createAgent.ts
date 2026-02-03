@@ -90,6 +90,7 @@ export async function createAgent<
     validate,
     maxRetries = 1,
     loggingContext,
+    callbacks,
   } = definition;
 
   // Fetch prompts from database if systemPrompt not provided directly
@@ -199,6 +200,27 @@ export async function createAgent<
 
       console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms${attemptInfo}`);
 
+      // Fire onMainComplete callback (non-blocking - don't await)
+      // This enables "fire early" patterns where actions can be triggered
+      // before sub-agents complete (e.g., send message immediately)
+      if (callbacks?.onMainComplete) {
+        try {
+          const callbackResult = callbacks.onMainComplete({
+            result: mainResult,
+            input,
+            messages: accumulatedMessages.length > 0 ? accumulatedMessages : undefined,
+          });
+          // If callback returns a promise, don't await it - let it run in background
+          if (callbackResult instanceof Promise) {
+            callbackResult.catch(err =>
+              console.error(`[${name}] onMainComplete callback error:`, err)
+            );
+          }
+        } catch (err) {
+          console.error(`[${name}] onMainComplete callback error:`, err);
+        }
+      }
+
       // If no subAgents, return main result wrapped in response (with messages if any)
       if (!subAgents || subAgents.length === 0) {
         return {
@@ -219,6 +241,7 @@ export async function createAgent<
         parentInput: input,  // Pass the original input for transform functions that need it
         previousResults: { response: mainResult },
         parentName: name,
+        onSubAgentComplete: callbacks?.onSubAgentComplete,
       });
 
       console.log(`[${name}] Total execution time: ${Date.now() - startTime}ms${attemptInfo}`);

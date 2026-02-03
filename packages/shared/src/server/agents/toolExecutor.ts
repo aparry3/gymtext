@@ -80,37 +80,95 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
       };
     }
 
-    // Sort tool calls by priority
-    const sortedToolCalls = [...result.tool_calls].sort(
-      (a: { name: string }, b: { name: string }) =>
-        (TOOL_PRIORITY[a.name] ?? 99) - (TOOL_PRIORITY[b.name] ?? 99)
-    );
+    // Group tool calls by priority for parallel execution within same priority level
+    const toolCallsWithPriority = result.tool_calls.map((tc: { name: string; args: unknown }) => ({
+      ...tc,
+      priority: TOOL_PRIORITY[tc.name] ?? 99,
+    }));
 
-    console.log(`[${name}] ${sortedToolCalls.length} tool call(s): ${sortedToolCalls.map((tc: { name: string }) => tc.name).join(', ')}`);
+    // Group by priority
+    const priorityGroups = new Map<number, typeof toolCallsWithPriority>();
+    for (const tc of toolCallsWithPriority) {
+      const group = priorityGroups.get(tc.priority) || [];
+      group.push(tc);
+      priorityGroups.set(tc.priority, group);
+    }
+
+    // Sort priority levels (lower = first)
+    const sortedPriorities = Array.from(priorityGroups.keys()).sort((a, b) => a - b);
+
+    console.log(`[${name}] ${result.tool_calls.length} tool call(s) in ${sortedPriorities.length} priority batch(es): ${
+      sortedPriorities.map(p => `P${p}=[${priorityGroups.get(p)!.map((tc: { name: string }) => tc.name).join(',')}]`).join(' → ')
+    }`);
 
     // Track messages from tools for this iteration
     const iterationMessages: string[] = [];
+    let toolIndex = 0;
 
-    // Execute each tool call in priority order
-    for (let i = 0; i < sortedToolCalls.length; i++) {
-      const toolCall = sortedToolCalls[i];
-      const callId = `call_${iteration}_${i}`;
+    // Execute priority batches sequentially, tools within batch in parallel
+    for (const priority of sortedPriorities) {
+      const batch = priorityGroups.get(priority)!;
+      const batchStartTime = Date.now();
 
-      // Find the tool
-      const selectedTool = tools.find(t => t.name === toolCall.name);
-      if (!selectedTool) {
-        console.error(`[${name}] Tool not found: ${toolCall.name}`);
-        continue;
-      }
+      console.log(`[${name}] Executing priority ${priority} batch: [${batch.map((tc: { name: string }) => tc.name).join(', ')}]`);
 
-      const toolStartTime = Date.now();
+      // Execute all tools in this priority batch in parallel
+      const batchPromises = batch.map(async (toolCall: { name: string; args: unknown }, batchIndex: number) => {
+        const callId = `call_${iteration}_${toolIndex + batchIndex}`;
 
-      try {
-        console.log(`[${name}] Executing tool: ${toolCall.name}`);
+        // Find the tool
+        const selectedTool = tools.find(t => t.name === toolCall.name);
+        if (!selectedTool) {
+          console.error(`[${name}] Tool not found: ${toolCall.name}`);
+          return { toolCall, callId, error: new Error(`Tool not found: ${toolCall.name}`), result: null };
+        }
 
-        const toolResult = await (selectedTool as { invoke: (args: unknown) => Promise<ToolExecutionResult> }).invoke(toolCall.args);
+        const toolStartTime = Date.now();
 
-        const durationMs = Date.now() - toolStartTime;
+        try {
+          console.log(`[${name}] Executing tool: ${toolCall.name}`);
+
+          const toolResult = await (selectedTool as { invoke: (args: unknown) => Promise<ToolExecutionResult> }).invoke(toolCall.args);
+
+          const durationMs = Date.now() - toolStartTime;
+          console.log(`[${name}] ${toolCall.name} complete in ${durationMs}ms`);
+
+          return { toolCall, callId, error: null, result: toolResult, durationMs };
+        } catch (error) {
+          console.error(`[${name}] Tool error (${toolCall.name}):`, error);
+          return { toolCall, callId, error, result: null };
+        }
+      });
+
+      // Wait for all tools in this batch to complete
+      const batchResults = await Promise.all(batchPromises);
+
+      console.log(`[${name}] Priority ${priority} batch completed in ${Date.now() - batchStartTime}ms`);
+
+      // Process results in order (maintain conversation history order)
+      for (const { toolCall, callId, error, result: toolResult, durationMs } of batchResults) {
+        if (error || !toolResult) {
+          // Add error to conversation history so model knows it failed
+          conversationHistory.push({
+            role: 'assistant',
+            content: '',
+            tool_calls: [{
+              id: callId,
+              type: 'function',
+              function: { name: toolCall.name, arguments: JSON.stringify(toolCall.args) },
+            }],
+          });
+          conversationHistory.push({
+            role: 'tool',
+            content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            tool_call_id: callId,
+          });
+
+          accumulatedMessages.push(
+            "I tried to help but encountered an issue. Please try again!"
+          );
+          continue;
+        }
 
         // Track tool type for continuation message
         lastToolType = toolResult.toolType || 'action';
@@ -127,7 +185,7 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
           name: toolCall.name,
           args: toolCall.args as Record<string, unknown>,
           result: toolResult.response,
-          durationMs,
+          durationMs: durationMs ?? 0,
         });
 
         // Add to conversation history
@@ -145,22 +203,9 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
           content: toolResult.response,
           tool_call_id: callId,
         });
-
-        console.log(`[${name}] ${toolCall.name} complete in ${durationMs}ms`);
-      } catch (error) {
-        console.error(`[${name}] Tool error (${toolCall.name}):`, error);
-
-        // Add error to conversation history so model knows it failed
-        conversationHistory.push({
-          role: 'tool',
-          content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          tool_call_id: callId,
-        });
-
-        accumulatedMessages.push(
-          "I tried to help but encountered an issue. Please try again!"
-        );
       }
+
+      toolIndex += batch.length;
     }
 
     // Add continuation message for next iteration

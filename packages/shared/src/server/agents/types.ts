@@ -200,6 +200,13 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
    * Callbacks are fire-and-forget (non-blocking)
    */
   loggingContext?: AgentLoggingContext;
+
+  /**
+   * Lifecycle callbacks for the agent
+   * Enable "fire early" patterns where actions can be triggered
+   * without waiting for the full agent chain to complete
+   */
+  callbacks?: AgentCallbacks;
 }
 
 /**
@@ -318,4 +325,54 @@ export interface AgentLoggingContext {
   onValidationFailure?: (entry: ValidationFailureEntry) => void;
   /** Called when all retries are exhausted (fire-and-forget) */
   onChainFailure?: (entry: ChainFailureEntry) => void;
+}
+
+// ============================================
+// Agent Callback Types
+// ============================================
+
+/**
+ * Callback context for onMainComplete
+ * Provides the main agent result and helpers for triggering async actions
+ */
+export interface MainCompleteContext<TMainOutput> {
+  /** The main agent's output (before sub-agents run) */
+  result: TMainOutput;
+  /** The original input string passed to the agent */
+  input: string;
+  /** Accumulated messages from tool execution (if any) */
+  messages?: string[];
+}
+
+/**
+ * Callback context for onSubAgentComplete
+ * Called when an individual sub-agent finishes (before the batch completes)
+ */
+export interface SubAgentCompleteContext {
+  /** The sub-agent's key name */
+  key: string;
+  /** The sub-agent's output */
+  result: unknown;
+  /** The original input string passed to the parent agent */
+  input: string;
+}
+
+/**
+ * Callbacks for agent lifecycle events
+ * These enable "fire early" patterns where actions can be triggered
+ * without waiting for the full agent chain to complete
+ */
+export interface AgentCallbacks<TMainOutput = unknown> {
+  /**
+   * Called immediately after the main agent completes, BEFORE sub-agents run.
+   * Use this to trigger actions that only need the main result (e.g., send message).
+   * This callback is non-blocking - sub-agents continue in parallel.
+   */
+  onMainComplete?: (context: MainCompleteContext<TMainOutput>) => void | Promise<void>;
+
+  /**
+   * Called when an individual sub-agent completes.
+   * Useful for triggering actions as soon as specific sub-agents finish.
+   */
+  onSubAgentComplete?: (context: SubAgentCompleteContext) => void | Promise<void>;
 }

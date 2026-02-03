@@ -21,6 +21,12 @@ export interface ModifyWeekParams {
   userId: string;
   targetDay: string;
   changeRequest: string;
+  /**
+   * Optional callback fired as soon as the workout message is ready.
+   * This enables "fire early" patterns where the message can be sent
+   * before the microcycle update completes.
+   */
+  onMessageReady?: (message: string) => void | Promise<void>;
 }
 
 /**
@@ -48,6 +54,11 @@ export interface ModificationToolContext {
   message: string;
   workoutDate: Date;
   targetDay: string;
+  /**
+   * Optional callback fired as soon as a workout message is ready.
+   * Enables "fire early" patterns for faster response times.
+   */
+  onMessageReady?: (message: string) => void | Promise<void>;
 }
 
 // Schema definitions - empty because all params come from context
@@ -106,6 +117,7 @@ This is the LEAST commonly used tool - default to modify_week when uncertain.`,
         userId: context.userId,
         targetDay: context.targetDay,
         changeRequest: context.message,
+        onMessageReady: context.onMessageReady,
       });
       return toToolResult(result);
     },

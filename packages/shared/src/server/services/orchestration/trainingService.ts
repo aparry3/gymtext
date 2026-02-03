@@ -297,15 +297,10 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           activityType
         );
 
-        // 5b. Resolve exercise names to canonical IDs and track usage
-        if (structure && exerciseResolution) {
-          await resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, user.id);
-        }
-
         const theme = structure?.title || 'Workout';
         const details = { theme };
 
-        // 6. Create workout record
+        // 6. Create workout record (must happen before short link creation)
         const workoutData: NewWorkoutInstance = {
           clientId: user.id,
           microcycleId: microcycle.id,
@@ -324,21 +319,43 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const savedWorkout = await workoutInstanceService.createWorkout(workoutData);
         console.log(`[TrainingService] Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
 
-        // 7. Create short link and update message
-        try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id, savedWorkout.id);
-          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-          console.log(`[TrainingService] Created short link for workout ${savedWorkout.id}: ${fullUrl}`);
+        // 7. Parallelize: exercise resolution and short link creation
+        // These are independent operations that can run concurrently
+        const [, shortLinkResult] = await Promise.all([
+          // 7a. Resolve exercise names to canonical IDs (fire-and-forget pattern for non-critical operation)
+          structure && exerciseResolution
+            ? resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, user.id)
+                .then(() => {
+                  // Update workout with resolved exercises
+                  return workoutInstanceService.updateWorkout(savedWorkout.id, {
+                    structured: structure,
+                  });
+                })
+                .catch(err => {
+                  console.warn(`[TrainingService] Exercise resolution failed, continuing:`, err);
+                })
+            : Promise.resolve(),
 
-          if (savedWorkout.message) {
-            const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone);
-            savedWorkout.message = normalizeWhitespace(
-              `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n(More details: ${fullUrl})`
-            );
-            await workoutInstanceService.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
-          }
-        } catch (error) {
-          console.error(`[TrainingService] Failed to create short link for workout ${savedWorkout.id}:`, error);
+          // 7b. Create short link
+          shortLinkService.createWorkoutLink(user.id, savedWorkout.id)
+            .then(shortLink => {
+              const fullUrl = shortLinkService.getFullUrl(shortLink.code);
+              console.log(`[TrainingService] Created short link for workout ${savedWorkout.id}: ${fullUrl}`);
+              return { shortLink, fullUrl };
+            })
+            .catch(err => {
+              console.error(`[TrainingService] Failed to create short link for workout ${savedWorkout.id}:`, err);
+              return null;
+            }),
+        ]);
+
+        // 8. Update message with short link if available
+        if (shortLinkResult && savedWorkout.message) {
+          const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone);
+          savedWorkout.message = normalizeWhitespace(
+            `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n(More details: ${shortLinkResult.fullUrl})`
+          );
+          await workoutInstanceService.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
         }
 
         return savedWorkout;

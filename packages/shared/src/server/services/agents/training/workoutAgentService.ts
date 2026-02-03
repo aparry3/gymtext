@@ -243,13 +243,18 @@ export class WorkoutAgentService {
    * @param dayOverview - Day overview from microcycle (e.g., "Upper body push focus")
    * @param isDeload - Whether this is a deload week
    * @param activityType - Optional activity type for day format context (TRAINING, ACTIVE_RECOVERY, REST)
+   * @param options - Optional configuration including:
+   *   - onMessageReady: Callback fired as soon as the message sub-agent completes.
+   *     This enables "fire early" patterns where the message can be sent
+   *     before the structure sub-agent completes.
    * @returns WorkoutGenerateOutput with response, message, and structure
    */
   async generateWorkout(
     user: UserWithProfile,
     dayOverview: string,
     isDeload: boolean = false,
-    activityType?: ActivityType
+    activityType?: ActivityType,
+    options?: { onMessageReady?: (message: string) => void | Promise<void> }
   ): Promise<WorkoutGenerateOutput> {
     // Build context using ContextService
     const context = await this.contextService.getContext(
@@ -283,6 +288,26 @@ export class WorkoutAgentService {
         message: messageAgent,
         structure: structuredAgent,  // Validation is now built into the agent itself
       }],
+      // Use onSubAgentComplete callback for fire-early message delivery
+      // This allows the message to be sent as soon as it's generated,
+      // without waiting for the structure sub-agent to complete
+      callbacks: options?.onMessageReady ? {
+        onSubAgentComplete: ({ key, result }) => {
+          if (key === 'message' && typeof result === 'string') {
+            // Fire the callback with the message (non-blocking)
+            try {
+              const callbackResult = options.onMessageReady!(normalizeWhitespace(result));
+              if (callbackResult instanceof Promise) {
+                callbackResult.catch(err =>
+                  console.error('[WorkoutAgentService] onMessageReady callback error:', err)
+                );
+              }
+            } catch (err) {
+              console.error('[WorkoutAgentService] onMessageReady callback error:', err);
+            }
+          }
+        },
+      } : undefined,
     }, { model: 'gpt-5.1' });
 
     // Empty input - DB user prompt provides the instructions

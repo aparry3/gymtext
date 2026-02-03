@@ -46,11 +46,19 @@ export function toolWithMessage(
 }
 
 /**
+ * Options for modification requests
+ */
+export interface ModificationOptions {
+  /** Callback fired as soon as a workout message is ready (enables fire-early patterns) */
+  onMessageReady?: (message: string) => void | Promise<void>;
+}
+
+/**
  * Dependencies for chat tools (DI pattern)
  * Pass the methods directly, not the full services
  */
 export interface ChatToolDeps {
-  makeModification: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
+  makeModification: (userId: string, message: string, previousMessages?: Message[], options?: ModificationOptions) => Promise<ToolResult>;
   getWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
   updateProfile: (userId: string, message: string, previousMessages?: Message[]) => Promise<ToolResult>;
 }
@@ -124,7 +132,12 @@ Use this tool for:
 This tool handles WORKOUT CONTENT - not user settings like send time, timezone, or name.
 All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
     async (): Promise<ToolResult> => {
-      return deps.makeModification(context.userId, context.message, context.previousMessages);
+      // Pass onSendMessage as onMessageReady to enable fire-early patterns
+      // This allows workout messages to be sent as soon as they're generated,
+      // without waiting for microcycle updates to complete
+      return deps.makeModification(context.userId, context.message, context.previousMessages, {
+        onMessageReady: onSendMessage,
+      });
     },
     onSendMessage
   );
