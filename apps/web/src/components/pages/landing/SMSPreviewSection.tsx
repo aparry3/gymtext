@@ -1,21 +1,10 @@
 'use client';
 
 import { CheckCircle2, Zap, ClipboardList } from 'lucide-react';
-import type { Theme } from './LandingPage';
 
-interface SMSPreviewSectionProps {
-  theme?: Theme;
-}
-
-export function SMSPreviewSection({ theme = 'dark' }: SMSPreviewSectionProps) {
-  const isLight = theme === 'light';
-
+export function SMSPreviewSection() {
   return (
-    <section id="demo" className={`py-24 overflow-hidden ${
-      isLight
-        ? 'bg-gradient-to-b from-white to-gray-50'
-        : 'bg-gradient-to-b from-slate-950 to-slate-900'
-    }`}>
+    <section id="demo" className="py-24 overflow-hidden bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-1/2 flex justify-center">
@@ -44,11 +33,11 @@ export function SMSPreviewSection({ theme = 'dark' }: SMSPreviewSectionProps) {
           </div>
 
           <div className="lg:w-1/2 text-center lg:text-left">
-            <h2 className={`text-3xl md:text-5xl font-bold mb-6 ${isLight ? 'text-gray-900' : 'text-white'}`}>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900">
               Real Coaching. <br />
               <span className="text-[#1B81FF]">In Your Pocket.</span>
             </h2>
-            <p className={`text-lg mb-8 leading-relaxed ${isLight ? 'text-gray-600' : 'text-slate-300'}`}>
+            <p className="text-lg mb-8 leading-relaxed text-gray-600">
               Most fitness apps are just databases of exercises. GymText is a
               direct line to your daily routine. It&apos;s human, interactive,
               and frictionless.
@@ -60,10 +49,10 @@ export function SMSPreviewSection({ theme = 'dark' }: SMSPreviewSectionProps) {
                   <CheckCircle2 size={24} />
                 </div>
                 <div className="text-left">
-                  <h4 className={`font-bold text-lg ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                  <h4 className="font-bold text-lg text-gray-900">
                     No App Required
                   </h4>
-                  <p className={isLight ? 'text-gray-500' : 'text-slate-400'}>
+                  <p className="text-gray-500">
                     Don&apos;t waste time loading heavy apps. It&apos;s just a
                     text.
                   </p>
@@ -75,10 +64,10 @@ export function SMSPreviewSection({ theme = 'dark' }: SMSPreviewSectionProps) {
                   <Zap size={24} />
                 </div>
                 <div className="text-left">
-                  <h4 className={`font-bold text-lg ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                  <h4 className="font-bold text-lg text-gray-900">
                     Instant Accountability
                   </h4>
-                  <p className={isLight ? 'text-gray-500' : 'text-slate-400'}>
+                  <p className="text-gray-500">
                     Knowing your coach is waiting for a reply changes
                     everything.
                   </p>
@@ -90,10 +79,10 @@ export function SMSPreviewSection({ theme = 'dark' }: SMSPreviewSectionProps) {
                   <ClipboardList size={24} />
                 </div>
                 <div className="text-left">
-                  <h4 className={`font-bold text-lg ${isLight ? 'text-gray-900' : 'text-white'}`}>
+                  <h4 className="font-bold text-lg text-gray-900">
                     Intelligent Progression
                   </h4>
-                  <p className={isLight ? 'text-gray-500' : 'text-slate-400'}>
+                  <p className="text-gray-500">
                     We track your weights and adjust over time. Progressive
                     overload made easy.
                   </p>

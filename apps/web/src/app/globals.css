@@ -260,23 +260,6 @@ body {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Brand colors for landing page - GymText blue #1B81FF */
-.landing-dark {
-  --brand-blue: #1B81FF;
-  --brand-blue-light: #5BA3FF;
-  --brand-blue-dark: #1468CC;
-}
-
-/* Dark landing theme */
-.landing-dark {
-  --background: 222 47% 4%;
-  --foreground: 210 17% 95%;
-  --card: 222 47% 7%;
-  --muted: 217 33% 15%;
-  --muted-foreground: 215 20% 55%;
-  --border: 217 33% 17%;
-}
-
 /* Landing page animations */
 @keyframes slide-up {
   from {
