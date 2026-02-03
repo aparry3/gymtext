@@ -2,18 +2,6 @@ import { getServices } from '@/lib/context';
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { getTwilioSecrets } from '@/server/config';
-import { getUrlsConfig } from '@gymtext/shared';
-
-/**
- * Get the logo media URL for MMS messages.
- * Including an image ensures all messages are sent as MMS, preventing iOS
- * from creating separate SMS/MMS threads for the same phone number.
- */
-function getLogoMediaUrls(): string[] | undefined {
-  const { publicBaseUrl, baseUrl } = getUrlsConfig();
-  const resolvedBaseUrl = publicBaseUrl || baseUrl;
-  return resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
-}
 
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -99,8 +87,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      // Include logo to ensure consistent MMS delivery
-      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage, getLogoMediaUrls());
+      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');
@@ -137,8 +124,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Send confirmation via direct message (not queued)
-      // Include logo to ensure consistent MMS delivery
-      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage, getLogoMediaUrls());
+      await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
       twiml.message('');

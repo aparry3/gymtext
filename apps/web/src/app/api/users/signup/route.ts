@@ -227,12 +227,7 @@ async function completeSignupFlow(
   const userWithProfile = await services.user.getUser(userId);
   if (userWithProfile) {
     const welcomeMessage = await services.messagingAgent.generateWelcomeMessage(userWithProfile);
-    // Include logo to ensure consistent MMS delivery, preventing iOS
-    // from creating separate SMS/MMS threads for the same phone number
-    const { publicBaseUrl, baseUrl } = getUrlsConfig();
-    const resolvedBaseUrl = publicBaseUrl || baseUrl;
-    const mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
-    await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage, mediaUrls);
+    await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
   }
 
   // Trigger async Inngest onboarding job

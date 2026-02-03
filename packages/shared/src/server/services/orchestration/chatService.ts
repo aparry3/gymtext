@@ -14,7 +14,7 @@
  */
 import type { UserWithProfile } from '@/server/models/user';
 import { now } from '@/shared/utils/date';
-import { getChatConfig, getUrlsConfig } from '@/shared/config';
+import { getChatConfig } from '@/shared/config';
 import { getEnvironmentSettings } from '@/server/config';
 import { createChatTools } from '../agents/chat/tools';
 import type { ToolResult } from '../agents/types/shared';
@@ -181,12 +181,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
         // Callback for sending immediate messages via MessagingOrchestrator
         const onSendMessage = async (immediateMessage: string) => {
           try {
-            // Include logo to ensure consistent MMS delivery, preventing iOS
-            // from creating separate SMS/MMS threads for the same phone number
-            const { publicBaseUrl, baseUrl } = getUrlsConfig();
-            const resolvedBaseUrl = publicBaseUrl || baseUrl;
-            const mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
-            await messagingOrchestrator.sendImmediate(userWithProfile, immediateMessage, mediaUrls);
+            await messagingOrchestrator.sendImmediate(userWithProfile, immediateMessage);
             console.log('[ChatService] Sent immediate message:', immediateMessage);
           } catch (error) {
             console.error('[ChatService] Failed to send immediate message:', error);
