@@ -20,9 +20,7 @@ export const BrandsNavbar: React.FC = () => {
     ? 'bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm py-3'
     : 'bg-transparent py-6';
   const textColorClass = scrolled ? 'text-gray-900' : 'text-white';
-  const buttonClass = scrolled
-    ? 'bg-gray-900 text-white hover:bg-gray-800'
-    : 'bg-white text-gray-900 hover:bg-gray-100';
+  const buttonClass = 'bg-[#1B81FF] text-white hover:bg-[#1468CC]';
 
   return (
     <nav
@@ -76,7 +74,7 @@ export const BrandsNavbar: React.FC = () => {
               Team
             </a>
             <a
-              href="mailto:kyle@gymtext.co"
+              href="mailto:admin@gymtext.co"
               className={`${buttonClass} px-5 py-2.5 rounded-full text-sm font-semibold transition-all transform hover:scale-105 shadow-lg`}
             >
               Book Demo
@@ -115,8 +113,8 @@ export const BrandsNavbar: React.FC = () => {
               Team
             </a>
             <a
-              href="mailto:kyle@gymtext.co"
-              className="block w-full text-center mt-4 bg-gray-900 text-white px-5 py-3 rounded-lg font-medium"
+              href="mailto:admin@gymtext.co"
+              className="block w-full text-center mt-4 bg-[#1B81FF] text-white px-5 py-3 rounded-lg font-medium hover:bg-[#1468CC]"
             >
               Book Demo
             </a>
