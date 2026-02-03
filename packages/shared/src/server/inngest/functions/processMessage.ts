@@ -19,6 +19,7 @@
 import { inngest } from '@/server/connections/inngest/client';
 import { createServicesFromDb } from '@/server/services';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { getUrlsConfig } from '@/shared/config';
 
 // Create services container at module level (Inngest always uses production)
 const services = createServicesFromDb(postgresDb);
@@ -77,10 +78,17 @@ export const processMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
+      // Get logo URL to include in all chat responses as MMS
+      // This ensures consistent MMS delivery, preventing iOS from creating
+      // separate SMS/MMS threads for the same phone number
+      const { publicBaseUrl, baseUrl } = getUrlsConfig();
+      const resolvedBaseUrl = publicBaseUrl || baseUrl;
+      const mediaUrls = resolvedBaseUrl ? [`${resolvedBaseUrl}/OpenGraphGymtext.png`] : undefined;
+
       // Send each message sequentially using messagingOrchestrator
       const results = [];
       for (const message of messages) {
-        const result = await services.messagingOrchestrator.sendImmediate(user, message);
+        const result = await services.messagingOrchestrator.sendImmediate(user, message, mediaUrls);
         results.push(result);
       }
 
