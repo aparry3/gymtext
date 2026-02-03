@@ -73,39 +73,39 @@ export const BrandsFeatures: React.FC = () => {
 
           <FeatureCard
             title="White-Labeled Experiences"
-            description="Your brand, your voice. We deliver personalized workouts and wellness content directly via SMS, appearing as you."
+            description="Personalized workouts, recovery, and wellness content delivered via SMS in your brand's voice and tone."
             icon={<Smartphone className="h-6 w-6" />}
             className="lg:col-span-2 lg:row-span-1"
           />
 
           <FeatureCard
-            title="AI Personalization"
-            description="Our engine adapts programming to user goals, equipment, and feedback instantly."
+            title="AI-Driven Personalization"
+            description="Programming adapts to goals, skill level, schedule, equipment, and interests across fitness, mobility, and recovery."
             icon={<Cpu className="h-6 w-6" />}
             dark={true}
           />
 
           <FeatureCard
-            title="2-Way Engagement"
-            description="It's not just a notification. It's a conversation. Users text back, and our AI (or your team) responds."
+            title="Two-Way Engagement"
+            description="Customers can text back with questions, feedback, or needs, creating a conversational experience instead of one-way content."
             icon={<MessageCircle className="h-6 w-6" />}
           />
 
           <FeatureCard
             title="Retention & Loyalty"
-            description="Stay top-of-mind between visits. Reduce churn by providing value everyday."
+            description="Keep customers engaged between visits, trips, training sessions, or deployments with consistent value."
             icon={<Heart className="h-6 w-6" />}
           />
 
           <FeatureCard
-            title="Revenue Growth"
-            description="Drive upsells to personal training, events, or merchandise through targeted campaigns."
+            title="Revenue & Brand Extension"
+            description="Support upsells, programs, events, merch, memberships, or partner offerings through targeted, relevant messaging."
             icon={<TrendingUp className="h-6 w-6" />}
           />
 
           <FeatureCard
             title="Operational Simplicity"
-            description="Zero friction. No apps to download. No passwords to forget. It just works."
+            description="No new systems for your customers to learn. No apps. No logins. GymText integrates seamlessly into existing workflows."
             icon={<Settings className="h-6 w-6" />}
             className="lg:col-span-3 bg-gradient-to-r from-white to-blue-50"
           />

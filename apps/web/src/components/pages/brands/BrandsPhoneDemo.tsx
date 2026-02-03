@@ -1,28 +1,28 @@
 'use client';
 
 import React from 'react';
-import { Dumbbell, Mountain, Hotel, Trophy } from 'lucide-react';
+import { Dumbbell, Hotel, ShoppingBag, Shield } from 'lucide-react';
 
 const USE_CASES = [
   {
     label: 'Gyms & Trainers',
     icon: <Dumbbell className="w-5 h-5" />,
-    desc: 'Automated daily programming and personal records tracking.',
+    desc: 'Daily programming, class reminders, training plans, and member retention.',
   },
   {
-    label: 'Outdoor Retail',
-    icon: <Mountain className="w-5 h-5" />,
-    desc: 'Training plans for marathons, hikes, and adventures.',
-  },
-  {
-    label: 'Hospitality',
+    label: 'Hotels & Wellness Retreats',
     icon: <Hotel className="w-5 h-5" />,
-    desc: 'In-room recovery, jet-lag protocols, and yoga sessions.',
+    desc: 'Curated movement experiences like yoga, mobility, and recovery for guests.',
   },
   {
-    label: 'Pro Sports',
-    icon: <Trophy className="w-5 h-5" />,
-    desc: 'Game day prep, logistics, and readiness questionnaires.',
+    label: 'Athletic & Fitness Brands',
+    icon: <ShoppingBag className="w-5 h-5" />,
+    desc: 'Sport-specific training, recovery programs, and community engagement.',
+  },
+  {
+    label: 'Military & Tactical',
+    icon: <Shield className="w-5 h-5" />,
+    desc: 'Readiness training, mobility, and performance routines for operational demands.',
   },
 ];
 
