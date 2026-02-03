@@ -1,0 +1,83 @@
+/* GymText Brands Page - Custom Styles */
+
+/* Gymblue color palette */
+.bg-gymblue-50 { background-color: #eff6ff; }
+.bg-gymblue-100 { background-color: #dbeafe; }
+.bg-gymblue-200 { background-color: #bfdbfe; }
+.bg-gymblue-300 { background-color: #93c5fd; }
+.bg-gymblue-400 { background-color: #60a5fa; }
+.bg-gymblue-500 { background-color: #3b82f6; }
+.bg-gymblue-600 { background-color: #2563eb; }
+.bg-gymblue-700 { background-color: #1d4ed8; }
+.bg-gymblue-800 { background-color: #1e40af; }
+.bg-gymblue-900 { background-color: #1e3a8a; }
+
+.text-gymblue-50 { color: #eff6ff; }
+.text-gymblue-100 { color: #dbeafe; }
+.text-gymblue-200 { color: #bfdbfe; }
+.text-gymblue-300 { color: #93c5fd; }
+.text-gymblue-400 { color: #60a5fa; }
+.text-gymblue-500 { color: #3b82f6; }
+.text-gymblue-600 { color: #2563eb; }
+.text-gymblue-700 { color: #1d4ed8; }
+.text-gymblue-800 { color: #1e40af; }
+.text-gymblue-900 { color: #1e3a8a; }
+
+.border-gymblue-100 { border-color: #dbeafe; }
+.border-gymblue-200 { border-color: #bfdbfe; }
+
+.ring-gymblue-100 { --tw-ring-color: #dbeafe; }
+
+/* iOS Colors for phone mockup */
+.bg-ios-blue { background-color: #007AFF; }
+.text-ios-blue { color: #007AFF; }
+.bg-ios-gray { background-color: #E9E9EB; }
+.text-ios-gray { color: #E9E9EB; }
+.bg-ios-green { background-color: #34C759; }
+.text-ios-green { color: #34C759; }
+
+/* Selection styling */
+.brands-page ::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scroll behavior */
+.brands-page {
+  scroll-behavior: smooth;
+}
+
+/* Fade in up animation for phone mockup messages */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Ken Burns zoom effect transition for hero */
+.duration-10000 {
+  transition-duration: 10000ms;
+}
+
+/* Blue gradient backgrounds */
+.bg-blue-50 { background-color: #eff6ff; }
+.from-blue-100 { --tw-gradient-from: #dbeafe; }
+.to-indigo-100 { --tw-gradient-to: #e0e7ff; }
