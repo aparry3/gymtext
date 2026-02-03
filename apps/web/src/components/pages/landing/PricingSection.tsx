@@ -39,9 +39,6 @@ export function PricingSection() {
                 <span className="text-2xl font-bold">.99</span>
                 <span className="text-lg opacity-80 ml-1">/mo</span>
               </div>
-              <p className="mt-3 text-sm opacity-90">
-                7-day free trial included
-              </p>
             </div>
 
             {/* Benefits List */}
@@ -61,12 +58,8 @@ export function PricingSection() {
                 href="/start"
                 className="mt-8 block w-full bg-[#1B81FF] hover:bg-[#1468CC] text-white py-4 rounded-xl font-bold text-center text-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-[#1B81FF]/20"
               >
-                Start Free Trial
+                Get Started
               </Link>
-
-              <p className="mt-4 text-center text-sm text-gray-400">
-                No credit card required to start
-              </p>
             </div>
           </div>
         </div>

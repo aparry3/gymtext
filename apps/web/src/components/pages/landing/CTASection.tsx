@@ -25,9 +25,6 @@ export function CTASection() {
         >
           Get Started Today
         </Link>
-        <p className="mt-6 text-sm text-gray-400">
-          No credit card required for 7-day trial. Cancel anytime.
-        </p>
       </div>
     </section>
   );
