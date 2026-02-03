@@ -13,15 +13,13 @@ const SLIDES = [
   },
   {
     id: 'hotel',
-    image:
-      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80',
+    image: '/yoga.jpg',
     title: 'Curated Wellness for Hospitality',
     subtitle: 'Premium in-room recovery and mobility sessions for your guests.',
   },
   {
     id: 'sports',
-    image:
-      'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&q=80',
+    image: '/football.jpeg',
     title: 'High Performance Coaching at Scale',
     subtitle: 'Deliver pro-level game prep and recovery directly to athletes.',
   },
@@ -76,7 +74,7 @@ export const BrandsHeroCarousel: React.FC = () => {
                   : 'opacity-0 translate-y-8'
               }`}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] drop-shadow-lg text-white">
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] text-white drop-shadow-lg">
                 {slide.title}
               </h1>
               <p className="text-xl text-gray-200 leading-relaxed font-light drop-shadow-md max-w-2xl mx-auto">
@@ -88,8 +86,8 @@ export const BrandsHeroCarousel: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 mt-12 lg:mt-0 relative z-30">
           <a
-            href="mailto:kyle@gymtext.co"
-            className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-bold text-gray-900 bg-white rounded-full hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
+            href="mailto:admin@gymtext.co"
+            className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-bold text-white bg-[#1B81FF] rounded-full hover:bg-[#1468CC] transition-all shadow-xl shadow-[#1B81FF]/30 hover:shadow-2xl hover:-translate-y-1"
           >
             Partner With Us
             <ArrowRight className="ml-2 h-5 w-5" />
