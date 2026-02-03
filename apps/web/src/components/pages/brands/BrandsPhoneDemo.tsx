@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { BrandsPhoneMockup } from './BrandsPhoneMockup';
 import { Dumbbell, Mountain, Hotel, Trophy } from 'lucide-react';
 
 const USE_CASES = [
@@ -73,7 +72,24 @@ export const BrandsPhoneDemo: React.FC = () => {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-blue-100 to-indigo-100 rounded-full blur-3xl opacity-50 -z-10"></div>
 
               <div className="transform transition-transform duration-500 hover:scale-[1.02] hover:rotate-1">
-                <BrandsPhoneMockup />
+                <div className="relative w-full max-w-sm mx-auto">
+                  <div className="relative w-full">
+                    <img
+                      src="/iPhone bezel.png"
+                      alt="iPhone frame"
+                      className="block w-full h-auto pointer-events-none z-10 relative"
+                    />
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="absolute top-[3.7%] left-[6.9%] w-[86.2%] h-[93%] object-cover rounded-[2.3rem] z-0"
+                    >
+                      <source src="/GymTextDemo.mp4" type="video/mp4" />
+                    </video>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

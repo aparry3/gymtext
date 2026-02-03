@@ -70,19 +70,19 @@ export const BrandsTeam: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TeamMember
             name="Kyle Doran"
-            role="Co-Founder"
+            role="CEO"
             email="kyle@gymtext.co"
             imageColor="b6e3f4"
           />
           <TeamMember
             name="Kevin Doran"
-            role="Co-Founder"
+            role="CPO"
             email="kevin@gymtext.co"
             imageColor="ffdfbf"
           />
           <TeamMember
             name="Aaron Parry"
-            role="Product Designer"
+            role="CTO"
             email="aaron@gymtext.co"
             imageColor="c0aede"
           />
