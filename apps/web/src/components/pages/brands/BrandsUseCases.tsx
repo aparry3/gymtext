@@ -34,8 +34,9 @@ export const BrandsUseCases: React.FC = () => {
               Built for any organization moving people.
             </h2>
             <p className="text-xl text-gray-500 mb-8 leading-relaxed">
-              Whether you run a gym, a hotel, or a tactical unit, GymText scales
-              your expertise and delivers it directly to your users&apos; pockets.
+              GymText works whether you&apos;re supporting gym members between sessions,
+              helping military units stay ready, extending a hotel wellness experience,
+              or reinforcing a brand-led training program.
             </p>
             <div className="space-y-4">
               {['No App Fatigue', '98% Open Rates', 'Instant Onboarding'].map(
@@ -54,22 +55,22 @@ export const BrandsUseCases: React.FC = () => {
           <div className="grid gap-4">
             <UseCaseItem
               title="Gyms & Trainers"
-              description="Automate daily programming and check-ins. Scale your personal training business without burning out."
+              description="Daily programming, class reminders, training plans, accountability, and member retention."
               icon={<Dumbbell className="h-6 w-6" />}
             />
             <UseCaseItem
-              title="Hospitality & Travel"
-              description="Provide premium in-room wellness experiences. Custom yoga and recovery for weary travelers."
+              title="Hotels & Wellness Retreats"
+              description="Curated movement experiences for guests such as yoga, mobility, recovery, or destination-specific fitness journeys."
               icon={<Hotel className="h-6 w-6" />}
             />
             <UseCaseItem
-              title="Brands & Retail"
-              description="Extend your brand beyond the purchase. Offer training plans that accompany your gear."
+              title="Athletic & Fitness Brands"
+              description="Sport-specific training, recovery programs, campaign extensions, and community engagement tied to product launches."
               icon={<ShoppingBag className="h-6 w-6" />}
             />
             <UseCaseItem
-              title="Tactical & Defense"
-              description="Secure, low-bandwidth distribution of readiness training for deployed personnel."
+              title="Military & Tactical"
+              description="Readiness training, mobility, injury prevention, and performance routines tailored to operational demands."
               icon={<Shield className="h-6 w-6" />}
             />
           </div>

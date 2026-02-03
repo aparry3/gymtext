@@ -8,6 +8,7 @@ import { HeroSection } from '@/components/pages/landing/HeroSection';
 import { HowItWorksSection } from '@/components/pages/landing/HowItWorksSection';
 import { SMSPreviewSection } from '@/components/pages/landing/SMSPreviewSection';
 import { FeaturesSection } from '@/components/pages/landing/FeaturesSection';
+import { PricingSection } from '@/components/pages/landing/PricingSection';
 import { CTASection } from '@/components/pages/landing/CTASection';
 import { FooterSection } from '@/components/pages/landing/FooterSection';
 
@@ -74,6 +75,12 @@ export function LandingPage() {
             >
               Demo
             </button>
+            <button
+              onClick={() => scrollToSection('pricing')}
+              className={`transition-colors ${isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
+            >
+              Pricing
+            </button>
             <Link
               href="/blog"
               className={`transition-colors ${isScrolled ? 'hover:text-gray-900' : 'hover:text-white/80'}`}
@@ -118,6 +125,12 @@ export function LandingPage() {
             >
               Demo
             </button>
+            <button
+              onClick={() => scrollToSection('pricing')}
+              className="text-lg text-left text-gray-600 hover:text-gray-900"
+            >
+              Pricing
+            </button>
             <Link
               href="/blog"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -139,6 +152,7 @@ export function LandingPage() {
       <SMSPreviewSection />
       <HowItWorksSection />
       <FeaturesSection />
+      <PricingSection />
       <CTASection />
       <FooterSection />
     </main>
