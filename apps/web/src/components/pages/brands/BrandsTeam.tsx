@@ -21,7 +21,7 @@ const TeamMember: React.FC<TeamMemberProps> = ({
       <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}&backgroundColor=${imageColor}`}
+          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}&backgroundColor=${imageColor}&top=shortHairShortFlat,shortHairShortWaved,shortHairShortCurly,shortHairShortRound&facialHair=beardLight,beardMedium,moustacheFancy&facialHairProbability=80&clothing=blazerAndShirt,blazerAndSweater,collarAndSweater`}
           alt={name}
           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
         />
