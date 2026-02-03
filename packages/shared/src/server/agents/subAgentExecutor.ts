@@ -61,16 +61,18 @@ export async function executeSubAgents(
     const batchPromises = batchKeys.map(async (key) => {
       const entry = batch[key];
 
-      // Determine agent, condition, and transform based on entry type
+      // Determine agent, condition, transform, and onComplete based on entry type
       let agent: ConfigurableAgent<unknown>;
       let condition: ((r: unknown) => boolean) | undefined;
       let transform: ((r: unknown, parentInput?: string) => string) | undefined;
+      let onComplete: ((result: unknown) => void | Promise<void>) | undefined;
 
       if (isSubAgentConfig(entry)) {
-        // Extended config: { agent, transform?, condition? }
+        // Extended config: { agent, transform?, condition?, onComplete? }
         agent = entry.agent;
         condition = entry.condition;
         transform = entry.transform;
+        onComplete = entry.onComplete;
       } else {
         // Simple config: bare agent
         agent = entry as ConfigurableAgent<unknown>;
@@ -93,6 +95,13 @@ export async function executeSubAgents(
 
       // Execute the agent - validation is handled internally by the agent
       const result = await agent.invoke(agentInput);
+
+      // Fire onComplete callback (fire-and-forget, don't block)
+      if (onComplete) {
+        Promise.resolve(onComplete(result)).catch((e) =>
+          console.error(`[${parentName}:${key}] onComplete callback failed:`, e)
+        );
+      }
 
       console.log(`[${parentName}:${key}] Completed in ${Date.now() - startTime}ms`);
       return { key, result, skipped: false };

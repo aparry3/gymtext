@@ -16,6 +16,14 @@ export type {
   ModifyWeekParams,
 } from './workoutModificationService';
 
+// Modify week agent service (composed agent for week modifications with progressive delivery)
+export { createModifyWeekAgentService, ModifyWeekAgentService } from './modifyWeekAgentService';
+export type {
+  ModifyWeekAgentServiceInstance,
+  ModifyWeekOutput,
+  ModifyWeekOptions,
+} from './modifyWeekAgentService';
+
 // Plan modification service (agent helper)
 export { createPlanModificationService } from './planModificationService';
 export type {

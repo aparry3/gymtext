@@ -1,9 +1,11 @@
 import {
   createWorkoutAgentService,
-  createMicrocycleAgentService,
   type WorkoutAgentService,
-  type MicrocycleAgentService,
 } from '../training';
+import {
+  createModifyWeekAgentService,
+  type ModifyWeekAgentService,
+} from './modifyWeekAgentService';
 import type { ModifyWorkoutOutput, WorkoutGenerateOutput } from '@/server/services/agents/types/workouts';
 import { now, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
@@ -34,6 +36,16 @@ export interface ModifyWeekParams {
   userId: string;
   targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
   changeRequest: string; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
+  /**
+   * Callback fired when microcycle message is ready (fire-and-forget).
+   * Use for progressive message delivery to reduce perceived latency.
+   */
+  onMicrocycleMessage?: (message: string) => void | Promise<void>;
+  /**
+   * Callback fired when workout message is ready (fire-and-forget).
+   * Use for progressive message delivery to reduce perceived latency.
+   */
+  onWorkoutMessage?: (message: string) => void | Promise<void>;
 }
 
 export interface ModifyWeekResult {
@@ -87,16 +99,16 @@ export function createWorkoutModificationService(
   } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
-  let microcycleAgent: MicrocycleAgentService | null = null;
+  let modifyWeekAgent: ModifyWeekAgentService | null = null;
 
   const getWorkoutAgent = (): WorkoutAgentService => {
     if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService);
     return workoutAgent;
   };
 
-  const getMicrocycleAgent = (): MicrocycleAgentService => {
-    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService);
-    return microcycleAgent;
+  const getModifyWeekAgent = (): ModifyWeekAgentService => {
+    if (!modifyWeekAgent) modifyWeekAgent = createModifyWeekAgentService(contextService);
+    return modifyWeekAgent;
   };
 
   const getWorkoutTypeFromTheme = (theme: string): string => {
@@ -155,7 +167,7 @@ export function createWorkoutModificationService(
 
     async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
       try {
-        const { userId, targetDay, changeRequest } = params;
+        const { userId, targetDay, changeRequest, onMicrocycleMessage, onWorkoutMessage } = params;
         console.log('[MODIFY_WEEK] Starting week modification', { userId, targetDay, changeRequest });
 
         const user = await userService.getUser(userId);
@@ -168,45 +180,52 @@ export function createWorkoutModificationService(
         const { microcycle } = await trainingService.prepareMicrocycleForDate(userId, plan, today.toJSDate(), user.timezone);
         if (!microcycle) return { success: false, messages: [], error: 'Could not find or create microcycle for current week' };
 
-        console.log('[MODIFY_WEEK] Modifying microcycle', { microcycleId: microcycle.id, absoluteWeek: microcycle.absoluteWeek });
+        const targetDayIndex = DAY_NAMES.indexOf(targetDay as typeof DAY_NAMES[number]);
+
+        console.log('[MODIFY_WEEK] Invoking ModifyWeekAgentService', { microcycleId: microcycle.id, absoluteWeek: microcycle.absoluteWeek });
+
         // Combine targetDay into the change request for the agent
         const fullChangeRequest = `For ${targetDay}: ${changeRequest}`;
-        const modifiedMicrocycle = await getMicrocycleAgent().modifyMicrocycle(user, microcycle, fullChangeRequest);
 
+        // Use the composed agent service with progressive message callbacks
+        const agentResult = await getModifyWeekAgent().modifyWeek(
+          user,
+          microcycle,
+          targetDayIndex,
+          fullChangeRequest,
+          {
+            onMicrocycleMessage,
+            onWorkoutMessage,
+          }
+        );
+
+        // Persist microcycle changes
         const updatedMicrocycle = await microcycleService.updateMicrocycle(microcycle.id, {
-          days: modifiedMicrocycle.days,
-          description: modifiedMicrocycle.description,
-          isDeload: modifiedMicrocycle.isDeload,
-          structured: modifiedMicrocycle.structure,
+          days: agentResult.microcycle.days,
+          description: agentResult.microcycle.description,
+          isDeload: agentResult.microcycle.isDeload,
+          structured: agentResult.microcycle.structure,
         });
         if (!updatedMicrocycle) return { success: false, messages: [], error: 'Failed to update microcycle' };
 
-        console.log('[MODIFY_WEEK] Generating new workout for target day');
-        const targetDayIndex = DAY_NAMES.indexOf(targetDay as typeof DAY_NAMES[number]);
-        const dayOverview = modifiedMicrocycle.days[targetDayIndex] || 'Rest or active recovery';
-
+        // Persist workout changes
+        const dayOverview = agentResult.microcycle.days[targetDayIndex] || 'Rest or active recovery';
         const targetDate = today.startOf('week').plus({ days: targetDayIndex });
         let workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, targetDate.toJSDate());
 
-        const activityType = modifiedMicrocycle.structure?.days?.[targetDayIndex]?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
-
-        let workoutMessage: string | undefined;
-
         if (!workout) {
-          console.log('[MODIFY_WEEK] No existing workout found, generating new one');
+          console.log('[MODIFY_WEEK] No existing workout found, generating new one via training service');
           const generatedWorkout = await trainingService.prepareWorkoutForDate(user, targetDate);
           if (generatedWorkout) {
             workout = generatedWorkout;
-            workoutMessage = generatedWorkout.message ?? undefined;
           }
         } else {
-          console.log('[MODIFY_WEEK] Regenerating existing workout');
-          const workoutResult = await getWorkoutAgent().generateWorkout(user, dayOverview, modifiedMicrocycle.isDeload, activityType);
+          console.log('[MODIFY_WEEK] Updating existing workout');
 
           // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-          if (workoutResult.structure && exerciseResolution) {
+          if (agentResult.workout.structure && exerciseResolution) {
             await resolveExercisesInStructure(
-              workoutResult.structure,
+              agentResult.workout.structure,
               exerciseResolution,
               exerciseUse,
               userId
@@ -215,20 +234,28 @@ export function createWorkoutModificationService(
 
           await workoutInstanceService.updateWorkout(workout.id, {
             goal: dayOverview,
-            description: workoutResult.response,
-            structured: workoutResult.structure ?? undefined,
-            message: workoutResult.message,
+            description: agentResult.workout.response,
+            structured: agentResult.workout.structure ?? undefined,
+            message: agentResult.workout.message,
             sessionType: getWorkoutTypeFromTheme(dayOverview),
           });
-          workoutMessage = workoutResult.message;
         }
 
+        // Collect messages for return (for backward compatibility)
         const messages: string[] = [];
         const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
-        if (targetDay === currentDayOfWeek && workoutMessage) messages.push(workoutMessage);
+        if (targetDay === currentDayOfWeek && agentResult.workout.message) {
+          messages.push(agentResult.workout.message);
+        }
 
         console.log('[MODIFY_WEEK] Week modification complete');
-        return { success: true, modifiedDays: 1, modifications: modifiedMicrocycle.modifications, messages };
+        return {
+          success: true,
+          modifiedDays: 1,
+          modifications: agentResult.microcycle.modifications,
+          messages,
+          workout: agentResult.workout,
+        };
       } catch (error) {
         console.error('[MODIFY_WEEK] Error modifying week:', error);
         return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };

@@ -132,6 +132,13 @@ export interface SubAgentConfig<TAgent extends ConfigurableAgent<any> = Configur
   transform?: (mainResult: unknown, parentInput?: string) => string;
   /** Condition to run this subAgent (default: always run) */
   condition?: (mainResult: unknown) => boolean;
+  /**
+   * Callback fired immediately when this sub-agent completes (fire-and-forget).
+   * Use this for progressive message delivery - the callback runs in parallel
+   * with other sub-agents and doesn't block the overall chain.
+   * @param result - The sub-agent's result
+   */
+  onComplete?: (result: unknown) => void | Promise<void>;
 }
 
 /**
