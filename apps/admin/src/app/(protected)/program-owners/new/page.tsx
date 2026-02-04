@@ -50,7 +50,7 @@ export default function CreateProgramOwnerPage() {
     { value: 'coach', label: 'Coach' },
     { value: 'trainer', label: 'Trainer' },
     { value: 'influencer', label: 'Influencer' },
-    { value: 'brand', label: 'Brand' },
+    { value: 'admin', label: 'Admin' },
   ]
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'wordmark') => {

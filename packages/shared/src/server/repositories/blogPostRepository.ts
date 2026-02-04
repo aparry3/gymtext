@@ -40,16 +40,41 @@ export class BlogPostRepository extends BaseRepository {
   }
 
   /**
-   * Find a blog post by ID
+   * Find a blog post by ID with cover image URL
    */
-  async findById(id: string): Promise<BlogPost | null> {
+  async findById(id: string): Promise<(BlogPost & { coverImageUrl: string | null }) | null> {
     const result = await this.db
       .selectFrom('blogPosts')
-      .selectAll()
-      .where('id', '=', id)
+      .leftJoin('uploadedImages', 'uploadedImages.id', 'blogPosts.coverImageId')
+      .select([
+        'blogPosts.id',
+        'blogPosts.ownerId',
+        'blogPosts.organizationId',
+        'blogPosts.slug',
+        'blogPosts.title',
+        'blogPosts.description',
+        'blogPosts.content',
+        'blogPosts.coverImageId',
+        'blogPosts.status',
+        'blogPosts.publishedAt',
+        'blogPosts.tags',
+        'blogPosts.metaTitle',
+        'blogPosts.metaDescription',
+        'blogPosts.readingTimeMinutes',
+        'blogPosts.viewCount',
+        'blogPosts.createdAt',
+        'blogPosts.updatedAt',
+        'uploadedImages.url as coverImageUrl',
+      ])
+      .where('blogPosts.id', '=', id)
       .executeTakeFirst();
 
-    return result ? BlogPostModel.fromDB(result) : null;
+    if (!result) return null;
+
+    return {
+      ...BlogPostModel.fromDB(result),
+      coverImageUrl: result.coverImageUrl ?? null,
+    };
   }
 
   /**

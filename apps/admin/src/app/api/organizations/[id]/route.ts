@@ -56,7 +56,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const { id } = await params;
     const body = await request.json();
 
-    const { name, slug, description, logoUrl, wordmarkUrl, websiteUrl, isActive } = body;
+    const { name, slug, description, logoUrl, wordmarkUrl, websiteUrl, organizationType, isActive } = body;
 
     const { services } = await getAdminContext();
 
@@ -67,6 +67,7 @@ export async function PATCH(request: Request, { params }: Params) {
       logoUrl,
       wordmarkUrl,
       websiteUrl,
+      organizationType,
       isActive,
     });
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Loader2, Trash2, Globe, EyeOff, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Trash2, Globe, EyeOff, Eye, ImagePlus, X } from 'lucide-react';
 import { TipTapEditor } from '@/components/blog/TipTapEditor';
 
 interface BlogPost {
@@ -17,6 +17,8 @@ interface BlogPost {
   slug: string;
   description: string | null;
   content: string;
+  coverImageId: string | null;
+  coverImageUrl: string | null;
   status: 'draft' | 'published' | 'archived';
   publishedAt: string | null;
   tags: string[];
@@ -48,6 +50,9 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
   const [tags, setTags] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+  const [coverImageId, setCoverImageId] = useState<string | null>(null);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     async function fetchPost() {
@@ -68,6 +73,8 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
         setTags(data.tags.join(', '));
         setMetaTitle(data.metaTitle || '');
         setMetaDescription(data.metaDescription || '');
+        setCoverImageId(data.coverImageId || null);
+        setCoverImageUrl(data.coverImageUrl || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load post');
       } finally {
@@ -97,6 +104,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
             .filter(Boolean),
           metaTitle: metaTitle.trim() || null,
           metaDescription: metaDescription.trim() || null,
+          coverImageId,
         }),
       });
 
@@ -107,11 +115,48 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
       }
 
       setPost(result.data);
+      setCoverImageUrl(result.data.coverImageUrl || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save post');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/blog/images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to upload image');
+      }
+
+      setCoverImageId(result.data.id);
+      setCoverImageUrl(result.data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveCoverImage = () => {
+    setCoverImageId(null);
+    setCoverImageUrl(null);
   };
 
   const handlePublish = async () => {
@@ -370,6 +415,56 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
                     placeholder="Brief description for listings and SEO"
                     className="w-full px-3 py-2 border rounded-md bg-background min-h-[80px] resize-y"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Cover Image</label>
+                  {coverImageUrl ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={coverImageUrl}
+                        alt="Cover"
+                        className="max-w-md max-h-48 rounded-lg object-cover border"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={handleRemoveCoverImage}
+                        type="button"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={isUploadingImage}
+                        />
+                        <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg hover:bg-muted/50 transition-colors">
+                          {isUploadingImage ? (
+                            <>
+                              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Upload cover image</span>
+                            </>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recommended size: 1200x630px
+                  </p>
                 </div>
 
                 <div>

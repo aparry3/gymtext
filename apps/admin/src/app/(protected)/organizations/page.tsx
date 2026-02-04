@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatRelative } from '@/shared/utils/date'
 
+type OrganizationType = 'gym' | 'brand' | 'media' | 'hospitality' | 'education' | 'corporate'
+
 interface OrganizationWithStats {
   id: string
   name: string
@@ -18,6 +20,7 @@ interface OrganizationWithStats {
   logoUrl: string | null
   wordmarkUrl: string | null
   websiteUrl: string | null
+  organizationType: OrganizationType | null
   isActive: boolean
   createdAt: Date
   updatedAt: Date
@@ -228,6 +231,11 @@ function OrganizationsPageContent() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-semibold truncate">{org.name}</h3>
+                      {org.organizationType && (
+                        <Badge variant="outline" className="capitalize">
+                          {org.organizationType}
+                        </Badge>
+                      )}
                       <Badge variant={org.isActive ? 'default' : 'secondary'}>
                         {org.isActive ? 'Active' : 'Inactive'}
                       </Badge>

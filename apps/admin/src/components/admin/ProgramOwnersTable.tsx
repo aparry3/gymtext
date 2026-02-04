@@ -155,11 +155,10 @@ function OwnerRow({ owner }: OwnerRowProps) {
   }
 
   const typeColors: Record<string, string> = {
-    ai: 'bg-purple-100 text-purple-800',
     coach: 'bg-blue-100 text-blue-800',
     trainer: 'bg-green-100 text-green-800',
     influencer: 'bg-orange-100 text-orange-800',
-    brand: 'bg-pink-100 text-pink-800',
+    admin: 'bg-purple-100 text-purple-800',
   }
 
   return (

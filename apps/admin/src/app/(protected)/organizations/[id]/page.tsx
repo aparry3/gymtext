@@ -19,6 +19,8 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 
+type OrganizationType = 'gym' | 'brand' | 'media' | 'hospitality' | 'education' | 'corporate'
+
 interface Organization {
   id: string
   name: string
@@ -27,6 +29,7 @@ interface Organization {
   logoUrl: string | null
   wordmarkUrl: string | null
   websiteUrl: string | null
+  organizationType: OrganizationType | null
   isActive: boolean
   createdAt: Date
   updatedAt: Date
@@ -74,6 +77,7 @@ export default function OrganizationDetailPage() {
     logoUrl: '',
     wordmarkUrl: '',
     websiteUrl: '',
+    organizationType: '' as OrganizationType | '',
     isActive: true,
   })
 
@@ -106,6 +110,7 @@ export default function OrganizationDetailPage() {
         logoUrl: data.organization.logoUrl || '',
         wordmarkUrl: data.organization.wordmarkUrl || '',
         websiteUrl: data.organization.websiteUrl || '',
+        organizationType: data.organization.organizationType || '',
         isActive: data.organization.isActive,
       })
     } catch (err) {
@@ -174,6 +179,7 @@ export default function OrganizationDetailPage() {
         logoUrl: organization.logoUrl || '',
         wordmarkUrl: organization.wordmarkUrl || '',
         websiteUrl: organization.websiteUrl || '',
+        organizationType: organization.organizationType || '',
         isActive: organization.isActive,
       })
     }
@@ -363,6 +369,22 @@ export default function OrganizationDetailPage() {
                     />
                   </div>
                   <div>
+                    <label className="text-sm font-medium text-gray-700">Organization Type</label>
+                    <select
+                      value={editForm.organizationType}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, organizationType: e.target.value as OrganizationType | '' }))}
+                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">None</option>
+                      <option value="gym">Gym</option>
+                      <option value="brand">Brand</option>
+                      <option value="media">Media</option>
+                      <option value="hospitality">Hospitality</option>
+                      <option value="education">Education</option>
+                      <option value="corporate">Corporate</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-gray-700">Logo URL</label>
                     <Input
                       value={editForm.logoUrl}
@@ -406,6 +428,11 @@ export default function OrganizationDetailPage() {
                 <>
                   <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-bold">{organization.name}</h1>
+                    {organization.organizationType && (
+                      <Badge variant="outline" className="capitalize">
+                        {organization.organizationType}
+                      </Badge>
+                    )}
                     <Badge variant={organization.isActive ? 'default' : 'secondary'}>
                       {organization.isActive ? 'Active' : 'Inactive'}
                     </Badge>
