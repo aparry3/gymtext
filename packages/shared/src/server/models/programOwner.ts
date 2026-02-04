@@ -17,6 +17,7 @@ export interface ProgramOwner {
   wordmarkUrl: string | null;
   stripeConnectAccountId: string | null;
   phone: string | null;
+  slug: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +35,7 @@ export class ProgramOwnerModel {
       wordmarkUrl: row.wordmarkUrl ?? null,
       stripeConnectAccountId: row.stripeConnectAccountId,
       phone: row.phone ?? null,
+      slug: row.slug ?? null,
       isActive: row.isActive,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
       updatedAt: new Date(row.updatedAt as unknown as string | number | Date),

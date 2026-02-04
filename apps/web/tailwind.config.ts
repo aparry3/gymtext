@@ -13,7 +13,14 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['var(--font-oswald)', 'Oswald', 'sans-serif'],
+      },
       colors: {
+        // Mount St. Joseph / Pat Clatchey theme
+        'msj-purple': '#4c1d95',
+        'msj-gold': '#fbbf24',
+        'msj-dark': '#1a1a1a',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

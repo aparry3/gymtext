@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Mount St. Joseph / Pat Clatchey theme colors */
+@theme {
+  --color-msj-purple: #4c1d95;
+  --color-msj-gold: #fbbf24;
+  --color-msj-dark: #1a1a1a;
+}
+
 /* Soft and friendly design system with HSL colors */
 :root {
   /* Prevent iOS auto dark mode adjustments */

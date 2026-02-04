@@ -8,6 +8,7 @@ export interface ProgramOwnerServiceInstance {
   create(data: NewProgramOwner): Promise<ProgramOwner>;
   getById(id: string): Promise<ProgramOwner | null>;
   getByUserId(userId: string): Promise<ProgramOwner | null>;
+  getBySlug(slug: string): Promise<ProgramOwner | null>;
   getAiOwner(): Promise<ProgramOwner>;
   listActive(): Promise<ProgramOwner[]>;
   listAll(): Promise<ProgramOwner[]>;
@@ -34,6 +35,10 @@ export function createProgramOwnerService(
 
     async getByUserId(userId: string): Promise<ProgramOwner | null> {
       return repos.programOwner.findByUserId(userId);
+    },
+
+    async getBySlug(slug: string): Promise<ProgramOwner | null> {
+      return repos.programOwner.findBySlug(slug);
     },
 
     async getAiOwner(): Promise<ProgramOwner> {

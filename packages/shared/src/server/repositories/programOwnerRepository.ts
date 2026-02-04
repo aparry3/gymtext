@@ -63,6 +63,19 @@ export class ProgramOwnerRepository extends BaseRepository {
   }
 
   /**
+   * Find a program owner by their slug (for public landing pages)
+   */
+  async findBySlug(slug: string): Promise<ProgramOwner | null> {
+    const result = await this.db
+      .selectFrom('programOwners')
+      .selectAll()
+      .where('slug', '=', slug)
+      .executeTakeFirst();
+
+    return result ? ProgramOwnerModel.fromDB(result) : null;
+  }
+
+  /**
    * Find the system AI owner
    */
   async findAiOwner(): Promise<ProgramOwner | null> {
