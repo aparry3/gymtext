@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEnvironment } from '@/context/EnvironmentContext'
-import { AdminProgramOwner, AdminProgramOwnerDetailResponse } from '@/components/admin/types'
+import { AdminProgramOwner, AdminProgramOwnerDetailResponse, OwnerType } from '@/components/admin/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -54,6 +54,7 @@ export default function ProgramOwnerDetailPage() {
     wordmarkUrl: '',
     phone: '',
     isActive: true,
+    ownerType: 'coach' as OwnerType,
   })
 
   const [avatarUpload, setAvatarUpload] = useState<ImageUploadState>({
@@ -100,6 +101,7 @@ export default function ProgramOwnerDetailPage() {
         wordmarkUrl: data.owner.wordmarkUrl || '',
         phone: formattedPhone,
         isActive: data.owner.isActive,
+        ownerType: data.owner.ownerType,
       })
       setAvatarUpload(prev => ({
         ...prev,
@@ -236,6 +238,7 @@ export default function ProgramOwnerDetailPage() {
         wordmarkUrl: owner.wordmarkUrl || '',
         phone: formattedPhone,
         isActive: owner.isActive,
+        ownerType: owner.ownerType,
       })
       setAvatarUpload(prev => ({
         ...prev,
@@ -331,6 +334,19 @@ export default function ProgramOwnerDetailPage() {
                       onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
                       className="mt-1"
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Type</label>
+                    <select
+                      value={editForm.ownerType}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, ownerType: e.target.value as OwnerType }))}
+                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="coach">Coach</option>
+                      <option value="trainer">Trainer</option>
+                      <option value="influencer">Influencer</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Bio</label>

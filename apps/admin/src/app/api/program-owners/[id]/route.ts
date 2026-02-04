@@ -102,6 +102,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.userId !== undefined) updateData.userId = body.userId;
+    if (body.ownerType !== undefined) updateData.ownerType = body.ownerType;
 
     const updated = await services.programOwner.update(id, updateData);
 
