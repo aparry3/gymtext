@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
   }
 
   // For now, hardcode Pat Clatchey metadata
-  if (slug === 'pat-clatchey') {
+  if (slug === 'coachclatchey') {
     return {
       title: 'Train with Coach Pat Clatchey | GymText Legend Series',
       description:
