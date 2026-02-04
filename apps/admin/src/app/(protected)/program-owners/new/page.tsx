@@ -29,6 +29,7 @@ export default function CreateProgramOwnerPage() {
 
   const [form, setForm] = useState({
     displayName: '',
+    slug: '',
     ownerType: 'coach' as OwnerType,
     bio: '',
     avatarUrl: '',
@@ -144,6 +145,7 @@ export default function CreateProgramOwnerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           displayName: form.displayName.trim(),
+          slug: form.slug.trim() || null,
           ownerType: form.ownerType,
           bio: form.bio.trim() || null,
           avatarUrl: avatarMode === 'url' ? (form.avatarUrl.trim() || null) : null,
@@ -218,6 +220,30 @@ export default function CreateProgramOwnerPage() {
                 placeholder="e.g., Coach John Smith"
                 disabled={isSubmitting}
               />
+            </div>
+
+            {/* Slug */}
+            <div className="space-y-2">
+              <label htmlFor="slug" className="text-sm font-medium">
+                Slug
+              </label>
+              <Input
+                id="slug"
+                value={form.slug}
+                onChange={(e) => {
+                  // Auto-format: lowercase, replace spaces with hyphens, allow only alphanumeric + hyphens
+                  const formatted = e.target.value
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '');
+                  setForm(prev => ({ ...prev, slug: formatted }));
+                }}
+                placeholder="e.g., pat-clatchey"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                URL-friendly identifier for public pages (e.g., pat-clatchey)
+              </p>
             </div>
 
             {/* Owner Type */}

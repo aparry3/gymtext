@@ -96,6 +96,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     // Build update object
     const updateData: Record<string, unknown> = {};
     if (body.displayName !== undefined) updateData.displayName = body.displayName;
+    if (body.slug !== undefined) updateData.slug = body.slug;
     if (body.bio !== undefined) updateData.bio = body.bio;
     if (body.avatarUrl !== undefined) updateData.avatarUrl = body.avatarUrl;
     if (body.wordmarkUrl !== undefined) updateData.wordmarkUrl = body.wordmarkUrl;

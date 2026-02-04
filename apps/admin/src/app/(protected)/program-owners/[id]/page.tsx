@@ -49,6 +49,7 @@ export default function ProgramOwnerDetailPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [editForm, setEditForm] = useState({
     displayName: '',
+    slug: '',
     bio: '',
     avatarUrl: '',
     wordmarkUrl: '',
@@ -96,6 +97,7 @@ export default function ProgramOwnerDetailPage() {
       }
       setEditForm({
         displayName: data.owner.displayName,
+        slug: data.owner.slug || '',
         bio: data.owner.bio || '',
         avatarUrl: data.owner.avatarUrl || '',
         wordmarkUrl: data.owner.wordmarkUrl || '',
@@ -233,6 +235,7 @@ export default function ProgramOwnerDetailPage() {
       }
       setEditForm({
         displayName: owner.displayName,
+        slug: owner.slug || '',
         bio: owner.bio || '',
         avatarUrl: owner.avatarUrl || '',
         wordmarkUrl: owner.wordmarkUrl || '',
@@ -334,6 +337,25 @@ export default function ProgramOwnerDetailPage() {
                       onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
                       className="mt-1"
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Slug</label>
+                    <Input
+                      value={editForm.slug}
+                      onChange={(e) => {
+                        // Auto-format: lowercase, replace spaces with hyphens, allow only alphanumeric + hyphens
+                        const formatted = e.target.value
+                          .toLowerCase()
+                          .replace(/\s+/g, '-')
+                          .replace(/[^a-z0-9-]/g, '');
+                        setEditForm(prev => ({ ...prev, slug: formatted }));
+                      }}
+                      placeholder="e.g., pat-clatchey"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      URL-friendly identifier for public pages (e.g., pat-clatchey)
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Type</label>
