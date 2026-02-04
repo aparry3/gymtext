@@ -22,7 +22,7 @@ export interface BlogServiceInstance {
 
   // Management methods (for programs portal)
   create(ownerId: string, data: CreateBlogPostInput): Promise<BlogPost>;
-  getById(id: string): Promise<BlogPost | null>;
+  getById(id: string): Promise<(BlogPost & { coverImageUrl: string | null }) | null>;
   getByOwnerId(ownerId: string): Promise<BlogPost[]>;
   update(id: string, ownerId: string, data: UpdateBlogPostInput): Promise<BlogPost | null>;
   publish(id: string, ownerId: string): Promise<BlogPost | null>;
@@ -65,7 +65,7 @@ export function createBlogService(repos: RepositoryContainer): BlogServiceInstan
   /**
    * Verify the owner owns the post (for mutations)
    */
-  async function verifyOwnership(id: string, ownerId: string): Promise<BlogPost | null> {
+  async function verifyOwnership(id: string, ownerId: string): Promise<(BlogPost & { coverImageUrl: string | null }) | null> {
     const post = await repos.blogPost.findById(id);
     if (!post || post.ownerId !== ownerId) {
       return null;
@@ -142,7 +142,7 @@ export function createBlogService(repos: RepositoryContainer): BlogServiceInstan
       return repos.blogPost.create(newPost);
     },
 
-    async getById(id: string): Promise<BlogPost | null> {
+    async getById(id: string): Promise<(BlogPost & { coverImageUrl: string | null }) | null> {
       return repos.blogPost.findById(id);
     },
 

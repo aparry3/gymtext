@@ -236,27 +236,10 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
         let { enrollment, currentPlanInstance: plan } = enrollmentResult;
 
-        // For AI programs without a version, generate one
+        // If there's no plan version, we cannot proceed
         if (!plan) {
-          const prog = await programService.getById(enrollment.programId);
-          if (!prog) {
-            console.log(`[TrainingService] Program not found: ${enrollment.programId}`);
-            return null;
-          }
-
-          const owner = await programOwnerService.getById(prog.ownerId);
-          if (!owner) {
-            console.log(`[TrainingService] Program owner not found: ${prog.ownerId}`);
-            return null;
-          }
-
-          if (owner.ownerType === 'ai') {
-            console.log(`[TrainingService] AI program has no version, generating one for user ${user.id}`);
-            plan = await this.createFitnessPlan(user);
-          } else {
-            console.log(`[TrainingService] Non-AI program has no version for user ${user.id}`);
-            return null;
-          }
+          console.log(`[TrainingService] Program has no version for user ${user.id}`);
+          return null;
         }
 
         // 2. Get progress for the target date

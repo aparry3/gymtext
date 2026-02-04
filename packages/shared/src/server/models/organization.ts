@@ -13,6 +13,9 @@ export type OrganizationMemberUpdate = Updateable<OrganizationMembers>;
 // Role types
 export type OrganizationRole = 'admin' | 'editor' | 'viewer';
 
+// Organization type
+export type OrganizationType = 'gym' | 'brand' | 'media' | 'hospitality' | 'education' | 'corporate';
+
 /**
  * Organization entity
  */
@@ -24,6 +27,7 @@ export interface Organization {
   logoUrl: string | null;
   wordmarkUrl: string | null;
   websiteUrl: string | null;
+  organizationType: OrganizationType | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -77,6 +81,7 @@ export class OrganizationModel {
       logoUrl: row.logoUrl,
       wordmarkUrl: row.wordmarkUrl,
       websiteUrl: row.websiteUrl,
+      organizationType: row.organizationType as OrganizationType | null,
       isActive: row.isActive,
       createdAt: new Date(row.createdAt as unknown as string | number | Date),
       updatedAt: new Date(row.updatedAt as unknown as string | number | Date),

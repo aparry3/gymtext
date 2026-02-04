@@ -82,17 +82,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Prevent modifying AI owner type
-    if (existing.ownerType === 'ai' && body.ownerType && body.ownerType !== 'ai') {
-      return NextResponse.json(
-        { success: false, message: 'Cannot change the type of the AI owner' },
-        { status: 400 }
-      );
-    }
-
     // Validate ownerType if provided
     if (body.ownerType) {
-      const validTypes: OwnerType[] = ['ai', 'coach', 'trainer', 'influencer'];
+      const validTypes: OwnerType[] = ['coach', 'trainer', 'influencer', 'admin'];
       if (!validTypes.includes(body.ownerType)) {
         return NextResponse.json(
           { success: false, message: 'Invalid ownerType' },

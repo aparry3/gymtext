@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { name, slug, description, logoUrl, wordmarkUrl, websiteUrl, isActive } = body;
+    const { name, slug, description, logoUrl, wordmarkUrl, websiteUrl, organizationType, isActive } = body;
 
     // Validate required fields
     if (!name) {
@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       logoUrl,
       wordmarkUrl,
       websiteUrl,
+      organizationType,
       isActive,
     });
 

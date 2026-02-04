@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { ArrowLeft, Clock, Eye } from 'lucide-react';
 import { getServices, getRepositories } from '@/lib/context';
 import { ContentRenderer } from '@/components/pages/blog/ContentRenderer';
+import { ShareButtons } from '@/components/pages/blog/ShareButtons';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -105,18 +106,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <header className="mb-8">
-            {/* Tags */}
-            {post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {post.tags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="text-sm font-medium px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
-                  >
-                    {tag}
-                  </Link>
-                ))}
+            {/* Cover Image */}
+            {coverImageUrl && (
+              <div className="mb-6 -mx-4 md:mx-0">
+                <img
+                  src={coverImageUrl}
+                  alt={post.title}
+                  className="w-full rounded-none md:rounded-xl shadow-lg"
+                />
               </div>
             )}
 
@@ -127,8 +124,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
             {/* Description */}
             {post.description && (
-              <p className="text-xl text-gray-600 mb-6">{post.description}</p>
+              <p className="text-xl text-gray-600 italic mb-6">{post.description}</p>
             )}
+
+            {/* Share Buttons */}
+            <div className="mb-6">
+              <ShareButtons
+                url={`https://gymtext.com/blog/${slug}`}
+                title={post.title}
+              />
+            </div>
 
             {/* Author and Meta */}
             <div className="flex flex-wrap items-center gap-4 text-gray-600">
@@ -171,19 +176,25 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
           </header>
 
-          {/* Cover Image */}
-          {coverImageUrl && (
-            <div className="mb-8 -mx-4 md:mx-0">
-              <img
-                src={coverImageUrl}
-                alt={post.title}
-                className="w-full rounded-none md:rounded-xl shadow-lg"
-              />
-            </div>
-          )}
-
           {/* Content */}
           <ContentRenderer content={post.content} />
+
+          {/* Tags */}
+          {post.tags.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/blog?tag=${encodeURIComponent(tag)}`}
+                    className="text-sm font-medium px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Author Bio */}
           {post.author.bio && (

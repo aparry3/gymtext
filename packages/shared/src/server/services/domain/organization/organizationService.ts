@@ -7,6 +7,7 @@ import type {
   OrganizationMemberWithOwner,
   OrganizationWithStats,
   OrganizationRole,
+  OrganizationType,
 } from '../../../models/organization';
 import { OrganizationModel } from '../../../models/organization';
 
@@ -47,6 +48,7 @@ export interface CreateOrganizationInput {
   logoUrl?: string;
   wordmarkUrl?: string;
   websiteUrl?: string;
+  organizationType?: OrganizationType | null;
   isActive?: boolean;
 }
 
@@ -60,6 +62,7 @@ export interface UpdateOrganizationInput {
   logoUrl?: string | null;
   wordmarkUrl?: string | null;
   websiteUrl?: string | null;
+  organizationType?: OrganizationType | null;
   isActive?: boolean;
 }
 
@@ -108,6 +111,7 @@ export function createOrganizationService(repos: RepositoryContainer): Organizat
         logoUrl: data.logoUrl || null,
         wordmarkUrl: data.wordmarkUrl || null,
         websiteUrl: data.websiteUrl || null,
+        organizationType: data.organizationType || null,
         isActive: data.isActive ?? true,
       };
 
@@ -161,6 +165,10 @@ export function createOrganizationService(repos: RepositoryContainer): Organizat
 
       if (data.websiteUrl !== undefined) {
         updateData.websiteUrl = data.websiteUrl;
+      }
+
+      if (data.organizationType !== undefined) {
+        updateData.organizationType = data.organizationType;
       }
 
       if (data.isActive !== undefined) {
