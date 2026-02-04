@@ -152,7 +152,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { displayName, ownerType, bio, avatarUrl, wordmarkUrl, userId, phone, isActive } = body;
+    const { displayName, slug, ownerType, bio, avatarUrl, wordmarkUrl, userId, phone, isActive } = body;
 
     // Validate required fields
     if (!displayName || !ownerType) {
@@ -175,6 +175,7 @@ export async function POST(request: Request) {
 
     const owner = await services.programOwner.create({
       displayName,
+      slug: slug || null,
       ownerType,
       bio: bio || null,
       avatarUrl: avatarUrl || null,

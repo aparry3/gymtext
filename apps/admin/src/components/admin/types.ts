@@ -211,6 +211,7 @@ export interface AdminProgramOwner {
   userId: string | null;
   ownerType: OwnerType;
   displayName: string;
+  slug: string | null;
   bio: string | null;
   avatarUrl: string | null;
   wordmarkUrl: string | null;
