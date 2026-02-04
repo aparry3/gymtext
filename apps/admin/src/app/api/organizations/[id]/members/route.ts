@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: Params) {
     const { id } = await params;
     const body = await request.json();
 
-    const { programOwnerId, role, actorOwnerId } = body;
+    const { programOwnerId, role } = body;
 
     // Validate required fields
     if (!programOwnerId) {
@@ -56,43 +56,26 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
-    const { services } = await getAdminContext();
+    const { repos } = await getAdminContext();
 
-    // For admin portal, we allow adding members without authorization check
-    // In the programs portal, actorOwnerId would be required and checked
-    // For now, use a simplified approach - admin portal has full access
-    const member = await services.organization.addMember(
-      id,
+    // Admin portal is a trusted context - bypass service-layer authorization
+    // and use repository directly. The admin middleware already verified access.
+
+    // Check if member already exists
+    const existing = await repos.organization.getMember(id, programOwnerId);
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        data: existing
+      });
+    }
+
+    // Add the new member
+    const member = await repos.organization.addMember({
+      organizationId: id,
       programOwnerId,
-      memberRole,
-      actorOwnerId || programOwnerId // If no actor specified, use the member being added (for bootstrap)
-    );
-
-    // If member is null and no actorOwnerId, try direct add (bootstrap scenario)
-    if (!member && !actorOwnerId) {
-      // Check if this is the first member (bootstrap scenario)
-      const existingMembers = await services.organization.listMembers(id);
-      if (existingMembers.length === 0) {
-        // Direct add for first member - use repository directly
-        const { repos } = await getAdminContext();
-        const newMember = await repos.organization.addMember({
-          organizationId: id,
-          programOwnerId,
-          role: memberRole,
-        });
-        return NextResponse.json({
-          success: true,
-          data: newMember
-        }, { status: 201 });
-      }
-    }
-
-    if (!member) {
-      return NextResponse.json(
-        { success: false, message: 'Unable to add member. Check authorization or if member already exists.' },
-        { status: 400 }
-      );
-    }
+      role: memberRole,
+    });
 
     return NextResponse.json({
       success: true,
@@ -117,7 +100,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const { id } = await params;
     const body = await request.json();
 
-    const { programOwnerId, role, actorOwnerId } = body;
+    const { programOwnerId, role } = body;
 
     // Validate required fields
     if (!programOwnerId || !role) {
@@ -136,33 +119,28 @@ export async function PATCH(request: Request, { params }: Params) {
       );
     }
 
-    const { services } = await getAdminContext();
+    const { repos } = await getAdminContext();
 
-    // For admin portal, we allow role updates without authorization check
-    // In a real scenario, actorOwnerId would be verified
-    const member = await services.organization.updateMemberRole(
-      id,
-      programOwnerId,
-      role,
-      actorOwnerId || programOwnerId
-    );
+    // Admin portal is a trusted context - bypass service-layer authorization
 
-    // If authorization fails, try direct update for admin portal
-    if (!member && !actorOwnerId) {
-      const { repos } = await getAdminContext();
-      const updatedMember = await repos.organization.updateMemberRole(id, programOwnerId, role);
-      if (updatedMember) {
-        return NextResponse.json({
-          success: true,
-          data: updatedMember
-        });
+    // Protect against demoting the last admin
+    const membership = await repos.organization.getMember(id, programOwnerId);
+    if (membership?.role === 'admin' && role !== 'admin') {
+      const adminCount = await repos.organization.countAdmins(id);
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          { success: false, message: 'Cannot demote the last admin' },
+          { status: 400 }
+        );
       }
     }
 
+    const member = await repos.organization.updateMemberRole(id, programOwnerId, role);
+
     if (!member) {
       return NextResponse.json(
-        { success: false, message: 'Unable to update member role. Cannot demote the last admin.' },
-        { status: 400 }
+        { success: false, message: 'Member not found' },
+        { status: 404 }
       );
     }
 
@@ -189,7 +167,6 @@ export async function DELETE(request: Request, { params }: Params) {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const programOwnerId = searchParams.get('programOwnerId');
-    const actorOwnerId = searchParams.get('actorOwnerId');
 
     if (!programOwnerId) {
       return NextResponse.json(
@@ -198,40 +175,28 @@ export async function DELETE(request: Request, { params }: Params) {
       );
     }
 
-    const { services } = await getAdminContext();
+    const { repos } = await getAdminContext();
 
-    // For admin portal, allow removal without authorization check
-    const removed = await services.organization.removeMember(
-      id,
-      programOwnerId,
-      actorOwnerId || programOwnerId
-    );
+    // Admin portal is a trusted context - bypass service-layer authorization
 
-    // If authorization fails, try direct removal for admin portal
-    if (!removed && !actorOwnerId) {
-      const { repos } = await getAdminContext();
-      // Check if this is the last admin
+    // Protect against removing the last admin
+    const membership = await repos.organization.getMember(id, programOwnerId);
+    if (membership?.role === 'admin') {
       const adminCount = await repos.organization.countAdmins(id);
-      const membership = await repos.organization.getMember(id, programOwnerId);
-      if (membership?.role === 'admin' && adminCount <= 1) {
+      if (adminCount <= 1) {
         return NextResponse.json(
           { success: false, message: 'Cannot remove the last admin from an organization' },
           { status: 400 }
         );
       }
-      const directRemoved = await repos.organization.removeMember(id, programOwnerId);
-      if (directRemoved) {
-        return NextResponse.json({
-          success: true,
-          message: 'Member removed'
-        });
-      }
     }
+
+    const removed = await repos.organization.removeMember(id, programOwnerId);
 
     if (!removed) {
       return NextResponse.json(
-        { success: false, message: 'Unable to remove member. Cannot remove the last admin.' },
-        { status: 400 }
+        { success: false, message: 'Member not found' },
+        { status: 404 }
       );
     }
 
