@@ -52,6 +52,7 @@ import { createExerciseResolutionService, type ExerciseResolutionServiceInstance
 import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
 import { createBlogService, type BlogServiceInstance } from './domain/blog/blogService';
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
+import { createEventLogService, type EventLogServiceInstance } from './domain/logging/eventLogService';
 
 // Agent services
 import {
@@ -150,6 +151,9 @@ export interface ServiceContainer {
 
   // Organization
   organization: OrganizationServiceInstance;
+
+  // Event logging
+  eventLog: EventLogServiceInstance;
 }
 
 /**
@@ -204,6 +208,9 @@ export function createServices(
 
   // Organization (repos-only)
   const organization = createOrganizationService(repos);
+
+  // Event logging (repos-only)
+  const eventLog = createEventLogService(repos);
 
   // =========================================================================
   // Phase 2: Create ContextService (needed by agents)
@@ -505,6 +512,9 @@ export function createServices(
 
     // Organization
     organization,
+
+    // Event logging
+    eventLog,
   };
 }
 

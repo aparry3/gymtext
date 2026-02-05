@@ -37,10 +37,6 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
 const services = createServicesFromDb(postgresDb);
 const onboardingSteps = createOnboardingSteps(services);
 
-// Get repositories for event logging
-import { createRepositories } from '@/server/repositories/factory';
-const repos = createRepositories(postgresDb);
-
 export const onboardUserFunction = inngest.createFunction(
   {
     id: 'onboard-user',
@@ -97,7 +93,7 @@ export const onboardUserFunction = inngest.createFunction(
       );
 
       // Log successful onboarding event
-      await repos.eventLog.log({
+      await services.eventLog.log({
         eventName: 'onboarding_success',
         userId,
         entityId: 'onboarding',
@@ -116,7 +112,7 @@ export const onboardUserFunction = inngest.createFunction(
       console.error(`[Inngest] Onboarding failed for user ${userId}:`, error);
 
       // Log onboarding failure event
-      await repos.eventLog.log({
+      await services.eventLog.log({
         eventName: 'onboarding_failed',
         userId,
         entityId: 'onboarding',

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getServices, getRepositories, type ServiceContainer } from '@/lib/context';
+import { getServices, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets } from '@/server/config';
@@ -56,8 +56,7 @@ export async function POST(request: NextRequest) {
     console.error('[Signup] Error in signup API:', error);
 
     // Log signup failure event
-    const repos = getRepositories();
-    await repos.eventLog.log({
+    await services.eventLog.log({
       eventName: 'signup_failed',
       entityId: 'signup',
       data: {
@@ -197,8 +196,7 @@ async function handleSubscribedUserReOnboard(
   });
 
   // Log successful re-onboarding event
-  const repos = getRepositories();
-  await repos.eventLog.log({
+  await services.eventLog.log({
     eventName: 'signup_success',
     userId: existingUser.id,
     entityId: 'signup',
@@ -329,8 +327,7 @@ async function completeSignupFlow(
   console.log(`[Signup] Checkout session created: ${session.id}`);
 
   // Log successful signup event
-  const repos = getRepositories();
-  await repos.eventLog.log({
+  await services.eventLog.log({
     eventName: 'signup_success',
     userId,
     entityId: 'signup',
