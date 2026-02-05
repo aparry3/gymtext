@@ -1,12 +1,12 @@
 /**
- * Agent Prompt IDs
+ * Agent Constants
  *
  * Use these constants in createAgent calls and migrations.
  * TypeScript will catch typos at compile time.
  */
 
 // Core agents requiring system + optional user prompts
-export const PROMPT_IDS = {
+export const AGENTS = {
   // Chat
   CHAT_GENERATE: 'chat:generate',
 
@@ -48,7 +48,12 @@ export const PROMPT_IDS = {
   BLOG_METADATA: 'blog:metadata',
 } as const;
 
-// Context prompts (role='context')
+/**
+ * @deprecated Use AGENTS instead. Will be removed in a future version.
+ */
+export const PROMPT_IDS = AGENTS;
+
+// Context prompts (role='context') - still fetched from prompts table
 export const CONTEXT_IDS = {
   // Day format
   WORKOUT_FORMAT_TRAINING: 'workout:message:format:training',
@@ -73,6 +78,7 @@ export const PROMPT_ROLES = {
   CONTEXT: 'context',
 } as const;
 
-export type PromptId = (typeof PROMPT_IDS)[keyof typeof PROMPT_IDS];
+export type AgentId = (typeof AGENTS)[keyof typeof AGENTS];
+export type PromptId = AgentId; // Backward compatibility alias
 export type ContextId = (typeof CONTEXT_IDS)[keyof typeof CONTEXT_IDS];
 export type PromptRole = (typeof PROMPT_ROLES)[keyof typeof PROMPT_ROLES];

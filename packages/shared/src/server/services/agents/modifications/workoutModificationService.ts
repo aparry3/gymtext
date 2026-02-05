@@ -15,6 +15,7 @@ import { resolveExercisesInStructure, type TrainingServiceInstance } from '../..
 import type { ContextService } from '../../context/contextService';
 import type { ExerciseResolutionServiceInstance } from '../../domain/exercise/exerciseResolutionService';
 import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
+import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
 
 export interface ModifyWorkoutParams {
   userId: string;
@@ -64,6 +65,7 @@ export interface WorkoutModificationServiceDeps {
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   contextService: ContextService;
+  agentDefinition: AgentDefinitionServiceInstance;
   // Exercise resolution (optional — skipped if not provided)
   exerciseResolution?: ExerciseResolutionServiceInstance;
   exerciseUse?: ExerciseUseRepository;
@@ -82,6 +84,7 @@ export function createWorkoutModificationService(
     training: trainingService,
     fitnessPlan: fitnessPlanService,
     contextService,
+    agentDefinition: agentDefinitionService,
     exerciseResolution,
     exerciseUse,
   } = deps;
@@ -90,12 +93,12 @@ export function createWorkoutModificationService(
   let microcycleAgent: MicrocycleAgentService | null = null;
 
   const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService);
+    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService, undefined, agentDefinitionService);
     return workoutAgent;
   };
 
   const getMicrocycleAgent = (): MicrocycleAgentService => {
-    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService);
+    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService, agentDefinitionService);
     return microcycleAgent;
   };
 

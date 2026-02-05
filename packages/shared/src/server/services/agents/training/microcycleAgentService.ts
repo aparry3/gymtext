@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, AGENTS, type ConfigurableAgent } from '@/server/agents';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
   MicrocycleGenerationOutputSchema,
@@ -15,6 +15,7 @@ import type { ContextService } from '@/server/services/context';
 import { ContextType, SnippetType } from '@/server/services/context';
 import { DAY_NAMES } from '@/shared/utils/date';
 import type { UserWithProfile } from '@/server/models/user';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 
 const MAX_RETRIES = 3;
 
@@ -43,44 +44,45 @@ const validateDays = (days: string[]): boolean => {
  */
 export class MicrocycleAgentService {
   private contextService: ContextService;
+  private agentDefinitionService: AgentDefinitionServiceInstance;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> | null = null;
 
-  constructor(contextService: ContextService) {
+  constructor(contextService: ContextService, agentDefinitionService: AgentDefinitionServiceInstance) {
     this.contextService = contextService;
+    this.agentDefinitionService = agentDefinitionService;
   }
 
   /**
    * Get the message sub-agent (lazy-initialized)
-   * System prompt and user prompt fetched from DB
+   * Definition resolved from agentDefinitionService
    * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
-      this.messageAgentPromise = createAgent({
-        name: PROMPT_IDS.MICROCYCLE_MESSAGE,
-        // No userPrompt - DB user prompt provides static instructions
-        // Transform in sub-agent config provides formatted microcycle data
-      }, { model: 'gpt-5-nano' });
+      this.messageAgentPromise = (async () => {
+        const definition = await this.agentDefinitionService.getDefinition(AGENTS.MICROCYCLE_MESSAGE);
+        return createAgent(definition);
+      })();
     }
     return this.messageAgentPromise;
   }
 
   /**
    * Get the structured sub-agent (lazy-initialized)
-   * System prompt and user prompt fetched from DB
+   * Definition resolved from agentDefinitionService
    * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> {
     if (!this.structuredAgentPromise) {
-      this.structuredAgentPromise = createAgent({
-        name: PROMPT_IDS.MICROCYCLE_STRUCTURED,
-        // No userPrompt - DB user prompt provides static instructions
-        // Transform in sub-agent config provides formatted microcycle data
-        schema: MicrocycleStructureSchema,
-      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+      this.structuredAgentPromise = (async () => {
+        const definition = await this.agentDefinitionService.getDefinition(AGENTS.MICROCYCLE_STRUCTURED, {
+          schema: MicrocycleStructureSchema,
+        });
+        return createAgent(definition);
+      })();
     }
     return this.structuredAgentPromise;
   }
@@ -129,11 +131,9 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Create main agent with context (prompts fetched from DB)
+    // Create main agent with resolved definition
     // Sub-agents use transform to format main agent output → sub-agent input
-    const agent = await createAgent({
-      name: PROMPT_IDS.MICROCYCLE_GENERATE,
-      context,
+    const definition = await this.agentDefinitionService.getDefinition(AGENTS.MICROCYCLE_GENERATE, {
       schema: MicrocycleGenerationOutputSchema,
       subAgents: [{
         message: {
@@ -148,7 +148,9 @@ export class MicrocycleAgentService {
           },
         },
       }],
-    }, { model: 'gpt-5.1' });
+    });
+
+    const agent = createAgent(definition);
 
     // Execute with retry logic
     let lastError: Error | null = null;
@@ -159,10 +161,11 @@ export class MicrocycleAgentService {
           console.log(`[microcycle-generate] Retry attempt ${attempt}/${MAX_RETRIES} for week ${absoluteWeek}`);
         }
 
-        // Pass just the dynamic data - DB user prompt provides instructions
-        const result = await agent.invoke(
-          `Absolute Week: ${absoluteWeek}`
-        ) as MicrocycleGenerateOutput;
+        // Pass context at invoke time, message provides dynamic data
+        const result = await agent.invoke({
+          message: `Absolute Week: ${absoluteWeek}`,
+          context,
+        }) as MicrocycleGenerateOutput;
 
         // Validate that all 7 days are present and non-empty
         if (!validateDays(result.response.days)) {
@@ -250,11 +253,9 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Prompts fetched from DB based on agent name
+    // Get resolved definition and create agent
     // Sub-agents use transform to format main agent output → sub-agent input
-    const agent = await createAgent({
-      name: PROMPT_IDS.MICROCYCLE_MODIFY,
-      context,
+    const definition = await this.agentDefinitionService.getDefinition(AGENTS.MICROCYCLE_MODIFY, {
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{
         message: {
@@ -273,7 +274,9 @@ export class MicrocycleAgentService {
           },
         },
       }],
-    }, { model: 'gpt-5.1' });
+    });
+
+    const agent = createAgent(definition);
 
     // Execute with retry logic
     let lastError: Error | null = null;
@@ -284,8 +287,11 @@ export class MicrocycleAgentService {
           console.log(`[microcycle-modify] Retry attempt ${attempt}/${MAX_RETRIES} for week ${absoluteWeek}`);
         }
 
-        // Pass changeRequest directly as the message - it's the user's request, not context
-        const result = await agent.invoke(changeRequest) as ModifyMicrocycleOutput;
+        // Pass changeRequest as message and context at invoke time
+        const result = await agent.invoke({
+          message: changeRequest,
+          context,
+        }) as ModifyMicrocycleOutput;
 
         // Validate that all 7 days are present and non-empty
         if (!validateDays(result.response.days)) {
@@ -336,8 +342,12 @@ export class MicrocycleAgentService {
  * Factory function to create a MicrocycleAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
  * @returns A new MicrocycleAgentService instance
  */
-export function createMicrocycleAgentService(contextService: ContextService): MicrocycleAgentService {
-  return new MicrocycleAgentService(contextService);
+export function createMicrocycleAgentService(
+  contextService: ContextService,
+  agentDefinitionService: AgentDefinitionServiceInstance
+): MicrocycleAgentService {
+  return new MicrocycleAgentService(contextService, agentDefinitionService);
 }

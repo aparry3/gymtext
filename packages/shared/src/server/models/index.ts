@@ -46,6 +46,14 @@ export type { PageVisit, NewPageVisit } from './pageVisit';
 // Prompt types
 export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
 
+// Agent definition types
+export type {
+  AgentDefinition as AgentDefinitionDb,
+  NewAgentDefinition,
+  AgentDefinitionUpdate,
+  DbAgentConfig
+} from './agentDefinition';
+
 // Referral types
 export type { Referral, NewReferral, ReferralUpdate, ReferralStats } from './referral';
 export { MAX_REFERRAL_CREDITS, REFERRAL_CREDIT_AMOUNT_CENTS } from './referral';

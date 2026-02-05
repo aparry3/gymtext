@@ -29,10 +29,10 @@
 export { createAgent } from './createAgent';
 
 // ============================================
-// Prompt IDs (use these in createAgent calls)
+// Agent Constants (use these in createAgent calls)
 // ============================================
-export { PROMPT_IDS, CONTEXT_IDS, PROMPT_ROLES } from './promptIds';
-export type { PromptId, ContextId, PromptRole } from './promptIds';
+export { AGENTS, PROMPT_IDS, CONTEXT_IDS, PROMPT_ROLES } from './constants';
+export type { AgentId, PromptId, ContextId, PromptRole } from './constants';
 
 // ============================================
 // Model Initialization
@@ -53,12 +53,17 @@ export type {
 
   // Configurable agent types
   AgentDefinition,
+  AgentDefinitionOverrides,
   ModelConfig,
   ConfigurableAgent,
   SubAgentBatch,
   SubAgentEntry,
   SubAgentConfig,
   ModelId,
+
+  // Database config types
+  DbAgentConfig,
+  InvokeParams,
 
   // Validation types
   ValidationResult,

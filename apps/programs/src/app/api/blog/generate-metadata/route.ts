@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createBlogMetadataAgentService } from '@gymtext/shared/server/services';
+import { createServicesFromDb, postgresDb, createBlogMetadataAgentService } from '@gymtext/shared/server';
 
 /**
  * POST /api/blog/generate-metadata
@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate metadata using the agent service
-    const agentService = createBlogMetadataAgentService();
+    const services = createServicesFromDb(postgresDb);
+    const agentService = createBlogMetadataAgentService(services.agentDefinition);
     const metadata = await agentService.generateMetadata(content);
 
     return NextResponse.json({

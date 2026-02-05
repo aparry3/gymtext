@@ -99,17 +99,93 @@ export type ModelId =
   | 'gemini-2.5-flash-lite';
 
 /**
+ * Database-loaded agent configuration
+ * Returned by agentDefinitionService.getAgentDefinition()
+ */
+export interface DbAgentConfig {
+  /** System prompt instructions */
+  systemPrompt: string;
+  /** Optional user prompt template */
+  userPrompt: string | null;
+  /** Model identifier (e.g., 'gpt-5-nano') */
+  model: string;
+  /** Maximum tokens for response */
+  maxTokens: number;
+  /** Temperature for generation (0-2) */
+  temperature: number;
+  /** Maximum iterations for tool loops */
+  maxIterations: number;
+  /** Maximum retry attempts on validation failure */
+  maxRetries: number;
+}
+
+/**
+ * Overrides for agentDefinitionService.getDefinition()
+ * Combines DB field overrides + code-provided additions
+ *
+ * @example
+ * ```typescript
+ * const definition = await agentDefinitionService.getDefinition(AGENTS.CHAT_GENERATE, {
+ *   tools: [...],        // Code-provided
+ *   temperature: 0.5,    // Override DB value
+ * });
+ * const agent = createAgent(definition);
+ * ```
+ */
+export interface AgentDefinitionOverrides<TSchema extends ZodSchema | undefined = undefined> {
+  // DB field overrides (optional - use DB values if not provided)
+  /** Override the model from database */
+  model?: ModelId;
+  /** Override the temperature from database */
+  temperature?: number;
+  /** Override the max tokens from database */
+  maxTokens?: number;
+  /** Override the max iterations from database */
+  maxIterations?: number;
+  /** Override the max retries from database */
+  maxRetries?: number;
+
+  // Code-provided additions
+  /** LangChain tools available to this agent */
+  tools?: StructuredToolInterface[];
+  /** Zod schema for structured output */
+  schema?: TSchema;
+  /** SubAgents to execute after main agent */
+  subAgents?: SubAgentBatch[];
+  /** Validation function for the agent output */
+  validate?: (result: unknown) => ValidationResult;
+  /** Transform input string into user message */
+  userPrompt?: (input: string) => string;
+  /** Logging context for tracking validation failures */
+  loggingContext?: AgentLoggingContext;
+  /** Context messages to bake into the agent at creation time (for sub-agents) */
+  context?: string[];
+}
+
+/**
+ * Runtime parameters for agent invocation
+ * These are passed to invoke() rather than createAgent()
+ */
+export interface InvokeParams {
+  /** The user's input message */
+  message?: string;
+  /** Context messages injected between system and user prompts */
+  context?: string[];
+  /** Previous conversation messages (placed after context, before user prompt) */
+  previousMessages?: Message[];
+}
+
+/**
  * The configurable agent interface
- * invoke always takes a string - the string is either used directly as the user message
- * or passed to userPrompt transformer if defined
+ * invoke accepts either InvokeParams object or a simple string for backward compatibility
  */
 export interface ConfigurableAgent<TOutput> {
   /**
-   * Invoke the agent with input string
-   * @param input - The input string (used as user message or transformed via userPrompt)
+   * Invoke the agent with runtime parameters
+   * @param params - InvokeParams object with message, context, previousMessages, OR a simple string (backward compat)
    * @param retryContext - Optional retry context with previous failed attempts (for internal retry handling)
    */
-  invoke(input: string, retryContext?: RetryContext): Promise<TOutput>;
+  invoke(params: InvokeParams | string, retryContext?: RetryContext): Promise<TOutput>;
   /** The agent's name for logging */
   name: string;
 }
@@ -149,16 +225,63 @@ export type SubAgentBatch = Record<string, SubAgentEntry>;
 
 /**
  * Agent definition - the declarative configuration
+ *
+ * Definitions must be resolved via agentDefinitionService.getDefinition() before
+ * passing to createAgent(). This ensures all DB config is baked into the definition.
+ *
+ * For main agents: Use invoke(InvokeParams) to pass context and previousMessages at runtime.
+ * For sub-agents: Use context property to bake in context at creation time (since sub-agents
+ * receive input via transform functions, not direct invoke calls with InvokeParams).
  */
 export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefined> {
   /** Identifier for logging and debugging */
   name: string;
 
+  // =========================================================================
+  // Resolved DB configuration (from agentDefinitionService.getDefinition)
+  // All values must be resolved before calling createAgent().
+  // =========================================================================
+
   /**
-   * Static system prompt instructions.
-   * If not provided, fetched from database using agent name.
+   * System prompt instructions.
+   * Required - must be resolved from agentDefinitionService.getDefinition()
    */
-  systemPrompt?: string;
+  systemPrompt: string;
+
+  /**
+   * User prompt template from database.
+   * Prepended to the user's input message if provided.
+   */
+  dbUserPrompt?: string | null;
+
+  /** Model identifier (resolved from DB or override) */
+  model?: ModelId;
+
+  /** Maximum tokens for response (resolved from DB or override) */
+  maxTokens?: number;
+
+  /** Temperature for generation (resolved from DB or override) */
+  temperature?: number;
+
+  /** Maximum iterations for tool loops (resolved from DB or override) */
+  maxIterations?: number;
+
+  /**
+   * Maximum number of retry attempts if validation fails
+   * Default: 1 (no retry - single attempt only)
+   */
+  maxRetries?: number;
+
+  // =========================================================================
+  // Code-provided configuration (from overrides or legacy pattern)
+  // =========================================================================
+
+  /**
+   * Context messages to bake into the agent at creation time.
+   * Use this for sub-agents that need fixed context.
+   * For main agents, prefer passing context via invoke(InvokeParams).
+   */
+  context?: string[];
 
   /**
    * Optional transformer for the input string.
@@ -166,12 +289,6 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
    * - If undefined: the input string IS the user message directly
    */
   userPrompt?: (input: string) => string;
-
-  /** Context messages injected between system and user prompts (pre-computed strings) */
-  context?: string[];
-
-  /** Previous conversation messages (placed after context, before user prompt) */
-  previousMessages?: Message[];
 
   /** LangChain tools available to this agent */
   tools?: StructuredToolInterface[];
@@ -188,12 +305,6 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
    * The previous failed output and errors are automatically injected as negative examples
    */
   validate?: (result: unknown) => ValidationResult;
-
-  /**
-   * Maximum number of retry attempts if validation fails
-   * Default: 1 (no retry - single attempt only)
-   */
-  maxRetries?: number;
 
   /**
    * Optional logging context for tracking validation/chain failures

@@ -52,6 +52,7 @@ import { createExerciseResolutionService, type ExerciseResolutionServiceInstance
 import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
 import { createBlogService, type BlogServiceInstance } from './domain/blog/blogService';
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
+import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 
 // Agent services
 import {
@@ -150,6 +151,9 @@ export interface ServiceContainer {
 
   // Organization
   organization: OrganizationServiceInstance;
+
+  // Agent definitions
+  agentDefinition: AgentDefinitionServiceInstance;
 }
 
 /**
@@ -174,7 +178,7 @@ export function createServices(
   // Phase 1: Create services with no service dependencies (repos only)
   // =========================================================================
   const user = createUserService(repos);
-  const fitnessProfile = createFitnessProfileService(repos);
+  // Note: fitnessProfile is created below after agentDefinition is available
   const onboardingData = createOnboardingDataService(repos);
   const fitnessPlan = createFitnessPlanService(repos);
   const workoutInstance = createWorkoutInstanceService(repos);
@@ -185,6 +189,10 @@ export function createServices(
   const shortLink = createShortLinkService(repos);
   const prompt = createPromptService(repos);
   const queue = createQueueService(repos);
+  const agentDefinition = createAgentDefinitionService(repos);
+
+  // fitnessProfile needs agentDefinitionService for profile agents
+  const fitnessProfile = createFitnessProfileService(repos, agentDefinition);
 
   // Program domain services (repos-only)
   const programOwner = createProgramOwnerService(repos);
@@ -218,13 +226,13 @@ export function createServices(
   });
 
   // =========================================================================
-  // Phase 2.5: Create agent services (need contextService)
+  // Phase 2.5: Create agent services (need contextService and agentDefinition)
   // =========================================================================
-  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog);
-  const microcycleAgent = createMicrocycleAgentService(contextService);
-  const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
-  const chatAgent = createChatAgentService(contextService);
-  const programAgent = createProgramAgentService();
+  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog, agentDefinition);
+  const microcycleAgent = createMicrocycleAgentService(contextService, agentDefinition);
+  const fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentDefinition);
+  const chatAgent = createChatAgentService(contextService, agentDefinition);
+  const programAgent = createProgramAgentService(agentDefinition);
 
   // =========================================================================
   // Phase 2.6: Create training orchestration service
@@ -343,7 +351,7 @@ export function createServices(
   // =========================================================================
   // Phase 4: Create agent and orchestration services
   // =========================================================================
-  const messagingAgent = createMessagingAgentService();
+  const messagingAgent = createMessagingAgentService(agentDefinition);
 
   const dailyMessage = createDailyMessageService(repos, {
     user,
@@ -387,6 +395,7 @@ export function createServices(
     training,
     fitnessPlan,
     contextService,
+    agentDefinition,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
   });
@@ -396,6 +405,7 @@ export function createServices(
     fitnessPlan,
     workoutModification,
     contextService,
+    agentDefinition,
   });
 
   const modification = createModificationService({
@@ -403,6 +413,7 @@ export function createServices(
     workoutInstance,
     workoutModification,
     planModification,
+    agentDefinition,
   });
 
   // =========================================================================
@@ -412,6 +423,7 @@ export function createServices(
     user,
     fitnessProfile,
     workoutInstance,
+    agentDefinition,
   });
 
   const chat = createChatService({
@@ -432,6 +444,7 @@ export function createServices(
     user,
     fitnessProfile,
     contextService,
+    agentDefinition,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
   });
@@ -505,6 +518,9 @@ export function createServices(
 
     // Organization
     organization,
+
+    // Agent definitions
+    agentDefinition,
   };
 }
 
@@ -596,4 +612,7 @@ export type {
 
   // Organization
   OrganizationServiceInstance,
+
+  // Agent definitions
+  AgentDefinitionServiceInstance,
 };

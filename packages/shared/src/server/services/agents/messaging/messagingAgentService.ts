@@ -1,10 +1,11 @@
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
 import { PlanSummarySchema } from '../schemas/messaging';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 
 // =============================================================================
 // Factory Pattern
@@ -21,9 +22,13 @@ export interface MessagingAgentServiceInstance {
 
 /**
  * Create a MessagingAgentService instance
- * Uses createAgent pattern with DB-backed prompts
+ * Uses createAgent pattern with definitions from agentDefinitionService
+ *
+ * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
  */
-export function createMessagingAgentService(): MessagingAgentServiceInstance {
+export function createMessagingAgentService(
+  agentDefinitionService: AgentDefinitionServiceInstance
+): MessagingAgentServiceInstance {
   return {
     /**
      * Generate a welcome message for a new user
@@ -76,15 +81,18 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
           }))
         : undefined;
 
-      // Create agent with context and previousMessages
-      const agent = await createAgent({
-        name: PROMPT_IDS.MESSAGING_PLAN_SUMMARY,
+      // Get resolved definition and create agent
+      const definition = await agentDefinitionService.getDefinition(AGENTS.MESSAGING_PLAN_SUMMARY, {
+        schema: PlanSummarySchema,
+      });
+
+      const agent = createAgent(definition);
+
+      const result = await agent.invoke({
+        message: '',
         context,
         previousMessages: previousMsgs,
-        schema: PlanSummarySchema,
-      }, { model: 'gpt-5-nano' });
-
-      const result = await agent.invoke('');
+      });
       return result.response.messages;
     },
 
@@ -104,12 +112,11 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
         `<Today>${currentWeekday}</Today>`,
       ];
 
-      const agent = await createAgent({
-        name: PROMPT_IDS.MESSAGING_PLAN_READY,
-        context,
-      }, { model: 'gpt-5-nano' });
+      const definition = await agentDefinitionService.getDefinition(AGENTS.MESSAGING_PLAN_READY);
 
-      const result = await agent.invoke('');
+      const agent = createAgent(definition);
+
+      const result = await agent.invoke({ message: '', context });
       return result.response;
     },
   };

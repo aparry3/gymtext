@@ -13,7 +13,7 @@
 
 import { UserWithProfile } from '@/server/models/user';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createAgent, PROMPT_IDS } from '@/server/agents';
+import { createAgent, AGENTS } from '@/server/agents';
 import {
   buildProfileUpdateUserMessage,
   buildStructuredProfileUserMessage,
@@ -26,6 +26,7 @@ import { formatSignupDataForLLM } from './signupDataFormatter';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { formatForAI } from '@/shared/utils/date';
 import type { RepositoryContainer } from '../../../repositories/factory';
+import type { AgentDefinitionServiceInstance } from '../agents/agentDefinitionService';
 
 /**
  * Result returned when patching/updating a profile
@@ -53,8 +54,14 @@ export interface FitnessProfileServiceInstance {
 
 /**
  * Create a FitnessProfileService instance with injected repositories
+ *
+ * @param repos - Repository container
+ * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
  */
-export function createFitnessProfileService(repos: RepositoryContainer): FitnessProfileServiceInstance {
+export function createFitnessProfileService(
+  repos: RepositoryContainer,
+  agentDefinitionService?: AgentDefinitionServiceInstance
+): FitnessProfileServiceInstance {
   const circuitBreaker = new CircuitBreaker({
     failureThreshold: 5,
     resetTimeout: 60000,
@@ -103,44 +110,47 @@ export function createFitnessProfileService(repos: RepositoryContainer): Fitness
           const currentProfile = createEmptyProfile(user);
           const currentDate = formatForAI(new Date(), user.timezone);
 
+          // Note: This matches ConfigurableAgent.invoke signature for sub-agent compatibility
           const invokeStructuredProfileAgent = async (
-            input: StructuredProfileInput | string
+            params: string
           ): Promise<StructuredProfileOutput> => {
-            const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+            if (!agentDefinitionService) {
+              throw new Error('agentDefinitionService is required for createFitnessProfile');
+            }
+            const parsedInput: StructuredProfileInput = JSON.parse(params);
             const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-            const agent = await createAgent(
-              {
-                name: PROMPT_IDS.PROFILE_STRUCTURED,
-                schema: StructuredProfileSchema,
-              },
-              { model: 'gpt-5-nano', temperature: 0.3 }
-            );
+            const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_STRUCTURED, {
+              schema: StructuredProfileSchema,
+              temperature: 0.3,
+            });
 
+            const agent = createAgent(definition);
             const agentResult = await agent.invoke(userPrompt);
             return { structured: agentResult.response, success: true };
           };
 
+          if (!agentDefinitionService) {
+            throw new Error('agentDefinitionService is required for createFitnessProfile');
+          }
           const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-          const agent = await createAgent(
-            {
-              name: PROMPT_IDS.PROFILE_FITNESS,
-              schema: ProfileUpdateOutputSchema,
-              subAgents: [
-                {
-                  structured: {
-                    agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
-                    condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
-                    transform: (agentResult: unknown) =>
-                      JSON.stringify({
-                        dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
-                        currentDate,
-                      }),
-                  },
+          const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_FITNESS, {
+            schema: ProfileUpdateOutputSchema,
+            subAgents: [
+              {
+                structured: {
+                  agent: { name: AGENTS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
+                  condition: (agentResult: unknown) => (agentResult as { wasUpdated: boolean }).wasUpdated,
+                  transform: (agentResult: unknown) =>
+                    JSON.stringify({
+                      dossierText: (agentResult as { updatedProfile: string }).updatedProfile,
+                      currentDate,
+                    }),
                 },
-              ],
-            },
-            { model: 'gpt-5.1' }
-          );
+              },
+            ],
+          });
+
+          const agent = createAgent(definition);
 
           const agentResult = await agent.invoke(userPrompt);
           const structuredResult = (agentResult as { structured?: StructuredProfileOutput }).structured;

@@ -2,108 +2,95 @@ import type { ZodSchema } from 'zod';
 import { initializeModel, type InvokableModel } from './models';
 import type {
   AgentDefinition,
-  ModelConfig,
   ConfigurableAgent,
   InferSchemaOutput,
   AgentComposedOutput,
   SubAgentBatch,
   RetryContext,
   Message,
+  InvokeParams,
+  ModelId,
 } from './types';
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
 import { logAgentInvocation } from './logger';
-import type { PromptServiceInstance } from '@/server/services/domain/prompts/promptService';
-
-// Lazy-loaded prompt service instance
-let _promptService: PromptServiceInstance | null = null;
-
-async function getPromptService(): Promise<PromptServiceInstance> {
-  if (!_promptService) {
-    const { createServicesFromDb } = await import('@/server/services/factory');
-    const { postgresDb } = await import('@/server/connections/postgres/postgres');
-    const services = createServicesFromDb(postgresDb);
-    _promptService = services.prompt;
-  }
-  return _promptService;
-}
 
 /**
- * Create a configurable agent from a definition and model config
+ * Create a configurable agent from a resolved definition
  *
  * This factory function creates agents declaratively, supporting:
  * - Structured output via Zod schemas
  * - Optional userPrompt transformer for input strings
- * - Pre-computed context messages
+ * - Runtime context and previousMessages via invoke()
  * - Tool-based agents with agentic loops
  * - Composed agents with parallel/sequential subAgents
- * - Database-backed prompts (fetched if systemPrompt not provided)
  *
- * @param definition - The agent's declarative configuration
- * @param config - Optional model configuration
- * @returns A Promise resolving to a ConfigurableAgent that can be invoked with a string
+ * IMPORTANT: Definitions must be resolved via agentDefinitionService.getDefinition()
+ * before calling this function. The systemPrompt must be provided in the definition.
+ *
+ * @param definition - The agent's declarative configuration (must include systemPrompt)
+ * @returns A ConfigurableAgent that can be invoked with InvokeParams or string
  *
  * @example
  * ```typescript
- * // Agent with DB-stored prompts (systemPrompt fetched from database)
- * const messageAgent = await createAgent({
- *   name: 'workout-message',
+ * // Get resolved definition from agentDefinitionService
+ * const definition = await agentDefinitionService.getDefinition(AGENTS.CHAT_GENERATE, {
+ *   tools: [...],
+ * });
+ * const agent = createAgent(definition);
+ * await agent.invoke({
+ *   message: 'Hello',
  *   context: [`<Profile>${user.profile}</Profile>`],
- *   schema: MessageSchema,
- * }, { model: 'gpt-5-nano' });
+ *   previousMessages: [...],
+ * });
  *
- * await messageAgent.invoke('Generate a motivational workout message');
- *
- * // Agent with explicit systemPrompt (legacy pattern, bypasses DB)
- * const workoutAgent = await createAgent({
- *   name: 'workout',
- *   systemPrompt: SYSTEM_PROMPT,
- *   userPrompt: (input) => `Create workout based on: ${input}`,
- *   context: [profileContext, historyContext],
- *   subAgents: [
- *     { structured: structuredAgent, message: messageAgent },
- *     { validation: validationAgent }
- *   ]
- * }, { model: 'gpt-5.1' });
- *
- * await workoutAgent.invoke('upper body strength');
+ * // Simple string invoke (backward compatible)
+ * await agent.invoke('Generate a motivational workout message');
  * ```
  */
-export async function createAgent<
+export function createAgent<
   TSchema extends ZodSchema | undefined = undefined,
   TSubAgents extends SubAgentBatch[] | undefined = undefined
 >(
-  definition: AgentDefinition<TSchema>,
-  config?: ModelConfig
-): Promise<ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>>> {
+  definition: AgentDefinition<TSchema>
+): ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> {
 
   const {
     name,
-    systemPrompt: providedSystemPrompt,
+    systemPrompt,
+    dbUserPrompt,
+    model: definitionModel,
+    maxTokens: definitionMaxTokens,
+    temperature: definitionTemperature,
+    maxIterations: definitionMaxIterations,
+    maxRetries: definitionMaxRetries,
     userPrompt: providedUserPrompt,
-    context = [],
-    previousMessages = [],
+    context: definitionContext = [],
     tools,
     schema,
     subAgents = [],
     validate,
-    maxRetries = 1,
     loggingContext,
   } = definition;
 
-  // Fetch prompts from database if systemPrompt not provided directly
-  let systemPrompt = providedSystemPrompt;
-  let dbUserPrompt: string | null = null;
-
+  // Validate that systemPrompt is provided (required after Phase 2)
   if (!systemPrompt) {
-    const promptService = await getPromptService();
-    const prompts = await promptService.getPrompts(name);
-    systemPrompt = prompts.systemPrompt;
-    dbUserPrompt = prompts.userPrompt;
+    throw new Error(
+      `Agent definition '${name}' missing systemPrompt. ` +
+      `Use agentDefinitionService.getDefinition() to resolve the definition before calling createAgent().`
+    );
   }
 
-  const { maxIterations = 5 } = config || {};
+  // Use resolved definition values directly
+  const effectiveMaxIterations = definitionMaxIterations ?? 5;
+  const effectiveMaxRetries = definitionMaxRetries ?? 1;
+  const effectiveConfig = {
+    model: definitionModel as ModelId | undefined,
+    maxTokens: definitionMaxTokens,
+    temperature: definitionTemperature,
+    maxIterations: effectiveMaxIterations,
+  };
 
   // Determine if this is a tool-based agent
   const isToolAgent = tools && tools.length > 0;
@@ -112,8 +99,8 @@ export async function createAgent<
   // Tools and schema are mutually exclusive - tools take precedence
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const model: InvokableModel<any> = isToolAgent
-    ? initializeModel(undefined, config, { tools })
-    : initializeModel(schema, config);
+    ? initializeModel(undefined, effectiveConfig, { tools })
+    : initializeModel(schema, effectiveConfig);
 
   /**
    * Internal invoke function that handles RetryContext for error feedback
@@ -121,6 +108,8 @@ export async function createAgent<
    */
   const invokeInternal = async (
     input: string,
+    context: string[],
+    previousMessages: Message[],
     retryContext?: RetryContext
   ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
     const startTime = Date.now();
@@ -186,7 +175,7 @@ export async function createAgent<
           messages,
           tools: tools!,
           name,
-          maxIterations,
+          maxIterations: effectiveMaxIterations,
         });
         mainResult = toolResult.response as InferSchemaOutput<TSchema>;
         accumulatedMessages = toolResult.messages;
@@ -238,22 +227,37 @@ export async function createAgent<
 
   /**
    * Public invoke function - wraps invokeInternal with validation and retry logic
-   * If validate is defined, runs retry loop with error feedback on failures
+   * Accepts InvokeParams object or simple string for backward compatibility
    */
   const invoke = async (
-    input: string,
+    params: InvokeParams | string,
     retryContext?: RetryContext
   ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+    // Normalize params - support both InvokeParams and simple string
+    const normalizedParams: InvokeParams = typeof params === 'string'
+      ? { message: params }
+      : params;
+
+    const {
+      message = '',
+      context: invokeContext = [],
+      previousMessages = [],
+    } = normalizedParams;
+
+    // Merge definition context with invoke context
+    // Definition context comes first (sub-agents bake in context at creation time)
+    const mergedContext = [...definitionContext, ...invokeContext];
+
     // If no validation on this agent, just invoke directly
     if (!validate) {
-      return invokeInternal(input, retryContext);
+      return invokeInternal(message, mergedContext, previousMessages, retryContext);
     }
 
     // Run with validation + retry
     // Merge any incoming retryContext with our own tracking
     const previousAttempts: Array<{ output: unknown; errors: string[] }> = [];
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= effectiveMaxRetries; attempt++) {
       // Track attempt timing for logging
       const attemptStartTime = Date.now();
 
@@ -262,7 +266,7 @@ export async function createAgent<
         ? { attempt, previousAttempts }
         : retryContext;
 
-      const result = await invokeInternal(input, currentContext);
+      const result = await invokeInternal(message, mergedContext, previousMessages, currentContext);
       const validation = validate(result);
 
       if (validation.isValid) {
@@ -279,7 +283,7 @@ export async function createAgent<
         errors,
       });
 
-      console.log(`[${name}] Validation failed, attempt ${attempt}/${maxRetries}`);
+      console.log(`[${name}] Validation failed, attempt ${attempt}/${effectiveMaxRetries}`);
 
       // Fire-and-forget: log validation failure
       if (loggingContext?.onValidationFailure) {
@@ -290,7 +294,7 @@ export async function createAgent<
         }
       }
 
-      if (attempt === maxRetries) {
+      if (attempt === effectiveMaxRetries) {
         // Fire-and-forget: log chain failure (all retries exhausted)
         if (loggingContext?.onChainFailure) {
           try {
@@ -298,7 +302,7 @@ export async function createAgent<
               attempt,
               errors,
               durationMs,
-              totalAttempts: maxRetries,
+              totalAttempts: effectiveMaxRetries,
             });
           } catch (e) {
             console.error(`[${name}] Failed to log chain failure:`, e);
@@ -306,9 +310,9 @@ export async function createAgent<
         }
 
         // Log final errors before throwing
-        console.error(`[${name}] Validation failed after ${maxRetries} attempts. Final errors:`,
+        console.error(`[${name}] Validation failed after ${effectiveMaxRetries} attempts. Final errors:`,
           validation.errors);
-        throw new Error(`${name} validation failed after ${maxRetries} attempts: ${validation.errors?.join(', ') ?? 'Unknown error'}`);
+        throw new Error(`${name} validation failed after ${effectiveMaxRetries} attempts: ${validation.errors?.join(', ') ?? 'Unknown error'}`);
       }
     }
 
