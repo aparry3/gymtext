@@ -51,7 +51,7 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
   }
 
   // For now, only render the Clatchey landing page
-  if (slug === 'pat-clatchey') {
+  if (slug === 'coachclatchey') {
     return <ClatcheyLandingPage owner={owner} />;
   }
 
