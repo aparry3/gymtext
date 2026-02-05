@@ -8,18 +8,22 @@ import type {
 /**
  * AgentDefinitionRepository - Data access layer for agent configurations
  *
- * Provides access to database-stored agent definitions including
- * prompts and model configuration.
+ * Uses append-only versioning pattern:
+ * - Each "update" inserts a new row with updated values
+ * - Latest version determined by created_at DESC per agent_id
+ * - Full version history is preserved
  */
 export class AgentDefinitionRepository extends BaseRepository {
   /**
-   * Get a single agent definition by ID
+   * Get the latest active version of an agent definition by agent ID
    */
-  async getById(id: string): Promise<AgentDefinition | null> {
+  async getById(agentId: string): Promise<AgentDefinition | null> {
     const result = await this.db
       .selectFrom('agentDefinitions')
-      .where('id', '=', id)
+      .where('agentId', '=', agentId)
       .where('isActive', '=', true)
+      .orderBy('createdAt', 'desc')
+      .limit(1)
       .selectAll()
       .executeTakeFirst();
 
@@ -27,83 +31,164 @@ export class AgentDefinitionRepository extends BaseRepository {
   }
 
   /**
-   * Get multiple agent definitions by IDs (batch)
+   * Get the latest active versions for multiple agent IDs (batch)
    */
-  async getByIds(ids: string[]): Promise<AgentDefinition[]> {
-    if (ids.length === 0) return [];
+  async getByIds(agentIds: string[]): Promise<AgentDefinition[]> {
+    if (agentIds.length === 0) return [];
 
-    return this.db
-      .selectFrom('agentDefinitions')
-      .where('id', 'in', ids)
-      .where('isActive', '=', true)
-      .selectAll()
+    // Use a subquery to get the latest version for each agent_id
+    const latestVersions = await this.db
+      .selectFrom('agentDefinitions as ad')
+      .selectAll('ad')
+      .where('ad.agentId', 'in', agentIds)
+      .where('ad.isActive', '=', true)
+      .where(({ eb, selectFrom }) =>
+        eb(
+          'ad.createdAt',
+          '=',
+          selectFrom('agentDefinitions as inner')
+            .select((eb) => eb.fn.max('inner.createdAt').as('maxCreatedAt'))
+            .where('inner.agentId', '=', eb.ref('ad.agentId'))
+            .where('inner.isActive', '=', true)
+        )
+      )
       .execute();
+
+    return latestVersions;
   }
 
   /**
-   * Get all active agent definitions
+   * Get all active agent definitions (latest version of each)
    */
   async getAllActive(): Promise<AgentDefinition[]> {
+    // Get distinct agent_ids first, then get latest version for each
+    const latestVersions = await this.db
+      .selectFrom('agentDefinitions as ad')
+      .selectAll('ad')
+      .where('ad.isActive', '=', true)
+      .where(({ eb, selectFrom }) =>
+        eb(
+          'ad.createdAt',
+          '=',
+          selectFrom('agentDefinitions as inner')
+            .select((eb) => eb.fn.max('inner.createdAt').as('maxCreatedAt'))
+            .where('inner.agentId', '=', eb.ref('ad.agentId'))
+            .where('inner.isActive', '=', true)
+        )
+      )
+      .orderBy('ad.agentId')
+      .execute();
+
+    return latestVersions;
+  }
+
+  /**
+   * Get version history for a specific agent
+   */
+  async getHistory(agentId: string, limit = 20): Promise<AgentDefinition[]> {
     return this.db
       .selectFrom('agentDefinitions')
-      .where('isActive', '=', true)
+      .where('agentId', '=', agentId)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
       .selectAll()
       .execute();
   }
 
   /**
-   * Upsert an agent definition
-   * Inserts if not exists, updates if exists
+   * Get a specific version by version ID
    */
-  async upsert(definition: NewAgentDefinition): Promise<AgentDefinition> {
+  async getByVersionId(versionId: number): Promise<AgentDefinition | null> {
+    const result = await this.db
+      .selectFrom('agentDefinitions')
+      .where('versionId', '=', versionId)
+      .selectAll()
+      .executeTakeFirst();
+
+    return result ?? null;
+  }
+
+  /**
+   * Create a new agent definition (initial version)
+   */
+  async create(definition: NewAgentDefinition): Promise<AgentDefinition> {
     return this.db
       .insertInto('agentDefinitions')
       .values(definition)
-      .onConflict((oc) =>
-        oc.column('id').doUpdateSet({
-          systemPrompt: definition.systemPrompt,
-          userPrompt: definition.userPrompt,
-          model: definition.model,
-          maxTokens: definition.maxTokens,
-          temperature: definition.temperature,
-          maxIterations: definition.maxIterations,
-          maxRetries: definition.maxRetries,
-          description: definition.description,
-          isActive: definition.isActive,
-        })
-      )
       .returningAll()
       .executeTakeFirstOrThrow();
   }
 
   /**
-   * Update an agent definition
+   * Update an agent definition (append-only: inserts new row with updated values)
+   * Merges the update with current values so partial updates are supported.
    */
   async update(
-    id: string,
+    agentId: string,
     update: AgentDefinitionUpdate
-  ): Promise<AgentDefinition | null> {
-    const result = await this.db
-      .updateTable('agentDefinitions')
-      .set(update)
-      .where('id', '=', id)
-      .returningAll()
-      .executeTakeFirst();
+  ): Promise<AgentDefinition> {
+    // Get current values to merge with update
+    const current = await this.getById(agentId);
+    if (!current) {
+      throw new Error(`Agent definition not found: ${agentId}`);
+    }
 
-    return result ?? null;
+    // Insert new version with merged values
+    return this.db
+      .insertInto('agentDefinitions')
+      .values({
+        agentId,
+        systemPrompt: update.systemPrompt ?? current.systemPrompt,
+        userPrompt: update.userPrompt !== undefined ? update.userPrompt : current.userPrompt,
+        model: update.model ?? current.model,
+        maxTokens: update.maxTokens ?? current.maxTokens,
+        temperature: update.temperature ?? current.temperature,
+        maxIterations: update.maxIterations ?? current.maxIterations,
+        maxRetries: update.maxRetries ?? current.maxRetries,
+        description: update.description !== undefined ? update.description : current.description,
+        isActive: update.isActive ?? current.isActive,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
   }
 
   /**
-   * Soft-delete an agent definition by marking it inactive
+   * Revert to a specific version (creates new row with old content)
    */
-  async deactivate(id: string): Promise<boolean> {
-    const result = await this.db
-      .updateTable('agentDefinitions')
-      .set({ isActive: false })
-      .where('id', '=', id)
-      .executeTakeFirst();
+  async revert(agentId: string, versionId: number): Promise<AgentDefinition> {
+    const version = await this.getByVersionId(versionId);
+    if (!version) {
+      throw new Error(`Version not found: ${versionId}`);
+    }
+    if (version.agentId !== agentId) {
+      throw new Error(`Version ${versionId} does not belong to agent ${agentId}`);
+    }
 
-    return (result.numUpdatedRows ?? BigInt(0)) > BigInt(0);
+    // Insert new row with the old version's content
+    return this.db
+      .insertInto('agentDefinitions')
+      .values({
+        agentId: version.agentId,
+        systemPrompt: version.systemPrompt,
+        userPrompt: version.userPrompt,
+        model: version.model,
+        maxTokens: version.maxTokens,
+        temperature: version.temperature,
+        maxIterations: version.maxIterations,
+        maxRetries: version.maxRetries,
+        description: version.description,
+        isActive: version.isActive,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Soft-delete an agent definition by marking latest version as inactive
+   * (Inserts a new version with isActive = false)
+   */
+  async deactivate(agentId: string): Promise<AgentDefinition> {
+    return this.update(agentId, { isActive: false });
   }
 }
 

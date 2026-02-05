@@ -157,16 +157,16 @@ export function createAgentDefinitionService(
           const config = toDbAgentConfig(definition);
 
           // Update cache
-          cache.set(definition.id, {
+          cache.set(definition.agentId, {
             data: config,
             expiresAt: Date.now() + CACHE_TTL_MS,
           });
 
-          result.set(definition.id, config);
+          result.set(definition.agentId, config);
         }
 
         // Check for missing definitions
-        const foundIds = new Set(definitions.map((d) => d.id));
+        const foundIds = new Set(definitions.map((d) => d.agentId));
         const missingIds = idsToFetch.filter((id) => !foundIds.has(id));
         if (missingIds.length > 0) {
           throw new Error(

@@ -5,17 +5,23 @@ import { Kysely, sql } from 'kysely';
  *
  * Creates the agent_definitions table for database-driven agent configuration.
  * This table stores agent metadata (model, temperature, max tokens, etc.) alongside prompts.
- * Seeds initial data from existing prompts table with default model configs.
+ *
+ * Uses append-only versioning:
+ * - version_id: auto-incrementing primary key for each version
+ * - agent_id: the agent identifier (e.g., "chat:generate")
+ * - Updates insert new rows; latest version determined by created_at DESC
+ * - Full version history is preserved for all agents
  */
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   console.log('Starting agent definitions migration...');
 
-  // Create agent_definitions table
+  // Create agent_definitions table with append-only versioning
   console.log('Creating agent_definitions table...');
   await sql`
     CREATE TABLE agent_definitions (
-      id TEXT PRIMARY KEY,
+      version_id SERIAL PRIMARY KEY,
+      agent_id TEXT NOT NULL,
       system_prompt TEXT NOT NULL,
       user_prompt TEXT,
       model TEXT NOT NULL DEFAULT 'gpt-5-nano',
@@ -25,27 +31,22 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       max_retries INTEGER DEFAULT 1,
       description TEXT,
       is_active BOOLEAN NOT NULL DEFAULT true,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `.execute(db);
 
   // Create indexes
   console.log('Creating indexes...');
+  // Index for efficient lookups of latest version per agent
   await sql`
-    CREATE INDEX idx_agent_definitions_active ON agent_definitions (is_active) WHERE is_active = true
+    CREATE INDEX idx_agent_definitions_agent_id_created
+      ON agent_definitions (agent_id, created_at DESC)
   `.execute(db);
 
-  // Create trigger for updated_at
-  console.log('Creating updated_at trigger...');
+  // Index for active agents
   await sql`
-    DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_agent_definitions_updated_at') THEN
-        CREATE TRIGGER update_agent_definitions_updated_at
-        BEFORE UPDATE ON agent_definitions
-        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-      END IF;
-    END $$
+    CREATE INDEX idx_agent_definitions_active
+      ON agent_definitions (is_active) WHERE is_active = true
   `.execute(db);
 
   // Seed agent definitions from existing prompts table
@@ -130,7 +131,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     };
 
     await sql`
-      INSERT INTO agent_definitions (id, system_prompt, user_prompt, model, max_tokens, temperature, description)
+      INSERT INTO agent_definitions (agent_id, system_prompt, user_prompt, model, max_tokens, temperature, description)
       VALUES (
         ${row.id},
         ${row.system_prompt},
@@ -140,10 +141,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         ${config.temperature},
         ${config.description}
       )
-      ON CONFLICT (id) DO UPDATE SET
-        system_prompt = EXCLUDED.system_prompt,
-        user_prompt = EXCLUDED.user_prompt,
-        updated_at = CURRENT_TIMESTAMP
     `.execute(db);
 
     console.log(`  Seeded agent: ${row.id}`);
@@ -155,12 +152,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   console.log('Rolling back agent definitions migration...');
 
-  // Drop trigger first
-  console.log('Dropping trigger...');
-  await sql`DROP TRIGGER IF EXISTS update_agent_definitions_updated_at ON agent_definitions`.execute(db);
-
   // Drop indexes
   console.log('Dropping indexes...');
+  await sql`DROP INDEX IF EXISTS idx_agent_definitions_agent_id_created`.execute(db);
   await sql`DROP INDEX IF EXISTS idx_agent_definitions_active`.execute(db);
 
   // Drop table
