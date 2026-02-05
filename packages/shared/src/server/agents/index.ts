@@ -93,3 +93,33 @@ export type { SubAgentExecutorConfig } from './subAgentExecutor';
 
 export { executeToolLoop } from './toolExecutor';
 export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';
+
+// ============================================
+// Registry System
+// ============================================
+export {
+  toolRegistry,
+  agentRegistry,
+  callbackRegistry,
+  createAgentFromRegistry,
+  executeAgentCallbacks,
+  initializeRegistries,
+} from './registry';
+export type {
+  ToolDefinition,
+  ToolContext,
+  RegistryAgentConfig,
+  SubAgentRef,
+  SubAgentBatchRef,
+  TransformFn,
+  ConditionFn,
+  ValidatorDefinition,
+  CallbackDefinition,
+  CallbackConfig,
+  CallbackContext,
+  CallbackTiming,
+  CreateFromRegistryOptions,
+  RegistryAgent,
+  ChatToolDeps,
+  ChatToolContext,
+} from './registry';

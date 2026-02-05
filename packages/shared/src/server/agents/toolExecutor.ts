@@ -1,6 +1,7 @@
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { Message, ToolExecutionResult } from './types';
 import { buildLoopContinuationMessage } from './utils';
+import { toolRegistry } from './registry/toolRegistry';
 
 /**
  * Configuration for tool loop execution
@@ -32,14 +33,6 @@ export interface ToolCallRecord {
   result: string;
   durationMs: number;
 }
-
-// Tool execution priority (lower = first)
-// Profile updates should happen before modifications
-const TOOL_PRIORITY: Record<string, number> = {
-  'update_profile': 1,
-  'get_workout': 2,
-  'make_modification': 3,
-};
 
 /**
  * Execute an agentic tool loop
@@ -80,10 +73,10 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
       };
     }
 
-    // Sort tool calls by priority
+    // Sort tool calls by priority (resolved from ToolRegistry)
     const sortedToolCalls = [...result.tool_calls].sort(
       (a: { name: string }, b: { name: string }) =>
-        (TOOL_PRIORITY[a.name] ?? 99) - (TOOL_PRIORITY[b.name] ?? 99)
+        toolRegistry.getPriority(a.name) - toolRegistry.getPriority(b.name)
     );
 
     console.log(`[${name}] ${sortedToolCalls.length} tool call(s): ${sortedToolCalls.map((tc: { name: string }) => tc.name).join(', ')}`);
