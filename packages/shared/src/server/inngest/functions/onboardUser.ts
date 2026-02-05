@@ -37,6 +37,10 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
 const services = createServicesFromDb(postgresDb);
 const onboardingSteps = createOnboardingSteps(services);
 
+// Get repositories for event logging
+import { createRepositories } from '@/server/repositories/factory';
+const repos = createRepositories(postgresDb);
+
 export const onboardUserFunction = inngest.createFunction(
   {
     id: 'onboard-user',
@@ -92,12 +96,36 @@ export const onboardUserFunction = inngest.createFunction(
         onboardingSteps.sendMessages(userId)
       );
 
+      // Log successful onboarding event
+      await repos.eventLog.log({
+        eventName: 'onboarding_success',
+        userId,
+        entityId: 'onboarding',
+        data: {
+          messagesSent,
+          forceCreate,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
       console.log(`[Inngest] Onboarding complete for user ${userId}`);
 
       return { success: true, userId, messagesSent };
     } catch (error) {
       // Mark onboarding as failed
       console.error(`[Inngest] Onboarding failed for user ${userId}:`, error);
+
+      // Log onboarding failure event
+      await repos.eventLog.log({
+        eventName: 'onboarding_failed',
+        userId,
+        entityId: 'onboarding',
+        data: {
+          error: error instanceof Error ? error.message : 'Unknown error during onboarding',
+          forceCreate,
+          timestamp: new Date().toISOString(),
+        },
+      });
 
       try {
         await services.onboardingData.updateStatus(

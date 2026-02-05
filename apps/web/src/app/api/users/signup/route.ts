@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getServices, type ServiceContainer } from '@/lib/context';
+import { getServices, getRepositories, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets } from '@/server/config';
@@ -54,6 +54,19 @@ export async function POST(request: NextRequest) {
     return await handleNewUserSignup(services, formData);
   } catch (error) {
     console.error('[Signup] Error in signup API:', error);
+
+    // Log signup failure event
+    const repos = getRepositories();
+    await repos.eventLog.log({
+      eventName: 'signup_failed',
+      entityId: 'signup',
+      data: {
+        error: error instanceof Error ? error.message : 'Internal server error',
+        phoneNumber: formData?.phoneNumber ? String(formData.phoneNumber).slice(-4) : 'unknown', // Last 4 digits for privacy
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     return NextResponse.json(
       {
         success: false,
@@ -183,6 +196,18 @@ async function handleSubscribedUserReOnboard(
     },
   });
 
+  // Log successful re-onboarding event
+  const repos = getRepositories();
+  await repos.eventLog.log({
+    eventName: 'signup_success',
+    userId: existingUser.id,
+    entityId: 'signup',
+    data: {
+      flow: 're_onboarding',
+      timestamp: new Date().toISOString(),
+    },
+  });
+
   // Set session cookie and return redirect URL (no Stripe checkout)
   const sessionToken = services.userAuth.createSessionToken(existingUser.id);
 
@@ -302,6 +327,19 @@ async function completeSignupFlow(
   const session = await stripe.checkout.sessions.create(checkoutOptions);
 
   console.log(`[Signup] Checkout session created: ${session.id}`);
+
+  // Log successful signup event
+  const repos = getRepositories();
+  await repos.eventLog.log({
+    eventName: 'signup_success',
+    userId,
+    entityId: 'signup',
+    data: {
+      flow: forceCreate ? 'force_create' : 'standard',
+      hasReferral: !!validReferralCode,
+      timestamp: new Date().toISOString(),
+    },
+  });
 
   // Set session cookie and return checkout URL
   const sessionToken = services.userAuth.createSessionToken(userId);
