@@ -4,8 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { DomainTree } from './DomainTree';
 import { PromptEditorPane } from './PromptEditorPane';
 import { VersionHistoryPanel } from './VersionHistoryPanel';
-import { RoleTabs } from './RoleTabs';
-import type { SelectedPrompt, PromptRole, Prompt } from './types';
+import type { Prompt } from './types';
 
 function EmptyState() {
   return (
@@ -34,40 +33,27 @@ function EmptyState() {
 }
 
 export function PromptsEditor() {
-  const [selectedPrompt, setSelectedPrompt] = useState<SelectedPrompt | null>(null);
-  const [selectedRole, setSelectedRole] = useState<PromptRole>('system');
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [revertTrigger, setRevertTrigger] = useState(0);
 
-  // Handler for tree selection
+  // Handler for tree selection - roles ignored since all are context
   const handleAgentSelect = useCallback(
-    (agentId: string, availableRoles: PromptRole[]) => {
+    (agentId: string) => {
       if (isDirty && !confirm('Discard unsaved changes?')) return;
 
-      setSelectedPrompt({ agentId, availableRoles });
-      setSelectedRole(availableRoles[0]);
+      setSelectedAgentId(agentId);
       setIsDirty(false);
       setIsHistoryOpen(false);
     },
     [isDirty]
   );
 
-  // Handler for role change
-  const handleRoleChange = useCallback(
-    (role: PromptRole) => {
-      if (isDirty && !confirm('Discard unsaved changes?')) return;
-
-      setSelectedRole(role);
-      setIsDirty(false);
-    },
-    [isDirty]
-  );
-
-  // Handler for revert
+  // Handler for revert - always uses 'context' role
   const handleRevert = useCallback((version: Prompt) => {
     // Trigger a save with the old content
-    fetch(`/api/prompts/${version.id}/${version.role}`, {
+    fetch(`/api/prompts/${version.id}/context`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: version.value }),
@@ -102,42 +88,30 @@ export function PromptsEditor() {
     <div className="flex h-[calc(100vh-180px)] gap-4 mt-6">
       {/* Left Sidebar - Domain Tree */}
       <aside className="w-64 flex-shrink-0 overflow-y-auto border rounded-lg bg-white shadow-sm">
-        <DomainTree onSelect={handleAgentSelect} selectedAgentId={selectedPrompt?.agentId} />
+        <DomainTree onSelect={handleAgentSelect} selectedAgentId={selectedAgentId ?? undefined} />
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
-        {selectedPrompt ? (
-          <>
-            {/* Role Tabs */}
-            <RoleTabs
-              availableRoles={selectedPrompt.availableRoles}
-              selectedRole={selectedRole}
-              onRoleChange={handleRoleChange}
-            />
-
-            {/* Editor */}
-            <PromptEditorPane
-              key={`${selectedPrompt.agentId}-${selectedRole}-${revertTrigger}`}
-              agentId={selectedPrompt.agentId}
-              role={selectedRole}
-              onDirtyChange={setIsDirty}
-              onHistoryToggle={() => setIsHistoryOpen(!isHistoryOpen)}
-              isHistoryOpen={isHistoryOpen}
-            />
-          </>
+        {selectedAgentId ? (
+          <PromptEditorPane
+            key={`${selectedAgentId}-${revertTrigger}`}
+            agentId={selectedAgentId}
+            onDirtyChange={setIsDirty}
+            onHistoryToggle={() => setIsHistoryOpen(!isHistoryOpen)}
+            isHistoryOpen={isHistoryOpen}
+          />
         ) : (
           <EmptyState />
         )}
       </main>
 
       {/* Right Sidebar - Version History */}
-      {isHistoryOpen && selectedPrompt && (
+      {isHistoryOpen && selectedAgentId && (
         <aside className="w-80 flex-shrink-0">
           <VersionHistoryPanel
-            key={`history-${selectedPrompt.agentId}-${selectedRole}-${revertTrigger}`}
-            agentId={selectedPrompt.agentId}
-            role={selectedRole}
+            key={`history-${selectedAgentId}-${revertTrigger}`}
+            agentId={selectedAgentId}
             onRevert={handleRevert}
             onClose={() => setIsHistoryOpen(false)}
           />

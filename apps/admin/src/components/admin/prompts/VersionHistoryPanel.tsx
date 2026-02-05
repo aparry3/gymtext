@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Prompt, PromptRole } from './types';
+import type { Prompt } from './types';
 
 interface VersionHistoryPanelProps {
   agentId: string;
-  role: PromptRole;
   onRevert: (version: Prompt) => void;
   onClose: () => void;
 }
+
+// All prompts on this page are context prompts
+const ROLE = 'context' as const;
 
 function CloseIcon({ className }: { className?: string }) {
   return (
@@ -35,7 +37,6 @@ function HistorySkeleton() {
 
 export function VersionHistoryPanel({
   agentId,
-  role,
   onRevert,
   onClose,
 }: VersionHistoryPanelProps) {
@@ -47,7 +48,7 @@ export function VersionHistoryPanel({
     async function fetchHistory() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/prompts/${agentId}/${role}/history?limit=20`);
+        const response = await fetch(`/api/prompts/${agentId}/${ROLE}/history?limit=20`);
         const result = await response.json();
 
         if (result.success) {
@@ -61,7 +62,7 @@ export function VersionHistoryPanel({
     }
 
     fetchHistory();
-  }, [agentId, role]);
+  }, [agentId]);
 
   const handleRevert = (version: Prompt) => {
     if (confirm('Revert to this version? This will create a new version with this content.')) {

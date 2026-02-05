@@ -24,6 +24,7 @@ import {
   Landmark,
   ClipboardList,
   Dumbbell,
+  Settings2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEnvironment } from '@/context/EnvironmentContext';
@@ -38,7 +39,8 @@ const navItems = [
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },
-  { href: '/prompts', label: 'Prompts', icon: FileText },
+  { href: '/agent-configs', label: 'Agent Configs', icon: Settings2 },
+  { href: '/prompts', label: 'Context Prompts', icon: FileText },
 ];
 
 function NavItem({

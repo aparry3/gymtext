@@ -5,15 +5,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CodeMirrorEditor } from '@/components/ui/codemirror/CodeMirrorEditor';
-import type { PromptRole } from './types';
-
 interface PromptEditorPaneProps {
   agentId: string;
-  role: PromptRole;
   onDirtyChange: (isDirty: boolean) => void;
   onHistoryToggle: () => void;
   isHistoryOpen: boolean;
 }
+
+// All prompts on this page are context prompts
+const ROLE = 'context' as const;
 
 function HistoryIcon({ className }: { className?: string }) {
   return (
@@ -38,7 +38,6 @@ function EditorSkeleton() {
 
 export function PromptEditorPane({
   agentId,
-  role,
   onDirtyChange,
   onHistoryToggle,
   isHistoryOpen,
@@ -57,7 +56,7 @@ export function PromptEditorPane({
       setError(null);
 
       try {
-        const response = await fetch(`/api/prompts/${agentId}/${role}`);
+        const response = await fetch(`/api/prompts/${agentId}/${ROLE}`);
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -78,7 +77,7 @@ export function PromptEditorPane({
     }
 
     fetchPrompt();
-  }, [agentId, role]);
+  }, [agentId]);
 
   // Track dirty state
   useEffect(() => {
@@ -93,7 +92,7 @@ export function PromptEditorPane({
     setError(null);
 
     try {
-      const response = await fetch(`/api/prompts/${agentId}/${role}`, {
+      const response = await fetch(`/api/prompts/${agentId}/${ROLE}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: content }),
@@ -112,7 +111,7 @@ export function PromptEditorPane({
     } finally {
       setIsSaving(false);
     }
-  }, [agentId, role, content, originalContent]);
+  }, [agentId, content, originalContent]);
 
   const isDirty = content !== originalContent;
 
@@ -122,7 +121,6 @@ export function PromptEditorPane({
       <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50/50">
         <div className="flex items-center gap-2">
           <Badge variant="outline">{agentId}</Badge>
-          <Badge variant="secondary">{role}</Badge>
           {isDirty && (
             <Badge variant="destructive" className="animate-pulse">
               Unsaved

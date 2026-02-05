@@ -37,7 +37,10 @@ function AdminPromptsPageContent() {
     <div className="container mx-auto px-4 py-6 max-w-full">
       <div className="space-y-2">
         {/* Header */}
-        <AdminHeader title="Prompts Editor" subtitle="Manage AI agent prompts with version history" />
+        <AdminHeader
+          title="Context Prompts"
+          subtitle="Runtime context snippets for experience levels and message formats"
+        />
 
         {/* Editor */}
         <PromptsEditor />

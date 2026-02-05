@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { PROMPT_DOMAINS, type PromptRole, type AgentConfig } from './types';
 
 interface DomainTreeProps {
-  onSelect: (agentId: string, roles: PromptRole[]) => void;
+  onSelect: (agentId: string) => void;
   selectedAgentId?: string;
 }
 
@@ -89,7 +89,7 @@ function TreeNodeComponent({
 }: {
   node: TreeNode;
   depth: number;
-  onSelect: (agentId: string, roles: PromptRole[]) => void;
+  onSelect: (agentId: string) => void;
   selectedAgentId?: string;
   expandedNodes: Set<string>;
   toggleNode: (nodeId: string) => void;
@@ -105,7 +105,7 @@ function TreeNodeComponent({
     return (
       <li>
         <button
-          onClick={() => onSelect(node.fullId!, node.roles!)}
+          onClick={() => onSelect(node.fullId!)}
           className={cn(
             'w-full text-left px-2 py-1 text-sm rounded-lg transition-colors',
             'hover:bg-gray-100',
@@ -131,7 +131,7 @@ function TreeNodeComponent({
             {/* If this node is also a selectable prompt */}
             {isLeaf && (
               <button
-                onClick={() => onSelect(node.fullId!, node.roles!)}
+                onClick={() => onSelect(node.fullId!)}
                 className={cn(
                   'ml-1 px-1.5 py-0.5 text-xs rounded transition-colors',
                   'text-gray-400 hover:text-gray-600 hover:bg-gray-100',
