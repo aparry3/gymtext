@@ -1,6 +1,7 @@
 import type { ZodSchema } from 'zod';
 import { initializeModel, type InvokableModel } from './models';
 import type {
+  AgentConfig,
   AgentDefinition,
   ModelConfig,
   ConfigurableAgent,
@@ -9,120 +10,182 @@ import type {
   SubAgentBatch,
   RetryContext,
   Message,
+  ModelId,
+  InvokeParams,
 } from './types';
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
 import { executeToolLoop } from './toolExecutor';
 import { logAgentInvocation } from './logger';
-import type { PromptServiceInstance } from '@/server/services/domain/prompts/promptService';
 
-// Lazy-loaded prompt service instance
-let _promptService: PromptServiceInstance | null = null;
+/**
+ * Default model configuration values
+ */
+const DEFAULT_MODEL: ModelId = 'gpt-5-nano';
+const DEFAULT_TEMPERATURE = 1;
+const DEFAULT_MAX_TOKENS = 16000;
+const DEFAULT_MAX_ITERATIONS = 5;
 
-async function getPromptService(): Promise<PromptServiceInstance> {
-  if (!_promptService) {
-    const { createServicesFromDb } = await import('@/server/services/factory');
-    const { postgresDb } = await import('@/server/connections/postgres/postgres');
-    const services = createServicesFromDb(postgresDb);
-    _promptService = services.prompt;
-  }
-  return _promptService;
+/**
+ * Check if the argument is a legacy AgentDefinition (has context/previousMessages/dbUserPrompt)
+ * vs the new AgentConfig
+ */
+function isLegacyDefinition(arg: unknown): boolean {
+  if (!arg || typeof arg !== 'object') return false;
+  const obj = arg as Record<string, unknown>;
+  // Legacy definition has these fields at the definition level, not in invoke
+  return 'context' in obj || 'previousMessages' in obj || 'dbUserPrompt' in obj;
 }
 
 /**
- * Create a configurable agent from a definition and model config
+ * Convert legacy AgentDefinition + ModelConfig to unified AgentConfig
+ */
+function convertLegacyConfig<TSchema extends ZodSchema | undefined>(
+  definition: AgentDefinition<TSchema>,
+  modelConfig?: ModelConfig
+): AgentConfig<TSchema> {
+  return {
+    name: definition.name,
+    systemPrompt: definition.systemPrompt,
+    // Convert dbUserPrompt to userPrompt, or use userPrompt transformer
+    userPrompt: definition.userPrompt ?? definition.dbUserPrompt ?? undefined,
+    // Model config
+    model: modelConfig?.model,
+    temperature: modelConfig?.temperature,
+    maxTokens: modelConfig?.maxTokens,
+    maxIterations: modelConfig?.maxIterations,
+    // Static capabilities
+    tools: definition.tools,
+    schema: definition.schema,
+    subAgents: definition.subAgents,
+    // Behavior
+    validate: definition.validate,
+    maxRetries: definition.maxRetries,
+    loggingContext: definition.loggingContext,
+  };
+}
+
+/**
+ * Create a configurable agent from a unified config
  *
  * This factory function creates agents declaratively, supporting:
  * - Structured output via Zod schemas
- * - Optional userPrompt transformer for input strings
- * - Pre-computed context messages
+ * - Optional userPrompt (string or transformer function)
  * - Tool-based agents with agentic loops
  * - Composed agents with parallel/sequential subAgents
- * - Database-backed prompts (fetched if systemPrompt not provided)
  *
- * @param definition - The agent's declarative configuration
- * @param config - Optional model configuration
- * @returns A Promise resolving to a ConfigurableAgent that can be invoked with a string
+ * IMPORTANT: This is a pure function. Config fetching should be done at the
+ * service layer using agentDefinitionService.getDefinition() before calling createAgent.
+ *
+ * Also supports legacy two-argument signature for backward compatibility:
+ * `createAgent(definition, modelConfig)` - deprecated, use unified config instead
+ *
+ * @param configOrDefinition - The unified agent configuration or legacy AgentDefinition
+ * @param legacyModelConfig - Legacy ModelConfig (only when using old two-arg signature)
+ * @returns A Promise resolving to a ConfigurableAgent that can be invoked with InvokeParams or string
  *
  * @example
  * ```typescript
- * // Agent with DB-stored prompts (systemPrompt fetched from database)
+ * // NEW PATTERN: Fetch definition at service layer first
+ * const definition = await agentDefinitionService.getDefinition(AGENTS.WORKOUT_MESSAGE);
+ *
+ * // Create agent with unified config
  * const messageAgent = await createAgent({
- *   name: 'workout-message',
- *   context: [`<Profile>${user.profile}</Profile>`],
+ *   ...definition,
+ *   tools,
  *   schema: MessageSchema,
- * }, { model: 'gpt-5-nano' });
+ * });
  *
- * await messageAgent.invoke('Generate a motivational workout message');
+ * // Invoke with runtime context
+ * await messageAgent.invoke({
+ *   message: 'Generate a motivational workout message',
+ *   context: [`<Profile>${user.profile}</Profile>`],
+ * });
  *
- * // Agent with explicit systemPrompt (legacy pattern, bypasses DB)
- * const workoutAgent = await createAgent({
- *   name: 'workout',
- *   systemPrompt: SYSTEM_PROMPT,
- *   userPrompt: (input) => `Create workout based on: ${input}`,
- *   context: [profileContext, historyContext],
- *   subAgents: [
- *     { structured: structuredAgent, message: messageAgent },
- *     { validation: validationAgent }
- *   ]
- * }, { model: 'gpt-5.1' });
- *
- * await workoutAgent.invoke('upper body strength');
+ * // LEGACY PATTERN (deprecated): Two-argument signature still works
+ * const agent = await createAgent({
+ *   name: 'my-agent',
+ *   systemPrompt: '...',
+ *   context: [...],  // context at definition level
+ * }, modelConfig);
+ * await agent.invoke('message');  // string input
  * ```
  */
 export async function createAgent<
   TSchema extends ZodSchema | undefined = undefined,
   TSubAgents extends SubAgentBatch[] | undefined = undefined
 >(
-  definition: AgentDefinition<TSchema>,
-  config?: ModelConfig
+  configOrDefinition: AgentConfig<TSchema> | AgentDefinition<TSchema>,
+  legacyModelConfig?: ModelConfig
 ): Promise<ConfigurableAgent<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>>> {
+  // Support legacy two-argument signature
+  let config: AgentConfig<TSchema>;
+  let legacyContext: string[] = [];
+  let legacyPreviousMessages: Message[] = [];
+
+  if (isLegacyDefinition(configOrDefinition) || legacyModelConfig !== undefined) {
+    // Legacy pattern: createAgent(definition, modelConfig)
+    const definition = configOrDefinition as AgentDefinition<TSchema>;
+    config = convertLegacyConfig(definition, legacyModelConfig);
+    // Capture legacy context/previousMessages for use in invoke
+    legacyContext = definition.context ?? [];
+    legacyPreviousMessages = definition.previousMessages ?? [];
+  } else {
+    // New pattern: createAgent(config)
+    config = configOrDefinition as AgentConfig<TSchema>;
+  }
 
   const {
     name,
-    systemPrompt: providedSystemPrompt,
-    userPrompt: providedUserPrompt,
-    context = [],
-    previousMessages = [],
+    systemPrompt,
+    userPrompt,
+    model: modelId = DEFAULT_MODEL,
+    temperature = DEFAULT_TEMPERATURE,
+    maxTokens = DEFAULT_MAX_TOKENS,
+    maxIterations = DEFAULT_MAX_ITERATIONS,
     tools,
     schema,
     subAgents = [],
     validate,
     maxRetries = 1,
     loggingContext,
-  } = definition;
+  } = config;
 
-  // Fetch prompts from database if systemPrompt not provided directly
-  let systemPrompt = providedSystemPrompt;
-  let dbUserPrompt: string | null = null;
-
+  // Require systemPrompt - no more DB fallback in createAgent
   if (!systemPrompt) {
-    const promptService = await getPromptService();
-    const prompts = await promptService.getPrompts(name);
-    systemPrompt = prompts.systemPrompt;
-    dbUserPrompt = prompts.userPrompt;
+    throw new Error(
+      `systemPrompt is required for agent '${name}'. ` +
+      `Use agentDefinitionService.getDefinition() at the service layer to fetch prompts from the database.`
+    );
   }
 
-  const { maxIterations = 5 } = config || {};
+  // Resolve model configuration
+  const resolvedConfig = {
+    model: modelId,
+    temperature,
+    maxTokens,
+    maxIterations,
+  };
 
   // Determine if this is a tool-based agent
   const isToolAgent = tools && tools.length > 0;
 
-  // Initialize the model appropriately
+  // Initialize the model appropriately using resolved config
   // Tools and schema are mutually exclusive - tools take precedence
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const model: InvokableModel<any> = isToolAgent
-    ? initializeModel(undefined, config, { tools })
-    : initializeModel(schema, config);
+    ? initializeModel(undefined, resolvedConfig, { tools })
+    : initializeModel(schema, resolvedConfig);
 
   /**
    * Internal invoke function that handles RetryContext for error feedback
    * On retries, previous failed outputs and errors are injected into message history
    */
   const invokeInternal = async (
-    input: string,
+    params: InvokeParams,
     retryContext?: RetryContext
   ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+    const { message: input, context = [], previousMessages = [] } = params;
     const startTime = Date.now();
     const attemptInfo = retryContext && retryContext.attempt > 1
       ? ` (attempt ${retryContext.attempt})`
@@ -131,16 +194,16 @@ export async function createAgent<
 
     try {
       // Determine the final user message:
-      // 1. If userPrompt function provided, use it to transform input
-      // 2. Else if DB user prompt exists, prepend it to input
+      // 1. If userPrompt is a function, use it to transform input
+      // 2. Else if userPrompt is a string, prepend it to input
       // 3. Else input IS the user message directly
       let evaluatedUserPrompt: string;
 
-      if (providedUserPrompt) {
-        evaluatedUserPrompt = providedUserPrompt(input);
-      } else if (dbUserPrompt) {
+      if (typeof userPrompt === 'function') {
+        evaluatedUserPrompt = userPrompt(input);
+      } else if (typeof userPrompt === 'string') {
         // DB user prompt is a template that precedes the actual user input
-        evaluatedUserPrompt = `${dbUserPrompt}\n\n${input}`;
+        evaluatedUserPrompt = `${userPrompt}\n\n${input}`;
       } else {
         evaluatedUserPrompt = input;
       }
@@ -239,14 +302,34 @@ export async function createAgent<
   /**
    * Public invoke function - wraps invokeInternal with validation and retry logic
    * If validate is defined, runs retry loop with error feedback on failures
+   *
+   * Supports both new InvokeParams and legacy string input for backward compatibility
    */
   const invoke = async (
-    input: string,
+    paramsOrMessage: InvokeParams | string,
     retryContext?: RetryContext
   ): Promise<AgentComposedOutput<InferSchemaOutput<TSchema>, TSubAgents>> => {
+    // Normalize input: support both InvokeParams and legacy string
+    let params: InvokeParams;
+    if (typeof paramsOrMessage === 'string') {
+      // Legacy string input - use context/previousMessages from definition if available
+      params = {
+        message: paramsOrMessage,
+        context: legacyContext.length > 0 ? legacyContext : undefined,
+        previousMessages: legacyPreviousMessages.length > 0 ? legacyPreviousMessages : undefined,
+      };
+    } else {
+      // New InvokeParams - merge with legacy context if not provided
+      params = {
+        ...paramsOrMessage,
+        context: paramsOrMessage.context ?? (legacyContext.length > 0 ? legacyContext : undefined),
+        previousMessages: paramsOrMessage.previousMessages ?? (legacyPreviousMessages.length > 0 ? legacyPreviousMessages : undefined),
+      };
+    }
+
     // If no validation on this agent, just invoke directly
     if (!validate) {
-      return invokeInternal(input, retryContext);
+      return invokeInternal(params, retryContext);
     }
 
     // Run with validation + retry
@@ -262,7 +345,7 @@ export async function createAgent<
         ? { attempt, previousAttempts }
         : retryContext;
 
-      const result = await invokeInternal(input, currentContext);
+      const result = await invokeInternal(params, currentContext);
       const validation = validate(result);
 
       if (validation.isValid) {

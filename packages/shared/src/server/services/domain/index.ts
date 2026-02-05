@@ -43,8 +43,15 @@ export { createShortLinkService } from './links/shortLinkService';
 export { createReferralService } from './referral/referralService';
 export { createDayConfigService } from './calendar/dayConfigService';
 export { createPromptService } from './prompts/promptService';
+export { createAgentConfigService, createAgentDefinitionService } from './agentConfig';
 export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './subscription/subscriptionService';
 export type { ShortLinkServiceInstance } from './links/shortLinkService';
 export type { ReferralServiceInstance } from './referral/referralService';
 export type { DayConfigServiceInstance } from './calendar/dayConfigService';
 export type { PromptServiceInstance } from './prompts/promptService';
+export type {
+  AgentConfigServiceInstance,
+  AgentDefinitionServiceInstance,
+  AgentDefinition,
+  GetDefinitionOptions,
+} from './agentConfig';

@@ -4,7 +4,7 @@
  * Handles AI operations for parsing raw program text into formatted markdown.
  * Takes raw text (from file parser) and outputs structured workout program markdown.
  */
-import { createAgent, PROMPT_IDS } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type AgentServices } from '@/server/agents';
 
 /**
  * Result from the program parsing agent
@@ -28,19 +28,25 @@ export interface ProgramAgentServiceInstance {
 
 /**
  * Create a ProgramAgentService instance
- * No dependencies needed - uses createAgent internally with DB-backed prompts
+ *
+ * @param agentServices - AgentServices for fetching agent configs
  */
-export function createProgramAgentService(): ProgramAgentServiceInstance {
+export function createProgramAgentService(agentServices: AgentServices): ProgramAgentServiceInstance {
   return {
     async parseProgram(rawText: string): Promise<ProgramParseResult> {
-      // Create agent - prompts fetched from DB based on agent name
+      // Fetch config at service layer
+      const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+        PROMPT_IDS.PROGRAM_PARSE,
+        agentServices,
+        { overrides: { model: 'gpt-5-nano', maxTokens: 32000 } }
+      );
+
+      // Create agent with explicit config
       const agent = await createAgent({
         name: PROMPT_IDS.PROGRAM_PARSE,
-        // No userPrompt override - use DB prompt
-      }, {
-        model: 'gpt-5-nano',
-        maxTokens: 32000, // Programs can be lengthy
-      });
+        systemPrompt,
+        dbUserPrompt,
+      }, modelConfig);
 
       console.log('[ProgramAgentService] Invoking with text:', {
         length: rawText.length,

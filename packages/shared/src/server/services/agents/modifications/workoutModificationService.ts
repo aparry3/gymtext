@@ -17,6 +17,7 @@ import { resolveExercisesInStructure, type TrainingServiceInstance } from '../..
 import type { ContextService } from '../../context/contextService';
 import type { ExerciseResolutionServiceInstance } from '../../domain/exercise/exerciseResolutionService';
 import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
+import type { AgentServices } from '@/server/agents';
 
 export interface ModifyWorkoutParams {
   userId: string;
@@ -79,6 +80,7 @@ export interface WorkoutModificationServiceDeps {
   // Exercise resolution (optional — skipped if not provided)
   exerciseResolution?: ExerciseResolutionServiceInstance;
   exerciseUse?: ExerciseUseRepository;
+  agentServices: AgentServices;
 }
 
 /**
@@ -96,18 +98,19 @@ export function createWorkoutModificationService(
     contextService,
     exerciseResolution,
     exerciseUse,
+    agentServices,
   } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
   let modifyWeekAgent: ModifyWeekAgentService | null = null;
 
   const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService);
+    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService, undefined, agentServices);
     return workoutAgent;
   };
 
   const getModifyWeekAgent = (): ModifyWeekAgentService => {
-    if (!modifyWeekAgent) modifyWeekAgent = createModifyWeekAgentService(contextService);
+    if (!modifyWeekAgent) modifyWeekAgent = createModifyWeekAgentService(contextService, undefined, agentServices);
     return modifyWeekAgent;
   };
 

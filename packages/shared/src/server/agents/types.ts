@@ -37,9 +37,9 @@ export interface RetryContext {
 // ============================================
 
 /**
- * Configuration for agents
+ * @deprecated Use AgentConfig instead (the unified type)
  */
-export interface AgentConfig {
+export interface LegacyAgentConfig {
   model?: 'gpt-5-nano' | 'gpt-5-mini' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
   temperature?: number;
   maxTokens?: number;
@@ -100,16 +100,16 @@ export type ModelId =
 
 /**
  * The configurable agent interface
- * invoke always takes a string - the string is either used directly as the user message
- * or passed to userPrompt transformer if defined
+ * invoke takes InvokeParams with message and runtime context
+ * Also supports legacy string input for backward compatibility
  */
 export interface ConfigurableAgent<TOutput> {
   /**
-   * Invoke the agent with input string
-   * @param input - The input string (used as user message or transformed via userPrompt)
+   * Invoke the agent with parameters
+   * @param paramsOrMessage - The invocation parameters (message, context, previousMessages) or legacy string input
    * @param retryContext - Optional retry context with previous failed attempts (for internal retry handling)
    */
-  invoke(input: string, retryContext?: RetryContext): Promise<TOutput>;
+  invoke(paramsOrMessage: InvokeParams | string, retryContext?: RetryContext): Promise<TOutput>;
   /** The agent's name for logging */
   name: string;
 }
@@ -155,30 +155,55 @@ export type SubAgentEntry = ConfigurableAgent<any> | SubAgentConfig;
 export type SubAgentBatch = Record<string, SubAgentEntry>;
 
 /**
- * Agent definition - the declarative configuration
+ * Unified agent configuration
+ *
+ * Contains everything needed to create an agent:
+ * - Definition: name, prompts (static configuration)
+ * - Model config: model, temperature, maxTokens, etc.
+ * - Capabilities: tools, schema, subAgents (static)
+ * - Behavior: validation, retry, logging
  */
-export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefined> {
+export interface AgentConfig<TSchema extends ZodSchema | undefined = undefined> {
+  // ========================================
+  // Definition (from DB via AgentDefinitionService)
+  // ========================================
+
   /** Identifier for logging and debugging */
   name: string;
 
   /**
    * Static system prompt instructions.
-   * If not provided, fetched from database using agent name.
+   * REQUIRED - must be provided explicitly (no DB fallback in createAgent).
+   * Use agentDefinitionService.getDefinition() to fetch from database.
    */
-  systemPrompt?: string;
+  systemPrompt: string;
 
   /**
-   * Optional transformer for the input string.
-   * - If provided: transforms the input string into the user message
-   * - If undefined: the input string IS the user message directly
+   * Optional user prompt - either:
+   * - A string from the database (prepended to input)
+   * - A transformer function (transforms input to user message)
    */
-  userPrompt?: (input: string) => string;
+  userPrompt?: string | ((input: string) => string) | null;
 
-  /** Context messages injected between system and user prompts (pre-computed strings) */
-  context?: string[];
+  // ========================================
+  // Model Configuration
+  // ========================================
 
-  /** Previous conversation messages (placed after context, before user prompt) */
-  previousMessages?: Message[];
+  /** Model to use (default: gpt-5-nano) */
+  model?: ModelId;
+
+  /** Temperature for sampling (default: 1) */
+  temperature?: number;
+
+  /** Max tokens for response (default: 16000) */
+  maxTokens?: number;
+
+  /** Max iterations for agentic tool loops (default: 5) */
+  maxIterations?: number;
+
+  // ========================================
+  // Static Capabilities
+  // ========================================
 
   /** LangChain tools available to this agent */
   tools?: StructuredToolInterface[];
@@ -188,6 +213,10 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
 
   /** SubAgents to execute after main agent - batches run sequentially, agents within batch run in parallel */
   subAgents?: SubAgentBatch[];
+
+  // ========================================
+  // Behavior
+  // ========================================
 
   /**
    * Validation for the agent output
@@ -210,13 +239,44 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
 }
 
 /**
- * Model configuration options
+ * Parameters for invoking an agent
+ * Contains runtime data that changes per invocation
+ */
+export interface InvokeParams {
+  /** The user input / message */
+  message: string;
+  /** Context messages injected between system and user prompts (pre-computed strings) */
+  context?: string[];
+  /** Previous conversation messages (placed after context, before user prompt) */
+  previousMessages?: Message[];
+}
+
+/**
+ * @deprecated Use AgentConfig directly - definition and model config are now unified
+ */
+export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefined> {
+  /** Identifier for logging and debugging */
+  name: string;
+  systemPrompt: string;
+  userPrompt?: (input: string) => string;
+  dbUserPrompt?: string | null;
+  context?: string[];
+  previousMessages?: Message[];
+  tools?: StructuredToolInterface[];
+  schema?: TSchema;
+  subAgents?: SubAgentBatch[];
+  validate?: (result: unknown) => ValidationResult;
+  maxRetries?: number;
+  loggingContext?: AgentLoggingContext;
+}
+
+/**
+ * @deprecated Use AgentConfig directly - definition and model config are now unified
  */
 export interface ModelConfig {
   model?: ModelId;
   maxTokens?: number;
   temperature?: number;
-  /** Max iterations for agentic tool loops (default: 5) */
   maxIterations?: number;
   verbose?: boolean;
 }

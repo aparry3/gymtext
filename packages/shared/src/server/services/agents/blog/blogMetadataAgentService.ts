@@ -4,7 +4,7 @@
  * Handles AI operations for generating blog metadata from content.
  * Takes raw HTML content and outputs structured metadata (title, description, tags, SEO fields).
  */
-import { createAgent, PROMPT_IDS } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type AgentServices } from '@/server/agents';
 import { BlogMetadataSchema, type BlogMetadataOutput } from '../schemas/blog';
 
 /**
@@ -59,22 +59,29 @@ function truncateContent(content: string, maxLength = 8000): string {
 
 /**
  * Create a BlogMetadataAgentService instance
- * No dependencies needed - uses createAgent internally with DB-backed prompts
+ *
+ * @param agentServices - AgentServices for fetching agent configs
  */
-export function createBlogMetadataAgentService(): BlogMetadataAgentServiceInstance {
+export function createBlogMetadataAgentService(agentServices: AgentServices): BlogMetadataAgentServiceInstance {
   return {
     async generateMetadata(content: string): Promise<BlogMetadataResult> {
+      // Fetch config at service layer
+      const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+        PROMPT_IDS.BLOG_METADATA,
+        agentServices,
+        { overrides: { model: 'gpt-5-nano', maxTokens: 1000 } }
+      );
+
       // Strip HTML and truncate for efficient processing
       const cleanContent = truncateContent(stripHtml(content));
 
-      // Create agent - prompts fetched from DB based on agent name
+      // Create agent with explicit config
       const agent = await createAgent({
         name: PROMPT_IDS.BLOG_METADATA,
+        systemPrompt,
+        dbUserPrompt,
         schema: BlogMetadataSchema,
-      }, {
-        model: 'gpt-5-nano',
-        maxTokens: 1000,
-      });
+      }, modelConfig);
 
       console.log('[BlogMetadataAgentService] Generating metadata for content:', {
         originalLength: content.length,

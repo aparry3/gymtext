@@ -1,12 +1,12 @@
 /**
- * Agent Prompt IDs
+ * Agent IDs
  *
  * Use these constants in createAgent calls and migrations.
  * TypeScript will catch typos at compile time.
  */
 
 // Core agents requiring system + optional user prompts
-export const PROMPT_IDS = {
+export const AGENTS = {
   // Chat
   CHAT_GENERATE: 'chat:generate',
 
@@ -73,6 +73,16 @@ export const PROMPT_ROLES = {
   CONTEXT: 'context',
 } as const;
 
-export type PromptId = (typeof PROMPT_IDS)[keyof typeof PROMPT_IDS];
+export type AgentId = (typeof AGENTS)[keyof typeof AGENTS];
 export type ContextId = (typeof CONTEXT_IDS)[keyof typeof CONTEXT_IDS];
 export type PromptRole = (typeof PROMPT_ROLES)[keyof typeof PROMPT_ROLES];
+
+/**
+ * @deprecated Use AGENTS instead
+ */
+export const PROMPT_IDS = AGENTS;
+
+/**
+ * @deprecated Use AgentId instead
+ */
+export type PromptId = AgentId;

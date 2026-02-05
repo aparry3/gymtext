@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type ConfigurableAgent, type AgentServices } from '@/server/agents';
 import { MicrocycleStructureSchema, type MicrocycleStructure } from '@/server/models/microcycle';
 import {
   MicrocycleGenerationOutputSchema,
@@ -36,51 +36,73 @@ const validateDays = (days: string[]): boolean => {
  *
  * @example
  * ```typescript
- * const microcycleAgentService = createMicrocycleAgentService(contextService);
+ * const microcycleAgentService = createMicrocycleAgentService(contextService, agentServices);
  * const result = await microcycleAgentService.generateMicrocycle(user, absoluteWeek);
  * const { days, description, isDeload, message, structure } = result;
  * ```
  */
 export class MicrocycleAgentService {
   private contextService: ContextService;
+  private agentServices: AgentServices;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> | null = null;
 
-  constructor(contextService: ContextService) {
+  constructor(contextService: ContextService, agentServices: AgentServices) {
     this.contextService = contextService;
+    this.agentServices = agentServices;
   }
 
   /**
    * Get the message sub-agent (lazy-initialized)
-   * System prompt and user prompt fetched from DB
    * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
-      this.messageAgentPromise = createAgent({
-        name: PROMPT_IDS.MICROCYCLE_MESSAGE,
-        // No userPrompt - DB user prompt provides static instructions
-        // Transform in sub-agent config provides formatted microcycle data
-      }, { model: 'gpt-5-nano' });
+      this.messageAgentPromise = (async () => {
+        // Fetch config at service layer
+        const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+          PROMPT_IDS.MICROCYCLE_MESSAGE,
+          this.agentServices,
+          { overrides: { model: 'gpt-5-nano' } }
+        );
+
+        return createAgent({
+          name: PROMPT_IDS.MICROCYCLE_MESSAGE,
+          systemPrompt,
+          dbUserPrompt,
+          // No userPrompt transformer - DB user prompt provides static instructions
+          // Transform in sub-agent config provides formatted microcycle data
+        }, modelConfig);
+      })();
     }
     return this.messageAgentPromise;
   }
 
   /**
    * Get the structured sub-agent (lazy-initialized)
-   * System prompt and user prompt fetched from DB
    * Transform in sub-agent config provides the formatted microcycle data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: MicrocycleStructure }>> {
     if (!this.structuredAgentPromise) {
-      this.structuredAgentPromise = createAgent({
-        name: PROMPT_IDS.MICROCYCLE_STRUCTURED,
-        // No userPrompt - DB user prompt provides static instructions
-        // Transform in sub-agent config provides formatted microcycle data
-        schema: MicrocycleStructureSchema,
-      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+      this.structuredAgentPromise = (async () => {
+        // Fetch config at service layer
+        const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+          PROMPT_IDS.MICROCYCLE_STRUCTURED,
+          this.agentServices,
+          { overrides: { model: 'gpt-5-nano', maxTokens: 32000 } }
+        );
+
+        return createAgent({
+          name: PROMPT_IDS.MICROCYCLE_STRUCTURED,
+          systemPrompt,
+          dbUserPrompt,
+          // No userPrompt transformer - DB user prompt provides static instructions
+          // Transform in sub-agent config provides formatted microcycle data
+          schema: MicrocycleStructureSchema,
+        }, modelConfig);
+      })();
     }
     return this.structuredAgentPromise;
   }
@@ -106,6 +128,13 @@ export class MicrocycleAgentService {
     message: string;
     structure?: MicrocycleStructure;
   }> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.MICROCYCLE_GENERATE,
+      this.agentServices,
+      { overrides: { model: 'gpt-5.1' } }
+    );
+
     // Build context using ContextService
     // FITNESS_PLAN is auto-fetched by context service
     // isDeload is determined by agent from plan's Progression Strategy
@@ -129,10 +158,12 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Create main agent with context (prompts fetched from DB)
+    // Create main agent with explicit config
     // Sub-agents use transform to format main agent output → sub-agent input
     const agent = await createAgent({
       name: PROMPT_IDS.MICROCYCLE_GENERATE,
+      systemPrompt,
+      dbUserPrompt,
       context,
       schema: MicrocycleGenerationOutputSchema,
       subAgents: [{
@@ -148,7 +179,7 @@ export class MicrocycleAgentService {
           },
         },
       }],
-    }, { model: 'gpt-5.1' });
+    }, modelConfig);
 
     // Execute with retry logic
     let lastError: Error | null = null;
@@ -229,6 +260,13 @@ export class MicrocycleAgentService {
     wasModified: boolean;
     modifications: string;
   }> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.MICROCYCLE_MODIFY,
+      this.agentServices,
+      { overrides: { model: 'gpt-5.1' } }
+    );
+
     // Get absoluteWeek from the current microcycle
     const absoluteWeek = currentMicrocycle.absoluteWeek;
 
@@ -250,10 +288,12 @@ export class MicrocycleAgentService {
       this.getStructuredAgent(),
     ]);
 
-    // Prompts fetched from DB based on agent name
+    // Create main agent with explicit config
     // Sub-agents use transform to format main agent output → sub-agent input
     const agent = await createAgent({
       name: PROMPT_IDS.MICROCYCLE_MODIFY,
+      systemPrompt,
+      dbUserPrompt,
       context,
       schema: ModifyMicrocycleOutputSchema,
       subAgents: [{
@@ -273,7 +313,7 @@ export class MicrocycleAgentService {
           },
         },
       }],
-    }, { model: 'gpt-5.1' });
+    }, modelConfig);
 
     // Execute with retry logic
     let lastError: Error | null = null;
@@ -336,8 +376,12 @@ export class MicrocycleAgentService {
  * Factory function to create a MicrocycleAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentServices - AgentServices for fetching agent configs
  * @returns A new MicrocycleAgentService instance
  */
-export function createMicrocycleAgentService(contextService: ContextService): MicrocycleAgentService {
-  return new MicrocycleAgentService(contextService);
+export function createMicrocycleAgentService(
+  contextService: ContextService,
+  agentServices: AgentServices
+): MicrocycleAgentService {
+  return new MicrocycleAgentService(contextService, agentServices);
 }

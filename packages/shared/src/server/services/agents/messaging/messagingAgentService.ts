@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type Message as AgentMessage, type AgentServices } from '@/server/agents';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
@@ -21,9 +21,10 @@ export interface MessagingAgentServiceInstance {
 
 /**
  * Create a MessagingAgentService instance
- * Uses createAgent pattern with DB-backed prompts
+ *
+ * @param agentServices - AgentServices for fetching agent configs (optional for backwards compat)
  */
-export function createMessagingAgentService(): MessagingAgentServiceInstance {
+export function createMessagingAgentService(agentServices?: AgentServices): MessagingAgentServiceInstance {
   return {
     /**
      * Generate a welcome message for a new user
@@ -53,6 +54,17 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
       plan: FitnessPlan,
       previousMessages?: Message[]
     ): Promise<string[]> {
+      if (!agentServices) {
+        throw new Error('agentServices required for generatePlanSummary');
+      }
+
+      // Fetch config at service layer
+      const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+        PROMPT_IDS.MESSAGING_PLAN_SUMMARY,
+        agentServices,
+        { overrides: { model: 'gpt-5-nano' } }
+      );
+
       // Build context array with user/plan data
       const context: string[] = [
         `<User>\nName: ${user.name}\n</User>`,
@@ -76,13 +88,15 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
           }))
         : undefined;
 
-      // Create agent with context and previousMessages
+      // Create agent with explicit config
       const agent = await createAgent({
         name: PROMPT_IDS.MESSAGING_PLAN_SUMMARY,
+        systemPrompt,
+        dbUserPrompt,
         context,
         previousMessages: previousMsgs,
         schema: PlanSummarySchema,
-      }, { model: 'gpt-5-nano' });
+      }, modelConfig);
 
       const result = await agent.invoke('');
       return result.response.messages;
@@ -97,6 +111,17 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
       weekOne: string,
       currentWeekday: DayOfWeek
     ): Promise<string> {
+      if (!agentServices) {
+        throw new Error('agentServices required for generatePlanMicrocycleCombinedMessage');
+      }
+
+      // Fetch config at service layer
+      const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+        PROMPT_IDS.MESSAGING_PLAN_READY,
+        agentServices,
+        { overrides: { model: 'gpt-5-nano' } }
+      );
+
       // Build context array with plan/week data
       const context: string[] = [
         `<Fitness Plan>\n${fitnessPlan}\n</Fitness Plan>`,
@@ -106,8 +131,10 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
 
       const agent = await createAgent({
         name: PROMPT_IDS.MESSAGING_PLAN_READY,
+        systemPrompt,
+        dbUserPrompt,
         context,
-      }, { model: 'gpt-5-nano' });
+      }, modelConfig);
 
       const result = await agent.invoke('');
       return result.response;

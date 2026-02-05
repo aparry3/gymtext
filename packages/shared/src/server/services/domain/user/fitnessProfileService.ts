@@ -13,7 +13,7 @@
 
 import { UserWithProfile } from '@/server/models/user';
 import { CircuitBreaker } from '@/server/utils/circuitBreaker';
-import { createAgent, PROMPT_IDS } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type AgentServices } from '@/server/agents';
 import {
   buildProfileUpdateUserMessage,
   buildStructuredProfileUserMessage,
@@ -53,8 +53,14 @@ export interface FitnessProfileServiceInstance {
 
 /**
  * Create a FitnessProfileService instance with injected repositories
+ *
+ * @param repos - Repository container
+ * @param agentServices - AgentServices for fetching agent configs (optional for backwards compat)
  */
-export function createFitnessProfileService(repos: RepositoryContainer): FitnessProfileServiceInstance {
+export function createFitnessProfileService(
+  repos: RepositoryContainer,
+  agentServices?: AgentServices
+): FitnessProfileServiceInstance {
   const circuitBreaker = new CircuitBreaker({
     failureThreshold: 5,
     resetTimeout: 60000,
@@ -103,17 +109,32 @@ export function createFitnessProfileService(repos: RepositoryContainer): Fitness
           const currentProfile = createEmptyProfile(user);
           const currentDate = formatForAI(new Date(), user.timezone);
 
+          if (!agentServices) {
+            throw new Error('agentServices required for createFitnessProfile');
+          }
+
+          // Fetch all configs in parallel at service layer
+          const [structuredConfig, fitnessConfig] = await Promise.all([
+            resolveAgentConfig(PROMPT_IDS.PROFILE_STRUCTURED, agentServices, { overrides: { model: 'gpt-5-nano', temperature: 0.3 } }),
+            resolveAgentConfig(PROMPT_IDS.PROFILE_FITNESS, agentServices, { overrides: { model: 'gpt-5.1' } }),
+          ]);
+
+          // Accepts InvokeParams | string for compatibility with ConfigurableAgent interface
           const invokeStructuredProfileAgent = async (
-            input: StructuredProfileInput | string
+            input: { message: string } | StructuredProfileInput | string
           ): Promise<StructuredProfileOutput> => {
-            const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+            // Extract message if InvokeParams was passed
+            const rawInput = typeof input === 'object' && 'message' in input ? input.message : input;
+            const parsedInput: StructuredProfileInput = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
             const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
             const agent = await createAgent(
               {
                 name: PROMPT_IDS.PROFILE_STRUCTURED,
+                systemPrompt: structuredConfig.systemPrompt,
+                dbUserPrompt: structuredConfig.userPrompt,
                 schema: StructuredProfileSchema,
               },
-              { model: 'gpt-5-nano', temperature: 0.3 }
+              structuredConfig.modelConfig
             );
 
             const agentResult = await agent.invoke(userPrompt);
@@ -124,6 +145,8 @@ export function createFitnessProfileService(repos: RepositoryContainer): Fitness
           const agent = await createAgent(
             {
               name: PROMPT_IDS.PROFILE_FITNESS,
+              systemPrompt: fitnessConfig.systemPrompt,
+              dbUserPrompt: fitnessConfig.userPrompt,
               schema: ProfileUpdateOutputSchema,
               subAgents: [
                 {
@@ -139,7 +162,7 @@ export function createFitnessProfileService(repos: RepositoryContainer): Fitness
                 },
               ],
             },
-            { model: 'gpt-5.1' }
+            fitnessConfig.modelConfig
           );
 
           const agentResult = await agent.invoke(userPrompt);

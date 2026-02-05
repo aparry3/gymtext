@@ -6,19 +6,22 @@
  *
  * @example
  * ```typescript
- * import { createAgent } from '@/server/agents';
+ * import { createAgent, AGENTS } from '@/server/agents';
  *
- * const myAgent = createAgent({
- *   name: 'my-agent',
- *   systemPrompt: 'You are a helpful assistant.',
- *   userPrompt: (input) => `Help with: ${input}`,
+ * // Fetch definition from database
+ * const definition = await agentDefinitionService.getDefinition(AGENTS.WORKOUT_MESSAGE);
+ *
+ * // Create agent with unified config
+ * const myAgent = await createAgent({
+ *   ...definition,
  *   schema: OutputSchema,
- * }, {
- *   model: 'gpt-5-nano',
- *   maxTokens: 4000,
  * });
  *
- * const result = await myAgent.invoke('something');
+ * // Invoke with runtime context
+ * const result = await myAgent.invoke({
+ *   message: 'Generate a workout message',
+ *   context: [`<Profile>${profile}</Profile>`],
+ * });
  * // result.response contains the schema-typed output
  * ```
  */
@@ -29,10 +32,14 @@
 export { createAgent } from './createAgent';
 
 // ============================================
-// Prompt IDs (use these in createAgent calls)
+// Agent IDs (use these in createAgent calls)
 // ============================================
-export { PROMPT_IDS, CONTEXT_IDS, PROMPT_ROLES } from './promptIds';
-export type { PromptId, ContextId, PromptRole } from './promptIds';
+export { AGENTS, CONTEXT_IDS, PROMPT_ROLES } from './promptIds';
+export type { AgentId, ContextId, PromptRole } from './promptIds';
+
+// Legacy exports (deprecated)
+export { PROMPT_IDS } from './promptIds';
+export type { PromptId } from './promptIds';
 
 // ============================================
 // Model Initialization
@@ -44,16 +51,20 @@ export type { ModelOptions, ImageModelConfig, ImageGenerationResult, InvokableMo
 // Types
 // ============================================
 export type {
-  // Base agent types
+  // Unified agent configuration
   AgentConfig,
+  InvokeParams,
+
+  // Base agent types
+  LegacyAgentConfig,
   AgentDeps,
   Agent,
   ToolType,
   ToolResult,
 
   // Configurable agent types
-  AgentDefinition,
-  ModelConfig,
+  AgentDefinition,  // deprecated - use AgentConfig
+  ModelConfig,      // deprecated - use AgentConfig
   ConfigurableAgent,
   SubAgentBatch,
   SubAgentEntry,
@@ -93,3 +104,14 @@ export type { SubAgentExecutorConfig } from './subAgentExecutor';
 
 export { executeToolLoop } from './toolExecutor';
 export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';
+
+// ============================================
+// Agent Config Resolution (deprecated - use AgentDefinitionService)
+// ============================================
+export { resolveAgentConfig, resolveAgentConfigs } from './resolveAgentConfig';
+export type { ResolvedAgentConfig, ResolveAgentConfigOptions, AgentServices } from './resolveAgentConfig';
+
+// ============================================
+// Standalone helpers (re-exported from services for convenience)
+// ============================================
+export { getAgentServices, resetAgentServices } from '../services/domain/agentConfig/standalone';

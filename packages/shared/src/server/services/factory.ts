@@ -32,6 +32,12 @@ import { createContextService, type ContextService } from './context/contextServ
 // More domain service factory functions
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
 import { createPromptService, type PromptServiceInstance } from './domain/prompts/promptService';
+import {
+  createAgentConfigService,
+  createAgentDefinitionService,
+  type AgentConfigServiceInstance,
+  type AgentDefinitionServiceInstance,
+} from './domain/agentConfig';
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
@@ -65,6 +71,7 @@ import {
 import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
+import type { AgentServices } from '../agents/resolveAgentConfig';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -150,6 +157,12 @@ export interface ServiceContainer {
 
   // Organization
   organization: OrganizationServiceInstance;
+
+  // Agent configuration
+  agentConfig: AgentConfigServiceInstance;
+
+  // Agent definition (fetches full definitions from DB)
+  agentDefinition: AgentDefinitionServiceInstance;
 }
 
 /**
@@ -174,7 +187,6 @@ export function createServices(
   // Phase 1: Create services with no service dependencies (repos only)
   // =========================================================================
   const user = createUserService(repos);
-  const fitnessProfile = createFitnessProfileService(repos);
   const onboardingData = createOnboardingDataService(repos);
   const fitnessPlan = createFitnessPlanService(repos);
   const workoutInstance = createWorkoutInstanceService(repos);
@@ -205,8 +217,28 @@ export function createServices(
   // Organization (repos-only)
   const organization = createOrganizationService(repos);
 
+  // Agent configuration (repos-only)
+  const agentConfig = createAgentConfigService(repos);
+
+  // Agent definition service (fetches full definitions from DB)
+  const agentDefinition = createAgentDefinitionService(agentConfig, prompt);
+
   // =========================================================================
-  // Phase 2: Create ContextService (needed by agents)
+  // Phase 2: Create AgentServices bundle (needed by services with AI)
+  // =========================================================================
+
+  // Bundle agent-related services for dependency injection
+  // NOTE: agentServices is the legacy interface, services should migrate to agentDefinitionService
+  const agentServices: AgentServices = {
+    promptService: prompt,
+    agentConfigService: agentConfig,
+  };
+
+  // Create fitnessProfile here since it needs agentServices for createFitnessProfile
+  const fitnessProfile = createFitnessProfileService(repos, agentServices);
+
+  // =========================================================================
+  // Phase 2.5: Create ContextService (needed by agents)
   // =========================================================================
   const contextService = createContextService({
     fitnessPlanService: fitnessPlan,
@@ -217,14 +249,11 @@ export function createServices(
     exerciseRepo: repos.exercise,
   });
 
-  // =========================================================================
-  // Phase 2.5: Create agent services (need contextService)
-  // =========================================================================
-  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog);
-  const microcycleAgent = createMicrocycleAgentService(contextService);
-  const fitnessPlanAgent = createFitnessPlanAgentService(contextService);
-  const chatAgent = createChatAgentService(contextService);
-  const programAgent = createProgramAgentService();
+  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog, agentServices);
+  const microcycleAgent = createMicrocycleAgentService(contextService, agentServices);
+  const fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentServices);
+  const chatAgent = createChatAgentService(contextService, agentDefinition);
+  const programAgent = createProgramAgentService(agentServices);
 
   // =========================================================================
   // Phase 2.6: Create training orchestration service
@@ -343,7 +372,7 @@ export function createServices(
   // =========================================================================
   // Phase 4: Create agent and orchestration services
   // =========================================================================
-  const messagingAgent = createMessagingAgentService();
+  const messagingAgent = createMessagingAgentService(agentServices);
 
   const dailyMessage = createDailyMessageService(repos, {
     user,
@@ -389,6 +418,7 @@ export function createServices(
     contextService,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
+    agentServices,
   });
 
   const planModification = createPlanModificationService(repos, {
@@ -396,6 +426,7 @@ export function createServices(
     fitnessPlan,
     workoutModification,
     contextService,
+    agentServices,
   });
 
   const modification = createModificationService({
@@ -403,6 +434,7 @@ export function createServices(
     workoutInstance,
     workoutModification,
     planModification,
+    agentServices,
   });
 
   // =========================================================================
@@ -412,6 +444,7 @@ export function createServices(
     user,
     fitnessProfile,
     workoutInstance,
+    agentServices,
   });
 
   const chat = createChatService({
@@ -434,6 +467,7 @@ export function createServices(
     contextService,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
+    agentServices,
   });
 
   // =========================================================================
@@ -505,6 +539,12 @@ export function createServices(
 
     // Organization
     organization,
+
+    // Agent configuration
+    agentConfig,
+
+    // Agent definition
+    agentDefinition,
   };
 }
 
@@ -596,4 +636,10 @@ export type {
 
   // Organization
   OrganizationServiceInstance,
+
+  // Agent configuration
+  AgentConfigServiceInstance,
+
+  // Agent definition
+  AgentDefinitionServiceInstance,
 };

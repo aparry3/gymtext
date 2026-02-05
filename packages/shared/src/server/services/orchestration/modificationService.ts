@@ -11,7 +11,7 @@
  * For specific modification operations, use WorkoutModificationService or PlanModificationService.
  */
 import { createModificationTools } from '../agents/modifications/tools';
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type Message as AgentMessage, type AgentServices } from '@/server/agents';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { buildModificationsUserMessage } from '../agents/prompts/modifications';
@@ -34,6 +34,7 @@ export interface ModificationServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   planModification: PlanModificationServiceInstance;
+  agentServices: AgentServices;
 }
 
 /**
@@ -45,7 +46,7 @@ export interface ModificationServiceDeps {
  * Fetches its own context and delegates to specialized sub-services.
  */
 export function createModificationService(deps: ModificationServiceDeps): ModificationServiceInstance {
-  const { user: userService, workoutInstance: workoutInstanceService, workoutModification: workoutModificationService, planModification: planModificationService } = deps;
+  const { user: userService, workoutInstance: workoutInstanceService, workoutModification: workoutModificationService, planModification: planModificationService, agentServices } = deps;
 
   return {
     /**
@@ -110,12 +111,21 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
         // Build user message
         const userMessage = buildModificationsUserMessage({ user, message });
 
-        // Create modifications agent - prompts fetched from DB based on agent name
+        // Fetch config at service layer
+        const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+          PROMPT_IDS.MODIFICATIONS_ROUTER,
+          agentServices,
+          { overrides: { model: 'gpt-5-mini' } }
+        );
+
+        // Create modifications agent with explicit config
         const agent = await createAgent({
           name: PROMPT_IDS.MODIFICATIONS_ROUTER,
+          systemPrompt,
+          dbUserPrompt,
           previousMessages: previousMsgs,
           tools,
-        }, { model: 'gpt-5-mini' });
+        }, modelConfig);
 
         // Invoke the agent - tool execution is handled by createAgent
         const result = await agent.invoke(userMessage);

@@ -94,7 +94,8 @@ export async function executeSubAgents(
       console.log(`[${parentName}:${key}] Starting`);
 
       // Execute the agent - validation is handled internally by the agent
-      const result = await agent.invoke(agentInput);
+      // Pass InvokeParams with the message
+      const result = await agent.invoke({ message: agentInput });
 
       // Fire onComplete callback (fire-and-forget, don't block)
       if (onComplete) {

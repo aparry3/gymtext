@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createAgent, PROMPT_IDS, type ConfigurableAgent, type ValidationResult, type AgentLoggingContext } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type ConfigurableAgent, type ValidationResult, type AgentLoggingContext, type AgentServices } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import { WorkoutStructureLLMSchema } from '@/shared/types/workout/workoutStructure';
 import { ModifyWorkoutGenerationOutputSchema } from '@/server/services/agents/schemas/workouts';
@@ -43,7 +43,7 @@ function safeJsonParse(str: string): unknown {
  *
  * @example
  * ```typescript
- * const workoutAgentService = createWorkoutAgentService(contextService);
+ * const workoutAgentService = createWorkoutAgentService(contextService, eventLogRepo, agentServices);
  * const result = await workoutAgentService.generateWorkout(user, dayOverview, isDeload);
  * const { response, message, structure } = result;
  * ```
@@ -51,15 +51,19 @@ function safeJsonParse(str: string): unknown {
 export class WorkoutAgentService {
   private contextService: ContextService;
   private eventLogRepo?: EventLogRepository;
+  private agentServices: AgentServices;
 
-  constructor(contextService: ContextService, eventLogRepo?: EventLogRepository) {
+  constructor(contextService: ContextService, eventLogRepo?: EventLogRepository, agentServices?: AgentServices) {
     this.contextService = contextService;
     this.eventLogRepo = eventLogRepo;
+    if (!agentServices) {
+      throw new Error('agentServices is required for WorkoutAgentService');
+    }
+    this.agentServices = agentServices;
   }
 
   /**
    * Get the message sub-agent with user context
-   * Prompts fetched from DB based on agent name
    *
    * @param user - User for context-aware agent (required)
    * @param activityType - Optional activity type for day format context injection
@@ -68,6 +72,13 @@ export class WorkoutAgentService {
     user: UserWithProfile,
     activityType?: ActivityType
   ): Promise<ConfigurableAgent<{ response: string }>> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.WORKOUT_MESSAGE,
+      this.agentServices,
+      { overrides: { model: 'gpt-5-nano' } }
+    );
+
     // Create agent with day format context if activityType provided
     const dayFormatContext = activityType
       ? await this.contextService.getContext(user, [ContextType.DAY_FORMAT], { activityType })
@@ -75,8 +86,10 @@ export class WorkoutAgentService {
 
     return createAgent({
       name: PROMPT_IDS.WORKOUT_MESSAGE,
+      systemPrompt,
+      dbUserPrompt,
       context: dayFormatContext,
-    }, { model: 'gpt-5-nano' });
+    }, modelConfig);
   }
 
   /**
@@ -86,10 +99,19 @@ export class WorkoutAgentService {
    * the structured agent's output (WorkoutStructure) to ensure nothing was lost.
    */
   public async getValidationAgent(): Promise<ConfigurableAgent<{ response: WorkoutValidationOutput }>> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.WORKOUT_STRUCTURED_VALIDATE,
+      this.agentServices,
+      { overrides: { model: 'gpt-5-nano' } }
+    );
+
     return createAgent({
       name: PROMPT_IDS.WORKOUT_STRUCTURED_VALIDATE,
+      systemPrompt,
+      dbUserPrompt,
       schema: WorkoutValidationOutputSchema,
-    }, { model: 'gpt-5-nano' });
+    }, modelConfig);
   }
 
   /**
@@ -108,6 +130,13 @@ export class WorkoutAgentService {
   public async getStructuredAgent(
     user: UserWithProfile
   ): Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.WORKOUT_STRUCTURED,
+      this.agentServices,
+      { overrides: { model: 'gpt-5-nano', maxTokens: 32000 } }
+    );
+
     const exerciseContext = await this.contextService.getContext(
       user,
       [ContextType.AVAILABLE_EXERCISES],
@@ -128,6 +157,8 @@ export class WorkoutAgentService {
     // Validation + retry is now on the agent itself, with error feedback in message history
     return createAgent({
       name: PROMPT_IDS.WORKOUT_STRUCTURED,
+      systemPrompt,
+      dbUserPrompt,
       context: exerciseContext,
       schema: WorkoutStructureLLMSchema,
       subAgents: [{
@@ -178,7 +209,7 @@ export class WorkoutAgentService {
       },
       maxRetries: 3,
       loggingContext,
-    }, { model: 'gpt-5-nano', maxTokens: 32000 }) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
+    }, modelConfig) as Promise<ConfigurableAgent<{ response: WorkoutStructure; validation: WorkoutValidationOutput }>>;
   }
 
   /**
@@ -251,6 +282,13 @@ export class WorkoutAgentService {
     isDeload: boolean = false,
     activityType?: ActivityType
   ): Promise<WorkoutGenerateOutput> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.WORKOUT_GENERATE,
+      this.agentServices,
+      { overrides: { model: 'gpt-5.1' } }
+    );
+
     // Build context using ContextService
     const context = await this.contextService.getContext(
       user,
@@ -273,17 +311,19 @@ export class WorkoutAgentService {
       this.getStructuredAgent(user),
     ]);
 
-    // Create main agent with context (prompts fetched from DB)
+    // Create main agent with explicit config
     // The structured agent has validation built-in with retry logic and error feedback
     // When structuredAgent.invoke() is called internally, it handles retries automatically
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_GENERATE,
+      systemPrompt,
+      dbUserPrompt,
       context,
       subAgents: [{
         message: messageAgent,
         structure: structuredAgent,  // Validation is now built into the agent itself
       }],
-    }, { model: 'gpt-5.1' });
+    }, modelConfig);
 
     // Empty input - DB user prompt provides the instructions
     const result = await agent.invoke('');
@@ -315,6 +355,13 @@ export class WorkoutAgentService {
     workout: WorkoutInstance,
     changeRequest: string
   ): Promise<ModifyWorkoutOutput> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.WORKOUT_MODIFY,
+      this.agentServices,
+      { overrides: { model: 'gpt-5-mini' } }
+    );
+
     // Build context for modification - uses workout
     const context = await this.contextService.getContext(
       user,
@@ -342,16 +389,18 @@ export class WorkoutAgentService {
       }
     };
 
-    // Prompts fetched from DB based on agent name
+    // Create main agent with explicit config
     const agent = await createAgent({
       name: PROMPT_IDS.WORKOUT_MODIFY,
+      systemPrompt,
+      dbUserPrompt,
       context,
       schema: ModifyWorkoutGenerationOutputSchema,
       subAgents: [{
         message: { agent: messageAgent, transform: extractOverview },
         structure: { agent: structuredAgent, transform: extractOverview },
       }],
-    }, { model: 'gpt-5-mini' });
+    }, modelConfig);
 
     // Pass changeRequest directly as the message - it's the user's request, not context
     const result = await agent.invoke(changeRequest) as ModifyWorkoutOutput;
@@ -367,11 +416,13 @@ export class WorkoutAgentService {
  *
  * @param contextService - ContextService for building agent context
  * @param eventLogRepo - Optional EventLogRepository for logging validation failures
+ * @param agentServices - AgentServices for fetching agent configs
  * @returns A new WorkoutAgentService instance
  */
 export function createWorkoutAgentService(
   contextService: ContextService,
-  eventLogRepo?: EventLogRepository
+  eventLogRepo?: EventLogRepository,
+  agentServices?: AgentServices
 ): WorkoutAgentService {
-  return new WorkoutAgentService(contextService, eventLogRepo);
+  return new WorkoutAgentService(contextService, eventLogRepo, agentServices);
 }

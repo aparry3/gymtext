@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, PROMPT_IDS, resolveAgentConfig, type ConfigurableAgent, type AgentServices } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   ModifyFitnessPlanOutputSchema,
@@ -24,58 +24,78 @@ import { ContextType } from '@/server/services/context/types';
  *
  * @example
  * ```typescript
- * const fitnessPlanAgentService = createFitnessPlanAgentService(contextService);
+ * const fitnessPlanAgentService = createFitnessPlanAgentService(contextService, agentServices);
  * const result = await fitnessPlanAgentService.generateFitnessPlan(user);
  * const { description, message, structure } = result;
  * ```
  */
 export class FitnessPlanAgentService {
   private contextService: ContextService;
+  private agentServices: AgentServices;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: PlanStructure }>> | null = null;
 
-  constructor(contextService: ContextService) {
+  constructor(contextService: ContextService, agentServices: AgentServices) {
     this.contextService = contextService;
+    this.agentServices = agentServices;
   }
 
   /**
    * Get the message sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
-      this.messageAgentPromise = createAgent({
-        name: PROMPT_IDS.PLAN_MESSAGE,
-        userPrompt: (input: string) => {
-          const data = JSON.parse(input) as PlanMessageData;
-          return planSummaryMessageUserPrompt(data);
-        },
-      }, { model: 'gpt-5-nano' });
+      this.messageAgentPromise = (async () => {
+        // Fetch config at service layer
+        const { systemPrompt, modelConfig } = await resolveAgentConfig(
+          PROMPT_IDS.PLAN_MESSAGE,
+          this.agentServices,
+          { overrides: { model: 'gpt-5-nano' } }
+        );
+
+        return createAgent({
+          name: PROMPT_IDS.PLAN_MESSAGE,
+          systemPrompt,
+          userPrompt: (input: string) => {
+            const data = JSON.parse(input) as PlanMessageData;
+            return planSummaryMessageUserPrompt(data);
+          },
+        }, modelConfig);
+      })();
     }
     return this.messageAgentPromise;
   }
 
   /**
    * Get the structured sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: PlanStructure }>> {
     if (!this.structuredAgentPromise) {
-      this.structuredAgentPromise = createAgent({
-        name: PROMPT_IDS.PLAN_STRUCTURED,
-        userPrompt: (input: string) => {
-          try {
-            const parsed = JSON.parse(input);
-            const planText = parsed.description || parsed.fitnessPlan || input;
-            return structuredPlanUserPrompt(planText);
-          } catch {
-            return structuredPlanUserPrompt(input);
-          }
-        },
-        schema: PlanStructureSchema,
-      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+      this.structuredAgentPromise = (async () => {
+        // Fetch config at service layer
+        const { systemPrompt, modelConfig } = await resolveAgentConfig(
+          PROMPT_IDS.PLAN_STRUCTURED,
+          this.agentServices,
+          { overrides: { model: 'gpt-5-nano', maxTokens: 32000 } }
+        );
+
+        return createAgent({
+          name: PROMPT_IDS.PLAN_STRUCTURED,
+          systemPrompt,
+          userPrompt: (input: string) => {
+            try {
+              const parsed = JSON.parse(input);
+              const planText = parsed.description || parsed.fitnessPlan || input;
+              return structuredPlanUserPrompt(planText);
+            } catch {
+              return structuredPlanUserPrompt(input);
+            }
+          },
+          schema: PlanStructureSchema,
+        }, modelConfig);
+      })();
     }
     return this.structuredAgentPromise;
   }
@@ -91,6 +111,13 @@ export class FitnessPlanAgentService {
     message: string;
     structure: PlanStructure;
   }> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.PLAN_GENERATE,
+      this.agentServices,
+      { overrides: { model: 'gpt-5.1' } }
+    );
+
     // Build context using ContextService
     // PROGRAM_VERSION first (guides generation), then user context
     const context = await this.contextService.getContext(
@@ -122,15 +149,17 @@ export class FitnessPlanAgentService {
       }
     };
 
-    // Create main agent with context (prompts fetched from DB)
+    // Create main agent with explicit config
     const agent = await createAgent({
       name: PROMPT_IDS.PLAN_GENERATE,
+      systemPrompt,
+      dbUserPrompt,
       context,
       subAgents: [{
         message: { agent: messageAgent, transform: injectUserForMessage },
         structure: structuredAgent,
       }],
-    }, { model: 'gpt-5.1' });
+    }, modelConfig);
 
     // Empty input - DB user prompt provides the instructions
     const result = await agent.invoke('') as {
@@ -167,6 +196,13 @@ export class FitnessPlanAgentService {
     modifications: string;
     structure: PlanStructure;
   }> {
+    // Fetch config at service layer
+    const { systemPrompt, userPrompt: dbUserPrompt, modelConfig } = await resolveAgentConfig(
+      PROMPT_IDS.PLAN_MODIFY,
+      this.agentServices,
+      { overrides: { model: 'gpt-5.1' } }
+    );
+
     // Build context using ContextService
     // PROGRAM_VERSION first (guides modification), then user context and current plan
     const context = await this.contextService.getContext(
@@ -178,15 +214,17 @@ export class FitnessPlanAgentService {
     // Get structured sub-agent (lazy-initialized)
     const structuredAgent = await this.getStructuredAgent();
 
-    // Prompts fetched from DB based on agent name
+    // Create main agent with explicit config
     const agent = await createAgent({
       name: PROMPT_IDS.PLAN_MODIFY,
+      systemPrompt,
+      dbUserPrompt,
       context,
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{
         structure: structuredAgent,  // No message needed for modify
       }],
-    }, { model: 'gpt-5.1' });
+    }, modelConfig);
 
     // Pass changeRequest directly as the message - it's the user's request, not context
     const result = await agent.invoke(changeRequest) as {
@@ -211,8 +249,12 @@ export class FitnessPlanAgentService {
  * Factory function to create a FitnessPlanAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentServices - AgentServices for fetching agent configs
  * @returns A new FitnessPlanAgentService instance
  */
-export function createFitnessPlanAgentService(contextService: ContextService): FitnessPlanAgentService {
-  return new FitnessPlanAgentService(contextService);
+export function createFitnessPlanAgentService(
+  contextService: ContextService,
+  agentServices: AgentServices
+): FitnessPlanAgentService {
+  return new FitnessPlanAgentService(contextService, agentServices);
 }

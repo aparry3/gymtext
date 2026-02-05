@@ -10,6 +10,7 @@ import type { Microcycle, MicrocycleStructure } from '@/server/models/microcycle
 import type { WorkoutStructure } from '@/server/models/workout';
 import type { ActivityType } from '@/shared/types/microcycle/schema';
 import type { EventLogRepository } from '@/server/repositories/eventLogRepository';
+import type { AgentServices } from '@/server/agents';
 
 /**
  * Output from modifyWeek operation
@@ -75,24 +76,26 @@ export interface ModifyWeekOptions {
 export class ModifyWeekAgentService {
   private contextService: ContextService;
   private eventLogRepo?: EventLogRepository;
+  private agentServices: AgentServices;
   private workoutAgent: WorkoutAgentService | null = null;
   private microcycleAgent: MicrocycleAgentService | null = null;
 
-  constructor(contextService: ContextService, eventLogRepo?: EventLogRepository) {
+  constructor(contextService: ContextService, eventLogRepo: EventLogRepository | undefined, agentServices: AgentServices) {
     this.contextService = contextService;
     this.eventLogRepo = eventLogRepo;
+    this.agentServices = agentServices;
   }
 
   private getWorkoutAgent(): WorkoutAgentService {
     if (!this.workoutAgent) {
-      this.workoutAgent = createWorkoutAgentService(this.contextService, this.eventLogRepo);
+      this.workoutAgent = createWorkoutAgentService(this.contextService, this.eventLogRepo, this.agentServices);
     }
     return this.workoutAgent;
   }
 
   private getMicrocycleAgent(): MicrocycleAgentService {
     if (!this.microcycleAgent) {
-      this.microcycleAgent = createMicrocycleAgentService(this.contextService);
+      this.microcycleAgent = createMicrocycleAgentService(this.contextService, this.agentServices);
     }
     return this.microcycleAgent;
   }
@@ -172,13 +175,15 @@ export class ModifyWeekAgentService {
  *
  * @param contextService - ContextService for building agent context
  * @param eventLogRepo - Optional EventLogRepository for logging
+ * @param agentServices - AgentServices for fetching agent configs
  * @returns A new ModifyWeekAgentService instance
  */
 export function createModifyWeekAgentService(
   contextService: ContextService,
-  eventLogRepo?: EventLogRepository
+  eventLogRepo: EventLogRepository | undefined,
+  agentServices: AgentServices
 ): ModifyWeekAgentService {
-  return new ModifyWeekAgentService(contextService, eventLogRepo);
+  return new ModifyWeekAgentService(contextService, eventLogRepo, agentServices);
 }
 
 /**

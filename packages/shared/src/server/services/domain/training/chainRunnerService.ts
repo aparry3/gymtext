@@ -20,6 +20,7 @@ import type { WorkoutInstanceServiceInstance } from './workoutInstanceService';
 import type { UserServiceInstance } from '../user/userService';
 import type { FitnessProfileServiceInstance } from '../user/fitnessProfileService';
 import type { ContextService } from '../../context/contextService';
+import type { AgentServices } from '@/server/agents';
 
 // Exercise resolution
 import { resolveExercisesInStructure } from '../../orchestration/trainingService';
@@ -64,6 +65,7 @@ export interface ChainRunnerServiceDeps {
   contextService: ContextService;
   exerciseResolution?: ExerciseResolutionServiceInstance;
   exerciseUse?: ExerciseUseRepository;
+  agentServices: AgentServices;
 }
 
 /**
@@ -73,24 +75,24 @@ export function createChainRunnerService(
   repos: RepositoryContainer,
   deps: ChainRunnerServiceDeps
 ): ChainRunnerServiceInstance {
-  const { fitnessPlan: fitnessPlanService, microcycle: microcycleService, workoutInstance: workoutService, user: userService, fitnessProfile: fitnessProfileService, contextService, exerciseResolution, exerciseUse } = deps;
+  const { fitnessPlan: fitnessPlanService, microcycle: microcycleService, workoutInstance: workoutService, user: userService, fitnessProfile: fitnessProfileService, contextService, exerciseResolution, exerciseUse, agentServices } = deps;
 
   let workoutAgent: WorkoutAgentService | null = null;
   let microcycleAgent: MicrocycleAgentService | null = null;
   let fitnessPlanAgent: FitnessPlanAgentService | null = null;
 
   const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService);
+    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService, undefined, agentServices);
     return workoutAgent;
   };
 
   const getMicrocycleAgent = (): MicrocycleAgentService => {
-    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService);
+    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService, agentServices);
     return microcycleAgent;
   };
 
   const getFitnessPlanAgent = (): FitnessPlanAgentService => {
-    if (!fitnessPlanAgent) fitnessPlanAgent = createFitnessPlanAgentService(contextService);
+    if (!fitnessPlanAgent) fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentServices);
     return fitnessPlanAgent;
   };
 

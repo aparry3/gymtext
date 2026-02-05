@@ -7,7 +7,8 @@
  */
 import type { UserWithProfile } from '@/server/models/user';
 import type { Message } from '@/server/models/message';
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agentConfig';
 import type { ContextService } from '@/server/services/context';
 import { ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
@@ -46,10 +47,12 @@ export interface ChatAgentServiceInstance {
  * Create a ChatAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentDefinitionService - Service for fetching agent definitions
  * @returns ChatAgentServiceInstance
  */
 export function createChatAgentService(
-  contextService: ContextService
+  contextService: ContextService,
+  agentDefinitionService: AgentDefinitionServiceInstance
 ): ChatAgentServiceInstance {
   return {
     async generateResponse(
@@ -58,6 +61,9 @@ export function createChatAgentService(
       previousMessages: Message[],
       tools: StructuredToolInterface[]
     ): Promise<ChatAgentResult> {
+      // Fetch definition from database
+      const definition = await agentDefinitionService.getDefinition(AGENTS.CHAT_GENERATE);
+
       // Build context using ContextService
       const agentContext = await contextService.getContext(
         user,
@@ -71,16 +77,18 @@ export function createChatAgentService(
           content: m.content,
         }));
 
-      // Create chat agent - prompts fetched from DB based on agent name
+      // Create chat agent with unified config
       const agent = await createAgent({
-        name: PROMPT_IDS.CHAT_GENERATE,
-        context: agentContext,
-        previousMessages: previousMsgs,
+        ...definition,
         tools,
       });
 
-      // Invoke the chat agent - it will decide when to call tools
-      const result = await agent.invoke(message);
+      // Invoke with runtime context
+      const result = await agent.invoke({
+        message,
+        context: agentContext,
+        previousMessages: previousMsgs,
+      });
 
       console.log(`[ChatAgentService] Agent completed with response length: ${result.response.length}, accumulated messages: ${result.messages?.length || 0}`);
 
