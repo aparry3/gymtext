@@ -63,9 +63,17 @@ import {
   type MicrocycleAgentService,
   type FitnessPlanAgentService,
 } from './agents/training';
-import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
+// chatAgentService no longer needed - chatService uses agentRunner directly
+// import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
+
+// Agent Runner infrastructure
+import { ToolRegistry } from '@/server/agents/tools';
+import { registerAllTools } from '@/server/agents/tools';
+import { HookRegistry } from '@/server/agents/hooks';
+import { registerAllHooks } from '@/server/agents/hooks';
+import { createAgentRunner, type AgentRunnerInstance } from '@/server/agents/runner';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -124,7 +132,6 @@ export interface ServiceContainer {
   workoutAgent: WorkoutAgentService;
   microcycleAgent: MicrocycleAgentService;
   fitnessPlanAgent: FitnessPlanAgentService;
-  chatAgent: ChatAgentServiceInstance;
   programAgent: ProgramAgentServiceInstance;
 
   // Orchestration services
@@ -154,6 +161,9 @@ export interface ServiceContainer {
 
   // Agent definitions
   agentDefinition: AgentDefinitionServiceInstance;
+
+  // Agent Runner (new declarative agent system)
+  agentRunner: AgentRunnerInstance;
 }
 
 /**
@@ -231,7 +241,6 @@ export function createServices(
   const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog, agentDefinition);
   const microcycleAgent = createMicrocycleAgentService(contextService, agentDefinition);
   const fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentDefinition);
-  const chatAgent = createChatAgentService(contextService, agentDefinition);
   const programAgent = createProgramAgentService(agentDefinition);
 
   // =========================================================================
@@ -408,16 +417,8 @@ export function createServices(
     agentDefinition,
   });
 
-  const modification = createModificationService({
-    user,
-    workoutInstance,
-    workoutModification,
-    planModification,
-    agentDefinition,
-  });
-
   // =========================================================================
-  // Phase 5.5: Create profile and chat orchestration services
+  // Phase 5.5: Create profile service
   // =========================================================================
   const profile = createProfileService({
     user,
@@ -426,15 +427,80 @@ export function createServices(
     agentDefinition,
   });
 
+  // =========================================================================
+  // Phase 5.6: Create AgentRunner (needs all services for tool execution)
+  // getServices() is lazy - called at invoke time, not at creation time
+  // =========================================================================
+  const toolRegistry = new ToolRegistry();
+  registerAllTools(toolRegistry);
+
+  const hookRegistry = new HookRegistry();
+  registerAllHooks(hookRegistry, { messagingOrchestrator: getMessagingOrchestrator() });
+
+  const agentRunner = createAgentRunner({
+    agentDefinitionService: agentDefinition,
+    contextService,
+    toolRegistry,
+    hookRegistry,
+    getServices: () => ({
+      profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
+      modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },
+      workoutModification: {
+        modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
+        modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
+      },
+      planModification: {
+        modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
+      },
+      training: {
+        getOrGenerateWorkout: async (userId: string, timezone: string) => {
+          const { now } = require('@/shared/utils/date');
+          const todayDt = now(timezone);
+          const todayDate = todayDt.toJSDate();
+
+          const existingWorkout = await workoutInstance.getWorkoutByUserIdAndDate(userId, todayDate);
+          if (existingWorkout) {
+            return {
+              toolType: 'query' as const,
+              response: `User's workout for today: ${existingWorkout.sessionType || 'Workout'} - ${existingWorkout.description || 'Custom workout'}`,
+              messages: existingWorkout.message ? [existingWorkout.message] : undefined,
+            };
+          }
+
+          const u = await user.getUser(userId);
+          if (!u) return { toolType: 'query' as const, response: 'User not found.' };
+
+          const generatedWorkout = await training.prepareWorkoutForDate(u, todayDt);
+          if (!generatedWorkout) {
+            return {
+              toolType: 'query' as const,
+              response: 'No workout scheduled for today.',
+            };
+          }
+
+          return {
+            toolType: 'query' as const,
+            response: `User's workout for today: ${generatedWorkout.sessionType || 'Workout'} - ${generatedWorkout.description || 'Custom workout'}`,
+            messages: generatedWorkout.message ? [generatedWorkout.message] : undefined,
+          };
+        },
+      },
+    }),
+  });
+
+  // =========================================================================
+  // Phase 5.7: Create orchestration services that use AgentRunner
+  // =========================================================================
+  const modification = createModificationService({
+    user,
+    workoutInstance,
+    agentRunner,
+  });
+
   const chat = createChatService({
     message,
     user,
-    workoutInstance,
-    training,
-    modification,
-    chatAgent,
-    messagingOrchestrator: getMessagingOrchestrator(),
-    profile,
+    agentRunner,
   });
 
   const chainRunner = createChainRunnerService(repos, {
@@ -491,7 +557,6 @@ export function createServices(
     workoutAgent,
     microcycleAgent,
     fitnessPlanAgent,
-    chatAgent,
     programAgent,
 
     // Chat orchestration
@@ -521,6 +586,9 @@ export function createServices(
 
     // Agent definitions
     agentDefinition,
+
+    // Agent Runner
+    agentRunner,
   };
 }
 
@@ -615,4 +683,7 @@ export type {
 
   // Agent definitions
   AgentDefinitionServiceInstance,
+
+  // Agent Runner
+  AgentRunnerInstance,
 };

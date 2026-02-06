@@ -100,7 +100,8 @@ export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatS
 // Agent Services
 // =============================================================================
 
-// Chat agent service
+// Chat agent service (legacy - chatService now uses AgentRunner)
+// Keeping export for backward compatibility
 export { createChatAgentService } from './agents/chat';
 export type { ChatAgentServiceInstance, ChatAgentResult } from './agents/chat';
 
@@ -112,7 +113,6 @@ export type { ModificationServiceInstance, ModificationServiceDeps } from './orc
 export {
   createWorkoutModificationService,
   createPlanModificationService,
-  createModificationTools,
 } from './agents/modifications';
 export type {
   WorkoutModificationServiceInstance,
@@ -125,8 +125,6 @@ export type {
   PlanModificationServiceDeps,
   ModifyPlanResult,
   ModifyPlanParams,
-  ModificationToolContext,
-  ModificationToolDeps,
 } from './agents/modifications';
 
 // Exercise resolution service
