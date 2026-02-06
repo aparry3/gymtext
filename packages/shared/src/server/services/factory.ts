@@ -57,11 +57,7 @@ import { createAgentDefinitionService, type AgentDefinitionServiceInstance } fro
 // Agent services
 import {
   createWorkoutAgentService,
-  createMicrocycleAgentService,
-  createFitnessPlanAgentService,
   type WorkoutAgentService,
-  type MicrocycleAgentService,
-  type FitnessPlanAgentService,
 } from './agents/training';
 // chatAgentService no longer needed - chatService uses agentRunner directly
 // import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
@@ -130,8 +126,6 @@ export interface ServiceContainer {
 
   // Agent services
   workoutAgent: WorkoutAgentService;
-  microcycleAgent: MicrocycleAgentService;
-  fitnessPlanAgent: FitnessPlanAgentService;
   programAgent: ProgramAgentServiceInstance;
 
   // Orchestration services
@@ -239,29 +233,8 @@ export function createServices(
   // Phase 2.5: Create agent services (need contextService and agentDefinition)
   // =========================================================================
   const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog, agentDefinition);
-  const microcycleAgent = createMicrocycleAgentService(contextService, agentDefinition);
-  const fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentDefinition);
+  // microcycleAgent and fitnessPlanAgent removed — trainingService now uses agentRunner
   const programAgent = createProgramAgentService(agentDefinition);
-
-  // =========================================================================
-  // Phase 2.6: Create training orchestration service
-  // =========================================================================
-  const training = createTrainingService({
-    user,
-    fitnessPlan,
-    progress,
-    microcycle,
-    workoutInstance,
-    shortLink,
-    enrollment,
-    program,
-    programOwner,
-    workoutAgent,
-    microcycleAgent,
-    fitnessPlanAgent,
-    exerciseResolution,
-    exerciseUse: repos.exerciseUse,
-  });
 
   // =========================================================================
   // Phase 3: Create services that depend on other services
@@ -358,84 +331,21 @@ export function createServices(
   };
 
   // =========================================================================
-  // Phase 4: Create agent and orchestration services
-  // =========================================================================
-  const messagingAgent = createMessagingAgentService(agentDefinition);
-
-  const dailyMessage = createDailyMessageService(repos, {
-    user,
-    workoutInstance,
-    messagingOrchestrator: getMessagingOrchestrator(),
-    dayConfig,
-    training,
-  });
-
-  const weeklyMessage = createWeeklyMessageService({
-    user,
-    messagingOrchestrator: getMessagingOrchestrator(),
-    training,
-    fitnessPlan,
-    messagingAgent,
-    enrollment,
-    dayConfig,
-  });
-
-  const onboarding = createOnboardingService({
-    fitnessPlan,
-    training,
-    dailyMessage,
-    messagingOrchestrator: getMessagingOrchestrator(),
-    messagingAgent,
-  });
-
-  const onboardingCoordinator = createOnboardingCoordinator(repos, {
-    onboardingData,
-    user,
-    onboarding,
-  });
-
-  // =========================================================================
-  // Phase 5: Create modification and chain runner services
-  // =========================================================================
-  const workoutModification = createWorkoutModificationService({
-    user,
-    microcycle,
-    workoutInstance,
-    training,
-    fitnessPlan,
-    contextService,
-    agentDefinition,
-    exerciseResolution,
-    exerciseUse: repos.exerciseUse,
-  });
-
-  const planModification = createPlanModificationService(repos, {
-    user,
-    fitnessPlan,
-    workoutModification,
-    contextService,
-    agentDefinition,
-  });
-
-  // =========================================================================
-  // Phase 5.5: Create profile service
-  // =========================================================================
-  const profile = createProfileService({
-    user,
-    fitnessProfile,
-    workoutInstance,
-    agentDefinition,
-  });
-
-  // =========================================================================
-  // Phase 5.6: Create AgentRunner (needs all services for tool execution)
-  // getServices() is lazy - called at invoke time, not at creation time
+  // Phase 3.5: Create AgentRunner (needs contextService + lazy getters)
+  // getServices() is lazy - called at invoke time, not at creation time.
+  // Services referenced inside (profile, modification, etc.) are assigned later.
   // =========================================================================
   const toolRegistry = new ToolRegistry();
   registerAllTools(toolRegistry);
 
   const hookRegistry = new HookRegistry();
   registerAllHooks(hookRegistry, { messagingOrchestrator: getMessagingOrchestrator() });
+
+  // Forward-declared services used by getServices() lambda — assigned in later phases
+  let profile: ProfileServiceInstance;
+  let modification: ModificationServiceInstance;
+  let workoutModification: WorkoutModificationServiceInstance;
+  let planModification: PlanModificationServiceInstance;
 
   const agentRunner = createAgentRunner({
     agentDefinitionService: agentDefinition,
@@ -489,9 +399,92 @@ export function createServices(
   });
 
   // =========================================================================
-  // Phase 5.7: Create orchestration services that use AgentRunner
+  // Phase 3.6: Create training service (needs agentRunner)
   // =========================================================================
-  const modification = createModificationService({
+  const training = createTrainingService({
+    user,
+    fitnessPlan,
+    progress,
+    microcycle,
+    workoutInstance,
+    shortLink,
+    enrollment,
+    program,
+    programOwner,
+    workoutAgent,
+    agentRunner,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
+  });
+
+  // =========================================================================
+  // Phase 4: Create agent and orchestration services
+  // =========================================================================
+  const messagingAgent = createMessagingAgentService(agentDefinition);
+
+  const dailyMessage = createDailyMessageService(repos, {
+    user,
+    workoutInstance,
+    messagingOrchestrator: getMessagingOrchestrator(),
+    dayConfig,
+    training,
+  });
+
+  const weeklyMessage = createWeeklyMessageService({
+    user,
+    messagingOrchestrator: getMessagingOrchestrator(),
+    training,
+    fitnessPlan,
+    messagingAgent,
+    enrollment,
+    dayConfig,
+  });
+
+  const onboarding = createOnboardingService({
+    fitnessPlan,
+    training,
+    dailyMessage,
+    messagingOrchestrator: getMessagingOrchestrator(),
+    messagingAgent,
+  });
+
+  const onboardingCoordinator = createOnboardingCoordinator(repos, {
+    onboardingData,
+    user,
+    onboarding,
+  });
+
+  // =========================================================================
+  // Phase 5: Create modification, profile, and remaining AgentRunner-dependent services
+  // Assigns forward-declared variables used by getServices() lambda in Phase 3.5
+  // =========================================================================
+  workoutModification = createWorkoutModificationService({
+    user,
+    microcycle,
+    workoutInstance,
+    training,
+    fitnessPlan,
+    contextService,
+    agentDefinition,
+    exerciseResolution,
+    exerciseUse: repos.exerciseUse,
+  });
+
+  profile = createProfileService({
+    user,
+    fitnessProfile,
+    workoutInstance,
+    agentDefinition,
+  });
+
+  planModification = createPlanModificationService(repos, {
+    user,
+    fitnessPlan,
+    workoutModification,
+    agentRunner,
+  });
+
+  modification = createModificationService({
     user,
     workoutInstance,
     agentRunner,
@@ -555,8 +548,6 @@ export function createServices(
 
     // Agent services
     workoutAgent,
-    microcycleAgent,
-    fitnessPlanAgent,
     programAgent,
 
     // Chat orchestration
@@ -659,7 +650,6 @@ export type {
 
   // Agent services
   WorkoutAgentService,
-  MicrocycleAgentService,
   ProgramAgentServiceInstance,
 
   // Program domain services
