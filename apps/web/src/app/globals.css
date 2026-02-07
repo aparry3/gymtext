@@ -185,16 +185,16 @@ body {
   --input: 217 33% 15%;
 }
 
-/* Questionnaire dark theme */
+/* Questionnaire light theme */
 .questionnaire-theme {
-  --questionnaire-bg: 222 47% 5%;
-  --questionnaire-surface: 222 47% 8%;
-  --questionnaire-foreground: 210 17% 95%;
-  --questionnaire-muted: 217 33% 15%;
-  --questionnaire-muted-foreground: 215 20% 55%;
+  --questionnaire-bg: 0 0% 100%;
+  --questionnaire-surface: 210 17% 97%;
+  --questionnaire-foreground: 215 25% 15%;
+  --questionnaire-muted: 210 17% 90%;
+  --questionnaire-muted-foreground: 215 16% 47%;
   --questionnaire-accent: 213 94% 68%;
   --questionnaire-accent-foreground: 0 0% 100%;
-  --questionnaire-border: 217 33% 20%;
+  --questionnaire-border: 210 17% 90%;
 }
 
 /* Color utilities */
