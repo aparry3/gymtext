@@ -31,7 +31,6 @@ import type { ProgramServiceInstance } from '../domain/program/programService';
 import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
 
 // Agent services
-import type { WorkoutAgentService } from '../agents/training/workoutAgentService';
 import type { AgentRunnerInstance } from '@/server/agents/runner';
 import { SnippetType } from '../context/builders/experienceLevel';
 
@@ -169,7 +168,6 @@ export interface TrainingServiceDeps {
   programOwner: ProgramOwnerServiceInstance;
 
   // Agent services
-  workoutAgent: WorkoutAgentService;  // Still needed for regenerateWorkoutMessage (standalone sub-agent)
   agentRunner: AgentRunnerInstance;
 
   // Exercise resolution (optional — skipped if not provided)
@@ -195,7 +193,6 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     enrollment: enrollmentService,
     program: programService,
     programOwner: programOwnerService,
-    workoutAgent,
     agentRunner,
     exerciseResolution,
     exerciseUse,
@@ -425,16 +422,17 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       while (attempt < MAX_REGENERATION_ATTEMPTS) {
         attempt++;
 
-        // Get message agent with proper context (will use default TRAINING if no activityType)
-        const messageAgent = await workoutAgent.getMessageAgent(user, activityType);
-
         // Add length constraint on retry attempts
         const input = attempt === 1
           ? workout.description || ''
           : `${workout.description}\n\nIMPORTANT: Keep the message under ${maxLength} characters. Be more concise.`;
 
-        const result = await messageAgent.invoke(input);
-        message = result.response;
+        const result = await agentRunner.invoke('workout:message', {
+          user,
+          message: input,
+          extras: { activityType },
+        });
+        message = result.response as string;
 
         if (!isMessageTooLong(message)) {
           console.log(`[TrainingService] Message generated successfully on attempt ${attempt} (${message.length} chars)`);

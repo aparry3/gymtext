@@ -1,5 +1,4 @@
 // Training Agent Services
-// WorkoutAgentService is still used by trainingService for regenerateWorkoutMessage
-// MicrocycleAgentService and FitnessPlanAgentService are no longer used (migrated to AgentRunner)
-
-export { WorkoutAgentService, createWorkoutAgentService } from './workoutAgentService';
+// All agent services have been migrated to AgentRunner.
+// The old WorkoutAgentService, MicrocycleAgentService, and FitnessPlanAgentService
+// are no longer used.

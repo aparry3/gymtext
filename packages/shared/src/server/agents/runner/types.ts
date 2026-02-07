@@ -8,8 +8,8 @@ import type { HookableConfig, HookConfigOrString } from '../hooks/types';
  * Parameters for AgentRunner.invoke()
  */
 export interface AgentInvokeParams {
-  /** The current user */
-  user: UserWithProfile;
+  /** The current user (optional for agents that don't need user context) */
+  user?: UserWithProfile;
   /** The user's input message */
   message?: string;
   /** Previous conversation messages */

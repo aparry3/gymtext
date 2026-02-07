@@ -116,6 +116,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         // Resolve context for the sub-agent
         let subContext: string[] = [];
         if (subExtended.contextTypes && subExtended.contextTypes.length > 0) {
+          if (!params.user) throw new Error(`[AgentRunner] Sub-agent ${config.agentId} requires user for context resolution`);
           const contextTypes = subExtended.contextTypes.map(
             t => t as ContextType
           );
@@ -169,10 +170,10 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           subAgentConfig.transform = (mainResult: unknown, parentInput?: string) => {
             const ctx: MappingContext = {
               result: mainResult,
-              user: params.user,
+              user: params.user!,
               extras: (params.extras as Record<string, unknown>) || {},
               parentInput: parentInput || '',
-              now: today(params.user.timezone).toISOString(),
+              now: today(params.user?.timezone || 'UTC').toISOString(),
             };
             const mapped = resolveInputMapping(mapping, ctx);
 
@@ -216,6 +217,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       // 3. Resolve context
       let context: string[] = [];
       if (extended.contextTypes && extended.contextTypes.length > 0) {
+        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for context resolution`);
         const contextTypes = extended.contextTypes.map(
           t => t as ContextType
         );
@@ -229,6 +231,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       // 4. Resolve tools
       let tools = definition.tools;
       if (extended.toolIds && extended.toolIds.length > 0) {
+        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
         const toolCtx: ToolExecutionContext = {
           user: params.user,
           message: params.message || '',
@@ -280,6 +283,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
 
       // 9. Fire agent-level post-hooks
       if (extended.hooks?.postHook) {
+        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for post-hooks`);
         const config = normalizeHookConfig(extended.hooks.postHook);
         const hookFn = hookRegistry.get(config.hook);
         if (hookFn) {

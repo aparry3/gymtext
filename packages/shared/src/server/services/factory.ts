@@ -55,10 +55,6 @@ import { createOrganizationService, type OrganizationServiceInstance } from './d
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 
 // Agent services
-import {
-  createWorkoutAgentService,
-  type WorkoutAgentService,
-} from './agents/training';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
 
@@ -123,7 +119,6 @@ export interface ServiceContainer {
   training: TrainingServiceInstance;
 
   // Agent services
-  workoutAgent: WorkoutAgentService;
   programAgent: ProgramAgentServiceInstance;
 
   // Orchestration services
@@ -226,13 +221,6 @@ export function createServices(
     enrollmentService: enrollment,
     exerciseRepo: repos.exercise,
   });
-
-  // =========================================================================
-  // Phase 2.5: Create agent services (need contextService and agentDefinition)
-  // =========================================================================
-  const workoutAgent = createWorkoutAgentService(contextService, repos.eventLog, agentDefinition);
-  // microcycleAgent and fitnessPlanAgent removed — trainingService now uses agentRunner
-  const programAgent = createProgramAgentService(agentDefinition);
 
   // =========================================================================
   // Phase 3: Create services that depend on other services
@@ -409,11 +397,12 @@ export function createServices(
     enrollment,
     program,
     programOwner,
-    workoutAgent,
     agentRunner,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
   });
+
+  const programAgent = createProgramAgentService(agentRunner);
 
   // =========================================================================
   // Phase 4: Create agent and orchestration services
@@ -543,7 +532,6 @@ export function createServices(
     training,
 
     // Agent services
-    workoutAgent,
     programAgent,
 
     // Chat orchestration
@@ -645,7 +633,6 @@ export type {
   TrainingServiceInstance,
 
   // Agent services
-  WorkoutAgentService,
   ProgramAgentServiceInstance,
 
   // Program domain services
