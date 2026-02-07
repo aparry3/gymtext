@@ -26,10 +26,6 @@ export class FitnessPlanRepository extends BaseRepository {
       startDate: fitnessPlan.startDate,
     };
 
-    // Add legacyClientId for backward compatibility during migration
-    // This will be ignored after the column is dropped
-    insertValues.legacyClientId = fitnessPlan.clientId;
-
     const result = await this.db
       .insertInto('fitnessPlans')
       .values(insertValues)
