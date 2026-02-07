@@ -25,6 +25,3 @@ export type {
   ModifyPlanParams,
 } from './planModificationService';
 
-// Legacy modification tools (no longer used by modificationService - tools resolved via ToolRegistry)
-// export { createModificationTools } from './tools';
-// export type { ModificationToolContext, ModificationToolDeps } from './tools';

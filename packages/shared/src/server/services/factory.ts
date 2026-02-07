@@ -407,7 +407,7 @@ export function createServices(
   // =========================================================================
   // Phase 4: Create agent and orchestration services
   // =========================================================================
-  const messagingAgent = createMessagingAgentService(agentDefinition);
+  const messagingAgent = createMessagingAgentService(agentRunner);
 
   const dailyMessage = createDailyMessageService(repos, {
     user,
