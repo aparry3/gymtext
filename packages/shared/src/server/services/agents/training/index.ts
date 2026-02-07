@@ -1,7 +1,5 @@
 // Training Agent Services
-// These services handle AI operations for training-related domains
-// Use factory functions to create instances with injected ContextService
+// WorkoutAgentService is still used by trainingService for regenerateWorkoutMessage
+// MicrocycleAgentService and FitnessPlanAgentService are no longer used (migrated to AgentRunner)
 
 export { WorkoutAgentService, createWorkoutAgentService } from './workoutAgentService';
-export { MicrocycleAgentService, createMicrocycleAgentService } from './microcycleAgentService';
-export { FitnessPlanAgentService, createFitnessPlanAgentService } from './fitnessPlanAgentService';

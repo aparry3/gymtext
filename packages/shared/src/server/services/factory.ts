@@ -59,8 +59,6 @@ import {
   createWorkoutAgentService,
   type WorkoutAgentService,
 } from './agents/training';
-// chatAgentService no longer needed - chatService uses agentRunner directly
-// import { createChatAgentService, type ChatAgentServiceInstance } from './agents/chat';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
 
@@ -501,8 +499,7 @@ export function createServices(
     workoutInstance,
     user,
     fitnessProfile,
-    contextService,
-    agentDefinition,
+    agentRunner,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
   });

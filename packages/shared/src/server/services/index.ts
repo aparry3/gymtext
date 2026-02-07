@@ -100,11 +100,6 @@ export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatS
 // Agent Services
 // =============================================================================
 
-// Chat agent service (legacy - chatService now uses AgentRunner)
-// Keeping export for backward compatibility
-export { createChatAgentService } from './agents/chat';
-export type { ChatAgentServiceInstance, ChatAgentResult } from './agents/chat';
-
 // Modification orchestration service
 export { createModificationService } from './orchestration/modificationService';
 export type { ModificationServiceInstance, ModificationServiceDeps } from './orchestration/modificationService';
