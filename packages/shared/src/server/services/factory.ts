@@ -464,8 +464,7 @@ export function createServices(
     workoutInstance,
     training,
     fitnessPlan,
-    contextService,
-    agentDefinition,
+    agentRunner,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
   });
@@ -474,7 +473,7 @@ export function createServices(
     user,
     fitnessProfile,
     workoutInstance,
-    agentDefinition,
+    agentRunner,
   });
 
   planModification = createPlanModificationService(repos, {

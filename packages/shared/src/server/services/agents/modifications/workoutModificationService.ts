@@ -1,21 +1,18 @@
-import {
-  createWorkoutAgentService,
-  createMicrocycleAgentService,
-  type WorkoutAgentService,
-  type MicrocycleAgentService,
-} from '../training';
 import type { ModifyWorkoutOutput, WorkoutGenerateOutput } from '@/server/services/agents/types/workouts';
+import type { WorkoutStructure } from '@/server/models/workout';
+import type { MicrocycleStructure } from '@/server/models/microcycle';
 import { now, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
+import { normalizeWhitespace } from '@/server/utils/formatters';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { MicrocycleServiceInstance } from '../../domain/training/microcycleService';
 import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
 import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
 import { resolveExercisesInStructure, type TrainingServiceInstance } from '../../orchestration/trainingService';
-import type { ContextService } from '../../context/contextService';
 import type { ExerciseResolutionServiceInstance } from '../../domain/exercise/exerciseResolutionService';
 import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
-import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
+import { SnippetType } from '../../context/builders/experienceLevel';
 
 export interface ModifyWorkoutParams {
   userId: string;
@@ -64,8 +61,7 @@ export interface WorkoutModificationServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
-  contextService: ContextService;
-  agentDefinition: AgentDefinitionServiceInstance;
+  agentRunner: AgentRunnerInstance;
   // Exercise resolution (optional — skipped if not provided)
   exerciseResolution?: ExerciseResolutionServiceInstance;
   exerciseUse?: ExerciseUseRepository;
@@ -83,24 +79,10 @@ export function createWorkoutModificationService(
     workoutInstance: workoutInstanceService,
     training: trainingService,
     fitnessPlan: fitnessPlanService,
-    contextService,
-    agentDefinition: agentDefinitionService,
+    agentRunner,
     exerciseResolution,
     exerciseUse,
   } = deps;
-
-  let workoutAgent: WorkoutAgentService | null = null;
-  let microcycleAgent: MicrocycleAgentService | null = null;
-
-  const getWorkoutAgent = (): WorkoutAgentService => {
-    if (!workoutAgent) workoutAgent = createWorkoutAgentService(contextService, undefined, agentDefinitionService);
-    return workoutAgent;
-  };
-
-  const getMicrocycleAgent = (): MicrocycleAgentService => {
-    if (!microcycleAgent) microcycleAgent = createMicrocycleAgentService(contextService, agentDefinitionService);
-    return microcycleAgent;
-  };
 
   const getWorkoutTypeFromTheme = (theme: string): string => {
     const themeLower = theme.toLowerCase();
@@ -127,7 +109,16 @@ export function createWorkoutModificationService(
         const workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, workoutDateTime.toJSDate());
         if (!workout) return { success: false, messages: [], error: 'No workout found for that date' };
 
-        const modifiedWorkout = await getWorkoutAgent().modifyWorkout(user, workout, changeRequest);
+        const result = await agentRunner.invoke('workout:modify', {
+          user,
+          message: changeRequest,
+          extras: { workout },
+        });
+        const modifiedWorkout: ModifyWorkoutOutput = {
+          response: result.response as { overview: string; wasModified: boolean; modifications: string },
+          message: normalizeWhitespace((result as Record<string, unknown>).message as string),
+          structure: (result as Record<string, unknown>).structure as WorkoutStructure,
+        };
 
         // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
         if (modifiedWorkout.structure && exerciseResolution) {
@@ -174,7 +165,21 @@ export function createWorkoutModificationService(
         console.log('[MODIFY_WEEK] Modifying microcycle', { microcycleId: microcycle.id, absoluteWeek: microcycle.absoluteWeek });
         // Combine targetDay into the change request for the agent
         const fullChangeRequest = `For ${targetDay}: ${changeRequest}`;
-        const modifiedMicrocycle = await getMicrocycleAgent().modifyMicrocycle(user, microcycle, fullChangeRequest);
+        const mcResult = await agentRunner.invoke('microcycle:modify', {
+          user,
+          message: fullChangeRequest,
+          extras: { microcycle, absoluteWeek: microcycle.absoluteWeek },
+        });
+        const mcResponse = mcResult.response as { overview: string; days: string[]; isDeload: boolean; wasModified: boolean; modifications: string };
+        const modifiedMicrocycle = {
+          days: mcResponse.days,
+          description: mcResponse.overview,
+          isDeload: mcResponse.isDeload,
+          message: normalizeWhitespace((mcResult as Record<string, unknown>).message as string),
+          structure: (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined,
+          wasModified: mcResponse.wasModified,
+          modifications: mcResponse.modifications,
+        };
 
         const updatedMicrocycle = await microcycleService.updateMicrocycle(microcycle.id, {
           days: modifiedMicrocycle.days,
@@ -204,12 +209,23 @@ export function createWorkoutModificationService(
           }
         } else {
           console.log('[MODIFY_WEEK] Regenerating existing workout');
-          const workoutResult = await getWorkoutAgent().generateWorkout(user, dayOverview, modifiedMicrocycle.isDeload, activityType);
+          const wkResult = await agentRunner.invoke('workout:generate', {
+            user,
+            extras: {
+              dayOverview,
+              isDeload: modifiedMicrocycle.isDeload,
+              activityType,
+              snippetType: SnippetType.WORKOUT,
+            },
+          });
+          const wkDescription = wkResult.response as string;
+          const wkMessage = normalizeWhitespace((wkResult as Record<string, unknown>).message as string);
+          const wkStructure = (wkResult as Record<string, unknown>).structure as WorkoutStructure | undefined;
 
           // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-          if (workoutResult.structure && exerciseResolution) {
+          if (wkStructure && exerciseResolution) {
             await resolveExercisesInStructure(
-              workoutResult.structure,
+              wkStructure,
               exerciseResolution,
               exerciseUse,
               userId
@@ -218,12 +234,12 @@ export function createWorkoutModificationService(
 
           await workoutInstanceService.updateWorkout(workout.id, {
             goal: dayOverview,
-            description: workoutResult.response,
-            structured: workoutResult.structure ?? undefined,
-            message: workoutResult.message,
+            description: wkDescription,
+            structured: wkStructure ?? undefined,
+            message: wkMessage,
             sessionType: getWorkoutTypeFromTheme(dayOverview),
           });
-          workoutMessage = workoutResult.message;
+          workoutMessage = wkMessage;
         }
 
         const messages: string[] = [];
