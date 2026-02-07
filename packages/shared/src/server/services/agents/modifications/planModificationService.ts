@@ -5,6 +5,7 @@ import type { UserServiceInstance } from '../../domain/user/userService';
 import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
 import type { WorkoutModificationServiceInstance } from './workoutModificationService';
 import type { ContextService } from '../../context/contextService';
+import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
 
 export interface ModifyPlanParams {
   userId: string;
@@ -35,6 +36,7 @@ export interface PlanModificationServiceDeps {
   fitnessPlan: FitnessPlanServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   contextService: ContextService;
+  agentDefinition: AgentDefinitionServiceInstance;
 }
 
 /**
@@ -44,12 +46,12 @@ export function createPlanModificationService(
   repos: RepositoryContainer,
   deps: PlanModificationServiceDeps
 ): PlanModificationServiceInstance {
-  const { user: userService, fitnessPlan: fitnessPlanService, workoutModification: workoutModificationService, contextService } = deps;
+  const { user: userService, fitnessPlan: fitnessPlanService, workoutModification: workoutModificationService, contextService, agentDefinition: agentDefinitionService } = deps;
 
   let fitnessPlanAgent: FitnessPlanAgentService | null = null;
 
   const getFitnessPlanAgent = (): FitnessPlanAgentService => {
-    if (!fitnessPlanAgent) fitnessPlanAgent = createFitnessPlanAgentService(contextService);
+    if (!fitnessPlanAgent) fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentDefinitionService);
     return fitnessPlanAgent;
   };
 

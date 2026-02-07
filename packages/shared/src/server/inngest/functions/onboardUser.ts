@@ -67,7 +67,7 @@ export const onboardUserFunction = inngest.createFunction(
       // Step 3: Get or create plan (uses user with profile)
       // forceCreate=true will always create new plan even if one exists
       const { plan } = await step.run('step-3-plan', () =>
-        onboardingSteps.getOrCreatePlan(user, forceCreate)
+        onboardingSteps.getOrCreatePlan(user, signupData, forceCreate)
       ) as unknown as { plan: FitnessPlan; wasCreated: boolean };
 
       // Step 4: Get or create microcycle (needs plan)

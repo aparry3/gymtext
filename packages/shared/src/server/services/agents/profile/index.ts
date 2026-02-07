@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
@@ -18,6 +18,7 @@ import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { FitnessProfileServiceInstance } from '../../domain/user/fitnessProfileService';
 import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
+import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
 
 /**
  * ProfileServiceInstance interface
@@ -30,6 +31,7 @@ export interface ProfileServiceDeps {
   user: UserServiceInstance;
   fitnessProfile: FitnessProfileServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
+  agentDefinition: AgentDefinitionServiceInstance;
 }
 
 /**
@@ -47,7 +49,7 @@ export interface ProfileServiceDeps {
  * For entity CRUD operations, use FitnessProfileService directly.
  */
 export function createProfileService(deps: ProfileServiceDeps): ProfileServiceInstance {
-  const { user: userService, fitnessProfile: fitnessProfileService, workoutInstance: workoutInstanceService } = deps;
+  const { user: userService, fitnessProfile: fitnessProfileService, workoutInstance: workoutInstanceService, agentDefinition: agentDefinitionService } = deps;
 
   return {
     /**
@@ -90,15 +92,17 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           }));
 
         // Helper function to create and invoke the structured profile agent
-        // System prompt fetched from DB based on agent name
-        const invokeStructuredProfileAgent = async (input: StructuredProfileInput | string): Promise<StructuredProfileOutput> => {
-          const parsedInput: StructuredProfileInput = typeof input === 'string' ? JSON.parse(input) : input;
+        // Definition resolved from agentDefinitionService
+        // Note: This matches ConfigurableAgent.invoke signature for sub-agent compatibility
+        const invokeStructuredProfileAgent = async (params: string): Promise<StructuredProfileOutput> => {
+          const parsedInput: StructuredProfileInput = JSON.parse(params);
           const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-          const agent = await createAgent({
-            name: PROMPT_IDS.PROFILE_STRUCTURED,
+          const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_STRUCTURED, {
             schema: StructuredProfileSchema,
-          }, { model: 'gpt-5-nano', temperature: 0.3 });
+            temperature: 0.3,
+          });
 
+          const agent = createAgent(definition);
           const result = await agent.invoke(userPrompt);
           return { structured: result.response, success: true };
         };
@@ -110,14 +114,12 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           (async (): Promise<ProfileUpdateOutput> => {
             const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
-            // Create profile update agent with subAgents for structured extraction
-            const agent = await createAgent({
-              name: PROMPT_IDS.PROFILE_FITNESS,
-              previousMessages: previousMsgs,
+            // Get resolved definition and create profile update agent with subAgents for structured extraction
+            const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_FITNESS, {
               schema: ProfileUpdateOutputSchema,
               subAgents: [{
                 structured: {
-                  agent: { name: PROMPT_IDS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
+                  agent: { name: AGENTS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
                   condition: (result: unknown) => (result as { wasUpdated: boolean }).wasUpdated,
                   transform: (result: unknown) => JSON.stringify({
                     dossierText: (result as { updatedProfile: string }).updatedProfile,
@@ -127,7 +129,12 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
               }],
             });
 
-            const result = await agent.invoke(userPrompt);
+            const agent = createAgent(definition);
+
+            const result = await agent.invoke({
+              message: userPrompt,
+              previousMessages: previousMsgs,
+            });
             const structuredResult = (result as { structured?: StructuredProfileOutput }).structured;
             const structured = structuredResult?.success ? structuredResult.structured : null;
 
@@ -139,16 +146,20 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
             };
           })(),
           // User fields agent - extracts timezone, send time, name changes
-          // Prompts fetched from DB based on agent name
+          // Definition resolved from agentDefinitionService
           (async (): Promise<UserFieldsOutput> => {
             const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
-            const agent = await createAgent({
-              name: PROMPT_IDS.PROFILE_USER,
-              previousMessages: previousMsgs,
+            const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_USER, {
               schema: UserFieldsOutputSchema,
-            }, { model: 'gpt-5-nano', temperature: 0.3 });
+              temperature: 0.3,
+            });
 
-            const result = await agent.invoke(userPrompt);
+            const agent = createAgent(definition);
+
+            const result = await agent.invoke({
+              message: userPrompt,
+              previousMessages: previousMsgs,
+            });
             return {
               timezone: result.response.timezone,
               preferredSendHour: result.response.preferredSendHour,

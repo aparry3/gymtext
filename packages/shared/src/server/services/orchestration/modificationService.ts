@@ -11,7 +11,7 @@
  * For specific modification operations, use WorkoutModificationService or PlanModificationService.
  */
 import { createModificationTools } from '../agents/modifications/tools';
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { buildModificationsUserMessage } from '../agents/prompts/modifications';
@@ -21,6 +21,7 @@ import type { UserServiceInstance } from '../domain/user/userService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { WorkoutModificationServiceInstance } from '../agents/modifications/workoutModificationService';
 import type { PlanModificationServiceInstance } from '../agents/modifications/planModificationService';
+import type { AgentDefinitionServiceInstance } from '../domain/agents/agentDefinitionService';
 
 /**
  * ModificationServiceInstance interface
@@ -34,6 +35,7 @@ export interface ModificationServiceDeps {
   workoutInstance: WorkoutInstanceServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   planModification: PlanModificationServiceInstance;
+  agentDefinition: AgentDefinitionServiceInstance;
 }
 
 /**
@@ -45,7 +47,7 @@ export interface ModificationServiceDeps {
  * Fetches its own context and delegates to specialized sub-services.
  */
 export function createModificationService(deps: ModificationServiceDeps): ModificationServiceInstance {
-  const { user: userService, workoutInstance: workoutInstanceService, workoutModification: workoutModificationService, planModification: planModificationService } = deps;
+  const { user: userService, workoutInstance: workoutInstanceService, workoutModification: workoutModificationService, planModification: planModificationService, agentDefinition: agentDefinitionService } = deps;
 
   return {
     /**
@@ -110,15 +112,18 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
         // Build user message
         const userMessage = buildModificationsUserMessage({ user, message });
 
-        // Create modifications agent - prompts fetched from DB based on agent name
-        const agent = await createAgent({
-          name: PROMPT_IDS.MODIFICATIONS_ROUTER,
-          previousMessages: previousMsgs,
+        // Get resolved definition and create modifications agent
+        const definition = await agentDefinitionService.getDefinition(AGENTS.MODIFICATIONS_ROUTER, {
           tools,
-        }, { model: 'gpt-5-mini' });
+        });
 
-        // Invoke the agent - tool execution is handled by createAgent
-        const result = await agent.invoke(userMessage);
+        const agent = createAgent(definition);
+
+        // Invoke the agent with runtime params - tool execution is handled by createAgent
+        const result = await agent.invoke({
+          message: userMessage,
+          previousMessages: previousMsgs,
+        });
 
         console.log('[MODIFICATION_SERVICE] Agent returned:', {
           messageCount: result.messages?.length ?? 0,

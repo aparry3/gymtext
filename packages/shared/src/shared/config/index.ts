@@ -27,6 +27,7 @@ import type {
   FeatureFlags,
   ConversationConfig,
   ShortLinksConfig,
+  ProgramConfig,
   StripeConfig,
   AdminConfig,
   UrlsConfig,
@@ -84,6 +85,10 @@ export function getConversationConfig(): ConversationConfig {
 
 export function getShortLinksConfig(): ShortLinksConfig {
   return getConfig().shortLinks;
+}
+
+export function getProgramConfig(): ProgramConfig {
+  return getConfig().program;
 }
 
 export function getStripeConfig(): StripeConfig {

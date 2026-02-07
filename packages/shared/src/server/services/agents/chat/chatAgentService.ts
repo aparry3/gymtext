@@ -7,11 +7,12 @@
  */
 import type { UserWithProfile } from '@/server/models/user';
 import type { Message } from '@/server/models/message';
-import { createAgent, PROMPT_IDS, type Message as AgentMessage } from '@/server/agents';
+import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import type { ContextService } from '@/server/services/context';
 import { ContextType } from '@/server/services/context';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import type { StructuredToolInterface } from '@langchain/core/tools';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 
 /**
  * Result from the chat agent
@@ -46,10 +47,12 @@ export interface ChatAgentServiceInstance {
  * Create a ChatAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
  * @returns ChatAgentServiceInstance
  */
 export function createChatAgentService(
-  contextService: ContextService
+  contextService: ContextService,
+  agentDefinitionService: AgentDefinitionServiceInstance
 ): ChatAgentServiceInstance {
   return {
     async generateResponse(
@@ -71,16 +74,20 @@ export function createChatAgentService(
           content: m.content,
         }));
 
-      // Create chat agent - prompts fetched from DB based on agent name
-      const agent = await createAgent({
-        name: PROMPT_IDS.CHAT_GENERATE,
-        context: agentContext,
-        previousMessages: previousMsgs,
+      // Get resolved definition from agentDefinitionService
+      const definition = await agentDefinitionService.getDefinition(AGENTS.CHAT_GENERATE, {
         tools,
       });
 
-      // Invoke the chat agent - it will decide when to call tools
-      const result = await agent.invoke(message);
+      // Create chat agent with resolved definition
+      const agent = createAgent(definition);
+
+      // Invoke the chat agent with runtime params
+      const result = await agent.invoke({
+        message,
+        context: agentContext,
+        previousMessages: previousMsgs,
+      });
 
       console.log(`[ChatAgentService] Agent completed with response length: ${result.response.length}, accumulated messages: ${result.messages?.length || 0}`);
 

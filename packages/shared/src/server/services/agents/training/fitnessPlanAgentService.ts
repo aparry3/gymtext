@@ -1,4 +1,4 @@
-import { createAgent, PROMPT_IDS, type ConfigurableAgent } from '@/server/agents';
+import { createAgent, AGENTS, type ConfigurableAgent } from '@/server/agents';
 import { PlanStructureSchema, type PlanStructure } from '@/server/models/fitnessPlan';
 import {
   ModifyFitnessPlanOutputSchema,
@@ -13,6 +13,7 @@ import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { ContextService } from '@/server/services/context/contextService';
 import { ContextType } from '@/server/services/context/types';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 
 /**
  * FitnessPlanAgentService - Handles all fitness plan-related AI operations
@@ -31,51 +32,57 @@ import { ContextType } from '@/server/services/context/types';
  */
 export class FitnessPlanAgentService {
   private contextService: ContextService;
+  private agentDefinitionService: AgentDefinitionServiceInstance;
 
   // Lazy-initialized sub-agents (promises cached after first creation)
   private messageAgentPromise: Promise<ConfigurableAgent<{ response: string }>> | null = null;
   private structuredAgentPromise: Promise<ConfigurableAgent<{ response: PlanStructure }>> | null = null;
 
-  constructor(contextService: ContextService) {
+  constructor(contextService: ContextService, agentDefinitionService: AgentDefinitionServiceInstance) {
     this.contextService = contextService;
+    this.agentDefinitionService = agentDefinitionService;
   }
 
   /**
    * Get the message sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
+   * Definition resolved from agentDefinitionService, userPrompt transforms JSON data
    */
   public async getMessageAgent(): Promise<ConfigurableAgent<{ response: string }>> {
     if (!this.messageAgentPromise) {
-      this.messageAgentPromise = createAgent({
-        name: PROMPT_IDS.PLAN_MESSAGE,
-        userPrompt: (input: string) => {
-          const data = JSON.parse(input) as PlanMessageData;
-          return planSummaryMessageUserPrompt(data);
-        },
-      }, { model: 'gpt-5-nano' });
+      this.messageAgentPromise = (async () => {
+        const definition = await this.agentDefinitionService.getDefinition(AGENTS.PLAN_MESSAGE, {
+          userPrompt: (input: string) => {
+            const data = JSON.parse(input) as PlanMessageData;
+            return planSummaryMessageUserPrompt(data);
+          },
+        });
+        return createAgent(definition);
+      })();
     }
     return this.messageAgentPromise;
   }
 
   /**
    * Get the structured sub-agent (lazy-initialized)
-   * System prompt fetched from DB, userPrompt transforms JSON data
+   * Definition resolved from agentDefinitionService, userPrompt transforms JSON data
    */
   public async getStructuredAgent(): Promise<ConfigurableAgent<{ response: PlanStructure }>> {
     if (!this.structuredAgentPromise) {
-      this.structuredAgentPromise = createAgent({
-        name: PROMPT_IDS.PLAN_STRUCTURED,
-        userPrompt: (input: string) => {
-          try {
-            const parsed = JSON.parse(input);
-            const planText = parsed.description || parsed.fitnessPlan || input;
-            return structuredPlanUserPrompt(planText);
-          } catch {
-            return structuredPlanUserPrompt(input);
-          }
-        },
-        schema: PlanStructureSchema,
-      }, { model: 'gpt-5-nano', maxTokens: 32000 });
+      this.structuredAgentPromise = (async () => {
+        const definition = await this.agentDefinitionService.getDefinition(AGENTS.PLAN_STRUCTURED, {
+          userPrompt: (input: string) => {
+            try {
+              const parsed = JSON.parse(input);
+              const planText = parsed.description || parsed.fitnessPlan || input;
+              return structuredPlanUserPrompt(planText);
+            } catch {
+              return structuredPlanUserPrompt(input);
+            }
+          },
+          schema: PlanStructureSchema,
+        });
+        return createAgent(definition);
+      })();
     }
     return this.structuredAgentPromise;
   }
@@ -122,18 +129,18 @@ export class FitnessPlanAgentService {
       }
     };
 
-    // Create main agent with context (prompts fetched from DB)
-    const agent = await createAgent({
-      name: PROMPT_IDS.PLAN_GENERATE,
-      context,
+    // Create main agent with resolved definition
+    const definition = await this.agentDefinitionService.getDefinition(AGENTS.PLAN_GENERATE, {
       subAgents: [{
         message: { agent: messageAgent, transform: injectUserForMessage },
         structure: structuredAgent,
       }],
-    }, { model: 'gpt-5.1' });
+    });
 
-    // Empty input - DB user prompt provides the instructions
-    const result = await agent.invoke('') as {
+    const agent = createAgent(definition);
+
+    // Empty input - DB user prompt provides the instructions. Context passed at invoke time.
+    const result = await agent.invoke({ message: '', context }) as {
       response: string;
       message: string;
       structure: PlanStructure;
@@ -178,18 +185,18 @@ export class FitnessPlanAgentService {
     // Get structured sub-agent (lazy-initialized)
     const structuredAgent = await this.getStructuredAgent();
 
-    // Prompts fetched from DB based on agent name
-    const agent = await createAgent({
-      name: PROMPT_IDS.PLAN_MODIFY,
-      context,
+    // Get resolved definition and create agent
+    const definition = await this.agentDefinitionService.getDefinition(AGENTS.PLAN_MODIFY, {
       schema: ModifyFitnessPlanOutputSchema,
       subAgents: [{
         structure: structuredAgent,  // No message needed for modify
       }],
-    }, { model: 'gpt-5.1' });
+    });
 
-    // Pass changeRequest directly as the message - it's the user's request, not context
-    const result = await agent.invoke(changeRequest) as {
+    const agent = createAgent(definition);
+
+    // Pass changeRequest as message and context at invoke time
+    const result = await agent.invoke({ message: changeRequest, context }) as {
       response: ModifyFitnessPlanSchemaOutput;
       structure?: PlanStructure;
       messages?: string[];
@@ -211,8 +218,12 @@ export class FitnessPlanAgentService {
  * Factory function to create a FitnessPlanAgentService instance
  *
  * @param contextService - ContextService for building agent context
+ * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
  * @returns A new FitnessPlanAgentService instance
  */
-export function createFitnessPlanAgentService(contextService: ContextService): FitnessPlanAgentService {
-  return new FitnessPlanAgentService(contextService);
+export function createFitnessPlanAgentService(
+  contextService: ContextService,
+  agentDefinitionService: AgentDefinitionServiceInstance
+): FitnessPlanAgentService {
+  return new FitnessPlanAgentService(contextService, agentDefinitionService);
 }

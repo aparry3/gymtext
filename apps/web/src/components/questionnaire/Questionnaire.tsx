@@ -6,7 +6,7 @@
  * Main orchestrator component for the full-page questionnaire flow.
  */
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import type { QuestionnaireQuestion } from '@/lib/questionnaire/types';
 import { useQuestionnaire, clearQuestionnaireState } from '@/lib/questionnaire/useQuestionnaire';
@@ -42,13 +42,13 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
     hasValidAnswer,
   } = useQuestionnaire({ programId, questions });
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (isComplete && hasValidAnswer) {
       handleSubmit();
     } else if (hasValidAnswer) {
       goNext();
     }
-  }, [isComplete, hasValidAnswer, goNext]);
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
