@@ -72,7 +72,11 @@ export function TextInputQuestion({
     const newValue = e.target.value;
 
     if (isPhone) {
-      const digits = getPhoneDigits(newValue);
+      let digits = getPhoneDigits(newValue);
+      // Strip leading US country code from autofill/paste
+      if (digits.length === 11 && digits.startsWith('1')) {
+        digits = digits.slice(1);
+      }
       if (digits.length <= 10) {
         setDisplayValue(formatPhoneNumber(digits));
         onChange(digits);

@@ -19,6 +19,7 @@
  */
 
 import { now } from '@/shared/utils/date';
+import { getProgramConfig } from '@/shared/config';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -58,7 +59,7 @@ export interface WorkoutResult {
 export interface OnboardingSteps {
   loadData(userId: string): Promise<LoadDataResult>;
   getOrCreateProfile(user: UserWithProfile, signupData: SignupData, forceCreate?: boolean): Promise<ProfileResult>;
-  getOrCreatePlan(user: UserWithProfile, forceCreate?: boolean): Promise<PlanResult>;
+  getOrCreatePlan(user: UserWithProfile, signupData: SignupData, forceCreate?: boolean): Promise<PlanResult>;
   getOrCreateMicrocycle(user: UserWithProfile, plan: FitnessPlan, forceCreate?: boolean): Promise<MicrocycleResult>;
   getOrCreateWorkout(user: UserWithProfile, microcycle: Microcycle, forceCreate?: boolean): Promise<WorkoutResult>;
   markCompleted(userId: string): Promise<void>;
@@ -141,14 +142,24 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
      *
      * @param forceCreate - When true, always creates new plan (for re-onboarding)
      */
-    async getOrCreatePlan(user: UserWithProfile, forceCreate = false): Promise<PlanResult> {
-      // Ensure user is enrolled in AI program
+    async getOrCreatePlan(user: UserWithProfile, signupData: SignupData, forceCreate = false): Promise<PlanResult> {
+      // Ensure user is enrolled in a program
       let enrollment = await enrollmentService.getActiveEnrollment(user.id);
       if (!enrollment) {
-        console.log(`[Onboarding] Step 3: Creating AI program enrollment for ${user.id}`);
-        const aiProgram = await programService.getAiProgram();
-        enrollment = await enrollmentService.enrollClient(user.id, aiProgram.id, {
-          programVersionId: aiProgram.publishedVersionId ?? undefined,
+        // Resolve program: use signupData.programId, fall back to DEFAULT_PROGRAM_ID config
+        const programId = signupData.programId || getProgramConfig().defaultProgramId;
+        if (!programId) {
+          throw new Error('No programId in signup data and DEFAULT_PROGRAM_ID is not configured');
+        }
+
+        const program = await programService.getById(programId);
+        if (!program) {
+          throw new Error(`Program ${programId} not found`);
+        }
+
+        console.log(`[Onboarding] Step 3: Creating program enrollment for ${user.id} (program: ${program.id})`);
+        enrollment = await enrollmentService.enrollClient(user.id, program.id, {
+          programVersionId: program.publishedVersionId ?? undefined,
         });
       }
 
@@ -162,7 +173,10 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       }
 
       console.log(`[Onboarding] Step 3: Creating plan for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
-      const plan = await trainingService.createFitnessPlan(user);
+      const plan = await trainingService.createFitnessPlan(user, {
+        programId: enrollment.programId,
+        programVersionId: enrollment.programVersionId ?? undefined,
+      });
 
       return { plan, wasCreated: true };
     },

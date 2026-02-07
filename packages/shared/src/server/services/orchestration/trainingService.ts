@@ -117,7 +117,7 @@ export interface TrainingServiceInstance {
    * Generate a fitness plan for a user
    * Orchestrates: AI generation, database storage
    */
-  createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan>;
+  createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan>;
 
   /**
    * Generate a workout for a specific date
@@ -204,14 +204,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
   } = deps;
 
   return {
-    async createFitnessPlan(user: UserWithProfile): Promise<FitnessPlan> {
+    async createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // 1. Generate plan via AI agent
       const agentResponse = await fitnessPlanAgent.generateFitnessPlan(user);
 
       // 2. Create plan model from agent response
-      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse);
+      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse, options);
       console.log('[TrainingService] Generated plan:', fitnessPlan.description?.substring(0, 200));
 
       // 3. Save to database

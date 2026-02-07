@@ -84,6 +84,9 @@ export function loadConfig(): AppConfig {
       defaultExpiryDays: parseOptionalInt(process.env.SHORT_LINK_DEFAULT_EXPIRY_DAYS),
       domain: process.env.SHORT_LINK_DOMAIN,
     },
+    program: {
+      defaultProgramId: process.env.DEFAULT_PROGRAM_ID,
+    },
     stripe: {
       priceId: process.env.STRIPE_PRICE_ID,
     },

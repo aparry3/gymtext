@@ -65,6 +65,13 @@ export const ShortLinksConfigSchema = z.object({
 });
 
 // ============================================================================
+// Program Configuration
+// ============================================================================
+export const ProgramConfigSchema = z.object({
+  defaultProgramId: z.string().min(1).optional(),
+});
+
+// ============================================================================
 // Stripe Configuration (non-secret)
 // TODO: Refactor config system to use modular loading where apps declare which
 // config sections they require, rather than validating all sections globally.
@@ -105,6 +112,7 @@ export const AppConfigSchema = z.object({
   features: FeatureFlagsSchema,
   conversation: ConversationConfigSchema,
   shortLinks: ShortLinksConfigSchema,
+  program: ProgramConfigSchema,
   stripe: StripeConfigSchema,
   admin: AdminConfigSchema,
   urls: UrlsConfigSchema,
@@ -119,6 +127,7 @@ export type MessagingProvider = z.infer<typeof MessagingProviderSchema>;
 export type FeatureFlags = z.infer<typeof FeatureFlagsSchema>;
 export type ConversationConfig = z.infer<typeof ConversationConfigSchema>;
 export type ShortLinksConfig = z.infer<typeof ShortLinksConfigSchema>;
+export type ProgramConfig = z.infer<typeof ProgramConfigSchema>;
 export type StripeConfig = z.infer<typeof StripeConfigSchema>;
 export type AdminConfig = z.infer<typeof AdminConfigSchema>;
 export type UrlsConfig = z.infer<typeof UrlsConfigSchema>;

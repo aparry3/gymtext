@@ -90,6 +90,19 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     source: 'base',
   },
   {
+    id: 'gender',
+    questionText: "What's your gender?",
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    ],
+    source: 'base',
+  },
+  {
     id: 'phone',
     questionText: "What's your phone number?",
     type: 'phone',
