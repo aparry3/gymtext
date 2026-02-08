@@ -8,3 +8,5 @@ export type {
   HookConfigOrString,
   HookableConfig,
 } from './types';
+
+export type { HookMetadata } from './hookRegistry';

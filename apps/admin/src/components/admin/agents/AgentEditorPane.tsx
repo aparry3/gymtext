@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CodeMirrorEditor } from '@/components/ui/codemirror/CodeMirrorEditor';
-import { MODEL_OPTIONS, type AdminAgentDefinition } from './types';
+import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata } from './types';
+import { ToolsSection } from './ToolsSection';
+import { ContextTypesSection } from './ContextTypesSection';
+import { HooksSection } from './HooksSection';
+import { JsonConfigSection } from './JsonConfigSection';
 
 interface AgentEditorPaneProps {
   agentId: string;
@@ -56,6 +60,21 @@ interface FormState {
   maxRetries: number;
   description: string;
   isActive: boolean;
+  toolIds: string[];
+  contextTypes: string[];
+  subAgentsJson: string;
+  hooksJson: string;
+  toolHooksJson: string;
+  schemaJsonJson: string;
+  validationRulesJson: string;
+  userPromptTemplate: string;
+}
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((v, i) => v === sortedB[i]);
 }
 
 function formStateEquals(a: FormState, b: FormState): boolean {
@@ -68,9 +87,72 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     a.maxIterations === b.maxIterations &&
     a.maxRetries === b.maxRetries &&
     a.description === b.description &&
-    a.isActive === b.isActive
+    a.isActive === b.isActive &&
+    arraysEqual(a.toolIds, b.toolIds) &&
+    arraysEqual(a.contextTypes, b.contextTypes) &&
+    a.subAgentsJson === b.subAgentsJson &&
+    a.hooksJson === b.hooksJson &&
+    a.toolHooksJson === b.toolHooksJson &&
+    a.schemaJsonJson === b.schemaJsonJson &&
+    a.validationRulesJson === b.validationRulesJson &&
+    a.userPromptTemplate === b.userPromptTemplate
   );
 }
+
+function safeStringify(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return '';
+  }
+}
+
+function safeParse(str: string): { value: unknown; error: string | null } {
+  if (!str.trim()) return { value: null, error: null };
+  try {
+    return { value: JSON.parse(str), error: null };
+  } catch (e) {
+    return { value: null, error: e instanceof Error ? e.message : 'Invalid JSON' };
+  }
+}
+
+/** Parse hooks JSON to structured form for HooksSection */
+function parseHooksConfig(json: string): {
+  preHook?: { hook: string; source?: string } | null;
+  postHook?: { hook: string; source?: string } | null;
+} {
+  if (!json.trim()) return {};
+  try {
+    const parsed = JSON.parse(json);
+    return {
+      preHook: parsed?.preHook ?? null,
+      postHook: parsed?.postHook ?? null,
+    };
+  } catch {
+    return {};
+  }
+}
+
+const DEFAULT_FORM_STATE: FormState = {
+  systemPrompt: '',
+  userPrompt: '',
+  model: 'gpt-5-nano',
+  maxTokens: 16000,
+  temperature: 1.0,
+  maxIterations: 5,
+  maxRetries: 1,
+  description: '',
+  isActive: true,
+  toolIds: [],
+  contextTypes: [],
+  subAgentsJson: '',
+  hooksJson: '',
+  toolHooksJson: '',
+  schemaJsonJson: '',
+  validationRulesJson: '',
+  userPromptTemplate: '',
+};
 
 export function AgentEditorPane({
   agentId,
@@ -78,22 +160,34 @@ export function AgentEditorPane({
   onHistoryToggle,
   isHistoryOpen,
 }: AgentEditorPaneProps) {
-  const [formState, setFormState] = useState<FormState>({
-    systemPrompt: '',
-    userPrompt: '',
-    model: 'gpt-5-nano',
-    maxTokens: 16000,
-    temperature: 1.0,
-    maxIterations: 5,
-    maxRetries: 1,
-    description: '',
-    isActive: true,
-  });
-  const [originalState, setOriginalState] = useState<FormState>(formState);
+  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM_STATE);
+  const [originalState, setOriginalState] = useState<FormState>(DEFAULT_FORM_STATE);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [jsonErrors, setJsonErrors] = useState<Record<string, string | null>>({});
+  const [registry, setRegistry] = useState<RegistryMetadata | null>(null);
+  const registryFetched = useRef(false);
+
+  // Fetch registry metadata (once)
+  useEffect(() => {
+    if (registryFetched.current) return;
+    registryFetched.current = true;
+
+    async function fetchRegistry() {
+      try {
+        const response = await fetch('/api/agent-registries');
+        const result = await response.json();
+        if (result.success && result.data) {
+          setRegistry(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch registry:', err);
+      }
+    }
+    fetchRegistry();
+  }, []);
 
   // Fetch agent definition
   useEffect(() => {
@@ -117,10 +211,19 @@ export function AgentEditorPane({
             maxRetries: data.maxRetries || 1,
             description: data.description || '',
             isActive: data.isActive,
+            toolIds: data.toolIds || [],
+            contextTypes: data.contextTypes || [],
+            subAgentsJson: safeStringify(data.subAgents),
+            hooksJson: safeStringify(data.hooks),
+            toolHooksJson: safeStringify(data.toolHooks),
+            schemaJsonJson: safeStringify(data.schemaJson),
+            validationRulesJson: safeStringify(data.validationRules),
+            userPromptTemplate: data.userPromptTemplate || '',
           };
           setFormState(state);
           setOriginalState(state);
           setLastSaved(new Date(data.createdAt));
+          setJsonErrors({});
         } else {
           setError('Agent not found');
         }
@@ -141,9 +244,66 @@ export function AgentEditorPane({
     onDirtyChange(isDirty);
   }, [formState, originalState, onDirtyChange]);
 
+  // Validate JSON fields and return parsed body or null on error
+  const validateAndBuildBody = useCallback((): Record<string, unknown> | null => {
+    const errors: Record<string, string | null> = {};
+    const jsonFields = [
+      { key: 'subAgentsJson', label: 'Sub-Agents' },
+      { key: 'toolHooksJson', label: 'Tool Hooks' },
+      { key: 'schemaJsonJson', label: 'Output Schema' },
+      { key: 'validationRulesJson', label: 'Validation Rules' },
+    ] as const;
+
+    const parsed: Record<string, unknown> = {};
+    let hasError = false;
+
+    for (const { key, label } of jsonFields) {
+      const str = formState[key];
+      if (!str.trim()) {
+        parsed[key] = null;
+        errors[key] = null;
+      } else {
+        const result = safeParse(str);
+        if (result.error) {
+          errors[key] = `${label}: ${result.error}`;
+          hasError = true;
+        } else {
+          parsed[key] = result.value;
+          errors[key] = null;
+        }
+      }
+    }
+
+    // hooksJson is managed via structured form, validate it too
+    const hooksStr = formState.hooksJson;
+    if (hooksStr.trim()) {
+      const hooksResult = safeParse(hooksStr);
+      if (hooksResult.error) {
+        errors.hooksJson = `Hooks: ${hooksResult.error}`;
+        hasError = true;
+      } else {
+        parsed.hooksJson = hooksResult.value;
+        errors.hooksJson = null;
+      }
+    } else {
+      parsed.hooksJson = null;
+      errors.hooksJson = null;
+    }
+
+    setJsonErrors(errors);
+    if (hasError) return null;
+    return parsed;
+  }, [formState]);
+
   // Save handler
   const handleSave = useCallback(async () => {
     if (formStateEquals(formState, originalState)) return;
+
+    const parsed = validateAndBuildBody();
+    if (!parsed) {
+      setError('Fix JSON errors before saving');
+      return;
+    }
 
     setIsSaving(true);
     setError(null);
@@ -162,6 +322,14 @@ export function AgentEditorPane({
           maxRetries: formState.maxRetries,
           description: formState.description || null,
           isActive: formState.isActive,
+          toolIds: formState.toolIds.length > 0 ? formState.toolIds : null,
+          contextTypes: formState.contextTypes.length > 0 ? formState.contextTypes : null,
+          subAgents: parsed.subAgentsJson,
+          hooks: parsed.hooksJson,
+          toolHooks: parsed.toolHooksJson,
+          schemaJson: parsed.schemaJsonJson,
+          validationRules: parsed.validationRulesJson,
+          userPromptTemplate: formState.userPromptTemplate || null,
         }),
       });
 
@@ -178,13 +346,25 @@ export function AgentEditorPane({
     } finally {
       setIsSaving(false);
     }
-  }, [agentId, formState, originalState]);
+  }, [agentId, formState, originalState, validateAndBuildBody]);
 
   const isDirty = !formStateEquals(formState, originalState);
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Hooks structured form handler
+  const handleHooksChange = useCallback(
+    (config: { preHook?: { hook: string; source?: string } | null; postHook?: { hook: string; source?: string } | null }) => {
+      const clean: Record<string, unknown> = {};
+      if (config.preHook?.hook) clean.preHook = config.preHook;
+      if (config.postHook?.hook) clean.postHook = config.postHook;
+      const json = Object.keys(clean).length > 0 ? JSON.stringify(clean, null, 2) : '';
+      updateField('hooksJson', json);
+    },
+    []
+  );
 
   return (
     <Card className="flex-1 flex flex-col overflow-hidden">
@@ -326,6 +506,95 @@ export function AgentEditorPane({
                 checked={formState.isActive}
                 onCheckedChange={(v) => updateField('isActive', v)}
               />
+            </div>
+
+            {/* Extended Configuration Sections */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Agent Configuration</h3>
+
+              {/* Tools */}
+              {registry && (
+                <ToolsSection
+                  tools={registry.tools}
+                  selected={formState.toolIds}
+                  onChange={(ids) => updateField('toolIds', ids)}
+                />
+              )}
+
+              {/* Context Types */}
+              {registry && (
+                <ContextTypesSection
+                  contextTypes={registry.contextTypes}
+                  selected={formState.contextTypes}
+                  onChange={(types) => updateField('contextTypes', types)}
+                />
+              )}
+
+              {/* Hooks (structured) */}
+              {registry && (
+                <HooksSection
+                  hooks={registry.hooks}
+                  value={parseHooksConfig(formState.hooksJson)}
+                  onChange={handleHooksChange}
+                />
+              )}
+
+              {/* Tool Hooks (JSON) */}
+              <JsonConfigSection
+                label="Tool Hooks"
+                value={formState.toolHooksJson}
+                onChange={(v) => updateField('toolHooksJson', v)}
+                onSave={handleSave}
+                placeholder='{ "tool_name": { "preHook": "hookName", "postHook": { "hook": "hookName", "source": "result.field" } } }'
+                error={jsonErrors.toolHooksJson}
+              />
+
+              {/* Sub-Agents (JSON) */}
+              <JsonConfigSection
+                label="Sub-Agents"
+                value={formState.subAgentsJson}
+                onChange={(v) => updateField('subAgentsJson', v)}
+                onSave={handleSave}
+                placeholder='[{ "batch": 0, "key": "result", "agentId": "domain:agent", "inputMapping": { ... } }]'
+                error={jsonErrors.subAgentsJson}
+              />
+
+              {/* Output Schema (JSON) */}
+              <JsonConfigSection
+                label="Output Schema"
+                value={formState.schemaJsonJson}
+                onChange={(v) => updateField('schemaJsonJson', v)}
+                onSave={handleSave}
+                height="h-64"
+                placeholder='{ "type": "object", "properties": { ... } }'
+                error={jsonErrors.schemaJsonJson}
+              />
+
+              {/* Validation Rules (JSON) */}
+              <JsonConfigSection
+                label="Validation Rules"
+                value={formState.validationRulesJson}
+                onChange={(v) => updateField('validationRulesJson', v)}
+                onSave={handleSave}
+                placeholder='[{ "field": "result.field", "operator": "exists" }]'
+                error={jsonErrors.validationRulesJson}
+              />
+
+              {/* User Prompt Template */}
+              <div className="space-y-2">
+                <Label>User Prompt Template</Label>
+                <p className="text-xs text-gray-500">
+                  Template with {'{{variable}}'} syntax for sub-agent input mapping
+                </p>
+                <div className="h-32 border rounded-lg overflow-hidden">
+                  <CodeMirrorEditor
+                    value={formState.userPromptTemplate}
+                    onChange={(v) => updateField('userPromptTemplate', v)}
+                    placeholder="Template with {{variable}} placeholders..."
+                    onSave={handleSave}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* System Prompt */}

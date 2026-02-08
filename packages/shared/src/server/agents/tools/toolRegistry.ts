@@ -5,6 +5,12 @@ import type { HookRegistry } from '../hooks/hookRegistry';
 import type { HookableConfig } from '../hooks/types';
 import { normalizeHookConfig, resolveDotPath } from '../hooks/resolver';
 
+export interface ToolMetadata {
+  name: string;
+  description: string;
+  priority?: number;
+}
+
 /**
  * Registry for tool definitions
  *
@@ -23,6 +29,14 @@ export class ToolRegistry {
 
   get(name: string): ToolDefinition | undefined {
     return this.tools.get(name);
+  }
+
+  list(): ToolMetadata[] {
+    return [...this.tools.values()].map((def) => ({
+      name: def.name,
+      description: def.description,
+      priority: def.priority,
+    }));
   }
 
   /**

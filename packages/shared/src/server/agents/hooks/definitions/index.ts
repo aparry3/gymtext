@@ -9,5 +9,9 @@ export function registerAllHooks(
   registry: HookRegistry,
   deps: { messagingOrchestrator: MessagingOrchestratorInstance }
 ): void {
-  registry.register('sendMessage', createSendMessageHook(deps.messagingOrchestrator));
+  registry.register(
+    'sendMessage',
+    createSendMessageHook(deps.messagingOrchestrator),
+    'Sends an immediate SMS message to the user'
+  );
 }

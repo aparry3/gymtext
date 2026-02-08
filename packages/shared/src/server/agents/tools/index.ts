@@ -6,3 +6,5 @@ export type {
   ToolExecutionContext,
   ToolServiceContainer,
 } from './types';
+
+export type { ToolMetadata } from './toolRegistry';

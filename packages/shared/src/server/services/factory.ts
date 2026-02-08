@@ -151,6 +151,10 @@ export interface ServiceContainer {
 
   // Agent Runner (new declarative agent system)
   agentRunner: AgentRunnerInstance;
+
+  // Registries (for admin metadata API)
+  toolRegistry: ToolRegistry;
+  hookRegistry: HookRegistry;
 }
 
 /**
@@ -564,6 +568,10 @@ export function createServices(
 
     // Agent Runner
     agentRunner,
+
+    // Registries
+    toolRegistry,
+    hookRegistry,
   };
 }
 
