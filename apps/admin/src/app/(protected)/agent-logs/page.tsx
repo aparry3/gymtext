@@ -6,6 +6,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,7 @@ function formatJson(value: unknown): string {
 interface MessageBlock {
   role: string;
   content: string;
+  section?: string;
 }
 
 function parseMessages(messages: unknown): MessageBlock[] {
@@ -86,9 +88,32 @@ function parseMessages(messages: unknown): MessageBlock[] {
             ? (m as Record<string, unknown>).content as string
             : JSON.stringify((m as Record<string, unknown>).content, null, 2)
           : JSON.stringify(m, null, 2),
+      section: typeof m === 'object' && m !== null && 'section' in m ? String((m as Record<string, unknown>).section) : undefined,
     }));
   }
   return [{ role: 'raw', content: formatJson(messages) }];
+}
+
+const sectionColors: Record<string, string> = {
+  system: 'bg-purple-100 text-purple-800',
+  context: 'bg-blue-100 text-blue-800',
+  example: 'bg-amber-100 text-amber-800',
+  previous: 'bg-gray-100 text-gray-800',
+  retry: 'bg-red-100 text-red-800',
+  user: 'bg-green-100 text-green-800',
+};
+
+interface LogMetadata {
+  usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+  toolCalls?: { name: string; durationMs: number }[];
+  toolIterations?: number;
+  retryAttempt?: number;
+  isToolAgent?: boolean;
+}
+
+function parseMetadata(metadata: unknown): LogMetadata | null {
+  if (!metadata || typeof metadata !== 'object') return null;
+  return metadata as LogMetadata;
 }
 
 const roleColors: Record<string, string> = {
@@ -100,6 +125,88 @@ const roleColors: Record<string, string> = {
   tool: 'bg-orange-100 text-orange-800',
   function: 'bg-orange-100 text-orange-800',
 };
+
+function MetadataPanel({ metadata }: { metadata: unknown }) {
+  const parsed = parseMetadata(metadata);
+
+  if (!parsed) {
+    return (
+      <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
+        {formatJson(metadata)}
+      </pre>
+    );
+  }
+
+  const hasUsage = parsed.usage && (parsed.usage.inputTokens || parsed.usage.outputTokens || parsed.usage.totalTokens);
+  const hasToolCalls = parsed.toolCalls && parsed.toolCalls.length > 0;
+  const hasFlags = parsed.isToolAgent || parsed.retryAttempt;
+
+  // If no structured data, fall back to raw JSON
+  if (!hasUsage && !hasToolCalls && !hasFlags) {
+    return (
+      <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
+        {formatJson(metadata)}
+      </pre>
+    );
+  }
+
+  return (
+    <div className="space-y-4 max-h-[60vh] overflow-auto pr-1">
+      {/* Flags */}
+      {hasFlags && (
+        <div className="flex gap-2 flex-wrap">
+          {parsed.isToolAgent && (
+            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Tool Agent</Badge>
+          )}
+          {parsed.retryAttempt && (
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Retry #{parsed.retryAttempt}</Badge>
+          )}
+        </div>
+      )}
+
+      {/* Token Usage */}
+      {hasUsage && (
+        <div className="border rounded-lg p-4">
+          <h4 className="text-sm font-medium mb-3">Token Usage</h4>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Input</p>
+              <p className="text-lg font-semibold tabular-nums">{parsed.usage!.inputTokens?.toLocaleString() ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Output</p>
+              <p className="text-lg font-semibold tabular-nums">{parsed.usage!.outputTokens?.toLocaleString() ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-lg font-semibold tabular-nums">{parsed.usage!.totalTokens?.toLocaleString() ?? '-'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tool Calls */}
+      {hasToolCalls && (
+        <div className="border rounded-lg p-4">
+          <h4 className="text-sm font-medium mb-3">
+            Tool Calls
+            {parsed.toolIterations != null && (
+              <span className="text-muted-foreground font-normal ml-2">({parsed.toolIterations} iteration{parsed.toolIterations !== 1 ? 's' : ''})</span>
+            )}
+          </h4>
+          <div className="space-y-2">
+            {parsed.toolCalls!.map((tc, i) => (
+              <div key={i} className="flex items-center justify-between bg-muted/50 px-3 py-2 rounded">
+                <span className="text-sm font-mono">{tc.name}</span>
+                <span className="text-sm text-muted-foreground tabular-nums">{formatDuration(tc.durationMs)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function LogDetailDialog({
   log,
@@ -156,11 +263,16 @@ function LogDetailDialog({
                 messages.map((msg, i) => (
                   <div key={i} className="border rounded-lg overflow-hidden">
                     <div
-                      className={`px-3 py-1.5 text-xs font-medium ${
+                      className={`px-3 py-1.5 text-xs font-medium flex items-center gap-2 ${
                         roleColors[msg.role] || 'bg-gray-100 text-gray-800'
                       }`}
                     >
                       {msg.role}
+                      {msg.section && (
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${sectionColors[msg.section] || 'bg-gray-100 text-gray-600'}`}>
+                          {msg.section}
+                        </span>
+                      )}
                     </div>
                     <pre className="text-sm whitespace-pre-wrap p-3 bg-muted/50 overflow-auto max-h-80">
                       {msg.content}
@@ -179,9 +291,7 @@ function LogDetailDialog({
 
           {log.metadata != null ? (
             <TabsContent value="metadata" className="flex-1 overflow-auto">
-              <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-                {formatJson(log.metadata)}
-              </pre>
+              <MetadataPanel metadata={log.metadata} />
             </TabsContent>
           ) : null}
         </Tabs>
@@ -255,6 +365,23 @@ export default function AgentLogsPage() {
     setDialogOpen(true);
   }, []);
 
+  const handleClearLogs = useCallback(async () => {
+    if (!window.confirm(`Delete all ${total} agent logs? This cannot be undone.`)) return;
+
+    try {
+      const response = await fetch('/api/agent-logs', { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to clear logs');
+      }
+      setCurrentPage(1);
+      fetchLogs(agentIdFilter, 1);
+    } catch (err) {
+      setError('Failed to clear logs');
+      console.error('Error clearing agent logs:', err);
+    }
+  }, [total, fetchLogs, agentIdFilter]);
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="space-y-6">
@@ -300,6 +427,17 @@ export default function AgentLogsPage() {
               ))}
             </SelectContent>
           </Select>
+          <div className="ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearLogs}
+              disabled={total === 0 || isLoading}
+              className="text-destructive hover:text-destructive"
+            >
+              Clear all logs
+            </Button>
+          </div>
         </div>
 
         {/* Table */}

@@ -3,7 +3,7 @@ import { getAdminContext } from '@/lib/context';
 
 export async function GET(request: Request) {
   try {
-    const { repos } = await getAdminContext();
+    const { services } = await getAdminContext();
     const { searchParams } = new URL(request.url);
 
     const agentId = searchParams.get('agentId') || undefined;
@@ -12,12 +12,12 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize;
 
     const [logs, total] = await Promise.all([
-      repos.agentLog.query({
+      services.agentLog.query({
         agentId,
         limit: pageSize,
         offset,
       }),
-      repos.agentLog.count({ agentId }),
+      services.agentLog.count({ agentId }),
     ]);
 
     return NextResponse.json({
@@ -41,6 +41,30 @@ export async function GET(request: Request) {
           error instanceof Error
             ? error.message
             : 'An error occurred fetching agent logs',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const { services } = await getAdminContext();
+    const deleted = await services.agentLog.deleteAll();
+
+    return NextResponse.json({
+      success: true,
+      data: { deleted },
+    });
+  } catch (error) {
+    console.error('Error clearing agent logs:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred clearing agent logs',
       },
       { status: 500 }
     );

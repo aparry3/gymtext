@@ -15,7 +15,12 @@ export class AgentLogRepository extends BaseRepository {
     try {
       await this.db
         .insertInto('agentLogs')
-        .values(entry)
+        .values({
+          ...entry,
+          messages: JSON.stringify(entry.messages),
+          response: entry.response != null ? JSON.stringify(entry.response) : null,
+          metadata: entry.metadata != null ? JSON.stringify(entry.metadata) : null,
+        })
         .execute();
     } catch (error) {
       console.error('[AgentLogRepository] Failed to log agent invocation:', error);
@@ -89,6 +94,17 @@ export class AgentLogRepository extends BaseRepository {
     const result = await this.db
       .deleteFrom('agentLogs')
       .where('createdAt', '<', cutoffDate)
+      .executeTakeFirst();
+
+    return Number(result.numDeletedRows ?? 0);
+  }
+
+  /**
+   * Delete all agent logs
+   */
+  async deleteAll(): Promise<number> {
+    const result = await this.db
+      .deleteFrom('agentLogs')
       .executeTakeFirst();
 
     return Number(result.numDeletedRows ?? 0);

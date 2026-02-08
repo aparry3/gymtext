@@ -24,15 +24,18 @@ function buildExampleMessages(examples: AgentExample[]): Message[] {
     messages.push({
       role: 'user',
       content: `[EXAMPLE]\n${example.input}`,
+      section: 'example',
     });
     messages.push({
       role: 'assistant',
       content: example.output,
+      section: 'example',
     });
     if (example.type === 'negative' && example.feedback) {
       messages.push({
         role: 'user',
         content: `[CORRECTION] ${example.feedback}`,
+        section: 'example',
       });
     }
   }
@@ -59,19 +62,20 @@ export function buildMessages(config: BuildMessagesConfig): Message[] {
     .map(content => ({
       role: 'user' as const,
       content,
+      section: 'context' as const,
     }));
 
-  // Build example messages for few-shot prompting
+  // Build example messages for few-shot prompting (already tagged in buildExampleMessages)
   const exampleMessages: Message[] = examples && examples.length > 0
     ? buildExampleMessages(examples)
     : [];
 
   return [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: systemPrompt, section: 'system' as const },
     ...contextMessages,
     ...exampleMessages,
-    ...previousMessages,
-    { role: 'user', content: userPrompt },
+    ...previousMessages.map(m => ({ ...m, section: m.section ?? 'previous' as const })),
+    { role: 'user', content: userPrompt, section: 'user' as const },
   ];
 }
 

@@ -53,6 +53,7 @@ import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } fro
 import { createBlogService, type BlogServiceInstance } from './domain/blog/blogService';
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
+import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
 
 // Agent services
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
@@ -149,6 +150,9 @@ export interface ServiceContainer {
   // Agent definitions
   agentDefinition: AgentDefinitionServiceInstance;
 
+  // Agent logs
+  agentLog: AgentLogServiceInstance;
+
   // Agent Runner (new declarative agent system)
   agentRunner: AgentRunnerInstance;
 
@@ -191,6 +195,7 @@ export function createServices(
   const prompt = createPromptService(repos);
   const queue = createQueueService(repos);
   const agentDefinition = createAgentDefinitionService(repos);
+  const agentLog = createAgentLogService(repos);
 
   // fitnessProfile needs agentDefinitionService for profile agents
   const fitnessProfile = createFitnessProfileService(repos, agentDefinition);
@@ -567,6 +572,9 @@ export function createServices(
     // Agent definitions
     agentDefinition,
 
+    // Agent logs
+    agentLog,
+
     // Agent Runner
     agentRunner,
 
@@ -665,6 +673,9 @@ export type {
 
   // Agent definitions
   AgentDefinitionServiceInstance,
+
+  // Agent logs
+  AgentLogServiceInstance,
 
   // Agent Runner
   AgentRunnerInstance,

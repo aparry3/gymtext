@@ -30,10 +30,20 @@ export interface ImageGenerationResult {
 }
 
 /**
+ * Token usage metadata from an LLM invocation
+ */
+export interface ModelUsageMetadata {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}
+
+/**
  * A model that can invoke prompts and return responses
  */
 export interface InvokableModel<T = unknown> {
   invoke(input: unknown): Promise<T>;
+  lastUsage?: ModelUsageMetadata;
 }
 
 /**
@@ -54,21 +64,58 @@ export const initializeModel = <T = string>(outputSchema?: unknown, config?: { m
         maxOutputTokens: maxTokens,
       })
       if (options?.tools) {
-        return llm.bindTools(options.tools) as unknown as InvokableModel<T>;
+        const bound = llm.bindTools(options.tools);
+        const wrapper: InvokableModel<T> = {
+          invoke: async (input: unknown): Promise<T> => {
+            const result = await bound.invoke(input as Parameters<typeof bound.invoke>[0]);
+            if (result.usage_metadata) {
+              wrapper.lastUsage = {
+                inputTokens: result.usage_metadata.input_tokens,
+                outputTokens: result.usage_metadata.output_tokens,
+                totalTokens: result.usage_metadata.total_tokens,
+              };
+            }
+            return result as T;
+          }
+        };
+        return wrapper;
       }
       if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema) as unknown as InvokableModel<T>;
+        const structured = llm.withStructuredOutput(outputSchema, { includeRaw: true });
+        const wrapper: InvokableModel<T> = {
+          invoke: async (input: unknown): Promise<T> => {
+            const result = await structured.invoke(input as Parameters<typeof structured.invoke>[0]);
+            if (result.raw && 'usage_metadata' in result.raw && result.raw.usage_metadata) {
+              const u = result.raw.usage_metadata as Record<string, number>;
+              wrapper.lastUsage = {
+                inputTokens: u.input_tokens,
+                outputTokens: u.output_tokens,
+                totalTokens: u.total_tokens,
+              };
+            }
+            return result.parsed as T;
+          }
+        };
+        return wrapper;
       }
       // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
+      const wrapper: InvokableModel<T> = {
         invoke: async (input: unknown): Promise<T> => {
           const response = await llm.invoke(input as Parameters<typeof llm.invoke>[0]);
+          if (response.usage_metadata) {
+            wrapper.lastUsage = {
+              inputTokens: response.usage_metadata.input_tokens,
+              outputTokens: response.usage_metadata.output_tokens,
+              totalTokens: response.usage_metadata.total_tokens,
+            };
+          }
           const content = typeof response.content === 'string'
             ? response.content
             : String(response.content);
           return content as T;
         }
       };
+      return wrapper;
     } else {
       const llm = new ChatOpenAI({
         model: model,
@@ -77,21 +124,58 @@ export const initializeModel = <T = string>(outputSchema?: unknown, config?: { m
         reasoningEffort: 'low',
       })
       if (options?.tools) {
-        return llm.bindTools(options.tools) as unknown as InvokableModel<T>;
+        const bound = llm.bindTools(options.tools);
+        const wrapper: InvokableModel<T> = {
+          invoke: async (input: unknown): Promise<T> => {
+            const result = await bound.invoke(input as Parameters<typeof bound.invoke>[0]);
+            if (result.usage_metadata) {
+              wrapper.lastUsage = {
+                inputTokens: result.usage_metadata.input_tokens,
+                outputTokens: result.usage_metadata.output_tokens,
+                totalTokens: result.usage_metadata.total_tokens,
+              };
+            }
+            return result as T;
+          }
+        };
+        return wrapper;
       }
       if (outputSchema) {
-        return llm.withStructuredOutput(outputSchema) as unknown as InvokableModel<T>;
+        const structured = llm.withStructuredOutput(outputSchema, { includeRaw: true });
+        const wrapper: InvokableModel<T> = {
+          invoke: async (input: unknown): Promise<T> => {
+            const result = await structured.invoke(input as Parameters<typeof structured.invoke>[0]);
+            if (result.raw && 'usage_metadata' in result.raw && result.raw.usage_metadata) {
+              const u = result.raw.usage_metadata as Record<string, number>;
+              wrapper.lastUsage = {
+                inputTokens: u.input_tokens,
+                outputTokens: u.output_tokens,
+                totalTokens: u.total_tokens,
+              };
+            }
+            return result.parsed as T;
+          }
+        };
+        return wrapper;
       }
       // When no schema provided, wrap LLM to auto-extract .content from AIMessage
-      return {
+      const wrapper: InvokableModel<T> = {
         invoke: async (input: unknown): Promise<T> => {
           const response = await llm.invoke(input as Parameters<typeof llm.invoke>[0]);
+          if (response.usage_metadata) {
+            wrapper.lastUsage = {
+              inputTokens: response.usage_metadata.input_tokens,
+              outputTokens: response.usage_metadata.output_tokens,
+              totalTokens: response.usage_metadata.total_tokens,
+            };
+          }
           const content = typeof response.content === 'string'
             ? response.content
             : String(response.content);
           return content as T;
         }
       };
+      return wrapper;
     }
   };
 

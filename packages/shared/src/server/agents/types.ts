@@ -376,6 +376,8 @@ export interface Message {
   content: string;
   tool_calls?: ToolCall[];
   tool_call_id?: string;
+  /** Section label for agent log readability (ignored by LLM) */
+  section?: 'system' | 'context' | 'example' | 'previous' | 'retry' | 'user';
 }
 
 /**
@@ -430,6 +432,13 @@ export interface AgentLogEntry {
   messages: Message[];
   response: unknown;
   durationMs: number;
+  metadata?: {
+    usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+    toolCalls?: { name: string; durationMs: number }[];
+    toolIterations?: number;
+    retryAttempt?: number;
+    isToolAgent?: boolean;
+  };
 }
 
 // ============================================

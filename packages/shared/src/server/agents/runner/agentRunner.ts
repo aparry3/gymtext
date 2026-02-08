@@ -80,7 +80,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
    * Build the onLog callback for DB logging
    */
   const buildOnLog = agentLogRepository
-    ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number }) => {
+    ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
         agentLogRepository.log({
           agentId: entry.agentId,
           model: entry.model ?? null,
@@ -88,7 +88,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           input: entry.input,
           response: entry.response as JsonValue,
           durationMs: entry.durationMs,
-          metadata: {},
+          metadata: (entry.metadata ?? {}) as JsonValue,
         });
       }
     : undefined;

@@ -2,6 +2,7 @@ import type { ZodSchema } from 'zod';
 import { initializeModel, type InvokableModel } from './models';
 import type {
   AgentDefinition,
+  AgentLogEntry,
   ConfigurableAgent,
   InferSchemaOutput,
   AgentComposedOutput,
@@ -148,6 +149,7 @@ export function createAgent<
             content: typeof attempt.output === 'string'
               ? attempt.output
               : JSON.stringify(attempt.output),
+            section: 'retry',
           });
 
           // Add error feedback as a user message
@@ -155,6 +157,7 @@ export function createAgent<
           retryMessages.push({
             role: 'user',
             content: `The previous output failed validation:\n${errorList}\n\nPlease fix these issues.`,
+            section: 'retry',
           });
         }
       }
@@ -172,9 +175,10 @@ export function createAgent<
       // Execute main agent
       let mainResult: InferSchemaOutput<TSchema>;
       let accumulatedMessages: string[] = [];
+      let toolResult: Awaited<ReturnType<typeof executeToolLoop>> | undefined;
 
       if (isToolAgent) {
-        const toolResult = await executeToolLoop({
+        toolResult = await executeToolLoop({
           model,
           messages,
           tools: tools!,
@@ -190,6 +194,22 @@ export function createAgent<
       // Log the agent invocation (fire-and-forget, won't block execution)
       logAgentInvocation(name, input, messages, mainResult);
 
+      // Build metadata for logging
+      const metadata: AgentLogEntry['metadata'] = {};
+
+      if (isToolAgent && toolResult) {
+        metadata.usage = toolResult.usage;
+        metadata.toolCalls = toolResult.toolCalls.map(tc => ({ name: tc.name, durationMs: tc.durationMs }));
+        metadata.toolIterations = toolResult.iterations;
+        metadata.isToolAgent = true;
+      } else if (model.lastUsage) {
+        metadata.usage = model.lastUsage;
+      }
+
+      if (retryContext && retryContext.attempt > 1) {
+        metadata.retryAttempt = retryContext.attempt;
+      }
+
       // DB logging callback (fire-and-forget)
       if (onLog) {
         try {
@@ -200,6 +220,7 @@ export function createAgent<
             messages,
             response: mainResult,
             durationMs: Date.now() - startTime,
+            metadata,
           });
         } catch { /* silent */ }
       }
