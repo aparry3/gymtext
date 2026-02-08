@@ -85,6 +85,10 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
+        // SMS consent
+        smsConsent: true,
+        smsConsentedAt: new Date().toISOString(),
+
         // Program info
         ...(programId && { programId }),
         ...(Object.keys(programAnswers).length > 0 && { programAnswers }),
@@ -179,7 +183,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         {ownerWordmarkUrl ? (
           <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
         ) : (
-          <img src="/WordmarkWhite.png" alt="GymText" className="h-8 object-contain" />
+          <img src="/Wordmark.png" alt="GymText" className="h-8 object-contain" />
         )}
         <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
           {programName || 'Sign Up'}
@@ -241,8 +245,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       <main className="flex flex-1 flex-col justify-center px-6 pt-8 pb-safe-offset-12">
         <div className="mx-auto w-full max-w-md">
           {error && (
-            <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4">
-              <p className="text-red-400 text-center">{error}</p>
+            <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4">
+              <p className="text-red-600 text-center">{error}</p>
             </div>
           )}
 

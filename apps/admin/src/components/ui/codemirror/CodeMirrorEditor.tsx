@@ -17,6 +17,7 @@ import {
 } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
+import { json } from '@codemirror/lang-json';
 import {
   syntaxHighlighting,
   defaultHighlightStyle,
@@ -32,6 +33,7 @@ interface CodeMirrorEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   theme?: 'light' | 'dark';
+  language?: 'markdown' | 'json';
   onSave?: () => void;
 }
 
@@ -41,6 +43,7 @@ export function CodeMirrorEditor({
   placeholder = '',
   readOnly = false,
   theme = 'light',
+  language = 'markdown',
   onSave,
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,7 +88,7 @@ export function CodeMirrorEditor({
       highlightActiveLine(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       saveKeymap,
-      markdown(),
+      language === 'json' ? json() : markdown(),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -146,7 +149,7 @@ export function CodeMirrorEditor({
       view.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, theme]); // Only recreate on readOnly or theme change
+  }, [readOnly, theme, language]); // Only recreate on readOnly, theme, or language change
 
   // Update content when value prop changes externally
   useEffect(() => {

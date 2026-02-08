@@ -1,24 +1,18 @@
-import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
-import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import {
   buildProfileUpdateUserMessage,
   buildUserFieldsUserMessage,
-  buildStructuredProfileUserMessage,
 } from '../prompts/profile';
-import {
-  ProfileUpdateOutputSchema,
-  UserFieldsOutputSchema,
-} from '../schemas/profile';
-import { StructuredProfileSchema } from '@/server/models/profile';
-import type { StructuredProfileOutput, ProfileUpdateOutput, UserFieldsOutput, StructuredProfileInput } from '../types/profile';
+import type { ProfileUpdateOutput, UserFieldsOutput } from '../types/profile';
+import type { StructuredProfile } from '@/server/models/profile';
+import type { CommonTimezone } from '@/shared/utils/timezone';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { FitnessProfileServiceInstance } from '../../domain/user/fitnessProfileService';
 import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
-import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * ProfileServiceInstance interface
@@ -31,7 +25,7 @@ export interface ProfileServiceDeps {
   user: UserServiceInstance;
   fitnessProfile: FitnessProfileServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  agentDefinition: AgentDefinitionServiceInstance;
+  agentRunner: AgentRunnerInstance;
 }
 
 /**
@@ -49,7 +43,7 @@ export interface ProfileServiceDeps {
  * For entity CRUD operations, use FitnessProfileService directly.
  */
 export function createProfileService(deps: ProfileServiceDeps): ProfileServiceInstance {
-  const { user: userService, fitnessProfile: fitnessProfileService, workoutInstance: workoutInstanceService, agentDefinition: agentDefinitionService } = deps;
+  const { user: userService, fitnessProfile: fitnessProfileService, workoutInstance: workoutInstanceService, agentRunner } = deps;
 
   return {
     /**
@@ -84,91 +78,45 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
         const currentProfile = await fitnessProfileService.getCurrentProfile(userId) ?? '';
         const currentDate = formatForAI(new Date(), user.timezone);
 
-        // Convert previous messages to Message format for the configurable agent
-        const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
-          .map(m => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }));
-
-        // Helper function to create and invoke the structured profile agent
-        // Definition resolved from agentDefinitionService
-        // Note: This matches ConfigurableAgent.invoke signature for sub-agent compatibility
-        const invokeStructuredProfileAgent = async (params: string): Promise<StructuredProfileOutput> => {
-          const parsedInput: StructuredProfileInput = JSON.parse(params);
-          const userPrompt = buildStructuredProfileUserMessage(parsedInput.dossierText, parsedInput.currentDate);
-          const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_STRUCTURED, {
-            schema: StructuredProfileSchema,
-            temperature: 0.3,
-          });
-
-          const agent = createAgent(definition);
-          const result = await agent.invoke(userPrompt);
-          return { structured: result.response, success: true };
-        };
+        // Convert previous messages to agent format
+        const previousMsgs = (previousMessages || []).map(m => ({
+          role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
+          content: m.content,
+        }));
 
         // Run BOTH agents in parallel for efficiency
-        const [profileResult, userFieldsResult] = await Promise.all([
+        const [profileAgentResult, userFieldsAgentResult] = await Promise.all([
           // Profile agent - updates fitness profile dossier
-          // Prompts fetched from DB based on agent name
-          (async (): Promise<ProfileUpdateOutput> => {
-            const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-
-            // Get resolved definition and create profile update agent with subAgents for structured extraction
-            const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_FITNESS, {
-              schema: ProfileUpdateOutputSchema,
-              subAgents: [{
-                structured: {
-                  agent: { name: AGENTS.PROFILE_STRUCTURED, invoke: invokeStructuredProfileAgent },
-                  condition: (result: unknown) => (result as { wasUpdated: boolean }).wasUpdated,
-                  transform: (result: unknown) => JSON.stringify({
-                    dossierText: (result as { updatedProfile: string }).updatedProfile,
-                    currentDate,
-                  }),
-                },
-              }],
-            });
-
-            const agent = createAgent(definition);
-
-            const result = await agent.invoke({
-              message: userPrompt,
-              previousMessages: previousMsgs,
-            });
-            const structuredResult = (result as { structured?: StructuredProfileOutput }).structured;
-            const structured = structuredResult?.success ? structuredResult.structured : null;
-
-            return {
-              updatedProfile: result.response.updatedProfile,
-              wasUpdated: result.response.wasUpdated,
-              updateSummary: result.response.updateSummary || '',
-              structured,
-            };
-          })(),
+          // Sub-agent (profile:structured) runs conditionally when wasUpdated=true (DB config)
+          agentRunner.invoke('profile:fitness', {
+            user,
+            message: buildProfileUpdateUserMessage(currentProfile, message, user, currentDate),
+            previousMessages: previousMsgs,
+          }),
           // User fields agent - extracts timezone, send time, name changes
-          // Definition resolved from agentDefinitionService
-          (async (): Promise<UserFieldsOutput> => {
-            const userPrompt = buildUserFieldsUserMessage(message, user, currentDate);
-            const definition = await agentDefinitionService.getDefinition(AGENTS.PROFILE_USER, {
-              schema: UserFieldsOutputSchema,
-              temperature: 0.3,
-            });
-
-            const agent = createAgent(definition);
-
-            const result = await agent.invoke({
-              message: userPrompt,
-              previousMessages: previousMsgs,
-            });
-            return {
-              timezone: result.response.timezone,
-              preferredSendHour: result.response.preferredSendHour,
-              name: result.response.name,
-              hasUpdates: result.response.hasUpdates,
-              updateSummary: result.response.updateSummary || '',
-            };
-          })(),
+          agentRunner.invoke('profile:user', {
+            user,
+            message: buildUserFieldsUserMessage(message, user, currentDate),
+            previousMessages: previousMsgs,
+          }),
         ]);
+
+        // Extract typed results
+        const profileResult: ProfileUpdateOutput = {
+          updatedProfile: (profileAgentResult.response as Record<string, unknown>).updatedProfile as string,
+          wasUpdated: (profileAgentResult.response as Record<string, unknown>).wasUpdated as boolean,
+          updateSummary: ((profileAgentResult.response as Record<string, unknown>).updateSummary as string) || '',
+          structured: (profileAgentResult as Record<string, unknown>).structured as StructuredProfile | null ?? null,
+        };
+
+        const userFieldsResponse = userFieldsAgentResult.response as Record<string, unknown>;
+        const userFieldsResult: UserFieldsOutput = {
+          timezone: (userFieldsResponse.timezone as CommonTimezone | null) ?? null,
+          preferredSendHour: (userFieldsResponse.preferredSendHour as number | null) ?? null,
+          name: (userFieldsResponse.name as string | null) ?? null,
+          hasUpdates: userFieldsResponse.hasUpdates as boolean,
+          updateSummary: (userFieldsResponse.updateSummary as string) || '',
+        };
 
         // Persist profile updates (structured data now included from update agent)
         if (profileResult.wasUpdated) {

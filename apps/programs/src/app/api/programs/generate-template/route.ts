@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { validateFile, parseFile, createProgramAgentService, createServicesFromDb, postgresDb } from '@gymtext/shared/server';
+import { validateFile, parseFile, createServicesFromDb, postgresDb } from '@gymtext/shared/server';
 
 /**
  * POST /api/programs/generate-template
@@ -54,8 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Generate template using program agent
     const services = createServicesFromDb(postgresDb);
-    const service = createProgramAgentService(services.agentDefinition);
-    const result = await service.parseProgram(parsed.text);
+    const result = await services.programAgent.parseProgram(parsed.text);
 
     return NextResponse.json({
       success: true,

@@ -147,6 +147,15 @@ export class AgentDefinitionRepository extends BaseRepository {
         maxRetries: update.maxRetries ?? current.maxRetries,
         description: update.description !== undefined ? update.description : current.description,
         isActive: update.isActive ?? current.isActive,
+        toolIds: update.toolIds !== undefined ? update.toolIds : current.toolIds,
+        contextTypes: update.contextTypes !== undefined ? update.contextTypes : current.contextTypes,
+        subAgents: update.subAgents !== undefined ? update.subAgents : current.subAgents,
+        hooks: update.hooks !== undefined ? update.hooks : current.hooks,
+        toolHooks: update.toolHooks !== undefined ? update.toolHooks : current.toolHooks,
+        schemaJson: update.schemaJson !== undefined ? update.schemaJson : current.schemaJson,
+        validationRules: update.validationRules !== undefined ? update.validationRules : current.validationRules,
+        userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
+        examples: update.examples !== undefined ? update.examples : current.examples,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -178,6 +187,15 @@ export class AgentDefinitionRepository extends BaseRepository {
         maxRetries: version.maxRetries,
         description: version.description,
         isActive: version.isActive,
+        toolIds: version.toolIds,
+        contextTypes: version.contextTypes,
+        subAgents: version.subAgents,
+        hooks: version.hooks,
+        toolHooks: version.toolHooks,
+        schemaJson: version.schemaJson,
+        validationRules: version.validationRules,
+        userPromptTemplate: version.userPromptTemplate,
+        examples: version.examples,
       })
       .returningAll()
       .executeTakeFirstOrThrow();

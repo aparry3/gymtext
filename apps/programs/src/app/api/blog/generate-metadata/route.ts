@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Generate metadata using the agent service
     const services = createServicesFromDb(postgresDb);
-    const agentService = createBlogMetadataAgentService(services.agentDefinition);
+    const agentService = createBlogMetadataAgentService(services.agentRunner);
     const metadata = await agentService.generateMetadata(content);
 
     return NextResponse.json({

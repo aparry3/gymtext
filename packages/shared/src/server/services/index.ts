@@ -100,10 +100,6 @@ export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatS
 // Agent Services
 // =============================================================================
 
-// Chat agent service
-export { createChatAgentService } from './agents/chat';
-export type { ChatAgentServiceInstance, ChatAgentResult } from './agents/chat';
-
 // Modification orchestration service
 export { createModificationService } from './orchestration/modificationService';
 export type { ModificationServiceInstance, ModificationServiceDeps } from './orchestration/modificationService';
@@ -112,7 +108,6 @@ export type { ModificationServiceInstance, ModificationServiceDeps } from './orc
 export {
   createWorkoutModificationService,
   createPlanModificationService,
-  createModificationTools,
 } from './agents/modifications';
 export type {
   WorkoutModificationServiceInstance,
@@ -125,8 +120,6 @@ export type {
   PlanModificationServiceDeps,
   ModifyPlanResult,
   ModifyPlanParams,
-  ModificationToolContext,
-  ModificationToolDeps,
 } from './agents/modifications';
 
 // Exercise resolution service

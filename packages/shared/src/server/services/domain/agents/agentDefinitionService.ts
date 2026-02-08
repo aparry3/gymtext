@@ -1,14 +1,20 @@
 import type { ZodSchema } from 'zod';
 import type { DbAgentConfig } from '@/server/models/agentDefinition';
+import type { AgentDefinition as DbAgentDefinitionRow } from '@/server/models/agentDefinition';
 import type { RepositoryContainer } from '../../../repositories/factory';
 import type {
   AgentDefinition,
   AgentDefinitionOverrides,
   ModelId,
 } from '@/server/agents/types';
+import type { ExtendedAgentConfig } from '@/server/agents/runner/types';
+import type { ValidationRule } from '@/server/agents/declarative/types';
+import type { SubAgentDbConfig } from '@/server/agents/runner/types';
+import type { HookableConfig } from '@/server/agents/hooks/types';
 
 interface CacheEntry {
   data: DbAgentConfig;
+  raw: DbAgentDefinitionRow;
   expiresAt: number;
 }
 
@@ -59,6 +65,13 @@ export interface AgentDefinitionServiceInstance {
   ): Promise<AgentDefinition<TSchema>>;
 
   /**
+   * Get the extended configuration for an agent (new DB columns)
+   * Returns tool_ids, context_types, sub_agents, hooks, etc.
+   * Uses the same cache as getAgentDefinition().
+   */
+  getExtendedConfig(agentId: string): Promise<ExtendedAgentConfig>;
+
+  /**
    * Invalidate cache for a specific agent
    */
   invalidateCache(agentId: string): void;
@@ -104,6 +117,45 @@ export function createAgentDefinitionService(
     maxRetries: row.maxRetries ?? 1,
   });
 
+  /**
+   * Fetch and cache a full DB row
+   */
+  const fetchAndCache = async (agentId: string): Promise<CacheEntry> => {
+    const definition = await repos.agentDefinition.getById(agentId);
+
+    if (!definition) {
+      throw new Error(
+        `Agent definition not found for '${agentId}'. ` +
+          `All agent definitions must be seeded before use. Run the agent definition migration.`
+      );
+    }
+
+    const config = toDbAgentConfig(definition);
+    const entry: CacheEntry = {
+      data: config,
+      raw: definition,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
+
+    cache.set(agentId, entry);
+    return entry;
+  };
+
+  /**
+   * Extract extended config from a raw DB row
+   */
+  const toExtendedConfig = (raw: DbAgentDefinitionRow): ExtendedAgentConfig => ({
+    toolIds: (raw.toolIds as string[] | null) ?? null,
+    contextTypes: (raw.contextTypes as string[] | null) ?? null,
+    subAgents: (raw.subAgents as unknown as SubAgentDbConfig[] | null) ?? null,
+    hooks: (raw.hooks as unknown as HookableConfig | null) ?? null,
+    toolHooks: (raw.toolHooks as unknown as Record<string, HookableConfig> | null) ?? null,
+    schemaJson: (raw.schemaJson as unknown as Record<string, unknown> | null) ?? null,
+    validationRules: (raw.validationRules as unknown as ValidationRule[] | null) ?? null,
+    userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
+    examples: (raw.examples as unknown[] | null) ?? null,
+  });
+
   return {
     async getAgentDefinition(agentId: string): Promise<DbAgentConfig> {
       // Check cache first
@@ -112,25 +164,8 @@ export function createAgentDefinitionService(
         return cached.data;
       }
 
-      // Fetch from database
-      const definition = await repos.agentDefinition.getById(agentId);
-
-      if (!definition) {
-        throw new Error(
-          `Agent definition not found for '${agentId}'. ` +
-            `All agent definitions must be seeded before use. Run the agent definition migration.`
-        );
-      }
-
-      const config = toDbAgentConfig(definition);
-
-      // Update cache
-      cache.set(agentId, {
-        data: config,
-        expiresAt: Date.now() + CACHE_TTL_MS,
-      });
-
-      return config;
+      const entry = await fetchAndCache(agentId);
+      return entry.data;
     },
 
     async getAgentDefinitions(
@@ -156,9 +191,10 @@ export function createAgentDefinitionService(
         for (const definition of definitions) {
           const config = toDbAgentConfig(definition);
 
-          // Update cache
+          // Update cache with full row
           cache.set(definition.agentId, {
             data: config,
+            raw: definition,
             expiresAt: Date.now() + CACHE_TTL_MS,
           });
 
@@ -204,6 +240,17 @@ export function createAgentDefinitionService(
         loggingContext: overrides?.loggingContext,
         context: overrides?.context,
       };
+    },
+
+    async getExtendedConfig(agentId: string): Promise<ExtendedAgentConfig> {
+      // Check cache first
+      const cached = cache.get(agentId);
+      if (cached && cached.expiresAt > Date.now()) {
+        return toExtendedConfig(cached.raw);
+      }
+
+      const entry = await fetchAndCache(agentId);
+      return toExtendedConfig(entry.raw);
     },
 
     invalidateCache(agentId: string): void {

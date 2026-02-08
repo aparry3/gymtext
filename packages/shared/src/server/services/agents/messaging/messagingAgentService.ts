@@ -1,11 +1,8 @@
-import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
-import { PlanSummarySchema } from '../schemas/messaging';
-import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
-import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
 
 // =============================================================================
 // Factory Pattern
@@ -22,12 +19,11 @@ export interface MessagingAgentServiceInstance {
 
 /**
  * Create a MessagingAgentService instance
- * Uses createAgent pattern with definitions from agentDefinitionService
  *
- * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
+ * @param agentRunner - AgentRunner for invoking agents
  */
 export function createMessagingAgentService(
-  agentDefinitionService: AgentDefinitionServiceInstance
+  agentRunner: AgentRunnerInstance
 ): MessagingAgentServiceInstance {
   return {
     /**
@@ -58,42 +54,35 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
       plan: FitnessPlan,
       previousMessages?: Message[]
     ): Promise<string[]> {
-      // Build context array with user/plan data
-      const context: string[] = [
+      // Build context as message content
+      const contextParts: string[] = [
         `<User>\nName: ${user.name}\n</User>`,
         `<Plan Details>\n${plan.description || 'No plan description available.'}\n</Plan Details>`,
       ];
 
       // Add continuation context if there are previous messages
       if (previousMessages && previousMessages.length > 0) {
-        context.push(
+        contextParts.push(
           'IMPORTANT: You are continuing a conversation that has already started. ' +
           'DO NOT greet the user by name again. DO NOT introduce yourself again. ' +
           'Just continue naturally with the plan summary.'
         );
       }
 
-      // Convert previous messages to agent message format
-      const previousMsgs: AgentMessage[] | undefined = previousMessages
-        ? ConversationFlowBuilder.toMessageArray(previousMessages).map(m => ({
-            role: m.role as 'user' | 'assistant',
+      // Convert previous messages to agent format
+      const previousMsgs = previousMessages
+        ? previousMessages.map(m => ({
+            role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
             content: m.content,
           }))
         : undefined;
 
-      // Get resolved definition and create agent
-      const definition = await agentDefinitionService.getDefinition(AGENTS.MESSAGING_PLAN_SUMMARY, {
-        schema: PlanSummarySchema,
-      });
-
-      const agent = createAgent(definition);
-
-      const result = await agent.invoke({
-        message: '',
-        context,
+      const result = await agentRunner.invoke('messaging:plan-summary', {
+        user,
+        message: contextParts.join('\n\n'),
         previousMessages: previousMsgs,
       });
-      return result.response.messages;
+      return (result.response as { messages: string[] }).messages;
     },
 
     /**
@@ -105,19 +94,16 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
       weekOne: string,
       currentWeekday: DayOfWeek
     ): Promise<string> {
-      // Build context array with plan/week data
-      const context: string[] = [
+      const contextParts: string[] = [
         `<Fitness Plan>\n${fitnessPlan}\n</Fitness Plan>`,
         `<Week 1>\n${weekOne}\n</Week 1>`,
         `<Today>${currentWeekday}</Today>`,
       ];
 
-      const definition = await agentDefinitionService.getDefinition(AGENTS.MESSAGING_PLAN_READY);
-
-      const agent = createAgent(definition);
-
-      const result = await agent.invoke({ message: '', context });
-      return result.response;
+      const result = await agentRunner.invoke('messaging:plan-ready', {
+        message: contextParts.join('\n\n'),
+      });
+      return result.response as string;
     },
   };
 }

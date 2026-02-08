@@ -98,3 +98,27 @@ export type { SubAgentExecutorConfig } from './subAgentExecutor';
 
 export { executeToolLoop } from './toolExecutor';
 export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';
+
+// ============================================
+// Hook System
+// ============================================
+export { HookRegistry } from './hooks';
+export type { HookFn, HookConfig, HookConfigOrString, HookableConfig } from './hooks';
+
+// ============================================
+// Tool System
+// ============================================
+export { ToolRegistry } from './tools';
+export type { ToolDefinition, ToolExecutionContext } from './tools';
+
+// ============================================
+// Declarative Engine
+// ============================================
+export { resolveInputMapping, evaluateRules, resolveTemplate } from './declarative';
+export type { InputMapping, ValidationRule as DeclarativeValidationRule, MappingContext } from './declarative';
+
+// ============================================
+// Agent Runner
+// ============================================
+export { createAgentRunner } from './runner';
+export type { AgentRunnerInstance, AgentRunnerDeps, AgentInvokeParams } from './runner';

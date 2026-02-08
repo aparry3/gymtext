@@ -1,11 +1,10 @@
-import { createFitnessPlanAgentService, type FitnessPlanAgentService } from '../training';
 import { now, getDayOfWeek } from '@/shared/utils/date';
 import type { RepositoryContainer } from '@/server/repositories/factory';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
 import type { WorkoutModificationServiceInstance } from './workoutModificationService';
-import type { ContextService } from '../../context/contextService';
-import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { PlanStructure } from '@/server/models/fitnessPlan';
 
 export interface ModifyPlanParams {
   userId: string;
@@ -35,25 +34,20 @@ export interface PlanModificationServiceDeps {
   user: UserServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
-  contextService: ContextService;
-  agentDefinition: AgentDefinitionServiceInstance;
+  agentRunner: AgentRunnerInstance;
 }
 
 /**
  * Create a PlanModificationService instance with injected dependencies
+ *
+ * Uses AgentRunner to invoke plan:modify agent declaratively.
+ * Context, schema, and sub-agents (plan:structured) are resolved from DB config.
  */
 export function createPlanModificationService(
   repos: RepositoryContainer,
   deps: PlanModificationServiceDeps
 ): PlanModificationServiceInstance {
-  const { user: userService, fitnessPlan: fitnessPlanService, workoutModification: workoutModificationService, contextService, agentDefinition: agentDefinitionService } = deps;
-
-  let fitnessPlanAgent: FitnessPlanAgentService | null = null;
-
-  const getFitnessPlanAgent = (): FitnessPlanAgentService => {
-    if (!fitnessPlanAgent) fitnessPlanAgent = createFitnessPlanAgentService(contextService, agentDefinitionService);
-    return fitnessPlanAgent;
-  };
+  const { user: userService, fitnessPlan: fitnessPlanService, workoutModification: workoutModificationService, agentRunner } = deps;
 
   return {
     async modifyPlan(params: ModifyPlanParams): Promise<ModifyPlanResult> {
@@ -73,11 +67,22 @@ export function createPlanModificationService(
         console.log('[MODIFY_PLAN] Running plan and week modifications in parallel');
 
         const [planResult, weekResult] = await Promise.all([
-          getFitnessPlanAgent().modifyFitnessPlan(user, currentPlan, changeRequest),
+          // Invoke plan:modify via AgentRunner
+          // Context (programVersion, user, userProfile, fitnessPlan), schema, and sub-agents (plan:structured)
+          // are all resolved from DB config
+          agentRunner.invoke('plan:modify', {
+            user,
+            message: changeRequest,
+            extras: { planText: currentPlan.description || '' },
+          }),
           workoutModificationService.modifyWeek({ userId, targetDay: currentDayOfWeek, changeRequest }),
         ]);
 
-        if (!planResult.wasModified) {
+        // Extract typed result from agent output
+        const agentResponse = planResult.response as { description: string; wasModified: boolean; modifications: string };
+        const structure = (planResult as Record<string, unknown>).structure as PlanStructure | undefined;
+
+        if (!agentResponse.wasModified) {
           console.log('[MODIFY_PLAN] No modifications needed - current plan already satisfies the request');
           return { success: true, wasModified: false, messages: [] };
         }
@@ -86,8 +91,8 @@ export function createPlanModificationService(
 
         const newPlan = await repos.fitnessPlan.insertFitnessPlan({
           clientId: userId,
-          description: planResult.description,
-          structured: planResult.structure,
+          description: agentResponse.description,
+          structured: structure,
           startDate: new Date(),
         });
 
@@ -99,7 +104,7 @@ export function createPlanModificationService(
           console.warn(`[MODIFY_PLAN] Week modification had issues: ${weekResult.error}`);
         }
 
-        return { success: true, wasModified: true, modifications: planResult.modifications, messages: weekResult.messages || [] };
+        return { success: true, wasModified: true, modifications: agentResponse.modifications, messages: weekResult.messages || [] };
       } catch (error) {
         console.error('[MODIFY_PLAN] Error modifying plan:', error);
         return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
@@ -107,4 +112,3 @@ export function createPlanModificationService(
     },
   };
 }
-

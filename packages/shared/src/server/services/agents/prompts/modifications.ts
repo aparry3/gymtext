@@ -6,8 +6,13 @@
  * Types are in types/modifications.ts.
  */
 
-import type { ModificationsUserMessageInput } from '../types/modifications';
+import type { UserWithProfile } from '@/server/models/user';
 import { formatForAI, getDayOfWeekName } from '@/shared/utils/date';
+
+interface ModificationsUserMessageInput {
+  user: UserWithProfile;
+  message: string;
+}
 
 // =============================================================================
 // Message Template Functions

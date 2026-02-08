@@ -2,6 +2,7 @@ import type { ZodSchema } from 'zod';
 import { initializeModel, type InvokableModel } from './models';
 import type {
   AgentDefinition,
+  AgentLogEntry,
   ConfigurableAgent,
   InferSchemaOutput,
   AgentComposedOutput,
@@ -10,6 +11,7 @@ import type {
   Message,
   InvokeParams,
   ModelId,
+  AgentExample,
 } from './types';
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
@@ -72,6 +74,8 @@ export function createAgent<
     subAgents = [],
     validate,
     loggingContext,
+    onLog,
+    examples,
   } = definition;
 
   // Validate that systemPrompt is provided (required after Phase 2)
@@ -145,6 +149,7 @@ export function createAgent<
             content: typeof attempt.output === 'string'
               ? attempt.output
               : JSON.stringify(attempt.output),
+            section: 'retry',
           });
 
           // Add error feedback as a user message
@@ -152,25 +157,28 @@ export function createAgent<
           retryMessages.push({
             role: 'user',
             content: `The previous output failed validation:\n${errorList}\n\nPlease fix these issues.`,
+            section: 'retry',
           });
         }
       }
 
-      // Build messages with context, retry feedback, and previous conversation history
+      // Build messages with context, examples, retry feedback, and previous conversation history
       // Retry messages go before previousMessages so they're part of the "context"
       const messages = buildMessages({
         systemPrompt,
         userPrompt: evaluatedUserPrompt,
         context,
+        examples,
         previousMessages: [...retryMessages, ...previousMessages],
       });
 
       // Execute main agent
       let mainResult: InferSchemaOutput<TSchema>;
       let accumulatedMessages: string[] = [];
+      let toolResult: Awaited<ReturnType<typeof executeToolLoop>> | undefined;
 
       if (isToolAgent) {
-        const toolResult = await executeToolLoop({
+        toolResult = await executeToolLoop({
           model,
           messages,
           tools: tools!,
@@ -185,6 +193,37 @@ export function createAgent<
 
       // Log the agent invocation (fire-and-forget, won't block execution)
       logAgentInvocation(name, input, messages, mainResult);
+
+      // Build metadata for logging
+      const metadata: AgentLogEntry['metadata'] = {};
+
+      if (isToolAgent && toolResult) {
+        metadata.usage = toolResult.usage;
+        metadata.toolCalls = toolResult.toolCalls.map(tc => ({ name: tc.name, durationMs: tc.durationMs }));
+        metadata.toolIterations = toolResult.iterations;
+        metadata.isToolAgent = true;
+      } else if (model.lastUsage) {
+        metadata.usage = model.lastUsage;
+      }
+
+      if (retryContext && retryContext.attempt > 1) {
+        metadata.retryAttempt = retryContext.attempt;
+      }
+
+      // DB logging callback (fire-and-forget)
+      if (onLog) {
+        try {
+          onLog({
+            agentId: name,
+            model: effectiveConfig.model,
+            input,
+            messages,
+            response: mainResult,
+            durationMs: Date.now() - startTime,
+            metadata,
+          });
+        } catch { /* silent */ }
+      }
 
       console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms${attemptInfo}`);
 

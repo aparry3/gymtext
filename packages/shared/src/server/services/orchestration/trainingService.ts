@@ -12,7 +12,7 @@ import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
 import { normalizeWhitespace } from '@/server/utils/formatters';
 import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
 import type { UserWithProfile } from '@/server/models/user';
-import { FitnessPlanModel, type FitnessPlan } from '@/server/models/fitnessPlan';
+import { FitnessPlanModel, type FitnessPlan, type FitnessPlanOverview, type PlanStructure } from '@/server/models/fitnessPlan';
 import type { Microcycle, ActivityType } from '@/server/models/microcycle';
 import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import type { ProgressInfo } from '../domain/training/progressService';
@@ -31,9 +31,8 @@ import type { ProgramServiceInstance } from '../domain/program/programService';
 import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
 
 // Agent services
-import type { WorkoutAgentService } from '../agents/training/workoutAgentService';
-import type { MicrocycleAgentService } from '../agents/training/microcycleAgentService';
-import type { FitnessPlanAgentService } from '../agents/training/fitnessPlanAgentService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
+import { SnippetType } from '../context/builders/experienceLevel';
 
 // Exercise resolution
 import type { ExerciseResolutionServiceInstance } from '../domain/exercise/exerciseResolutionService';
@@ -169,9 +168,7 @@ export interface TrainingServiceDeps {
   programOwner: ProgramOwnerServiceInstance;
 
   // Agent services
-  workoutAgent: WorkoutAgentService;
-  microcycleAgent: MicrocycleAgentService;
-  fitnessPlanAgent: FitnessPlanAgentService;
+  agentRunner: AgentRunnerInstance;
 
   // Exercise resolution (optional — skipped if not provided)
   exerciseResolution?: ExerciseResolutionServiceInstance;
@@ -196,9 +193,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     enrollment: enrollmentService,
     program: programService,
     programOwner: programOwnerService,
-    workoutAgent,
-    microcycleAgent,
-    fitnessPlanAgent,
+    agentRunner,
     exerciseResolution,
     exerciseUse,
   } = deps;
@@ -208,7 +203,12 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // 1. Generate plan via AI agent
-      const agentResponse = await fitnessPlanAgent.generateFitnessPlan(user);
+      const result = await agentRunner.invoke('plan:generate', { user });
+      const agentResponse: FitnessPlanOverview = {
+        description: result.response as string,
+        message: (result as Record<string, unknown>).message as string,
+        structure: (result as Record<string, unknown>).structure as PlanStructure,
+      };
 
       // 2. Create plan model from agent response
       const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse, options);
@@ -273,12 +273,18 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const activityType = structuredDay?.activityType as ActivityType | undefined;
 
         // 5. Generate workout via AI agent
-        const { response: description, message, structure } = await workoutAgent.generateWorkout(
+        const workoutResult = await agentRunner.invoke('workout:generate', {
           user,
-          dayOverview,
-          microcycle.isDeload ?? false,
-          activityType
-        );
+          extras: {
+            dayOverview,
+            isDeload: microcycle.isDeload ?? false,
+            activityType,
+            snippetType: SnippetType.WORKOUT,
+          },
+        });
+        const description = workoutResult.response as string;
+        const message = (workoutResult as Record<string, unknown>).message as string;
+        const structure = (workoutResult as Record<string, unknown>).structure as WorkoutStructure;
 
         // 5b. Resolve exercise names to canonical IDs and track usage
         if (structure && exerciseResolution) {
@@ -355,10 +361,20 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       }
 
       // 4. Generate microcycle via AI agent
-      const { days, description, isDeload, message, structure } = await microcycleAgent.generateMicrocycle(
+      const mcResult = await agentRunner.invoke('microcycle:generate', {
         user,
-        progress.absoluteWeek
-      );
+        message: `Absolute Week: ${progress.absoluteWeek}`,
+        extras: {
+          absoluteWeek: progress.absoluteWeek,
+          snippetType: SnippetType.MICROCYCLE,
+        },
+      });
+      const mcResponse = mcResult.response as { days: string[]; overview: string; isDeload: boolean };
+      const days = mcResponse.days;
+      const description = mcResponse.overview;
+      const isDeload = mcResponse.isDeload;
+      const message = (mcResult as Record<string, unknown>).message as string;
+      const structure = (mcResult as Record<string, unknown>).structure as Microcycle['structured'];
 
       // 5. Create microcycle record
       const microcycle = await microcycleService.createMicrocycle({
@@ -406,16 +422,17 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       while (attempt < MAX_REGENERATION_ATTEMPTS) {
         attempt++;
 
-        // Get message agent with proper context (will use default TRAINING if no activityType)
-        const messageAgent = await workoutAgent.getMessageAgent(user, activityType);
-
         // Add length constraint on retry attempts
         const input = attempt === 1
           ? workout.description || ''
           : `${workout.description}\n\nIMPORTANT: Keep the message under ${maxLength} characters. Be more concise.`;
 
-        const result = await messageAgent.invoke(input);
-        message = result.response;
+        const result = await agentRunner.invoke('workout:message', {
+          user,
+          message: input,
+          extras: { activityType },
+        });
+        message = result.response as string;
 
         if (!isMessageTooLong(message)) {
           console.log(`[TrainingService] Message generated successfully on attempt ${attempt} (${message.length} chars)`);

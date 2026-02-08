@@ -1,5 +1,6 @@
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { Message, ToolExecutionResult } from './types';
+import type { ModelUsageMetadata } from './models';
 import { buildLoopContinuationMessage } from './utils';
 
 /**
@@ -21,6 +22,8 @@ export interface ToolLoopResult {
   response: string;
   messages: string[];
   toolCalls: ToolCallRecord[];
+  iterations: number;
+  usage?: ModelUsageMetadata;
 }
 
 /**
@@ -58,11 +61,21 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
   const toolCalls: ToolCallRecord[] = [];
   const accumulatedMessages: string[] = [];
   let lastToolType: 'query' | 'action' = 'action';
+  const totalUsage: ModelUsageMetadata = {};
+  let iterationCount = 0;
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
+    iterationCount = iteration;
     console.log(`[${name}] Tool loop iteration ${iteration}`);
 
     const result = await model.invoke(conversationHistory);
+
+    // Accumulate usage from this invocation
+    if (model.lastUsage) {
+      totalUsage.inputTokens = (totalUsage.inputTokens ?? 0) + (model.lastUsage.inputTokens ?? 0);
+      totalUsage.outputTokens = (totalUsage.outputTokens ?? 0) + (model.lastUsage.outputTokens ?? 0);
+      totalUsage.totalTokens = (totalUsage.totalTokens ?? 0) + (model.lastUsage.totalTokens ?? 0);
+    }
 
     // Check for tool calls
     if (!result.tool_calls || result.tool_calls.length === 0) {
@@ -77,6 +90,8 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
         response,
         messages: accumulatedMessages,
         toolCalls,
+        iterations: iterationCount,
+        usage: totalUsage,
       };
     }
 
@@ -181,5 +196,7 @@ export async function executeToolLoop(config: ToolLoopConfig): Promise<ToolLoopR
       : "I'm here to help! What would you like to know?",
     messages: accumulatedMessages,
     toolCalls,
+    iterations: iterationCount,
+    usage: totalUsage,
   };
 }

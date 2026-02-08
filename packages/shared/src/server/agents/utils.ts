@@ -1,4 +1,4 @@
-import type { Message } from './types';
+import type { Message, AgentExample } from './types';
 
 /**
  * Configuration for building messages
@@ -7,20 +7,54 @@ export interface BuildMessagesConfig {
   systemPrompt: string;
   userPrompt: string;
   context?: string[];
+  examples?: AgentExample[];
   previousMessages?: Message[];
 }
 
 /**
- * Build the message array for LLM invocation
- * Order: [SYSTEM, ...CONTEXT, ...PREVIOUS, USER]
+ * Build example messages for few-shot prompting
  *
- * Context messages are added as user role messages between system and conversation history
+ * Positive example = 2 messages: user (input) + assistant (output)
+ * Negative example = 3 messages: user (input) + assistant (output) + user (correction)
+ */
+function buildExampleMessages(examples: AgentExample[]): Message[] {
+  const messages: Message[] = [];
+
+  for (const example of examples) {
+    messages.push({
+      role: 'user',
+      content: `[EXAMPLE]\n${example.input}`,
+      section: 'example',
+    });
+    messages.push({
+      role: 'assistant',
+      content: example.output,
+      section: 'example',
+    });
+    if (example.type === 'negative' && example.feedback) {
+      messages.push({
+        role: 'user',
+        content: `[CORRECTION] ${example.feedback}`,
+        section: 'example',
+      });
+    }
+  }
+
+  return messages;
+}
+
+/**
+ * Build the message array for LLM invocation
+ * Order: [SYSTEM, ...CONTEXT, ...EXAMPLES, ...PREVIOUS, USER]
+ *
+ * Context messages are added as user role messages between system and conversation history.
+ * Examples are injected as user/assistant pairs between context and previous messages.
  *
  * @param config - Message building configuration
  * @returns Array of messages ready for LLM invocation
  */
 export function buildMessages(config: BuildMessagesConfig): Message[] {
-  const { systemPrompt, userPrompt, context = [], previousMessages = [] } = config;
+  const { systemPrompt, userPrompt, context = [], examples, previousMessages = [] } = config;
 
   // Build context messages (as user messages per existing pattern)
   const contextMessages: Message[] = context
@@ -28,13 +62,20 @@ export function buildMessages(config: BuildMessagesConfig): Message[] {
     .map(content => ({
       role: 'user' as const,
       content,
+      section: 'context' as const,
     }));
 
+  // Build example messages for few-shot prompting (already tagged in buildExampleMessages)
+  const exampleMessages: Message[] = examples && examples.length > 0
+    ? buildExampleMessages(examples)
+    : [];
+
   return [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: systemPrompt, section: 'system' as const },
     ...contextMessages,
-    ...previousMessages,
-    { role: 'user', content: userPrompt },
+    ...exampleMessages,
+    ...previousMessages.map(m => ({ ...m, section: m.section ?? 'previous' as const })),
+    { role: 'user', content: userPrompt, section: 'user' as const },
   ];
 }
 
