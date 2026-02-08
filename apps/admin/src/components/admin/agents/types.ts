@@ -2,6 +2,13 @@
  * Agent Definition Types for Admin UI
  */
 
+export interface AgentExample {
+  type: 'positive' | 'negative';
+  input: string;
+  output: string;
+  feedback?: string;
+}
+
 export interface AdminAgentDefinition {
   versionId: number;
   agentId: string;
@@ -23,6 +30,7 @@ export interface AdminAgentDefinition {
   schemaJson: Record<string, unknown> | null;
   validationRules: unknown[] | null;
   userPromptTemplate: string | null;
+  examples: AgentExample[] | null;
 }
 
 export interface RegistryToolMetadata {

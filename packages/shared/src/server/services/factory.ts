@@ -342,6 +342,7 @@ export function createServices(
     contextService,
     toolRegistry,
     hookRegistry,
+    agentLogRepository: repos.agentLog,
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
       modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },

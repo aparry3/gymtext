@@ -311,6 +311,18 @@ export interface AgentDefinition<TSchema extends ZodSchema | undefined = undefin
    * Callbacks are fire-and-forget (non-blocking)
    */
   loggingContext?: AgentLoggingContext;
+
+  /**
+   * Optional callback for logging agent invocations to the database
+   * Called fire-and-forget after each invocation
+   */
+  onLog?: (entry: AgentLogEntry) => void;
+
+  /**
+   * Few-shot examples injected into the message chain
+   * Loaded from agent_definitions.examples JSONB column
+   */
+  examples?: AgentExample[];
 }
 
 /**
@@ -385,6 +397,39 @@ export interface ToolExecutionResult {
   toolType?: 'query' | 'action';
   response: string;
   messages?: string[];
+}
+
+// ============================================
+// Agent Example Types
+// ============================================
+
+/**
+ * Example for few-shot prompting in agent definitions
+ * Positive examples show the expected output format
+ * Negative examples show what to avoid with feedback
+ */
+export interface AgentExample {
+  type: 'positive' | 'negative';
+  input: string;
+  output: string;
+  /** For negative examples: explains why this output is wrong */
+  feedback?: string;
+}
+
+// ============================================
+// Agent Log Callback Types
+// ============================================
+
+/**
+ * Entry passed to the onLog callback after agent invocation
+ */
+export interface AgentLogEntry {
+  agentId: string;
+  model?: string;
+  input: string;
+  messages: Message[];
+  response: unknown;
+  durationMs: number;
 }
 
 // ============================================

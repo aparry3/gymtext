@@ -153,6 +153,7 @@ export function createAgentDefinitionService(
     schemaJson: (raw.schemaJson as unknown as Record<string, unknown> | null) ?? null,
     validationRules: (raw.validationRules as unknown as ValidationRule[] | null) ?? null,
     userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
+    examples: (raw.examples as unknown[] | null) ?? null,
   });
 
   return {

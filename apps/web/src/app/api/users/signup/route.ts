@@ -338,6 +338,10 @@ function extractSignupData(formData: Record<string, unknown>): SignupData {
     injuries: formData.injuries as string | undefined,
     acceptedRisks: formData.acceptedRisks as boolean,
 
+    // SMS consent
+    smsConsent: formData.smsConsent as boolean | undefined,
+    smsConsentedAt: formData.smsConsentedAt as string | undefined,
+
     // Program-specific data
     programId: formData.programId as string | undefined,
     programAnswers: formData.programAnswers as Record<string, string | string[]> | undefined,

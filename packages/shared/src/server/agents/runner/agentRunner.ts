@@ -1,4 +1,6 @@
 import { createAgent } from '../createAgent';
+import type { NewAgentLog } from '@/server/models/agentLog';
+import type { JsonValue } from '@/server/models/_types';
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 import type { ContextService } from '@/server/services/context/contextService';
 import { ContextType } from '@/server/services/context/types';
@@ -20,6 +22,7 @@ import type {
   AgentComposedOutput,
   ModelId,
   ValidationResult,
+  AgentExample,
 } from '../types';
 import { normalizeHookConfig } from '../hooks/resolver';
 import { today } from '@/shared/utils/date';
@@ -36,6 +39,8 @@ export interface AgentRunnerDeps {
   hookRegistry: HookRegistry;
   /** Lazy getter for service container (avoids circular dep) */
   getServices: () => ToolServiceContainer;
+  /** Optional repository for DB logging of agent invocations */
+  agentLogRepository?: { log: (entry: NewAgentLog) => Promise<void> };
 }
 
 /**
@@ -68,7 +73,25 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
     toolRegistry,
     hookRegistry,
     getServices,
+    agentLogRepository,
   } = deps;
+
+  /**
+   * Build the onLog callback for DB logging
+   */
+  const buildOnLog = agentLogRepository
+    ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number }) => {
+        agentLogRepository.log({
+          agentId: entry.agentId,
+          model: entry.model ?? null,
+          messages: entry.messages as JsonValue,
+          input: entry.input,
+          response: entry.response as JsonValue,
+          durationMs: entry.durationMs,
+          metadata: {},
+        });
+      }
+    : undefined;
 
   /**
    * Get extended config from the service (reads from same cache)
@@ -144,6 +167,11 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           validate = (result: unknown) => evaluateRules(rules, result);
         }
 
+        // Resolve examples from extended config
+        const subExamples: AgentExample[] | undefined = subExtended.examples
+          ? subExtended.examples as AgentExample[]
+          : undefined;
+
         // Create the sub-agent
         const subAgent = createAgent({
           ...subAgentDef,
@@ -155,6 +183,8 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
             ? subSubAgents
             : subAgentDef.subAgents,
           validate: validate ?? subAgentDef.validate,
+          onLog: buildOnLog,
+          examples: subExamples,
         });
 
         // Build the SubAgentConfig with transform and condition
@@ -260,7 +290,12 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         validate = (result: unknown) => evaluateRules(rules, result);
       }
 
-      // 7. Build the complete agent definition
+      // 7. Resolve examples from extended config
+      const agentExamples: AgentExample[] | undefined = extended.examples
+        ? extended.examples as AgentExample[]
+        : undefined;
+
+      // 8. Build the complete agent definition
       const agent = createAgent({
         ...definition,
         model: definition.model as ModelId,
@@ -273,6 +308,8 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           ? subAgents
           : undefined,
         validate,
+        onLog: buildOnLog,
+        examples: agentExamples,
       });
 
       // 8. Invoke the agent

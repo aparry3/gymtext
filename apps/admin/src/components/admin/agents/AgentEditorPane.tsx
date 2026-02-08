@@ -16,10 +16,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CodeMirrorEditor } from '@/components/ui/codemirror/CodeMirrorEditor';
-import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata } from './types';
+import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata, type AgentExample } from './types';
 import { ToolsSection } from './ToolsSection';
 import { ContextTypesSection } from './ContextTypesSection';
 import { HooksSection } from './HooksSection';
+import { ExamplesSection } from './ExamplesSection';
 import { JsonConfigSection } from './JsonConfigSection';
 
 interface AgentEditorPaneProps {
@@ -68,6 +69,7 @@ interface FormState {
   schemaJsonJson: string;
   validationRulesJson: string;
   userPromptTemplate: string;
+  examplesJson: string;
 }
 
 function arraysEqual(a: string[], b: string[]): boolean {
@@ -95,7 +97,8 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     a.toolHooksJson === b.toolHooksJson &&
     a.schemaJsonJson === b.schemaJsonJson &&
     a.validationRulesJson === b.validationRulesJson &&
-    a.userPromptTemplate === b.userPromptTemplate
+    a.userPromptTemplate === b.userPromptTemplate &&
+    a.examplesJson === b.examplesJson
   );
 }
 
@@ -152,6 +155,7 @@ const DEFAULT_FORM_STATE: FormState = {
   schemaJsonJson: '',
   validationRulesJson: '',
   userPromptTemplate: '',
+  examplesJson: '[]',
 };
 
 export function AgentEditorPane({
@@ -219,6 +223,7 @@ export function AgentEditorPane({
             schemaJsonJson: safeStringify(data.schemaJson),
             validationRulesJson: safeStringify(data.validationRules),
             userPromptTemplate: data.userPromptTemplate || '',
+            examplesJson: JSON.stringify(data.examples || [], null, 2),
           };
           setFormState(state);
           setOriginalState(state);
@@ -330,6 +335,7 @@ export function AgentEditorPane({
           schemaJson: parsed.schemaJsonJson,
           validationRules: parsed.validationRulesJson,
           userPromptTemplate: formState.userPromptTemplate || null,
+          examples: JSON.parse(formState.examplesJson),
         }),
       });
 
@@ -353,6 +359,19 @@ export function AgentEditorPane({
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Examples structured form handler
+  const parsedExamples: AgentExample[] = (() => {
+    try { return JSON.parse(formState.examplesJson); }
+    catch { return []; }
+  })();
+
+  const handleExamplesChange = useCallback(
+    (examples: AgentExample[]) => {
+      updateField('examplesJson', JSON.stringify(examples, null, 2));
+    },
+    []
+  );
 
   // Hooks structured form handler
   const handleHooksChange = useCallback(
@@ -538,6 +557,12 @@ export function AgentEditorPane({
                   onChange={handleHooksChange}
                 />
               )}
+
+              {/* Examples */}
+              <ExamplesSection
+                examples={parsedExamples}
+                onChange={handleExamplesChange}
+              />
 
               {/* Tool Hooks (JSON) */}
               <JsonConfigSection

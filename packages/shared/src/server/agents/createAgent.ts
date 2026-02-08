@@ -10,6 +10,7 @@ import type {
   Message,
   InvokeParams,
   ModelId,
+  AgentExample,
 } from './types';
 import { buildMessages } from './utils';
 import { executeSubAgents } from './subAgentExecutor';
@@ -72,6 +73,8 @@ export function createAgent<
     subAgents = [],
     validate,
     loggingContext,
+    onLog,
+    examples,
   } = definition;
 
   // Validate that systemPrompt is provided (required after Phase 2)
@@ -156,12 +159,13 @@ export function createAgent<
         }
       }
 
-      // Build messages with context, retry feedback, and previous conversation history
+      // Build messages with context, examples, retry feedback, and previous conversation history
       // Retry messages go before previousMessages so they're part of the "context"
       const messages = buildMessages({
         systemPrompt,
         userPrompt: evaluatedUserPrompt,
         context,
+        examples,
         previousMessages: [...retryMessages, ...previousMessages],
       });
 
@@ -185,6 +189,20 @@ export function createAgent<
 
       // Log the agent invocation (fire-and-forget, won't block execution)
       logAgentInvocation(name, input, messages, mainResult);
+
+      // DB logging callback (fire-and-forget)
+      if (onLog) {
+        try {
+          onLog({
+            agentId: name,
+            model: effectiveConfig.model,
+            input,
+            messages,
+            response: mainResult,
+            durationMs: Date.now() - startTime,
+          });
+        } catch { /* silent */ }
+      }
 
       console.log(`[${name}] Main agent completed in ${Date.now() - startTime}ms${attemptInfo}`);
 

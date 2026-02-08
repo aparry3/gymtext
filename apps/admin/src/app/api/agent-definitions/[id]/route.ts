@@ -77,6 +77,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       schemaJson: body.schemaJson,
       validationRules: body.validationRules,
       userPromptTemplate: body.userPromptTemplate,
+      examples: body.examples,
     });
 
     // Invalidate cache

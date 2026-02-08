@@ -56,4 +56,6 @@ export interface ExtendedAgentConfig {
   validationRules: ValidationRule[] | null;
   /** User prompt template with {{variable}} substitution */
   userPromptTemplate: string | null;
+  /** Few-shot examples for the agent */
+  examples: unknown[] | null;
 }

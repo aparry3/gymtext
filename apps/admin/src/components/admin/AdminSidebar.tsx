@@ -25,6 +25,7 @@ import {
   ClipboardList,
   Dumbbell,
   Bot,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEnvironment } from '@/context/EnvironmentContext';
@@ -41,6 +42,7 @@ const navItems = [
   { href: '/demos', label: 'Demos', icon: Presentation },
   { href: '/prompts', label: 'Prompts', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
+  { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
 ];
 
 function NavItem({

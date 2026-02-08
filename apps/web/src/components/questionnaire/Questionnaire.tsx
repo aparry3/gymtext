@@ -85,6 +85,10 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
+        // SMS consent
+        smsConsent: true,
+        smsConsentedAt: new Date().toISOString(),
+
         // Program info
         ...(programId && { programId }),
         ...(Object.keys(programAnswers).length > 0 && { programAnswers }),

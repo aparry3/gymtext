@@ -24,6 +24,10 @@ export interface SignupData {
   equipment?: string[];
   acceptedRisks?: boolean;
 
+  // SMS consent
+  smsConsent?: boolean;
+  smsConsentedAt?: string;
+
   // Program-specific data (for program signups)
   programId?: string;
   programAnswers?: Record<string, string | string[]>;

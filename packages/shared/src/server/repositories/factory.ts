@@ -45,6 +45,7 @@ import { EventLogRepository } from './eventLogRepository';
 import { BlogPostRepository } from './blogPostRepository';
 import { OrganizationRepository } from './organizationRepository';
 import { AgentDefinitionRepository } from './agentDefinitionRepository';
+import { AgentLogRepository } from './agentLogRepository';
 
 /**
  * Container for all repository instances
@@ -82,6 +83,7 @@ export interface RepositoryContainer {
   blogPost: BlogPostRepository;
   organization: OrganizationRepository;
   agentDefinition: AgentDefinitionRepository;
+  agentLog: AgentLogRepository;
   // Direct db access for complex queries
   db: Kysely<DB>;
 }
@@ -136,6 +138,7 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     blogPost: new BlogPostRepository(db),
     organization: new OrganizationRepository(db),
     agentDefinition: new AgentDefinitionRepository(db),
+    agentLog: new AgentLogRepository(db),
     db,
   };
 

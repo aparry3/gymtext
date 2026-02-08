@@ -155,6 +155,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         schemaJson: update.schemaJson !== undefined ? update.schemaJson : current.schemaJson,
         validationRules: update.validationRules !== undefined ? update.validationRules : current.validationRules,
         userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
+        examples: update.examples !== undefined ? update.examples : current.examples,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -194,6 +195,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         schemaJson: version.schemaJson,
         validationRules: version.validationRules,
         userPromptTemplate: version.userPromptTemplate,
+        examples: version.examples,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
