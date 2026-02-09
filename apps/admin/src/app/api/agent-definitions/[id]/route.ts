@@ -69,6 +69,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       maxRetries: body.maxRetries,
       description: body.description,
       isActive: body.isActive,
+      toolIds: body.toolIds,
+      contextTypes: body.contextTypes,
+      subAgents: body.subAgents,
+      hooks: body.hooks,
+      toolHooks: body.toolHooks,
+      schemaJson: body.schemaJson,
+      validationRules: body.validationRules,
+      userPromptTemplate: body.userPromptTemplate,
+      examples: body.examples,
     });
 
     // Invalidate cache

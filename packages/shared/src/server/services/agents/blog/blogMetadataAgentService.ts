@@ -4,9 +4,7 @@
  * Handles AI operations for generating blog metadata from content.
  * Takes raw HTML content and outputs structured metadata (title, description, tags, SEO fields).
  */
-import { createAgent, AGENTS } from '@/server/agents';
-import { BlogMetadataSchema, type BlogMetadataOutput } from '../schemas/blog';
-import type { AgentDefinitionServiceInstance } from '../../domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * Result from the blog metadata generation agent
@@ -61,23 +59,15 @@ function truncateContent(content: string, maxLength = 8000): string {
 /**
  * Create a BlogMetadataAgentService instance
  *
- * @param agentDefinitionService - AgentDefinitionService for resolving agent definitions
+ * @param agentRunner - AgentRunner for invoking agents
  */
 export function createBlogMetadataAgentService(
-  agentDefinitionService: AgentDefinitionServiceInstance
+  agentRunner: AgentRunnerInstance
 ): BlogMetadataAgentServiceInstance {
   return {
     async generateMetadata(content: string): Promise<BlogMetadataResult> {
       // Strip HTML and truncate for efficient processing
       const cleanContent = truncateContent(stripHtml(content));
-
-      // Get resolved definition and create agent
-      const definition = await agentDefinitionService.getDefinition(AGENTS.BLOG_METADATA, {
-        schema: BlogMetadataSchema,
-        maxTokens: 1000,
-      });
-
-      const agent = createAgent(definition);
 
       console.log('[BlogMetadataAgentService] Generating metadata for content:', {
         originalLength: content.length,
@@ -85,9 +75,11 @@ export function createBlogMetadataAgentService(
         preview: cleanContent.slice(0, 200) + (cleanContent.length > 200 ? '...' : ''),
       });
 
-      // Invoke with clean content
-      const result = await agent.invoke(cleanContent);
-      const output = result.response as BlogMetadataOutput;
+      const result = await agentRunner.invoke('blog:metadata', {
+        message: cleanContent,
+      });
+
+      const output = result.response as BlogMetadataResult;
 
       console.log('[BlogMetadataAgentService] Generated metadata:', {
         title: output.title,

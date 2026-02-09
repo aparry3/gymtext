@@ -4,14 +4,14 @@
  * Orchestrates modification requests by coordinating between:
  * - User service (fetching user context)
  * - Workout instance service (fetching current workout)
- * - Modification agent (determining what to modify)
- * - Sub-services (workoutModification, planModification)
+ * - AgentRunner (modifications:router agent with tools from DB config)
  *
  * This is an ORCHESTRATION service - it coordinates agent calls.
  * For specific modification operations, use WorkoutModificationService or PlanModificationService.
+ *
+ * Tools (modify_workout, modify_week, modify_plan) and their wiring to
+ * sub-services are handled declaratively by the AgentRunner from DB config.
  */
-import { createModificationTools } from '../agents/modifications/tools';
-import { createAgent, AGENTS, type Message as AgentMessage } from '@/server/agents';
 import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
 import { ConversationFlowBuilder } from '@/server/services/flows/conversationFlowBuilder';
 import { buildModificationsUserMessage } from '../agents/prompts/modifications';
@@ -19,9 +19,7 @@ import type { ToolResult } from '../agents/types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
-import type { WorkoutModificationServiceInstance } from '../agents/modifications/workoutModificationService';
-import type { PlanModificationServiceInstance } from '../agents/modifications/planModificationService';
-import type { AgentDefinitionServiceInstance } from '../domain/agents/agentDefinitionService';
+import type { AgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * ModificationServiceInstance interface
@@ -33,9 +31,7 @@ export interface ModificationServiceInstance {
 export interface ModificationServiceDeps {
   user: UserServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  workoutModification: WorkoutModificationServiceInstance;
-  planModification: PlanModificationServiceInstance;
-  agentDefinition: AgentDefinitionServiceInstance;
+  agentRunner: AgentRunnerInstance;
 }
 
 /**
@@ -44,17 +40,17 @@ export interface ModificationServiceDeps {
  * ModificationService - Orchestration service for modifications agent
  *
  * Handles workout, schedule, and plan modifications via the modifications agent.
- * Fetches its own context and delegates to specialized sub-services.
+ * Fetches its own context and delegates to specialized sub-services via AgentRunner tools.
  */
 export function createModificationService(deps: ModificationServiceDeps): ModificationServiceInstance {
-  const { user: userService, workoutInstance: workoutInstanceService, workoutModification: workoutModificationService, planModification: planModificationService, agentDefinition: agentDefinitionService } = deps;
+  const { user: userService, workoutInstance: workoutInstanceService, agentRunner } = deps;
 
   return {
     /**
      * Process a modification request from a user message
      *
-     * Fetches context via entity services, calls the modifications agent,
-     * and returns a standardized ToolResult.
+     * Fetches context via entity services, invokes the modifications:router agent
+     * via AgentRunner, and returns a standardized ToolResult.
      *
      * @param userId - The user's ID
      * @param message - The user's modification request message
@@ -78,61 +74,42 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
         const today = now(user.timezone).toJSDate();
         const weekday = getWeekday(today, user.timezone);
         const targetDay = DAY_NAMES[weekday - 1];
-        const currentWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, today);
 
         console.log('[MODIFICATION_SERVICE] Context fetched:', {
           targetDay,
           workoutDate: today.toISOString(),
-          hasWorkout: !!currentWorkout,
           messageCount: previousMessages?.length ?? 0,
         });
 
-        // Create modification tools with context and service dependencies
-        const tools = createModificationTools(
-          {
-            userId,
-            message,
-            workoutDate: today,
-            targetDay,
-          },
-          {
-            modifyWorkout: workoutModificationService.modifyWorkout.bind(workoutModificationService),
-            modifyWeek: workoutModificationService.modifyWeek.bind(workoutModificationService),
-            modifyPlan: planModificationService.modifyPlan.bind(planModificationService),
-          }
-        );
-
-        // Convert previous messages to Message format for the configurable agent
-        const previousMsgs: AgentMessage[] = ConversationFlowBuilder.toMessageArray(previousMessages || [])
+        // Convert previous messages to agent format
+        const previousMsgs = ConversationFlowBuilder.toMessageArray(previousMessages || [])
           .map(m => ({
             role: m.role as 'user' | 'assistant',
             content: m.content,
           }));
 
-        // Build user message
+        // Build user message with context
         const userMessage = buildModificationsUserMessage({ user, message });
 
-        // Get resolved definition and create modifications agent
-        const definition = await agentDefinitionService.getDefinition(AGENTS.MODIFICATIONS_ROUTER, {
-          tools,
-        });
-
-        const agent = createAgent(definition);
-
-        // Invoke the agent with runtime params - tool execution is handled by createAgent
-        const result = await agent.invoke({
+        // Invoke modifications:router via AgentRunner
+        // Tools (modify_workout, modify_week, modify_plan) are resolved from DB config
+        const result = await agentRunner.invoke('modifications:router', {
+          user,
           message: userMessage,
           previousMessages: previousMsgs,
+          extras: { workoutDate: today, targetDay },
         });
 
         console.log('[MODIFICATION_SERVICE] Agent returned:', {
           messageCount: result.messages?.length ?? 0,
-          response: result.response.substring(0, 100) + (result.response.length > 100 ? '...' : ''),
+          response: typeof result.response === 'string'
+            ? result.response.substring(0, 100) + (result.response.length > 100 ? '...' : '')
+            : String(result.response).substring(0, 100),
         });
 
         return {
           toolType: 'action',
-          response: result.response,
+          response: result.response as string,
           messages: result.messages,
         };
       } catch (error) {

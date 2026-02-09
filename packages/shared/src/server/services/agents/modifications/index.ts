@@ -25,6 +25,3 @@ export type {
   ModifyPlanParams,
 } from './planModificationService';
 
-// Modification tools
-export { createModificationTools } from './tools';
-export type { ModificationToolContext, ModificationToolDeps } from './tools';

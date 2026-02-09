@@ -2,6 +2,13 @@
  * Agent Definition Types for Admin UI
  */
 
+export interface AgentExample {
+  type: 'positive' | 'negative';
+  input: string;
+  output: string;
+  feedback?: string;
+}
+
 export interface AdminAgentDefinition {
   versionId: number;
   agentId: string;
@@ -15,6 +22,33 @@ export interface AdminAgentDefinition {
   description: string | null;
   isActive: boolean;
   createdAt: string;
+  toolIds: string[] | null;
+  contextTypes: string[] | null;
+  subAgents: unknown[] | null;
+  hooks: Record<string, unknown> | null;
+  toolHooks: Record<string, unknown> | null;
+  schemaJson: Record<string, unknown> | null;
+  validationRules: unknown[] | null;
+  userPromptTemplate: string | null;
+  examples: AgentExample[] | null;
+}
+
+export interface RegistryToolMetadata {
+  name: string;
+  description: string;
+  priority?: number;
+}
+
+export interface RegistryHookMetadata {
+  name: string;
+  description: string;
+}
+
+export interface RegistryMetadata {
+  tools: RegistryToolMetadata[];
+  hooks: RegistryHookMetadata[];
+  contextTypes: string[];
+  agentIds: string[];
 }
 
 export interface AgentDomain {

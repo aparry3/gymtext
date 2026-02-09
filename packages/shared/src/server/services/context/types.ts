@@ -46,6 +46,10 @@ export interface ContextExtras {
 
   // Activity type for day format context
   activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
+
+  // Modification context (used by modification tools)
+  workoutDate?: Date;
+  targetDay?: string;
 }
 
 /**
