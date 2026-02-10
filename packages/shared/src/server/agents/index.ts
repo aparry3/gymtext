@@ -100,12 +100,6 @@ export { executeToolLoop } from './toolExecutor';
 export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';
 
 // ============================================
-// Hook System
-// ============================================
-export { HookRegistry } from './hooks';
-export type { HookFn, HookConfig, HookConfigOrString, HookableConfig } from './hooks';
-
-// ============================================
 // Tool System
 // ============================================
 export { ToolRegistry } from './tools';
@@ -122,3 +116,9 @@ export type { InputMapping, ValidationRule as DeclarativeValidationRule, Mapping
 // ============================================
 export { createAgentRunner } from './runner';
 export type { AgentRunnerInstance, AgentRunnerDeps, AgentInvokeParams } from './runner';
+
+// ============================================
+// Context Registry
+// ============================================
+export { ContextRegistry, registerAllContextProviders } from './context';
+export type { ContextProvider, ContextRegistryDeps } from './context';

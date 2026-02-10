@@ -69,7 +69,7 @@ export function createChainRunnerService(
   // Helper functions for chain operations
   const runFullFitnessPlanChain = async (plan: FitnessPlan, user: UserWithProfile): Promise<FitnessPlan> => {
     console.log(`[ChainRunner] Running full fitness plan chain for plan ${plan.id}`);
-    const result = await agentRunner.invoke('plan:generate', { user });
+    const result = await agentRunner.invoke('plan:generate', { params: { user } });
     const description = result.response as string;
     const message = (result as Record<string, unknown>).message as string;
     const structure = (result as Record<string, unknown>).structure as PlanStructure;
@@ -80,7 +80,7 @@ export function createChainRunnerService(
 
   const runFitnessPlanStructuredChain = async (plan: FitnessPlan, user: UserWithProfile): Promise<FitnessPlan> => {
     console.log(`[ChainRunner] Running structured chain for plan ${plan.id}`);
-    const result = await agentRunner.invoke('plan:structured', { user, message: plan.description || '' });
+    const result = await agentRunner.invoke('plan:structured', { input: plan.description || '', params: { user } });
     const updated = await fitnessPlanService.updateFitnessPlan(plan.id!, { structured: result.response as PlanStructure });
     if (!updated) throw new Error(`Failed to update fitness plan: ${plan.id}`);
     return updated;
@@ -88,7 +88,7 @@ export function createChainRunnerService(
 
   const runFitnessPlanMessageChain = async (plan: FitnessPlan, user: UserWithProfile): Promise<FitnessPlan> => {
     console.log(`[ChainRunner] Running message chain for plan ${plan.id}`);
-    const result = await agentRunner.invoke('plan:message', { user, message: plan.description || '' });
+    const result = await agentRunner.invoke('plan:message', { input: plan.description || '', params: { user } });
     const updated = await fitnessPlanService.updateFitnessPlan(plan.id!, { message: result.response as string });
     if (!updated) throw new Error(`Failed to update fitness plan: ${plan.id}`);
     return updated;
@@ -97,9 +97,8 @@ export function createChainRunnerService(
   const runFullMicrocycleChain = async (microcycle: Microcycle, _plan: FitnessPlan, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running full microcycle chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:generate', {
-      user,
-      message: `Absolute Week: ${microcycle.absoluteWeek}`,
-      extras: { absoluteWeek: microcycle.absoluteWeek, snippetType: SnippetType.MICROCYCLE },
+      input: `Absolute Week: ${microcycle.absoluteWeek}`,
+      params: { user, absoluteWeek: microcycle.absoluteWeek, snippetType: SnippetType.MICROCYCLE },
     });
     const mcResponse = result.response as { days: string[]; overview: string; isDeload: boolean };
     const updated = await microcycleService.updateMicrocycle(microcycle.id, {
@@ -116,8 +115,8 @@ export function createChainRunnerService(
   const runMicrocycleStructuredChain = async (microcycle: Microcycle, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running structured chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:structured', {
-      user,
-      message: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, absoluteWeek: microcycle.absoluteWeek, isDeload: microcycle.isDeload }),
+      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, absoluteWeek: microcycle.absoluteWeek, isDeload: microcycle.isDeload }),
+      params: { user },
     });
     const updated = await microcycleService.updateMicrocycle(microcycle.id, { structured: result.response as MicrocycleStructure });
     if (!updated) throw new Error(`Failed to update microcycle: ${microcycle.id}`);
@@ -127,8 +126,8 @@ export function createChainRunnerService(
   const runMicrocycleMessageChain = async (microcycle: Microcycle, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running message chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:message', {
-      user,
-      message: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, isDeload: microcycle.isDeload }),
+      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, isDeload: microcycle.isDeload }),
+      params: { user },
     });
     const updated = await microcycleService.updateMicrocycle(microcycle.id, { message: result.response as string });
     if (!updated) throw new Error(`Failed to update microcycle: ${microcycle.id}`);
@@ -148,8 +147,7 @@ export function createChainRunnerService(
       activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
     }
     const result = await agentRunner.invoke('workout:generate', {
-      user,
-      extras: { dayOverview, isDeload: microcycle?.isDeload || false, activityType, snippetType: SnippetType.WORKOUT },
+      params: { user, dayOverview, isDeload: microcycle?.isDeload || false, activityType, snippetType: SnippetType.WORKOUT },
     });
     const description = result.response as string;
     const message = (result as Record<string, unknown>).message as string;
@@ -162,7 +160,7 @@ export function createChainRunnerService(
   const runWorkoutStructuredChain = async (workout: WorkoutInstance, user: UserWithProfile): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running structured chain for workout ${workout.id}`);
     if (!workout.description) throw new Error(`Workout ${workout.id} has no description to parse`);
-    const result = await agentRunner.invoke('workout:structured', { user, message: workout.description });
+    const result = await agentRunner.invoke('workout:structured', { input: workout.description, params: { user } });
     const structure = result.response as WorkoutStructure;
 
     // Resolve exercises to canonical IDs
@@ -178,7 +176,7 @@ export function createChainRunnerService(
   const runWorkoutMessageChain = async (workout: WorkoutInstance, user: UserWithProfile): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running message chain for workout ${workout.id}`);
     if (!workout.description) throw new Error(`Workout ${workout.id} has no description to create message from`);
-    const result = await agentRunner.invoke('workout:message', { user, message: workout.description });
+    const result = await agentRunner.invoke('workout:message', { input: workout.description, params: { user } });
     const updated = await workoutService.updateWorkout(workout.id, { message: result.response as string });
     if (!updated) throw new Error(`Failed to update workout: ${workout.id}`);
     return updated;

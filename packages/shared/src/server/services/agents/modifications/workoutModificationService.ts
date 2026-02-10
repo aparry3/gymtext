@@ -110,9 +110,8 @@ export function createWorkoutModificationService(
         if (!workout) return { success: false, messages: [], error: 'No workout found for that date' };
 
         const result = await agentRunner.invoke('workout:modify', {
-          user,
-          message: changeRequest,
-          extras: { workout },
+          input: changeRequest,
+          params: { user, workout },
         });
         const modifiedWorkout: ModifyWorkoutOutput = {
           response: result.response as { overview: string; wasModified: boolean; modifications: string },
@@ -166,9 +165,8 @@ export function createWorkoutModificationService(
         // Combine targetDay into the change request for the agent
         const fullChangeRequest = `For ${targetDay}: ${changeRequest}`;
         const mcResult = await agentRunner.invoke('microcycle:modify', {
-          user,
-          message: fullChangeRequest,
-          extras: { microcycle, absoluteWeek: microcycle.absoluteWeek },
+          input: fullChangeRequest,
+          params: { user, microcycle, absoluteWeek: microcycle.absoluteWeek },
         });
         const mcResponse = mcResult.response as { overview: string; days: string[]; isDeload: boolean; wasModified: boolean; modifications: string };
         const modifiedMicrocycle = {
@@ -210,8 +208,8 @@ export function createWorkoutModificationService(
         } else {
           console.log('[MODIFY_WEEK] Regenerating existing workout');
           const wkResult = await agentRunner.invoke('workout:generate', {
-            user,
-            extras: {
+            params: {
+              user,
               dayOverview,
               isDeload: modifiedMicrocycle.isDeload,
               activityType,

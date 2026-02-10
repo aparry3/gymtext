@@ -72,8 +72,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       toolIds: body.toolIds,
       contextTypes: body.contextTypes,
       subAgents: body.subAgents,
-      hooks: body.hooks,
-      toolHooks: body.toolHooks,
       schemaJson: body.schemaJson,
       validationRules: body.validationRules,
       userPromptTemplate: body.userPromptTemplate,

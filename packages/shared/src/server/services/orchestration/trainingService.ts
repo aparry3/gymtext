@@ -203,7 +203,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // 1. Generate plan via AI agent
-      const result = await agentRunner.invoke('plan:generate', { user });
+      const result = await agentRunner.invoke('plan:generate', { params: { user } });
       const agentResponse: FitnessPlanOverview = {
         description: result.response as string,
         message: (result as Record<string, unknown>).message as string,
@@ -274,8 +274,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
         // 5. Generate workout via AI agent
         const workoutResult = await agentRunner.invoke('workout:generate', {
-          user,
-          extras: {
+          params: {
+            user,
             dayOverview,
             isDeload: microcycle.isDeload ?? false,
             activityType,
@@ -362,9 +362,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       // 4. Generate microcycle via AI agent
       const mcResult = await agentRunner.invoke('microcycle:generate', {
-        user,
-        message: `Absolute Week: ${progress.absoluteWeek}`,
-        extras: {
+        input: `Absolute Week: ${progress.absoluteWeek}`,
+        params: {
+          user,
           absoluteWeek: progress.absoluteWeek,
           snippetType: SnippetType.MICROCYCLE,
         },
@@ -428,9 +428,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           : `${workout.description}\n\nIMPORTANT: Keep the message under ${maxLength} characters. Be more concise.`;
 
         const result = await agentRunner.invoke('workout:message', {
-          user,
-          message: input,
-          extras: { activityType },
+          input,
+          params: { user, activityType },
         });
         message = result.response as string;
 

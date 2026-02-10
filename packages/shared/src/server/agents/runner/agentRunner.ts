@@ -1,11 +1,10 @@
 import { createAgent } from '../createAgent';
 import type { NewAgentLog } from '@/server/models/agentLog';
 import type { JsonValue } from '@/server/models/_types';
+import type { UserWithProfile } from '@/server/models/user';
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
-import type { ContextService } from '@/server/services/context/contextService';
-import { ContextType } from '@/server/services/context/types';
+import type { ContextRegistry } from '../context/contextRegistry';
 import type { ToolRegistry } from '../tools/toolRegistry';
-import type { HookRegistry } from '../hooks/hookRegistry';
 import type { ToolExecutionContext, ToolServiceContainer } from '../tools/types';
 import { resolveInputMapping } from '../declarative/inputMapping';
 import { evaluateRules } from '../declarative/validation';
@@ -24,7 +23,6 @@ import type {
   ValidationResult,
   AgentExample,
 } from '../types';
-import { normalizeHookConfig } from '../hooks/resolver';
 import { today } from '@/shared/utils/date';
 
 const MAX_DEPTH = 5;
@@ -34,9 +32,8 @@ const MAX_DEPTH = 5;
  */
 export interface AgentRunnerDeps {
   agentDefinitionService: AgentDefinitionServiceInstance;
-  contextService: ContextService;
+  contextRegistry: ContextRegistry;
   toolRegistry: ToolRegistry;
-  hookRegistry: HookRegistry;
   /** Lazy getter for service container (avoids circular dep) */
   getServices: () => ToolServiceContainer;
   /** Optional repository for DB logging of agent invocations */
@@ -59,19 +56,17 @@ export interface AgentRunnerInstance {
  *
  * Flow:
  * 1. Fetch DB config (base + extended columns)
- * 2. Resolve context via contextService
- * 3. Resolve tools via toolRegistry (with hook wrapping)
+ * 2. Resolve context via contextRegistry
+ * 3. Resolve tools via toolRegistry
  * 4. Build sub-agent batches from sub_agents JSONB (recursive)
  * 5. Build validate function from validation_rules
  * 6. Construct AgentDefinition, call createAgent().invoke()
- * 7. Fire post-hooks if configured
  */
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
   const {
     agentDefinitionService,
-    contextService,
+    contextRegistry,
     toolRegistry,
-    hookRegistry,
     getServices,
     agentLogRepository,
   } = deps;
@@ -139,14 +134,9 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         // Resolve context for the sub-agent
         let subContext: string[] = [];
         if (subExtended.contextTypes && subExtended.contextTypes.length > 0) {
-          if (!params.user) throw new Error(`[AgentRunner] Sub-agent ${config.agentId} requires user for context resolution`);
-          const contextTypes = subExtended.contextTypes.map(
-            t => t as ContextType
-          );
-          subContext = await contextService.getContext(
-            params.user,
-            contextTypes,
-            params.extras
+          subContext = await contextRegistry.resolve(
+            subExtended.contextTypes,
+            params.params || {}
           );
         }
 
@@ -196,14 +186,15 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         if (config.inputMapping) {
           const mapping = config.inputMapping;
           const template = subExtended.userPromptTemplate;
+          const user = params.params?.user as UserWithProfile | undefined;
 
           subAgentConfig.transform = (mainResult: unknown, parentInput?: string) => {
             const ctx: MappingContext = {
               result: mainResult,
-              user: params.user!,
-              extras: (params.extras as Record<string, unknown>) || {},
+              user: user!,
+              extras: (params.params as Record<string, unknown>) || {},
               parentInput: parentInput || '',
-              now: today(params.user?.timezone || 'UTC').toISOString(),
+              now: today(user?.timezone || 'UTC').toISOString(),
             };
             const mapped = resolveInputMapping(mapping, ctx);
 
@@ -247,33 +238,32 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       // 3. Resolve context
       let context: string[] = [];
       if (extended.contextTypes && extended.contextTypes.length > 0) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for context resolution`);
-        const contextTypes = extended.contextTypes.map(
-          t => t as ContextType
-        );
-        context = await contextService.getContext(
-          params.user,
-          contextTypes,
-          params.extras
+        context = await contextRegistry.resolve(
+          extended.contextTypes,
+          params.params || {}
         );
       }
 
+      // Prepend manual context if provided
+      if (params.context && params.context.length > 0) {
+        context = [...params.context, ...context];
+      }
+
       // 4. Resolve tools
+      const user = params.params?.user as UserWithProfile | undefined;
       let tools = definition.tools;
       if (extended.toolIds && extended.toolIds.length > 0) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
+        if (!user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
         const toolCtx: ToolExecutionContext = {
-          user: params.user,
-          message: params.message || '',
+          user,
+          message: params.input || '',
           previousMessages: params.previousMessages,
           services: getServices(),
-          extras: params.extras as Record<string, unknown>,
+          extras: params.params as Record<string, unknown>,
         };
         tools = toolRegistry.resolve(
           extended.toolIds,
-          toolCtx,
-          hookRegistry,
-          extended.toolHooks ?? undefined
+          toolCtx
         );
       }
 
@@ -314,23 +304,9 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
 
       // 8. Invoke the agent
       const result = await agent.invoke({
-        message: params.message,
+        message: params.input,
         previousMessages: params.previousMessages,
       });
-
-      // 9. Fire agent-level post-hooks
-      if (extended.hooks?.postHook) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for post-hooks`);
-        const config = normalizeHookConfig(extended.hooks.postHook);
-        const hookFn = hookRegistry.get(config.hook);
-        if (hookFn) {
-          try {
-            await hookFn(params.user, result);
-          } catch (err) {
-            console.error(`[AgentRunner] Agent post-hook ${config.hook} failed:`, err);
-          }
-        }
-      }
 
       return result as AgentComposedOutput<unknown, undefined>;
     },

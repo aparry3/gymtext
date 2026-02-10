@@ -76,7 +76,7 @@ export function createBlogMetadataAgentService(
       });
 
       const result = await agentRunner.invoke('blog:metadata', {
-        message: cleanContent,
+        input: cleanContent,
       });
 
       const output = result.response as BlogMetadataResult;

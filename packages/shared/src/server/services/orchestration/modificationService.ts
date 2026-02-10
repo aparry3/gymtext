@@ -94,10 +94,9 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
         // Invoke modifications:router via AgentRunner
         // Tools (modify_workout, modify_week, modify_plan) are resolved from DB config
         const result = await agentRunner.invoke('modifications:router', {
-          user,
-          message: userMessage,
+          input: userMessage,
+          params: { user, workoutDate: today, targetDay },
           previousMessages: previousMsgs,
-          extras: { workoutDate: today, targetDay },
         });
 
         console.log('[MODIFICATION_SERVICE] Agent returned:', {

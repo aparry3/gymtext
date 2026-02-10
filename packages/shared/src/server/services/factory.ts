@@ -27,7 +27,6 @@ import { createMicrocycleService, type MicrocycleServiceInstance } from './domai
 import { createProgressService, type ProgressServiceInstance } from './domain/training/progressService';
 import { createSubscriptionService, type SubscriptionServiceInstance } from './domain/subscription/subscriptionService';
 import { createDayConfigService, type DayConfigServiceInstance } from './domain/calendar/dayConfigService';
-import { createContextService, type ContextService } from './context/contextService';
 
 // More domain service factory functions
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
@@ -62,9 +61,10 @@ import { createProfileService, type ProfileServiceInstance } from './agents/prof
 // Agent Runner infrastructure
 import { ToolRegistry } from '@/server/agents/tools';
 import { registerAllTools } from '@/server/agents/tools';
-import { HookRegistry } from '@/server/agents/hooks';
-import { registerAllHooks } from '@/server/agents/hooks';
 import { createAgentRunner, type AgentRunnerInstance } from '@/server/agents/runner';
+
+// Context Registry
+import { ContextRegistry, registerAllContextProviders } from '@/server/agents/context';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -125,9 +125,6 @@ export interface ServiceContainer {
   // Orchestration services
   chat: ChatServiceInstance;
 
-  // Shared context service for agents
-  contextService: ContextService;
-
   // Program domain services
   programOwner: ProgramOwnerServiceInstance;
   program: ProgramServiceInstance;
@@ -158,7 +155,6 @@ export interface ServiceContainer {
 
   // Registries (for admin metadata API)
   toolRegistry: ToolRegistry;
-  hookRegistry: HookRegistry;
 }
 
 /**
@@ -166,7 +162,7 @@ export interface ServiceContainer {
  *
  * Services are created in dependency order:
  * 1. Services with no service dependencies (only repos)
- * 2. ContextService (needed by agents)
+ * 2. ContextRegistry (needed by agents)
  * 3. Services that depend on other services
  * 4. Orchestration services
  * 5. Modification services
@@ -220,9 +216,10 @@ export function createServices(
   const organization = createOrganizationService(repos);
 
   // =========================================================================
-  // Phase 2: Create ContextService (needed by agents)
+  // Phase 2: Create ContextRegistry (needed by agents)
   // =========================================================================
-  const contextService = createContextService({
+  const contextRegistry = new ContextRegistry();
+  registerAllContextProviders(contextRegistry, {
     fitnessPlanService: fitnessPlan,
     workoutInstanceService: workoutInstance,
     microcycleService: microcycle,
@@ -333,9 +330,6 @@ export function createServices(
   const toolRegistry = new ToolRegistry();
   registerAllTools(toolRegistry);
 
-  const hookRegistry = new HookRegistry();
-  registerAllHooks(hookRegistry, { messagingOrchestrator: getMessagingOrchestrator() });
-
   // Forward-declared services used by getServices() lambda — assigned in later phases
   let profile: ProfileServiceInstance;
   let modification: ModificationServiceInstance;
@@ -344,9 +338,8 @@ export function createServices(
 
   const agentRunner = createAgentRunner({
     agentDefinitionService: agentDefinition,
-    contextService,
+    contextRegistry,
     toolRegistry,
-    hookRegistry,
     agentLogRepository: repos.agentLog,
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
@@ -547,9 +540,6 @@ export function createServices(
     // Chat orchestration
     chat,
 
-    // Shared context
-    contextService,
-
     // Program domain services
     programOwner,
     program,
@@ -580,7 +570,6 @@ export function createServices(
 
     // Registries
     toolRegistry,
-    hookRegistry,
   };
 }
 
@@ -600,18 +589,6 @@ export function createServicesFromDb(
   return createServices(createRepositories(db), clients);
 }
 
-/**
- * Create a ContextService from a ServiceContainer
- *
- * Convenience function for creating a ContextService with services from the container.
- *
- * @param services - Service container
- * @returns ContextService instance
- */
-export function createContextServiceFromContainer(services: ServiceContainer): ContextService {
-  return services.contextService;
-}
-
 // Re-export types for convenience
 export type {
   // Core service types
@@ -626,7 +603,6 @@ export type {
   ProgressServiceInstance,
   SubscriptionServiceInstance,
   DayConfigServiceInstance,
-  ContextService,
 
   // Additional service types
   ShortLinkServiceInstance,
