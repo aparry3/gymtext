@@ -362,8 +362,10 @@ export function AgentEditorPane({
 
   // Examples structured form handler
   const parsedExamples: AgentExample[] = (() => {
-    try { return JSON.parse(formState.examplesJson); }
-    catch { return []; }
+    try {
+      const parsed = JSON.parse(formState.examplesJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   })();
 
   const handleExamplesChange = useCallback(

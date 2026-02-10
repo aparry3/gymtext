@@ -68,7 +68,10 @@ export class ToolRegistry {
         continue;
       }
 
-      const hookConfig = toolHooks?.[toolId];
+      // toolHooks JSONB keys may be camelCased by Kysely's CamelCasePlugin,
+      // so check both the original toolId and the camelCase variant
+      const hookConfig = toolHooks?.[toolId]
+        ?? toolHooks?.[toolId.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())];
 
       // Build the LangChain tool with context injection and hook wrapping
       const langchainTool = tool(
