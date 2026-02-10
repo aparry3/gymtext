@@ -19,7 +19,6 @@ import { CodeMirrorEditor } from '@/components/ui/codemirror/CodeMirrorEditor';
 import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata, type AgentExample } from './types';
 import { ToolsSection } from './ToolsSection';
 import { ContextTypesSection } from './ContextTypesSection';
-import { HooksSection } from './HooksSection';
 import { ExamplesSection } from './ExamplesSection';
 import { JsonConfigSection } from './JsonConfigSection';
 
@@ -64,8 +63,6 @@ interface FormState {
   toolIds: string[];
   contextTypes: string[];
   subAgentsJson: string;
-  hooksJson: string;
-  toolHooksJson: string;
   schemaJsonJson: string;
   validationRulesJson: string;
   userPromptTemplate: string;
@@ -93,8 +90,6 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     arraysEqual(a.toolIds, b.toolIds) &&
     arraysEqual(a.contextTypes, b.contextTypes) &&
     a.subAgentsJson === b.subAgentsJson &&
-    a.hooksJson === b.hooksJson &&
-    a.toolHooksJson === b.toolHooksJson &&
     a.schemaJsonJson === b.schemaJsonJson &&
     a.validationRulesJson === b.validationRulesJson &&
     a.userPromptTemplate === b.userPromptTemplate &&
@@ -120,23 +115,6 @@ function safeParse(str: string): { value: unknown; error: string | null } {
   }
 }
 
-/** Parse hooks JSON to structured form for HooksSection */
-function parseHooksConfig(json: string): {
-  preHook?: { hook: string; source?: string } | null;
-  postHook?: { hook: string; source?: string } | null;
-} {
-  if (!json.trim()) return {};
-  try {
-    const parsed = JSON.parse(json);
-    return {
-      preHook: parsed?.preHook ?? null,
-      postHook: parsed?.postHook ?? null,
-    };
-  } catch {
-    return {};
-  }
-}
-
 const DEFAULT_FORM_STATE: FormState = {
   systemPrompt: '',
   userPrompt: '',
@@ -150,8 +128,6 @@ const DEFAULT_FORM_STATE: FormState = {
   toolIds: [],
   contextTypes: [],
   subAgentsJson: '',
-  hooksJson: '',
-  toolHooksJson: '',
   schemaJsonJson: '',
   validationRulesJson: '',
   userPromptTemplate: '',
@@ -218,8 +194,6 @@ export function AgentEditorPane({
             toolIds: data.toolIds || [],
             contextTypes: data.contextTypes || [],
             subAgentsJson: safeStringify(data.subAgents),
-            hooksJson: safeStringify(data.hooks),
-            toolHooksJson: safeStringify(data.toolHooks),
             schemaJsonJson: safeStringify(data.schemaJson),
             validationRulesJson: safeStringify(data.validationRules),
             userPromptTemplate: data.userPromptTemplate || '',
@@ -254,7 +228,6 @@ export function AgentEditorPane({
     const errors: Record<string, string | null> = {};
     const jsonFields = [
       { key: 'subAgentsJson', label: 'Sub-Agents' },
-      { key: 'toolHooksJson', label: 'Tool Hooks' },
       { key: 'schemaJsonJson', label: 'Output Schema' },
       { key: 'validationRulesJson', label: 'Validation Rules' },
     ] as const;
@@ -277,22 +250,6 @@ export function AgentEditorPane({
           errors[key] = null;
         }
       }
-    }
-
-    // hooksJson is managed via structured form, validate it too
-    const hooksStr = formState.hooksJson;
-    if (hooksStr.trim()) {
-      const hooksResult = safeParse(hooksStr);
-      if (hooksResult.error) {
-        errors.hooksJson = `Hooks: ${hooksResult.error}`;
-        hasError = true;
-      } else {
-        parsed.hooksJson = hooksResult.value;
-        errors.hooksJson = null;
-      }
-    } else {
-      parsed.hooksJson = null;
-      errors.hooksJson = null;
     }
 
     setJsonErrors(errors);
@@ -330,8 +287,6 @@ export function AgentEditorPane({
           toolIds: formState.toolIds.length > 0 ? formState.toolIds : null,
           contextTypes: formState.contextTypes.length > 0 ? formState.contextTypes : null,
           subAgents: parsed.subAgentsJson,
-          hooks: parsed.hooksJson,
-          toolHooks: parsed.toolHooksJson,
           schemaJson: parsed.schemaJsonJson,
           validationRules: parsed.validationRulesJson,
           userPromptTemplate: formState.userPromptTemplate || null,
@@ -369,18 +324,6 @@ export function AgentEditorPane({
   const handleExamplesChange = useCallback(
     (examples: AgentExample[]) => {
       updateField('examplesJson', JSON.stringify(examples, null, 2));
-    },
-    []
-  );
-
-  // Hooks structured form handler
-  const handleHooksChange = useCallback(
-    (config: { preHook?: { hook: string; source?: string } | null; postHook?: { hook: string; source?: string } | null }) => {
-      const clean: Record<string, unknown> = {};
-      if (config.preHook?.hook) clean.preHook = config.preHook;
-      if (config.postHook?.hook) clean.postHook = config.postHook;
-      const json = Object.keys(clean).length > 0 ? JSON.stringify(clean, null, 2) : '';
-      updateField('hooksJson', json);
     },
     []
   );
@@ -549,29 +492,10 @@ export function AgentEditorPane({
                 />
               )}
 
-              {/* Hooks (structured) */}
-              {registry && (
-                <HooksSection
-                  hooks={registry.hooks}
-                  value={parseHooksConfig(formState.hooksJson)}
-                  onChange={handleHooksChange}
-                />
-              )}
-
               {/* Examples */}
               <ExamplesSection
                 examples={parsedExamples}
                 onChange={handleExamplesChange}
-              />
-
-              {/* Tool Hooks (JSON) */}
-              <JsonConfigSection
-                label="Tool Hooks"
-                value={formState.toolHooksJson}
-                onChange={(v) => updateField('toolHooksJson', v)}
-                onSave={handleSave}
-                placeholder='{ "tool_name": { "preHook": "hookName", "postHook": { "hook": "hookName", "source": "result.field" } } }'
-                error={jsonErrors.toolHooksJson}
               />
 
               {/* Sub-Agents (JSON) */}

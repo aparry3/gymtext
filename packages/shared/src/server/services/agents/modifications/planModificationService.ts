@@ -71,9 +71,8 @@ export function createPlanModificationService(
           // Context (programVersion, user, userProfile, fitnessPlan), schema, and sub-agents (plan:structured)
           // are all resolved from DB config
           agentRunner.invoke('plan:modify', {
-            user,
-            message: changeRequest,
-            extras: { planText: currentPlan.description || '' },
+            input: changeRequest,
+            params: { user, planText: currentPlan.description || '' },
           }),
           workoutModificationService.modifyWeek({ userId, targetDay: currentDayOfWeek, changeRequest }),
         ]);

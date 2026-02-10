@@ -25,8 +25,6 @@ export interface AdminAgentDefinition {
   toolIds: string[] | null;
   contextTypes: string[] | null;
   subAgents: unknown[] | null;
-  hooks: Record<string, unknown> | null;
-  toolHooks: Record<string, unknown> | null;
   schemaJson: Record<string, unknown> | null;
   validationRules: unknown[] | null;
   userPromptTemplate: string | null;
@@ -39,14 +37,8 @@ export interface RegistryToolMetadata {
   priority?: number;
 }
 
-export interface RegistryHookMetadata {
-  name: string;
-  description: string;
-}
-
 export interface RegistryMetadata {
   tools: RegistryToolMetadata[];
-  hooks: RegistryHookMetadata[];
   contextTypes: string[];
   agentIds: string[];
 }

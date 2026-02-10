@@ -14,13 +14,8 @@
 export {
   createServices,
   createServicesFromDb,
-  createContextServiceFromContainer,
 } from './factory';
 export type { ServiceContainer, ExternalClients } from './factory';
-
-// Context service
-export { createContextService } from './context/contextService';
-export type { ContextService } from './context/contextService';
 
 // =============================================================================
 // Domain Service Factory Functions

@@ -78,8 +78,8 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
         : undefined;
 
       const result = await agentRunner.invoke('messaging:plan-summary', {
-        user,
-        message: contextParts.join('\n\n'),
+        input: contextParts.join('\n\n'),
+        params: { user },
         previousMessages: previousMsgs,
       });
       return (result.response as { messages: string[] }).messages;
@@ -101,7 +101,7 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
       ];
 
       const result = await agentRunner.invoke('messaging:plan-ready', {
-        message: contextParts.join('\n\n'),
+        input: contextParts.join('\n\n'),
       });
       return result.response as string;
     },

@@ -1,9 +1,5 @@
-import type { WorkoutInstance, Microcycle } from '@/server/models';
-import type { ProgramVersion } from '@/server/models/programVersion';
-import type { ExperienceLevel, SnippetType } from './builders/experienceLevel';
-
 /**
- * Context types that can be requested from the ContextService
+ * Context types that can be requested from the ContextRegistry
  */
 export enum ContextType {
   USER = 'user',
@@ -18,63 +14,4 @@ export enum ContextType {
   DAY_FORMAT = 'dayFormat',
   PROGRAM_VERSION = 'programVersion',
   AVAILABLE_EXERCISES = 'availableExercises',
-}
-
-/**
- * Optional extras that callers can provide to supplement/override auto-fetched data
- */
-export interface ContextExtras {
-  // Caller-provided data (cannot be auto-fetched)
-  dayOverview?: string;
-
-  // Training metadata (from orchestration context)
-  isDeload?: boolean;
-  absoluteWeek?: number;
-  currentWeek?: number;
-
-  // Override auto-fetched data
-  workout?: WorkoutInstance | null;
-  microcycle?: Microcycle | null;
-  planText?: string;
-
-  // Date override
-  date?: Date;
-
-  // Experience level context
-  experienceLevel?: ExperienceLevel;
-  snippetType?: SnippetType;
-
-  // Activity type for day format context
-  activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
-
-  // Modification context (used by modification tools)
-  workoutDate?: Date;
-  targetDay?: string;
-}
-
-/**
- * Internal data structure built from user + extras + fetched data
- * Passed to individual builders
- */
-export interface ResolvedContextData {
-  userName?: string | null;
-  userGender?: string | null;
-  userAge?: number | null;
-  profile?: string | null;
-  planText?: string | null;
-  dayOverview?: string;
-  workout?: WorkoutInstance | null;
-  microcycle?: Microcycle | null;
-  timezone?: string;
-  date?: Date;
-  isDeload?: boolean;
-  absoluteWeek?: number;
-  currentWeek?: number;
-  experienceLevel?: ExperienceLevel | null;
-  snippetType?: SnippetType;
-  activityType?: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST';
-  dayFormatTemplate?: string | null;
-  experienceSnippet?: string | null;
-  programVersion?: ProgramVersion | null;
-  exercises?: { id: string; name: string }[];
 }
