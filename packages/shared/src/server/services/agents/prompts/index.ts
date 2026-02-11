@@ -10,9 +10,6 @@
  * This module now only exports template functions for building user messages.
  */
 
-// Modifications prompts
-export { buildModificationsUserMessage } from './modifications';
-
 // Profile prompts
 export {
   buildProfileUpdateUserMessage,
