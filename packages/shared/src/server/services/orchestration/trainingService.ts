@@ -13,7 +13,7 @@ import { normalizeWhitespace } from '@/server/utils/formatters';
 import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
 import type { UserWithProfile } from '@/server/models/user';
 import { FitnessPlanModel, type FitnessPlan, type FitnessPlanOverview, type PlanStructure } from '@/server/models/fitnessPlan';
-import type { Microcycle, ActivityType } from '@/server/models/microcycle';
+import type { Microcycle } from '@/server/models/microcycle';
 import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
 import type { ProgressInfo } from '../domain/training/progressService';
 
@@ -260,7 +260,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           return null;
         }
 
-        // 4. Extract day overview from microcycle
+        // 4. Extract day overview from microcycle (for goal field)
         const dayIndex = getWeekday(targetDate.toJSDate(), user.timezone) - 1;
         const dayOverview = microcycle.days?.[dayIndex];
 
@@ -269,18 +269,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           return null;
         }
 
-        const structuredDay = microcycle.structured?.days?.[dayIndex];
-        const activityType = structuredDay?.activityType as ActivityType | undefined;
-
         // 5. Generate workout via AI agent
         const workoutResult = await agentRunner.invoke('workout:generate', {
-          params: {
-            user,
-            dayOverview,
-            isDeload: microcycle.isDeload ?? false,
-            activityType,
-            snippetType: SnippetType.WORKOUT,
-          },
+          params: { user, date: targetDate.toJSDate() },
         });
         const description = workoutResult.response as string;
         const message = (workoutResult as Record<string, unknown>).message as string;
@@ -363,11 +354,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       // 4. Generate microcycle via AI agent
       const mcResult = await agentRunner.invoke('microcycle:generate', {
         input: `Absolute Week: ${progress.absoluteWeek}`,
-        params: {
-          user,
-          absoluteWeek: progress.absoluteWeek,
-          snippetType: SnippetType.MICROCYCLE,
-        },
+        params: { user, snippetType: SnippetType.MICROCYCLE },
       });
       const mcResponse = mcResult.response as { days: string[]; overview: string; isDeload: boolean };
       const days = mcResponse.days;
@@ -404,18 +391,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const MAX_REGENERATION_ATTEMPTS = 3;
       const maxLength = getSmsMaxLength();
 
-      // 1. Get activityType from microcycle (same pattern as prepareWorkoutForDate)
-      let activityType: ActivityType | undefined;
-
-      if (workout.microcycleId) {
-        const microcycle = await microcycleService.getMicrocycleById(workout.microcycleId);
-        if (microcycle?.structured?.days) {
-          const dayIndex = getWeekday(new Date(workout.date), user.timezone) - 1;
-          activityType = microcycle.structured.days[dayIndex]?.activityType as ActivityType;
-        }
-      }
-
-      // 2. Generate message, regenerating if too long
+      // 1. Generate message, regenerating if too long
       let message: string = '';
       let attempt = 0;
 
@@ -429,7 +405,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
         const result = await agentRunner.invoke('workout:message', {
           input,
-          params: { user, activityType },
+          params: { user, date: new Date(workout.date) },
         });
         message = result.response as string;
 

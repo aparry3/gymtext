@@ -72,7 +72,7 @@ export function createPlanModificationService(
           // are all resolved from DB config
           agentRunner.invoke('plan:modify', {
             input: changeRequest,
-            params: { user, planText: currentPlan.description || '' },
+            params: { user },
           }),
           workoutModificationService.modifyWeek({ userId, targetDay: currentDayOfWeek, changeRequest }),
         ]);

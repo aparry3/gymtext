@@ -14,16 +14,13 @@ export function createExperienceLevelProvider(deps: {
   return {
     name: 'experienceLevel',
     description: 'Experience level context with coaching guidance snippet',
-    params: { required: ['user'], optional: ['experienceLevel', 'snippetType'] },
+    params: { required: ['user'], optional: ['snippetType'] },
     resolve: async (params) => {
       const user = params.user as UserWithProfile;
-      let experienceLevel = params.experienceLevel as ExperienceLevel | undefined;
       const snippetType = (params.snippetType as SnippetType) || SnippetType.WORKOUT;
 
-      if (!experienceLevel) {
-        const structuredProfile = await deps.fitnessProfileService.getCurrentStructuredProfile(user.id);
-        experienceLevel = structuredProfile?.experienceLevel ?? undefined;
-      }
+      const structuredProfile = await deps.fitnessProfileService.getCurrentStructuredProfile(user.id);
+      const experienceLevel = structuredProfile?.experienceLevel as ExperienceLevel | undefined;
 
       if (!experienceLevel) {
         return null;

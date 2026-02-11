@@ -98,7 +98,7 @@ export function createChainRunnerService(
     console.log(`[ChainRunner] Running full microcycle chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:generate', {
       input: `Absolute Week: ${microcycle.absoluteWeek}`,
-      params: { user, absoluteWeek: microcycle.absoluteWeek, snippetType: SnippetType.MICROCYCLE },
+      params: { user, snippetType: SnippetType.MICROCYCLE },
     });
     const mcResponse = result.response as { days: string[]; overview: string; isDeload: boolean };
     const updated = await microcycleService.updateMicrocycle(microcycle.id, {
@@ -134,20 +134,10 @@ export function createChainRunnerService(
     return updated;
   };
 
-  const runFullWorkoutChain = async (workout: WorkoutInstance, user: UserWithProfile, microcycle: Microcycle | null): Promise<WorkoutInstance> => {
+  const runFullWorkoutChain = async (workout: WorkoutInstance, user: UserWithProfile, _microcycle: Microcycle | null): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running full workout chain for workout ${workout.id}`);
-    let dayOverview = workout.goal || 'General workout';
-    let activityType: 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
-    if (microcycle) {
-      const workoutDate = new Date(workout.date);
-      const dayOfWeek = workoutDate.getDay();
-      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      if (microcycle.days[dayIndex]) dayOverview = microcycle.days[dayIndex];
-      const structuredDay = microcycle.structured?.days?.[dayIndex];
-      activityType = structuredDay?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
-    }
     const result = await agentRunner.invoke('workout:generate', {
-      params: { user, dayOverview, isDeload: microcycle?.isDeload || false, activityType, snippetType: SnippetType.WORKOUT },
+      params: { user, date: new Date(workout.date) },
     });
     const description = result.response as string;
     const message = (result as Record<string, unknown>).message as string;
