@@ -333,8 +333,6 @@ export function createServices(
   // Forward-declared services used by getServices() lambda — assigned in later phases
   let profile: ProfileServiceInstance;
   let modification: ModificationServiceInstance;
-  let workoutModification: WorkoutModificationServiceInstance;
-  let planModification: PlanModificationServiceInstance;
 
   const agentRunner = createAgentRunner({
     agentDefinitionService: agentDefinition,
@@ -344,13 +342,6 @@ export function createServices(
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
       modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },
-      workoutModification: {
-        modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
-        modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
-      },
-      planModification: {
-        modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
-      },
       training: {
         getOrGenerateWorkout: async (userId: string, timezone: string) => {
           const { now } = require('@/shared/utils/date');
@@ -448,7 +439,7 @@ export function createServices(
   // Phase 5: Create modification, profile, and remaining AgentRunner-dependent services
   // Assigns forward-declared variables used by getServices() lambda in Phase 3.5
   // =========================================================================
-  workoutModification = createWorkoutModificationService({
+  const workoutModification = createWorkoutModificationService({
     user,
     microcycle,
     workoutInstance,
@@ -457,6 +448,7 @@ export function createServices(
     agentRunner,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
+    messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   profile = createProfileService({
@@ -466,7 +458,7 @@ export function createServices(
     agentRunner,
   });
 
-  planModification = createPlanModificationService(repos, {
+  const planModification = createPlanModificationService(repos, {
     user,
     fitnessPlan,
     workoutModification,
@@ -475,8 +467,8 @@ export function createServices(
 
   modification = createModificationService({
     user,
-    workoutInstance,
-    agentRunner,
+    workoutModification,
+    planModification,
   });
 
   const chat = createChatService({

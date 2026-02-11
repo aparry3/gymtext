@@ -70,7 +70,13 @@ gymtext/
 │   └── shared/                   # @gymtext/shared package
 │       └── src/
 │           ├── server/          # All server-side logic
-│           │   ├── agents/      # AI/LLM chain implementations
+│           │   ├── agents/      # DB-driven AI agent system
+│           │   │   ├── constants.ts    # Agent ID constants
+│           │   │   ├── createAgent.ts  # Agent factory
+│           │   │   ├── runner/         # AgentRunner (invoke entry point)
+│           │   │   ├── context/        # Context registry & providers
+│           │   │   ├── tools/          # Tool registry & definitions
+│           │   │   └── declarative/    # Input mapping, templates, validation
 │           │   ├── connections/ # External service factories
 │           │   ├── context/     # EnvironmentContext system
 │           │   ├── models/      # Database schema and types
@@ -104,10 +110,10 @@ The application follows a clean architecture pattern with clear separation of co
    - Never directly instantiates LLMs - delegates to agents
 
 3. **Agents Layer** (`packages/shared/src/server/agents/`)
-   - Manages all LLM interactions and AI chains
-   - Each agent has a specific purpose with tailored prompts
-   - Uses LangChain for chain composition
-   - Abstracts AI complexity from business logic
+   - **Database-driven**: Agent definitions (prompts, model, tools, context, sub-agents, validation) stored in `agent_definitions` table
+   - **Code-side registries**: Tool Registry and Context Registry resolve tool/context references from DB config at runtime
+   - **AgentRunner**: Central entry point - services call `agentRunner.invoke(agentId, params)` instead of building chains
+   - Uses LangChain under the hood; abstracts all LLM complexity from services
 
 4. **Repositories Layer** (`packages/shared/src/server/repositories/`)
    - Handles all database operations
@@ -123,12 +129,15 @@ The application follows a clean architecture pattern with clear separation of co
 
 ### Key Architectural Patterns
 - **Repository Pattern**: All database operations go through repositories
-- **Service Layer**: Business logic is isolated in services, delegates LLM work to agents
-- **Agent Pattern**: Each AI task has a dedicated agent with specific prompts - services should NOT instantiate LLMs directly
+- **Service Layer**: Business logic is isolated in services, delegates LLM work to agents via AgentRunner
+- **Database-Driven Agents**: Agent definitions (prompts, model config, tools, context, sub-agents, validation) live in the `agent_definitions` table with append-only versioning
+- **Registries in Code**: Tool Registry and Context Registry map string IDs from DB config to runtime implementations
+- **AgentRunner**: Services call `agentRunner.invoke(agentId, params)` - never instantiate LLMs directly
 - **Factory Pattern**: Connections use factories for environment switching
 - **Environment Context**: Request-scoped context carries environment-specific connections
 - **Type Safety**: Full TypeScript with Kysely codegen for database types
-- **Clean Architecture**: Services use agents for all LLM interactions (see _claude_docs/AGENT_ARCHITECTURE.md)
+- **Lazy Service Injection**: AgentRunner receives `getServices()` lambda to break circular dependencies between services and tools
+- **Clean Architecture**: See `_claude_docs/AGENT_ARCHITECTURE.md` for full agent pattern details
 
 ## Environment Context System
 
@@ -164,10 +173,10 @@ The admin app supports switching between production and sandbox environments (li
   const user = await repos.user.findById(userId);
   ```
 
-- **`packages/shared/src/server/services/factory.ts`** - Service container factory
+- **`packages/shared/src/server/services/factory.ts`** - Service container factory (multi-phase bootstrap with AgentRunner setup)
   ```typescript
   const services = getServices(ctx);
-  // Access repos, ctx, and services
+  // Access repos, ctx, services, and agentRunner
   ```
 
 - **`apps/admin/src/context/EnvironmentContext.tsx`** - React context for UI toggle
@@ -217,38 +226,84 @@ Core tables include:
 - `microcycles` - Weekly training patterns (generated on-demand)
 - `workout_instances` - Individual workouts with enhanced block structure
 - `subscriptions` - Stripe subscription tracking
+- `agent_definitions` - AI agent configurations (append-only versioned)
+- `agent_logs` - Agent invocation history for observability
 
 ## AI Agent System
 
-Specialized agents in `packages/shared/src/server/agents/`:
+Agents are **defined in the database** (`agent_definitions` table) and **executed via code-side registries**. See `_claude_docs/AGENT_ARCHITECTURE.md` for the full reference.
 
-### Chat & Profile Management
-- `chatAgent` (`chat/chain.ts`) - Generates contextual conversation responses
-  - Uses conversation history and user profile for personalized coaching
-  - Supports multiple models (GPT-4, Gemini 2.0 Flash)
-  - Keeps responses concise for SMS format
-- `userProfileAgent` (`profile/chain.ts`) - Extracts and updates user profiles from conversations
-  - **Stateless Operation**: Receives `currentProfile` and `currentUser` partial objects
-  - Analyzes messages for fitness information with confidence scoring
-  - Returns *updated* partial objects to the caller (does not write to DB)
-  - Supports batch message processing for conversation history
-  - Only updates with high confidence (>0.75 threshold)
+### Database-Driven Agent Definitions
 
-### Fitness Planning
-- `generateFitnessPlanAgent` - Creates fitness plans with simplified mesocycle structure
-- `dailyWorkout` - Generates on-demand workouts with block structure using Gemini 2.0 Flash
-- `microcyclePattern` - Creates weekly training patterns with progressive overload
-- `dailyMessageAgent` - Generates daily workout messages
-- `welcomeMessageAgent` - Onboarding messages
+Each agent is a row in `agent_definitions` with append-only versioning (latest `created_at` = active version):
 
-### Agent Tools
-- `profilePatchTool` (`tools/profilePatchTool.ts`) - LangChain tool for profile updates
-  - **Pure Function**: Takes partial profile, returns updated partial profile
-  - Validates confidence scores before applying updates
-  - Tracks which fields were updated and why
-  - **No Side Effects**: Does not interact with the database
+| Column | Purpose |
+|--------|---------|
+| `agent_id` | Unique identifier (e.g., `'chat:generate'`, `'workout:generate'`) |
+| `system_prompt` | System prompt instructions |
+| `user_prompt_template` | Template with `{{variable}}` substitution |
+| `model` | Model identifier (e.g., `'gpt-5.1'`, `'gpt-5-nano'`) |
+| `tool_ids` | Tool names available to agent (e.g., `['update_profile', 'get_workout']`) |
+| `context_types` | Context to resolve at runtime (e.g., `['dateContext', 'currentWorkout']`) |
+| `sub_agents` | Sub-agent configurations (batches, parallel/sequential) |
+| `schema_json` | JSON Schema for structured output |
+| `validation_rules` | Declarative validation rules with auto-retry |
+| `temperature`, `max_tokens`, `max_iterations`, `max_retries` | Model configuration |
 
-**Important**: Services should use these agents, not instantiate their own LLMs
+Agent IDs are defined as constants in `packages/shared/src/server/agents/constants.ts`.
+
+### Code-Side Registries
+
+**Tool Registry** (`agents/tools/toolRegistry.ts`):
+- Maps tool name strings (from DB `tool_ids`) to LangChain tool implementations
+- Tools registered in `agents/tools/definitions/` (e.g., `chatTools.ts`, `modificationTools.ts`)
+- Tools receive a `ToolExecutionContext` with user, message, and service access
+- Key tools: `update_profile`, `get_workout`, `make_modification`, `modify_workout`, `modify_week`, `modify_plan`
+
+**Context Registry** (`agents/context/contextRegistry.ts`):
+- Maps context type strings (from DB `context_types`) to context provider functions
+- Resolves multiple context types in parallel
+- Key contexts: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `trainingMeta`, `currentMicrocycle`, `experienceLevel`
+
+### AgentRunner
+
+The `AgentRunner` (`agents/runner/agentRunner.ts`) is the single entry point for all agent invocations:
+
+```typescript
+// Services invoke agents like this:
+const result = await agentRunner.invoke('chat:generate', {
+  input: message,
+  params: { user: userWithProfile, previousMessages },
+});
+```
+
+**Invocation flow**:
+1. Fetch agent definition + extended config from DB (cached 5min)
+2. Resolve context strings via Context Registry
+3. Resolve tools via Tool Registry
+4. Recursively build sub-agents (up to depth 5)
+5. Build validation function from declarative rules
+6. Execute via `createAgent()` with three output modes: tool agent, structured output, or plain text
+7. Execute sub-agents (sequential batches, parallel within batch)
+8. Log invocation to `agent_logs` table
+
+### Agent Definitions (Key Agents)
+
+- `chat:generate` - Main chat response with tools (`update_profile`, `get_workout`, `make_modification`)
+- `profile:fitness` - Extracts/updates fitness profile from messages, with `profile:structured` sub-agent
+- `profile:user` - Extracts user info (name, gender, etc.)
+- `plan:generate` - Creates fitness plans with mesocycle structure
+- `workout:generate` - Generates daily workouts with `workout:message` and `workout:structured` sub-agents
+- `microcycle:generate` - Creates weekly training patterns
+- `modifications:router` - Routes modification requests to appropriate sub-agents
+
+### Declarative Features
+
+- **Input Mapping**: Maps parent output to sub-agent input using `$`-prefixed references (`$result.field`, `$user.name`, `$extras.field`)
+- **Template Engine**: Resolves `{{variable}}` placeholders in `user_prompt_template`
+- **Validation Rules**: Declarative checks (`equals`, `truthy`, `nonEmpty`, `length`) with auto-retry on failure
+
+**Important**: Services must use `agentRunner.invoke()` - never instantiate LLMs directly
 
 ## Environment Variables
 
@@ -301,25 +356,19 @@ If sandbox variables are not set, sandbox mode falls back to production credenti
 
 ## Chat Architecture
 
-The chat system uses a two-agent architecture for processing messages:
+The chat system is orchestrated by `ChatService` which calls agents via `agentRunner.invoke()`:
 
-1. **Profile Extraction Phase** - UserProfileAgent analyzes incoming messages
-   - **Input**: User message + Current Partial Profile State (from client)
-   - Extracts fitness-related information with confidence scoring (>0.75)
-   - **Output**: Updated Partial Profile State + Explanation
-   - No database writes occur in this phase
+1. **Chat Response** - `chat:generate` agent with tool access
+   - Tools: `update_profile` (persists profile changes), `get_workout` (fetches/generates today's workout), `make_modification` (delegates program changes)
+   - Context: `dateContext`, `currentWorkout` resolved automatically from DB config
+   - Returns main response + accumulated tool messages
 
-2. **Response Generation Phase** - ChatAgent generates the response
-   - Receives updated profile from UserProfileAgent
-   - Uses conversation history for context
-   - Generates personalized coaching responses
-   - Acknowledges profile updates when they occur
+2. **Profile Updates** - Handled via `update_profile` tool during chat, not a separate phase
+   - Tool calls `profile:fitness` agent which extracts profile data with structured sub-agents
+   - Profile updates persisted through the tool's service callback
 
-This separation ensures:
-- Profile building happens automatically and consistently
-- Chat responses remain conversational and engaging
-- Services don't need to manage LLM instantiation
-- Clean separation of concerns between data extraction and conversation
+3. **Modifications** - `make_modification` tool routes to `modifications:router` agent
+   - Router determines modification type and delegates to appropriate sub-agents
 
 **Onboarding Chat**: A specialized flow for new users that uses a **pass-through architecture**. The frontend maintains state, sends it to the API, and receives updates via SSE. The database is only updated upon final confirmation.
 
@@ -364,9 +413,12 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 ### Adding New Features
 - Follow the existing service/repository/agent pattern
 - Place business logic in services, not in API routes
-- Use the appropriate AI agent for LLM tasks - never instantiate LLMs directly in services
+- Use `agentRunner.invoke(agentId, params)` for all LLM tasks - never instantiate LLMs directly
+- New agents: add a row to `agent_definitions` (via migration), add agent ID to `agents/constants.ts`
+- New tools: add definition in `agents/tools/definitions/`, register in `registerAllTools()`
+- New context providers: add in `agents/context/`, register in `registerAllContextProviders()`
 - Add proper TypeScript types for all new code
-- See `_claude_docs/AGENT_ARCHITECTURE.md` for agent pattern details
+- See `_claude_docs/AGENT_ARCHITECTURE.md` for full agent pattern details
 
 ### Testing Considerations
 - The project uses Vitest for testing

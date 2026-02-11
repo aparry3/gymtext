@@ -53,12 +53,19 @@ All context (user, message, date, etc.) is automatically provided - no parameter
     message: z.string().describe(
       'REQUIRED. Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
     ),
+    type: z.enum(['workout', 'week', 'plan']).describe(
+      'Type of modification: "workout" = same muscle group, different constraints (equipment, time, intensity). ' +
+      '"week" = different muscle group or workout type, rearranging schedule (THIS IS THE DEFAULT/MOST COMMON). ' +
+      '"plan" = program-level changes (frequency, split, goals).'
+    ),
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
+    const type = (args.type as 'workout' | 'week' | 'plan') ?? 'week';
     return ctx.services.modification.makeModification(
       ctx.user.id,
       ctx.message,
+      type,
       ctx.previousMessages
     );
   },

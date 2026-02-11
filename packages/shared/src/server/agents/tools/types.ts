@@ -56,14 +56,7 @@ export interface ToolServiceContainer {
   };
   modification: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    makeModification: (userId: string, message: string, previousMessages?: any[]) => Promise<ToolResult>;
-  };
-  workoutModification: {
-    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
-    modifyWeek: (params: { userId: string; targetDay: string; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
-  };
-  planModification: {
-    modifyPlan: (params: { userId: string; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
+    makeModification: (userId: string, message: string, type: 'workout' | 'week' | 'plan', previousMessages?: any[]) => Promise<ToolResult>;
   };
   training: {
     getOrGenerateWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
