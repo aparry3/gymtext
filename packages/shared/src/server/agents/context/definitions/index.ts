@@ -15,12 +15,12 @@ import type { ExerciseRepository } from '@/server/repositories/exerciseRepositor
 // Simple providers (no service deps)
 import { userProvider } from './user';
 import { userProfileProvider } from './userProfile';
-import { dayOverviewProvider } from './dayOverview';
 import { dateContextProvider } from './dateContext';
-import { trainingMetaProvider } from './trainingMeta';
-import { dayFormatProvider } from './dayFormat';
 
 // Factory providers (need service deps)
+import { createDayOverviewProvider } from './dayOverview';
+import { createTrainingMetaProvider } from './trainingMeta';
+import { createDayFormatProvider } from './dayFormat';
 import { createFitnessPlanProvider } from './fitnessPlan';
 import { createCurrentWorkoutProvider } from './currentWorkout';
 import { createCurrentMicrocycleProvider } from './currentMicrocycle';
@@ -50,12 +50,21 @@ export function registerAllContextProviders(
   // Simple providers
   registry.register(userProvider);
   registry.register(userProfileProvider);
-  registry.register(dayOverviewProvider);
   registry.register(dateContextProvider);
-  registry.register(trainingMetaProvider);
-  registry.register(dayFormatProvider);
 
   // Service-dependent providers
+  registry.register(createDayOverviewProvider({
+    microcycleService: deps.microcycleService,
+  }));
+
+  registry.register(createTrainingMetaProvider({
+    microcycleService: deps.microcycleService,
+  }));
+
+  registry.register(createDayFormatProvider({
+    microcycleService: deps.microcycleService,
+  }));
+
   registry.register(createFitnessPlanProvider({
     fitnessPlanService: deps.fitnessPlanService,
   }));

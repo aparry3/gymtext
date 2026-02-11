@@ -115,7 +115,7 @@ export function createWorkoutModificationService(
         // Step 1: workout:modify (no sub-agents after migration)
         const modifyResult = await agentRunner.invoke('workout:modify', {
           input: changeRequest,
-          params: { user, workout },
+          params: { user, date: workoutDateTime.toJSDate() },
         });
         const modifyResponse = modifyResult.response as { overview: string; wasModified: boolean; modifications: string };
         const workoutDescription = modifyResponse.overview;
@@ -206,10 +206,10 @@ export function createWorkoutModificationService(
           // Path A: Existing workout - parallel agents
           console.log('[MODIFY_WEEK] Existing workout found, running parallel modification');
 
-          // Step 1: workout:modify (pass microcycle to avoid redundant DB fetch)
+          // Step 1: workout:modify
           const modifyResult = await agentRunner.invoke('workout:modify', {
             input: changeRequest,
-            params: { user, workout: existingWorkout, microcycle },
+            params: { user, date: targetDate.toJSDate() },
           });
           const modifyResponse = modifyResult.response as { overview: string; wasModified: boolean; modifications: string };
           const workoutDescription = modifyResponse.overview;
@@ -233,7 +233,7 @@ export function createWorkoutModificationService(
 
           const microcyclePromise = agentRunner.invoke('microcycle:modify', {
             input: fullChangeRequest,
-            params: { user, microcycle, absoluteWeek: microcycle.absoluteWeek },
+            params: { user },
           });
 
           const [workoutMessage, structure, mcResult] = await Promise.all([
@@ -280,7 +280,7 @@ export function createWorkoutModificationService(
           // Step 1: microcycle:modify
           const mcResult = await agentRunner.invoke('microcycle:modify', {
             input: fullChangeRequest,
-            params: { user, microcycle, absoluteWeek: microcycle.absoluteWeek },
+            params: { user },
           });
           const mcResponse = mcResult.response as { overview: string; days: string[]; isDeload: boolean; wasModified: boolean; modifications: string };
           const mcStructure = (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined;

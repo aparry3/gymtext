@@ -9,17 +9,11 @@ export function createFitnessPlanProvider(deps: {
   return {
     name: 'fitnessPlan',
     description: 'Current fitness plan description',
-    params: { required: ['user'], optional: ['planText'] },
+    params: { required: ['user'] },
     resolve: async (params) => {
       const user = params.user as UserWithProfile;
-      let planText = params.planText as string | undefined;
-
-      if (!planText) {
-        const plan = await deps.fitnessPlanService.getCurrentPlan(user.id);
-        planText = plan?.description ?? undefined;
-      }
-
-      return buildFitnessPlanContext(planText);
+      const plan = await deps.fitnessPlanService.getCurrentPlan(user.id);
+      return buildFitnessPlanContext(plan?.description ?? undefined);
     },
   };
 }
