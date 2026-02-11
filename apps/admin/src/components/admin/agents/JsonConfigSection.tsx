@@ -31,12 +31,12 @@ export function JsonConfigSection({
 
   return (
     <Collapsible>
-      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors">
+      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
         <span>{label}</span>
-        {hasContent && <Badge variant="secondary">Configured</Badge>}
+        {hasContent && <Badge variant="secondary" className="bg-slate-100 text-slate-700">Configured</Badge>}
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-2 pb-1">
-        <div className={`${height} border rounded-lg overflow-hidden`}>
+        <div className={`${height} overflow-hidden rounded-xl border border-slate-300 bg-white`}>
           <CodeMirrorEditor
             value={value}
             onChange={onChange}
@@ -46,7 +46,7 @@ export function JsonConfigSection({
           />
         </div>
         {error && (
-          <p className="mt-1 text-xs text-red-600">{error}</p>
+          <p className="mt-1 text-xs text-rose-600">{error}</p>
         )}
       </CollapsibleContent>
     </Collapsible>

@@ -35,6 +35,8 @@ interface AgentLogEntry {
   response: unknown;
   durationMs: number | null;
   metadata: unknown;
+  evalResult: unknown;
+  evalScore: string | null;
   createdAt: string;
 }
 
@@ -247,6 +249,7 @@ function LogDetailDialog({
             <TabsTrigger value="messages">Messages ({messages.length})</TabsTrigger>
             <TabsTrigger value="response">Response</TabsTrigger>
             {log.metadata != null ? <TabsTrigger value="metadata">Metadata</TabsTrigger> : null}
+            {log.evalResult != null ? <TabsTrigger value="eval">Eval</TabsTrigger> : null}
           </TabsList>
 
           <TabsContent value="input" className="flex-1 overflow-auto">
@@ -292,6 +295,33 @@ function LogDetailDialog({
           {log.metadata != null ? (
             <TabsContent value="metadata" className="flex-1 overflow-auto">
               <MetadataPanel metadata={log.metadata} />
+            </TabsContent>
+          ) : null}
+
+          {log.evalResult != null ? (
+            <TabsContent value="eval" className="flex-1 overflow-auto">
+              <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
+                {log.evalScore != null && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Score:</span>
+                    <Badge
+                      variant="outline"
+                      className={
+                        parseFloat(log.evalScore) >= 7
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : parseFloat(log.evalScore) >= 4
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                      }
+                    >
+                      {parseFloat(log.evalScore).toFixed(1)}
+                    </Badge>
+                  </div>
+                )}
+                <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
+                  {formatJson(log.evalResult)}
+                </pre>
+              </div>
             </TabsContent>
           ) : null}
         </Tabs>
@@ -461,6 +491,9 @@ export default function AgentLogsPage() {
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                     Duration
                   </th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                    Score
+                  </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Response
                   </th>
@@ -475,13 +508,14 @@ export default function AgentLogsPage() {
                       <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
                       <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
                       <td className="px-4 py-3"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-10 ml-auto" /></td>
                       <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
                     </tr>
                   ))
                 ) : logs.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-12 text-center text-muted-foreground"
                     >
                       No agent logs found
@@ -512,6 +546,24 @@ export default function AgentLogsPage() {
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground whitespace-nowrap tabular-nums">
                         {formatDuration(log.durationMs)}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {log.evalScore != null ? (
+                          <Badge
+                            variant="outline"
+                            className={
+                              parseFloat(log.evalScore) >= 7
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : parseFloat(log.evalScore) >= 4
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : 'bg-red-50 text-red-700 border-red-200'
+                            }
+                          >
+                            {parseFloat(log.evalScore).toFixed(1)}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 max-w-xs">
                         <span className="text-muted-foreground truncate block">

@@ -21,6 +21,8 @@ import { ToolsSection } from './ToolsSection';
 import { ContextTypesSection } from './ContextTypesSection';
 import { ExamplesSection } from './ExamplesSection';
 import { JsonConfigSection } from './JsonConfigSection';
+import { SubAgentsBuilderSection } from './SubAgentsBuilderSection';
+import { ValidationRulesBuilderSection } from './ValidationRulesBuilderSection';
 
 interface AgentEditorPaneProps {
   agentId: string;
@@ -67,6 +69,8 @@ interface FormState {
   validationRulesJson: string;
   userPromptTemplate: string;
   examplesJson: string;
+  evalPrompt: string;
+  evalModel: string;
 }
 
 function arraysEqual(a: string[], b: string[]): boolean {
@@ -93,7 +97,9 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     a.schemaJsonJson === b.schemaJsonJson &&
     a.validationRulesJson === b.validationRulesJson &&
     a.userPromptTemplate === b.userPromptTemplate &&
-    a.examplesJson === b.examplesJson
+    a.examplesJson === b.examplesJson &&
+    a.evalPrompt === b.evalPrompt &&
+    a.evalModel === b.evalModel
   );
 }
 
@@ -132,7 +138,51 @@ const DEFAULT_FORM_STATE: FormState = {
   validationRulesJson: '',
   userPromptTemplate: '',
   examplesJson: '[]',
+  evalPrompt: '',
+  evalModel: 'gpt-5-nano',
 };
+
+const SCHEMA_TEMPLATES: Array<{ key: string; label: string; value: Record<string, unknown> }> = [
+  {
+    key: 'object',
+    label: 'Object Response',
+    value: {
+      type: 'object',
+      properties: {},
+      required: [],
+      additionalProperties: false,
+    },
+  },
+  {
+    key: 'messages',
+    label: 'Messages Array',
+    value: {
+      type: 'object',
+      required: ['messages'],
+      properties: {
+        messages: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of SMS messages',
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    key: 'validation',
+    label: 'Validation Result',
+    value: {
+      type: 'object',
+      required: ['isValid', 'errors'],
+      properties: {
+        isValid: { type: 'boolean' },
+        errors: { type: 'array', items: { type: 'string' } },
+      },
+      additionalProperties: false,
+    },
+  },
+];
 
 export function AgentEditorPane({
   agentId,
@@ -198,6 +248,8 @@ export function AgentEditorPane({
             validationRulesJson: safeStringify(data.validationRules),
             userPromptTemplate: data.userPromptTemplate || '',
             examplesJson: JSON.stringify(data.examples || [], null, 2),
+            evalPrompt: data.evalPrompt || '',
+            evalModel: data.evalModel || 'gpt-5-nano',
           };
           setFormState(state);
           setOriginalState(state);
@@ -291,6 +343,8 @@ export function AgentEditorPane({
           validationRules: parsed.validationRulesJson,
           userPromptTemplate: formState.userPromptTemplate || null,
           examples: JSON.parse(formState.examplesJson),
+          evalPrompt: formState.evalPrompt || null,
+          evalModel: formState.evalModel || null,
         }),
       });
 
@@ -315,6 +369,18 @@ export function AgentEditorPane({
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
+  const applySchemaTemplate = (templateKey: string) => {
+    const template = SCHEMA_TEMPLATES.find((entry) => entry.key === templateKey);
+    if (!template) return;
+    updateField('schemaJsonJson', JSON.stringify(template.value, null, 2));
+  };
+
+  const appendPromptSnippet = (field: 'systemPrompt' | 'userPrompt', snippet: string) => {
+    const current = formState[field].trim();
+    const next = current ? `${formState[field]}\n\n${snippet}` : snippet;
+    updateField(field, next);
+  };
+
   // Examples structured form handler
   const parsedExamples: AgentExample[] = (() => {
     try {
@@ -332,28 +398,30 @@ export function AgentEditorPane({
   );
 
   return (
-    <Card className="flex-1 flex flex-col overflow-hidden">
+    <Card className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white/85 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.6)] backdrop-blur">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50/50">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-slate-50/70 px-5 py-3">
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{agentId}</Badge>
+          <Badge variant="outline" className="border-slate-300 bg-white/80 text-slate-700">
+            {agentId}
+          </Badge>
           {isDirty && (
-            <Badge variant="destructive" className="animate-pulse">
+            <Badge variant="destructive" className="animate-pulse bg-rose-100 text-rose-700 border-rose-200">
               Unsaved
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-3">
           {lastSaved && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               Last saved: {lastSaved.toLocaleTimeString()}
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={onHistoryToggle}>
+          <Button variant="outline" size="sm" className="border-slate-300 bg-white/80 text-slate-700 hover:bg-slate-50" onClick={onHistoryToggle}>
             <HistoryIcon className="h-4 w-4 mr-1.5" />
             {isHistoryOpen ? 'Hide History' : 'History'}
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty || isSaving}>
+          <Button size="sm" className="bg-sky-600 text-white hover:bg-sky-700" onClick={handleSave} disabled={!isDirty || isSaving}>
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </div>
@@ -361,121 +429,132 @@ export function AgentEditorPane({
 
       {/* Error Banner */}
       {error && (
-        <div className="px-4 py-2 bg-red-50 text-red-700 text-sm border-b border-red-100">
+        <div className="border-b border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
           {error}
         </div>
       )}
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-5">
         {isLoading ? (
           <EditorSkeleton />
         ) : (
           <div className="space-y-6">
-            {/* Model Settings Row */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Model Select */}
-              <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
-                <Select
-                  value={formState.model}
-                  onValueChange={(v) => updateField('model', v)}
-                >
-                  <SelectTrigger id="model">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODEL_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Max Tokens */}
-              <div className="space-y-2">
-                <Label htmlFor="maxTokens">Max Tokens</Label>
-                <Input
-                  id="maxTokens"
-                  type="number"
-                  min={1}
-                  max={128000}
-                  value={formState.maxTokens}
-                  onChange={(e) => updateField('maxTokens', parseInt(e.target.value) || 16000)}
-                />
-              </div>
-            </div>
-
-            {/* Temperature Slider */}
-            <div className="space-y-2">
+            <section className="rounded-2xl border border-slate-200/75 bg-slate-50/65 p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Temperature</Label>
-                <span className="text-sm text-gray-500">{formState.temperature.toFixed(2)}</span>
+                <h3 className="text-sm font-semibold text-slate-800">Core Settings</h3>
+                <span className="text-xs text-slate-500">Model behavior and runtime limits</span>
               </div>
-              <Slider
-                min={0}
-                max={2}
-                step={0.05}
-                value={[formState.temperature]}
-                onValueChange={([v]) => updateField('temperature', v)}
-              />
-            </div>
 
-            {/* Iterations and Retries Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="maxIterations">Max Iterations</Label>
-                <Input
-                  id="maxIterations"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={formState.maxIterations}
-                  onChange={(e) => updateField('maxIterations', parseInt(e.target.value) || 5)}
-                />
+              {/* Model Settings Row */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Model Select */}
+                <div className="space-y-2">
+                  <Label htmlFor="model">Model</Label>
+                  <Select
+                    value={formState.model}
+                    onValueChange={(v) => updateField('model', v)}
+                  >
+                    <SelectTrigger id="model" className="border-slate-300 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODEL_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Max Tokens */}
+                <div className="space-y-2">
+                  <Label htmlFor="maxTokens">Max Tokens</Label>
+                  <Input
+                    id="maxTokens"
+                    className="border-slate-300 bg-white"
+                    type="number"
+                    min={1}
+                    max={128000}
+                    value={formState.maxTokens}
+                    onChange={(e) => updateField('maxTokens', parseInt(e.target.value) || 16000)}
+                  />
+                </div>
               </div>
+
+              {/* Temperature Slider */}
               <div className="space-y-2">
-                <Label htmlFor="maxRetries">Max Retries</Label>
-                <Input
-                  id="maxRetries"
-                  type="number"
+                <div className="flex items-center justify-between">
+                  <Label>Temperature</Label>
+                  <span className="text-sm text-slate-500">{formState.temperature.toFixed(2)}</span>
+                </div>
+                <Slider
                   min={0}
-                  max={10}
-                  value={formState.maxRetries}
-                  onChange={(e) => updateField('maxRetries', parseInt(e.target.value) || 1)}
+                  max={2}
+                  step={0.05}
+                  value={[formState.temperature]}
+                  onValueChange={([v]) => updateField('temperature', v)}
                 />
               </div>
-            </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={formState.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="Brief description of what this agent does..."
-              />
-            </div>
-
-            {/* Active Toggle */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <Label htmlFor="isActive">Active</Label>
-                <p className="text-xs text-gray-500">Inactive agents are not used in production</p>
+              {/* Iterations and Retries Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="maxIterations">Max Iterations</Label>
+                  <Input
+                    id="maxIterations"
+                    className="border-slate-300 bg-white"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={formState.maxIterations}
+                    onChange={(e) => updateField('maxIterations', parseInt(e.target.value) || 5)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxRetries">Max Retries</Label>
+                  <Input
+                    id="maxRetries"
+                    className="border-slate-300 bg-white"
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={formState.maxRetries}
+                    onChange={(e) => updateField('maxRetries', parseInt(e.target.value) || 1)}
+                  />
+                </div>
               </div>
-              <Switch
-                id="isActive"
-                checked={formState.isActive}
-                onCheckedChange={(v) => updateField('isActive', v)}
-              />
-            </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  className="border-slate-300 bg-white"
+                  value={formState.description}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  placeholder="Brief description of what this agent does..."
+                />
+              </div>
+
+              {/* Active Toggle */}
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
+                <div>
+                  <Label htmlFor="isActive">Active</Label>
+                  <p className="text-xs text-slate-500">Inactive agents are not used in production</p>
+                </div>
+                <Switch
+                  id="isActive"
+                  checked={formState.isActive}
+                  onCheckedChange={(v) => updateField('isActive', v)}
+                />
+              </div>
+            </section>
 
             {/* Extended Configuration Sections */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Agent Configuration</h3>
+            <section className="space-y-3 rounded-2xl border border-slate-200/75 bg-slate-50/60 p-4">
+              <h3 className="border-b border-slate-200 pb-1 text-sm font-semibold text-slate-700">Agent Configuration</h3>
 
               {/* Tools */}
               {registry && (
@@ -502,16 +581,34 @@ export function AgentEditorPane({
               />
 
               {/* Sub-Agents (JSON) */}
-              <JsonConfigSection
-                label="Sub-Agents"
-                value={formState.subAgentsJson}
-                onChange={(v) => updateField('subAgentsJson', v)}
-                onSave={handleSave}
-                placeholder='[{ "batch": 0, "key": "result", "agentId": "domain:agent", "inputMapping": { ... } }]'
-                error={jsonErrors.subAgentsJson}
-              />
+              {registry && (
+                <SubAgentsBuilderSection
+                  value={formState.subAgentsJson}
+                  onChange={(v) => updateField('subAgentsJson', v)}
+                  onSave={handleSave}
+                  agentIds={registry.agentIds}
+                  error={jsonErrors.subAgentsJson}
+                />
+              )}
 
               {/* Output Schema (JSON) */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Label className="text-xs text-slate-500">Schema Starters</Label>
+                  {SCHEMA_TEMPLATES.map((template) => (
+                    <Button
+                      key={template.key}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                      onClick={() => applySchemaTemplate(template.key)}
+                    >
+                      {template.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <JsonConfigSection
                 label="Output Schema"
                 value={formState.schemaJsonJson}
@@ -522,23 +619,21 @@ export function AgentEditorPane({
                 error={jsonErrors.schemaJsonJson}
               />
 
-              {/* Validation Rules (JSON) */}
-              <JsonConfigSection
-                label="Validation Rules"
+              {/* Validation Rules */}
+              <ValidationRulesBuilderSection
                 value={formState.validationRulesJson}
                 onChange={(v) => updateField('validationRulesJson', v)}
                 onSave={handleSave}
-                placeholder='[{ "field": "result.field", "operator": "exists" }]'
                 error={jsonErrors.validationRulesJson}
               />
 
               {/* User Prompt Template */}
               <div className="space-y-2">
                 <Label>User Prompt Template</Label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   Template with {'{{variable}}'} syntax for sub-agent input mapping
                 </p>
-                <div className="h-32 border rounded-lg overflow-hidden">
+                <div className="h-32 overflow-hidden rounded-xl border border-slate-300 bg-white">
                   <CodeMirrorEditor
                     value={formState.userPromptTemplate}
                     onChange={(v) => updateField('userPromptTemplate', v)}
@@ -547,12 +642,88 @@ export function AgentEditorPane({
                   />
                 </div>
               </div>
-            </div>
+            </section>
+
+            {/* Eval Configuration */}
+            <section className="space-y-3 rounded-2xl border border-slate-200/75 bg-slate-50/60 p-4">
+              <h3 className="border-b border-slate-200 pb-1 text-sm font-semibold text-slate-700">Eval Configuration</h3>
+              <p className="text-xs text-slate-500">
+                Optional. Configure a rubric prompt to auto-evaluate this agent&apos;s output quality after each invocation.
+              </p>
+
+              {/* Eval Model */}
+              <div className="space-y-2">
+                <Label htmlFor="evalModel">Eval Model</Label>
+                <Select
+                  value={formState.evalModel}
+                  onValueChange={(v) => updateField('evalModel', v)}
+                >
+                  <SelectTrigger id="evalModel" className="border-slate-300 bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODEL_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Eval Prompt */}
+              <div className="space-y-2">
+                <Label>Eval Prompt (Rubric)</Label>
+                <p className="text-xs text-slate-500">
+                  System prompt for the eval LLM. It receives the agent&apos;s input and response as JSON. Should output a score and reasoning.
+                </p>
+                <div className="h-48 overflow-hidden rounded-xl border border-slate-300 bg-white">
+                  <CodeMirrorEditor
+                    value={formState.evalPrompt}
+                    onChange={(v) => updateField('evalPrompt', v)}
+                    placeholder="You are an evaluator. Score the agent's response from 0-10..."
+                    onSave={handleSave}
+                  />
+                </div>
+              </div>
+            </section>
 
             {/* System Prompt */}
-            <div className="space-y-2">
-              <Label>System Prompt</Label>
-              <div className="h-64 border rounded-lg overflow-hidden">
+            <section className="space-y-2 rounded-2xl border border-slate-200/75 bg-slate-50/60 p-4">
+              <div className="flex items-center justify-between">
+                <Label>System Prompt</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    onClick={() =>
+                      appendPromptSnippet(
+                        'systemPrompt',
+                        '## Role\nYou are an expert assistant for this workflow.'
+                      )
+                    }
+                  >
+                    Add Role Block
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    onClick={() =>
+                      appendPromptSnippet(
+                        'systemPrompt',
+                        '## Output Requirements\n- Follow the output schema exactly.\n- Do not include extra fields.\n- Keep responses concise and actionable.'
+                      )
+                    }
+                  >
+                    Add Output Rules
+                  </Button>
+                </div>
+              </div>
+              <div className="h-64 overflow-hidden rounded-xl border border-slate-300 bg-white">
                 <CodeMirrorEditor
                   value={formState.systemPrompt}
                   onChange={(v) => updateField('systemPrompt', v)}
@@ -560,12 +731,28 @@ export function AgentEditorPane({
                   onSave={handleSave}
                 />
               </div>
-            </div>
+            </section>
 
             {/* User Prompt */}
-            <div className="space-y-2">
-              <Label>User Prompt (Optional)</Label>
-              <div className="h-48 border rounded-lg overflow-hidden">
+            <section className="space-y-2 rounded-2xl border border-slate-200/75 bg-slate-50/60 p-4">
+              <div className="flex items-center justify-between">
+                <Label>User Prompt (Optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                  onClick={() =>
+                    appendPromptSnippet(
+                      'userPrompt',
+                      'Generate the response using the provided context and return only the final answer.'
+                    )
+                  }
+                >
+                  Add Starter
+                </Button>
+              </div>
+              <div className="h-48 overflow-hidden rounded-xl border border-slate-300 bg-white">
                 <CodeMirrorEditor
                   value={formState.userPrompt}
                   onChange={(v) => updateField('userPrompt', v)}
@@ -573,7 +760,7 @@ export function AgentEditorPane({
                   onSave={handleSave}
                 />
               </div>
-            </div>
+            </section>
           </div>
         )}
       </div>
