@@ -29,6 +29,8 @@ export interface AdminAgentDefinition {
   validationRules: unknown[] | null;
   userPromptTemplate: string | null;
   examples: AgentExample[] | null;
+  evalPrompt: string | null;
+  evalModel: string | null;
 }
 
 export interface RegistryToolMetadata {

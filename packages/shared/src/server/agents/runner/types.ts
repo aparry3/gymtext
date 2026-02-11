@@ -49,4 +49,8 @@ export interface ExtendedAgentConfig {
   userPromptTemplate: string | null;
   /** Few-shot examples for the agent */
   examples: unknown[] | null;
+  /** Eval prompt for automated evaluation of agent output */
+  evalPrompt: string | null;
+  /** Model to use for eval (defaults to gpt-5-nano if null) */
+  evalModel: string | null;
 }

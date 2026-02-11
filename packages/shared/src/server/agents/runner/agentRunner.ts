@@ -37,7 +37,10 @@ export interface AgentRunnerDeps {
   /** Lazy getter for service container (avoids circular dep) */
   getServices: () => ToolServiceContainer;
   /** Optional repository for DB logging of agent invocations */
-  agentLogRepository?: { log: (entry: NewAgentLog) => Promise<void> };
+  agentLogRepository?: {
+    log: (entry: NewAgentLog) => Promise<string | null>;
+    updateEval: (logId: string, evalResult: unknown, evalScore: number | null) => Promise<void>;
+  };
 }
 
 /**
@@ -72,7 +75,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
   } = deps;
 
   /**
-   * Build the onLog callback for DB logging
+   * Build the onLog callback for sub-agent DB logging (no eval)
    */
   const buildOnLog = agentLogRepository
     ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
@@ -87,6 +90,54 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         });
       }
     : undefined;
+
+  /**
+   * Run eval against an agent's output (fire-and-forget)
+   */
+  async function runEval(
+    logId: string,
+    agentId: string,
+    input: string,
+    response: unknown,
+    evalPrompt: string,
+    evalModel: string | null
+  ): Promise<void> {
+    try {
+      const model = (evalModel || 'gpt-5-nano') as ModelId;
+      const evalAgent = createAgent({
+        name: `eval:${agentId}`,
+        systemPrompt: evalPrompt,
+        model,
+        maxTokens: 1000,
+        temperature: 0,
+        maxIterations: 1,
+        maxRetries: 0,
+      });
+
+      const evalInput = JSON.stringify({
+        agentId,
+        input,
+        response: typeof response === 'string' ? response : JSON.stringify(response),
+      });
+
+      const evalResult = await evalAgent.invoke({ message: evalInput });
+      const responseText = typeof evalResult.response === 'string'
+        ? evalResult.response
+        : JSON.stringify(evalResult.response);
+
+      // Try to extract a numeric score from the response
+      let score: number | null = null;
+      const scoreMatch = responseText.match(/(?:score|rating)[:\s]*(\d+(?:\.\d+)?)/i)
+        || responseText.match(/(\d+(?:\.\d+)?)\s*\/\s*\d+/);
+      if (scoreMatch) {
+        score = parseFloat(scoreMatch[1]);
+      }
+
+      await agentLogRepository!.updateEval(logId, evalResult.response, score);
+    } catch (error) {
+      console.error(`[AgentRunner] Eval failed for ${agentId}:`, error);
+    }
+  }
 
   /**
    * Get extended config from the service (reads from same cache)
@@ -285,7 +336,26 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         ? extended.examples as AgentExample[]
         : undefined;
 
-      // 8. Build the complete agent definition
+      // 8. Build onLog for the top-level agent (with eval support)
+      const topLevelOnLog = agentLogRepository
+        ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
+            agentLogRepository.log({
+              agentId: entry.agentId,
+              model: entry.model ?? null,
+              messages: entry.messages as JsonValue,
+              input: entry.input,
+              response: entry.response as JsonValue,
+              durationMs: entry.durationMs,
+              metadata: (entry.metadata ?? {}) as JsonValue,
+            }).then((logId) => {
+              if (logId && extended.evalPrompt) {
+                runEval(logId, entry.agentId, entry.input, entry.response, extended.evalPrompt, extended.evalModel);
+              }
+            });
+          }
+        : undefined;
+
+      // 9. Build the complete agent definition
       const agent = createAgent({
         ...definition,
         model: definition.model as ModelId,
@@ -298,11 +368,11 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           ? subAgents
           : undefined,
         validate,
-        onLog: buildOnLog,
+        onLog: topLevelOnLog,
         examples: agentExamples,
       });
 
-      // 8. Invoke the agent
+      // 10. Invoke the agent
       const result = await agent.invoke({
         message: params.input,
         previousMessages: params.previousMessages,

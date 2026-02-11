@@ -170,6 +170,8 @@ export class AgentDefinitionRepository extends BaseRepository {
         validationRules: toJsonParam(update.validationRules !== undefined ? update.validationRules : current.validationRules),
         userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
         examples: toJsonParam(update.examples !== undefined ? update.examples : current.examples),
+        evalPrompt: update.evalPrompt !== undefined ? update.evalPrompt : current.evalPrompt,
+        evalModel: update.evalModel !== undefined ? update.evalModel : current.evalModel,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -208,6 +210,8 @@ export class AgentDefinitionRepository extends BaseRepository {
         validationRules: toJsonParam(version.validationRules),
         userPromptTemplate: version.userPromptTemplate,
         examples: toJsonParam(version.examples),
+        evalPrompt: version.evalPrompt,
+        evalModel: version.evalModel,
       })
       .returningAll()
       .executeTakeFirstOrThrow();

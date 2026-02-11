@@ -151,6 +151,8 @@ export function createAgentDefinitionService(
     validationRules: (raw.validationRules as unknown as ValidationRule[] | null) ?? null,
     userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
     examples: (raw.examples as unknown[] | null) ?? null,
+    evalPrompt: (raw.evalPrompt as string | null) ?? null,
+    evalModel: (raw.evalModel as string | null) ?? null,
   });
 
   return {
