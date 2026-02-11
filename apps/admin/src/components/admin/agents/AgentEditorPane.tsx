@@ -320,7 +320,8 @@ export function AgentEditorPane({
     try {
       const parsed = JSON.parse(formState.examplesJson);
       return Array.isArray(parsed) ? parsed : [];
-    } catch { return []; }
+    }
+    catch { return []; }
   })();
 
   const handleExamplesChange = useCallback(
