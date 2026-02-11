@@ -206,10 +206,10 @@ export function createWorkoutModificationService(
           // Path A: Existing workout - parallel agents
           console.log('[MODIFY_WEEK] Existing workout found, running parallel modification');
 
-          // Step 1: workout:modify
+          // Step 1: workout:modify (pass microcycle to avoid redundant DB fetch)
           const modifyResult = await agentRunner.invoke('workout:modify', {
             input: changeRequest,
-            params: { user, workout: existingWorkout },
+            params: { user, workout: existingWorkout, microcycle },
           });
           const modifyResponse = modifyResult.response as { overview: string; wasModified: boolean; modifications: string };
           const workoutDescription = modifyResponse.overview;
