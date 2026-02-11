@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Sparkles, ImagePlus, X } from 'lucide-react';
 import { TipTapEditor } from '@/components/blog/TipTapEditor';
 
 export default function NewBlogPostPage() {
@@ -22,6 +22,9 @@ export default function NewBlogPostPage() {
   const [tags, setTags] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+  const [coverImageId, setCoverImageId] = useState<string | null>(null);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Auto-generate slug from title
   const handleTitleChange = (newTitle: string) => {
@@ -39,6 +42,42 @@ export default function NewBlogPostPage() {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 200);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/blog/images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to upload image');
+      }
+
+      setCoverImageId(result.data.id);
+      setCoverImageUrl(result.data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveCoverImage = () => {
+    setCoverImageId(null);
+    setCoverImageUrl(null);
   };
 
   const handleGenerateMetadata = async () => {
@@ -101,6 +140,7 @@ export default function NewBlogPostPage() {
             .filter(Boolean),
           metaTitle: metaTitle.trim() || undefined,
           metaDescription: metaDescription.trim() || undefined,
+          coverImageId: coverImageId || undefined,
         }),
       });
 
@@ -196,6 +236,56 @@ export default function NewBlogPostPage() {
                   placeholder="Brief description for listings and SEO"
                   className="w-full px-3 py-2 border rounded-md bg-background min-h-[80px] resize-y"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Cover Image</label>
+                {coverImageUrl ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={coverImageUrl}
+                      alt="Cover"
+                      className="max-w-md max-h-48 rounded-lg object-cover border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveCoverImage}
+                      type="button"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={isUploadingImage}
+                      />
+                      <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg hover:bg-muted/50 transition-colors">
+                        {isUploadingImage ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Upload cover image</span>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recommended size: 1200x630px
+                </p>
               </div>
 
               <div>
