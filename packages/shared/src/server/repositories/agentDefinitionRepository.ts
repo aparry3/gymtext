@@ -4,6 +4,16 @@ import type {
   NewAgentDefinition,
   AgentDefinitionUpdate,
 } from '@/server/models/agentDefinition';
+import type { Json } from '@/server/models/_types';
+
+/**
+ * Ensure a JSON column value is a string so the pg driver doesn't
+ * misinterpret JavaScript arrays as PostgreSQL arrays.
+ */
+function toJsonParam(value: Json | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
 
 /**
  * AgentDefinitionRepository - Data access layer for agent configurations
@@ -114,7 +124,13 @@ export class AgentDefinitionRepository extends BaseRepository {
   async create(definition: NewAgentDefinition): Promise<AgentDefinition> {
     return this.db
       .insertInto('agentDefinitions')
-      .values(definition)
+      .values({
+        ...definition,
+        subAgents: toJsonParam(definition.subAgents),
+        schemaJson: toJsonParam(definition.schemaJson),
+        validationRules: toJsonParam(definition.validationRules),
+        examples: toJsonParam(definition.examples),
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
   }
@@ -149,11 +165,11 @@ export class AgentDefinitionRepository extends BaseRepository {
         isActive: update.isActive ?? current.isActive,
         toolIds: update.toolIds !== undefined ? update.toolIds : current.toolIds,
         contextTypes: update.contextTypes !== undefined ? update.contextTypes : current.contextTypes,
-        subAgents: update.subAgents !== undefined ? update.subAgents : current.subAgents,
-        schemaJson: update.schemaJson !== undefined ? update.schemaJson : current.schemaJson,
-        validationRules: update.validationRules !== undefined ? update.validationRules : current.validationRules,
+        subAgents: toJsonParam(update.subAgents !== undefined ? update.subAgents : current.subAgents),
+        schemaJson: toJsonParam(update.schemaJson !== undefined ? update.schemaJson : current.schemaJson),
+        validationRules: toJsonParam(update.validationRules !== undefined ? update.validationRules : current.validationRules),
         userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
-        examples: update.examples !== undefined ? update.examples : current.examples,
+        examples: toJsonParam(update.examples !== undefined ? update.examples : current.examples),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -187,11 +203,11 @@ export class AgentDefinitionRepository extends BaseRepository {
         isActive: version.isActive,
         toolIds: version.toolIds,
         contextTypes: version.contextTypes,
-        subAgents: version.subAgents,
-        schemaJson: version.schemaJson,
-        validationRules: version.validationRules,
+        subAgents: toJsonParam(version.subAgents),
+        schemaJson: toJsonParam(version.schemaJson),
+        validationRules: toJsonParam(version.validationRules),
         userPromptTemplate: version.userPromptTemplate,
-        examples: version.examples,
+        examples: toJsonParam(version.examples),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
