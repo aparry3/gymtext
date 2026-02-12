@@ -55,6 +55,9 @@ const SecretsSchema = z.object({
   CRON_SECRET: z.string().optional(),
   INNGEST_EVENT_KEY: z.string().optional(),
   INNGEST_SIGNING_KEY: z.string().optional(),
+
+  // Blob Storage
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 });
 
 type EnvVars = z.infer<typeof SecretsSchema>;

@@ -23,6 +23,9 @@ const SecretsSchema = z.object({
   // AI Services (for program parsing)
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   GOOGLE_API_KEY: z.string().min(1, 'GOOGLE_API_KEY is required'),
+
+  // Blob Storage
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 });
 
 type EnvVars = z.infer<typeof SecretsSchema>;

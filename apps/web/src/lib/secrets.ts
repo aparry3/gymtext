@@ -44,6 +44,9 @@ const SecretsSchema = z.object({
 
   // Session
   SESSION_ENCRYPTION_KEY: z.string().optional(),
+
+  // Blob Storage
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 });
 
 // =============================================================================
