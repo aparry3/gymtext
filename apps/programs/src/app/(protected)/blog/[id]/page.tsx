@@ -371,7 +371,7 @@ export default function EditBlogPostPage({ params }: EditBlogPostPageProps) {
               <article className="prose prose-lg max-w-none">
                 <h1>{title}</h1>
                 {description && <p className="lead">{description}</p>}
-                <div dangerouslySetInnerHTML={{ __html: content }} />
+                <div dangerouslySetInnerHTML={{ __html: content.replace(/<p><\/p>/g, '<p><br></p>') }} />
               </article>
             </CardContent>
           </Card>

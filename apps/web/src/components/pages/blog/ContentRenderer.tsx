@@ -9,6 +9,9 @@ interface ContentRendererProps {
  * Uses light mode styling only for consistent blog appearance
  */
 export function ContentRenderer({ content }: ContentRendererProps) {
+  // Ensure empty paragraphs are preserved for spacing
+  const processedContent = content.replace(/<p><\/p>/g, '<p><br></p>');
+
   return (
     <div
       className="prose prose-lg max-w-none
@@ -26,7 +29,7 @@ export function ContentRenderer({ content }: ContentRendererProps) {
         prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
         prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
         prose-img:rounded-lg prose-img:shadow-md prose-img:my-6"
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: processedContent }}
     />
   );
 }

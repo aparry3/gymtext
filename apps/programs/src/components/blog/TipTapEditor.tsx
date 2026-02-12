@@ -43,7 +43,10 @@ export function TipTapEditor({
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // Preserve empty paragraphs by replacing <p></p> with <p><br></p>
+      // so they render with height in the viewer
+      const html = editor.getHTML().replace(/<p><\/p>/g, '<p><br></p>');
+      onChange(html);
     },
     editorProps: {
       attributes: {
