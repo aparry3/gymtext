@@ -3,28 +3,29 @@
  *
  * Registers all context providers with a ContextRegistry instance.
  * Providers that need service dependencies are created via closures.
+ *
+ * Note: experienceLevel and dayFormat are now handled as agent extensions,
+ * not as context providers. See agent_extensions table.
  */
 import type { ContextRegistry } from '../contextRegistry';
 import type { FitnessPlanServiceInstance } from '@/server/services/domain/training/fitnessPlanService';
 import type { WorkoutInstanceServiceInstance } from '@/server/services/domain/training/workoutInstanceService';
 import type { MicrocycleServiceInstance } from '@/server/services/domain/training/microcycleService';
-import type { FitnessProfileServiceInstance } from '@/server/services/domain/user/fitnessProfileService';
 import type { EnrollmentServiceInstance } from '@/server/services/domain/program/enrollmentService';
 import type { ExerciseRepository } from '@/server/repositories/exerciseRepository';
+import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
 
 // Simple providers (no service deps)
-import { userProvider } from './user';
-import { userProfileProvider } from './userProfile';
-import { dateContextProvider } from './dateContext';
+import { createUserProvider } from './user';
+import { createUserProfileProvider } from './userProfile';
+import { createDateContextProvider } from './dateContext';
 
 // Factory providers (need service deps)
 import { createDayOverviewProvider } from './dayOverview';
 import { createTrainingMetaProvider } from './trainingMeta';
-import { createDayFormatProvider } from './dayFormat';
 import { createFitnessPlanProvider } from './fitnessPlan';
 import { createCurrentWorkoutProvider } from './currentWorkout';
 import { createCurrentMicrocycleProvider } from './currentMicrocycle';
-import { createExperienceLevelProvider } from './experienceLevel';
 import { createProgramVersionProvider } from './programVersion';
 import { createAvailableExercisesProvider } from './availableExercises';
 
@@ -32,9 +33,9 @@ export interface ContextRegistryDeps {
   fitnessPlanService: FitnessPlanServiceInstance;
   workoutInstanceService: WorkoutInstanceServiceInstance;
   microcycleService: MicrocycleServiceInstance;
-  fitnessProfileService: FitnessProfileServiceInstance;
   enrollmentService: EnrollmentServiceInstance;
   exerciseRepo?: ExerciseRepository;
+  contextTemplateService: ContextTemplateServiceInstance;
 }
 
 /**
@@ -47,47 +48,48 @@ export function registerAllContextProviders(
   registry: ContextRegistry,
   deps: ContextRegistryDeps
 ): void {
-  // Simple providers
-  registry.register(userProvider);
-  registry.register(userProfileProvider);
-  registry.register(dateContextProvider);
+  const { contextTemplateService } = deps;
+
+  // Simple providers (now with template support)
+  registry.register(createUserProvider({ contextTemplateService }));
+  registry.register(createUserProfileProvider({ contextTemplateService }));
+  registry.register(createDateContextProvider({ contextTemplateService }));
 
   // Service-dependent providers
   registry.register(createDayOverviewProvider({
     microcycleService: deps.microcycleService,
+    contextTemplateService,
   }));
 
   registry.register(createTrainingMetaProvider({
     microcycleService: deps.microcycleService,
-  }));
-
-  registry.register(createDayFormatProvider({
-    microcycleService: deps.microcycleService,
+    contextTemplateService,
   }));
 
   registry.register(createFitnessPlanProvider({
     fitnessPlanService: deps.fitnessPlanService,
+    contextTemplateService,
   }));
 
   registry.register(createCurrentWorkoutProvider({
     workoutInstanceService: deps.workoutInstanceService,
+    contextTemplateService,
   }));
 
   registry.register(createCurrentMicrocycleProvider({
     microcycleService: deps.microcycleService,
-  }));
-
-  registry.register(createExperienceLevelProvider({
-    fitnessProfileService: deps.fitnessProfileService,
+    contextTemplateService,
   }));
 
   registry.register(createProgramVersionProvider({
     enrollmentService: deps.enrollmentService,
+    contextTemplateService,
   }));
 
   if (deps.exerciseRepo) {
     registry.register(createAvailableExercisesProvider({
       exerciseRepo: deps.exerciseRepo,
+      contextTemplateService,
     }));
   }
 }

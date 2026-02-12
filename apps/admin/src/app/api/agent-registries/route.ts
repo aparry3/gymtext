@@ -13,20 +13,7 @@ export async function GET() {
 
     const tools = services.toolRegistry.list();
 
-    const contextTypes = [
-      'user',
-      'userProfile',
-      'fitnessPlan',
-      'dayOverview',
-      'currentWorkout',
-      'dateContext',
-      'trainingMeta',
-      'currentMicrocycle',
-      'experienceLevel',
-      'dayFormat',
-      'programVersion',
-      'availableExercises',
-    ];
+    const contextTypes = services.contextRegistry.list().map((p) => p.name);
 
     const agentIds = AGENT_DOMAINS.flatMap((domain) =>
       domain.agents.map((agent) => agent.id)

@@ -6,6 +6,13 @@
  */
 import type { ContextProvider } from './types';
 
+export interface ContextProviderMetadata {
+  name: string;
+  description: string;
+  params: { required?: string[]; optional?: string[] };
+  templateVariables?: string[];
+}
+
 export class ContextRegistry {
   private providers = new Map<string, ContextProvider>();
 
@@ -19,8 +26,18 @@ export class ContextRegistry {
     return this.providers.get(name);
   }
 
+  /** List all registered providers with metadata */
+  list(): ContextProviderMetadata[] {
+    return Array.from(this.providers.values()).map((p) => ({
+      name: p.name,
+      description: p.description,
+      params: p.params,
+      templateVariables: p.templateVariables,
+    }));
+  }
+
   /** List all registered provider names */
-  list(): string[] {
+  listNames(): string[] {
     return Array.from(this.providers.keys());
   }
 

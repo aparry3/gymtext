@@ -13,6 +13,8 @@ export interface AgentInvokeParams {
   previousMessages?: Message[];
   /** Manual context injection (prepended to resolved context) */
   context?: string[];
+  /** Agent extensions to apply (e.g., { experienceLevel: 'beginner', dayFormat: 'TRAINING' }) */
+  extensions?: Record<string, string>;
 }
 
 /**
@@ -53,4 +55,6 @@ export interface ExtendedAgentConfig {
   evalPrompt: string | null;
   /** Model to use for eval (defaults to gpt-5-nano if null) */
   evalModel: string | null;
+  /** Default extension keys per type (e.g., { experienceLevel: 'intermediate' }) */
+  defaultExtensions: Record<string, string> | null;
 }

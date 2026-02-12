@@ -31,6 +31,7 @@ export interface AdminAgentDefinition {
   examples: AgentExample[] | null;
   evalPrompt: string | null;
   evalModel: string | null;
+  defaultExtensions: Record<string, string> | null;
 }
 
 export interface RegistryToolMetadata {

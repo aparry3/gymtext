@@ -15,6 +15,7 @@ import type {
   SubAgentDbConfig,
   ExtendedAgentConfig,
 } from './types';
+import type { AgentExtensionServiceInstance } from '@/server/services/domain/agents/agentExtensionService';
 import type {
   SubAgentBatch,
   SubAgentConfig,
@@ -41,6 +42,8 @@ export interface AgentRunnerDeps {
     log: (entry: NewAgentLog) => Promise<string | null>;
     updateEval: (logId: string, evalResult: unknown, evalScore: number | null) => Promise<void>;
   };
+  /** Optional agent extension service for resolving per-agent extensions */
+  agentExtensionService?: AgentExtensionServiceInstance;
 }
 
 /**
@@ -72,6 +75,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
     toolRegistry,
     getServices,
     agentLogRepository,
+    agentExtensionService,
   } = deps;
 
   /**
@@ -336,7 +340,40 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         ? extended.examples as AgentExample[]
         : undefined;
 
-      // 8. Build onLog for the top-level agent (with eval support)
+      // 8. Resolve extensions and merge into system prompt
+      // Merge: defaults from agent definition, overridden by caller-provided extensions
+      let finalSystemPrompt = definition.systemPrompt;
+      let finalEvalPrompt = extended.evalPrompt;
+
+      const mergedExtensions: Record<string, string> = {
+        ...(extended.defaultExtensions || {}),
+        ...(params.extensions || {}),
+      };
+
+      if (Object.keys(mergedExtensions).length > 0 && agentExtensionService) {
+        const extensionParts: string[] = [];
+        const extensionRubrics: string[] = [];
+
+        for (const [extType, extKey] of Object.entries(mergedExtensions)) {
+          if (!extKey) continue;
+          const ext = await agentExtensionService.getExtension(agentId, extType, extKey);
+          if (ext) {
+            extensionParts.push(ext.content);
+            if (ext.evalRubric) {
+              extensionRubrics.push(ext.evalRubric);
+            }
+          }
+        }
+
+        if (extensionParts.length > 0) {
+          finalSystemPrompt = finalSystemPrompt + '\n\n' + extensionParts.join('\n\n');
+        }
+        if (extensionRubrics.length > 0) {
+          finalEvalPrompt = [finalEvalPrompt, ...extensionRubrics].filter(Boolean).join('\n\n') || null;
+        }
+      }
+
+      // 8b. Build onLog for the top-level agent (with eval support)
       const topLevelOnLog = agentLogRepository
         ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
             agentLogRepository.log({
@@ -348,8 +385,8 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
               durationMs: entry.durationMs,
               metadata: (entry.metadata ?? {}) as JsonValue,
             }).then((logId) => {
-              if (logId && extended.evalPrompt) {
-                runEval(logId, entry.agentId, entry.input, entry.response, extended.evalPrompt, extended.evalModel);
+              if (logId && finalEvalPrompt) {
+                runEval(logId, entry.agentId, entry.input, entry.response, finalEvalPrompt, extended.evalModel);
               }
             });
           }
@@ -358,6 +395,7 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       // 9. Build the complete agent definition
       const agent = createAgent({
         ...definition,
+        systemPrompt: finalSystemPrompt,
         model: definition.model as ModelId,
         context,
         tools,

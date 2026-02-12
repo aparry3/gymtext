@@ -1,18 +1,15 @@
 import type { WorkoutInstance } from '@/server/models';
 
 /**
- * Build current workout context string
+ * Build current workout context content (raw, without XML wrapper)
  *
  * @param workout - Current workout instance (optional)
- * @returns Formatted context string with XML tags
+ * @returns Raw content string (XML wrapper applied by template)
  */
 export const buildWorkoutContext = (workout: WorkoutInstance | null | undefined): string => {
   if (!workout) {
-    return '<CurrentWorkout>No workout scheduled</CurrentWorkout>';
+    return 'No workout scheduled';
   }
 
-  // Include workout description or session type
-  const description = workout.description || workout.sessionType || 'Workout';
-
-  return `<CurrentWorkout>${description}</CurrentWorkout>`;
+  return workout.description || workout.sessionType || 'Workout';
 };

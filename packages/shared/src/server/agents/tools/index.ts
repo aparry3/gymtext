@@ -7,4 +7,4 @@ export type {
   ToolServiceContainer,
 } from './types';
 
-export type { ToolMetadata } from './toolRegistry';
+export type { ToolMetadata, DetailedToolMetadata } from './toolRegistry';

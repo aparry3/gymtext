@@ -40,7 +40,7 @@ const navItems = [
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },
-  { href: '/prompts', label: 'Prompts', icon: FileText },
+  { href: '/registry', label: 'Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
 ];

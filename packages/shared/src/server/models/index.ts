@@ -43,8 +43,11 @@ export { StructuredProfileSchema, StructuredConstraintSchema, ExperienceLevelSch
 // PageVisit types
 export type { PageVisit, NewPageVisit } from './pageVisit';
 
-// Prompt types
-export type { Prompt, NewPrompt, PromptRole, PromptPair } from './prompt';
+// Context template types
+export type { ContextTemplate, NewContextTemplate } from './contextTemplate';
+
+// Agent extension types
+export type { AgentExtension, NewAgentExtension } from './agentExtension';
 
 // Agent definition types
 export type {

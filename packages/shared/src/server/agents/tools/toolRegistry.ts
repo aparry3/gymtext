@@ -1,11 +1,19 @@
 import { z } from 'zod';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ToolDefinition, ToolExecutionContext } from './types';
 
 export interface ToolMetadata {
   name: string;
   description: string;
   priority?: number;
+}
+
+export interface DetailedToolMetadata {
+  name: string;
+  description: string;
+  priority?: number;
+  parameters: Record<string, unknown>;
 }
 
 /**
@@ -33,6 +41,15 @@ export class ToolRegistry {
       name: def.name,
       description: def.description,
       priority: def.priority,
+    }));
+  }
+
+  listDetailed(): DetailedToolMetadata[] {
+    return [...this.tools.values()].map((def) => ({
+      name: def.name,
+      description: def.description,
+      priority: def.priority,
+      parameters: zodToJsonSchema(def.schema) as Record<string, unknown>,
     }));
   }
 

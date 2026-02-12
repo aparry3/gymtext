@@ -10,8 +10,6 @@ export enum ContextType {
   DATE_CONTEXT = 'dateContext',
   TRAINING_META = 'trainingMeta',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
-  EXPERIENCE_LEVEL = 'experienceLevel',
-  DAY_FORMAT = 'dayFormat',
   PROGRAM_VERSION = 'programVersion',
   AVAILABLE_EXERCISES = 'availableExercises',
 }

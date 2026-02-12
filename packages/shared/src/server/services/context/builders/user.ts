@@ -1,12 +1,12 @@
 /**
- * Build user context string with basic user information
+ * Build user context content (raw, without XML wrapper)
  *
  * @param user - User object with name, optional gender, and optional age
- * @returns Formatted context string with XML tags
+ * @returns Raw content string (XML wrapper applied by template)
  */
 export const buildUserContext = (user: { name?: string | null; gender?: string | null; age?: number | null } | null | undefined): string => {
   if (!user) {
-    return '<User>No user information available</User>';
+    return 'No user information available';
   }
 
   const parts: string[] = [];
@@ -24,8 +24,8 @@ export const buildUserContext = (user: { name?: string | null; gender?: string |
   }
 
   if (parts.length === 0) {
-    return '<User>No user information available</User>';
+    return 'No user information available';
   }
 
-  return `<User>\n${parts.join('\n')}\n</User>`;
+  return parts.join('\n');
 };

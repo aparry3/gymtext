@@ -153,6 +153,7 @@ export function createAgentDefinitionService(
     examples: (raw.examples as unknown[] | null) ?? null,
     evalPrompt: (raw.evalPrompt as string | null) ?? null,
     evalModel: (raw.evalModel as string | null) ?? null,
+    defaultExtensions: (raw.defaultExtensions as Record<string, string> | null) ?? null,
   });
 
   return {

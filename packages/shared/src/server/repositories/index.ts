@@ -13,7 +13,6 @@ export * from './workoutInstanceRepository';
 export * from './microcycleRepository';
 export * from './subscriptionRepository';
 export * from './onboardingRepository';
-export * from './promptRepository';
 export * from './dayConfigRepository';
 export * from './messageQueueRepository';
 export * from './shortLinkRepository';

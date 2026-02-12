@@ -71,6 +71,7 @@ interface FormState {
   examplesJson: string;
   evalPrompt: string;
   evalModel: string;
+  defaultExtensionsJson: string;
 }
 
 function arraysEqual(a: string[], b: string[]): boolean {
@@ -99,7 +100,8 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     a.userPromptTemplate === b.userPromptTemplate &&
     a.examplesJson === b.examplesJson &&
     a.evalPrompt === b.evalPrompt &&
-    a.evalModel === b.evalModel
+    a.evalModel === b.evalModel &&
+    a.defaultExtensionsJson === b.defaultExtensionsJson
   );
 }
 
@@ -140,6 +142,7 @@ const DEFAULT_FORM_STATE: FormState = {
   examplesJson: '[]',
   evalPrompt: '',
   evalModel: 'gpt-5-nano',
+  defaultExtensionsJson: '',
 };
 
 const SCHEMA_TEMPLATES: Array<{ key: string; label: string; value: Record<string, unknown> }> = [
@@ -250,6 +253,7 @@ export function AgentEditorPane({
             examplesJson: JSON.stringify(data.examples || [], null, 2),
             evalPrompt: data.evalPrompt || '',
             evalModel: data.evalModel || 'gpt-5-nano',
+            defaultExtensionsJson: safeStringify(data.defaultExtensions),
           };
           setFormState(state);
           setOriginalState(state);
@@ -282,6 +286,7 @@ export function AgentEditorPane({
       { key: 'subAgentsJson', label: 'Sub-Agents' },
       { key: 'schemaJsonJson', label: 'Output Schema' },
       { key: 'validationRulesJson', label: 'Validation Rules' },
+      { key: 'defaultExtensionsJson', label: 'Default Extensions' },
     ] as const;
 
     const parsed: Record<string, unknown> = {};
@@ -345,6 +350,7 @@ export function AgentEditorPane({
           examples: JSON.parse(formState.examplesJson),
           evalPrompt: formState.evalPrompt || null,
           evalModel: formState.evalModel || null,
+          defaultExtensions: parsed.defaultExtensionsJson,
         }),
       });
 
@@ -625,6 +631,17 @@ export function AgentEditorPane({
                 onChange={(v) => updateField('validationRulesJson', v)}
                 onSave={handleSave}
                 error={jsonErrors.validationRulesJson}
+              />
+
+              {/* Default Extensions */}
+              <JsonConfigSection
+                label="Default Extensions"
+                value={formState.defaultExtensionsJson}
+                onChange={(v) => updateField('defaultExtensionsJson', v)}
+                onSave={handleSave}
+                height="h-32"
+                placeholder='{ "experienceLevel": "intermediate", "dayFormat": "TRAINING" }'
+                error={jsonErrors.defaultExtensionsJson}
               />
 
               {/* User Prompt Template */}

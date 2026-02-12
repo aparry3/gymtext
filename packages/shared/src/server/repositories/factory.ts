@@ -21,7 +21,6 @@ import { WorkoutInstanceRepository } from './workoutInstanceRepository';
 import { MicrocycleRepository } from './microcycleRepository';
 import { SubscriptionRepository } from './subscriptionRepository';
 import { OnboardingRepository } from './onboardingRepository';
-import { PromptRepository } from './promptRepository';
 import { DayConfigRepository } from './dayConfigRepository';
 import { MessageQueueRepository } from './messageQueueRepository';
 import { ShortLinkRepository } from './shortLinkRepository';
@@ -46,6 +45,8 @@ import { BlogPostRepository } from './blogPostRepository';
 import { OrganizationRepository } from './organizationRepository';
 import { AgentDefinitionRepository } from './agentDefinitionRepository';
 import { AgentLogRepository } from './agentLogRepository';
+import { ContextTemplateRepository } from './contextTemplateRepository';
+import { AgentExtensionRepository } from './agentExtensionRepository';
 
 /**
  * Container for all repository instances
@@ -59,7 +60,6 @@ export interface RepositoryContainer {
   microcycle: MicrocycleRepository;
   subscription: SubscriptionRepository;
   onboarding: OnboardingRepository;
-  prompt: PromptRepository;
   dayConfig: DayConfigRepository;
   messageQueue: MessageQueueRepository;
   shortLink: ShortLinkRepository;
@@ -84,6 +84,8 @@ export interface RepositoryContainer {
   organization: OrganizationRepository;
   agentDefinition: AgentDefinitionRepository;
   agentLog: AgentLogRepository;
+  contextTemplate: ContextTemplateRepository;
+  agentExtension: AgentExtensionRepository;
   // Direct db access for complex queries
   db: Kysely<DB>;
 }
@@ -114,7 +116,6 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     microcycle: new MicrocycleRepository(db),
     subscription: new SubscriptionRepository(db),
     onboarding: new OnboardingRepository(db),
-    prompt: new PromptRepository(db),
     dayConfig: new DayConfigRepository(db),
     messageQueue: new MessageQueueRepository(db),
     shortLink: new ShortLinkRepository(db),
@@ -139,6 +140,8 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     organization: new OrganizationRepository(db),
     agentDefinition: new AgentDefinitionRepository(db),
     agentLog: new AgentLogRepository(db),
+    contextTemplate: new ContextTemplateRepository(db),
+    agentExtension: new AgentExtensionRepository(db),
     db,
   };
 

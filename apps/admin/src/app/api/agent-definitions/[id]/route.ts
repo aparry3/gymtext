@@ -78,6 +78,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       examples: body.examples,
       evalPrompt: body.evalPrompt,
       evalModel: body.evalModel,
+      defaultExtensions: body.defaultExtensions,
     });
 
     // Invalidate cache

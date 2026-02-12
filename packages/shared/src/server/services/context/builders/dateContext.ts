@@ -1,23 +1,7 @@
-import { formatForAI } from '@/shared/utils/date';
+// dateContext builder is no longer needed - the provider handles template resolution directly.
+// This file is kept for backwards compatibility but the builder logic
+// has been moved into the dateContext context provider definition.
+// The provider uses formatForAI directly and passes formattedDate + timezone to the template.
 
-/**
- * Build date/timezone context string
- *
- * @param timezone - User's timezone (IANA format)
- * @param date - Date to format (defaults to now)
- * @returns Formatted context string with XML tags
- */
-export const buildDateContext = (
-  timezone: string | undefined,
-  date: Date | undefined
-): string => {
-  const effectiveTimezone = timezone || 'America/New_York';
-  const effectiveDate = date || new Date();
-
-  const formattedDate = formatForAI(effectiveDate, effectiveTimezone);
-
-  return `<DateContext>
-Today is ${formattedDate}.
-Timezone: ${effectiveTimezone}
-</DateContext>`;
-};
+// Re-export formatForAI for any remaining callers
+export { formatForAI } from '@/shared/utils/date';

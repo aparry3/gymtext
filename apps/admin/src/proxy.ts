@@ -45,7 +45,6 @@ export const config = {
     '/',
     '/login',
     '/calendar/:path*',
-    '/prompts/:path*',
     '/users/:path*',
     '/api/:path*',
   ],

@@ -8,10 +8,10 @@ export interface TrainingMetaInput {
 }
 
 /**
- * Build training metadata context string
+ * Build training metadata context content (raw, without XML wrapper)
  *
  * @param data - Training metadata (isDeload, week numbers)
- * @returns Formatted context string with XML tags, or empty string if no data
+ * @returns Raw content string (XML wrapper applied by template)
  */
 export const buildTrainingMetaContext = (data: TrainingMetaInput): string => {
   const parts: string[] = [];
@@ -32,5 +32,5 @@ export const buildTrainingMetaContext = (data: TrainingMetaInput): string => {
     return '';
   }
 
-  return `<TrainingMeta>${parts.join(' | ')}</TrainingMeta>`;
+  return parts.join(' | ');
 };

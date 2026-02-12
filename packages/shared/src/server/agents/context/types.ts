@@ -17,6 +17,9 @@ export interface ContextProvider {
     optional?: string[];
   };
 
+  /** Template variables available for this provider (e.g., ['content', 'formattedDate']) */
+  templateVariables?: string[];
+
   /** Resolve the context string from params. Return null to skip. */
   resolve: (params: Record<string, unknown>) => Promise<string | null>;
 }

@@ -46,7 +46,8 @@
     "unpdf": "^1.4.0",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.0",

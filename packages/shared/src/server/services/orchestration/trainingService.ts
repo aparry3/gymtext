@@ -19,6 +19,7 @@ import type { ProgressInfo } from '../domain/training/progressService';
 
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
+import type { FitnessProfileServiceInstance } from '../domain/user/fitnessProfileService';
 import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
 import type { ProgressServiceInstance } from '../domain/training/progressService';
 import type { MicrocycleServiceInstance } from '../domain/training/microcycleService';
@@ -32,7 +33,6 @@ import type { ProgramOwnerServiceInstance } from '../domain/program/programOwner
 
 // Agent services
 import type { AgentRunnerInstance } from '@/server/agents/runner';
-import { SnippetType } from '../context/builders/experienceLevel';
 
 // Exercise resolution
 import type { ExerciseResolutionServiceInstance } from '../domain/exercise/exerciseResolutionService';
@@ -40,6 +40,9 @@ import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRep
 
 // Workout structure types
 import type { WorkoutStructure } from '@/server/models/workout';
+
+// Microcycle structure types
+import type { MicrocycleStructure } from '@/shared/types/microcycle';
 
 // =============================================================================
 // Exported Helpers
@@ -156,6 +159,7 @@ export interface TrainingServiceInstance {
 export interface TrainingServiceDeps {
   // Domain services
   user: UserServiceInstance;
+  fitnessProfile: FitnessProfileServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   progress: ProgressServiceInstance;
   microcycle: MicrocycleServiceInstance;
@@ -185,6 +189,7 @@ export interface TrainingServiceDeps {
 export function createTrainingService(deps: TrainingServiceDeps): TrainingServiceInstance {
   const {
     user: userService,
+    fitnessProfile: fitnessProfileService,
     fitnessPlan: fitnessPlanService,
     progress: progressService,
     microcycle: microcycleService,
@@ -197,6 +202,34 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     exerciseResolution,
     exerciseUse,
   } = deps;
+
+  /**
+   * Build extension overrides from the user's structured profile.
+   * Returns experienceLevel if available, otherwise undefined (falls back to agent defaults).
+   */
+  async function buildUserExtensions(userId: string): Promise<Record<string, string> | undefined> {
+    try {
+      const structured = await fitnessProfileService.getCurrentStructuredProfile(userId);
+      if (structured?.experienceLevel) {
+        return { experienceLevel: structured.experienceLevel };
+      }
+    } catch {
+      // Structured profile not available — fall through to defaults
+    }
+    return undefined;
+  }
+
+  /**
+   * Resolve the day's activity type from the microcycle structured data.
+   * Returns the dayFormat extension key (TRAINING, ACTIVE_RECOVERY, REST) or undefined.
+   */
+  function getDayActivityType(microcycle: Microcycle, dayIndex: number): string | undefined {
+    const structured = microcycle.structured as MicrocycleStructure | null | undefined;
+    if (structured?.days?.[dayIndex]?.activityType) {
+      return structured.days[dayIndex].activityType;
+    }
+    return undefined;
+  }
 
   return {
     async createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
@@ -269,9 +302,18 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           return null;
         }
 
-        // 5. Generate workout via AI agent
+        // 5. Build extensions from user profile + day activity type
+        const userExtensions = await buildUserExtensions(user.id);
+        const activityType = getDayActivityType(microcycle, dayIndex);
+        const extensions: Record<string, string> = {
+          ...userExtensions,
+          ...(activityType ? { dayFormat: activityType } : {}),
+        };
+
+        // 5b. Generate workout via AI agent
         const workoutResult = await agentRunner.invoke('workout:generate', {
           params: { user, date: targetDate.toJSDate() },
+          extensions: Object.keys(extensions).length > 0 ? extensions : undefined,
         });
         const description = workoutResult.response as string;
         const message = (workoutResult as Record<string, unknown>).message as string;
@@ -351,10 +393,12 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         throw new Error(`[TrainingService] User not found: ${userId}`);
       }
 
-      // 4. Generate microcycle via AI agent
+      // 4. Generate microcycle via AI agent (with experience level extension)
+      const mcExtensions = await buildUserExtensions(user.id);
       const mcResult = await agentRunner.invoke('microcycle:generate', {
         input: `Absolute Week: ${progress.absoluteWeek}`,
-        params: { user, snippetType: SnippetType.MICROCYCLE },
+        params: { user },
+        extensions: mcExtensions,
       });
       const mcResponse = mcResult.response as { days: string[]; overview: string; isDeload: boolean };
       const days = mcResponse.days;

@@ -130,6 +130,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         schemaJson: toJsonParam(definition.schemaJson),
         validationRules: toJsonParam(definition.validationRules),
         examples: toJsonParam(definition.examples),
+        defaultExtensions: toJsonParam(definition.defaultExtensions),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -172,6 +173,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         examples: toJsonParam(update.examples !== undefined ? update.examples : current.examples),
         evalPrompt: update.evalPrompt !== undefined ? update.evalPrompt : current.evalPrompt,
         evalModel: update.evalModel !== undefined ? update.evalModel : current.evalModel,
+        defaultExtensions: toJsonParam(update.defaultExtensions !== undefined ? update.defaultExtensions : current.defaultExtensions),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -212,6 +214,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         examples: toJsonParam(version.examples),
         evalPrompt: version.evalPrompt,
         evalModel: version.evalModel,
+        defaultExtensions: toJsonParam(version.defaultExtensions),
       })
       .returningAll()
       .executeTakeFirstOrThrow();

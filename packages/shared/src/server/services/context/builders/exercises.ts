@@ -1,8 +1,8 @@
 /**
- * Build available exercises context string
+ * Build available exercises context content (raw, without XML wrapper)
  *
  * @param exercises - List of active exercises with names
- * @returns Formatted context string with XML tags
+ * @returns Raw content string (XML wrapper applied by template)
  */
 export const buildExercisesContext = (
   exercises: { name: string }[] | null | undefined
@@ -11,5 +11,5 @@ export const buildExercisesContext = (
     return '';
   }
   const names = exercises.map(ex => `- ${ex.name}`).join('\n');
-  return `<AvailableExercises>\nExercises Available:\n${names}\n</AvailableExercises>`;
+  return `Exercises Available:\n${names}`;
 };

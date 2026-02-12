@@ -20,5 +20,6 @@
  */
 
 export { ContextRegistry } from './contextRegistry';
+export type { ContextProviderMetadata } from './contextRegistry';
 export type { ContextProvider } from './types';
 export { registerAllContextProviders, type ContextRegistryDeps } from './definitions';

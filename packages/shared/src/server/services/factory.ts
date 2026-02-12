@@ -30,7 +30,6 @@ import { createDayConfigService, type DayConfigServiceInstance } from './domain/
 
 // More domain service factory functions
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
-import { createPromptService, type PromptServiceInstance } from './domain/prompts/promptService';
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
@@ -53,6 +52,8 @@ import { createBlogService, type BlogServiceInstance } from './domain/blog/blogS
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
+import { createAgentExtensionService, type AgentExtensionServiceInstance } from './domain/agents/agentExtensionService';
+import { createContextTemplateService, type ContextTemplateServiceInstance } from './domain/context/contextTemplateService';
 
 // Agent services
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
@@ -100,7 +101,6 @@ export interface ServiceContainer {
 
   // Additional services
   shortLink: ShortLinkServiceInstance;
-  prompt: PromptServiceInstance;
   referral: ReferralServiceInstance;
   adminAuth: AdminAuthServiceInstance;
   userAuth: UserAuthServiceInstance;
@@ -150,11 +150,18 @@ export interface ServiceContainer {
   // Agent logs
   agentLog: AgentLogServiceInstance;
 
+  // Agent extensions
+  agentExtension: AgentExtensionServiceInstance;
+
+  // Context templates
+  contextTemplate: ContextTemplateServiceInstance;
+
   // Agent Runner (new declarative agent system)
   agentRunner: AgentRunnerInstance;
 
   // Registries (for admin metadata API)
   toolRegistry: ToolRegistry;
+  contextRegistry: ContextRegistry;
 }
 
 /**
@@ -188,10 +195,11 @@ export function createServices(
   const subscription = createSubscriptionService(repos);
   const dayConfig = createDayConfigService(repos);
   const shortLink = createShortLinkService(repos);
-  const prompt = createPromptService(repos);
   const queue = createQueueService(repos);
   const agentDefinition = createAgentDefinitionService(repos);
   const agentLog = createAgentLogService(repos);
+  const agentExtension = createAgentExtensionService(repos);
+  const contextTemplate = createContextTemplateService(repos);
 
   // fitnessProfile needs agentDefinitionService for profile agents
   const fitnessProfile = createFitnessProfileService(repos, agentDefinition);
@@ -223,9 +231,9 @@ export function createServices(
     fitnessPlanService: fitnessPlan,
     workoutInstanceService: workoutInstance,
     microcycleService: microcycle,
-    fitnessProfileService: fitnessProfile,
     enrollmentService: enrollment,
     exerciseRepo: repos.exercise,
+    contextTemplateService: contextTemplate,
   });
 
   // =========================================================================
@@ -339,6 +347,7 @@ export function createServices(
     contextRegistry,
     toolRegistry,
     agentLogRepository: repos.agentLog,
+    agentExtensionService: agentExtension,
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
       modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },
@@ -383,6 +392,7 @@ export function createServices(
   // =========================================================================
   const training = createTrainingService({
     user,
+    fitnessProfile,
     fitnessPlan,
     progress,
     microcycle,
@@ -507,7 +517,6 @@ export function createServices(
 
     // Additional services (use getters for lazy-loaded ones)
     shortLink,
-    prompt,
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
@@ -557,11 +566,18 @@ export function createServices(
     // Agent logs
     agentLog,
 
+    // Agent extensions
+    agentExtension,
+
+    // Context templates
+    contextTemplate,
+
     // Agent Runner
     agentRunner,
 
     // Registries
     toolRegistry,
+    contextRegistry,
   };
 }
 
@@ -598,7 +614,6 @@ export type {
 
   // Additional service types
   ShortLinkServiceInstance,
-  PromptServiceInstance,
   ReferralServiceInstance,
   AdminAuthServiceInstance,
   UserAuthServiceInstance,
@@ -644,6 +659,12 @@ export type {
 
   // Agent logs
   AgentLogServiceInstance,
+
+  // Agent extensions
+  AgentExtensionServiceInstance,
+
+  // Context templates
+  ContextTemplateServiceInstance,
 
   // Agent Runner
   AgentRunnerInstance,

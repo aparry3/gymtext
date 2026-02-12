@@ -10,7 +10,6 @@ import type { WorkoutInstanceServiceInstance } from './workoutInstanceService';
 import type { UserServiceInstance } from '../user/userService';
 import type { FitnessProfileServiceInstance } from '../user/fitnessProfileService';
 import type { AgentRunnerInstance } from '@/server/agents/runner';
-import { SnippetType } from '../../context/builders/experienceLevel';
 
 // Exercise resolution
 import { resolveExercisesInStructure } from '../../orchestration/trainingService';
@@ -66,6 +65,21 @@ export function createChainRunnerService(
 ): ChainRunnerServiceInstance {
   const { fitnessPlan: fitnessPlanService, microcycle: microcycleService, workoutInstance: workoutService, user: userService, fitnessProfile: fitnessProfileService, agentRunner, exerciseResolution, exerciseUse } = deps;
 
+  /**
+   * Build extension overrides from the user's structured profile.
+   */
+  async function buildUserExtensions(userId: string): Promise<Record<string, string> | undefined> {
+    try {
+      const structured = await fitnessProfileService.getCurrentStructuredProfile(userId);
+      if (structured?.experienceLevel) {
+        return { experienceLevel: structured.experienceLevel };
+      }
+    } catch {
+      // Structured profile not available — fall through to defaults
+    }
+    return undefined;
+  }
+
   // Helper functions for chain operations
   const runFullFitnessPlanChain = async (plan: FitnessPlan, user: UserWithProfile): Promise<FitnessPlan> => {
     console.log(`[ChainRunner] Running full fitness plan chain for plan ${plan.id}`);
@@ -96,9 +110,11 @@ export function createChainRunnerService(
 
   const runFullMicrocycleChain = async (microcycle: Microcycle, _plan: FitnessPlan, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running full microcycle chain for microcycle ${microcycle.id}`);
+    const extensions = await buildUserExtensions(user.id);
     const result = await agentRunner.invoke('microcycle:generate', {
       input: `Absolute Week: ${microcycle.absoluteWeek}`,
-      params: { user, snippetType: SnippetType.MICROCYCLE },
+      params: { user },
+      extensions,
     });
     const mcResponse = result.response as { days: string[]; overview: string; isDeload: boolean };
     const updated = await microcycleService.updateMicrocycle(microcycle.id, {
@@ -136,8 +152,10 @@ export function createChainRunnerService(
 
   const runFullWorkoutChain = async (workout: WorkoutInstance, user: UserWithProfile, _microcycle: Microcycle | null): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running full workout chain for workout ${workout.id}`);
+    const extensions = await buildUserExtensions(user.id);
     const result = await agentRunner.invoke('workout:generate', {
       params: { user, date: new Date(workout.date) },
+      extensions,
     });
     const description = result.response as string;
     const message = (result as Record<string, unknown>).message as string;
