@@ -37,7 +37,8 @@
     "migrate:training:dry": "tsx scripts/migrations/regenerate-training-data.ts --dry-run",
     "agent:upsert": "source .env.local && tsx scripts/agent-definition.ts upsert",
     "agent:get": "source .env.local && tsx scripts/agent-definition.ts get",
-    "agent:list": "source .env.local && tsx scripts/agent-definition.ts list"
+    "agent:list": "source .env.local && tsx scripts/agent-definition.ts list",
+    "seed:templates": "source .env.local && npx tsx scripts/seed-context-templates.ts"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.1",

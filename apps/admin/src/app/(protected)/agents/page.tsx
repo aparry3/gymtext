@@ -6,7 +6,7 @@ import { AgentsEditor } from '@/components/admin/agents/AgentsEditor';
 
 function AgentsEditorSkeleton() {
   return (
-    <div className="mt-6 flex h-[calc(100vh-180px)] gap-4">
+    <div className="mt-6 flex min-h-[calc(100vh-180px)] gap-4">
       {/* Sidebar skeleton */}
       <aside className="w-64 flex-shrink-0 rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur animate-pulse">
         <div className="p-4 space-y-3">

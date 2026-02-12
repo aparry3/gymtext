@@ -5,18 +5,18 @@ type RouteParams = { params: Promise<{ type: string; variant: string }> };
 
 /**
  * GET /api/registry/context/[type]/[variant]
- * Returns the latest context template for a given type and variant.
+ * Returns the latest context template record for a given type and variant.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { type, variant } = await params;
 
   try {
-    const { services } = await getAdminContext();
-    const template = await services.contextTemplate.getTemplate(type, variant);
+    const { repos } = await getAdminContext();
+    const record = await repos.contextTemplate.getLatest(type, variant);
 
     return NextResponse.json({
       success: true,
-      data: template,
+      data: record,
     });
   } catch (error) {
     console.error('Error fetching context template:', error);

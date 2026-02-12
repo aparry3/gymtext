@@ -1,10 +1,9 @@
 import type { ContextProvider } from '../types';
 import type { UserWithProfile } from '@/server/models';
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
-import { buildUserContext } from '@/server/services/context/builders';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<User>\n{{content}}\n</User>';
+const DEFAULT_TEMPLATE = '<User>\n{{#if user.name}}<Name>{{user.name}}</Name>\n{{/if}}{{#if user.gender}}<Gender>{{user.gender}}</Gender>\n{{/if}}{{#if user.age}}<Age>{{user.age}}</Age>\n{{/if}}</User>';
 
 export function createUserProvider(deps: {
   contextTemplateService: ContextTemplateServiceInstance;
@@ -13,17 +12,11 @@ export function createUserProvider(deps: {
     name: 'user',
     description: 'Basic user information (name, gender, age)',
     params: { required: ['user'] },
-    templateVariables: ['content'],
+    templateVariables: ['user'],
     resolve: async (params) => {
       const user = params.user as UserWithProfile;
-      const content = buildUserContext({
-        name: user.name,
-        gender: user.gender,
-        age: user.age,
-      });
-
       const template = await deps.contextTemplateService.getTemplate('user') ?? DEFAULT_TEMPLATE;
-      return resolveTemplate(template, { content });
+      return resolveTemplate(template, { user });
     },
   };
 }

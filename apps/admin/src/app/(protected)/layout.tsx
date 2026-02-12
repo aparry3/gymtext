@@ -26,7 +26,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50/50">
       <AdminSidebar />
-      <main className="md:pl-64 pt-16 md:pt-0">
+      <main className="pt-16 md:pt-0 md:pl-[var(--admin-sidebar-width,16rem)] transition-[padding] duration-200">
         {children}
       </main>
     </div>

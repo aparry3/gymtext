@@ -2,7 +2,6 @@ import type { ContextProvider } from '../types';
 import type { UserWithProfile } from '@/server/models';
 import type { MicrocycleServiceInstance } from '@/server/services/domain/training/microcycleService';
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
-import { buildDayOverviewContext } from '@/server/services/context/builders';
 import { today, getWeekday } from '@/shared/utils/date';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
@@ -29,7 +28,7 @@ export function createDayOverviewProvider(deps: {
         dayOverviewStr = typeof dayOverview === 'string' ? dayOverview : undefined;
       }
 
-      const content = buildDayOverviewContext(dayOverviewStr);
+      const content = dayOverviewStr?.trim() || 'No day instruction provided';
       const template = await deps.contextTemplateService.getTemplate('dayOverview') ?? DEFAULT_TEMPLATE;
       return resolveTemplate(template, { content });
     },

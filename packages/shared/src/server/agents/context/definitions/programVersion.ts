@@ -2,7 +2,6 @@ import type { ContextProvider } from '../types';
 import type { UserWithProfile } from '@/server/models';
 import type { EnrollmentServiceInstance } from '@/server/services/domain/program/enrollmentService';
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
-import { buildProgramVersionContext } from '@/server/services/context/builders';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
 const DEFAULT_TEMPLATE = '<ProgramVersion>\n{{content}}\n</ProgramVersion>';
@@ -19,7 +18,7 @@ export function createProgramVersionProvider(deps: {
     resolve: async (params) => {
       const user = params.user as UserWithProfile;
       const enrollmentWithVersion = await deps.enrollmentService.getEnrollmentWithProgramVersion(user.id);
-      const content = buildProgramVersionContext(enrollmentWithVersion?.programVersion ?? null);
+      const content = enrollmentWithVersion?.programVersion?.templateMarkdown?.trim() || '';
 
       if (!content) return '';
 

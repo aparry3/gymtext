@@ -84,7 +84,7 @@ export function AgentsEditor() {
   }, [isDirty]);
 
   return (
-    <div className="mt-6 flex h-[calc(100vh-180px)] gap-4">
+    <div className="mt-6 flex min-h-[calc(100vh-180px)] gap-4">
       {/* Left Sidebar - Domain Tree */}
       <aside className="w-64 flex-shrink-0 overflow-y-auto rounded-2xl border border-slate-200/70 bg-white/85 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.45)] backdrop-blur">
         <AgentDomainTree onSelect={handleAgentSelect} selectedAgentId={selectedAgent?.agentId} />
