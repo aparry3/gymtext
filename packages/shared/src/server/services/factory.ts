@@ -359,6 +359,7 @@ export function createServices(
       planModification: {
         modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
       },
+      queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
       training: {
         getOrGenerateWorkout: async (userId: string, timezone: string) => {
           const { now } = require('@/shared/utils/date');

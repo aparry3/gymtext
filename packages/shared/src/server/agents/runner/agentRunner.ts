@@ -16,6 +16,7 @@ import type {
   ExtendedAgentConfig,
 } from './types';
 import type { AgentExtensionServiceInstance } from '@/server/services/domain/agents/agentExtensionService';
+import type { AgentExtension } from '@/server/models/agentExtension';
 import type {
   SubAgentBatch,
   SubAgentConfig,
@@ -340,38 +341,127 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         ? extended.examples as AgentExample[]
         : undefined;
 
-      // 8. Resolve extensions and merge into system prompt
-      // Merge: defaults from agent definition, overridden by caller-provided extensions
+      // 8. Resolve extensions
       let finalSystemPrompt = definition.systemPrompt;
       let finalEvalPrompt = extended.evalPrompt;
+      let finalModel = definition.model as ModelId;
+      let finalMaxTokens = definition.maxTokens;
+      let finalTemperature = definition.temperature;
+      let finalMaxIterations = definition.maxIterations;
+      let finalMaxRetries = definition.maxRetries;
+      let finalUserPromptTemplate = extended.userPromptTemplate;
+      let finalToolIds = extended.toolIds;
+      let finalContextTypes = extended.contextTypes;
+      let finalSchemaJson = extended.schemaJson;
+      let finalValidationRules = extended.validationRules;
+      let finalSubAgentConfigs = extended.subAgents;
+      let finalExamples = extended.examples;
 
-      const mergedExtensions: Record<string, string> = {
-        ...(extended.defaultExtensions || {}),
-        ...(params.extensions || {}),
-      };
+      if (agentExtensionService) {
+        const resolvedExtensions: AgentExtension[] = [];
 
-      if (Object.keys(mergedExtensions).length > 0 && agentExtensionService) {
-        const extensionParts: string[] = [];
-        const extensionRubrics: string[] = [];
+        // 8a. Explicit extensions (backward compat)
+        const mergedExtensionKeys: Record<string, string> = {
+          ...(extended.defaultExtensions || {}),
+          ...(params.extensions || {}),
+        };
 
-        for (const [extType, extKey] of Object.entries(mergedExtensions)) {
+        const explicitlyResolved = new Set<string>();
+
+        for (const [extType, extKey] of Object.entries(mergedExtensionKeys)) {
           if (!extKey) continue;
           const ext = await agentExtensionService.getExtension(agentId, extType, extKey);
           if (ext) {
-            extensionParts.push(ext.content);
-            if (ext.evalRubric) {
-              extensionRubrics.push(ext.evalRubric);
+            resolvedExtensions.push(ext);
+            explicitlyResolved.add(`${extType}:${extKey}`);
+          }
+        }
+
+        // 8b. Auto-triggered extensions
+        const allExtensions = await agentExtensionService.getFullExtensionsByAgent(agentId);
+        const triggerContext = { ...(params.params || {}) };
+
+        for (const ext of allExtensions) {
+          const pairKey = `${ext.extensionType}:${ext.extensionKey}`;
+          if (explicitlyResolved.has(pairKey)) continue;
+
+          if (ext.triggerConditions && Array.isArray(ext.triggerConditions) && (ext.triggerConditions as unknown[]).length > 0) {
+            const result = evaluateRules(ext.triggerConditions as unknown as ValidationRule[], triggerContext);
+            if (result.isValid) {
+              resolvedExtensions.push(ext);
             }
           }
         }
 
-        if (extensionParts.length > 0) {
-          finalSystemPrompt = finalSystemPrompt + '\n\n' + extensionParts.join('\n\n');
-        }
-        if (extensionRubrics.length > 0) {
-          finalEvalPrompt = [finalEvalPrompt, ...extensionRubrics].filter(Boolean).join('\n\n') || null;
+        // 8c. Apply extensions in order
+        for (const ext of resolvedExtensions) {
+          // Prompt fields with mode
+          if (ext.systemPrompt) {
+            finalSystemPrompt = ext.systemPromptMode === 'override'
+              ? ext.systemPrompt
+              : finalSystemPrompt + '\n\n' + ext.systemPrompt;
+          }
+          if (ext.userPromptTemplate) {
+            finalUserPromptTemplate = ext.userPromptTemplateMode === 'override'
+              ? ext.userPromptTemplate
+              : [finalUserPromptTemplate, ext.userPromptTemplate].filter(Boolean).join('\n\n') || null;
+          }
+          if (ext.evalPrompt) {
+            finalEvalPrompt = ext.evalPromptMode === 'override'
+              ? ext.evalPrompt
+              : [finalEvalPrompt, ext.evalPrompt].filter(Boolean).join('\n\n') || null;
+          }
+          // Non-prompt overrides (when non-null)
+          if (ext.model) finalModel = ext.model as ModelId;
+          if (ext.maxTokens != null) finalMaxTokens = ext.maxTokens;
+          if (ext.temperature != null) finalTemperature = typeof ext.temperature === 'string' ? parseFloat(ext.temperature) : ext.temperature;
+          if (ext.maxIterations != null) finalMaxIterations = ext.maxIterations;
+          if (ext.maxRetries != null) finalMaxRetries = ext.maxRetries;
+          if (ext.toolIds) finalToolIds = ext.toolIds;
+          if (ext.contextTypes) finalContextTypes = ext.contextTypes;
+          if (ext.schemaJson) finalSchemaJson = ext.schemaJson as unknown as Record<string, unknown>;
+          if (ext.validationRules) finalValidationRules = ext.validationRules as unknown as ValidationRule[];
+          if (ext.subAgents) finalSubAgentConfigs = ext.subAgents as unknown as SubAgentDbConfig[];
+          if (ext.examples) finalExamples = ext.examples as unknown as unknown[];
         }
       }
+
+      // Re-resolve tools if extensions changed toolIds
+      if (finalToolIds !== extended.toolIds && finalToolIds && finalToolIds.length > 0) {
+        if (!user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
+        const toolCtx: ToolExecutionContext = {
+          user,
+          message: params.input || '',
+          previousMessages: params.previousMessages,
+          services: getServices(),
+          extras: params.params as Record<string, unknown>,
+        };
+        tools = toolRegistry.resolve(finalToolIds, toolCtx);
+      }
+
+      // Re-resolve context if extensions changed contextTypes
+      if (finalContextTypes !== extended.contextTypes && finalContextTypes && finalContextTypes.length > 0) {
+        const resolvedCtx = await contextRegistry.resolve(finalContextTypes, params.params || {});
+        context = params.context && params.context.length > 0
+          ? [...params.context, ...resolvedCtx]
+          : resolvedCtx;
+      }
+
+      // Re-build sub-agents if extensions changed them
+      if (finalSubAgentConfigs !== extended.subAgents && finalSubAgentConfigs && finalSubAgentConfigs.length > 0) {
+        subAgents = await buildSubAgents(finalSubAgentConfigs, params, 0);
+      }
+
+      // Re-build validation if extensions changed rules
+      if (finalValidationRules !== extended.validationRules && finalValidationRules && finalValidationRules.length > 0) {
+        const rules = finalValidationRules;
+        validate = (result: unknown) => evaluateRules(rules, result);
+      }
+
+      // Re-resolve examples if extensions changed them
+      const agentExamplesResolved: AgentExample[] | undefined = finalExamples
+        ? finalExamples as AgentExample[]
+        : agentExamples;
 
       // 8b. Build onLog for the top-level agent (with eval support)
       const topLevelOnLog = agentLogRepository
@@ -396,18 +486,22 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       const agent = createAgent({
         ...definition,
         systemPrompt: finalSystemPrompt,
-        model: definition.model as ModelId,
+        model: finalModel,
+        maxTokens: finalMaxTokens,
+        temperature: finalTemperature,
+        maxIterations: finalMaxIterations,
+        maxRetries: finalMaxRetries,
         context,
         tools,
-        schema: extended.schemaJson
-          ? (extended.schemaJson as unknown as undefined)
+        schema: finalSchemaJson
+          ? (finalSchemaJson as unknown as undefined)
           : definition.schema,
         subAgents: subAgents && subAgents.length > 0
           ? subAgents
           : undefined,
         validate,
         onLog: topLevelOnLog,
-        examples: agentExamples,
+        examples: agentExamplesResolved,
       });
 
       // 10. Invoke the agent

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 
-type RouteParams = { params: Promise<{ agentId: string; type: string; key: string }> };
+type RouteParams = { params: Promise<{ id: string; type: string; key: string }> };
 
 /**
- * GET /api/registry/extensions/[agentId]/[type]/[key]
- * Returns the latest agent extension for a given agent, type, and key.
+ * GET /api/agent-definitions/{id}/extensions/{type}/{key}
+ * Returns the latest extension for a given agent, type, and key
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const { agentId, type, key } = await params;
+  const { id, type, key } = await params;
 
   try {
     const { services } = await getAdminContext();
-    const extension = await services.agentExtension.getExtension(agentId, type, key);
+    const extension = await services.agentExtension.getExtension(id, type, key);
 
     return NextResponse.json({
       success: true,
@@ -31,34 +31,20 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 }
 
 /**
- * POST /api/registry/extensions/[agentId]/[type]/[key]
- * Creates a new version of an agent extension.
+ * POST /api/agent-definitions/{id}/extensions/{type}/{key}
+ * Creates a new version of an agent extension
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { agentId, type, key } = await params;
+  const { id, type, key } = await params;
 
   try {
     const body = await request.json();
-    const { content, evalRubric } = body;
-
-    if (!content || typeof content !== 'string') {
-      return NextResponse.json(
-        { success: false, message: 'Content is required' },
-        { status: 400 }
-      );
-    }
 
     const { services } = await getAdminContext();
-    const saved = await services.agentExtension.saveExtension(
-      agentId,
-      type,
-      key,
-      content,
-      evalRubric ?? undefined
-    );
+    const saved = await services.agentExtension.saveExtension(id, type, key, body);
 
     // Invalidate cache for this extension
-    services.agentExtension.invalidateCache(agentId, type, key);
+    services.agentExtension.invalidateCache(id, type, key);
 
     return NextResponse.json({
       success: true,

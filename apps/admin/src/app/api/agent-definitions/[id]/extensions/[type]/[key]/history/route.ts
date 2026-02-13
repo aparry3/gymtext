@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 
-type RouteParams = { params: Promise<{ agentId: string; type: string; key: string }> };
+type RouteParams = { params: Promise<{ id: string; type: string; key: string }> };
 
 /**
- * GET /api/registry/extensions/[agentId]/[type]/[key]/history
- * Returns version history for an agent extension.
+ * GET /api/agent-definitions/{id}/extensions/{type}/{key}/history
+ * Returns version history for an agent extension
  * Query param: limit (optional, default 20)
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { agentId, type, key } = await params;
+  const { id, type, key } = await params;
   const limit = Number(request.nextUrl.searchParams.get('limit')) || 20;
 
   try {
     const { services } = await getAdminContext();
-    const history = await services.agentExtension.getHistory(agentId, type, key, limit);
+    const history = await services.agentExtension.getHistory(id, type, key, limit);
 
     return NextResponse.json({
       success: true,

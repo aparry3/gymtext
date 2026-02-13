@@ -67,4 +67,5 @@ export interface ToolServiceContainer {
   training: {
     getOrGenerateWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
   };
+  queueMessage: (user: UserWithProfile, content: { content: string }, queueName: string) => Promise<{ messageId: string; queueEntryId: string }>;
 }

@@ -50,7 +50,9 @@ Use this tool when the user wants to change TODAY'S workout:
 - Muscle group swap: "can I do legs instead?"
 
 This is the MOST COMMON modification. Use this for any single-day workout change.
-Do NOT use for schedule rearrangement (use modify_week) or program-level changes (use modify_plan).`,
+Do NOT use for schedule rearrangement (use modify_week) or program-level changes (use modify_plan).
+
+The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
   schema: z.object({
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
@@ -58,6 +60,7 @@ Do NOT use for schedule rearrangement (use modify_week) or program-level changes
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
+    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
     const { now } = await import('@/shared/utils/date');
     const timezone = ctx.user.timezone || 'America/New_York';
     const todayDate = now(timezone).toJSDate();
@@ -86,7 +89,9 @@ Use this tool when the user wants to rearrange their WEEKLY SCHEDULE:
 
 You MUST specify which day is the target of the change.
 Use targetWeek to indicate whether the change applies to this week or next week.
-If the user says "next week" or is responding to their upcoming week overview, use targetWeek: "next".`,
+If the user says "next week" or is responding to their upcoming week overview, use targetWeek: "next".
+
+The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
   schema: z.object({
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Sure, moving legs to Wednesday!"'
@@ -100,6 +105,7 @@ If the user says "next week" or is responding to their upcoming week overview, u
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
+    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
     const targetWeek = (args.targetWeek as 'current' | 'next') ?? 'current';
     let weekStartDate: Date | undefined;
 
@@ -133,7 +139,9 @@ Use this tool for changes that affect the ENTIRE TRAINING PROGRAM:
 - Goal changes: "I want to focus more on hypertrophy"
 - Adding modalities: "add 2 running days per week"
 
-Do NOT use for single-day workout changes (use modify_workout) or schedule rearrangement (use modify_week).`,
+Do NOT use for single-day workout changes (use modify_workout) or schedule rearrangement (use modify_week).
+
+The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
   schema: z.object({
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, updating your program!"'
@@ -141,6 +149,7 @@ Do NOT use for single-day workout changes (use modify_workout) or schedule rearr
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
+    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
     const result = await ctx.services.planModification.modifyPlan({
       userId: ctx.user.id,
       changeRequest: ctx.message,

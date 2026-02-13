@@ -1,4 +1,4 @@
-import type { AgentExtension } from '@/server/models/agentExtension';
+import type { AgentExtension, ExtensionFields } from '@/server/models/agentExtension';
 import type { RepositoryContainer } from '../../../repositories/factory';
 
 interface CacheEntry<T> {
@@ -9,51 +9,67 @@ interface CacheEntry<T> {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export interface AgentExtensionServiceInstance {
-  getExtension(agentId: string, extensionType: string, extensionKey: string): Promise<{ content: string; evalRubric: string | null } | null>;
+  getExtension(agentId: string, extensionType: string, extensionKey: string): Promise<AgentExtension | null>;
+  getFullExtensionsByAgent(agentId: string): Promise<AgentExtension[]>;
   getHistory(agentId: string, extensionType: string, extensionKey: string, limit?: number): Promise<AgentExtension[]>;
-  saveExtension(agentId: string, extensionType: string, extensionKey: string, content: string, evalRubric?: string | null): Promise<AgentExtension>;
+  saveExtension(agentId: string, extensionType: string, extensionKey: string, fields: Partial<ExtensionFields>): Promise<AgentExtension>;
   listByAgent(agentId: string): Promise<Array<{ extensionType: string; extensionKey: string }>>;
   listAll(): Promise<Array<{ agentId: string; extensionType: string; extensionKey: string }>>;
   invalidateCache(agentId: string, extensionType: string, extensionKey: string): void;
 }
 
 export function createAgentExtensionService(repos: RepositoryContainer): AgentExtensionServiceInstance {
-  const cache = new Map<string, CacheEntry<{ content: string; evalRubric: string | null }>>();
+  const extensionCache = new Map<string, CacheEntry<AgentExtension>>();
+  const agentCache = new Map<string, CacheEntry<AgentExtension[]>>();
 
-  const cacheKey = (agentId: string, extensionType: string, extensionKey: string) =>
+  const extensionCacheKey = (agentId: string, extensionType: string, extensionKey: string) =>
     `${agentId}:${extensionType}:${extensionKey}`;
+
+  const agentCacheKey = (agentId: string) => `agent:${agentId}`;
 
   return {
     async getExtension(agentId: string, extensionType: string, extensionKey: string) {
-      const key = cacheKey(agentId, extensionType, extensionKey);
-      const cached = cache.get(key);
+      const key = extensionCacheKey(agentId, extensionType, extensionKey);
+      const cached = extensionCache.get(key);
       if (cached && cached.expiresAt > Date.now()) {
         return cached.data;
       }
 
       const result = await repos.agentExtension.getLatest(agentId, extensionType, extensionKey);
       if (result) {
-        const data = { content: result.content, evalRubric: result.evalRubric };
-        cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
-        return data;
+        extensionCache.set(key, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+        return result;
       }
 
       return null;
+    },
+
+    async getFullExtensionsByAgent(agentId: string) {
+      const key = agentCacheKey(agentId);
+      const cached = agentCache.get(key);
+      if (cached && cached.expiresAt > Date.now()) {
+        return cached.data;
+      }
+
+      const results = await repos.agentExtension.getLatestByAgent(agentId);
+      agentCache.set(key, { data: results, expiresAt: Date.now() + CACHE_TTL_MS });
+      return results;
     },
 
     async getHistory(agentId: string, extensionType: string, extensionKey: string, limit?: number) {
       return repos.agentExtension.getHistory(agentId, extensionType, extensionKey, limit);
     },
 
-    async saveExtension(agentId: string, extensionType: string, extensionKey: string, content: string, evalRubric?: string | null) {
+    async saveExtension(agentId: string, extensionType: string, extensionKey: string, fields: Partial<ExtensionFields>) {
       const result = await repos.agentExtension.create({
         agentId,
         extensionType,
         extensionKey,
-        content,
-        evalRubric: evalRubric ?? null,
+        ...fields,
       });
-      cache.delete(cacheKey(agentId, extensionType, extensionKey));
+      // Invalidate both per-extension and per-agent caches
+      extensionCache.delete(extensionCacheKey(agentId, extensionType, extensionKey));
+      agentCache.delete(agentCacheKey(agentId));
       return result;
     },
 
@@ -66,7 +82,8 @@ export function createAgentExtensionService(repos: RepositoryContainer): AgentEx
     },
 
     invalidateCache(agentId: string, extensionType: string, extensionKey: string): void {
-      cache.delete(cacheKey(agentId, extensionType, extensionKey));
+      extensionCache.delete(extensionCacheKey(agentId, extensionType, extensionKey));
+      agentCache.delete(agentCacheKey(agentId));
     },
   };
 }

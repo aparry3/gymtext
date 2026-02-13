@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { AgentDomainTree } from './AgentDomainTree';
 import { AgentEditorPane } from './AgentEditorPane';
 import { AgentHistoryPanel } from './AgentHistoryPanel';
+import { AgentExtensionsPane } from './AgentExtensionsPane';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import type { SelectedAgent, AdminAgentDefinition } from './types';
 
 function EmptyState() {
@@ -34,6 +36,7 @@ function EmptyState() {
 
 export function AgentsEditor() {
   const [selectedAgent, setSelectedAgent] = useState<SelectedAgent | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('definition');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [revertTrigger, setRevertTrigger] = useState(0);
@@ -44,7 +47,18 @@ export function AgentsEditor() {
       if (isDirty && !confirm('Discard unsaved changes?')) return;
 
       setSelectedAgent({ agentId });
+      setActiveTab('definition');
       setIsDirty(false);
+      setIsHistoryOpen(false);
+    },
+    [isDirty]
+  );
+
+  // Handler for tab change
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (isDirty && !confirm('Discard unsaved changes?')) return;
+      setActiveTab(value);
       setIsHistoryOpen(false);
     },
     [isDirty]
@@ -93,20 +107,34 @@ export function AgentsEditor() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
         {selectedAgent ? (
-          <AgentEditorPane
-            key={`${selectedAgent.agentId}-${revertTrigger}`}
-            agentId={selectedAgent.agentId}
-            onDirtyChange={setIsDirty}
-            onHistoryToggle={() => setIsHistoryOpen(!isHistoryOpen)}
-            isHistoryOpen={isHistoryOpen}
-          />
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
+            <TabsList className="self-start mb-2">
+              <TabsTrigger value="definition">Definition</TabsTrigger>
+              <TabsTrigger value="extensions">Extensions</TabsTrigger>
+            </TabsList>
+            <TabsContent value="definition" className="flex-1 flex flex-col min-h-0">
+              <AgentEditorPane
+                key={`${selectedAgent.agentId}-${revertTrigger}`}
+                agentId={selectedAgent.agentId}
+                onDirtyChange={setIsDirty}
+                onHistoryToggle={() => setIsHistoryOpen(!isHistoryOpen)}
+                isHistoryOpen={isHistoryOpen}
+              />
+            </TabsContent>
+            <TabsContent value="extensions" className="flex-1 flex flex-col min-h-0">
+              <AgentExtensionsPane
+                key={`ext-${selectedAgent.agentId}`}
+                agentId={selectedAgent.agentId}
+              />
+            </TabsContent>
+          </Tabs>
         ) : (
           <EmptyState />
         )}
       </main>
 
-      {/* Right Sidebar - Version History */}
-      {isHistoryOpen && selectedAgent && (
+      {/* Right Sidebar - Version History (only on definition tab) */}
+      {isHistoryOpen && selectedAgent && activeTab === 'definition' && (
         <aside className="w-80 flex-shrink-0">
           <AgentHistoryPanel
             key={`history-${selectedAgent.agentId}-${revertTrigger}`}

@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { BaseRepository } from './baseRepository';
 import type { AgentExtension, NewAgentExtension } from '@/server/models/agentExtension';
 
@@ -53,6 +54,20 @@ export class AgentExtensionRepository extends BaseRepository {
       .values(entry)
       .returningAll()
       .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Get the latest version of each (extensionType, extensionKey) pair for an agent.
+   * Returns full row data for every unique extension.
+   */
+  async getLatestByAgent(agentId: string): Promise<AgentExtension[]> {
+    const results = await sql<AgentExtension>`
+      SELECT DISTINCT ON (extension_type, extension_key) *
+      FROM agent_extensions
+      WHERE agent_id = ${agentId}
+      ORDER BY extension_type, extension_key, created_at DESC
+    `.execute(this.db);
+    return results.rows;
   }
 
   /**

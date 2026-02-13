@@ -9,7 +9,7 @@ function RegistryEditorSkeleton() {
     <div className="flex flex-col h-[calc(100vh-180px)] mt-6">
       {/* Tab bar skeleton */}
       <div className="flex border-b mb-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2].map((i) => (
           <div key={i} className="px-4 py-2">
             <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
           </div>
@@ -47,7 +47,7 @@ function RegistryPageContent() {
       <div className="space-y-2">
         <AdminHeader
           title="Registry"
-          subtitle="Manage tools, context providers, and agent extensions"
+          subtitle="Manage tools and context providers"
         />
         <RegistryEditor />
       </div>

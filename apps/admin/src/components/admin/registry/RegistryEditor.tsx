@@ -3,14 +3,12 @@
 import { useState } from 'react';
 import { ToolsTab } from './ToolsTab';
 import { ContextTab } from './ContextTab';
-import { ExtensionsTab } from './ExtensionsTab';
 
-type TabId = 'tools' | 'context' | 'extensions';
+type TabId = 'tools' | 'context';
 
 const tabs: { id: TabId; label: string }[] = [
   { id: 'tools', label: 'Tools' },
   { id: 'context', label: 'Context' },
-  { id: 'extensions', label: 'Extensions' },
 ];
 
 export function RegistryEditor() {
@@ -39,7 +37,6 @@ export function RegistryEditor() {
       <div className="flex-1 min-h-0 overflow-auto">
         {activeTab === 'tools' && <ToolsTab />}
         {activeTab === 'context' && <ContextTab />}
-        {activeTab === 'extensions' && <ExtensionsTab />}
       </div>
     </div>
   );
