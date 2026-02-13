@@ -359,36 +359,34 @@ describe('real-world templates', () => {
 
   it('microcycle template', () => {
     const template =
-      '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nIs Deload: {{microcycle.isDeload}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\n</CurrentMicrocycle>';
+      '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\n</CurrentMicrocycle>';
 
     const result = resolveTemplate(template, {
       microcycle: {
         description: 'Heavy volume week',
-        isDeload: false,
         absoluteWeek: 3,
         days: ['Push', 'Pull', 'Legs', 'Rest', 'Upper', 'Lower', 'Rest'],
       },
     });
 
     expect(result).toBe(
-      '<CurrentMicrocycle>\nWeek Overview: Heavy volume week\nIs Deload: false\nAbsolute Week: 3\nDays:\nMonday: Push\nTuesday: Pull\n</CurrentMicrocycle>'
+      '<CurrentMicrocycle>\nWeek Overview: Heavy volume week\nAbsolute Week: 3\nDays:\nMonday: Push\nTuesday: Pull\n</CurrentMicrocycle>'
     );
   });
 
   it('microcycle template – missing description shows N/A', () => {
     const template =
-      '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nIs Deload: {{microcycle.isDeload}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\n</CurrentMicrocycle>';
+      '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\n</CurrentMicrocycle>';
 
     const result = resolveTemplate(template, {
       microcycle: {
-        isDeload: true,
         absoluteWeek: 4,
         days: ['Rest', 'Light Push'],
       },
     });
 
     expect(result).toBe(
-      '<CurrentMicrocycle>\nWeek Overview: N/A\nIs Deload: true\nAbsolute Week: 4\nDays:\nMonday: Rest\nTuesday: Light Push\n</CurrentMicrocycle>'
+      '<CurrentMicrocycle>\nWeek Overview: N/A\nAbsolute Week: 4\nDays:\nMonday: Rest\nTuesday: Light Push\n</CurrentMicrocycle>'
     );
   });
 });

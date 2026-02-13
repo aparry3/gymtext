@@ -5,7 +5,7 @@ import type { ContextTemplateServiceInstance } from '@/server/services/domain/co
 import { today } from '@/shared/utils/date';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nIs Deload: {{microcycle.isDeload}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\nWednesday: {{microcycle.days.2}}\nThursday: {{microcycle.days.3}}\nFriday: {{microcycle.days.4}}\nSaturday: {{microcycle.days.5}}\nSunday: {{microcycle.days.6}}\n</CurrentMicrocycle>';
+const DEFAULT_TEMPLATE = 'This week\'s training plan (Week {{microcycle.absoluteWeek}}):\n\n{{#if microcycle.description}}{{microcycle.description}}\n\n{{/if}}Monday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\nWednesday: {{microcycle.days.2}}\nThursday: {{microcycle.days.3}}\nFriday: {{microcycle.days.4}}\nSaturday: {{microcycle.days.5}}\nSunday: {{microcycle.days.6}}';
 
 export function createCurrentMicrocycleProvider(deps: {
   microcycleService: MicrocycleServiceInstance;

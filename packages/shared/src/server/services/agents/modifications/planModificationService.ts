@@ -1,4 +1,4 @@
-import { now, getDayOfWeek } from '@/shared/utils/date';
+import { now } from '@/shared/utils/date';
 import type { RepositoryContainer } from '@/server/repositories/factory';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { FitnessPlanServiceInstance } from '../../domain/training/fitnessPlanService';
@@ -62,7 +62,6 @@ export function createPlanModificationService(
         if (!currentPlan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
 
         const today = now(user.timezone);
-        const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
 
         console.log('[MODIFY_PLAN] Running plan and week modifications in parallel');
 
@@ -74,7 +73,7 @@ export function createPlanModificationService(
             input: changeRequest,
             params: { user },
           }),
-          workoutModificationService.modifyWeek({ userId, targetDay: currentDayOfWeek, changeRequest }),
+          workoutModificationService.modifyWeek({ userId, changeRequest }),
         ]);
 
         // Extract typed result from agent output

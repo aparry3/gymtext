@@ -22,7 +22,6 @@ const CONTEXT_DESCRIPTIONS: Record<string, string> = {
   dayOverview: 'Target day plan details',
   currentWorkout: 'Most recent workout data',
   dateContext: 'Today/date helpers for prompts',
-  trainingMeta: 'Training load, phase, and progression info',
   currentMicrocycle: 'Current weekly microcycle details',
   experienceLevel: 'Detected user experience level',
   dayFormat: 'Expected format for day responses',

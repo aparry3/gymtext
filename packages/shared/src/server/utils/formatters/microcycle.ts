@@ -52,11 +52,6 @@ export function formatMicrocyclePattern(pattern: MicrocyclePattern): string {
   // Overview
   sections.push(`# Weekly Overview\n${pattern.overview}`);
 
-  // Deload indicator
-  if (pattern.isDeload) {
-    sections.push('**Note: This is a DELOAD week**');
-  }
-
   // Days
   sections.push(formatMicrocycleDays(pattern.days));
 

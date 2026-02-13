@@ -263,7 +263,7 @@ Agent IDs are defined as constants in `packages/shared/src/server/agents/constan
 **Context Registry** (`agents/context/contextRegistry.ts`):
 - Maps context type strings (from DB `context_types`) to context provider functions
 - Resolves multiple context types in parallel
-- Key contexts: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `trainingMeta`, `currentMicrocycle`, `experienceLevel`
+- Key contexts: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `currentMicrocycle`, `experienceLevel`
 
 ### AgentRunner
 

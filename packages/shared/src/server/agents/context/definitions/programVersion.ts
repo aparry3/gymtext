@@ -4,7 +4,7 @@ import type { EnrollmentServiceInstance } from '@/server/services/domain/program
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<ProgramVersion>\n{{content}}\n</ProgramVersion>';
+const DEFAULT_TEMPLATE = 'Program template:\n\n{{content}}';
 
 export function createProgramVersionProvider(deps: {
   enrollmentService: EnrollmentServiceInstance;

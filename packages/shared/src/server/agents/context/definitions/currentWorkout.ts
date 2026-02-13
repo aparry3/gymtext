@@ -5,7 +5,7 @@ import type { ContextTemplateServiceInstance } from '@/server/services/domain/co
 import { today } from '@/shared/utils/date';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<CurrentWorkout>\n{{#if workout.description}}{{workout.description}}{{else}}{{#if workout.sessionType}}{{workout.sessionType}}{{else}}Workout{{/if}}{{/if}}\n</CurrentWorkout>';
+const DEFAULT_TEMPLATE = 'Today\'s scheduled workout:\n\n{{#if workout.description}}{{workout.description}}{{else}}{{#if workout.sessionType}}{{workout.sessionType}}{{else}}No workout details available{{/if}}{{/if}}';
 
 export function createCurrentWorkoutProvider(deps: {
   workoutInstanceService: WorkoutInstanceServiceInstance;

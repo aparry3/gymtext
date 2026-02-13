@@ -7,6 +7,9 @@ import {
   ChevronUp,
   Clock3,
   Database,
+  Eye,
+  Loader2,
+  X,
   MessageSquare,
   Plus,
   Sparkles,
@@ -280,6 +283,14 @@ export function AgentEditorPane({
   const [registry, setRegistry] = useState<RegistryMetadata | null>(null)
   const registryFetched = useRef(false)
 
+  // Context template & preview state
+  const [contextTemplates, setContextTemplates] = useState<Record<string, string | null>>({})
+  const [previewUserId, setPreviewUserId] = useState<string>('')
+  const [previewUsers, setPreviewUsers] = useState<Array<{ id: string; name: string; phone: string }>>([])
+  const [previewData, setPreviewData] = useState<Record<string, { rendered: string | null; error?: string }>>({})
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const previewUsersFetched = useRef(false)
+
   useEffect(() => {
     if (registryFetched.current) return
     registryFetched.current = true
@@ -298,6 +309,93 @@ export function AgentEditorPane({
 
     fetchRegistry()
   }, [])
+
+  // Fetch users for preview dropdown (once)
+  useEffect(() => {
+    if (previewUsersFetched.current) return
+    previewUsersFetched.current = true
+
+    async function fetchUsers() {
+      try {
+        const response = await fetch('/api/users?pageSize=50')
+        const result = await response.json()
+        if (result.success && result.data?.users) {
+          setPreviewUsers(
+            result.data.users.map((u: { id: string; name?: string; phoneNumber?: string }) => ({
+              id: u.id,
+              name: u.name || 'Unknown',
+              phone: u.phoneNumber || '',
+            }))
+          )
+        }
+      } catch (err) {
+        console.error('Failed to fetch users for preview:', err)
+      }
+    }
+
+    fetchUsers()
+  }, [])
+
+  // Fetch raw templates when contextTypes change
+  useEffect(() => {
+    const types = formState.contextTypes
+    if (types.length === 0) {
+      setContextTemplates({})
+      return
+    }
+
+    async function fetchTemplates() {
+      try {
+        const response = await fetch(`/api/registry/context/templates?types=${types.join(',')}`)
+        const result = await response.json()
+        if (result.success && result.data) {
+          setContextTemplates(result.data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch context templates:', err)
+      }
+    }
+
+    fetchTemplates()
+  }, [formState.contextTypes])
+
+  // Clear preview data when contextTypes change
+  useEffect(() => {
+    setPreviewData({})
+  }, [formState.contextTypes])
+
+  const handleRenderPreview = useCallback(async () => {
+    if (!previewUserId || formState.contextTypes.length === 0) return
+
+    setIsLoadingPreview(true)
+    try {
+      const response = await fetch('/api/registry/context/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: previewUserId,
+          contextTypes: formState.contextTypes,
+        }),
+      })
+      const result = await response.json()
+      if (result.success && result.data) {
+        const mapped: Record<string, { rendered: string | null; error?: string }> = {}
+        for (const item of result.data) {
+          mapped[item.contextType] = { rendered: item.rendered, error: item.error }
+        }
+        setPreviewData(mapped)
+      }
+    } catch (err) {
+      console.error('Failed to render preview:', err)
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }, [previewUserId, formState.contextTypes])
+
+  const selectedPreviewUser = useMemo(
+    () => previewUsers.find((u) => u.id === previewUserId),
+    [previewUsers, previewUserId]
+  )
 
   useEffect(() => {
     async function fetchAgent() {
@@ -550,6 +648,51 @@ export function AgentEditorPane({
                   title="Context Blocks"
                   subtitle="Selected runtime contexts are injected in this order"
                   tone="context"
+                  actions={
+                    formState.contextTypes.length > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={previewUserId}
+                          onChange={(e) => setPreviewUserId(e.target.value)}
+                          className="h-8 rounded-lg border border-indigo-300 bg-white px-2 text-xs text-slate-700"
+                        >
+                          <option value="">Select user for preview...</option>
+                          {previewUsers.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name} ({u.phone})
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-indigo-300 bg-white/85 text-indigo-800 hover:bg-indigo-50"
+                          onClick={handleRenderPreview}
+                          disabled={!previewUserId || isLoadingPreview}
+                        >
+                          {isLoadingPreview ? (
+                            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Eye className="mr-1.5 h-4 w-4" />
+                          )}
+                          Preview
+                        </Button>
+                        {Object.keys(previewData).length > 0 && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-300 bg-white/85 text-slate-600 hover:bg-slate-50"
+                            onClick={() => setPreviewData({})}
+                          >
+                            <X className="mr-1.5 h-4 w-4" />
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                    ) : undefined
+                  }
                 >
                   {formState.contextTypes.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-3 py-2 text-xs text-slate-500">
@@ -557,14 +700,62 @@ export function AgentEditorPane({
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {formState.contextTypes.map((contextType) => (
-                        <div key={contextType} className="rounded-xl border border-indigo-200 bg-white/85 px-3 py-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Context: {contextType}</p>
-                          <p className="mt-1 text-sm text-slate-700">
-                            Runtime provider injects `{`{${contextType}}`}` content into the prompt during invocation.
-                          </p>
-                        </div>
-                      ))}
+                      {formState.contextTypes.map((contextType) => {
+                        const template = contextTemplates[contextType]
+                        const preview = previewData[contextType]
+                        const variables = template
+                          ? [...template.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1])
+                          : []
+
+                        return (
+                          <div key={contextType} className="rounded-xl border border-indigo-200 bg-white/85 px-3 py-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+                              Context: {contextType}
+                            </p>
+
+                            {preview ? (
+                              <div className="mt-2">
+                                <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-600">
+                                  Preview{selectedPreviewUser ? ` (${selectedPreviewUser.name})` : ''}
+                                </p>
+                                {preview.error ? (
+                                  <p className="mt-1 rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-600">
+                                    {preview.error}
+                                  </p>
+                                ) : preview.rendered ? (
+                                  <pre className="mt-1 whitespace-pre-wrap rounded-lg border border-emerald-100 bg-emerald-50/50 p-2 font-mono text-xs leading-5 text-slate-700">
+                                    {preview.rendered}
+                                  </pre>
+                                ) : (
+                                  <p className="mt-1 text-xs text-slate-400 italic">Empty result</p>
+                                )}
+                              </div>
+                            ) : template != null ? (
+                              <div className="mt-2 space-y-2">
+                                <div>
+                                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Template</p>
+                                  <pre className="mt-1 whitespace-pre-wrap rounded-lg border border-indigo-100 bg-indigo-50/50 p-2 font-mono text-xs leading-5 text-slate-700">
+                                    {template}
+                                  </pre>
+                                </div>
+                                {variables.length > 0 && (
+                                  <p className="text-[10px] text-slate-500">
+                                    <span className="font-medium">Variables:</span>{' '}
+                                    {variables.map((v, i) => (
+                                      <span key={v}>
+                                        <code className="rounded bg-indigo-100 px-1 py-0.5 text-indigo-700">{v}</code>
+                                        {i < variables.length - 1 ? ', ' : ''}
+                                      </span>
+                                    ))}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-xs text-slate-500 italic">No template stored (uses inline default)</p>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </PromptSection>

@@ -10,7 +10,6 @@ import { DAY_NAMES } from './date';
 export interface MicrocyclePromptInput {
   overview: string;
   days: string[];
-  isDeload: boolean;
 }
 
 /**
@@ -29,8 +28,6 @@ Focus on summarizing the week's training theme and providing a clear, easy-to-re
 WEEKLY OVERVIEW:
 ${input.overview}
 
-IS DELOAD WEEK: ${input.isDeload}
-
 DAILY BREAKDOWNS:
 
 ${daysFormatted}
@@ -46,11 +43,9 @@ export const formatStructuredAgentInput = (
   overview: string,
   days: string[],
   absoluteWeek: number,
-  isDeload: boolean
 ): string => `Parse the following microcycle into structured format:
 
 Week Number: ${absoluteWeek}
-Is Deload: ${isDeload}
 
 Weekly Overview:
 ${overview}

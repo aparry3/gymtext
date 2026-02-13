@@ -5,7 +5,7 @@ import { formatForAI } from '@/shared/utils/date';
 import { today } from '@/shared/utils/date';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<DateContext>\nToday is {{formattedDate}}.\nTimezone: {{timezone}}\n</DateContext>';
+const DEFAULT_TEMPLATE = 'Today is {{formattedDate}} ({{timezone}}).';
 
 export function createDateContextProvider(deps: {
   contextTemplateService: ContextTemplateServiceInstance;

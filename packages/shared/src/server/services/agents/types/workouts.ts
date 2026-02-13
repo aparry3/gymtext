@@ -30,7 +30,6 @@ export interface WorkoutGenerateInput {
   user: UserWithProfile;
   date: Date;
   dayOverview: string;
-  isDeload?: boolean;
   experienceLevel?: ExperienceLevel;
 }
 

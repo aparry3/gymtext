@@ -50,7 +50,6 @@ interface Microcycle {
   saturdayOverview?: string | null
   sundayOverview?: string | null
   description?: string | null
-  isDeload: boolean
   message?: string | null
   startDate: Date
   endDate: Date
@@ -395,10 +394,6 @@ function WeekGrid({ mesocycle, microcycles, userId, mesocycleIndex, currentWeek,
   }
 
   const getLoadSummary = (microcycle: Microcycle) => {
-    if (microcycle.isDeload) {
-      return 'Deload week'
-    }
-
     // Count how many days have overviews
     const daysWithWorkouts = [
       microcycle.mondayOverview,

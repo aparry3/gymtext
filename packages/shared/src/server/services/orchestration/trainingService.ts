@@ -43,6 +43,7 @@ import type { WorkoutStructure } from '@/server/models/workout';
 
 // Microcycle structure types
 import type { MicrocycleStructure } from '@/shared/types/microcycle';
+import { flattenWorkoutTags } from '@/shared/types/workout/tags';
 
 // =============================================================================
 // Exported Helpers
@@ -327,6 +328,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const theme = structure?.title || 'Workout';
         const details = { theme };
 
+        // 5c. Flatten workout tags from structure
+        const tags = structure?.tags ? flattenWorkoutTags(structure.tags) : [];
+
         // 6. Create workout record
         const workoutData: NewWorkoutInstance = {
           clientId: user.id,
@@ -338,6 +342,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           description,
           message,
           structured: structure,
+          tags,
           completedAt: null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -400,10 +405,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         params: { user },
         extensions: mcExtensions,
       });
-      const mcResponse = mcResult.response as { days: string[]; overview: string; isDeload: boolean };
+      const mcResponse = mcResult.response as { days: string[]; overview: string };
       const days = mcResponse.days;
       const description = mcResponse.overview;
-      const isDeload = mcResponse.isDeload;
       const message = (mcResult as Record<string, unknown>).message as string;
       const structure = (mcResult as Record<string, unknown>).structure as Microcycle['structured'];
 
@@ -413,7 +417,6 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         absoluteWeek: progress.absoluteWeek,
         days,
         description,
-        isDeload,
         message,
         structured: structure,
         startDate: progress.weekStartDate,

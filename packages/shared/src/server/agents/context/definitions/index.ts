@@ -14,6 +14,7 @@ import type { MicrocycleServiceInstance } from '@/server/services/domain/trainin
 import type { EnrollmentServiceInstance } from '@/server/services/domain/program/enrollmentService';
 import type { ExerciseRepository } from '@/server/repositories/exerciseRepository';
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
+import type { RepositoryContainer } from '@/server/repositories/factory';
 
 // Simple providers (no service deps)
 import { createUserProvider } from './user';
@@ -22,12 +23,14 @@ import { createDateContextProvider } from './dateContext';
 
 // Factory providers (need service deps)
 import { createDayOverviewProvider } from './dayOverview';
-import { createTrainingMetaProvider } from './trainingMeta';
 import { createFitnessPlanProvider } from './fitnessPlan';
 import { createCurrentWorkoutProvider } from './currentWorkout';
 import { createCurrentMicrocycleProvider } from './currentMicrocycle';
+import { createUpcomingMicrocycleProvider } from './upcomingMicrocycle';
 import { createProgramVersionProvider } from './programVersion';
 import { createAvailableExercisesProvider } from './availableExercises';
+import { createRecentWorkoutsProvider } from './recentWorkouts';
+import { createPreviousSessionsByTypeProvider } from './previousSessionsByType';
 
 export interface ContextRegistryDeps {
   fitnessPlanService: FitnessPlanServiceInstance;
@@ -36,6 +39,7 @@ export interface ContextRegistryDeps {
   enrollmentService: EnrollmentServiceInstance;
   exerciseRepo?: ExerciseRepository;
   contextTemplateService: ContextTemplateServiceInstance;
+  repos: RepositoryContainer;
 }
 
 /**
@@ -61,11 +65,6 @@ export function registerAllContextProviders(
     contextTemplateService,
   }));
 
-  registry.register(createTrainingMetaProvider({
-    microcycleService: deps.microcycleService,
-    contextTemplateService,
-  }));
-
   registry.register(createFitnessPlanProvider({
     fitnessPlanService: deps.fitnessPlanService,
     contextTemplateService,
@@ -81,6 +80,11 @@ export function registerAllContextProviders(
     contextTemplateService,
   }));
 
+  registry.register(createUpcomingMicrocycleProvider({
+    microcycleService: deps.microcycleService,
+    contextTemplateService,
+  }));
+
   registry.register(createProgramVersionProvider({
     enrollmentService: deps.enrollmentService,
     contextTemplateService,
@@ -92,4 +96,15 @@ export function registerAllContextProviders(
       contextTemplateService,
     }));
   }
+
+  registry.register(createRecentWorkoutsProvider({
+    workoutInstanceService: deps.workoutInstanceService,
+    contextTemplateService,
+  }));
+
+  registry.register(createPreviousSessionsByTypeProvider({
+    workoutInstanceService: deps.workoutInstanceService,
+    repos: deps.repos,
+    contextTemplateService,
+  }));
 }

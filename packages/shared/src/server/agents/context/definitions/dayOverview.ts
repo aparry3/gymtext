@@ -5,7 +5,7 @@ import type { ContextTemplateServiceInstance } from '@/server/services/domain/co
 import { today, getWeekday } from '@/shared/utils/date';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<DayOverview>{{content}}</DayOverview>';
+const DEFAULT_TEMPLATE = 'Today\'s training focus:\n\n{{content}}';
 
 export function createDayOverviewProvider(deps: {
   microcycleService: MicrocycleServiceInstance;

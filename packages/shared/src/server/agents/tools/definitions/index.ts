@@ -1,5 +1,5 @@
 import type { ToolRegistry } from '../toolRegistry';
-import { updateProfileTool, makeModificationTool, getWorkoutTool } from './chatTools';
+import { updateProfileTool, modifyWorkoutTool, modifyWeekTool, modifyPlanTool, getWorkoutTool } from './chatTools';
 
 /**
  * Register all tool definitions with the tool registry
@@ -7,6 +7,8 @@ import { updateProfileTool, makeModificationTool, getWorkoutTool } from './chatT
 export function registerAllTools(registry: ToolRegistry): void {
   // Chat tools
   registry.register(updateProfileTool);
-  registry.register(makeModificationTool);
+  registry.register(modifyWorkoutTool);
+  registry.register(modifyWeekTool);
+  registry.register(modifyPlanTool);
   registry.register(getWorkoutTool);
 }

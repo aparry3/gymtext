@@ -8,8 +8,8 @@ export enum ContextType {
   DAY_OVERVIEW = 'dayOverview',
   CURRENT_WORKOUT = 'currentWorkout',
   DATE_CONTEXT = 'dateContext',
-  TRAINING_META = 'trainingMeta',
   CURRENT_MICROCYCLE = 'currentMicrocycle',
+  UPCOMING_MICROCYCLE = 'upcomingMicrocycle',
   PROGRAM_VERSION = 'programVersion',
   AVAILABLE_EXERCISES = 'availableExercises',
 }

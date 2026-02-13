@@ -32,7 +32,6 @@ interface Microcycle {
   id: string
   absoluteWeek: number
   description: string | null
-  isDeload: boolean
   isActive: boolean
   startDate: Date
   endDate: Date
@@ -461,9 +460,6 @@ function RecentMicrocyclesTable({ microcycles, userId, basePath }: RecentMicrocy
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex gap-2">
-                      {microcycle.isDeload && (
-                        <Badge variant="secondary">Deload</Badge>
-                      )}
                       {microcycle.isActive && (
                         <Badge variant={isCurrent ? "default" : "outline"}>Active</Badge>
                       )}

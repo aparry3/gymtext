@@ -3,7 +3,7 @@ import type { ExerciseRepository } from '@/server/repositories/exerciseRepositor
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<AvailableExercises>\n{{#each exercises separator="\\n"}}- {{name}}{{/each}}\n</AvailableExercises>';
+const DEFAULT_TEMPLATE = 'Available exercises:\n{{#each exercises separator="\\n"}}- {{name}}{{/each}}';
 
 export function createAvailableExercisesProvider(deps: {
   exerciseRepo: ExerciseRepository;

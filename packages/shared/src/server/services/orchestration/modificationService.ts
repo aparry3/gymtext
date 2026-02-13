@@ -2,14 +2,14 @@
  * Modification Orchestration Service
  *
  * Routes modification requests to the appropriate sub-service based on type:
- * - workout: WorkoutModificationService.modifyWorkout (same muscle group, different constraints)
- * - week: WorkoutModificationService.modifyWeek (different muscle group, schedule changes)
+ * - workout: WorkoutModificationService.modifyWorkout (change today's workout + sync microcycle)
+ * - week: WorkoutModificationService.modifyWeek (restructure weekly schedule, invalidate affected workouts)
  * - plan: PlanModificationService.modifyPlan (program-level changes)
  *
  * The chat agent determines the modification type via the `type` parameter on the
  * make_modification tool, eliminating the need for a separate LLM router agent.
  */
-import { now, getWeekday, DAY_NAMES } from '@/shared/utils/date';
+import { now } from '@/shared/utils/date';
 import type { ToolResult } from '../agents/types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../domain/user/userService';
@@ -68,8 +68,6 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
         }
 
         const today = now(user.timezone).toJSDate();
-        const weekday = getWeekday(today, user.timezone);
-        const targetDay = DAY_NAMES[weekday - 1];
 
         let result: { success: boolean; messages?: string[]; error?: string; modifications?: string };
 
@@ -84,7 +82,6 @@ export function createModificationService(deps: ModificationServiceDeps): Modifi
           case 'week':
             result = await workoutModificationService.modifyWeek({
               userId,
-              targetDay,
               changeRequest: message,
             });
             break;

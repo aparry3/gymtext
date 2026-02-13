@@ -116,11 +116,10 @@ export function createChainRunnerService(
       params: { user },
       extensions,
     });
-    const mcResponse = result.response as { days: string[]; overview: string; isDeload: boolean };
+    const mcResponse = result.response as { days: string[]; overview: string };
     const updated = await microcycleService.updateMicrocycle(microcycle.id, {
       days: mcResponse.days,
       description: mcResponse.overview,
-      isDeload: mcResponse.isDeload,
       message: (result as Record<string, unknown>).message as string,
       structured: (result as Record<string, unknown>).structure as MicrocycleStructure,
     });
@@ -131,7 +130,7 @@ export function createChainRunnerService(
   const runMicrocycleStructuredChain = async (microcycle: Microcycle, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running structured chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:structured', {
-      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, absoluteWeek: microcycle.absoluteWeek, isDeload: microcycle.isDeload }),
+      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, absoluteWeek: microcycle.absoluteWeek }),
       params: { user },
     });
     const updated = await microcycleService.updateMicrocycle(microcycle.id, { structured: result.response as MicrocycleStructure });
@@ -142,7 +141,7 @@ export function createChainRunnerService(
   const runMicrocycleMessageChain = async (microcycle: Microcycle, user: UserWithProfile): Promise<Microcycle> => {
     console.log(`[ChainRunner] Running message chain for microcycle ${microcycle.id}`);
     const result = await agentRunner.invoke('microcycle:message', {
-      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days, isDeload: microcycle.isDeload }),
+      input: JSON.stringify({ overview: microcycle.description || '', days: microcycle.days }),
       params: { user },
     });
     const updated = await microcycleService.updateMicrocycle(microcycle.id, { message: result.response as string });

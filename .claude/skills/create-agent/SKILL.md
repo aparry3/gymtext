@@ -30,7 +30,7 @@ Before creating an agent, determine:
 - **`maxIterations`**: Max tool-use loop iterations. Default: 10.
 - **`maxRetries`**: Max retry attempts on validation failure. Default: 3.
 - **`toolIds`**: Array of tool names the agent can use. Available tools: `update_profile`, `make_modification`, `get_workout`.
-- **`contextTypes`**: Array of context providers resolved at runtime. Available: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `trainingMeta`, `currentMicrocycle`, `experienceLevel`, `dayFormat`, `programVersion`, `availableExercises`.
+- **`contextTypes`**: Array of context providers resolved at runtime. Available: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `currentMicrocycle`, `experienceLevel`, `dayFormat`, `programVersion`, `availableExercises`.
 - **`subAgents`**: Sub-agent configurations (batches, parallel/sequential execution).
 - **`schemaJson`**: JSON Schema for structured output validation.
 - **`validationRules`**: Declarative validation rules (`equals`, `truthy`, `nonEmpty`, `length`) with auto-retry.

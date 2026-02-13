@@ -21,48 +21,47 @@ const TEMPLATES: Array<{ contextType: string; template: string }> = [
   {
     contextType: 'user',
     template:
-      '<User>\n{{#if user.name}}<Name>{{user.name}}</Name>\n{{/if}}{{#if user.gender}}<Gender>{{user.gender}}</Gender>\n{{/if}}{{#if user.age}}<Age>{{user.age}}</Age>\n{{/if}}</User>',
+      'Client: {{#if user.name}}{{user.name}}{{else}}Unknown{{/if}}{{#if user.gender}} ({{user.gender}}){{/if}}{{#if user.age}}, age {{user.age}}{{/if}}',
   },
   {
     contextType: 'userProfile',
-    template: '<UserProfile>{{content}}</UserProfile>',
+    template: 'Here is everything we know about this client:\n\n{{content}}',
   },
   {
     contextType: 'dateContext',
-    template:
-      '<DateContext>\nToday is {{formattedDate}}.\nTimezone: {{timezone}}\n</DateContext>',
+    template: 'Today is {{formattedDate}} ({{timezone}}).',
   },
   {
     contextType: 'fitnessPlan',
-    template: '<FitnessPlan>{{content}}</FitnessPlan>',
+    template: 'Their current training program:\n\n{{content}}',
   },
   {
     contextType: 'dayOverview',
-    template: '<DayOverview>{{content}}</DayOverview>',
+    template: "Today's training focus:\n\n{{content}}",
   },
   {
     contextType: 'currentWorkout',
     template:
-      '<CurrentWorkout>\n{{#if workout.description}}{{workout.description}}{{else}}{{#if workout.sessionType}}{{workout.sessionType}}{{else}}Workout{{/if}}{{/if}}\n</CurrentWorkout>',
-  },
-  {
-    contextType: 'trainingMeta',
-    template:
-      '<TrainingMeta>{{#if microcycle.isDeload}}Is Deload Week: {{microcycle.isDeload}}{{/if}}{{#if microcycle.absoluteWeek}} | Absolute Week: {{microcycle.absoluteWeek}}{{/if}}</TrainingMeta>',
+      "Today's scheduled workout:\n\n{{#if workout.description}}{{workout.description}}{{else}}{{#if workout.sessionType}}{{workout.sessionType}}{{else}}No workout details available{{/if}}{{/if}}",
   },
   {
     contextType: 'currentMicrocycle',
     template:
-      '<CurrentMicrocycle>\nWeek Overview: {{#if microcycle.description}}{{microcycle.description}}{{else}}N/A{{/if}}\nIs Deload: {{microcycle.isDeload}}\nAbsolute Week: {{microcycle.absoluteWeek}}\nDays:\nMonday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\nWednesday: {{microcycle.days.2}}\nThursday: {{microcycle.days.3}}\nFriday: {{microcycle.days.4}}\nSaturday: {{microcycle.days.5}}\nSunday: {{microcycle.days.6}}\n</CurrentMicrocycle>',
+      "This week's training plan (Week {{microcycle.absoluteWeek}}):\n\n{{#if microcycle.description}}{{microcycle.description}}\n\n{{/if}}Monday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\nWednesday: {{microcycle.days.2}}\nThursday: {{microcycle.days.3}}\nFriday: {{microcycle.days.4}}\nSaturday: {{microcycle.days.5}}\nSunday: {{microcycle.days.6}}",
+  },
+  {
+    contextType: 'upcomingMicrocycle',
+    template:
+      "Next week's training plan (Week {{microcycle.absoluteWeek}}):\n\n{{#if microcycle.description}}{{microcycle.description}}\n\n{{/if}}Monday: {{microcycle.days.0}}\nTuesday: {{microcycle.days.1}}\nWednesday: {{microcycle.days.2}}\nThursday: {{microcycle.days.3}}\nFriday: {{microcycle.days.4}}\nSaturday: {{microcycle.days.5}}\nSunday: {{microcycle.days.6}}",
   },
   {
     contextType: 'programVersion',
-    template: '<ProgramVersion>\n{{content}}\n</ProgramVersion>',
+    template: 'Program template:\n\n{{content}}',
   },
   {
     contextType: 'availableExercises',
     template:
-      '<AvailableExercises>\n{{#each exercises separator="\\n"}}- {{name}}{{/each}}\n</AvailableExercises>',
+      'Available exercises:\n{{#each exercises separator="\\n"}}- {{name}}{{/each}}',
   },
 ];
 

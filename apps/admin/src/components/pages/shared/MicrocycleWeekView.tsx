@@ -34,7 +34,6 @@ interface Microcycle {
   }
   structured?: MicrocycleStructure | null
   description?: string | null
-  isDeload?: boolean
   message?: string | null
   startDate: Date
   endDate: Date
@@ -263,9 +262,6 @@ function MicrocycleHeader({ microcycle }: { microcycle: Microcycle }) {
           </p>
         </div>
         <div className="flex gap-2">
-          {microcycle.isDeload && (
-            <Badge variant="secondary">Deload</Badge>
-          )}
           {microcycle.isActive && (
             <Badge variant="default">Active</Badge>
           )}

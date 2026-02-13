@@ -4,7 +4,7 @@ import type { FitnessPlanServiceInstance } from '@/server/services/domain/traini
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<FitnessPlan>{{content}}</FitnessPlan>';
+const DEFAULT_TEMPLATE = 'Their current training program:\n\n{{content}}';
 
 export function createFitnessPlanProvider(deps: {
   fitnessPlanService: FitnessPlanServiceInstance;

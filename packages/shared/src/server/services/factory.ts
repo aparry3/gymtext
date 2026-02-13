@@ -234,6 +234,7 @@ export function createServices(
     enrollmentService: enrollment,
     exerciseRepo: repos.exercise,
     contextTemplateService: contextTemplate,
+    repos,
   });
 
   // =========================================================================
@@ -340,7 +341,8 @@ export function createServices(
 
   // Forward-declared services used by getServices() lambda — assigned in later phases
   let profile: ProfileServiceInstance;
-  let modification: ModificationServiceInstance;
+  let workoutModification: WorkoutModificationServiceInstance;
+  let planModification: PlanModificationServiceInstance;
 
   const agentRunner = createAgentRunner({
     agentDefinitionService: agentDefinition,
@@ -350,7 +352,13 @@ export function createServices(
     agentExtensionService: agentExtension,
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
-      modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },
+      workoutModification: {
+        modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
+        modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
+      },
+      planModification: {
+        modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
+      },
       training: {
         getOrGenerateWorkout: async (userId: string, timezone: string) => {
           const { now } = require('@/shared/utils/date');
@@ -449,7 +457,7 @@ export function createServices(
   // Phase 5: Create modification, profile, and remaining AgentRunner-dependent services
   // Assigns forward-declared variables used by getServices() lambda in Phase 3.5
   // =========================================================================
-  const workoutModification = createWorkoutModificationService({
+  workoutModification = createWorkoutModificationService({
     user,
     microcycle,
     workoutInstance,
@@ -468,14 +476,14 @@ export function createServices(
     agentRunner,
   });
 
-  const planModification = createPlanModificationService(repos, {
+  planModification = createPlanModificationService(repos, {
     user,
     fitnessPlan,
     workoutModification,
     agentRunner,
   });
 
-  modification = createModificationService({
+  const modification = createModificationService({
     user,
     workoutModification,
     planModification,

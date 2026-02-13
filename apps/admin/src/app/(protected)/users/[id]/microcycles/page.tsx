@@ -26,7 +26,6 @@ interface Microcycle {
   absoluteWeek: number
   days: string[]
   description: string | null
-  isDeload: boolean
   message: string | null
   structured: MicrocycleStructure | null
   startDate: string
@@ -228,10 +227,7 @@ export default function MicrocyclesPage() {
                               {microcycle.isActive && (
                                 <Badge variant="default">Active</Badge>
                               )}
-                              {microcycle.isDeload && (
-                                <Badge variant="secondary">Deload</Badge>
-                              )}
-                              {!microcycle.isActive && !microcycle.isDeload && (
+                              {!microcycle.isActive && (
                                 <Badge variant="outline">Planned</Badge>
                               )}
                             </div>

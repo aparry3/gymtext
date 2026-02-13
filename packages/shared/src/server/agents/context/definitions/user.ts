@@ -3,7 +3,7 @@ import type { UserWithProfile } from '@/server/models';
 import type { ContextTemplateServiceInstance } from '@/server/services/domain/context/contextTemplateService';
 import { resolveTemplate } from '@/server/agents/declarative/templateEngine';
 
-const DEFAULT_TEMPLATE = '<User>\n{{#if user.name}}<Name>{{user.name}}</Name>\n{{/if}}{{#if user.gender}}<Gender>{{user.gender}}</Gender>\n{{/if}}{{#if user.age}}<Age>{{user.age}}</Age>\n{{/if}}</User>';
+const DEFAULT_TEMPLATE = 'Client: {{#if user.name}}{{user.name}}{{else}}Unknown{{/if}}{{#if user.gender}} ({{user.gender}}){{/if}}{{#if user.age}}, age {{user.age}}{{/if}}';
 
 export function createUserProvider(deps: {
   contextTemplateService: ContextTemplateServiceInstance;

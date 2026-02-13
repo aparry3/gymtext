@@ -24,7 +24,7 @@ Use this tool when the user shares PERMANENT information:
 DO NOT use for one-time requests ("switch today to legs") or questions.
 
 IMPORTANT: If user wants BOTH a preference AND a workout change, call BOTH tools.
-Example: "Add runs to my plan on Tues/Thurs" -> update_profile (preference) + make_modification (plan change)
+Example: "Add runs to my plan on Tues/Thurs" -> update_profile (preference) + modify_week or modify_plan (change)
 
 All context is automatically provided - no parameters needed.`,
   schema: z.object({}),
@@ -38,36 +38,118 @@ All context is automatically provided - no parameters needed.`,
   },
 };
 
-export const makeModificationTool: ToolDefinition = {
-  name: 'make_modification',
-  description: `Make changes to the user's workout or training program.
+export const modifyWorkoutTool: ToolDefinition = {
+  name: 'modify_workout',
+  description: `Modify today's workout — same muscle group but different constraints.
 
-Use this tool for:
-- **Today's Workout**: Swap exercises, different constraints, different equipment
-- **Weekly Schedule**: Change workout type, muscle group, or training day
-- **Program-Level**: Frequency, training splits, overall focus
+Use this tool when the user wants to change TODAY'S workout:
+- Different exercises: "give me different back exercises"
+- Equipment constraints: "only dumbbells today", "no barbell"
+- Time constraints: "I only have 30 minutes"
+- Intensity changes: "make it lighter today", "I want something harder"
+- Muscle group swap: "can I do legs instead?"
 
-This tool handles WORKOUT CONTENT - not user settings like send time, timezone, or name.
-All context (user, message, date, etc.) is automatically provided - no parameters needed.`,
+This is the MOST COMMON modification. Use this for any single-day workout change.
+Do NOT use for schedule rearrangement (use modify_week) or program-level changes (use modify_plan).`,
   schema: z.object({
     message: z.string().describe(
-      'REQUIRED. Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
-    ),
-    type: z.enum(['workout', 'week', 'plan']).describe(
-      'Type of modification: "workout" = same muscle group, different constraints (equipment, time, intensity). ' +
-      '"week" = different muscle group or workout type, rearranging schedule (THIS IS THE DEFAULT/MOST COMMON). ' +
-      '"plan" = program-level changes (frequency, split, goals).'
+      'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
     ),
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
-    const type = (args.type as 'workout' | 'week' | 'plan') ?? 'week';
-    return ctx.services.modification.makeModification(
-      ctx.user.id,
-      ctx.message,
-      type,
-      ctx.previousMessages
-    );
+    const { now } = await import('@/shared/utils/date');
+    const timezone = ctx.user.timezone || 'America/New_York';
+    const todayDate = now(timezone).toJSDate();
+    const result = await ctx.services.workoutModification.modifyWorkout({
+      userId: ctx.user.id,
+      workoutDate: todayDate,
+      changeRequest: ctx.message,
+    });
+    return {
+      toolType: 'action',
+      response: result.modifications || 'Workout modified successfully.',
+      messages: result.messages,
+    };
+  },
+};
+
+export const modifyWeekTool: ToolDefinition = {
+  name: 'modify_week',
+  description: `Restructure the weekly schedule — move sessions, swap days, multi-day changes.
+
+Use this tool when the user wants to rearrange their WEEKLY SCHEDULE:
+- Move sessions: "move legs to Wednesday"
+- Swap days: "swap Monday and Thursday"
+- Multi-day changes: "I'm travelling Wed-Fri, make those rest days"
+- Schedule around events: "I have a game Saturday, make Friday light"
+
+You MUST specify which day is the target of the change.
+Use targetWeek to indicate whether the change applies to this week or next week.
+If the user says "next week" or is responding to their upcoming week overview, use targetWeek: "next".`,
+  schema: z.object({
+    message: z.string().describe(
+      'Brief acknowledgment to send immediately (1 sentence). Example: "Sure, moving legs to Wednesday!"'
+    ),
+    targetDay: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']).describe(
+      'The primary day being modified in the weekly schedule.'
+    ),
+    targetWeek: z.enum(['current', 'next']).optional().default('current').describe(
+      'Which week to modify. Use "next" if the user references next week or is responding to their upcoming week overview. Defaults to "current".'
+    ),
+  }),
+  priority: 3,
+  execute: async (ctx, args): Promise<ToolResult> => {
+    const targetWeek = (args.targetWeek as 'current' | 'next') ?? 'current';
+    let weekStartDate: Date | undefined;
+
+    if (targetWeek === 'next') {
+      const { now, getNextWeekStart } = await import('@/shared/utils/date');
+      const timezone = ctx.user.timezone || 'America/New_York';
+      const todayDate = now(timezone).toJSDate();
+      weekStartDate = getNextWeekStart(todayDate, timezone);
+    }
+
+    const result = await ctx.services.workoutModification.modifyWeek({
+      userId: ctx.user.id,
+      changeRequest: ctx.message,
+      weekStartDate,
+    });
+    return {
+      toolType: 'action',
+      response: result.modifications || 'Week schedule modified successfully.',
+      messages: result.messages,
+    };
+  },
+};
+
+export const modifyPlanTool: ToolDefinition = {
+  name: 'modify_plan',
+  description: `Make program-level changes — frequency, training split, overall goals.
+
+Use this tool for changes that affect the ENTIRE TRAINING PROGRAM:
+- Frequency: "I want to train 5 days instead of 4"
+- Split changes: "switch me to push/pull/legs"
+- Goal changes: "I want to focus more on hypertrophy"
+- Adding modalities: "add 2 running days per week"
+
+Do NOT use for single-day workout changes (use modify_workout) or schedule rearrangement (use modify_week).`,
+  schema: z.object({
+    message: z.string().describe(
+      'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, updating your program!"'
+    ),
+  }),
+  priority: 3,
+  execute: async (ctx, args): Promise<ToolResult> => {
+    const result = await ctx.services.planModification.modifyPlan({
+      userId: ctx.user.id,
+      changeRequest: ctx.message,
+    });
+    return {
+      toolType: 'action',
+      response: result.modifications || 'Plan modified successfully.',
+      messages: result.messages,
+    };
   },
 };
 

@@ -162,12 +162,6 @@ export function createWeeklyMessageService(
           return { success: false, userId: user.id, error: 'Could not generate next week\'s training pattern' };
         }
 
-        const isDeload = nextWeekMicrocycle.isDeload;
-        if (isDeload) {
-          console.log(`[WeeklyMessageService] User ${user.id} is entering a deload week (week ${nextWeekMicrocycle.absoluteWeek})`);
-        }
-
-
         const breakdownMessage = nextWeekMicrocycle.message;
         if (!breakdownMessage) {
           console.error(`[WeeklyMessageService] No breakdown message stored for microcycle ${nextWeekMicrocycle.id}`);
