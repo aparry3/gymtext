@@ -51,6 +51,9 @@ const formSchema = z.object({
   acceptRisks: z.boolean().refine((val) => val === true, {
     message: 'You must accept the risks associated with exercise',
   }),
+  smsConsent: z.boolean().refine((val) => val === true, {
+    message: 'You must consent to receive SMS messages',
+  }),
 });
 
 export type FormData = z.infer<typeof formSchema>;
@@ -175,6 +178,10 @@ export function MultiStepSignupForm() {
         equipment: data.equipment,
         injuries: data.injuries,
         acceptedRisks: data.acceptRisks,
+
+        // SMS consent
+        smsConsent: data.smsConsent,
+        smsConsentedAt: new Date().toISOString(),
 
         // Referral code (if present)
         referralCode: referralCode || undefined,
@@ -340,7 +347,7 @@ function getFieldsForStep(step: number): (keyof FormData)[] {
     case 5:
       return ['trainingLocation', 'equipment'];
     case 6:
-      return ['acceptRisks'];
+      return ['acceptRisks', 'smsConsent'];
     default:
       return [];
   }

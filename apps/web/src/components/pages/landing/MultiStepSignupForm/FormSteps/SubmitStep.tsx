@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { FormData } from '../index';
 import { Shield, CheckCircle2, Clock, XCircle } from 'lucide-react';
@@ -103,12 +104,32 @@ export function SubmitStep({ register, errors }: SubmitStepProps) {
         </div>
       </div>
 
-      {/* Additional Info */}
-      <div className="text-center text-sm text-muted-foreground">
-        <p>
-          By submitting this form, you agree to receive text messages from GYMTEXT at the
-          phone number provided. Message and data rates may apply.
-        </p>
+      {/* SMS Consent */}
+      <div className="border border-border rounded-xl p-6 bg-white">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            {...register('smsConsent')}
+            className="mt-1 h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+            id="smsConsent"
+          />
+          <div className="flex-1">
+            <label htmlFor="smsConsent" className="text-sm text-foreground cursor-pointer">
+              By checking this box, I agree to receive recurring automated text messages
+              from GymText at the phone number provided. Message frequency varies.
+              Msg &amp; data rates may apply. Reply STOP to cancel at any time. View our{' '}
+              <Link href="/terms" target="_blank" className="underline text-primary hover:text-primary/80">Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" target="_blank" className="underline text-primary hover:text-primary/80">Privacy Policy</Link>.
+            </label>
+            {errors.smsConsent && (
+              <p className="mt-2 flex items-center gap-2 text-sm font-medium text-red-600">
+                <XCircle className="h-4 w-4" />
+                {errors.smsConsent.message}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
