@@ -56,6 +56,7 @@ export function TextInputQuestion({
   const isPhone = question.type === 'phone';
   const [displayValue, setDisplayValue] = useState(isPhone ? formatPhoneNumber(value) : value);
   const [smsConsented, setSmsConsented] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Sync displayValue when question changes or value prop changes
   useEffect(() => {
@@ -97,7 +98,7 @@ export function TextInputQuestion({
   };
 
   const hasValidInput = question.required ? (isPhone ? getPhoneDigits(value).length === 10 : value.trim().length > 0) : true;
-  const canContinue = hasValidInput && (isPhone && isSubmit ? smsConsented : true);
+  const canContinue = hasValidInput && (isPhone && isSubmit ? smsConsented && termsAccepted : true);
 
   return (
     <div className="flex flex-col gap-6">
@@ -131,33 +132,39 @@ export function TextInputQuestion({
       </div>
 
       {isPhone && isSubmit && (
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={smsConsented}
-            onChange={(e) => setSmsConsented(e.target.checked)}
-            className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))] accent-[hsl(var(--questionnaire-accent))]"
-          />
-          <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-snug">
-            By checking this box, I agree to receive recurring automated text messages from GymText at the phone number provided. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to cancel at any time. View our{' '}
-            <Link href="/terms" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Terms of Service</Link>
-            {' '}and{' '}
-            <Link href="/privacy" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Privacy Policy</Link>.
-          </span>
-        </label>
+        <div className="flex flex-col gap-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={smsConsented}
+              onChange={(e) => setSmsConsented(e.target.checked)}
+              className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))] accent-[hsl(var(--questionnaire-accent))]"
+            />
+            <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-snug">
+              I agree to receive recurring automated text messages from GymText at the phone number provided for training delivery and support. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help and STOP to cancel.
+            </span>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))] accent-[hsl(var(--questionnaire-accent))]"
+            />
+            <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-snug">
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Privacy Policy</Link>.
+            </span>
+          </label>
+        </div>
       )}
 
       <div className="mt-4">
         <ContinueButton onClick={onNext} disabled={!canContinue} isSubmit={isSubmit} isLoading={isLoading} />
       </div>
 
-      {isPhone && isSubmit && (
-        <div className="mt-4 text-center text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
-          <Link href="/terms" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Terms of Service</Link>
-          {' | '}
-          <Link href="/privacy" target="_blank" className="underline hover:text-[hsl(var(--questionnaire-foreground))]">Privacy Policy</Link>
-        </div>
-      )}
     </div>
   );
 }

@@ -193,6 +193,9 @@ export default function PrivacyPage() {
                   Twilio&apos;s Privacy Policy
                 </a>
               </p>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                Text messaging originator opt-in data and consent will not be shared with any third parties.
+              </p>
 
               <h3 className="mb-3 text-xl font-medium text-foreground">
                 4.2 Stripe (Payment Processing)
