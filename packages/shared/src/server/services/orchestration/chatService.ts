@@ -10,8 +10,7 @@
  * - SMS length constraint enforcement
  * - Error handling and fallback messages
  *
- * Tool setup (update_profile, make_modification, get_workout) and
- * hook wiring (sendMessage pre-hook on make_modification) are handled
+ * Tool setup (update_profile, make_modification, get_workout) is handled
  * declaratively by the AgentRunner from DB config.
  */
 import type { UserWithProfile } from '@/server/models/user';
@@ -43,7 +42,7 @@ export interface ChatServiceDeps {
  * ChatService handles incoming SMS messages and generates AI-powered responses.
  *
  * The AgentRunner resolves tools (update_profile, get_workout, make_modification)
- * and hooks (sendMessage pre-hook) from DB config on chat:generate.
+ * from DB config on chat:generate.
  */
 export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
   const {
@@ -88,11 +87,10 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
         }));
 
         // Invoke chat agent via AgentRunner
-        // Tools (update_profile, get_workout, make_modification) and hooks
-        // (sendMessage pre-hook) are resolved from DB config
+        // Tools (update_profile, get_workout, make_modification) are resolved from DB config
         const result = await agentRunner.invoke('chat:generate', {
-          user: userWithProfile,
-          message,
+          input: message,
+          params: { user: userWithProfile },
           previousMessages,
         });
 

@@ -14,13 +14,8 @@
 export {
   createServices,
   createServicesFromDb,
-  createContextServiceFromContainer,
 } from './factory';
 export type { ServiceContainer, ExternalClients } from './factory';
-
-// Context service
-export { createContextService } from './context/contextService';
-export type { ContextService } from './context/contextService';
 
 // =============================================================================
 // Domain Service Factory Functions
@@ -38,7 +33,6 @@ export { createProgressService } from './domain/training/progressService';
 export { createSubscriptionService } from './domain/subscription/subscriptionService';
 export { createDayConfigService } from './domain/calendar/dayConfigService';
 export { createShortLinkService } from './domain/links/shortLinkService';
-export { createPromptService } from './domain/prompts/promptService';
 export { createReferralService } from './domain/referral/referralService';
 export { createAdminAuthService } from './domain/auth/adminAuthService';
 export { createUserAuthService } from './domain/auth/userAuthService';
@@ -71,7 +65,6 @@ export type { ProgressServiceInstance, ProgressInfo } from './domain/training/pr
 export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './domain/subscription/subscriptionService';
 export type { DayConfigServiceInstance } from './domain/calendar/dayConfigService';
 export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
-export type { PromptServiceInstance } from './domain/prompts/promptService';
 export type { ReferralServiceInstance } from './domain/referral/referralService';
 export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 export type { UserAuthServiceInstance } from './domain/auth/userAuthService';

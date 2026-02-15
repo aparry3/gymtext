@@ -105,6 +105,7 @@
   },
   "env": {
     "PYTHONPATH": ".",
-    "VIRTUAL_ENV": "./venv"
+    "VIRTUAL_ENV": "./venv",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }

@@ -1,9 +1,7 @@
 import { z } from 'zod';
 import { tool, type StructuredToolInterface } from '@langchain/core/tools';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { ToolDefinition, ToolExecutionContext } from './types';
-import type { HookRegistry } from '../hooks/hookRegistry';
-import type { HookableConfig } from '../hooks/types';
-import { normalizeHookConfig, resolveDotPath } from '../hooks/resolver';
 
 export interface ToolMetadata {
   name: string;
@@ -11,11 +9,18 @@ export interface ToolMetadata {
   priority?: number;
 }
 
+export interface DetailedToolMetadata {
+  name: string;
+  description: string;
+  priority?: number;
+  parameters: Record<string, unknown>;
+}
+
 /**
  * Registry for tool definitions
  *
  * Tools are registered once at startup. At invocation time, resolve() builds
- * LangChain StructuredToolInterface instances with context + hook wrapping.
+ * LangChain StructuredToolInterface instances with context injection.
  */
 export class ToolRegistry {
   private tools = new Map<string, ToolDefinition>();
@@ -39,25 +44,29 @@ export class ToolRegistry {
     }));
   }
 
+  listDetailed(): DetailedToolMetadata[] {
+    return [...this.tools.values()].map((def) => ({
+      name: def.name,
+      description: def.description,
+      priority: def.priority,
+      parameters: zodToJsonSchema(def.schema) as Record<string, unknown>,
+    }));
+  }
+
   /**
    * Resolve tool IDs into LangChain StructuredToolInterface instances
    *
    * Wraps each tool's execute function with:
    * - Context injection (user, message, services, extras)
-   * - Hook execution (pre/post hooks from toolHooks config)
    * - Priority metadata on the resulting tool
    *
    * @param toolIds - Array of tool names to resolve
    * @param ctx - Execution context (user, message, services, extras)
-   * @param hookRegistry - Optional hook registry for resolving hook functions
-   * @param toolHooks - Optional per-tool hook configs from agent DB config
    * @returns Array of LangChain tools sorted by priority
    */
   resolve(
     toolIds: string[],
-    ctx: ToolExecutionContext,
-    hookRegistry?: HookRegistry,
-    toolHooks?: Record<string, HookableConfig>
+    ctx: ToolExecutionContext
   ): StructuredToolInterface[] {
     const resolved: StructuredToolInterface[] = [];
 
@@ -68,50 +77,9 @@ export class ToolRegistry {
         continue;
       }
 
-      // toolHooks JSONB keys may be camelCased by Kysely's CamelCasePlugin,
-      // so check both the original toolId and the camelCase variant
-      const hookConfig = toolHooks?.[toolId]
-        ?? toolHooks?.[toolId.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())];
-
-      // Build the LangChain tool with context injection and hook wrapping
       const langchainTool = tool(
         async (args: Record<string, unknown>) => {
-          // Execute preHook if configured
-          if (hookConfig?.preHook && hookRegistry) {
-            const config = normalizeHookConfig(hookConfig.preHook);
-            const hookFn = hookRegistry.get(config.hook);
-            if (hookFn) {
-              const value = config.source
-                ? resolveDotPath({ args, ctx }, config.source)
-                : undefined;
-              try {
-                await hookFn(ctx.user, value);
-              } catch (err) {
-                console.error(`[ToolRegistry] preHook ${config.hook} failed:`, err);
-              }
-            }
-          }
-
-          // Execute the tool
-          const result = await def.execute(ctx, args);
-
-          // Execute postHook if configured
-          if (hookConfig?.postHook && hookRegistry) {
-            const config = normalizeHookConfig(hookConfig.postHook);
-            const hookFn = hookRegistry.get(config.hook);
-            if (hookFn) {
-              const value = config.source
-                ? resolveDotPath({ args, result }, config.source)
-                : result;
-              try {
-                await hookFn(ctx.user, value);
-              } catch (err) {
-                console.error(`[ToolRegistry] postHook ${config.hook} failed:`, err);
-              }
-            }
-          }
-
-          return result;
+          return await def.execute(ctx, args);
         },
         {
           name: def.name,

@@ -14,7 +14,7 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
       className={cn(
-        'h-3 w-3 shrink-0 text-gray-400 transition-transform duration-200',
+        'h-3 w-3 shrink-0 text-slate-400 transition-transform duration-200',
         expanded && 'rotate-90'
       )}
       fill="none"
@@ -68,8 +68,8 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
   };
 
   return (
-    <nav className="p-3 space-y-1">
-      <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+    <nav className="space-y-1 p-3">
+      <h3 className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
         Agent Domains
       </h3>
       {AGENT_DOMAINS.map((domain) => {
@@ -82,15 +82,15 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
             open={isExpanded}
             onOpenChange={() => toggleDomain(domain.id)}
           >
-            <CollapsibleTrigger className="flex items-center w-full px-2 py-1.5 text-sm font-medium hover:bg-gray-100 rounded-lg transition-colors">
+            <CollapsibleTrigger className="flex w-full items-center rounded-xl px-2 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100/80">
               <ChevronIcon expanded={isExpanded} />
               <span className="ml-1">{domain.label}</span>
-              <span className="ml-auto text-xs text-gray-400">
+              <span className="ml-auto text-xs text-slate-400">
                 {isLoading ? '...' : `${existingCount}/${domain.agents.length}`}
               </span>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <ul className="ml-4 border-l border-gray-200 pl-2 space-y-0.5 mt-1">
+              <ul className="mt-1 ml-4 space-y-0.5 border-l border-slate-200 pl-2">
                 {domain.agents.map((agent) => {
                   const exists = existingAgents.has(agent.id);
                   const isSelected = selectedAgentId === agent.id;
@@ -101,14 +101,14 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
                         onClick={() => exists && onSelect(agent.id)}
                         disabled={!exists}
                         className={cn(
-                          'w-full text-left px-2 py-1 text-sm rounded-lg transition-colors',
-                          exists ? 'hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed',
-                          isSelected && 'bg-blue-50 text-blue-700 font-medium hover:bg-blue-100'
+                          'w-full rounded-lg px-2 py-1 text-left text-sm transition-colors',
+                          exists ? 'text-slate-700 hover:bg-slate-100/80' : 'cursor-not-allowed text-slate-400',
+                          isSelected && 'bg-sky-100/70 text-sky-800 font-medium hover:bg-sky-100'
                         )}
                       >
                         {agent.label}
                         {!exists && (
-                          <span className="ml-1 text-xs text-gray-400">(not seeded)</span>
+                          <span className="ml-1 text-xs text-slate-400">(not seeded)</span>
                         )}
                       </button>
                     </li>

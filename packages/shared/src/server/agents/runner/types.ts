@@ -1,21 +1,20 @@
-import type { UserWithProfile } from '@/server/models/user';
 import type { Message } from '@/server/agents/types';
-import type { ContextExtras } from '@/server/services/context/types';
 import type { InputMapping, ValidationRule } from '../declarative/types';
-import type { HookableConfig, HookConfigOrString } from '../hooks/types';
 
 /**
  * Parameters for AgentRunner.invoke()
  */
 export interface AgentInvokeParams {
-  /** The current user (optional for agents that don't need user context) */
-  user?: UserWithProfile;
-  /** The user's input message */
-  message?: string;
+  /** The user's input message (replaces 'message') */
+  input?: string;
+  /** Opaque parameter bag — carries user, extras, and any caller-provided data */
+  params?: Record<string, unknown>;
   /** Previous conversation messages */
   previousMessages?: Message[];
-  /** Extra context data (workoutDate, targetDay, etc.) */
-  extras?: ContextExtras;
+  /** Manual context injection (prepended to resolved context) */
+  context?: string[];
+  /** Agent extensions to apply (e.g., { experienceLevel: 'beginner', dayFormat: 'TRAINING' }) */
+  extensions?: Record<string, string>;
 }
 
 /**
@@ -32,8 +31,6 @@ export interface SubAgentDbConfig {
   inputMapping?: InputMapping;
   /** Declarative condition: rules that must pass for sub-agent to run */
   condition?: ValidationRule[];
-  /** Hook to execute after this sub-agent completes */
-  postHook?: HookConfigOrString;
 }
 
 /**
@@ -46,10 +43,6 @@ export interface ExtendedAgentConfig {
   contextTypes: string[] | null;
   /** Sub-agent configurations */
   subAgents: SubAgentDbConfig[] | null;
-  /** Agent-level hooks */
-  hooks: HookableConfig | null;
-  /** Per-tool hook configs */
-  toolHooks: Record<string, HookableConfig> | null;
   /** JSON Schema for structured output */
   schemaJson: Record<string, unknown> | null;
   /** Declarative validation rules */
@@ -58,4 +51,10 @@ export interface ExtendedAgentConfig {
   userPromptTemplate: string | null;
   /** Few-shot examples for the agent */
   examples: unknown[] | null;
+  /** Eval prompt for automated evaluation of agent output */
+  evalPrompt: string | null;
+  /** Model to use for eval (defaults to gpt-5-nano if null) */
+  evalModel: string | null;
+  /** Default extension keys per type (e.g., { experienceLevel: 'intermediate' }) */
+  defaultExtensions: Record<string, string> | null;
 }

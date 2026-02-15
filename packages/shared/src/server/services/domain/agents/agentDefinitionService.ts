@@ -10,7 +10,6 @@ import type {
 import type { ExtendedAgentConfig } from '@/server/agents/runner/types';
 import type { ValidationRule } from '@/server/agents/declarative/types';
 import type { SubAgentDbConfig } from '@/server/agents/runner/types';
-import type { HookableConfig } from '@/server/agents/hooks/types';
 
 interface CacheEntry {
   data: DbAgentConfig;
@@ -66,7 +65,7 @@ export interface AgentDefinitionServiceInstance {
 
   /**
    * Get the extended configuration for an agent (new DB columns)
-   * Returns tool_ids, context_types, sub_agents, hooks, etc.
+   * Returns tool_ids, context_types, sub_agents, etc.
    * Uses the same cache as getAgentDefinition().
    */
   getExtendedConfig(agentId: string): Promise<ExtendedAgentConfig>;
@@ -148,12 +147,13 @@ export function createAgentDefinitionService(
     toolIds: (raw.toolIds as string[] | null) ?? null,
     contextTypes: (raw.contextTypes as string[] | null) ?? null,
     subAgents: (raw.subAgents as unknown as SubAgentDbConfig[] | null) ?? null,
-    hooks: (raw.hooks as unknown as HookableConfig | null) ?? null,
-    toolHooks: (raw.toolHooks as unknown as Record<string, HookableConfig> | null) ?? null,
     schemaJson: (raw.schemaJson as unknown as Record<string, unknown> | null) ?? null,
     validationRules: (raw.validationRules as unknown as ValidationRule[] | null) ?? null,
     userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
     examples: (raw.examples as unknown[] | null) ?? null,
+    evalPrompt: (raw.evalPrompt as string | null) ?? null,
+    evalModel: (raw.evalModel as string | null) ?? null,
+    defaultExtensions: (raw.defaultExtensions as Record<string, string> | null) ?? null,
   });
 
   return {

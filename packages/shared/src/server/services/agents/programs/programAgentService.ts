@@ -42,7 +42,7 @@ export function createProgramAgentService(
       });
 
       const result = await agentRunner.invoke('program:parse', {
-        message: rawText,
+        input: rawText,
       });
 
       const response = result.response as string;

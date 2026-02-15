@@ -30,7 +30,6 @@ interface Microcycle {
   absoluteWeek: number
   days: string[]
   description: string | null
-  isDeload: boolean
   message: string | null
   structured: MicrocycleStructure | null
   startDate: string
@@ -231,9 +230,6 @@ export default function MicrocycleDetailPage() {
                   {microcycle.isActive && !isCurrent && (
                     <Badge variant="default">Active</Badge>
                   )}
-                  {microcycle.isDeload && (
-                    <Badge variant="secondary">Deload</Badge>
-                  )}
                 </div>
                 {microcycle.structured?.phase && (
                   <p className="text-lg text-muted-foreground">{microcycle.structured.phase}</p>
@@ -305,7 +301,6 @@ export default function MicrocycleDetailPage() {
                       formatMessageAgentInput({
                         overview: microcycle.description || '',
                         days: microcycle.days || [],
-                        isDeload: microcycle.isDeload
                       }),
                       'message'
                     )}
@@ -316,7 +311,6 @@ export default function MicrocycleDetailPage() {
                     {formatMessageAgentInput({
                       overview: microcycle.description || '',
                       days: microcycle.days || [],
-                      isDeload: microcycle.isDeload
                     })}
                   </pre>
                 </div>
@@ -332,7 +326,6 @@ export default function MicrocycleDetailPage() {
                         microcycle.description || '',
                         microcycle.days || [],
                         microcycle.absoluteWeek,
-                        microcycle.isDeload
                       ),
                       'structured'
                     )}
@@ -344,7 +337,6 @@ export default function MicrocycleDetailPage() {
                       microcycle.description || '',
                       microcycle.days || [],
                       microcycle.absoluteWeek,
-                      microcycle.isDeload
                     )}
                   </pre>
                 </div>

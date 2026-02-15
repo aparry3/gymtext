@@ -25,12 +25,13 @@ export interface AdminAgentDefinition {
   toolIds: string[] | null;
   contextTypes: string[] | null;
   subAgents: unknown[] | null;
-  hooks: Record<string, unknown> | null;
-  toolHooks: Record<string, unknown> | null;
   schemaJson: Record<string, unknown> | null;
   validationRules: unknown[] | null;
   userPromptTemplate: string | null;
   examples: AgentExample[] | null;
+  evalPrompt: string | null;
+  evalModel: string | null;
+  defaultExtensions: Record<string, string> | null;
 }
 
 export interface RegistryToolMetadata {
@@ -39,14 +40,8 @@ export interface RegistryToolMetadata {
   priority?: number;
 }
 
-export interface RegistryHookMetadata {
-  name: string;
-  description: string;
-}
-
 export interface RegistryMetadata {
   tools: RegistryToolMetadata[];
-  hooks: RegistryHookMetadata[];
   contextTypes: string[];
   agentIds: string[];
 }
@@ -64,6 +59,32 @@ export interface AgentConfig {
 
 export interface SelectedAgent {
   agentId: string;
+}
+
+export interface AdminAgentExtension {
+  agentId: string;
+  extensionType: string;
+  extensionKey: string;
+  systemPrompt: string | null;
+  systemPromptMode: string | null;
+  userPromptTemplate: string | null;
+  userPromptTemplateMode: string | null;
+  evalPrompt: string | null;
+  evalPromptMode: string | null;
+  model: string | null;
+  temperature: string | null;
+  maxTokens: number | null;
+  maxIterations: number | null;
+  maxRetries: number | null;
+  toolIds: string[] | null;
+  contextTypes: string[] | null;
+  schemaJson: Record<string, unknown> | null;
+  validationRules: unknown[] | null;
+  subAgents: unknown[] | null;
+  examples: unknown[] | null;
+  triggerConditions: unknown[] | null;
+  description: string | null;
+  createdAt: string;
 }
 
 /**

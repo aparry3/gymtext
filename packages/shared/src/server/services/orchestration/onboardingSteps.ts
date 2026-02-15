@@ -210,7 +210,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
 
     /**
      * Step 5: Get or create workout
-     * Needs microcycle for day pattern and isDeload flag
+     * Needs microcycle for day pattern
      *
      * @param forceCreate - When true, always creates new workout (for re-onboarding)
      */

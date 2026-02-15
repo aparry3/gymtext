@@ -24,8 +24,8 @@ function HistorySkeleton() {
     <div className="p-4 space-y-3">
       {[1, 2, 3].map((i) => (
         <div key={i} className="animate-pulse">
-          <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
-          <div className="h-4 bg-gray-200 rounded w-full" />
+          <div className="mb-2 h-3 w-1/2 rounded bg-slate-200" />
+          <div className="h-4 w-full rounded bg-slate-200" />
         </div>
       ))}
     </div>
@@ -80,11 +80,11 @@ export function AgentHistoryPanel({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg border shadow-lg">
+    <div className="flex h-full flex-col rounded-2xl border border-slate-200/75 bg-white/90 shadow-[0_16px_32px_-20px_rgba(15,23,42,0.6)] backdrop-blur">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50/50">
-        <h3 className="font-semibold text-sm">Version History</h3>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-slate-50/70 px-4 py-3">
+        <h3 className="text-sm font-semibold text-slate-800">Version History</h3>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-slate-600 hover:bg-slate-100">
           <CloseIcon className="h-4 w-4" />
         </Button>
       </div>
@@ -94,43 +94,43 @@ export function AgentHistoryPanel({
         {isLoading ? (
           <HistorySkeleton />
         ) : versions.length === 0 ? (
-          <p className="p-4 text-sm text-gray-500">No version history</p>
+          <p className="p-4 text-sm text-slate-500">No version history</p>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-slate-200">
             {versions.map((version, index) => (
               <li
                 key={version.versionId}
-                className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                  selectedVersion?.versionId === version.versionId ? 'bg-blue-50' : ''
+                className={`cursor-pointer p-3 transition-colors hover:bg-slate-50 ${
+                  selectedVersion?.versionId === version.versionId ? 'bg-sky-50/60' : ''
                 }`}
                 onClick={() => setSelectedVersion(version)}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-slate-500">
                     {new Date(version.createdAt).toLocaleString()}
                   </span>
                   <div className="flex items-center gap-1">
                     {index === 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="bg-slate-100 text-xs text-slate-700">
                         Current
                       </Badge>
                     )}
                     {!version.isActive && (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge variant="destructive" className="text-xs bg-rose-100 text-rose-700 border-rose-200">
                         Inactive
                       </Badge>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-gray-600">{formatSummary(version)}</p>
-                <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                <p className="text-xs text-slate-600">{formatSummary(version)}</p>
+                <p className="mt-1 line-clamp-1 text-xs text-slate-500">
                   {version.description || 'No description'}
                 </p>
                 {index > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="mt-2 text-xs h-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    className="mt-2 h-7 text-xs text-sky-700 hover:bg-sky-50 hover:text-sky-800"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRevert(version);
@@ -147,13 +147,13 @@ export function AgentHistoryPanel({
 
       {/* Preview Panel */}
       {selectedVersion && (
-        <div className="border-t p-4 max-h-80 overflow-y-auto bg-gray-50">
+        <div className="max-h-80 overflow-y-auto border-t border-slate-200 bg-slate-50/70 p-4">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Preview</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Preview</h4>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs"
+              className="h-6 text-xs text-slate-600 hover:bg-slate-100"
               onClick={() => setSelectedVersion(null)}
             >
               Close
@@ -161,16 +161,16 @@ export function AgentHistoryPanel({
           </div>
           <div className="space-y-3">
             <div>
-              <h5 className="text-xs font-medium text-gray-700 mb-1">System Prompt</h5>
-              <pre className="text-xs whitespace-pre-wrap font-mono text-gray-700 bg-white p-3 rounded border max-h-32 overflow-y-auto">
+              <h5 className="mb-1 text-xs font-medium text-slate-700">System Prompt</h5>
+              <pre className="max-h-32 overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs whitespace-pre-wrap text-slate-700">
                 {selectedVersion.systemPrompt.slice(0, 500)}
                 {selectedVersion.systemPrompt.length > 500 && '...'}
               </pre>
             </div>
             {selectedVersion.userPrompt && (
               <div>
-                <h5 className="text-xs font-medium text-gray-700 mb-1">User Prompt</h5>
-                <pre className="text-xs whitespace-pre-wrap font-mono text-gray-700 bg-white p-3 rounded border max-h-24 overflow-y-auto">
+                <h5 className="mb-1 text-xs font-medium text-slate-700">User Prompt</h5>
+                <pre className="max-h-24 overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs whitespace-pre-wrap text-slate-700">
                   {selectedVersion.userPrompt.slice(0, 300)}
                   {selectedVersion.userPrompt.length > 300 && '...'}
                 </pre>

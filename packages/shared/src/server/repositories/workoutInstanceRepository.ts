@@ -1,3 +1,4 @@
+import { sql, type SqlBool } from 'kysely';
 import { BaseRepository } from '@/server/repositories/baseRepository';
 import type {
   NewWorkoutInstance,
@@ -283,6 +284,43 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .executeTakeFirst();
 
     return Number(result.numDeletedRows) > 0;
+  }
+
+  /**
+   * Get recent workouts matching any of the given tags (array overlap).
+   * Uses the GIN index on the tags column for efficient querying.
+   * @param userId The user's ID
+   * @param tags Flattened tag strings (e.g. ['category:strength', 'muscle:lats'])
+   * @param limit Max number of results (default 3)
+   * @param excludeDate Optional date to exclude (e.g. today's workout)
+   */
+  async getRecentWorkoutsByTags(
+    userId: string,
+    tags: string[],
+    limit: number = 3,
+    excludeDate?: Date
+  ): Promise<WorkoutInstance[]> {
+    let query = this.db
+      .selectFrom('workoutInstances')
+      .selectAll()
+      .where('clientId', '=', userId)
+      .where(sql<SqlBool>`tags && ARRAY[${sql.join(tags)}]::text[]`)
+      .orderBy('date', 'desc')
+      .limit(limit);
+
+    if (excludeDate) {
+      const startOfDay = new Date(excludeDate);
+      const endOfDay = new Date(excludeDate);
+      endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+      query = query.where((eb) =>
+        eb.or([
+          eb('date', '<', startOfDay),
+          eb('date', '>=', endOfDay),
+        ])
+      );
+    }
+
+    return query.execute();
   }
 
   /**

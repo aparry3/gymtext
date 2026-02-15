@@ -27,11 +27,9 @@ import { createMicrocycleService, type MicrocycleServiceInstance } from './domai
 import { createProgressService, type ProgressServiceInstance } from './domain/training/progressService';
 import { createSubscriptionService, type SubscriptionServiceInstance } from './domain/subscription/subscriptionService';
 import { createDayConfigService, type DayConfigServiceInstance } from './domain/calendar/dayConfigService';
-import { createContextService, type ContextService } from './context/contextService';
 
 // More domain service factory functions
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
-import { createPromptService, type PromptServiceInstance } from './domain/prompts/promptService';
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 import { createUserAuthService, type UserAuthServiceInstance } from './domain/auth/userAuthService';
@@ -54,6 +52,8 @@ import { createBlogService, type BlogServiceInstance } from './domain/blog/blogS
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
+import { createAgentExtensionService, type AgentExtensionServiceInstance } from './domain/agents/agentExtensionService';
+import { createContextTemplateService, type ContextTemplateServiceInstance } from './domain/context/contextTemplateService';
 
 // Agent services
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
@@ -62,9 +62,10 @@ import { createProfileService, type ProfileServiceInstance } from './agents/prof
 // Agent Runner infrastructure
 import { ToolRegistry } from '@/server/agents/tools';
 import { registerAllTools } from '@/server/agents/tools';
-import { HookRegistry } from '@/server/agents/hooks';
-import { registerAllHooks } from '@/server/agents/hooks';
 import { createAgentRunner, type AgentRunnerInstance } from '@/server/agents/runner';
+
+// Context Registry
+import { ContextRegistry, registerAllContextProviders } from '@/server/agents/context';
 
 // Program domain services
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
@@ -100,7 +101,6 @@ export interface ServiceContainer {
 
   // Additional services
   shortLink: ShortLinkServiceInstance;
-  prompt: PromptServiceInstance;
   referral: ReferralServiceInstance;
   adminAuth: AdminAuthServiceInstance;
   userAuth: UserAuthServiceInstance;
@@ -124,9 +124,6 @@ export interface ServiceContainer {
 
   // Orchestration services
   chat: ChatServiceInstance;
-
-  // Shared context service for agents
-  contextService: ContextService;
 
   // Program domain services
   programOwner: ProgramOwnerServiceInstance;
@@ -153,12 +150,18 @@ export interface ServiceContainer {
   // Agent logs
   agentLog: AgentLogServiceInstance;
 
+  // Agent extensions
+  agentExtension: AgentExtensionServiceInstance;
+
+  // Context templates
+  contextTemplate: ContextTemplateServiceInstance;
+
   // Agent Runner (new declarative agent system)
   agentRunner: AgentRunnerInstance;
 
   // Registries (for admin metadata API)
   toolRegistry: ToolRegistry;
-  hookRegistry: HookRegistry;
+  contextRegistry: ContextRegistry;
 }
 
 /**
@@ -166,7 +169,7 @@ export interface ServiceContainer {
  *
  * Services are created in dependency order:
  * 1. Services with no service dependencies (only repos)
- * 2. ContextService (needed by agents)
+ * 2. ContextRegistry (needed by agents)
  * 3. Services that depend on other services
  * 4. Orchestration services
  * 5. Modification services
@@ -192,10 +195,11 @@ export function createServices(
   const subscription = createSubscriptionService(repos);
   const dayConfig = createDayConfigService(repos);
   const shortLink = createShortLinkService(repos);
-  const prompt = createPromptService(repos);
   const queue = createQueueService(repos);
   const agentDefinition = createAgentDefinitionService(repos);
   const agentLog = createAgentLogService(repos);
+  const agentExtension = createAgentExtensionService(repos);
+  const contextTemplate = createContextTemplateService(repos);
 
   // fitnessProfile needs agentDefinitionService for profile agents
   const fitnessProfile = createFitnessProfileService(repos, agentDefinition);
@@ -220,15 +224,17 @@ export function createServices(
   const organization = createOrganizationService(repos);
 
   // =========================================================================
-  // Phase 2: Create ContextService (needed by agents)
+  // Phase 2: Create ContextRegistry (needed by agents)
   // =========================================================================
-  const contextService = createContextService({
+  const contextRegistry = new ContextRegistry();
+  registerAllContextProviders(contextRegistry, {
     fitnessPlanService: fitnessPlan,
     workoutInstanceService: workoutInstance,
     microcycleService: microcycle,
-    fitnessProfileService: fitnessProfile,
     enrollmentService: enrollment,
     exerciseRepo: repos.exercise,
+    contextTemplateService: contextTemplate,
+    repos,
   });
 
   // =========================================================================
@@ -333,24 +339,19 @@ export function createServices(
   const toolRegistry = new ToolRegistry();
   registerAllTools(toolRegistry);
 
-  const hookRegistry = new HookRegistry();
-  registerAllHooks(hookRegistry, { messagingOrchestrator: getMessagingOrchestrator() });
-
   // Forward-declared services used by getServices() lambda — assigned in later phases
   let profile: ProfileServiceInstance;
-  let modification: ModificationServiceInstance;
   let workoutModification: WorkoutModificationServiceInstance;
   let planModification: PlanModificationServiceInstance;
 
   const agentRunner = createAgentRunner({
     agentDefinitionService: agentDefinition,
-    contextService,
+    contextRegistry,
     toolRegistry,
-    hookRegistry,
     agentLogRepository: repos.agentLog,
+    agentExtensionService: agentExtension,
     getServices: () => ({
       profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
-      modification: { makeModification: (...args: Parameters<typeof modification.makeModification>) => modification.makeModification(...args) },
       workoutModification: {
         modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
         modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
@@ -358,6 +359,7 @@ export function createServices(
       planModification: {
         modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
       },
+      queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
       training: {
         getOrGenerateWorkout: async (userId: string, timezone: string) => {
           const { now } = require('@/shared/utils/date');
@@ -399,6 +401,7 @@ export function createServices(
   // =========================================================================
   const training = createTrainingService({
     user,
+    fitnessProfile,
     fitnessPlan,
     progress,
     microcycle,
@@ -464,6 +467,7 @@ export function createServices(
     agentRunner,
     exerciseResolution,
     exerciseUse: repos.exerciseUse,
+    messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   profile = createProfileService({
@@ -480,10 +484,10 @@ export function createServices(
     agentRunner,
   });
 
-  modification = createModificationService({
+  const modification = createModificationService({
     user,
-    workoutInstance,
-    agentRunner,
+    workoutModification,
+    planModification,
   });
 
   const chat = createChatService({
@@ -522,7 +526,6 @@ export function createServices(
 
     // Additional services (use getters for lazy-loaded ones)
     shortLink,
-    prompt,
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
@@ -546,9 +549,6 @@ export function createServices(
 
     // Chat orchestration
     chat,
-
-    // Shared context
-    contextService,
 
     // Program domain services
     programOwner,
@@ -575,12 +575,18 @@ export function createServices(
     // Agent logs
     agentLog,
 
+    // Agent extensions
+    agentExtension,
+
+    // Context templates
+    contextTemplate,
+
     // Agent Runner
     agentRunner,
 
     // Registries
     toolRegistry,
-    hookRegistry,
+    contextRegistry,
   };
 }
 
@@ -600,18 +606,6 @@ export function createServicesFromDb(
   return createServices(createRepositories(db), clients);
 }
 
-/**
- * Create a ContextService from a ServiceContainer
- *
- * Convenience function for creating a ContextService with services from the container.
- *
- * @param services - Service container
- * @returns ContextService instance
- */
-export function createContextServiceFromContainer(services: ServiceContainer): ContextService {
-  return services.contextService;
-}
-
 // Re-export types for convenience
 export type {
   // Core service types
@@ -626,11 +620,9 @@ export type {
   ProgressServiceInstance,
   SubscriptionServiceInstance,
   DayConfigServiceInstance,
-  ContextService,
 
   // Additional service types
   ShortLinkServiceInstance,
-  PromptServiceInstance,
   ReferralServiceInstance,
   AdminAuthServiceInstance,
   UserAuthServiceInstance,
@@ -676,6 +668,12 @@ export type {
 
   // Agent logs
   AgentLogServiceInstance,
+
+  // Agent extensions
+  AgentExtensionServiceInstance,
+
+  // Context templates
+  ContextTemplateServiceInstance,
 
   // Agent Runner
   AgentRunnerInstance,

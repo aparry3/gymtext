@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WorkoutTagsSchema } from "./tags";
 
 /**
  * Workout Structure Schemas
@@ -90,7 +91,10 @@ export const WorkoutStructureSchema = z.object({
 
   // Metadata
   estimatedDurationMin: z.number().describe("Estimated minutes").default(-1),
-  intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate")
+  intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate"),
+
+  // Workout-level tags (optional for backwards compatibility)
+  tags: WorkoutTagsSchema.optional(),
 });
 
 // Inferred types
@@ -146,7 +150,8 @@ export const WorkoutStructureLLMSchema = z.object({
   }).default({ text: '', author: '' }),
   sections: z.array(WorkoutSectionLLMSchema).default([]),
   estimatedDurationMin: z.number().describe("Estimated minutes").default(-1),
-  intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate")
+  intensityLevel: z.enum(["Low", "Moderate", "High", "Severe"]).default("Moderate"),
+  tags: WorkoutTagsSchema.describe("Normalized tags for this workout. Over-tag — include everything that applies."),
 });
 
 // LLM-safe types

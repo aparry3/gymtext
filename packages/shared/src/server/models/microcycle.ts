@@ -20,7 +20,6 @@ export interface Microcycle {
   absoluteWeek: number;  // Week from plan start (1-indexed)
   days: string[];        // Ordered array of day overviews [day1, day2, ..., day7]
   description?: string | null;
-  isDeload: boolean;
   message?: string | null;
   structured?: MicrocycleStructure | null;  // Parsed structured microcycle data
   startDate: Date;
@@ -38,7 +37,6 @@ export class MicrocycleModel {
       absoluteWeek: row.absoluteWeek as unknown as number,
       days: (row.days as unknown as string[] | null) ?? [],
       description: (row.description as unknown as string | null) ?? null,
-      isDeload: (row.isDeload as unknown as boolean) ?? false,
       message: (row.message as unknown as string | null) ?? null,
       structured: row.structured as MicrocycleStructure | null,
       startDate: new Date(row.startDate as unknown as string | number | Date),
@@ -58,8 +56,6 @@ export class MicrocycleModel {
       days: microcycle.days as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       description: microcycle.description as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      isDeload: microcycle.isDeload as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       message: microcycle.message as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

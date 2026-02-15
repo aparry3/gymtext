@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WorkoutTagsSchema } from "./tags";
 
 /**
  * Gemini-compatible workout schemas
@@ -112,6 +113,7 @@ export const GeminiEnhancedWorkoutInstanceSchema = z.object({
   modifications: z.array(GeminiWorkoutModificationSchema).describe("Modifications for special conditions (use empty array if none)"),
   targetMetrics: GeminiWorkoutTargetMetricsSchema.describe("Target metrics for the workout"),
   summary: GeminiWorkoutSummarySchema.describe("Summary and meta reflections about the workout"),
+  tags: WorkoutTagsSchema.describe("Normalized tags for this workout. Over-tag — include everything that applies."),
   notes: z.string().describe("Additional notes for the workout (use empty string if no notes)")
 }).strict();
 

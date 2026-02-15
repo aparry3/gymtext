@@ -35,6 +35,7 @@ export const AGENTS = {
   MICROCYCLE_MODIFY: 'microcycle:modify',
 
   // Modifications
+  /** @deprecated Router removed in favor of direct type-based routing */
   MODIFICATIONS_ROUTER: 'modifications:router',
 
   // Programs

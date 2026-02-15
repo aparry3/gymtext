@@ -1,11 +1,10 @@
 import { createAgent } from '../createAgent';
 import type { NewAgentLog } from '@/server/models/agentLog';
 import type { JsonValue } from '@/server/models/_types';
+import type { UserWithProfile } from '@/server/models/user';
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
-import type { ContextService } from '@/server/services/context/contextService';
-import { ContextType } from '@/server/services/context/types';
+import type { ContextRegistry } from '../context/contextRegistry';
 import type { ToolRegistry } from '../tools/toolRegistry';
-import type { HookRegistry } from '../hooks/hookRegistry';
 import type { ToolExecutionContext, ToolServiceContainer } from '../tools/types';
 import { resolveInputMapping } from '../declarative/inputMapping';
 import { evaluateRules } from '../declarative/validation';
@@ -16,6 +15,8 @@ import type {
   SubAgentDbConfig,
   ExtendedAgentConfig,
 } from './types';
+import type { AgentExtensionServiceInstance } from '@/server/services/domain/agents/agentExtensionService';
+import type { AgentExtension } from '@/server/models/agentExtension';
 import type {
   SubAgentBatch,
   SubAgentConfig,
@@ -24,7 +25,6 @@ import type {
   ValidationResult,
   AgentExample,
 } from '../types';
-import { normalizeHookConfig } from '../hooks/resolver';
 import { today } from '@/shared/utils/date';
 
 const MAX_DEPTH = 5;
@@ -34,13 +34,17 @@ const MAX_DEPTH = 5;
  */
 export interface AgentRunnerDeps {
   agentDefinitionService: AgentDefinitionServiceInstance;
-  contextService: ContextService;
+  contextRegistry: ContextRegistry;
   toolRegistry: ToolRegistry;
-  hookRegistry: HookRegistry;
   /** Lazy getter for service container (avoids circular dep) */
   getServices: () => ToolServiceContainer;
   /** Optional repository for DB logging of agent invocations */
-  agentLogRepository?: { log: (entry: NewAgentLog) => Promise<void> };
+  agentLogRepository?: {
+    log: (entry: NewAgentLog) => Promise<string | null>;
+    updateEval: (logId: string, evalResult: unknown, evalScore: number | null) => Promise<void>;
+  };
+  /** Optional agent extension service for resolving per-agent extensions */
+  agentExtensionService?: AgentExtensionServiceInstance;
 }
 
 /**
@@ -59,25 +63,24 @@ export interface AgentRunnerInstance {
  *
  * Flow:
  * 1. Fetch DB config (base + extended columns)
- * 2. Resolve context via contextService
- * 3. Resolve tools via toolRegistry (with hook wrapping)
+ * 2. Resolve context via contextRegistry
+ * 3. Resolve tools via toolRegistry
  * 4. Build sub-agent batches from sub_agents JSONB (recursive)
  * 5. Build validate function from validation_rules
  * 6. Construct AgentDefinition, call createAgent().invoke()
- * 7. Fire post-hooks if configured
  */
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
   const {
     agentDefinitionService,
-    contextService,
+    contextRegistry,
     toolRegistry,
-    hookRegistry,
     getServices,
     agentLogRepository,
+    agentExtensionService,
   } = deps;
 
   /**
-   * Build the onLog callback for DB logging
+   * Build the onLog callback for sub-agent DB logging (no eval)
    */
   const buildOnLog = agentLogRepository
     ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
@@ -92,6 +95,54 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         });
       }
     : undefined;
+
+  /**
+   * Run eval against an agent's output (fire-and-forget)
+   */
+  async function runEval(
+    logId: string,
+    agentId: string,
+    input: string,
+    response: unknown,
+    evalPrompt: string,
+    evalModel: string | null
+  ): Promise<void> {
+    try {
+      const model = (evalModel || 'gpt-5-nano') as ModelId;
+      const evalAgent = createAgent({
+        name: `eval:${agentId}`,
+        systemPrompt: evalPrompt,
+        model,
+        maxTokens: 1000,
+        temperature: 0,
+        maxIterations: 1,
+        maxRetries: 0,
+      });
+
+      const evalInput = JSON.stringify({
+        agentId,
+        input,
+        response: typeof response === 'string' ? response : JSON.stringify(response),
+      });
+
+      const evalResult = await evalAgent.invoke({ message: evalInput });
+      const responseText = typeof evalResult.response === 'string'
+        ? evalResult.response
+        : JSON.stringify(evalResult.response);
+
+      // Try to extract a numeric score from the response
+      let score: number | null = null;
+      const scoreMatch = responseText.match(/(?:score|rating)[:\s]*(\d+(?:\.\d+)?)/i)
+        || responseText.match(/(\d+(?:\.\d+)?)\s*\/\s*\d+/);
+      if (scoreMatch) {
+        score = parseFloat(scoreMatch[1]);
+      }
+
+      await agentLogRepository!.updateEval(logId, evalResult.response, score);
+    } catch (error) {
+      console.error(`[AgentRunner] Eval failed for ${agentId}:`, error);
+    }
+  }
 
   /**
    * Get extended config from the service (reads from same cache)
@@ -139,14 +190,9 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         // Resolve context for the sub-agent
         let subContext: string[] = [];
         if (subExtended.contextTypes && subExtended.contextTypes.length > 0) {
-          if (!params.user) throw new Error(`[AgentRunner] Sub-agent ${config.agentId} requires user for context resolution`);
-          const contextTypes = subExtended.contextTypes.map(
-            t => t as ContextType
-          );
-          subContext = await contextService.getContext(
-            params.user,
-            contextTypes,
-            params.extras
+          subContext = await contextRegistry.resolve(
+            subExtended.contextTypes,
+            params.params || {}
           );
         }
 
@@ -196,14 +242,15 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         if (config.inputMapping) {
           const mapping = config.inputMapping;
           const template = subExtended.userPromptTemplate;
+          const user = params.params?.user as UserWithProfile | undefined;
 
           subAgentConfig.transform = (mainResult: unknown, parentInput?: string) => {
             const ctx: MappingContext = {
               result: mainResult,
-              user: params.user!,
-              extras: (params.extras as Record<string, unknown>) || {},
+              user: user!,
+              extras: (params.params as Record<string, unknown>) || {},
               parentInput: parentInput || '',
-              now: today(params.user?.timezone || 'UTC').toISOString(),
+              now: today(user?.timezone || 'UTC').toISOString(),
             };
             const mapped = resolveInputMapping(mapping, ctx);
 
@@ -247,33 +294,32 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
       // 3. Resolve context
       let context: string[] = [];
       if (extended.contextTypes && extended.contextTypes.length > 0) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for context resolution`);
-        const contextTypes = extended.contextTypes.map(
-          t => t as ContextType
-        );
-        context = await contextService.getContext(
-          params.user,
-          contextTypes,
-          params.extras
+        context = await contextRegistry.resolve(
+          extended.contextTypes,
+          params.params || {}
         );
       }
 
+      // Prepend manual context if provided
+      if (params.context && params.context.length > 0) {
+        context = [...params.context, ...context];
+      }
+
       // 4. Resolve tools
+      const user = params.params?.user as UserWithProfile | undefined;
       let tools = definition.tools;
       if (extended.toolIds && extended.toolIds.length > 0) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
+        if (!user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
         const toolCtx: ToolExecutionContext = {
-          user: params.user,
-          message: params.message || '',
+          user,
+          message: params.input || '',
           previousMessages: params.previousMessages,
           services: getServices(),
-          extras: params.extras as Record<string, unknown>,
+          extras: params.params as Record<string, unknown>,
         };
         tools = toolRegistry.resolve(
           extended.toolIds,
-          toolCtx,
-          hookRegistry,
-          extended.toolHooks ?? undefined
+          toolCtx
         );
       }
 
@@ -295,42 +341,174 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
         ? extended.examples as AgentExample[]
         : undefined;
 
-      // 8. Build the complete agent definition
+      // 8. Resolve extensions
+      let finalSystemPrompt = definition.systemPrompt;
+      let finalEvalPrompt = extended.evalPrompt;
+      let finalModel = definition.model as ModelId;
+      let finalMaxTokens = definition.maxTokens;
+      let finalTemperature = definition.temperature;
+      let finalMaxIterations = definition.maxIterations;
+      let finalMaxRetries = definition.maxRetries;
+      let finalUserPromptTemplate = extended.userPromptTemplate;
+      let finalToolIds = extended.toolIds;
+      let finalContextTypes = extended.contextTypes;
+      let finalSchemaJson = extended.schemaJson;
+      let finalValidationRules = extended.validationRules;
+      let finalSubAgentConfigs = extended.subAgents;
+      let finalExamples = extended.examples;
+
+      if (agentExtensionService) {
+        const resolvedExtensions: AgentExtension[] = [];
+
+        // 8a. Explicit extensions (backward compat)
+        const mergedExtensionKeys: Record<string, string> = {
+          ...(extended.defaultExtensions || {}),
+          ...(params.extensions || {}),
+        };
+
+        const explicitlyResolved = new Set<string>();
+
+        for (const [extType, extKey] of Object.entries(mergedExtensionKeys)) {
+          if (!extKey) continue;
+          const ext = await agentExtensionService.getExtension(agentId, extType, extKey);
+          if (ext) {
+            resolvedExtensions.push(ext);
+            explicitlyResolved.add(`${extType}:${extKey}`);
+          }
+        }
+
+        // 8b. Auto-triggered extensions
+        const allExtensions = await agentExtensionService.getFullExtensionsByAgent(agentId);
+        const triggerContext = { ...(params.params || {}) };
+
+        for (const ext of allExtensions) {
+          const pairKey = `${ext.extensionType}:${ext.extensionKey}`;
+          if (explicitlyResolved.has(pairKey)) continue;
+
+          if (ext.triggerConditions && Array.isArray(ext.triggerConditions) && (ext.triggerConditions as unknown[]).length > 0) {
+            const result = evaluateRules(ext.triggerConditions as unknown as ValidationRule[], triggerContext);
+            if (result.isValid) {
+              resolvedExtensions.push(ext);
+            }
+          }
+        }
+
+        // 8c. Apply extensions in order
+        for (const ext of resolvedExtensions) {
+          // Prompt fields with mode
+          if (ext.systemPrompt) {
+            finalSystemPrompt = ext.systemPromptMode === 'override'
+              ? ext.systemPrompt
+              : finalSystemPrompt + '\n\n' + ext.systemPrompt;
+          }
+          if (ext.userPromptTemplate) {
+            finalUserPromptTemplate = ext.userPromptTemplateMode === 'override'
+              ? ext.userPromptTemplate
+              : [finalUserPromptTemplate, ext.userPromptTemplate].filter(Boolean).join('\n\n') || null;
+          }
+          if (ext.evalPrompt) {
+            finalEvalPrompt = ext.evalPromptMode === 'override'
+              ? ext.evalPrompt
+              : [finalEvalPrompt, ext.evalPrompt].filter(Boolean).join('\n\n') || null;
+          }
+          // Non-prompt overrides (when non-null)
+          if (ext.model) finalModel = ext.model as ModelId;
+          if (ext.maxTokens != null) finalMaxTokens = ext.maxTokens;
+          if (ext.temperature != null) finalTemperature = typeof ext.temperature === 'string' ? parseFloat(ext.temperature) : ext.temperature;
+          if (ext.maxIterations != null) finalMaxIterations = ext.maxIterations;
+          if (ext.maxRetries != null) finalMaxRetries = ext.maxRetries;
+          if (ext.toolIds) finalToolIds = ext.toolIds;
+          if (ext.contextTypes) finalContextTypes = ext.contextTypes;
+          if (ext.schemaJson) finalSchemaJson = ext.schemaJson as unknown as Record<string, unknown>;
+          if (ext.validationRules) finalValidationRules = ext.validationRules as unknown as ValidationRule[];
+          if (ext.subAgents) finalSubAgentConfigs = ext.subAgents as unknown as SubAgentDbConfig[];
+          if (ext.examples) finalExamples = ext.examples as unknown as unknown[];
+        }
+      }
+
+      // Re-resolve tools if extensions changed toolIds
+      if (finalToolIds !== extended.toolIds && finalToolIds && finalToolIds.length > 0) {
+        if (!user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for tool resolution`);
+        const toolCtx: ToolExecutionContext = {
+          user,
+          message: params.input || '',
+          previousMessages: params.previousMessages,
+          services: getServices(),
+          extras: params.params as Record<string, unknown>,
+        };
+        tools = toolRegistry.resolve(finalToolIds, toolCtx);
+      }
+
+      // Re-resolve context if extensions changed contextTypes
+      if (finalContextTypes !== extended.contextTypes && finalContextTypes && finalContextTypes.length > 0) {
+        const resolvedCtx = await contextRegistry.resolve(finalContextTypes, params.params || {});
+        context = params.context && params.context.length > 0
+          ? [...params.context, ...resolvedCtx]
+          : resolvedCtx;
+      }
+
+      // Re-build sub-agents if extensions changed them
+      if (finalSubAgentConfigs !== extended.subAgents && finalSubAgentConfigs && finalSubAgentConfigs.length > 0) {
+        subAgents = await buildSubAgents(finalSubAgentConfigs, params, 0);
+      }
+
+      // Re-build validation if extensions changed rules
+      if (finalValidationRules !== extended.validationRules && finalValidationRules && finalValidationRules.length > 0) {
+        const rules = finalValidationRules;
+        validate = (result: unknown) => evaluateRules(rules, result);
+      }
+
+      // Re-resolve examples if extensions changed them
+      const agentExamplesResolved: AgentExample[] | undefined = finalExamples
+        ? finalExamples as AgentExample[]
+        : agentExamples;
+
+      // 8b. Build onLog for the top-level agent (with eval support)
+      const topLevelOnLog = agentLogRepository
+        ? (entry: { agentId: string; model?: string; input: string; messages: unknown; response: unknown; durationMs: number; metadata?: Record<string, unknown> }) => {
+            agentLogRepository.log({
+              agentId: entry.agentId,
+              model: entry.model ?? null,
+              messages: entry.messages as JsonValue,
+              input: entry.input,
+              response: entry.response as JsonValue,
+              durationMs: entry.durationMs,
+              metadata: (entry.metadata ?? {}) as JsonValue,
+            }).then((logId) => {
+              if (logId && finalEvalPrompt) {
+                runEval(logId, entry.agentId, entry.input, entry.response, finalEvalPrompt, extended.evalModel);
+              }
+            });
+          }
+        : undefined;
+
+      // 9. Build the complete agent definition
       const agent = createAgent({
         ...definition,
-        model: definition.model as ModelId,
+        systemPrompt: finalSystemPrompt,
+        model: finalModel,
+        maxTokens: finalMaxTokens,
+        temperature: finalTemperature,
+        maxIterations: finalMaxIterations,
+        maxRetries: finalMaxRetries,
         context,
         tools,
-        schema: extended.schemaJson
-          ? (extended.schemaJson as unknown as undefined)
+        schema: finalSchemaJson
+          ? (finalSchemaJson as unknown as undefined)
           : definition.schema,
         subAgents: subAgents && subAgents.length > 0
           ? subAgents
           : undefined,
         validate,
-        onLog: buildOnLog,
-        examples: agentExamples,
+        onLog: topLevelOnLog,
+        examples: agentExamplesResolved,
       });
 
-      // 8. Invoke the agent
+      // 10. Invoke the agent
       const result = await agent.invoke({
-        message: params.message,
+        message: params.input,
         previousMessages: params.previousMessages,
       });
-
-      // 9. Fire agent-level post-hooks
-      if (extended.hooks?.postHook) {
-        if (!params.user) throw new Error(`[AgentRunner] Agent ${agentId} requires user for post-hooks`);
-        const config = normalizeHookConfig(extended.hooks.postHook);
-        const hookFn = hookRegistry.get(config.hook);
-        if (hookFn) {
-          try {
-            await hookFn(params.user, result);
-          } catch (err) {
-            console.error(`[AgentRunner] Agent post-hook ${config.hook} failed:`, err);
-          }
-        }
-      }
 
       return result as AgentComposedOutput<unknown, undefined>;
     },

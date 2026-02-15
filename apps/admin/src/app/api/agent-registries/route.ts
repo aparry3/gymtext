@@ -4,7 +4,7 @@ import { AGENT_DOMAINS } from '@/components/admin/agents/types';
 
 /**
  * GET /api/agent-registries
- * Returns metadata about available tools, hooks, context types, and agent IDs
+ * Returns metadata about available tools, context types, and agent IDs
  * for populating the agent definition editor dropdowns.
  */
 export async function GET() {
@@ -12,22 +12,8 @@ export async function GET() {
     const { services } = await getAdminContext();
 
     const tools = services.toolRegistry.list();
-    const hooks = services.hookRegistry.list();
 
-    const contextTypes = [
-      'user',
-      'userProfile',
-      'fitnessPlan',
-      'dayOverview',
-      'currentWorkout',
-      'dateContext',
-      'trainingMeta',
-      'currentMicrocycle',
-      'experienceLevel',
-      'dayFormat',
-      'programVersion',
-      'availableExercises',
-    ];
+    const contextTypes = services.contextRegistry.list().map((p) => p.name);
 
     const agentIds = AGENT_DOMAINS.flatMap((domain) =>
       domain.agents.map((agent) => agent.id)
@@ -35,7 +21,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: { tools, hooks, contextTypes, agentIds },
+      data: { tools, contextTypes, agentIds },
     });
   } catch (error) {
     console.error('Error fetching agent registries:', error);

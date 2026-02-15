@@ -50,9 +50,6 @@ export function StructuredMicrocycleRenderer({
             <h2 className="text-lg font-semibold text-foreground">
               {structure.phase || `Week ${structure.weekNumber}`}
             </h2>
-            {structure.isDeload && (
-              <Badge variant="secondary">Deload</Badge>
-            )}
           </div>
           {structure.overview && (
             <p className="text-sm text-muted-foreground mt-1">{structure.overview}</p>

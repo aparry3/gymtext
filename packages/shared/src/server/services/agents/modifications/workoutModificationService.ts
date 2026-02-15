@@ -1,4 +1,4 @@
-import type { ModifyWorkoutOutput, WorkoutGenerateOutput } from '@/server/services/agents/types/workouts';
+import type { ModifyWorkoutOutput } from '@/server/services/agents/types/workouts';
 import type { WorkoutStructure } from '@/server/models/workout';
 import type { MicrocycleStructure } from '@/server/models/microcycle';
 import { now, getDayOfWeek, DAY_NAMES } from '@/shared/utils/date';
@@ -12,7 +12,8 @@ import { resolveExercisesInStructure, type TrainingServiceInstance } from '../..
 import type { ExerciseResolutionServiceInstance } from '../../domain/exercise/exerciseResolutionService';
 import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
 import type { AgentRunnerInstance } from '@/server/agents/runner';
-import { SnippetType } from '../../context/builders/experienceLevel';
+import type { MessagingOrchestratorInstance } from '../../orchestration/messagingOrchestrator';
+import { flattenWorkoutTags } from '@/shared/types/workout/tags';
 
 export interface ModifyWorkoutParams {
   userId: string;
@@ -30,13 +31,12 @@ export interface ModifyWorkoutResult {
 
 export interface ModifyWeekParams {
   userId: string;
-  targetDay: string; // The day being modified (e.g., "Monday", "Tuesday")
-  changeRequest: string; // What changes to make (e.g., ["Change chest to back workout", "Use dumbbells only", "Limit to 45 min"])
+  changeRequest: string;
+  weekStartDate?: Date;
 }
 
 export interface ModifyWeekResult {
   success: boolean;
-  workout?: WorkoutGenerateOutput;
   modifiedDays?: number;
   modifications?: string;
   messages: string[];
@@ -44,12 +44,9 @@ export interface ModifyWeekResult {
 }
 
 // =============================================================================
-// Factory Pattern (Recommended)
+// Factory Pattern
 // =============================================================================
 
-/**
- * WorkoutModificationServiceInstance interface
- */
 export interface WorkoutModificationServiceInstance {
   modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult>;
   modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult>;
@@ -62,14 +59,11 @@ export interface WorkoutModificationServiceDeps {
   training: TrainingServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
   agentRunner: AgentRunnerInstance;
-  // Exercise resolution (optional — skipped if not provided)
   exerciseResolution?: ExerciseResolutionServiceInstance;
   exerciseUse?: ExerciseUseRepository;
+  messagingOrchestrator?: MessagingOrchestratorInstance;
 }
 
-/**
- * Create a WorkoutModificationService instance with injected dependencies
- */
 export function createWorkoutModificationService(
   deps: WorkoutModificationServiceDeps
 ): WorkoutModificationServiceInstance {
@@ -82,6 +76,7 @@ export function createWorkoutModificationService(
     agentRunner,
     exerciseResolution,
     exerciseUse,
+    messagingOrchestrator,
   } = deps;
 
   const getWorkoutTypeFromTheme = (theme: string): string => {
@@ -96,158 +91,272 @@ export function createWorkoutModificationService(
   };
 
   return {
+    /**
+     * Modify today's workout (any change — different exercises, muscle group, equipment, constraints).
+     * Also syncs the microcycle to keep the weekly overview consistent.
+     *
+     * Flow (existing workout):
+     * 1. workout:modify → get new description
+     * 2. Promise.all([workout:message.then(queueMessage), workout:structured, microcycle:modify])
+     * 3. Resolve exercises, save workout + microcycle to DB
+     *
+     * Flow (no existing workout — rest day → workout day):
+     * 1. microcycle:modify → update the day in the schedule
+     * 2. Save microcycle, then trainingService.prepareWorkoutForDate() → generate workout
+     * 3. Queue message if today
+     */
     async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
       try {
         const { userId, workoutDate, changeRequest } = params;
-        console.log('Modifying workout', params);
+        console.log('[MODIFY_WORKOUT] Starting workout modification', { userId, changeRequest });
 
         const user = await userService.getUser(userId);
         if (!user) return { success: false, messages: [], error: 'User not found' };
 
         const today = now(user.timezone);
         const workoutDateTime = DateTime.fromJSDate(workoutDate, { zone: user.timezone });
-        const workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, workoutDateTime.toJSDate());
-        if (!workout) return { success: false, messages: [], error: 'No workout found for that date' };
+        const isToday = workoutDateTime.hasSame(today, 'day');
+        const targetDay = getDayOfWeek(workoutDate, user.timezone);
+        const targetDayIndex = DAY_NAMES.indexOf(targetDay);
 
-        const result = await agentRunner.invoke('workout:modify', {
-          user,
-          message: changeRequest,
-          extras: { workout },
-        });
-        const modifiedWorkout: ModifyWorkoutOutput = {
-          response: result.response as { overview: string; wasModified: boolean; modifications: string },
-          message: normalizeWhitespace((result as Record<string, unknown>).message as string),
-          structure: (result as Record<string, unknown>).structure as WorkoutStructure,
-        };
-
-        // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-        if (modifiedWorkout.structure && exerciseResolution) {
-          await resolveExercisesInStructure(
-            modifiedWorkout.structure,
-            exerciseResolution,
-            exerciseUse,
-            userId
-          );
-        }
-
-        const updated = await workoutInstanceService.updateWorkout(workout.id, {
-          description: modifiedWorkout.response.overview,
-          structured: modifiedWorkout.structure,
-          message: modifiedWorkout.message,
-        });
-        if (!updated) return { success: false, messages: [], error: 'Failed to update workout' };
-
-        const messages: string[] = [];
-        if (workoutDateTime.hasSame(today, 'day')) messages.push(modifiedWorkout.message);
-
-        return { success: true, workout: modifiedWorkout, modifications: modifiedWorkout.response.modifications, messages };
-      } catch (error) {
-        console.error('Error modifying workout:', error);
-        return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
-      }
-    },
-
-    async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
-      try {
-        const { userId, targetDay, changeRequest } = params;
-        console.log('[MODIFY_WEEK] Starting week modification', { userId, targetDay, changeRequest });
-
-        const user = await userService.getUser(userId);
-        if (!user) return { success: false, messages: [], error: 'User not found' };
-
-        const today = now(user.timezone);
         const plan = await fitnessPlanService.getCurrentPlan(userId);
         if (!plan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
 
         const { microcycle } = await trainingService.prepareMicrocycleForDate(userId, plan, today.toJSDate(), user.timezone);
         if (!microcycle) return { success: false, messages: [], error: 'Could not find or create microcycle for current week' };
 
-        console.log('[MODIFY_WEEK] Modifying microcycle', { microcycleId: microcycle.id, absoluteWeek: microcycle.absoluteWeek });
-        // Combine targetDay into the change request for the agent
+        const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, workoutDateTime.toJSDate());
         const fullChangeRequest = `For ${targetDay}: ${changeRequest}`;
+
+        if (existingWorkout) {
+          // Path A: Existing workout — modify workout + sync microcycle in parallel
+          console.log('[MODIFY_WORKOUT] Existing workout found, running parallel modification');
+
+          // Step 1: workout:modify
+          const modifyResult = await agentRunner.invoke('workout:modify', {
+            input: changeRequest,
+            params: { user, date: workoutDateTime.toJSDate() },
+          });
+          const modifyResponse = modifyResult.response as { overview: string; wasModified: boolean; modifications: string };
+          const workoutDescription = modifyResponse.overview;
+
+          // Step 2: Parallel — message + structured + microcycle:modify
+          const messagePromise = agentRunner.invoke('workout:message', {
+            input: workoutDescription,
+            params: { user },
+          }).then(async (msgResult) => {
+            const msg = normalizeWhitespace(msgResult.response as string);
+            if (isToday && messagingOrchestrator) {
+              await messagingOrchestrator.queueMessage(user, { content: msg }, 'daily');
+            }
+            return msg;
+          });
+
+          const structuredPromise = agentRunner.invoke('workout:structured', {
+            input: workoutDescription,
+            params: { user },
+          }).then((res) => res.response as WorkoutStructure);
+
+          const microcyclePromise = agentRunner.invoke('microcycle:modify', {
+            input: fullChangeRequest,
+            params: { user },
+          });
+
+          const [messageResult, structuredResult, mcSettledResult] = await Promise.allSettled([
+            messagePromise,
+            structuredPromise,
+            microcyclePromise,
+          ]);
+
+          // Extract results, gracefully handling failures
+          const workoutMessage = messageResult.status === 'fulfilled'
+            ? messageResult.value
+            : (() => { console.error('[MODIFY_WORKOUT] workout:message failed, using fallback', messageResult.reason); return 'Your workout has been updated.'; })();
+
+          const structure: WorkoutStructure | null = structuredResult.status === 'fulfilled'
+            ? structuredResult.value
+            : (() => { console.error('[MODIFY_WORKOUT] workout:structured failed, continuing without structure', structuredResult.reason); return null; })();
+
+          // Step 3: Resolve exercises
+          if (structure && exerciseResolution) {
+            await resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, userId);
+          }
+
+          // Step 4: Save workout to DB (always — core modification succeeded)
+          const tags = structure?.tags ? flattenWorkoutTags(structure.tags) : undefined;
+          await workoutInstanceService.updateWorkout(existingWorkout.id, {
+            goal: workoutDescription,
+            description: workoutDescription,
+            structured: structure ?? undefined,
+            message: workoutMessage,
+            sessionType: getWorkoutTypeFromTheme(workoutDescription),
+            ...(tags ? { tags } : {}),
+          });
+
+          // Save microcycle only if microcycle:modify succeeded
+          if (mcSettledResult.status === 'fulfilled') {
+            const mcResponse = mcSettledResult.value.response as { overview: string; days: string[]; wasModified: boolean; modifications: string };
+            const mcStructure = (mcSettledResult.value as Record<string, unknown>).structure as MicrocycleStructure | undefined;
+
+            // Use microcycle day description for goal if available
+            if (mcResponse.days[targetDayIndex]) {
+              await workoutInstanceService.updateWorkout(existingWorkout.id, {
+                goal: mcResponse.days[targetDayIndex],
+              });
+            }
+
+            await microcycleService.updateMicrocycle(microcycle.id, {
+              days: mcResponse.days,
+              description: mcResponse.overview,
+              structured: mcStructure,
+            });
+          } else {
+            console.error('[MODIFY_WORKOUT] microcycle:modify failed, skipping microcycle update', mcSettledResult.reason);
+          }
+
+          console.log('[MODIFY_WORKOUT] Workout modification complete (parallel path)');
+          return {
+            success: true,
+            workout: { response: modifyResponse, message: workoutMessage, structure: structure ?? undefined },
+            modifications: modifyResponse.modifications,
+            messages: [], // Already queued via queueMessage
+          };
+        } else {
+          // Path B: No existing workout (rest day → workout day) — sequential fallback
+          console.log('[MODIFY_WORKOUT] No existing workout, sequential fallback (rest day → workout day)');
+
+          // Step 1: microcycle:modify
+          const mcResult = await agentRunner.invoke('microcycle:modify', {
+            input: fullChangeRequest,
+            params: { user },
+          });
+          const mcResponse = mcResult.response as { overview: string; days: string[]; wasModified: boolean; modifications: string };
+          const mcStructure = (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined;
+
+          await microcycleService.updateMicrocycle(microcycle.id, {
+            days: mcResponse.days,
+            description: mcResponse.overview,
+            structured: mcStructure,
+          });
+
+          // Step 2: Generate new workout via training service
+          const generatedWorkout = await trainingService.prepareWorkoutForDate(user, workoutDateTime);
+          if (generatedWorkout && isToday && generatedWorkout.message && messagingOrchestrator) {
+            await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');
+          }
+
+          console.log('[MODIFY_WORKOUT] Workout modification complete (sequential fallback)');
+          return {
+            success: true,
+            modifications: mcResponse.modifications,
+            messages: [], // Already queued via queueMessage
+          };
+        }
+      } catch (error) {
+        console.error('[MODIFY_WORKOUT] Error modifying workout:', error);
+        return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
+      }
+    },
+
+    /**
+     * Restructure the weekly schedule (move sessions, swap days, multi-day changes).
+     * Invalidates affected workouts so they regenerate on-demand.
+     *
+     * Flow:
+     * 1. microcycle:modify → updated 7-day schedule
+     * 2. Save microcycle to DB
+     * 3. Compare old vs new days → find affected day indices
+     * 4. For each affected day (today or future, skip completed):
+     *    - If changed meaningfully: delete existing workout (will regenerate on-demand)
+     * 5. If today is affected: regenerate immediately via prepareWorkoutForDate()
+     */
+    async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
+      try {
+        const { userId, changeRequest, weekStartDate } = params;
+        console.log('[MODIFY_WEEK] Starting week modification', { userId, changeRequest, weekStartDate });
+
+        const user = await userService.getUser(userId);
+        if (!user) return { success: false, messages: [], error: 'User not found' };
+
+        const today = now(user.timezone);
+        const referenceDate = weekStartDate ?? today.toJSDate();
+        const plan = await fitnessPlanService.getCurrentPlan(userId);
+        if (!plan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
+
+        const { microcycle } = await trainingService.prepareMicrocycleForDate(userId, plan, referenceDate, user.timezone);
+        if (!microcycle) return { success: false, messages: [], error: 'Could not find or create microcycle for target week' };
+
+        const oldDays = [...microcycle.days];
+
+        // Step 1: microcycle:modify — agent determines which days are affected
         const mcResult = await agentRunner.invoke('microcycle:modify', {
-          user,
-          message: fullChangeRequest,
-          extras: { microcycle, absoluteWeek: microcycle.absoluteWeek },
+          input: changeRequest,
+          params: { user },
         });
-        const mcResponse = mcResult.response as { overview: string; days: string[]; isDeload: boolean; wasModified: boolean; modifications: string };
-        const modifiedMicrocycle = {
+        const mcResponse = mcResult.response as { overview: string; days: string[]; wasModified: boolean; modifications: string };
+        const mcStructure = (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined;
+
+        // Step 2: Save microcycle to DB
+        await microcycleService.updateMicrocycle(microcycle.id, {
           days: mcResponse.days,
           description: mcResponse.overview,
-          isDeload: mcResponse.isDeload,
-          message: normalizeWhitespace((mcResult as Record<string, unknown>).message as string),
-          structure: (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined,
-          wasModified: mcResponse.wasModified,
-          modifications: mcResponse.modifications,
-        };
-
-        const updatedMicrocycle = await microcycleService.updateMicrocycle(microcycle.id, {
-          days: modifiedMicrocycle.days,
-          description: modifiedMicrocycle.description,
-          isDeload: modifiedMicrocycle.isDeload,
-          structured: modifiedMicrocycle.structure,
+          structured: mcStructure,
         });
-        if (!updatedMicrocycle) return { success: false, messages: [], error: 'Failed to update microcycle' };
 
-        console.log('[MODIFY_WEEK] Generating new workout for target day');
-        const targetDayIndex = DAY_NAMES.indexOf(targetDay as typeof DAY_NAMES[number]);
-        const dayOverview = modifiedMicrocycle.days[targetDayIndex] || 'Rest or active recovery';
+        // Step 3: Compare old vs new days to find affected indices
+        const isFutureWeek = !!weekStartDate;
+        const weekStart = weekStartDate
+          ? DateTime.fromJSDate(weekStartDate, { zone: user.timezone }).startOf('week')
+          : today.startOf('week');
+        const todayIndex = isFutureWeek ? -1 : Math.floor(today.diff(weekStart, 'days').days);
+        let modifiedDays = 0;
+        let todayAffected = false;
 
-        const targetDate = today.startOf('week').plus({ days: targetDayIndex });
-        let workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, targetDate.toJSDate());
+        for (let i = 0; i < 7; i++) {
+          const oldDay = (oldDays[i] || '').toLowerCase().trim();
+          const newDay = (mcResponse.days[i] || '').toLowerCase().trim();
 
-        const activityType = modifiedMicrocycle.structure?.days?.[targetDayIndex]?.activityType as 'TRAINING' | 'ACTIVE_RECOVERY' | 'REST' | undefined;
+          // Skip if day didn't change
+          if (oldDay === newDay) continue;
 
-        let workoutMessage: string | undefined;
+          // Skip past days (before today) — for future weeks, no days are in the past
+          if (!isFutureWeek && i < todayIndex) continue;
 
-        if (!workout) {
-          console.log('[MODIFY_WEEK] No existing workout found, generating new one');
-          const generatedWorkout = await trainingService.prepareWorkoutForDate(user, targetDate);
-          if (generatedWorkout) {
-            workout = generatedWorkout;
-            workoutMessage = generatedWorkout.message ?? undefined;
-          }
-        } else {
-          console.log('[MODIFY_WEEK] Regenerating existing workout');
-          const wkResult = await agentRunner.invoke('workout:generate', {
-            user,
-            extras: {
-              dayOverview,
-              isDeload: modifiedMicrocycle.isDeload,
-              activityType,
-              snippetType: SnippetType.WORKOUT,
-            },
-          });
-          const wkDescription = wkResult.response as string;
-          const wkMessage = normalizeWhitespace((wkResult as Record<string, unknown>).message as string);
-          const wkStructure = (wkResult as Record<string, unknown>).structure as WorkoutStructure | undefined;
+          const dayDate = weekStart.plus({ days: i });
+          const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, dayDate.toJSDate());
 
-          // Resolve exercise names to canonical IDs (prevents fake LLM-generated exerciseIds)
-          if (wkStructure && exerciseResolution) {
-            await resolveExercisesInStructure(
-              wkStructure,
-              exerciseResolution,
-              exerciseUse,
-              userId
-            );
+          if (existingWorkout) {
+            // Skip completed workouts
+            if (existingWorkout.completedAt) continue;
+
+            // Delete the stale workout — it will regenerate on-demand
+            await workoutInstanceService.deleteWorkout(existingWorkout.id, userId);
+            modifiedDays++;
+          } else {
+            // New day or rest→workout — count as modified (will generate on-demand)
+            modifiedDays++;
           }
 
-          await workoutInstanceService.updateWorkout(workout.id, {
-            goal: dayOverview,
-            description: wkDescription,
-            structured: wkStructure ?? undefined,
-            message: wkMessage,
-            sessionType: getWorkoutTypeFromTheme(dayOverview),
-          });
-          workoutMessage = wkMessage;
+          if (!isFutureWeek && i === todayIndex) {
+            todayAffected = true;
+          }
         }
 
-        const messages: string[] = [];
-        const currentDayOfWeek = getDayOfWeek(today.toJSDate(), user.timezone);
-        if (targetDay === currentDayOfWeek && workoutMessage) messages.push(workoutMessage);
+        // Step 4: If today is affected, regenerate immediately (never for future weeks)
+        if (todayAffected) {
+          const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today);
+          if (generatedWorkout?.message && messagingOrchestrator) {
+            await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');
+          }
+        }
 
-        console.log('[MODIFY_WEEK] Week modification complete');
-        return { success: true, modifiedDays: 1, modifications: modifiedMicrocycle.modifications, messages };
+        console.log('[MODIFY_WEEK] Week modification complete', { modifiedDays, todayAffected, isFutureWeek });
+        return {
+          success: true,
+          modifiedDays,
+          modifications: mcResponse.modifications,
+          messages: [], // Already queued via queueMessage if today was affected
+        };
       } catch (error) {
         console.error('[MODIFY_WEEK] Error modifying week:', error);
         return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
@@ -255,4 +364,3 @@ export function createWorkoutModificationService(
     },
   };
 }
-

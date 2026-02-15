@@ -11,9 +11,9 @@ export class AgentLogRepository extends BaseRepository {
   /**
    * Log an agent invocation (fire-and-forget, catches errors silently)
    */
-  async log(entry: NewAgentLog): Promise<void> {
+  async log(entry: NewAgentLog): Promise<string | null> {
     try {
-      await this.db
+      const result = await this.db
         .insertInto('agentLogs')
         .values({
           ...entry,
@@ -21,9 +21,30 @@ export class AgentLogRepository extends BaseRepository {
           response: entry.response != null ? JSON.stringify(entry.response) : null,
           metadata: entry.metadata != null ? JSON.stringify(entry.metadata) : null,
         })
-        .execute();
+        .returning('id')
+        .executeTakeFirst();
+      return result?.id ?? null;
     } catch (error) {
       console.error('[AgentLogRepository] Failed to log agent invocation:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update eval result and score for an existing log entry
+   */
+  async updateEval(logId: string, evalResult: unknown, evalScore: number | null): Promise<void> {
+    try {
+      await this.db
+        .updateTable('agentLogs')
+        .set({
+          evalResult: evalResult != null ? JSON.stringify(evalResult) : null,
+          evalScore,
+        })
+        .where('id', '=', logId)
+        .execute();
+    } catch (error) {
+      console.error('[AgentLogRepository] Failed to update eval:', error);
     }
   }
 
@@ -97,6 +118,39 @@ export class AgentLogRepository extends BaseRepository {
       .executeTakeFirst();
 
     return Number(result.numDeletedRows ?? 0);
+  }
+
+  /**
+   * Average eval score per agent (for eval summary dashboard)
+   */
+  async avgScorePerAgent(filters?: {
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<Array<{ agentId: string; avgScore: number; count: number }>> {
+    let query = this.db
+      .selectFrom('agentLogs')
+      .select([
+        'agentId',
+        this.db.fn.avg<number>('evalScore').as('avgScore'),
+        this.db.fn.countAll<number>().as('count'),
+      ])
+      .where('evalScore', 'is not', null)
+      .groupBy('agentId')
+      .orderBy('agentId');
+
+    if (filters?.startDate) {
+      query = query.where('createdAt', '>=', filters.startDate);
+    }
+    if (filters?.endDate) {
+      query = query.where('createdAt', '<=', filters.endDate);
+    }
+
+    const rows = await query.execute();
+    return rows.map((r) => ({
+      agentId: r.agentId,
+      avgScore: Number(r.avgScore),
+      count: Number(r.count),
+    }));
   }
 
   /**

@@ -54,18 +54,18 @@ export interface ToolServiceContainer {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateProfile: (userId: string, message: string, previousMessages?: any[]) => Promise<ToolResult>;
   };
-  modification: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    makeModification: (userId: string, message: string, previousMessages?: any[]) => Promise<ToolResult>;
-  };
   workoutModification: {
-    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
-    modifyWeek: (params: { userId: string; targetDay: string; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string }) => Promise<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modifyWeek: (params: { userId: string; changeRequest: string; weekStartDate?: Date }) => Promise<any>;
   };
   planModification: {
-    modifyPlan: (params: { userId: string; changeRequest: string }) => Promise<{ success: boolean; messages?: string[]; error?: string; modifications?: string }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modifyPlan: (params: { userId: string; changeRequest: string }) => Promise<any>;
   };
   training: {
     getOrGenerateWorkout: (userId: string, timezone: string) => Promise<ToolResult>;
   };
+  queueMessage: (user: UserWithProfile, content: { content: string }, queueName: string) => Promise<{ messageId: string; queueEntryId: string }>;
 }

@@ -2,7 +2,7 @@ import type { ModelConfig } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
 import type { WorkoutInstance } from '@/server/models/workout';
-import type { ExperienceLevel } from '@/server/services/context';
+import type { ExperienceLevel } from '@/server/models/profile';
 
 // Re-export for convenience
 export type { WorkoutStructure };
@@ -30,7 +30,6 @@ export interface WorkoutGenerateInput {
   user: UserWithProfile;
   date: Date;
   dayOverview: string;
-  isDeload?: boolean;
   experienceLevel?: ExperienceLevel;
 }
 
@@ -77,7 +76,7 @@ export interface ModifyWorkoutOutput {
     modifications: string;
   };
   message: string;
-  structure: WorkoutStructure;
+  structure?: WorkoutStructure;
 }
 
 /**

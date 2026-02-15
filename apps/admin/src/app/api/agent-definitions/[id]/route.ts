@@ -72,12 +72,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       toolIds: body.toolIds,
       contextTypes: body.contextTypes,
       subAgents: body.subAgents,
-      hooks: body.hooks,
-      toolHooks: body.toolHooks,
       schemaJson: body.schemaJson,
       validationRules: body.validationRules,
       userPromptTemplate: body.userPromptTemplate,
       examples: body.examples,
+      evalPrompt: body.evalPrompt,
+      evalModel: body.evalModel,
+      defaultExtensions: body.defaultExtensions,
     });
 
     // Invalidate cache
@@ -89,6 +90,45 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('Error updating agent definition:', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : 'An error occurred',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PUT /api/agent-definitions/{id}
+ * Full replacement update (upsert). Creates if not exists, appends new version if exists.
+ * All fields from body are used (append-only under the hood).
+ */
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+
+  try {
+    const body = await request.json();
+    const { repos, services } = await getAdminContext();
+
+    const existing = await repos.agentDefinition.getById(id);
+    let result;
+    if (existing) {
+      result = await repos.agentDefinition.update(id, body);
+    } else {
+      result = await repos.agentDefinition.create({ ...body, agentId: id });
+    }
+
+    services.agentDefinition.invalidateCache(id);
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error replacing agent definition:', error);
 
     return NextResponse.json(
       {

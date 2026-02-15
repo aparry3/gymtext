@@ -24,9 +24,10 @@ import type { DB } from '@gymtext/shared/server';
 import {
   getSecretsForMode,
   getProductionSecrets,
+  getSandboxSecrets,
   type EnvironmentMode,
 } from './secrets';
-import { getConfigForMode, getProductionConfig } from './config';
+import { getConfigForMode, getProductionConfig, getSandboxConfig } from './config';
 
 export type { EnvironmentMode } from './secrets';
 
@@ -109,6 +110,29 @@ export async function getProductionContext(): Promise<AdminContext> {
   const services = createServices(repos);
 
   return { mode: 'production', db, repos, services, webApiUrl: config.urls.webApiUrl };
+}
+
+/**
+ * Get sandbox context (ignores header, always uses sandbox)
+ * Useful for operations that need to compare sandbox to production
+ */
+export async function getSandboxContext(): Promise<AdminContext> {
+  const secrets = getSandboxSecrets();
+  const config = getSandboxConfig();
+
+  const db = getOrCreateDb(secrets.database.url);
+  const repos = createRepositories(db);
+  const services = createServices(repos);
+
+  return { mode: 'sandbox', db, repos, services, webApiUrl: config.urls.webApiUrl };
+}
+
+/**
+ * Check whether sandbox is configured with a separate database URL.
+ * Returns false if sandbox falls back to production.
+ */
+export function isSandboxConfigured(): boolean {
+  return !!process.env.SANDBOX_DATABASE_URL;
 }
 
 /**

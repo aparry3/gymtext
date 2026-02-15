@@ -82,6 +82,20 @@ export {
 } from './formattedSchema';
 
 // ============================================================================
+// Workout Tags Exports
+// ============================================================================
+export {
+  WorkoutCategoryTag,
+  WorkoutSplitTag,
+  WorkoutMuscleTag,
+  WorkoutPatternTag,
+  WorkoutEquipmentTag,
+  WorkoutTagsSchema,
+  flattenWorkoutTags,
+  type WorkoutTags,
+} from './tags';
+
+// ============================================================================
 // Session Type Exports
 // ============================================================================
 export {

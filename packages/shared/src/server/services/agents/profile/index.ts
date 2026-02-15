@@ -89,14 +89,14 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           // Profile agent - updates fitness profile dossier
           // Sub-agent (profile:structured) runs conditionally when wasUpdated=true (DB config)
           agentRunner.invoke('profile:fitness', {
-            user,
-            message: buildProfileUpdateUserMessage(currentProfile, message, user, currentDate),
+            input: buildProfileUpdateUserMessage(currentProfile, message, user, currentDate),
+            params: { user },
             previousMessages: previousMsgs,
           }),
           // User fields agent - extracts timezone, send time, name changes
           agentRunner.invoke('profile:user', {
-            user,
-            message: buildUserFieldsUserMessage(message, user, currentDate),
+            input: buildUserFieldsUserMessage(message, user, currentDate),
+            params: { user },
             previousMessages: previousMsgs,
           }),
         ]);

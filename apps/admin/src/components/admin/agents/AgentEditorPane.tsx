@@ -1,82 +1,73 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
+import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
+import {
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Clock3,
+  Database,
+  Eye,
+  Loader2,
+  X,
+  MessageSquare,
+  Plus,
+  Sparkles,
+  Trash2,
+  Wrench,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { CodeMirrorEditor } from '@/components/ui/codemirror/CodeMirrorEditor';
-import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata, type AgentExample } from './types';
-import { ToolsSection } from './ToolsSection';
-import { ContextTypesSection } from './ContextTypesSection';
-import { HooksSection } from './HooksSection';
-import { ExamplesSection } from './ExamplesSection';
-import { JsonConfigSection } from './JsonConfigSection';
+} from '@/components/ui/select'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { MODEL_OPTIONS, type AdminAgentDefinition, type RegistryMetadata, type AgentExample } from './types'
+import { ToolsSection } from './ToolsSection'
+import { ContextTypesSection } from './ContextTypesSection'
 
 interface AgentEditorPaneProps {
-  agentId: string;
-  onDirtyChange: (isDirty: boolean) => void;
-  onHistoryToggle: () => void;
-  isHistoryOpen: boolean;
-}
-
-function HistoryIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  );
-}
-
-function EditorSkeleton() {
-  return (
-    <div className="h-full w-full animate-pulse bg-gray-100 flex items-center justify-center">
-      <span className="text-gray-400">Loading editor...</span>
-    </div>
-  );
+  agentId: string
+  onDirtyChange: (isDirty: boolean) => void
+  onHistoryToggle: () => void
+  isHistoryOpen: boolean
 }
 
 interface FormState {
-  systemPrompt: string;
-  userPrompt: string;
-  model: string;
-  maxTokens: number;
-  temperature: number;
-  maxIterations: number;
-  maxRetries: number;
-  description: string;
-  isActive: boolean;
-  toolIds: string[];
-  contextTypes: string[];
-  subAgentsJson: string;
-  hooksJson: string;
-  toolHooksJson: string;
-  schemaJsonJson: string;
-  validationRulesJson: string;
-  userPromptTemplate: string;
-  examplesJson: string;
+  systemPrompt: string
+  userPrompt: string
+  model: string
+  maxTokens: number
+  maxIterations: number
+  maxRetries: number
+  description: string
+  isActive: boolean
+  toolIds: string[]
+  contextTypes: string[]
+  subAgentsJson: string
+  schemaJsonJson: string
+  validationRulesJson: string
+  userPromptTemplate: string
+  examplesJson: string
+  evalPrompt: string
+  evalModel: string
+  defaultExtensionsJson: string
 }
 
 function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  const sortedA = [...a].sort();
-  const sortedB = [...b].sort();
-  return sortedA.every((v, i) => v === sortedB[i]);
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((v, i) => v === sortedB[i])
 }
 
 function formStateEquals(a: FormState, b: FormState): boolean {
@@ -85,7 +76,6 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     a.userPrompt === b.userPrompt &&
     a.model === b.model &&
     a.maxTokens === b.maxTokens &&
-    a.temperature === b.temperature &&
     a.maxIterations === b.maxIterations &&
     a.maxRetries === b.maxRetries &&
     a.description === b.description &&
@@ -93,47 +83,47 @@ function formStateEquals(a: FormState, b: FormState): boolean {
     arraysEqual(a.toolIds, b.toolIds) &&
     arraysEqual(a.contextTypes, b.contextTypes) &&
     a.subAgentsJson === b.subAgentsJson &&
-    a.hooksJson === b.hooksJson &&
-    a.toolHooksJson === b.toolHooksJson &&
     a.schemaJsonJson === b.schemaJsonJson &&
     a.validationRulesJson === b.validationRulesJson &&
     a.userPromptTemplate === b.userPromptTemplate &&
-    a.examplesJson === b.examplesJson
-  );
+    a.examplesJson === b.examplesJson &&
+    a.evalPrompt === b.evalPrompt &&
+    a.evalModel === b.evalModel &&
+    a.defaultExtensionsJson === b.defaultExtensionsJson
+  )
 }
 
 function safeStringify(value: unknown): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return ''
   try {
-    return JSON.stringify(value, null, 2);
+    return JSON.stringify(value, null, 2)
   } catch {
-    return '';
+    return ''
   }
 }
 
 function safeParse(str: string): { value: unknown; error: string | null } {
-  if (!str.trim()) return { value: null, error: null };
+  if (!str.trim()) return { value: null, error: null }
   try {
-    return { value: JSON.parse(str), error: null };
+    return { value: JSON.parse(str), error: null }
   } catch (e) {
-    return { value: null, error: e instanceof Error ? e.message : 'Invalid JSON' };
+    return { value: null, error: e instanceof Error ? e.message : 'Invalid JSON' }
   }
 }
 
-/** Parse hooks JSON to structured form for HooksSection */
-function parseHooksConfig(json: string): {
-  preHook?: { hook: string; source?: string } | null;
-  postHook?: { hook: string; source?: string } | null;
-} {
-  if (!json.trim()) return {};
+function parseExamples(value: string): AgentExample[] {
   try {
-    const parsed = JSON.parse(json);
-    return {
-      preHook: parsed?.preHook ?? null,
-      postHook: parsed?.postHook ?? null,
-    };
+    const parsed = JSON.parse(value)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.map((item) => ({
+      type: item?.type === 'negative' ? 'negative' : 'positive',
+      input: typeof item?.input === 'string' ? item.input : '',
+      output: typeof item?.output === 'string' ? item.output : '',
+      feedback: typeof item?.feedback === 'string' ? item.feedback : '',
+    }))
   } catch {
-    return {};
+    return []
   }
 }
 
@@ -142,7 +132,6 @@ const DEFAULT_FORM_STATE: FormState = {
   userPrompt: '',
   model: 'gpt-5-nano',
   maxTokens: 16000,
-  temperature: 1.0,
   maxIterations: 5,
   maxRetries: 1,
   description: '',
@@ -150,13 +139,133 @@ const DEFAULT_FORM_STATE: FormState = {
   toolIds: [],
   contextTypes: [],
   subAgentsJson: '',
-  hooksJson: '',
-  toolHooksJson: '',
   schemaJsonJson: '',
   validationRulesJson: '',
   userPromptTemplate: '',
   examplesJson: '[]',
-};
+  evalPrompt: '',
+  evalModel: 'gpt-5-nano',
+  defaultExtensionsJson: '',
+}
+
+function EditorSkeleton() {
+  return (
+    <div className="h-full w-full animate-pulse bg-slate-100/70 flex items-center justify-center">
+      <span className="text-slate-500">Loading editor...</span>
+    </div>
+  )
+}
+
+function EditablePromptText({
+  value,
+  onChange,
+  placeholder,
+  minHeightClass = 'min-h-[120px]',
+  mono = false,
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  minHeightClass?: string
+  mono?: boolean
+}) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const isFocusedRef = useRef(false)
+
+  useEffect(() => {
+    if (!ref.current || isFocusedRef.current) return
+    if (ref.current.innerText !== value) {
+      ref.current.innerText = value
+    }
+  }, [value])
+
+  return (
+    <div className="relative rounded-xl border border-white/90 bg-white/90 shadow-inner">
+      {!value.trim() && (
+        <p className="pointer-events-none absolute left-3 top-3 text-sm text-slate-400">{placeholder}</p>
+      )}
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        role="textbox"
+        aria-multiline
+        className={cn(
+          'w-full whitespace-pre-wrap break-words p-3 text-sm leading-6 text-slate-800 outline-none',
+          minHeightClass,
+          mono && 'font-mono text-xs leading-5'
+        )}
+        onFocus={() => {
+          isFocusedRef.current = true
+        }}
+        onBlur={(e) => {
+          isFocusedRef.current = false
+          onChange((e.currentTarget.innerText || '').replace(/\u00a0/g, ' '))
+        }}
+        onInput={(e) => {
+          onChange((e.currentTarget.textContent || '').replace(/\u00a0/g, ' '))
+        }}
+      />
+    </div>
+  )
+}
+
+function PromptSection({
+  icon,
+  title,
+  subtitle,
+  children,
+  tone,
+  actions,
+}: {
+  icon: ReactNode
+  title: string
+  subtitle: string
+  children: ReactNode
+  tone: 'system' | 'user' | 'example' | 'context' | 'runtime'
+  actions?: ReactNode
+}) {
+  const [isOpen, setIsOpen] = useState(true)
+
+  const toneClasses =
+    tone === 'system'
+      ? 'border-sky-200/90 bg-sky-50/70'
+      : tone === 'user'
+        ? 'border-violet-200/90 bg-violet-50/70'
+        : tone === 'example'
+          ? 'border-emerald-200/90 bg-emerald-50/70'
+          : tone === 'runtime'
+            ? 'border-amber-200/90 bg-amber-50/70'
+            : 'border-indigo-200/90 bg-indigo-50/70'
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <section className={cn('rounded-2xl border p-4', toneClasses)}>
+        <CollapsibleTrigger className="w-full text-left">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg border border-white/70 bg-white/85 p-1.5 text-slate-700">{icon}</span>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+                <p className="text-xs text-slate-600">{subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md border border-white/70 bg-white/85 p-1 text-slate-600">
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </span>
+            </div>
+          </div>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent className="pt-3">
+          {actions && <div className="mb-3">{actions}</div>}
+          {children}
+        </CollapsibleContent>
+      </section>
+    </Collapsible>
+  )
+}
 
 export function AgentEditorPane({
   agentId,
@@ -164,53 +273,146 @@ export function AgentEditorPane({
   onHistoryToggle,
   isHistoryOpen,
 }: AgentEditorPaneProps) {
-  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM_STATE);
-  const [originalState, setOriginalState] = useState<FormState>(DEFAULT_FORM_STATE);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [jsonErrors, setJsonErrors] = useState<Record<string, string | null>>({});
-  const [registry, setRegistry] = useState<RegistryMetadata | null>(null);
-  const registryFetched = useRef(false);
+  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM_STATE)
+  const [originalState, setOriginalState] = useState<FormState>(DEFAULT_FORM_STATE)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [jsonErrors, setJsonErrors] = useState<Record<string, string | null>>({})
+  const [registry, setRegistry] = useState<RegistryMetadata | null>(null)
+  const registryFetched = useRef(false)
 
-  // Fetch registry metadata (once)
+  // Context template & preview state
+  const [contextTemplates, setContextTemplates] = useState<Record<string, string | null>>({})
+  const [previewUserId, setPreviewUserId] = useState<string>('')
+  const [previewUsers, setPreviewUsers] = useState<Array<{ id: string; name: string; phone: string }>>([])
+  const [previewData, setPreviewData] = useState<Record<string, { rendered: string | null; error?: string }>>({})
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const previewUsersFetched = useRef(false)
+
   useEffect(() => {
-    if (registryFetched.current) return;
-    registryFetched.current = true;
+    if (registryFetched.current) return
+    registryFetched.current = true
 
     async function fetchRegistry() {
       try {
-        const response = await fetch('/api/agent-registries');
-        const result = await response.json();
+        const response = await fetch('/api/agent-registries')
+        const result = await response.json()
         if (result.success && result.data) {
-          setRegistry(result.data);
+          setRegistry(result.data)
         }
       } catch (err) {
-        console.error('Failed to fetch registry:', err);
+        console.error('Failed to fetch registry:', err)
       }
     }
-    fetchRegistry();
-  }, []);
 
-  // Fetch agent definition
+    fetchRegistry()
+  }, [])
+
+  // Fetch users for preview dropdown (once)
+  useEffect(() => {
+    if (previewUsersFetched.current) return
+    previewUsersFetched.current = true
+
+    async function fetchUsers() {
+      try {
+        const response = await fetch('/api/users?pageSize=50')
+        const result = await response.json()
+        if (result.success && result.data?.users) {
+          setPreviewUsers(
+            result.data.users.map((u: { id: string; name?: string; phoneNumber?: string }) => ({
+              id: u.id,
+              name: u.name || 'Unknown',
+              phone: u.phoneNumber || '',
+            }))
+          )
+        }
+      } catch (err) {
+        console.error('Failed to fetch users for preview:', err)
+      }
+    }
+
+    fetchUsers()
+  }, [])
+
+  // Fetch raw templates when contextTypes change
+  useEffect(() => {
+    const types = formState.contextTypes
+    if (types.length === 0) {
+      setContextTemplates({})
+      return
+    }
+
+    async function fetchTemplates() {
+      try {
+        const response = await fetch(`/api/registry/context/templates?types=${types.join(',')}`)
+        const result = await response.json()
+        if (result.success && result.data) {
+          setContextTemplates(result.data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch context templates:', err)
+      }
+    }
+
+    fetchTemplates()
+  }, [formState.contextTypes])
+
+  // Clear preview data when contextTypes change
+  useEffect(() => {
+    setPreviewData({})
+  }, [formState.contextTypes])
+
+  const handleRenderPreview = useCallback(async () => {
+    if (!previewUserId || formState.contextTypes.length === 0) return
+
+    setIsLoadingPreview(true)
+    try {
+      const response = await fetch('/api/registry/context/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: previewUserId,
+          contextTypes: formState.contextTypes,
+        }),
+      })
+      const result = await response.json()
+      if (result.success && result.data) {
+        const mapped: Record<string, { rendered: string | null; error?: string }> = {}
+        for (const item of result.data) {
+          mapped[item.contextType] = { rendered: item.rendered, error: item.error }
+        }
+        setPreviewData(mapped)
+      }
+    } catch (err) {
+      console.error('Failed to render preview:', err)
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }, [previewUserId, formState.contextTypes])
+
+  const selectedPreviewUser = useMemo(
+    () => previewUsers.find((u) => u.id === previewUserId),
+    [previewUsers, previewUserId]
+  )
+
   useEffect(() => {
     async function fetchAgent() {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       try {
-        const response = await fetch(`/api/agent-definitions/${encodeURIComponent(agentId)}`);
-        const result = await response.json();
+        const response = await fetch(`/api/agent-definitions/${encodeURIComponent(agentId)}`)
+        const result = await response.json()
 
         if (result.success && result.data) {
-          const data: AdminAgentDefinition = result.data;
+          const data: AdminAgentDefinition = result.data
           const state: FormState = {
             systemPrompt: data.systemPrompt,
             userPrompt: data.userPrompt || '',
             model: data.model,
             maxTokens: data.maxTokens || 16000,
-            temperature: data.temperature ? parseFloat(data.temperature) : 1.0,
             maxIterations: data.maxIterations || 5,
             maxRetries: data.maxRetries || 1,
             description: data.description || '',
@@ -218,100 +420,121 @@ export function AgentEditorPane({
             toolIds: data.toolIds || [],
             contextTypes: data.contextTypes || [],
             subAgentsJson: safeStringify(data.subAgents),
-            hooksJson: safeStringify(data.hooks),
-            toolHooksJson: safeStringify(data.toolHooks),
             schemaJsonJson: safeStringify(data.schemaJson),
             validationRulesJson: safeStringify(data.validationRules),
             userPromptTemplate: data.userPromptTemplate || '',
             examplesJson: JSON.stringify(data.examples || [], null, 2),
-          };
-          setFormState(state);
-          setOriginalState(state);
-          setLastSaved(new Date(data.createdAt));
-          setJsonErrors({});
+            evalPrompt: data.evalPrompt || '',
+            evalModel: data.evalModel || 'gpt-5-nano',
+            defaultExtensionsJson: safeStringify(data.defaultExtensions),
+          }
+          setFormState(state)
+          setOriginalState(state)
+          setLastSaved(new Date(data.createdAt))
+          setJsonErrors({})
         } else {
-          setError('Agent not found');
+          setError('Agent not found')
         }
       } catch (err) {
-        setError('Failed to load agent');
-        console.error('Failed to fetch agent:', err);
+        setError('Failed to load agent')
+        console.error('Failed to fetch agent:', err)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    fetchAgent();
-  }, [agentId]);
+    fetchAgent()
+  }, [agentId])
 
-  // Track dirty state
   useEffect(() => {
-    const isDirty = !formStateEquals(formState, originalState);
-    onDirtyChange(isDirty);
-  }, [formState, originalState, onDirtyChange]);
+    onDirtyChange(!formStateEquals(formState, originalState))
+  }, [formState, originalState, onDirtyChange])
 
-  // Validate JSON fields and return parsed body or null on error
-  const validateAndBuildBody = useCallback((): Record<string, unknown> | null => {
-    const errors: Record<string, string | null> = {};
+  const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+    setFormState((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const parsedExamples = useMemo(() => parseExamples(formState.examplesJson), [formState.examplesJson])
+
+  const setExamples = useCallback((examples: AgentExample[]) => {
+    updateField('examplesJson', JSON.stringify(examples, null, 2))
+  }, [])
+
+  const updateExample = (index: number, patch: Partial<AgentExample>) => {
+    const next = [...parsedExamples]
+    next[index] = { ...next[index], ...patch }
+    setExamples(next)
+  }
+
+  const addExample = () => {
+    setExamples([...parsedExamples, { type: 'positive', input: '', output: '', feedback: '' }])
+  }
+
+  const removeExample = (index: number) => {
+    setExamples(parsedExamples.filter((_, i) => i !== index))
+  }
+
+  const validateAndBuildBody = useCallback((): { parsed: Record<string, unknown>; examples: AgentExample[] } | null => {
+    const errors: Record<string, string | null> = {}
     const jsonFields = [
       { key: 'subAgentsJson', label: 'Sub-Agents' },
-      { key: 'toolHooksJson', label: 'Tool Hooks' },
       { key: 'schemaJsonJson', label: 'Output Schema' },
       { key: 'validationRulesJson', label: 'Validation Rules' },
-    ] as const;
+      { key: 'defaultExtensionsJson', label: 'Default Extensions' },
+    ] as const
 
-    const parsed: Record<string, unknown> = {};
-    let hasError = false;
+    const parsed: Record<string, unknown> = {}
+    let hasError = false
 
     for (const { key, label } of jsonFields) {
-      const str = formState[key];
+      const str = formState[key]
       if (!str.trim()) {
-        parsed[key] = null;
-        errors[key] = null;
+        parsed[key] = null
+        errors[key] = null
       } else {
-        const result = safeParse(str);
+        const result = safeParse(str)
         if (result.error) {
-          errors[key] = `${label}: ${result.error}`;
-          hasError = true;
+          errors[key] = `${label}: ${result.error}`
+          hasError = true
         } else {
-          parsed[key] = result.value;
-          errors[key] = null;
+          parsed[key] = result.value
+          errors[key] = null
         }
       }
     }
 
-    // hooksJson is managed via structured form, validate it too
-    const hooksStr = formState.hooksJson;
-    if (hooksStr.trim()) {
-      const hooksResult = safeParse(hooksStr);
-      if (hooksResult.error) {
-        errors.hooksJson = `Hooks: ${hooksResult.error}`;
-        hasError = true;
+    let examples: AgentExample[] = []
+    try {
+      const raw = JSON.parse(formState.examplesJson)
+      if (!Array.isArray(raw)) {
+        errors.examplesJson = 'Examples: expected an array'
+        hasError = true
       } else {
-        parsed.hooksJson = hooksResult.value;
-        errors.hooksJson = null;
+        examples = parseExamples(formState.examplesJson)
+        errors.examplesJson = null
       }
-    } else {
-      parsed.hooksJson = null;
-      errors.hooksJson = null;
+    } catch (e) {
+      errors.examplesJson = `Examples: ${e instanceof Error ? e.message : 'Invalid JSON'}`
+      hasError = true
     }
 
-    setJsonErrors(errors);
-    if (hasError) return null;
-    return parsed;
-  }, [formState]);
+    setJsonErrors(errors)
+    if (hasError) return null
 
-  // Save handler
+    return { parsed, examples }
+  }, [formState])
+
   const handleSave = useCallback(async () => {
-    if (formStateEquals(formState, originalState)) return;
+    if (formStateEquals(formState, originalState)) return
 
-    const parsed = validateAndBuildBody();
-    if (!parsed) {
-      setError('Fix JSON errors before saving');
-      return;
+    const validated = validateAndBuildBody()
+    if (!validated) {
+      setError('Fix configuration errors before saving')
+      return
     }
 
-    setIsSaving(true);
-    setError(null);
+    setIsSaving(true)
+    setError(null)
 
     try {
       const response = await fetch(`/api/agent-definitions/${encodeURIComponent(agentId)}`, {
@@ -322,336 +545,552 @@ export function AgentEditorPane({
           userPrompt: formState.userPrompt || null,
           model: formState.model,
           maxTokens: formState.maxTokens,
-          temperature: formState.temperature.toString(),
+          temperature: '1',
           maxIterations: formState.maxIterations,
           maxRetries: formState.maxRetries,
           description: formState.description || null,
           isActive: formState.isActive,
           toolIds: formState.toolIds.length > 0 ? formState.toolIds : null,
           contextTypes: formState.contextTypes.length > 0 ? formState.contextTypes : null,
-          subAgents: parsed.subAgentsJson,
-          hooks: parsed.hooksJson,
-          toolHooks: parsed.toolHooksJson,
-          schemaJson: parsed.schemaJsonJson,
-          validationRules: parsed.validationRulesJson,
+          subAgents: validated.parsed.subAgentsJson,
+          schemaJson: validated.parsed.schemaJsonJson,
+          validationRules: validated.parsed.validationRulesJson,
           userPromptTemplate: formState.userPromptTemplate || null,
-          examples: JSON.parse(formState.examplesJson),
+          examples: validated.examples,
+          evalPrompt: formState.evalPrompt || null,
+          evalModel: formState.evalModel || null,
+          defaultExtensions: validated.parsed.defaultExtensionsJson,
         }),
-      });
+      })
 
-      const result = await response.json();
-
+      const result = await response.json()
       if (!result.success) {
-        throw new Error(result.message);
+        throw new Error(result.message)
       }
 
-      setOriginalState(formState);
-      setLastSaved(new Date());
+      setOriginalState(formState)
+      setLastSaved(new Date())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  }, [agentId, formState, originalState, validateAndBuildBody]);
+  }, [agentId, formState, originalState, validateAndBuildBody])
 
-  const isDirty = !formStateEquals(formState, originalState);
-
-  const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
-  };
-
-  // Examples structured form handler
-  const parsedExamples: AgentExample[] = (() => {
-    try {
-      const parsed = JSON.parse(formState.examplesJson);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch { return []; }
-  })();
-
-  const handleExamplesChange = useCallback(
-    (examples: AgentExample[]) => {
-      updateField('examplesJson', JSON.stringify(examples, null, 2));
-    },
-    []
-  );
-
-  // Hooks structured form handler
-  const handleHooksChange = useCallback(
-    (config: { preHook?: { hook: string; source?: string } | null; postHook?: { hook: string; source?: string } | null }) => {
-      const clean: Record<string, unknown> = {};
-      if (config.preHook?.hook) clean.preHook = config.preHook;
-      if (config.postHook?.hook) clean.postHook = config.postHook;
-      const json = Object.keys(clean).length > 0 ? JSON.stringify(clean, null, 2) : '';
-      updateField('hooksJson', json);
-    },
-    []
-  );
+  const isDirty = !formStateEquals(formState, originalState)
 
   return (
-    <Card className="flex-1 flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50/50">
+    <Card className="flex flex-1 flex-col rounded-2xl border border-slate-200/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.95),rgba(248,250,252,0.95))] shadow-[0_20px_45px_-34px_rgba(15,23,42,0.6)] backdrop-blur">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-5 py-3">
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{agentId}</Badge>
+          <Badge variant="outline" className="border-slate-300 bg-white/90 text-slate-700">
+            {agentId}
+          </Badge>
           {isDirty && (
-            <Badge variant="destructive" className="animate-pulse">
+            <Badge variant="destructive" className="animate-pulse bg-rose-100 text-rose-700 border-rose-200">
               Unsaved
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-3">
-          {lastSaved && (
-            <span className="text-xs text-gray-500">
-              Last saved: {lastSaved.toLocaleTimeString()}
-            </span>
-          )}
-          <Button variant="outline" size="sm" onClick={onHistoryToggle}>
-            <HistoryIcon className="h-4 w-4 mr-1.5" />
+          {lastSaved && <span className="text-xs text-slate-500">Last saved: {lastSaved.toLocaleTimeString()}</span>}
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-300 bg-white/85 text-slate-700 hover:bg-slate-50"
+            onClick={onHistoryToggle}
+          >
             {isHistoryOpen ? 'Hide History' : 'History'}
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!isDirty || isSaving}>
+          <Button
+            size="sm"
+            className="bg-sky-600 text-white hover:bg-sky-700"
+            onClick={handleSave}
+            disabled={!isDirty || isSaving}
+          >
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>
 
-      {/* Error Banner */}
-      {error && (
-        <div className="px-4 py-2 bg-red-50 text-red-700 text-sm border-b border-red-100">
-          {error}
-        </div>
-      )}
+      {error && <div className="border-b border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</div>}
 
-      {/* Form Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="p-4">
         {isLoading ? (
           <EditorSkeleton />
         ) : (
-          <div className="space-y-6">
-            {/* Model Settings Row */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Model Select */}
-              <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
-                <Select
-                  value={formState.model}
-                  onValueChange={(v) => updateField('model', v)}
-                >
-                  <SelectTrigger id="model">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODEL_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Max Tokens */}
-              <div className="space-y-2">
-                <Label htmlFor="maxTokens">Max Tokens</Label>
-                <Input
-                  id="maxTokens"
-                  type="number"
-                  min={1}
-                  max={128000}
-                  value={formState.maxTokens}
-                  onChange={(e) => updateField('maxTokens', parseInt(e.target.value) || 16000)}
-                />
-              </div>
-            </div>
-
-            {/* Temperature Slider */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Temperature</Label>
-                <span className="text-sm text-gray-500">{formState.temperature.toFixed(2)}</span>
-              </div>
-              <Slider
-                min={0}
-                max={2}
-                step={0.05}
-                value={[formState.temperature]}
-                onValueChange={([v]) => updateField('temperature', v)}
-              />
-            </div>
-
-            {/* Iterations and Retries Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="maxIterations">Max Iterations</Label>
-                <Input
-                  id="maxIterations"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={formState.maxIterations}
-                  onChange={(e) => updateField('maxIterations', parseInt(e.target.value) || 5)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maxRetries">Max Retries</Label>
-                <Input
-                  id="maxRetries"
-                  type="number"
-                  min={0}
-                  max={10}
-                  value={formState.maxRetries}
-                  onChange={(e) => updateField('maxRetries', parseInt(e.target.value) || 1)}
-                />
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={formState.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="Brief description of what this agent does..."
-              />
-            </div>
-
-            {/* Active Toggle */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <Label htmlFor="isActive">Active</Label>
-                <p className="text-xs text-gray-500">Inactive agents are not used in production</p>
-              </div>
-              <Switch
-                id="isActive"
-                checked={formState.isActive}
-                onCheckedChange={(v) => updateField('isActive', v)}
-              />
-            </div>
-
-            {/* Extended Configuration Sections */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Agent Configuration</h3>
-
-              {/* Tools */}
-              {registry && (
-                <ToolsSection
-                  tools={registry.tools}
-                  selected={formState.toolIds}
-                  onChange={(ids) => updateField('toolIds', ids)}
-                />
-              )}
-
-              {/* Context Types */}
-              {registry && (
-                <ContextTypesSection
-                  contextTypes={registry.contextTypes}
-                  selected={formState.contextTypes}
-                  onChange={(types) => updateField('contextTypes', types)}
-                />
-              )}
-
-              {/* Hooks (structured) */}
-              {registry && (
-                <HooksSection
-                  hooks={registry.hooks}
-                  value={parseHooksConfig(formState.hooksJson)}
-                  onChange={handleHooksChange}
-                />
-              )}
-
-              {/* Examples */}
-              <ExamplesSection
-                examples={parsedExamples}
-                onChange={handleExamplesChange}
-              />
-
-              {/* Tool Hooks (JSON) */}
-              <JsonConfigSection
-                label="Tool Hooks"
-                value={formState.toolHooksJson}
-                onChange={(v) => updateField('toolHooksJson', v)}
-                onSave={handleSave}
-                placeholder='{ "tool_name": { "preHook": "hookName", "postHook": { "hook": "hookName", "source": "result.field" } } }'
-                error={jsonErrors.toolHooksJson}
-              />
-
-              {/* Sub-Agents (JSON) */}
-              <JsonConfigSection
-                label="Sub-Agents"
-                value={formState.subAgentsJson}
-                onChange={(v) => updateField('subAgentsJson', v)}
-                onSave={handleSave}
-                placeholder='[{ "batch": 0, "key": "result", "agentId": "domain:agent", "inputMapping": { ... } }]'
-                error={jsonErrors.subAgentsJson}
-              />
-
-              {/* Output Schema (JSON) */}
-              <JsonConfigSection
-                label="Output Schema"
-                value={formState.schemaJsonJson}
-                onChange={(v) => updateField('schemaJsonJson', v)}
-                onSave={handleSave}
-                height="h-64"
-                placeholder='{ "type": "object", "properties": { ... } }'
-                error={jsonErrors.schemaJsonJson}
-              />
-
-              {/* Validation Rules (JSON) */}
-              <JsonConfigSection
-                label="Validation Rules"
-                value={formState.validationRulesJson}
-                onChange={(v) => updateField('validationRulesJson', v)}
-                onSave={handleSave}
-                placeholder='[{ "field": "result.field", "operator": "exists" }]'
-                error={jsonErrors.validationRulesJson}
-              />
-
-              {/* User Prompt Template */}
-              <div className="space-y-2">
-                <Label>User Prompt Template</Label>
-                <p className="text-xs text-gray-500">
-                  Template with {'{{variable}}'} syntax for sub-agent input mapping
-                </p>
-                <div className="h-32 border rounded-lg overflow-hidden">
-                  <CodeMirrorEditor
-                    value={formState.userPromptTemplate}
-                    onChange={(v) => updateField('userPromptTemplate', v)}
-                    placeholder="Template with {{variable}} placeholders..."
-                    onSave={handleSave}
-                  />
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="rounded-2xl border border-slate-200/70 bg-white/75 p-4 shadow-inner">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Prompt Assembly</h2>
+                  <p className="text-xs text-slate-500">Single-scroll prompt view with editable sections</p>
                 </div>
+                <Badge className="border-0 bg-slate-800/90 text-white">Concatenated</Badge>
               </div>
-            </div>
 
-            {/* System Prompt */}
-            <div className="space-y-2">
-              <Label>System Prompt</Label>
-              <div className="h-64 border rounded-lg overflow-hidden">
-                <CodeMirrorEditor
-                  value={formState.systemPrompt}
-                  onChange={(v) => updateField('systemPrompt', v)}
-                  placeholder="Enter system prompt..."
-                  onSave={handleSave}
-                />
-              </div>
-            </div>
+              <div className="space-y-4">
+                <PromptSection
+                  icon={<Bot className="h-4 w-4" />}
+                  title="System Prompt"
+                  subtitle="Role, constraints, and global behavior"
+                  tone="system"
+                >
+                  <EditablePromptText
+                    value={formState.systemPrompt}
+                    onChange={(value) => updateField('systemPrompt', value)}
+                    placeholder="Define agent behavior and constraints..."
+                  />
+                </PromptSection>
 
-            {/* User Prompt */}
-            <div className="space-y-2">
-              <Label>User Prompt (Optional)</Label>
-              <div className="h-48 border rounded-lg overflow-hidden">
-                <CodeMirrorEditor
-                  value={formState.userPrompt}
-                  onChange={(v) => updateField('userPrompt', v)}
-                  placeholder="Enter user prompt template (optional)..."
-                  onSave={handleSave}
-                />
+                <PromptSection
+                  icon={<Database className="h-4 w-4" />}
+                  title="Context Blocks"
+                  subtitle="Selected runtime contexts are injected in this order"
+                  tone="context"
+                  actions={
+                    formState.contextTypes.length > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={previewUserId}
+                          onChange={(e) => setPreviewUserId(e.target.value)}
+                          className="h-8 rounded-lg border border-indigo-300 bg-white px-2 text-xs text-slate-700"
+                        >
+                          <option value="">Select user for preview...</option>
+                          {previewUsers.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name} ({u.phone})
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-indigo-300 bg-white/85 text-indigo-800 hover:bg-indigo-50"
+                          onClick={handleRenderPreview}
+                          disabled={!previewUserId || isLoadingPreview}
+                        >
+                          {isLoadingPreview ? (
+                            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Eye className="mr-1.5 h-4 w-4" />
+                          )}
+                          Preview
+                        </Button>
+                        {Object.keys(previewData).length > 0 && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-300 bg-white/85 text-slate-600 hover:bg-slate-50"
+                            onClick={() => setPreviewData({})}
+                          >
+                            <X className="mr-1.5 h-4 w-4" />
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                    ) : undefined
+                  }
+                >
+                  {formState.contextTypes.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-3 py-2 text-xs text-slate-500">
+                      No context blocks selected. Enable context types in the right panel.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {formState.contextTypes.map((contextType) => {
+                        const template = contextTemplates[contextType]
+                        const preview = previewData[contextType]
+                        const variables = template
+                          ? [...template.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1])
+                          : []
+
+                        return (
+                          <div key={contextType} className="rounded-xl border border-indigo-200 bg-white/85 px-3 py-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+                              Context: {contextType}
+                            </p>
+
+                            {preview ? (
+                              <div className="mt-2">
+                                <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-600">
+                                  Preview{selectedPreviewUser ? ` (${selectedPreviewUser.name})` : ''}
+                                </p>
+                                {preview.error ? (
+                                  <p className="mt-1 rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-600">
+                                    {preview.error}
+                                  </p>
+                                ) : preview.rendered ? (
+                                  <pre className="mt-1 whitespace-pre-wrap rounded-lg border border-emerald-100 bg-emerald-50/50 p-2 font-mono text-xs leading-5 text-slate-700">
+                                    {preview.rendered}
+                                  </pre>
+                                ) : (
+                                  <p className="mt-1 text-xs text-slate-400 italic">Empty result</p>
+                                )}
+                              </div>
+                            ) : template != null ? (
+                              <div className="mt-2 space-y-2">
+                                <div>
+                                  <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Template</p>
+                                  <pre className="mt-1 whitespace-pre-wrap rounded-lg border border-indigo-100 bg-indigo-50/50 p-2 font-mono text-xs leading-5 text-slate-700">
+                                    {template}
+                                  </pre>
+                                </div>
+                                {variables.length > 0 && (
+                                  <p className="text-[10px] text-slate-500">
+                                    <span className="font-medium">Variables:</span>{' '}
+                                    {variables.map((v, i) => (
+                                      <span key={v}>
+                                        <code className="rounded bg-indigo-100 px-1 py-0.5 text-indigo-700">{v}</code>
+                                        {i < variables.length - 1 ? ', ' : ''}
+                                      </span>
+                                    ))}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-xs text-slate-500 italic">No template stored (uses inline default)</p>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </PromptSection>
+
+                <PromptSection
+                  icon={<Sparkles className="h-4 w-4" />}
+                  title="Examples"
+                  subtitle="Inline examples included in the prompt sequence"
+                  tone="example"
+                  actions={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-emerald-300 bg-white/85 text-emerald-800 hover:bg-emerald-50"
+                      onClick={addExample}
+                    >
+                      <Plus className="mr-1.5 h-4 w-4" />
+                      Add Example
+                    </Button>
+                  }
+                >
+                  {parsedExamples.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-emerald-300 bg-white/75 px-3 py-2 text-xs text-slate-500">
+                      No examples yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {parsedExamples.map((example, index) => (
+                        <div key={`${example.type}-${index}`} className="rounded-xl border border-emerald-200 bg-white/90 p-3">
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  example.type === 'negative' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                                }
+                              >
+                                {example.type}
+                              </Badge>
+                              <Select
+                                value={example.type}
+                                onValueChange={(value: 'positive' | 'negative') => updateExample(index, { type: value })}
+                              >
+                                <SelectTrigger className="h-8 w-[130px] border-slate-300 bg-white">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="positive">Positive</SelectItem>
+                                  <SelectItem value="negative">Negative</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500 hover:bg-rose-50 hover:text-rose-600"
+                              onClick={() => removeExample(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="grid gap-2 lg:grid-cols-2">
+                            <div>
+                              <Label className="text-xs text-slate-600">Input</Label>
+                              <EditablePromptText
+                                value={example.input}
+                                onChange={(value) => updateExample(index, { input: value })}
+                                placeholder="Example input"
+                                minHeightClass="min-h-[95px]"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-slate-600">Expected Output</Label>
+                              <EditablePromptText
+                                value={example.output}
+                                onChange={(value) => updateExample(index, { output: value })}
+                                placeholder="Example output"
+                                minHeightClass="min-h-[95px]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </PromptSection>
+
+                <PromptSection
+                  icon={<MessageSquare className="h-4 w-4" />}
+                  title="Conversation Runtime Blocks"
+                  subtitle="Preview of appended message history and contact metadata"
+                  tone="runtime"
+                >
+                  <div className="rounded-xl border border-amber-200 bg-white/85 px-3 py-2 text-sm text-slate-700">
+                    <p className="font-medium text-amber-800">Previous Messages</p>
+                    <p className="mt-1">Appends latest conversation turns from message history store.</p>
+                    <p className="mt-2 font-medium text-amber-800">Contact Metadata</p>
+                    <p className="mt-1">Includes contact and profile facts available at runtime.</p>
+                  </div>
+                </PromptSection>
+
+                <PromptSection
+                  icon={<Clock3 className="h-4 w-4" />}
+                  title="User Prompt Template"
+                  subtitle="Optional pre-template before final user input"
+                  tone="example"
+                >
+                  <EditablePromptText
+                    value={formState.userPromptTemplate}
+                    onChange={(value) => updateField('userPromptTemplate', value)}
+                    placeholder="Template with {{variable}} placeholders..."
+                  />
+                </PromptSection>
+
+                <PromptSection
+                  icon={<MessageSquare className="h-4 w-4" />}
+                  title="User Prompt"
+                  subtitle="Final instruction merged with runtime input"
+                  tone="user"
+                >
+                  <EditablePromptText
+                    value={formState.userPrompt}
+                    onChange={(value) => updateField('userPrompt', value)}
+                    placeholder="Compose the final user-facing instruction..."
+                  />
+                </PromptSection>
               </div>
-            </div>
+            </section>
+
+            <aside className="rounded-2xl border border-slate-200/70 bg-white/85 p-4 h-fit">
+              <div className="mb-3">
+                <h2 className="text-base font-semibold text-slate-900">Configuration</h2>
+                <p className="text-xs text-slate-500">Model, tools, and context controls</p>
+              </div>
+
+              <div className="space-y-4">
+                <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-800">Runtime</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="model">Model</Label>
+                    <Select value={formState.model} onValueChange={(value) => updateField('model', value)}>
+                      <SelectTrigger id="model" className="border-slate-300 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MODEL_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxTokens">Max Tokens</Label>
+                    <Input
+                      id="maxTokens"
+                      type="number"
+                      min={1}
+                      max={128000}
+                      value={formState.maxTokens}
+                      onChange={(e) => updateField('maxTokens', parseInt(e.target.value, 10) || 16000)}
+                      className="border-slate-300 bg-white"
+                    />
+                  </div>
+                  <p className="rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-xs text-sky-700">
+                    Temperature is fixed to 1 for all agents.
+                  </p>
+                </section>
+
+                <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-800">Agent Metadata</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={formState.description}
+                      onChange={(e) => updateField('description', e.target.value)}
+                      placeholder="What this agent does"
+                      className="border-slate-300 bg-white"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <div>
+                      <p className="text-sm text-slate-800">Active</p>
+                      <p className="text-xs text-slate-500">Use in production routing</p>
+                    </div>
+                    <Switch checked={formState.isActive} onCheckedChange={(value) => updateField('isActive', value)} />
+                  </div>
+                </section>
+
+                {registry && (
+                  <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-slate-800">
+                      <Wrench className="h-4 w-4" />
+                      <h3 className="text-sm font-semibold">Tools</h3>
+                    </div>
+                    <ToolsSection
+                      tools={registry.tools}
+                      selected={formState.toolIds}
+                      onChange={(toolIds) => updateField('toolIds', toolIds)}
+                    />
+                  </section>
+                )}
+
+                {registry && (
+                  <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-slate-800">
+                      <Database className="h-4 w-4" />
+                      <h3 className="text-sm font-semibold">Context</h3>
+                    </div>
+                    <ContextTypesSection
+                      contextTypes={registry.contextTypes}
+                      selected={formState.contextTypes}
+                      onChange={(contextTypes) => updateField('contextTypes', contextTypes)}
+                    />
+                  </section>
+                )}
+
+                <details className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-800">Advanced</summary>
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="maxIterations">Max Iterations</Label>
+                        <Input
+                          id="maxIterations"
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={formState.maxIterations}
+                          onChange={(e) => updateField('maxIterations', parseInt(e.target.value, 10) || 5)}
+                          className="border-slate-300 bg-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="maxRetries">Max Retries</Label>
+                        <Input
+                          id="maxRetries"
+                          type="number"
+                          min={0}
+                          max={10}
+                          value={formState.maxRetries}
+                          onChange={(e) => updateField('maxRetries', parseInt(e.target.value, 10) || 1)}
+                          className="border-slate-300 bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="evalModel">Eval Model</Label>
+                      <Select value={formState.evalModel} onValueChange={(value) => updateField('evalModel', value)}>
+                        <SelectTrigger id="evalModel" className="border-slate-300 bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODEL_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Eval Prompt</Label>
+                      <EditablePromptText
+                        value={formState.evalPrompt}
+                        onChange={(value) => updateField('evalPrompt', value)}
+                        placeholder="Define eval rubric prompt..."
+                        minHeightClass="min-h-[110px]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Default Extensions (JSON)</Label>
+                      <EditablePromptText
+                        value={formState.defaultExtensionsJson}
+                        onChange={(value) => updateField('defaultExtensionsJson', value)}
+                        placeholder='{ "experienceLevel": "intermediate" }'
+                        minHeightClass="min-h-[90px]"
+                        mono
+                      />
+                      {jsonErrors.defaultExtensionsJson && (
+                        <p className="text-xs text-rose-600">{jsonErrors.defaultExtensionsJson}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Sub-Agents (JSON)</Label>
+                      <EditablePromptText
+                        value={formState.subAgentsJson}
+                        onChange={(value) => updateField('subAgentsJson', value)}
+                        placeholder='[{ "agentId": "domain:agent" }]'
+                        minHeightClass="min-h-[90px]"
+                        mono
+                      />
+                      {jsonErrors.subAgentsJson && <p className="text-xs text-rose-600">{jsonErrors.subAgentsJson}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Output Schema (JSON)</Label>
+                      <EditablePromptText
+                        value={formState.schemaJsonJson}
+                        onChange={(value) => updateField('schemaJsonJson', value)}
+                        placeholder='{ "type": "object", "properties": {} }'
+                        minHeightClass="min-h-[90px]"
+                        mono
+                      />
+                      {jsonErrors.schemaJsonJson && <p className="text-xs text-rose-600">{jsonErrors.schemaJsonJson}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label>Validation Rules (JSON)</Label>
+                      <EditablePromptText
+                        value={formState.validationRulesJson}
+                        onChange={(value) => updateField('validationRulesJson', value)}
+                        placeholder='[{ "type": "required" }]'
+                        minHeightClass="min-h-[90px]"
+                        mono
+                      />
+                      {jsonErrors.validationRulesJson && (
+                        <p className="text-xs text-rose-600">{jsonErrors.validationRulesJson}</p>
+                      )}
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </aside>
           </div>
         )}
       </div>
     </Card>
-  );
+  )
 }

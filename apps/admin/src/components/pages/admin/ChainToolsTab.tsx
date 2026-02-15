@@ -24,7 +24,6 @@ interface Microcycle {
   description: string | null
   message: string | null
   structured: unknown | null
-  isDeload: boolean
   startDate: Date
   endDate: Date
 }
@@ -291,7 +290,6 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>Week {microcycle.absoluteWeek}</Badge>
-                  {microcycle.isDeload && <Badge variant="secondary">Deload</Badge>}
                   <Badge variant="outline" className="text-xs">
                     {formatDate(microcycle.startDate)} - {formatDate(microcycle.endDate)}
                   </Badge>
