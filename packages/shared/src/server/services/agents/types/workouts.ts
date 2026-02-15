@@ -76,7 +76,7 @@ export interface ModifyWorkoutOutput {
     modifications: string;
   };
   message: string;
-  structure: WorkoutStructure;
+  structure?: WorkoutStructure;
 }
 
 /**

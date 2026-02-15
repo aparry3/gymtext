@@ -162,24 +162,30 @@ export function createWorkoutModificationService(
             params: { user },
           });
 
-          const [workoutMessage, structure, mcResult] = await Promise.all([
+          const [messageResult, structuredResult, mcSettledResult] = await Promise.allSettled([
             messagePromise,
             structuredPromise,
             microcyclePromise,
           ]);
+
+          // Extract results, gracefully handling failures
+          const workoutMessage = messageResult.status === 'fulfilled'
+            ? messageResult.value
+            : (() => { console.error('[MODIFY_WORKOUT] workout:message failed, using fallback', messageResult.reason); return 'Your workout has been updated.'; })();
+
+          const structure: WorkoutStructure | null = structuredResult.status === 'fulfilled'
+            ? structuredResult.value
+            : (() => { console.error('[MODIFY_WORKOUT] workout:structured failed, continuing without structure', structuredResult.reason); return null; })();
 
           // Step 3: Resolve exercises
           if (structure && exerciseResolution) {
             await resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, userId);
           }
 
-          // Step 4: Save workout + microcycle to DB
-          const mcResponse = mcResult.response as { overview: string; days: string[]; wasModified: boolean; modifications: string };
-          const mcStructure = (mcResult as Record<string, unknown>).structure as MicrocycleStructure | undefined;
-
+          // Step 4: Save workout to DB (always — core modification succeeded)
           const tags = structure?.tags ? flattenWorkoutTags(structure.tags) : undefined;
           await workoutInstanceService.updateWorkout(existingWorkout.id, {
-            goal: mcResponse.days[targetDayIndex] || workoutDescription,
+            goal: workoutDescription,
             description: workoutDescription,
             structured: structure ?? undefined,
             message: workoutMessage,
@@ -187,16 +193,31 @@ export function createWorkoutModificationService(
             ...(tags ? { tags } : {}),
           });
 
-          await microcycleService.updateMicrocycle(microcycle.id, {
-            days: mcResponse.days,
-            description: mcResponse.overview,
-            structured: mcStructure,
-          });
+          // Save microcycle only if microcycle:modify succeeded
+          if (mcSettledResult.status === 'fulfilled') {
+            const mcResponse = mcSettledResult.value.response as { overview: string; days: string[]; wasModified: boolean; modifications: string };
+            const mcStructure = (mcSettledResult.value as Record<string, unknown>).structure as MicrocycleStructure | undefined;
+
+            // Use microcycle day description for goal if available
+            if (mcResponse.days[targetDayIndex]) {
+              await workoutInstanceService.updateWorkout(existingWorkout.id, {
+                goal: mcResponse.days[targetDayIndex],
+              });
+            }
+
+            await microcycleService.updateMicrocycle(microcycle.id, {
+              days: mcResponse.days,
+              description: mcResponse.overview,
+              structured: mcStructure,
+            });
+          } else {
+            console.error('[MODIFY_WORKOUT] microcycle:modify failed, skipping microcycle update', mcSettledResult.reason);
+          }
 
           console.log('[MODIFY_WORKOUT] Workout modification complete (parallel path)');
           return {
             success: true,
-            workout: { response: modifyResponse, message: workoutMessage, structure },
+            workout: { response: modifyResponse, message: workoutMessage, structure: structure ?? undefined },
             modifications: modifyResponse.modifications,
             messages: [], // Already queued via queueMessage
           };

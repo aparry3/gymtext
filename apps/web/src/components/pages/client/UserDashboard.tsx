@@ -135,14 +135,13 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
       }
 
       // Helper to determine if a day is a rest day
-      // Priority: microcycle activityType > workout sessionType > default to training
+      // Priority: workout instance sessionType > microcycle activityType > default to not rest
       const isRestDay = (focus: DayFocus | undefined, workout: WorkoutData | null): boolean => {
-        // If we have microcycle focus data, use its activityType as source of truth
-        if (focus?.activityType) {
-          return focus.activityType === 'REST';
-        }
-        // Otherwise, only mark as rest if workout explicitly says so
-        return workout?.sessionType === 'rest';
+        // If a workout instance exists, its sessionType is source of truth (user may have modified a rest day)
+        if (workout) return workout.sessionType === 'rest';
+        // Fall back to microcycle focus
+        if (focus?.activityType) return focus.activityType === 'REST';
+        return false;
       };
 
       setDashboardData({
@@ -227,8 +226,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         {/* Hero workout card - full width */}
         <TodaysMissionCard
           dayLabel={dayLabel}
-          workoutTitle={dashboardData?.todayFocus?.focus || dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayWorkout?.goal || 'Workout'}
-          workoutFocus={dashboardData?.todayFocus?.activityType || dashboardData?.todayWorkout?.structure?.focus}
+          workoutTitle={dashboardData?.todayWorkout?.goal || dashboardData?.todayWorkout?.structure?.title || dashboardData?.todayFocus?.focus || 'Workout'}
+          workoutFocus={dashboardData?.todayWorkout?.structure?.focus || dashboardData?.todayFocus?.activityType}
           isRestDay={dashboardData?.isRestDayToday}
           onStartWorkout={handleStartWorkout}
         />
@@ -236,8 +235,8 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         {/* Widget cards - 3 column grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TomorrowPreviewCard
-            title={dashboardData?.tomorrowFocus?.focus || dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowWorkout?.goal || undefined}
-            focus={dashboardData?.tomorrowFocus?.activityType || dashboardData?.tomorrowWorkout?.structure?.focus}
+            title={dashboardData?.tomorrowWorkout?.goal || dashboardData?.tomorrowWorkout?.structure?.title || dashboardData?.tomorrowFocus?.focus || undefined}
+            focus={dashboardData?.tomorrowWorkout?.structure?.focus || dashboardData?.tomorrowFocus?.activityType}
             description={dashboardData?.tomorrowWorkout?.structure?.description}
             isRestDay={dashboardData?.isRestDayTomorrow}
           />
