@@ -27,6 +27,7 @@ import {
   Dumbbell,
   Bot,
   ScrollText,
+  ArrowUpCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -44,6 +45,7 @@ const navItems = [
   { href: '/registry', label: 'Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
+  { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
 ]
 
 function NavItem({

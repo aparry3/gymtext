@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { BaseRepository } from './baseRepository';
 import type { ContextTemplate, NewContextTemplate } from '@/server/models/contextTemplate';
 
@@ -46,6 +47,18 @@ export class ContextTemplateRepository extends BaseRepository {
       .values(template)
       .returningAll()
       .executeTakeFirstOrThrow();
+  }
+
+  /**
+   * Get the latest version of every template across all context types and variants.
+   */
+  async getAllLatest(): Promise<ContextTemplate[]> {
+    const results = await sql<ContextTemplate>`
+      SELECT DISTINCT ON (context_type, variant) *
+      FROM context_templates
+      ORDER BY context_type, variant, created_at DESC
+    `.execute(this.db);
+    return results.rows;
   }
 
   /**

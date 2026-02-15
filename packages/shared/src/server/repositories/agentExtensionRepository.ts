@@ -87,6 +87,19 @@ export class AgentExtensionRepository extends BaseRepository {
   }
 
   /**
+   * Get the latest version of every extension across all agents.
+   * Returns full row data for every unique (agentId, extensionType, extensionKey) triple.
+   */
+  async getAllLatest(): Promise<AgentExtension[]> {
+    const results = await sql<AgentExtension>`
+      SELECT DISTINCT ON (agent_id, extension_type, extension_key) *
+      FROM agent_extensions
+      ORDER BY agent_id, extension_type, extension_key, created_at DESC
+    `.execute(this.db);
+    return results.rows;
+  }
+
+  /**
    * List all distinct (agentId, extensionType, extensionKey) triples
    */
   async listAll(): Promise<Array<{ agentId: string; extensionType: string; extensionKey: string }>> {
