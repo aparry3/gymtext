@@ -1,0 +1,358 @@
+# MICROCYCLE: WEEK 9 — Realization Phase
+
+**Program:** Intermediate Upper/Lower Split Training Plan  
+**Client:** Marcus Johnson  
+**Microcycle:** Week 9 of 16 (Block 3: Realization — Week 1 of 4)  
+**Focus:** Express peak strength, test new maxes, consolidate gains  
+**Volume:** Low-Moderate (12-16 sets Upper, 10-14 sets Lower)  
+**Intensity:** Very High (RPE 9-10, 1-5 rep range)
+
+---
+
+## Microcycle Overview
+
+Marcus has completed accumulation (Weeks 1-4) and intensification (Weeks 5-8) blocks. Week 8 was a deload. He's now entering the realization phase where the goal is to express the strength he's built and test new personal records.
+
+Volume is lowest of all blocks (fewer total sets). Intensity is highest (RPE 9-10, working up to heavy 3-5RMs and singles). This block is about performance, not accumulation. Recovery between sets is maximal (4-5 min) to ensure quality attempts.
+
+**Training Schedule:**
+- Monday: Upper 1 (Work up to heavy 3-5RM bench)
+- Tuesday: Lower 1 (Work up to heavy 3-5RM squat)
+- Wednesday: OFF
+- Thursday: Upper 2 (Work up to heavy 3-5RM OHP)
+- Friday: Lower 2 (Work up to heavy 3-5RM deadlift)
+- Weekend: OFF
+
+**Key Changes from Intensification:**
+- Rep ranges drop further (5×5 → heavy 3-5RM, singles)
+- Working up to near-maximal loads (RPE 9-10)
+- Volume significantly reduced (testing, not training)
+- Rest periods maximized (4-5 min)
+- Accessory work minimal (only what supports main lifts)
+
+**Week 9-10 Strategy:**
+- Work up to heavy 3-5RM on main lifts
+- Test strength, establish new baselines
+- Minimal accessories (don't accumulate fatigue)
+
+---
+
+## Monday: Upper 1 — Bench Press Testing
+
+**Theme:** Work up to heavy 3-5RM bench press
+
+**Warm-Up (12 min):**
+- Row: 5 min
+- Band pull-apart: 2×20
+- Push-up: 2×10
+- Extensive ramp sets:
+  - 135lbs × 8
+  - 165lbs × 5
+  - 195lbs × 3
+  - 215lbs × 2
+  - 225lbs × 1 (opener)
+
+**Main Work:**
+
+1. **Barbell Bench Press — Work up to 5RM**
+   - Ramp protocol:
+     - 230lbs × 5 (RPE 8, first working set)
+     - 240lbs × 5 (RPE 9, second attempt)
+     - 245lbs × 5 (RPE 9-10, PR attempt if feeling good)
+     - Optional: 250lbs × 3-4 if 245×5 felt smooth
+   - Rest: 4-5 min between working sets
+   - Tempo: Controlled, maximal intent
+   - Goal: Establish new 5RM (or 3RM if pushing past 5RM)
+   - Notes: This is a test, not training. Stop if form breaks down.
+
+2. **Barbell Bent-Over Row** — 3×5
+   - Weight: 195lbs (heavy but submaximal)
+   - Rest: 3 min
+   - Tempo: 1-1-1
+   - RPE: 7-8 (supporting work, not maximal)
+   - Cues: Maintain technique, accumulate some back volume
+
+3. **Dumbbell Incline Bench Press** — 3×6
+   - Weight: 75lbs per hand
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7
+   - Cues: Upper chest volume, not pushing to failure
+
+4. **Cable Face Pull** — 2×15
+   - Weight: 60lbs
+   - Rest: 60s
+   - RPE: 6
+   - Cues: Shoulder health, recovery work
+
+**Total Sets:** 11 (1 working up + 3+3+2) — significantly reduced
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Pec stretch: 30s each side
+- Shoulder mobility: 2 min
+
+**Session Notes:**
+- Bench press is a TEST today, not training volume
+- Working up to 5RM gives good strength data without maximal singles
+- If 245lbs × 5 happens, that's a ~270lbs estimated 1RM
+- Accessories are minimal—don't interfere with main lift performance
+- Celebrate PRs! This is what the last 8 weeks built toward
+
+---
+
+## Tuesday: Lower 1 — Squat Testing
+
+**Theme:** Work up to heavy 3-5RM back squat
+
+**Warm-Up (15 min):**
+- Bike: 5 min
+- Leg swings: 10 each direction
+- Bodyweight squat: 2×10
+- Extensive ramp sets:
+  - 135lbs × 8
+  - 185lbs × 5
+  - 225lbs × 3
+  - 255lbs × 2
+  - 275lbs × 1 (opener)
+
+**Main Work:**
+
+1. **Barbell Back Squat — Work up to 5RM**
+   - Ramp protocol:
+     - 285lbs × 5 (RPE 8, first working set)
+     - 295lbs × 5 (RPE 9, second attempt)
+     - 305lbs × 5 (RPE 9-10, PR attempt)
+     - Optional: 315lbs × 3 if 305×5 felt strong
+   - Rest: 5 min between working sets
+   - Tempo: 3-0-X (controlled, explosive up)
+   - Goal: Establish new 5RM (or 3RM if pushing further)
+   - Notes: Squat depth must be maintained. No high squats on PR attempts.
+
+2. **Romanian Deadlift** — 3×5
+   - Weight: 215lbs
+   - Rest: 3 min
+   - Tempo: 3-1-1
+   - RPE: 7-8
+   - Cues: Hamstring work without excessive fatigue
+
+3. **Leg Press** — 2×8
+   - Weight: 500lbs
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7
+   - Cues: Quad volume, not pushing hard
+
+4. **Leg Curl** — 2×10
+   - Weight: 110lbs
+   - Rest: 60s
+   - RPE: 6-7
+   - Cues: Hamstring pump, recovery work
+
+**Total Sets:** 10 (1 working up + 3+2+2)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Couch stretch: 60s each
+- Pigeon pose: 60s each
+
+**Session Notes:**
+- 305lbs × 5 would be massive progress from 225lbs × 8 in Week 1
+- Estimated 1RM from 305×5 is ~340lbs
+- Depth is critical—don't count high squats
+- RDL and accessories are maintenance, not growth stimuli
+
+---
+
+## Thursday: Upper 2 — Overhead Press Testing
+
+**Theme:** Work up to heavy 3-5RM overhead press
+
+**Warm-Up (12 min):**
+- Row: 5 min
+- Band face pull: 2×20
+- Wall slides: 2×10
+- Ramp sets:
+  - 95lbs × 8
+  - 115lbs × 5
+  - 130lbs × 3
+  - 140lbs × 1
+
+**Main Work:**
+
+1. **Barbell Overhead Press — Work up to 5RM**
+   - Ramp protocol:
+     - 145lbs × 5 (RPE 8)
+     - 150lbs × 5 (RPE 9)
+     - 155lbs × 5 (RPE 9-10, PR attempt)
+     - Optional: 160lbs × 3 if feeling strong
+   - Rest: 4-5 min
+   - Tempo: 1-0-X (explosive press)
+   - Goal: New 5RM on OHP
+   - Notes: OHP is hardest lift to progress—any PR is a win
+
+2. **Weighted Pull-Up — Work up to Heavy 5**
+   - Weight: Work up to +35-45lbs for 5 reps
+   - Rest: 3-4 min
+   - Tempo: 1-1-2
+   - RPE: 8-9
+   - Goal: Test pull-up strength
+
+3. **Incline Barbell Bench Press** — 3×5
+   - Weight: 185lbs
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: Upper chest work, not maximal
+
+4. **Cable Lat Pulldown** — 2×8
+   - Weight: 175lbs
+   - Rest: 90s
+   - RPE: 7
+   - Cues: Lat volume, recovery work
+
+**Total Sets:** 10 (1+1+3+2)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Overhead stretch: 30s
+- Lat hang: 30s
+
+**Session Notes:**
+- 155lbs × 5 OHP would be excellent progress
+- Pull-up testing shows back/arm strength
+- Volume is minimal—focus is on performance
+
+---
+
+## Friday: Lower 2 — Deadlift Testing
+
+**Theme:** Work up to heavy 3-5RM conventional deadlift
+
+**Warm-Up (15 min):**
+- Row: 5 min
+- Cat-cow: 2×10
+- Glute bridge: 2×15
+- RDL: 135lbs × 8
+- Ramp sets:
+  - 185lbs × 5
+  - 225lbs × 3
+  - 275lbs × 2
+  - 315lbs × 1
+
+**Main Work:**
+
+1. **Conventional Deadlift — Work up to 5RM**
+   - Ramp protocol:
+     - 330lbs × 5 (RPE 8)
+     - 345lbs × 5 (RPE 9)
+     - 355lbs × 5 (RPE 9-10, PR attempt)
+     - Optional: 365lbs × 3 if 355×5 felt smooth
+   - Rest: 5 min between working sets
+   - Tempo: 1-0-1
+   - Goal: New 5RM deadlift
+   - Notes: Form is critical. No hitching or rounded back on PR attempts.
+
+2. **Front Squat** — 3×5
+   - Weight: 185lbs
+   - Rest: 2-3 min
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: Quad work, upright torso
+
+3. **Barbell Hip Thrust** — 2×8
+   - Weight: 295lbs
+   - Rest: 2 min
+   - RPE: 7
+   - Cues: Glute work, not pushing to failure
+
+4. **Glute-Ham Raise** — 2×6
+   - Weight: Bodyweight
+   - Rest: 90s
+   - RPE: 7
+   - Cues: Hamstring volume
+
+**Total Sets:** 10 (1+3+2+2)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Hamstring stretch: 60s each
+- Hip flexor stretch: 60s each
+
+**Session Notes:**
+- 355lbs × 5 deadlift would be 40lbs increase from Week 5
+- Estimated 1RM from 355×5 is ~400lbs
+- Form non-negotiable—don't count ugly reps
+- Minimal accessories after main lift testing
+
+---
+
+## Week 9 Progression Summary
+
+**Volume:**
+- Upper 1: 11 working sets
+- Lower 1: 10 working sets
+- Upper 2: 10 working sets
+- Lower 2: 10 working sets
+- **Total:** 41 working sets (down from 64 in Week 5, 78 in Week 1)
+
+**Intensity:**
+- RPE 9-10 on main lift testing
+- Working up to heavy 3-5RMs
+- Maximal effort, minimal volume
+
+**Strength Testing Results (Target PRs):**
+- Bench Press: 185lbs × 4×8 (Week 1) → 245lbs × 5 (Week 9) = +60lbs
+- Back Squat: 225lbs × 4×8 → 305lbs × 5 = +80lbs
+- Deadlift: 265lbs × 4×6 → 355lbs × 5 = +90lbs
+- OHP: 115lbs × 4×8 → 155lbs × 5 = +40lbs
+
+**Key Adaptations:**
+- Peak strength expression
+- Confidence with heavy loads
+- New baselines established for future programming
+- Psychological wins from PRs
+
+**Recovery Considerations:**
+- Lowest volume of entire program
+- Highest intensity (CNS fatigue)
+- Maximal rest between sets
+- Sleep and nutrition critical for performance
+
+**Key Metrics to Track:**
+- New 5RMs on all main lifts
+- Form quality on PR attempts
+- Recovery between testing sessions
+- Motivation and confidence levels
+
+**Feedback Questions for Marcus:**
+1. How did the testing feel? Strong or grinding?
+2. Were the PR attempts clean or ugly?
+3. Recovery adequate between main lift tests?
+4. Excited about the progress or disappointed with results?
+
+---
+
+## Week 10-12 Preview
+
+**Week 10:** Continue testing, potentially work up to heavy singles (90-95% 1RM)
+
+**Week 11:** Heavy singles across main lifts, final strength testing
+
+**Week 12:** Active recovery and program wrap-up
+- Test final 3-5RMs early in week
+- Light movement and mobility rest of week
+- Celebrate 12-week progress
+- Plan next training phase based on new maxes
+
+**Next Program Options:**
+1. Run another 16-week block with updated maxes
+2. Specialize in one lift (powerlifting focus)
+3. Shift to hypertrophy emphasis (bodybuilding block)
+4. Maintenance phase before competition
+
+---
+
+**Microcycle created:** February 16, 2026  
+**Coach:** GymText AI Training System  
+**Status:** Week 9 of 16 — Realization Phase, Strength Testing Initiated

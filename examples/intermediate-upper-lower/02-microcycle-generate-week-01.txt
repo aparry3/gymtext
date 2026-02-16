@@ -1,0 +1,371 @@
+# MICROCYCLE: WEEK 1 — Accumulation Phase
+
+**Program:** Intermediate Upper/Lower Split Training Plan  
+**Client:** Marcus Johnson  
+**Microcycle:** Week 1 of 16 (Block 1: Accumulation — Week 1 of 4)  
+**Focus:** Build work capacity, increase volume, establish movement proficiency  
+**Volume:** High (18-24 sets Upper, 16-22 sets Lower)  
+**Intensity:** Moderate (RPE 7-8, 8-12 rep range)
+
+---
+
+## Microcycle Overview
+
+First week of the intermediate upper/lower split. Marcus is transitioning from a beginner full-body program and needs to adapt to higher training volumes and frequency. The accumulation phase emphasizes volume (sets × reps) over intensity to build work capacity and muscle mass.
+
+This block uses higher rep ranges (8-12) with moderate loads. The goal is to accumulate training stress without excessive CNS fatigue. Each muscle group is trained twice per week (upper on Mon/Thu, lower on Tue/Fri) with different exercise selections to manage fatigue and prevent overuse.
+
+**Training Schedule:**
+- Monday: Upper 1 (Horizontal emphasis — bench press, rows)
+- Tuesday: Lower 1 (Squat emphasis — back squat, quad work)
+- Wednesday: OFF (active recovery)
+- Thursday: Upper 2 (Vertical emphasis — overhead press, pull-ups)
+- Friday: Lower 2 (Hinge emphasis — deadlift, posterior chain)
+- Weekend: OFF (recovery)
+
+**Recovery:** Minimum 1 rest day between upper/lower sessions. Wednesday provides mid-week recovery. Active recovery encouraged on off days.
+
+---
+
+## Monday: Upper 1 — Horizontal Emphasis
+
+**Theme:** Bench press and horizontal rowing focus with supplemental shoulder/arm work
+
+**Warm-Up (10 min):**
+- Row machine: 5 min light
+- Arm circles: 20 forward, 20 backward
+- Band pull-apart: 2×15
+- Push-up: 2×10 (bodyweight warm-up)
+- Empty bar bench press: 2×10
+- Light DB row: 1×10 each side
+
+**Main Work:**
+
+1. **Barbell Bench Press** — 4×8
+   - Weight: 185lbs (start conservative, Week 1 is about finding working weights)
+   - Rest: 2-3 min
+   - Tempo: 2-0-1 (controlled down, explosive up)
+   - RPE: 7 (could do 3 more reps)
+   - Cues: Shoulder blades pinned, drive through feet, bar to lower chest
+
+2. **Barbell Bent-Over Row** — 4×8
+   - Weight: 165lbs
+   - Rest: 2-3 min
+   - Tempo: 1-1-1
+   - RPE: 7
+   - Cues: Hip hinge position, row to lower ribs, squeeze shoulder blades
+
+3. **Incline Dumbbell Bench Press** — 3×10
+   - Weight: 60lbs per hand
+   - Rest: 90s
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: 30-45° incline, upper chest emphasis
+
+4. **Chest-Supported T-Bar Row** — 3×12
+   - Weight: 90lbs
+   - Rest: 90s
+   - Tempo: 1-1-2
+   - RPE: 7
+   - Cues: Chest on pad, pull elbows back, slow negative
+
+5. **Dumbbell Lateral Raise** — 3×15
+   - Weight: 20lbs per hand
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Slight elbow bend, raise to shoulder height
+
+6. **EZ-Bar Curl** — 3×12
+   - Weight: 70lbs
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Strict form, squeeze at top
+
+**Total Sets:** 20 (4+4+3+3+3+3)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Doorway pec stretch: 30s each side
+- Lat stretch: 30s each side
+
+**Session Notes:**
+- First upper session, establish baseline working weights
+- Should feel moderate fatigue, not destroyed
+- If RPE exceeds 8, reduce weight 10lbs next set
+
+---
+
+## Tuesday: Lower 1 — Squat Emphasis
+
+**Theme:** Back squat focus with quad-dominant accessory work
+
+**Warm-Up (10 min):**
+- Bike: 5 min light
+- Leg swings: 10 each direction per leg
+- Bodyweight squat: 2×10
+- Goblet squat: 2×8 with light KB
+- Empty bar back squat: 2×8
+- Light warm-up sets building to working weight
+
+**Main Work:**
+
+1. **Barbell Back Squat** — 4×8
+   - Weight: 225lbs
+   - Rest: 3 min
+   - Tempo: 3-0-1 (controlled down, explosive up)
+   - RPE: 7-8
+   - Cues: Big breath and brace, sit back, drive through midfoot
+
+2. **Romanian Deadlift** — 3×10
+   - Weight: 185lbs
+   - Rest: 2 min
+   - Tempo: 3-1-1
+   - RPE: 7
+   - Cues: Push hips back, feel hamstring stretch, flat back
+
+3. **Leg Press** — 3×12
+   - Weight: 360lbs (4 plates per side)
+   - Rest: 90s
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: Full range, knees track over toes
+
+4. **Walking Lunge** — 3×10 each leg
+   - Weight: 50lbs per hand
+   - Rest: 90s
+   - Tempo: 1-0-1
+   - RPE: 7
+   - Cues: Step forward, both knees 90°, drive through front heel
+
+5. **Leg Curl (Lying or Seated)** — 3×12
+   - Weight: 90lbs
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Full contraction, slow negative
+
+6. **Standing Calf Raise** — 3×15
+   - Weight: 225lbs
+   - Rest: 60s
+   - Tempo: 2-2-1
+   - RPE: 7
+   - Cues: Full stretch at bottom, squeeze at top
+
+**Total Sets:** 19 (4+3+3+3+3+3)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Couch stretch: 60s each side
+- Pigeon pose: 60s each side
+
+**Session Notes:**
+- Back squat is primary lift, everything else supports it
+- Quads and glutes should feel worked but not fried
+- RDL primes hamstrings for Friday's deadlift focus
+
+---
+
+## Thursday: Upper 2 — Vertical Emphasis
+
+**Theme:** Overhead pressing and vertical pulling focus with supplemental chest/arm work
+
+**Warm-Up (10 min):**
+- Row machine: 5 min light
+- Band face pull: 2×15
+- Wall slides: 2×10
+- Empty bar overhead press: 2×10
+- Light lat pulldown: 1×10
+
+**Main Work:**
+
+1. **Barbell Overhead Press** — 4×8
+   - Weight: 115lbs
+   - Rest: 3 min
+   - Tempo: 1-0-1
+   - RPE: 7-8
+   - Cues: Brace core, press slightly back, lockout overhead
+
+2. **Pull-Up (Bodyweight or Assisted)** — 4×8
+   - Weight: Bodyweight or 20lbs assistance
+   - Rest: 2-3 min
+   - Tempo: 1-1-2
+   - RPE: 7-8
+   - Cues: Full hang at bottom, chest to bar, squeeze lats
+
+3. **Incline Barbell Bench Press** — 3×10
+   - Weight: 155lbs
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: 30-45° angle, upper chest emphasis
+
+4. **Cable Lat Pulldown (Close Grip)** — 3×12
+   - Weight: 150lbs
+   - Rest: 90s
+   - Tempo: 1-1-2
+   - RPE: 7
+   - Cues: Pull to upper chest, elbows down and back
+
+5. **Cable Face Pull** — 3×15
+   - Weight: 50lbs
+   - Rest: 60s
+   - Tempo: 1-1-2
+   - RPE: 7
+   - Cues: Pull to nose level, external rotate at end
+
+6. **Overhead Tricep Extension (Cable Rope)** — 3×12
+   - Weight: 60lbs
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Elbows high, full stretch, lockout at top
+
+**Total Sets:** 20 (4+4+3+3+3+3)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Overhead reach: 30s
+- Lat stretch hanging from bar: 30s each arm
+
+**Session Notes:**
+- OHP and pull-ups are primary movements
+- Different angles than Monday (vertical vs horizontal)
+- Shoulders get hit hard—face pulls are prehab/recovery work
+
+---
+
+## Friday: Lower 2 — Hinge Emphasis
+
+**Theme:** Deadlift focus with posterior chain and glute work
+
+**Warm-Up (10 min):**
+- Row machine: 5 min
+- Cat-cow: 2×10
+- Glute bridge: 2×15
+- Light RDL: 2×8 with empty bar
+- Conventional deadlift warm-up sets building to working weight
+
+**Main Work:**
+
+1. **Conventional Deadlift** — 4×6
+   - Weight: 265lbs (lower reps for deadlift in accumulation phase)
+   - Rest: 3-4 min
+   - Tempo: 1-0-1
+   - RPE: 7-8
+   - Cues: Set up tight, push floor away with legs, lock out hips
+
+2. **Front Squat** — 3×10
+   - Weight: 155lbs
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7
+   - Cues: Elbows high, upright torso, sit straight down
+
+3. **Barbell Hip Thrust** — 3×12
+   - Weight: 225lbs
+   - Rest: 90s
+   - Tempo: 1-2-1
+   - RPE: 7-8
+   - Cues: Shoulders on bench, drive hips up, squeeze glutes hard
+
+4. **Glute-Ham Raise (or Nordic Curl)** — 3×8
+   - Weight: Bodyweight (assisted if needed)
+   - Rest: 90s
+   - Tempo: 3-0-1
+   - RPE: 8
+   - Cues: Control eccentric, hamstrings and glutes drive up
+
+5. **Leg Extension** — 3×15
+   - Weight: 110lbs
+   - Rest: 60s
+   - Tempo: 2-1-1
+   - RPE: 7
+   - Cues: Quad pump work, full contraction at top
+
+6. **Seated Calf Raise** — 3×20
+   - Weight: 90lbs
+   - Rest: 60s
+   - Tempo: 2-2-1
+   - RPE: 7
+   - Cues: Full stretch, full contraction
+
+**Total Sets:** 19 (4+3+3+3+3+3)
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Seated hamstring stretch: 60s each leg
+- Figure-4 stretch: 60s each side
+
+**Session Notes:**
+- Deadlift is king today—posterior chain emphasis
+- Front squat keeps quad work but less taxing than back squat
+- Hip thrust and GHR specifically target glutes and hamstrings
+- Leg extension is quad "pump" work after heavy deadlifts
+
+---
+
+## Week 1 Progression Summary
+
+**Volume:**
+- Upper 1: 20 working sets
+- Lower 1: 19 working sets
+- Upper 2: 20 working sets
+- Lower 2: 19 working sets
+- **Total:** 78 working sets for the week
+
+**Intensity:**
+- RPE 7-8 across all main lifts
+- Moderate loads, emphasis on volume accumulation
+- No sets to failure (leave 2-3 reps in reserve)
+
+**Movement Patterns Trained:**
+- Horizontal push: BB bench press, incline DB bench
+- Horizontal pull: BB row, T-bar row
+- Vertical push: OHP, incline BB bench
+- Vertical pull: Pull-up, lat pulldown
+- Squat: Back squat, front squat, leg press
+- Hinge: Deadlift, RDL
+- Lunge: Walking lunge
+- Isolation: Lateral raises, curls, triceps, leg curl/extension, calves
+
+**Exercise Variation:**
+- Upper 1 vs Upper 2: Horizontal (bench/row) vs Vertical (OHP/pull-up)
+- Lower 1 vs Lower 2: Squat emphasis vs Hinge emphasis
+- Prevents overuse, provides novel stimuli
+
+**Key Metrics to Track:**
+- Bodyweight (Monday AM): ___ lbs
+- Sleep quality (1-10): ___
+- Energy level (1-10): ___
+- Muscle soreness (1-10): ___
+- RPE accuracy (are prescribed RPEs matching actual effort?)
+
+**Feedback Questions for Marcus:**
+1. How did the 4-day split feel compared to 3-day full-body?
+2. Recovery between sessions—adequate or need more rest?
+3. Exercise selection—anything causing discomfort or pain?
+4. Weight selection—were prescribed RPEs accurate?
+
+---
+
+## Week 2 Preview
+
+Next week continues accumulation phase with rep increases:
+- Main lifts: 4×8 → 4×10 (same weight)
+- Secondary lifts: 3×10 → 3×12
+- Accessories: same (3×12-15)
+
+Goal is to add volume (more reps at same weight) without increasing intensity. This builds work capacity and drives hypertrophy.
+
+**Planned Adjustments:**
+- Reps increase by 2 per set on main lifts
+- Weight stays the same (volume increase, not intensity)
+- If 4×10 feels too easy (RPE <7), add 5-10lbs
+
+---
+
+**Microcycle created:** February 16, 2026  
+**Coach:** GymText AI Training System  
+**Status:** Week 1 of 16 — Accumulation Phase Initiated

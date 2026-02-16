@@ -1,0 +1,364 @@
+# MICROCYCLE: WEEK 5 — Intensification Phase
+
+**Program:** Intermediate Upper/Lower Split Training Plan  
+**Client:** Marcus Johnson  
+**Microcycle:** Week 5 of 16 (Block 2: Intensification — Week 1 of 4)  
+**Focus:** Build maximal strength, increase neural efficiency, move heavier loads  
+**Volume:** Moderate (14-18 sets Upper, 12-16 sets Lower)  
+**Intensity:** High (RPE 8-9, 4-8 rep range)
+
+---
+
+## Microcycle Overview
+
+Marcus has completed the accumulation block (Weeks 1-4) and deloaded in Week 4. He's now entering the intensification phase where the focus shifts from volume to intensity. The goal is to increase maximal strength by lifting heavier loads with fewer reps.
+
+Volume decreases (fewer total sets and reps) while intensity increases (heavier weight, RPE 8-9). This block uses lower rep ranges (4-8) to develop neural adaptations and maximal force production. Recovery between sets is longer (3-4 min) to ensure quality reps.
+
+**Training Schedule:**
+- Monday: Upper 1 (Horizontal emphasis — heavier bench, rows)
+- Tuesday: Lower 1 (Squat emphasis — heavier squats)
+- Wednesday: OFF
+- Thursday: Upper 2 (Vertical emphasis — heavier OHP, pull-ups)
+- Friday: Lower 2 (Hinge emphasis — heavier deadlifts)
+- Weekend: OFF
+
+**Key Changes from Accumulation:**
+- Rep ranges drop (8-12 → 4-8)
+- Weight increases significantly (10-15% heavier)
+- Volume decreases (fewer total sets)
+- Rest periods increase (3-4 min for main lifts)
+- RPE increases (7-8 → 8-9)
+
+---
+
+## Monday: Upper 1 — Horizontal Emphasis
+
+**Theme:** Heavy bench press and rowing with reduced volume
+
+**Warm-Up (10 min):**
+- Row machine: 5 min light
+- Band pull-apart: 2×20
+- Push-up: 2×10
+- Ramp sets to working weight:
+  - 135lbs × 8
+  - 175lbs × 5
+  - 200lbs × 3
+
+**Main Work:**
+
+1. **Barbell Bench Press** — 5×5
+   - Weight: 210lbs (increased from 185lbs × 8 in Week 3)
+   - Rest: 3-4 min
+   - Tempo: 2-1-1 (explosive intent on concentric)
+   - RPE: 8-9 (very challenging, 1-2 reps left)
+   - Cues: Drive through feet, bar speed on concentric, control descent
+
+2. **Barbell Bent-Over Row** — 5×5
+   - Weight: 185lbs (increased from 165lbs)
+   - Rest: 3 min
+   - Tempo: 1-1-1
+   - RPE: 8-9
+   - Cues: Pull explosively to ribs, squeeze hard at top
+
+3. **Dumbbell Incline Bench Press** — 4×6
+   - Weight: 70lbs per hand (increased from 60lbs)
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 8
+   - Cues: Upper chest focus, full lockout
+
+4. **Cable Seated Row (Wide Grip)** — 3×8
+   - Weight: 170lbs
+   - Rest: 90s
+   - Tempo: 1-1-2
+   - RPE: 7-8
+   - Cues: Wide grip targets mid-back
+
+5. **Dumbbell Lateral Raise** — 3×12
+   - Weight: 22.5lbs per hand
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Strict form, shoulder pump
+
+**Total Sets:** 17 (5+5+4+3+3) — reduced from 20 in accumulation
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Pec stretch: 30s each side
+- Lat stretch: 30s each side
+
+**Session Notes:**
+- 5×5 on main lifts is classic strength building
+- Heavier loads, longer rest, maximal intent
+- Should feel strong but fatigued after main lifts
+- Accessories are still moderate to accumulate some volume
+
+---
+
+## Tuesday: Lower 1 — Squat Emphasis
+
+**Theme:** Heavy back squat with supporting work
+
+**Warm-Up (12 min):**
+- Bike: 5 min
+- Leg swings: 10 each direction
+- Bodyweight squat: 2×10
+- Ramp sets:
+  - 135lbs × 8
+  - 185lbs × 5
+  - 225lbs × 3
+  - 245lbs × 2
+
+**Main Work:**
+
+1. **Barbell Back Squat** — 5×5
+   - Weight: 255lbs (increased from 225lbs × 8)
+   - Rest: 4 min
+   - Tempo: 3-0-X (controlled down, explosive up)
+   - RPE: 8-9
+   - Cues: Big breath, sit back, drive through whole foot, maximal speed on ascent
+
+2. **Romanian Deadlift** — 4×6
+   - Weight: 205lbs
+   - Rest: 2-3 min
+   - Tempo: 3-1-1
+   - RPE: 8
+   - Cues: Hamstring stretch, flat back, squeeze glutes at top
+
+3. **Leg Press** — 3×8
+   - Weight: 450lbs (5 plates per side)
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 7-8
+   - Cues: Deep but controlled, explosive press
+
+4. **Bulgarian Split Squat** — 3×6 each leg
+   - Weight: 60lbs per hand
+   - Rest: 90s per leg
+   - Tempo: 2-0-2
+   - RPE: 8
+   - Cues: Front leg drives, balance improving
+
+5. **Leg Curl** — 3×10
+   - Weight: 100lbs
+   - Rest: 60s
+   - Tempo: 2-1-2
+   - RPE: 7
+   - Cues: Hamstring isolation after heavy RDL
+
+**Total Sets:** 15 (5+4+3+3+3) — reduced from 19
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Couch stretch: 60s each side
+- Pigeon pose: 60s each side
+
+**Session Notes:**
+- 255lbs × 5×5 is significantly heavier than accumulation block
+- 4 min rest is critical—don't rush main lift sets
+- RDL at 6 reps still gets hamstring work without excessive fatigue
+- Split squats maintain single-leg strength
+
+---
+
+## Thursday: Upper 2 — Vertical Emphasis
+
+**Theme:** Heavy overhead press and vertical pulling
+
+**Warm-Up (10 min):**
+- Row: 5 min
+- Band face pull: 2×20
+- Wall slides: 2×10
+- Ramp sets:
+  - Empty bar × 10
+  - 95lbs × 5
+  - 115lbs × 3
+  - 125lbs × 2
+
+**Main Work:**
+
+1. **Barbell Overhead Press** — 5×5
+   - Weight: 130lbs (increased from 115lbs × 8)
+   - Rest: 3-4 min
+   - Tempo: 1-0-X (explosive press)
+   - RPE: 8-9 (OHP is hardest strength lift)
+   - Cues: Squeeze glutes, press bar back slightly, lockout overhead
+
+2. **Weighted Pull-Up** — 5×5
+   - Weight: +25lbs on belt
+   - Rest: 3 min
+   - Tempo: 1-1-2
+   - RPE: 8-9
+   - Cues: Dead hang start, chest to bar, control descent
+
+3. **Incline Barbell Bench Press** — 4×6
+   - Weight: 175lbs (increased from 155lbs)
+   - Rest: 2 min
+   - Tempo: 2-0-1
+   - RPE: 8
+   - Cues: Upper chest emphasis, bar speed
+
+4. **Cable Lat Pulldown (Close Grip)** — 3×8
+   - Weight: 165lbs
+   - Rest: 90s
+   - Tempo: 1-1-2
+   - RPE: 7-8
+   - Cues: Pull to upper chest, squeeze lats
+
+5. **Cable Face Pull** — 3×12
+   - Weight: 55lbs
+   - Rest: 60s
+   - Tempo: 1-1-2
+   - RPE: 7
+   - Cues: Rear delt/upper back health
+
+**Total Sets:** 17 (5+5+4+3+3) — reduced from 20
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Overhead reach: 30s
+- Lat hang stretch: 30s each arm
+
+**Session Notes:**
+- OHP at 130lbs × 5×5 is challenging pressing work
+- Weighted pull-ups show strength progress
+- Incline bench as secondary movement still heavy
+- Face pulls are recovery/prehab work
+
+---
+
+## Friday: Lower 2 — Hinge Emphasis
+
+**Theme:** Heavy deadlift with supporting work
+
+**Warm-Up (12 min):**
+- Row: 5 min
+- Cat-cow: 2×10
+- Glute bridge: 2×15
+- RDL with empty bar: 2×8
+- Ramp sets:
+  - 135lbs × 5
+  - 185lbs × 5
+  - 225lbs × 3
+  - 275lbs × 2
+
+**Main Work:**
+
+1. **Conventional Deadlift** — 5×4
+   - Weight: 295lbs (increased from 265lbs × 6)
+   - Rest: 4 min
+   - Tempo: 1-0-1
+   - RPE: 8-9
+   - Cues: Set tension, leg drive off floor, lock out hips, control descent
+
+2. **Front Squat** — 4×6
+   - Weight: 175lbs
+   - Rest: 2-3 min
+   - Tempo: 2-0-1
+   - RPE: 8
+   - Cues: Elbows high, upright torso, drive through midfoot
+
+3. **Barbell Hip Thrust** — 3×8
+   - Weight: 275lbs (increased from 225lbs)
+   - Rest: 2 min
+   - Tempo: 1-2-1
+   - RPE: 8
+   - Cues: Glute squeeze at top, full hip extension
+
+4. **Glute-Ham Raise** — 3×6
+   - Weight: Bodyweight (may add light weight)
+   - Rest: 90s
+   - Tempo: 3-0-1
+   - RPE: 8
+   - Cues: Hamstring and glute dominant, control eccentric
+
+5. **Leg Extension** — 3×12
+   - Weight: 120lbs
+   - Rest: 60s
+   - Tempo: 2-1-1
+   - RPE: 7
+   - Cues: Quad pump, full contraction
+
+**Total Sets:** 15 (5+4+3+3+3) — reduced from 19
+
+**Cooldown (5 min):**
+- Walk: 2 min
+- Seated hamstring stretch: 60s each
+- Figure-4 stretch: 60s each side
+
+**Session Notes:**
+- 295lbs × 4 reps × 5 sets is serious deadlift work
+- Front squat keeps quad work but less taxing than back squat
+- Hip thrusts and GHR support deadlift strength
+- Leg extension is quad volume without CNS fatigue
+
+---
+
+## Week 5 Progression Summary
+
+**Volume:**
+- Upper 1: 17 working sets (down from 20)
+- Lower 1: 15 working sets (down from 19)
+- Upper 2: 17 working sets (down from 20)
+- Lower 2: 15 working sets (down from 19)
+- **Total:** 64 working sets (down from 78 in Week 1)
+
+**Intensity:**
+- RPE 8-9 on main lifts (up from 7-8)
+- Weight increased 10-15% across all main lifts
+- Lower rep ranges (5×5, 5×4 vs 4×8-12)
+
+**Strength Progression (Week 1 → Week 5):**
+- Bench Press: 185lbs × 4×8 → 210lbs × 5×5 (+25lbs, -3 reps)
+- Back Squat: 225lbs × 4×8 → 255lbs × 5×5 (+30lbs)
+- Deadlift: 265lbs × 4×6 → 295lbs × 5×4 (+30lbs, -2 reps)
+- OHP: 115lbs × 4×8 → 130lbs × 5×5 (+15lbs)
+
+**Key Adaptations:**
+- Neural drive increased (moving heavier weights)
+- Rate of force development improving
+- Technique under heavy loads refining
+- Psychological confidence with heavy weights building
+
+**Recovery Considerations:**
+- Longer rest periods between sets (3-4 min)
+- Fewer total sets per session
+- Still training 4x/week but lower overall volume
+- CNS fatigue is higher than accumulation phase
+
+**Key Metrics to Track:**
+- Bodyweight (should be stable or slight decrease)
+- Sleep quality (critical for CNS recovery)
+- Joint health (any pain or discomfort)
+- Bar speed on main lifts (indicator of recovery)
+
+**Feedback Questions for Marcus:**
+1. How do the heavier loads feel? Strong or grinding?
+2. Is 3-4 min rest adequate for main lifts?
+3. Any joint issues with increased intensity?
+4. Recovery between sessions—adequate or need more?
+
+---
+
+## Week 6 Preview
+
+Next week continues intensification with wave loading:
+- Main lifts: 4×6 (slightly higher reps, slightly lighter weight)
+- Purpose: Provide variation, accumulate some volume at high intensity
+- Still RPE 8-9, just different rep/set scheme
+
+**Wave Loading Pattern (Weeks 5-7):**
+- Week 5: 5×5 @ heaviest
+- Week 6: 4×6 @ slightly lighter
+- Week 7: 5×4 @ heaviest again (potentially heavier than Week 5)
+- Week 8: Deload
+
+This prevents staleness and allows progression within the block.
+
+---
+
+**Microcycle created:** February 16, 2026  
+**Coach:** GymText AI Training System  
+**Status:** Week 5 of 16 — Intensification Phase Initiated
