@@ -1,0 +1,2815 @@
+[
+  {
+    "id": "advanced-w2-monday",
+    "metadata": {
+      "title": "Advanced Week 2 — Monday (Day 1)",
+      "weekNumber": 2,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Lower: Squat Emphasis (Primary Squat Day)",
+      "keyFeatures": [
+        "Competition squat 5x5 @ 70-75% RPE 7-8",
+        "Secondary variation: Pause squats 4x3",
+        "Accessory work: RDL, Bulgarian split squat, leg press",
+        "Volume building phase"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Squat Emphasis",
+      "focus": "Competition Squat + Quad/Glute Accessories",
+      "description": "Primary squat day—heaviest volume of the week. Building on Week 1: if last week felt RPE 7, add 5-10lbs today; if it felt RPE 8.5, hold weight and focus on bar speed. Competition squat 5x5 @ RPE 7-8 (~70-75% 1RM), followed by pause squats to address weakness out of the hole, then accessories for quad/glute hypertrophy. Track: weight, reps, RPE per set, bar speed notes.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prepare hips, ankles, and CNS for heavy squatting",
+          "exercises": [
+            {
+              "name": "Bike or Row",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Light sweat, prepare muscles and joints"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate and body temperature",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward/back and side-to-side — loosen hip flexors and adductors",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Circles",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10/direction",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Large circles clockwise and counter-clockwise — open up hip capsule",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Ankle Mobility (Wall Drives)",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Drive knee toward wall while keeping heel down — critical for squat depth",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar Squats",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus on movement quality — depth, bar path, breathing pattern",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Goblet Squats",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Light dumbbell or kettlebell — practice upright torso and depth",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition squat 5x5 @ RPE 7-8 (~70-75% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Squat (High-Bar or Low-Bar)",
+              "type": "Strength",
+              "sets": "5",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Primary squat day — heaviest volume. If Week 1 felt RPE 7, add 5-10lbs. If RPE 8.5, hold weight and focus on speed."
+              },
+              "tempo": "2-3 sec descent, no pause, explosive up",
+              "notes": "Setup: Bar on traps (high-bar) or rear delts (low-bar), feet shoulder-width, toes slightly out. Execution: Big breath and brace, descend with control (bar path straight up/down), depth to parallel or below, drive up explosively. Focus: Maintain bracing throughout rep, no dive-bombing, speed off the bottom. If bar speed slows significantly on rep 4-5, you're too heavy—reduce next set. Record: weight, actual reps, RPE per set, bar speed notes (fast/moderate/slow).",
+              "tags": [
+                "competition lift",
+                "primary"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Variation",
+          "overview": "Pause squats to address weakness out of the hole",
+          "exercises": [
+            {
+              "name": "Pause Squat (2sec pause at parallel)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "60-65% 1RM — teaches patience and position maintenance"
+              },
+              "tempo": "2 sec descent, 2 sec pause, explosive up",
+              "notes": "Setup: Same as competition squat. Execution: Descend to parallel, PAUSE for 2 full seconds (count 'one-thousand-one, one-thousand-two'), then drive up explosively. Don't relax in the hole—stay tight, maintain bracing, keep tension in quads/glutes. Purpose: Builds strength out of the hole, teaches positional awareness, reinforces proper depth. Common mistake: Relaxing during pause (losing tension leads to slower ascent).",
+              "tags": [
+                "variation",
+                "weak point"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Quad/glute hypertrophy and posterior chain work",
+          "exercises": [
+            {
+              "name": "Romanian Deadlift (RDL)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Hamstring/glute hypertrophy and posterior chain strength"
+              },
+              "tempo": "",
+              "notes": "Execution: Hinge at hips (push hips back, not down), feel hamstring stretch as bar travels down shins to mid-shin, squeeze glutes to return. Keep knees slightly bent, don't round lower back. Focus on eccentric (feel the stretch) and glute contraction at top. Purpose: Hypertrophy for hamstrings/glutes, posterior chain balance.",
+              "tags": [
+                "accessory",
+                "posterior chain"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Bulgarian Split Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec (between legs)",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Unilateral quad/glute work, addresses imbalances"
+              },
+              "tempo": "",
+              "notes": "Setup: Rear foot elevated on bench (~12-18 inches), front foot 2-3 feet forward. Execution: Descend until front thigh is parallel (or below if mobile), drive through front heel to return. Front leg does all the work—rear leg is just for balance. Focus: Torso upright, knee tracks over toes (don't cave inward). Purpose: Addresses left/right strength imbalances, unilateral stability, quad/glute hypertrophy.",
+              "tags": [
+                "accessory",
+                "unilateral"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Quad volume without spinal load (recovery-friendly)"
+              },
+              "tempo": "",
+              "notes": "Setup: Feet shoulder-width, mid-platform. Execution: Lower with control (full ROM, deep stretch but don't let lower back round), push through heels, full extension but don't lock knees aggressively (maintain slight bend at top). Purpose: Quad hypertrophy with minimal CNS demand—allows high volume without taxing recovery like more squatting would.",
+              "tags": [
+                "accessory",
+                "quad volume"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Static stretching and light foam rolling",
+          "exercises": [
+            {
+              "name": "Quad Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Pull heel toward glutes, feel stretch in front of thigh",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Flexor Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lunge position, drive hips forward, feel stretch in front of rear leg hip",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hamstring Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Seated or standing, reach for toes, feel stretch in back of thigh",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Glute Stretch (Figure-4)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lie on back, cross ankle over opposite knee, pull knee toward chest",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Foam Rolling (IT Band, Quads, Glutes)",
+              "type": "Recovery",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Focus on sore/tight areas, don't overdo it"
+              },
+              "tempo": "",
+              "notes": "Roll slowly over muscle bellies (not joints), pause on tender spots for 20-30sec",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 85,
+      "intensityLevel": "High",
+      "tags": [
+        "lower body",
+        "squat",
+        "powerlifting",
+        "accumulation",
+        "competition lifts",
+        "Week 2"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w2-tuesday",
+    "metadata": {
+      "title": "Advanced Week 2 — Tuesday (Day 2)",
+      "weekNumber": 2,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Upper: Bench Emphasis (Primary Bench Day)",
+      "keyFeatures": [
+        "Competition bench 5x5 @ 70-75% RPE 7-8",
+        "Secondary variation: Close-grip bench 4x6",
+        "Accessory work: Incline press, barbell rows, face pulls, triceps",
+        "Upper back emphasis for bench stability"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Upper: Bench Emphasis",
+      "focus": "Competition Bench + Lockout/Stability Accessories",
+      "description": "Primary bench day—heaviest pressing volume of the week. If Week 1 felt easy (RPE 7), add 5lbs today. Competition bench 5x5 @ RPE 7-8 (~70-75% 1RM), followed by close-grip bench for lockout/triceps strength, then upper back work (critical for bench stability) and arm accessories. Track all presses: weight, reps, RPE, bar path quality.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prepare shoulders, chest, and upper back for pressing",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — conversational pace"
+              },
+              "tempo": "",
+              "notes": "Elevate heart rate, warm muscles and joints",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Arm Circles",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/direction",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward and backward—loosen shoulder joints, increase ROM",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Aparts",
+              "type": "Mobility",
+              "sets": "3",
+              "reps": "20",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate rear delts and scapular retractors—essential for bench setup and shoulder health",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Push-Ups",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "In push-up position, protract (push shoulder blades apart) and retract (squeeze together)—teaches scapular control",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar Bench Press",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Practice setup: feet placement, arch, shoulder blade retraction, grip width, bar path",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition bench press 5x5 @ RPE 7-8 (~70-75% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Bench Press",
+              "type": "Strength",
+              "sets": "5",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Primary bench day — heaviest pressing volume. If Week 1 felt RPE 7, add 5lbs."
+              },
+              "tempo": "2 sec descent, touch chest lightly, explosive press",
+              "notes": "Setup: Feet flat on floor (or elevated if mobility limited), arch in upper back (not lower back), shoulder blades retracted and pinned to bench, grip width just outside shoulders (or wider/narrower based on preference). Execution: Unrack with assistance if heavy, position bar over sternum, big breath and hold, lower bar to chest (control descent 2sec, bar path slightly diagonal toward face), touch lightly (don't bounce), press explosively (drive through floor with feet, press bar up and slightly back toward rack). Breathe at top of each rep. Focus: Maintain arch and shoulder blade position throughout set, bar touches same spot on chest every rep (lower sternum), lockout fully but don't hyperextend elbows. Record: weight, reps, RPE per set, any bar path issues.",
+              "tags": [
+                "competition lift",
+                "primary"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Variation",
+          "overview": "Close-grip bench to address lockout/triceps weakness",
+          "exercises": [
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "6",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "65-70% 1RM — lockout and triceps strength"
+              },
+              "tempo": "",
+              "notes": "Setup: Same as competition bench but grip narrower—hands shoulder-width or slightly narrower (not too narrow, causes elbow stress). Execution: Lower to chest (same touch point as regular bench), keep elbows tucked closer to body (reduces pec involvement, emphasizes triceps), press explosively. Purpose: Builds lockout strength (top portion of bench), triceps mass and strength, teaches elbow position. Common mistake: Grip too narrow (stresses wrists/elbows), flaring elbows out (defeats purpose—keep them tucked).",
+              "tags": [
+                "variation",
+                "lockout strength"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Upper chest, upper back (critical for bench stability), triceps",
+          "exercises": [
+            {
+              "name": "Incline Dumbbell Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Upper chest/front delt hypertrophy"
+              },
+              "tempo": "",
+              "notes": "Setup: Incline bench 30-45°. Execution: Press dumbbells up and slightly together (don't bang them), control descent (feel stretch in upper chest), full ROM. Purpose: Upper chest hypertrophy, unilateral work (addresses imbalances), greater ROM than barbell.",
+              "tags": [
+                "accessory",
+                "upper chest"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Barbell Row (Pendlay or Bent-Over)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "8",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Upper back thickness — critical for bench stability and shoulder health"
+              },
+              "tempo": "",
+              "notes": "Setup: Pendlay (row from floor each rep, torso parallel to floor) OR Bent-Over (hold position, torso ~45°). Execution: Pull bar to sternum (not belly button), squeeze shoulder blades together, control descent, no momentum (no body english). Purpose: Upper back strength and hypertrophy—strong upper back stabilizes bench press (provides shelf for bar, maintains shoulder position), prevents shoulder injuries. Pull volume should match or exceed pressing volume.",
+              "tags": [
+                "accessory",
+                "back thickness"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Face Pulls",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Rear delt/upper back health — non-negotiable for powerlifters"
+              },
+              "tempo": "",
+              "notes": "Setup: Rope attachment on cable, chest height. Execution: Pull rope toward face (not chest), externally rotate at end (thumbs point back toward ears), squeeze rear delts, control return. Purpose: Rear delt and upper back health, external rotation strength, shoulder injury prevention (balances all the pressing). Do these even when tired—shoulder health is non-negotiable.",
+              "tags": [
+                "accessory",
+                "shoulder health"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Overhead Triceps Extension",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Triceps hypertrophy (complements pressing)"
+              },
+              "tempo": "",
+              "notes": "Setup: Seated or standing, single dumbbell held overhead with both hands. Execution: Lower dumbbell behind head (elbows stay pointing up, don't flare out), feel stretch in triceps, extend fully overhead. Control the eccentric (don't let dumbbell pull you down too fast). Purpose: Triceps hypertrophy, complements pressing (bigger triceps = stronger bench/lockout).",
+              "tags": [
+                "accessory",
+                "triceps"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretching and shoulder health maintenance",
+          "exercises": [
+            {
+              "name": "Chest Stretch (Doorway or Corner)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Arm on doorframe or wall, lean forward, feel stretch in chest and front shoulder",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Shoulder Stretch (Cross-Body)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/arm",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Pull arm across body, feel stretch in rear shoulder",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Triceps Stretch (Overhead)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/arm",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Reach arm overhead, bend elbow (hand behind head), pull elbow with other hand",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band External Rotations",
+              "type": "Recovery",
+              "sets": "2",
+              "reps": "15/arm",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Shoulder health maintenance"
+              },
+              "tempo": "",
+              "notes": "Elbow at side, 90° bend, rotate hand away from body using light band — strengthens rotator cuff",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 80,
+      "intensityLevel": "High",
+      "tags": [
+        "upper body",
+        "bench",
+        "powerlifting",
+        "accumulation",
+        "competition lifts",
+        "Week 2"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w2-thursday",
+    "metadata": {
+      "title": "Advanced Week 2 — Thursday (Day 4)",
+      "weekNumber": 2,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Lower: Deadlift Emphasis (Primary Deadlift Day)",
+      "keyFeatures": [
+        "Competition deadlift 5x4 @ 70-75% RPE 7-8",
+        "Secondary variation: Deficit deadlift 4x3",
+        "Secondary squat work: Front squat 3x6 (lighter than Monday)",
+        "Posterior chain accessories: GHR, leg curls"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Deadlift Emphasis",
+      "focus": "Competition Deadlift + Secondary Squat + Posterior Chain",
+      "description": "Primary deadlift day—most taxing lift of the week. Competition deadlift 5x4 @ RPE 7-8 (~70-75% 1RM), followed by deficit deadlifts for off-the-floor strength, then front squats (secondary squat work, lighter than Monday) to maintain squat frequency, finishing with posterior chain accessories. Don't grind reps—if bar speed slows significantly, stop the set. Track: weight, reps, RPE, bar speed, any form breakdown.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prepare posterior chain, hips, and spine for deadlifting",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — warm muscles"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate, warm posterior chain",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward/back and side-to-side—loosen hips and hamstrings",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Openers (90/90 Stretch)",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/side",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Sit with both legs at 90°, lean forward over front leg—opens up hip capsule",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cat-Cow",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hands and knees, arch and round spine slowly—mobilizes thoracic and lumbar spine",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar RDLs",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Practice hip hinge pattern—push hips back, feel hamstring stretch, neutral spine",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Deadlifts (Build-Up Sets)",
+              "type": "Mobility",
+              "sets": "3-4",
+              "reps": "3-5",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Gradual load increase",
+                "description": "Bar, 135, 185, 225, etc. — work up to working weight"
+              },
+              "tempo": "",
+              "notes": "Focus on setup perfection: feet position, grip, chest up, lats engaged, bracing",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition deadlift 5x4 @ RPE 7-8 (~70-75% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Deadlift (Conventional or Sumo)",
+              "type": "Strength",
+              "sets": "5",
+              "reps": "4",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Primary deadlift day — most taxing lift. Don't grind reps; if bar speed slows significantly, stop set."
+              },
+              "tempo": "Controlled setup, explosive pull, controlled descent",
+              "notes": "Setup (CRITICAL): Feet hip-width (conventional) or wide (sumo), bar over mid-foot, shins vertical, grip just outside legs (double-overhand or mixed grip—save straps for 80%+ loads), chest up (not chest down), lats engaged (imagine 'bending the bar' around your shins—pull slack out of bar, you should feel tension before pulling), big breath and brace (360° brace—belly, sides, lower back). Execution: Push floor away with legs (don't yank bar with back), bar scrapes shins and thighs (stays in contact with body entire lift—if bar drifts forward you lose leverage), hips and shoulders rise together (don't shoot hips up first—turns deadlift into stiff-leg and strains back), lockout with glutes (stand tall, squeeze glutes, don't lean back excessively or hitch). Lower with control (don't drop aggressively—controlled descent prevents injury). Focus: Perfect setup every single rep, bar speed (if rep takes >4-5sec or you feel back starting to round, stop set), breathing and bracing between reps. Record: weight, reps, RPE per set, bar speed notes, any form issues (hips shot up? back rounded? bar drifted forward?).",
+              "tags": [
+                "competition lift",
+                "primary"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Variation",
+          "overview": "Deficit deadlift for off-the-floor strength",
+          "exercises": [
+            {
+              "name": "Deficit Deadlift (1-2 inch platform)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "60-65% 1RM — builds off-the-floor strength, increases ROM"
+              },
+              "tempo": "",
+              "notes": "Setup: Stand on 1-2 inch platform or plates (standard is 1-2 45lb plates stacked). Same setup as competition deadlift but starting position is lower (bar starts lower, more knee bend required). Execution: Same cues as competition deadlift—push floor away, bar stays close, hips/shoulders rise together. Purpose: Strengthens off-the-floor position (where most people are weakest), increases ROM (builds strength through greater range), reinforces proper setup (can't cheat by setting up high). Common mistake: Too much height (>2 inches compromises form—stick to 1-2 inches).",
+              "tags": [
+                "variation",
+                "off-the-floor strength"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Lift",
+          "overview": "Front squat — secondary squat work to maintain frequency",
+          "exercises": [
+            {
+              "name": "Front Squat OR High-Bar Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "60-65% of back squat 1RM — lighter than Monday but maintains squat frequency"
+              },
+              "tempo": "",
+              "notes": "Purpose: Maintains squat frequency (competition lifts practiced 2-3x per week for skill retention), lighter than Monday's primary squat day, quad emphasis. Front squat: Bar rests on front delts (elbows high, chest up), teaches upright torso and quad strength. High-bar squat: If you already do low-bar on Monday, high-bar here provides variation while maintaining pattern. Focus: Speed and depth, not load—this is lighter work to maintain movement pattern and build volume.",
+              "tags": [
+                "secondary lift",
+                "squat frequency"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Posterior chain hypertrophy (hamstrings/glutes)",
+          "exercises": [
+            {
+              "name": "Glute-Ham Raise OR Nordic Curls",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Posterior chain hypertrophy (hamstrings/glutes)"
+              },
+              "tempo": "",
+              "notes": "Execution: Control eccentric (slow descent), use hands to assist on concentric if needed (pushing off floor with hands to return to start). Purpose: Hamstring and glute hypertrophy, eccentric strength (injury prevention—strong hamstrings protect knees). Very challenging—don't worry if you need assistance on the way up.",
+              "tags": [
+                "accessory",
+                "posterior chain"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Curls (Lying or Seated)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Hamstring isolation, complements compound work"
+              },
+              "tempo": "",
+              "notes": "Execution: Curl weight up (squeeze hamstrings at contraction), control descent (don't let weight drop). Purpose: Hamstring isolation and hypertrophy, complements deadlifts and GHRs, easier to recover from than more deadlifting.",
+              "tags": [
+                "accessory",
+                "hamstring isolation"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretching and lower back care",
+          "exercises": [
+            {
+              "name": "Hamstring Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Seated or standing, reach for toes, feel stretch in back of thigh",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Glute Stretch (Figure-4 or Pigeon)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "45 sec/side",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lie on back (figure-4) or pigeon pose, feel stretch in glute and hip",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Lower Back Stretch (Child's Pose)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "60 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Kneel, sit back on heels, extend arms forward, relax lower back—gentle stretch after heavy deadlifts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cat-Cow",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Gentle spinal mobility after deadlifts—arch and round slowly",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Walking",
+              "type": "Recovery",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Very easy",
+                "description": "Flush blood through legs, reduce stiffness"
+              },
+              "tempo": "",
+              "notes": "Slow pace, just for movement and recovery",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 90,
+      "intensityLevel": "Very High",
+      "tags": [
+        "lower body",
+        "deadlift",
+        "powerlifting",
+        "accumulation",
+        "competition lifts",
+        "Week 2"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w6-monday",
+    "metadata": {
+      "title": "Advanced Week 6 — Monday (Day 1)",
+      "weekNumber": 6,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading Week 2",
+      "focus": "Lower: Squat Emphasis (82.5% 4x3)",
+      "keyFeatures": [
+        "Competition squat 4x3 @ 82.5% RPE 8-9",
+        "Wave loading intensification (from 80% Week 5)",
+        "Reduced accessories (3 sets vs 4 in accumulation)",
+        "Secondary squat: Front squat 3x5"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Squat Emphasis",
+      "focus": "Competition Squat at 82.5% (Wave Loading Peak)",
+      "description": "Week 2 of wave loading: 82.5% 1RM for 4x3 @ RPE 8-9 (heavier than Week 5's 80%, but one fewer rep per set). Volume decreases (12 total reps vs 16), intensity increases. Bar speed critical: if third rep grinds (>3sec), reduce weight 5-10lbs next set. Accessories reduced to preserve energy for heavy compounds. Competition > hitting percentages.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Thorough preparation for 82.5% squats — critical at this intensity",
+          "exercises": [
+            {
+              "name": "Bike or Row",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Light sweat, prepare for heavy loading"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate and body temperature",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Circles",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10/direction",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Large circles, open up hip capsule — hips get stiff with heavy squats",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward/back and side-to-side — loosen hip flexors and adductors",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Ankle Mobility (Wall Drives)",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Drive knee toward wall while keeping heel down — critical for squat depth",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar Squats",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus on movement quality — depth, bar path, breathing pattern",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Goblet Squats",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Light dumbbell — practice upright torso and depth",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Paused Squats (Bar Only)",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "2 sec pause at bottom",
+              "notes": "Practice maintaining tension in the hole — important for heavy lifts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (Gradual Load Increase)",
+              "type": "Mobility",
+              "sets": "5-6",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "Bar → 135 → 185 → 225 → 275 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 400lb 1RM (330lb working weight): Bar×10, 135×5, 185×3, 225×2, 275×1, then 330×3. Each set deliberate — build confidence.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition squat 4x3 @ RPE 8-9 (~82.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Squat (High-Bar or Low-Bar)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3-4 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8-9",
+                "description": "82.5% 1RM — Wave Loading Week 2. Third rep challenging but fast. If it grinds (>3sec), reduce 5-10lbs next set."
+              },
+              "tempo": "2-3 sec descent, 0.5 sec pause at bottom, explosive up",
+              "notes": "Setup: Maximum tightness—big breath (fill belly and brace), upper back locked (squeeze bar into traps), confident approach (you own this weight). Walkout: 2-3 steps max, no repositioning (wastes energy). Execution: Descend with control (2-3sec, don't dive), hit depth (parallel or below), pause 0.5sec at bottom (maintain tension, don't relax), DRIVE explosively (push through floor, hips and chest rise together). Focus: Speed off the bottom (if you're slow out of the hole, power is lost). Bar speed check: first rep should move well, second rep slows slightly, third rep is hard but should complete in <3sec. If third rep grinds excessively or stalls, weight is too heavy—reduce 10lbs next set. Rest 3-4min between sets (sit down, sip water, mentally reset). Record: weight, reps completed, RPE per set, bar speed on each rep (fast/moderate/slow/grind), depth confidence, any form breakdown (chest collapse? hips shoot up?). This data is critical for Week 7 (85% 3x3).",
+              "tags": [
+                "competition lift",
+                "primary",
+                "wave loading"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Lift",
+          "overview": "Front squat — lighter secondary squat work",
+          "exercises": [
+            {
+              "name": "Front Squat OR High-Bar Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "60-65% of back squat 1RM — reduced from accumulation (was 3x6)"
+              },
+              "tempo": "",
+              "notes": "Purpose: Maintains squat frequency (2x per week for skill retention), quad emphasis, lighter than Monday's primary squat. Front squat: Bar rests on front delts (elbows high, chest up), teaches upright torso. High-bar squat: If you do low-bar on competition squat, high-bar here provides variation. Focus: Speed and quality, not load. Volume reduced from accumulation phase to preserve energy for main lift.",
+              "tags": [
+                "secondary lift",
+                "squat frequency"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Minimal accessories — reduced volume from accumulation",
+          "exercises": [
+            {
+              "name": "Romanian Deadlift (RDL)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6-8",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Hamstring/glute strength — reduced from 3x8 in accumulation"
+              },
+              "tempo": "",
+              "notes": "Execution: Hinge at hips, push hips back, feel hamstring stretch (bar to mid-shin), squeeze glutes to return. Don't round lower back. Purpose: Hamstring/glute hypertrophy, posterior chain balance. Volume reduced to preserve recovery capacity for heavy squats.",
+              "tags": [
+                "accessory",
+                "posterior chain"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Quad hypertrophy without spinal load (recovery-friendly)"
+              },
+              "tempo": "",
+              "notes": "Setup: Feet shoulder-width, mid-platform. Execution: Lower with control (full ROM, deep stretch), push through heels, full extension but don't lock knees aggressively. Purpose: Quad volume without CNS demand—allows hypertrophy work without taxing recovery.",
+              "tags": [
+                "accessory",
+                "quad volume"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Static stretching and light foam rolling",
+          "exercises": [
+            {
+              "name": "Quad Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Pull heel toward glutes, feel stretch in front of thigh",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Flexor Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lunge position, drive hips forward, feel stretch in front of rear leg hip",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Glute Stretch (Figure-4)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lie on back, cross ankle over opposite knee, pull knee toward chest",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Foam Rolling (Quads, IT Band)",
+              "type": "Recovery",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Focus on sore areas, gentle pressure"
+              },
+              "tempo": "",
+              "notes": "Roll slowly, pause on tender spots for 20-30sec — avoid aggressive pressure when fatigued",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 80,
+      "intensityLevel": "Very High",
+      "tags": [
+        "lower body",
+        "squat",
+        "powerlifting",
+        "wave loading",
+        "strength building",
+        "Week 6"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w6-tuesday",
+    "metadata": {
+      "title": "Advanced Week 6 — Tuesday (Day 2)",
+      "weekNumber": 6,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading Week 2",
+      "focus": "Upper: Bench Emphasis (82.5% 4x3)",
+      "keyFeatures": [
+        "Competition bench 4x3 @ 82.5% RPE 8-9",
+        "Wave loading intensification (from 80% Week 5)",
+        "Reduced accessories to preserve energy",
+        "Face pulls maintained (shoulder health non-negotiable)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Upper: Bench Emphasis",
+      "focus": "Competition Bench at 82.5% (Wave Loading Peak)",
+      "description": "Week 2 of wave loading: 82.5% 1RM for 4x3 @ RPE 8-9. Heavier than Week 5 (80%), but one fewer rep. Third rep challenging but controlled—if it stalls mid-press or takes >3sec, reduce 5lbs next set. Perfect setup critical at this intensity. Accessories minimal except face pulls (shoulder health). Track bar speed and path.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Thorough preparation for 82.5% bench — perfect setup is critical",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — conversational pace"
+              },
+              "tempo": "",
+              "notes": "Elevate heart rate, warm muscles and joints",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Arm Circles",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/direction",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward and backward — loosen shoulder joints, increase ROM",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Aparts",
+              "type": "Mobility",
+              "sets": "3",
+              "reps": "20",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate rear delts and scapular retractors — essential for bench setup and shoulder health",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Push-Ups",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "In push-up position, protract and retract shoulder blades — teaches scapular control",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar Bench Press",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Practice setup: feet placement, arch, shoulder blade retraction, grip width, bar path",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Pause Bench Press (Bar Only)",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "2 sec pause at chest",
+              "notes": "Practice maintaining tension with bar on chest — critical for heavy lifts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (Gradual Load Increase)",
+              "type": "Mobility",
+              "sets": "5-6",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "Bar → 95 → 135 → 185 → 225 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 300lb 1RM (247.5lb ≈ 250lb working weight): Bar×10, 95×5, 135×3, 185×2, 225×1, then 250×3. Each warm-up set deliberate — build confidence.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition bench press 4x3 @ RPE 8-9 (~82.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Bench Press",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3-4 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8-9",
+                "description": "82.5% 1RM — Wave Loading Week 2. Third rep challenging but controlled. If stalls mid-press, reduce 5lbs next set."
+              },
+              "tempo": "2 sec descent, 0.5 sec pause, explosive press",
+              "notes": "Setup (CRITICAL at 82.5%): Feet planted firmly (drive through floor during press), arch established (upper back arched, not lower back—shoulder blades retracted and locked), grip secure (chalk if needed, thumbs around bar for safety), spotter present and attentive. Execution: Unrack with spotter assist (save energy), position bar over sternum, big breath and brace, lower to chest with control (2sec descent, bar path slightly diagonal toward face), touch lightly (don't bounce), pause 0.5sec (maintain tension, feel bar on chest but don't relax), press explosively (drive through floor with feet, press bar up and slightly toward rack). Breathe at top. Focus: Maintain arch and shoulder blade position throughout set, bar touches same spot every rep (lower sternum), bar path diagonal (not straight up), lockout fully. Bar speed check: first rep should move well, second rep slows, third rep is challenging but should complete without mid-press stall. If bar stalls or takes >3sec, reduce 5lbs next set. Rest 3-4min (sit up, sip water, shake out arms, mentally prepare). Record: weight, reps, RPE, bar speed per rep, bar path quality, any form breakdown (arch collapse? bar path drift?).",
+              "tags": [
+                "competition lift",
+                "primary",
+                "wave loading"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Variation",
+          "overview": "Close-grip bench — reduced volume from accumulation",
+          "exercises": [
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "65% 1RM — lockout/triceps work, reduced from 4x6 in accumulation"
+              },
+              "tempo": "",
+              "notes": "Setup: Same as competition bench but grip narrower—hands shoulder-width or slightly narrower (not too narrow—elbow stress). Execution: Lower to chest (same touch point), keep elbows tucked closer to body (emphasizes triceps), press explosively. Purpose: Lockout strength, triceps hypertrophy. Volume reduced to preserve energy for main lift.",
+              "tags": [
+                "variation",
+                "lockout strength"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Minimal accessories — focus on upper back and shoulder health",
+          "exercises": [
+            {
+              "name": "Barbell Row (Pendlay or Bent-Over)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6-8",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Upper back strength — reduced from 4x8 in accumulation"
+              },
+              "tempo": "",
+              "notes": "Execution: Pull bar to sternum, squeeze shoulder blades together, control descent, no momentum. Purpose: Upper back strength for bench stability, shoulder health. Volume reduced but still critical—pull volume prevents shoulder issues.",
+              "tags": [
+                "accessory",
+                "back thickness"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Incline Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Upper chest/front delt — moderate hypertrophy work"
+              },
+              "tempo": "",
+              "notes": "Setup: Incline bench 30-45°. Execution: Press dumbbells up and slightly together, control descent (feel stretch in upper chest), full ROM. Purpose: Upper chest hypertrophy, unilateral work.",
+              "tags": [
+                "accessory",
+                "upper chest"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Face Pulls",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Rear delt/shoulder health — ALWAYS do these, even during strength phase"
+              },
+              "tempo": "",
+              "notes": "Setup: Rope attachment on cable, chest height. Execution: Pull rope toward face, externally rotate at end (thumbs point back), squeeze rear delts, control return. Purpose: Shoulder health is non-negotiable. Keep face pulls despite reduced accessories.",
+              "tags": [
+                "accessory",
+                "shoulder health"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretching and shoulder health maintenance",
+          "exercises": [
+            {
+              "name": "Chest Stretch (Doorway)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30-45 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Arm on doorframe, lean forward, feel stretch in chest and front shoulder",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Shoulder Stretch (Cross-Body)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/arm",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Pull arm across body, feel stretch in rear shoulder",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Triceps Stretch (Overhead)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/arm",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Reach arm overhead, bend elbow, pull elbow with other hand",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band External Rotations",
+              "type": "Recovery",
+              "sets": "2",
+              "reps": "15/arm",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Shoulder health maintenance"
+              },
+              "tempo": "",
+              "notes": "Elbow at side, 90° bend, rotate hand away from body using light band — rotator cuff health",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 75,
+      "intensityLevel": "Very High",
+      "tags": [
+        "upper body",
+        "bench",
+        "powerlifting",
+        "wave loading",
+        "strength building",
+        "Week 6"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w6-thursday",
+    "metadata": {
+      "title": "Advanced Week 6 — Thursday (Day 4)",
+      "weekNumber": 6,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading Week 2",
+      "focus": "Lower: Deadlift Emphasis (82.5% 4x2-3)",
+      "keyFeatures": [
+        "Competition deadlift 4x2-3 @ 82.5% RPE 8-9",
+        "Deadlifts more fatiguing — may be 2 reps instead of 3",
+        "Secondary squat: Front squat 3x5 (lighter than Monday)",
+        "Minimal accessories — preserve energy for main lift"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Deadlift Emphasis",
+      "focus": "Competition Deadlift at 82.5% (Wave Loading Peak)",
+      "description": "Week 2 of wave loading: 82.5% 1RM for 4x2-3 @ RPE 8-9. Deadlifts are more fatiguing than squats/bench—some lifters only manage 2 clean reps at this intensity (that's fine). Perfect setup every rep. If second or third rep grinds significantly (>4-5sec) or form breaks down (back rounds), stop set and reduce 10lbs next set. Secondary squat work lighter than Monday. Competition > percentages.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Thorough preparation for 82.5% deadlifts — most demanding main lift",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — warm posterior chain"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate, warm posterior chain",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15/leg",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward/back and side-to-side — loosen hips and hamstrings",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Openers (90/90 Stretch)",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/side",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Sit with both legs at 90°, lean forward over front leg — opens hip capsule",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cat-Cow",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hands and knees, arch and round spine slowly — mobilizes spine for deadlift setup",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Empty Bar RDLs",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Practice hip hinge pattern — push hips back, neutral spine, hamstring stretch",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (Gradual Load Increase)",
+              "type": "Mobility",
+              "sets": "6-7",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "90-120 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "135 → 185 → 225 → 275 → 315 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 500lb 1RM (412.5lb ≈ 415lb working weight): 135×5, 185×3, 225×2, 275×1, 315×1, 365×1, then 415×2-3. Each warm-up set: perfect setup, focus on bracing and lat engagement.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition deadlift 4x2-3 @ RPE 8-9 (~82.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Deadlift (Conventional or Sumo)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "2-3",
+              "duration": "",
+              "distance": "",
+              "rest": "3-4 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8-9",
+                "description": "82.5% 1RM — Wave Loading Week 2. Deadlifts more fatiguing: some lifters only manage 2 clean reps (acceptable). If rep grinds >4-5sec or form breaks, stop set."
+              },
+              "tempo": "Perfect setup, explosive pull, controlled descent",
+              "notes": "Setup (MOST CRITICAL PART): Feet hip-width (conventional) or wide (sumo), bar over mid-foot (look down—bar should bisect foot), shins vertical, grip just outside legs (mixed or hook grip at this weight—try without straps first), chest up (not down), lats engaged (imagine 'bending bar' around shins—pull slack out, feel tension before pulling), big breath and brace (360° brace—belly, sides, lower back). Execution: Push floor away with legs (don't yank with back), bar scrapes shins/thighs (stays in contact entire lift—if drifts forward, lose leverage), hips and shoulders rise together (don't shoot hips up first—strains back), lockout with glutes (stand tall, squeeze glutes, don't lean back excessively or hitch). Lower with control (controlled descent prevents injury). Focus: Perfect setup EVERY rep, bar speed (if second or third rep is significant grind—takes >4-5sec, form breaks down, back rounds—stop set and reduce 10lbs next set). Reps: Some lifters can do 3 clean reps, others only 2—listen to your body. If first rep is RPE 9.5, do NOT attempt second rep (injury risk). Rest 3-4min (sit down, release belt if wearing, sip water, mentally reset—deadlifts are as mental as physical at 82.5%). Record: weight, reps completed (2 or 3?), RPE per set, bar speed per rep, any form breakdown (back rounding? hips shot up? hitching? bar drifted forward?), grip (did grip hold or slip?).",
+              "tags": [
+                "competition lift",
+                "primary",
+                "wave loading"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Variation",
+          "overview": "Deficit deadlift — reduced volume from accumulation",
+          "exercises": [
+            {
+              "name": "Deficit Deadlift (1-2 inch platform)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "2",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "60-65% 1RM — off-the-floor strength, reduced from 4x3 in accumulation"
+              },
+              "tempo": "",
+              "notes": "Setup: Stand on 1-2 inch platform. Same setup as competition deadlift but starting position lower (bar starts lower, more knee bend required). Execution: Push floor away, bar stays close, hips/shoulders rise together. Purpose: Off-the-floor strength, increased ROM. Volume significantly reduced from accumulation to preserve energy.",
+              "tags": [
+                "variation",
+                "off-the-floor strength"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Lift",
+          "overview": "Front squat — secondary squat work (lighter than Monday)",
+          "exercises": [
+            {
+              "name": "Front Squat OR High-Bar Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "60% of back squat 1RM — lighter than Monday's competition squat"
+              },
+              "tempo": "",
+              "notes": "Purpose: Maintains squat frequency (2x per week for skill retention), lighter than Monday's 82.5% competition squat. Front squat: Bar on front delts (elbows high, chest up), teaches upright torso. High-bar: Variation from Monday's low-bar. Focus: Speed and quality, not load.",
+              "tags": [
+                "secondary lift",
+                "squat frequency"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Accessories",
+          "overview": "Minimal posterior chain work — preserve recovery",
+          "exercises": [
+            {
+              "name": "Glute-Ham Raise",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "8",
+                "description": "Posterior chain hypertrophy — reduced volume from accumulation"
+              },
+              "tempo": "",
+              "notes": "Execution: Control eccentric (slow descent), use hands to assist concentric if needed. Purpose: Hamstring/glute hypertrophy, eccentric strength (injury prevention). Volume reduced to preserve recovery.",
+              "tags": [
+                "accessory",
+                "posterior chain"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Gentle stretching and lower back care after heavy deadlifts",
+          "exercises": [
+            {
+              "name": "Hamstring Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "45 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Seated or standing, reach for toes, feel stretch in back of thigh",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Glute Stretch (Figure-4)",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "45 sec/side",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lie on back, cross ankle over opposite knee, pull knee toward chest",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Child's Pose",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "60 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Kneel, sit back on heels, extend arms forward — gentle lower back stretch after heavy deadlifts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cat-Cow",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Gentle spinal mobility after deadlifts — arch and round slowly",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Walking",
+              "type": "Recovery",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Very easy",
+                "description": "Flush blood through legs, reduce stiffness"
+              },
+              "tempo": "",
+              "notes": "Slow pace, just for movement and recovery",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 85,
+      "intensityLevel": "Very High",
+      "tags": [
+        "lower body",
+        "deadlift",
+        "powerlifting",
+        "wave loading",
+        "strength building",
+        "Week 6"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w10-monday",
+    "metadata": {
+      "title": "Advanced Week 10 — Monday (Day 1)",
+      "weekNumber": 10,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Lower: Squat Emphasis (92.5% 3x2)",
+      "keyFeatures": [
+        "Competition squat 3x2 @ 92.5% RPE 9.5",
+        "Maximal intensity, minimal volume (6 total reps)",
+        "Near-competition rest periods (4-5 min)",
+        "Accessories eliminated except light maintenance"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Squat Emphasis",
+      "focus": "Competition Squat at 92.5% (Heavy Doubles)",
+      "description": "Week 2 of peaking: Handling loads very close to 1RM to prepare CNS and confidence for competition. 92.5% 1RM for 3 sets of 2 reps. First rep should move with decent speed; second rep will slow significantly (expected at 92.5%). If second rep stalls or grinds excessively (>6sec), reduce weight 10lbs next set. All accessories eliminated except light maintenance to maximize recovery for Thursday's deadlifts.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Critical preparation for 92.5% squats — deliberate and confidence-building",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Light sweat, warm joints"
+              },
+              "tempo": "",
+              "notes": "Bike or row — purely for temperature increase",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Stretching",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hip circles, leg swings, 90/90 stretches — hips and ankles must be fluid",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (The Peaking Ladder)",
+              "type": "Mobility",
+              "sets": "6-7",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "Deliberate jumps: Bar → 135 → 185 → 225 → 275 → 315 → 365 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 400lb 1RM (370lb working weight): Bar×10, 135×5, 185×3, 225×2, 275×1, 315×1, 345×1, then 370×2. Every warm-up rep must be identical to competition form.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition squat 3x2 @ RPE 9.5 (~92.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Squat (High-Bar or Low-Bar)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "2",
+              "duration": "",
+              "distance": "",
+              "rest": "4-5 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "9.5",
+                "description": "92.5% 1RM — Heavy doubles. Second rep should be hard but clean. If stalling (>6sec), reduce 10lbs."
+              },
+              "tempo": "Controlled descent, 0.5s pause, maximal explosive drive",
+              "notes": "Setup: Maximum tightness—big breath (fill belly and brace), upper back locked (squeeze bar into traps), approach bar with total confidence. Walkout: 2-3 steps max, no repositioning (save every ounce of energy). Execution: Descend with control (2-3sec), hit depth (parallel or below—don't cut depth to save energy), pause 0.5sec at bottom (maintain tension), DRIVE through floor. First rep should move with decent speed; second rep will slow significantly—this is normal. If second rep stalls or you question depth, reduce weight 10lbs next set. Rest 4-5min (sit down between sets, mentally reset). Record: weight, reps completed, RPE, bar speed on each rep (first vs second), depth confidence. This data informs Week 11 openers.",
+              "tags": [
+                "competition lift",
+                "primary",
+                "peaking"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Maintenance",
+          "overview": "Light movement to maintain pattern without fatigue",
+          "exercises": [
+            {
+              "name": "Front Squat OR High-Bar Squat",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "55-60% back squat 1RM — Active recovery, NOT training"
+              },
+              "tempo": "",
+              "notes": "Very light. Purely to maintain movement pattern and blood flow after the heavy sets. Focus on smoothness and depth.",
+              "tags": [
+                "secondary lift",
+                "maintenance"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Romanian Deadlift",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "50% DL 1RM — Hamstring/glute maintenance"
+              },
+              "tempo": "",
+              "notes": "Extremely light. Keep the posterior chain moving without adding fatigue for Thursday.",
+              "tags": [
+                "accessory",
+                "maintenance"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Gentle recovery and mental reset",
+          "exercises": [
+            {
+              "name": "Quad/Hip Flexor Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec/leg",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Gentle, no aggressive stretching when neurally fatigued",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Visualization",
+              "type": "Recovery",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Sit quietly. Visualize Thursday's deadlifts at 92.5% moving perfectly.",
+              "tags": [
+                "mental"
+              ],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 75,
+      "intensityLevel": "Maximum",
+      "tags": [
+        "lower body",
+        "squat",
+        "powerlifting",
+        "peaking",
+        "heavy doubles",
+        "Week 10"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w10-tuesday",
+    "metadata": {
+      "title": "Advanced Week 10 — Tuesday (Day 2)",
+      "weekNumber": 10,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Upper: Bench Emphasis (92.5% 3x2)",
+      "keyFeatures": [
+        "Competition bench 3x2 @ 92.5% RPE 9.5",
+        "Maximal intensity, minimal volume",
+        "Spotter required (safety at near-maximal loads)",
+        "Accessories eliminated except shoulder health"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Upper: Bench Emphasis",
+      "focus": "Competition Bench at 92.5% (Heavy Doubles)",
+      "description": "Week 2 of peaking: Handle 92.5% 1RM for doubles. Setup is everything at this weight—feet planted, arch locked, shoulder blades retracted and pinned. Spotter present and attentive is non-negotiable. First rep should move with control; second rep will slow significantly but must complete without stalling. Accessories reduced to maintenance to preserve CNS for Thursday.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Shoulder and upper back preparation for maximal pressing",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Warm joints and muscles"
+              },
+              "tempo": "",
+              "notes": "Arm circles and band pull-aparts during cardio",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Aparts",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "20",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate rear delts and scaps for stability",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (Precision Jumps)",
+              "type": "Mobility",
+              "sets": "6-7",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "Bar → 95 → 135 → 185 → 225 → 255 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 300lb 1RM (275-280lb working weight): Bar×10, 95×5, 135×3, 185×2, 225×1, 255×1, then 277.5×2. Use spotter for last 2 warm-ups.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition bench press 3x2 @ RPE 9.5 (~92.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "2",
+              "duration": "",
+              "distance": "",
+              "rest": "4-5 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "9.5",
+                "description": "92.5% 1RM — Heavy doubles. Second rep will be slow; if bar stalls or requires spotter assistance, weight is too heavy."
+              },
+              "tempo": "2 sec descent, 0.5 sec pause, maximal explosive drive",
+              "notes": "Setup: Perfect setup is everything—feet planted (drive through floor during press), arch locked in, shoulder blades pinned, grip secure (chalk if needed). Spotter MUST be present—communicate liftoff cues clearly. Execution: Unrack (spotter assists liftoff to save energy), position over sternum, big breath and brace, lower with control (2sec), touch lightly, pause 0.5sec, press explosively (drive bar up and slightly toward face). Rest 4-5min. Record: weight, reps, RPE, bar speed (first vs second), arch stability, confidence level.",
+              "tags": [
+                "competition lift",
+                "primary",
+                "peaking"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Secondary Maintenance",
+          "overview": "Minimal upper work for shoulder health and pattern maintenance",
+          "exercises": [
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "60% 1RM — Maintenance only"
+              },
+              "tempo": "",
+              "notes": "Very light. Maintain triceps/lockout pattern without fatigue.",
+              "tags": [
+                "secondary lift",
+                "maintenance"
+              ],
+              "supersetId": ""
+            },
+            {
+              "name": "Face Pulls",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Light — Shoulder health"
+              },
+              "tempo": "",
+              "notes": "Keep the shoulders healthy. Essential even in peaking.",
+              "tags": [
+                "accessory",
+                "shoulder health"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretching and recovery",
+          "exercises": [
+            {
+              "name": "Chest/Shoulder Stretch",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "30 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Gentle doorway stretch",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 70,
+      "intensityLevel": "Maximum",
+      "tags": [
+        "upper body",
+        "bench",
+        "powerlifting",
+        "peaking",
+        "heavy doubles",
+        "Week 10"
+      ]
+    }
+  },
+  {
+    "id": "advanced-w10-thursday",
+    "metadata": {
+      "title": "Advanced Week 10 — Thursday (Day 4)",
+      "weekNumber": 10,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Lower: Deadlift Emphasis (92.5% 3x1-2)",
+      "keyFeatures": [
+        "Competition deadlift 3x1-2 @ 92.5% RPE 9.5",
+        "Singles preferred if first rep is RPE 9.5+",
+        "Maximum CNS demand — full rest between sets (5 min)",
+        "All accessories eliminated — focus only on the pull"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower: Deadlift Emphasis",
+      "focus": "Competition Deadlift at 92.5% (Heavy Singles/Doubles)",
+      "description": "Week 2 of peaking: Deadlifts at 92.5% are exceptionally demanding. Many lifters only perform singles (3x1) at this intensity. If first rep is RPE 9.5 or slow (>4sec), do NOT attempt second rep. Setup must be perfect—bar over mid-foot, shins vertical, lats engaged, big breath and brace (360). This is the most taxing session of the program.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Most thorough warm-up of the program — prepare for maximal pull",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Warm muscles"
+              },
+              "tempo": "",
+              "notes": "Leg swings and hip openers during cardio",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cat-Cow",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Mobilize spine, prepare for bracing",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Build-Up Sets (The Heavy Ladder)",
+              "type": "Mobility",
+              "sets": "7-8",
+              "reps": "5-1",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Progressive",
+                "description": "135 → 185 → 225 → 275 → 315 → 365 → 405 → 435 → working weight"
+              },
+              "tempo": "",
+              "notes": "Example for 500lb 1RM (460-465lb working weight): 135×5, 225×3, 315×2, 365×1, 405×1, 435×1, then 465×1-2. Warm-ups should feel 'fast'—if 435 feels slow, be conservative with 465.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Main Lift",
+          "overview": "Competition deadlift 3x1-2 @ RPE 9.5 (~92.5% 1RM)",
+          "exercises": [
+            {
+              "name": "Competition Deadlift (Conventional or Sumo)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "1-2",
+              "duration": "",
+              "distance": "",
+              "rest": "5 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "9.5",
+                "description": "92.5% 1RM — Heavy singles/doubles. If first rep is >4sec, do NOT attempt second. Quality > Quantity."
+              },
+              "tempo": "Perfect setup, maximal explosive pull, controlled descent",
+              "notes": "Setup (MOST CRITICAL): Feet hip-width (conventional) or wide (sumo), bar over mid-foot, shins vertical, grip secure (mixed or hook). Chest UP, lats engaged (pull slack out—bar should click), big breath and brace (360). Execution: Push floor away with legs (leg drive first), bar scrapes body entire lift, lockout with glutes (stand tall, don't lean back). Lower with control. If first rep is a grind (>4-5sec) or form breaks, STOP. Do not risk second rep. Rest 5min (release belt, sit down, mentally reset). Record: weight, reps (1 or 2?), RPE, bar speed (floor to lockout), grip stability, form notes (back round? hips shot up?).",
+              "tags": [
+                "competition lift",
+                "primary",
+                "peaking"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Maintenance Only",
+          "overview": "Minimal movement purely for blood flow",
+          "exercises": [
+            {
+              "name": "Light High-Bar Squat",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "2-3 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "6",
+                "description": "50% back squat 1RM — Movement only"
+              },
+              "tempo": "",
+              "notes": "Extremely light. Maintaining the pattern after maximal deadlifts.",
+              "tags": [
+                "secondary lift",
+                "maintenance"
+              ],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Post-deadlift care",
+          "exercises": [
+            {
+              "name": "Child's Pose",
+              "type": "Flexibility",
+              "sets": "2",
+              "reps": "",
+              "duration": "60 sec",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Relax the lower back after maximal loading",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Walking",
+              "type": "Recovery",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Very easy",
+                "description": "Flush blood through legs"
+              },
+              "tempo": "",
+              "notes": "Slow pace, just movement",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 80,
+      "intensityLevel": "Maximum",
+      "tags": [
+        "lower body",
+        "deadlift",
+        "powerlifting",
+        "peaking",
+        "heavy singles",
+        "Week 10"
+      ]
+    }
+  }
+]
