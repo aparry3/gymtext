@@ -20,6 +20,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LogOut,
   Building2,
   Landmark,
@@ -28,6 +29,7 @@ import {
   Bot,
   ScrollText,
   ArrowUpCircle,
+  Wrench,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -42,10 +44,13 @@ const navItems = [
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },
+  { href: '/promote', label: 'Deploy', icon: ArrowUpCircle },
+]
+
+const devAdminItems = [
   { href: '/registry', label: 'Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
-  { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
 ]
 
 function NavItem({
@@ -130,6 +135,86 @@ function EnvironmentToggleSidebar({ collapsed }: { collapsed?: boolean }) {
   )
 }
 
+const DEV_ADMIN_STORAGE_KEY = 'admin-dev-section-open'
+
+function DevAdminSection({
+  currentPath,
+  collapsed,
+  onNavClick,
+}: {
+  currentPath: string
+  collapsed?: boolean
+  onNavClick?: () => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(DEV_ADMIN_STORAGE_KEY)
+    if (stored === 'true') setOpen(true)
+  }, [])
+
+  const toggle = () => {
+    setOpen((prev) => {
+      window.localStorage.setItem(DEV_ADMIN_STORAGE_KEY, (!prev).toString())
+      return !prev
+    })
+  }
+
+  // Auto-expand if current path matches a dev admin item
+  useEffect(() => {
+    if (devAdminItems.some((item) => currentPath.startsWith(item.href))) {
+      setOpen(true)
+    }
+  }, [currentPath])
+
+  if (collapsed) {
+    return (
+      <>
+        <div className="my-2 border-t border-[hsl(var(--sidebar-border))]" />
+        {devAdminItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed
+            isActive={currentPath.startsWith(item.href)}
+            onClick={onNavClick}
+          />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={toggle}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[hsl(var(--sidebar-foreground))]/50 hover:bg-[hsl(var(--sidebar-muted))] transition-colors"
+      >
+        <Wrench className="h-3.5 w-3.5" />
+        <span className="flex-1 text-left">Dev Admin</span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 transition-transform duration-200',
+            open ? 'rotate-0' : '-rotate-90'
+          )}
+        />
+      </button>
+      {open && (
+        <div className="mt-1 space-y-1">
+          {devAdminItems.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SidebarContent({
   currentPath,
   collapsed,
@@ -190,7 +275,7 @@ function SidebarContent({
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
@@ -204,6 +289,12 @@ function SidebarContent({
             onClick={onNavClick}
           />
         ))}
+
+        <DevAdminSection
+          currentPath={currentPath}
+          collapsed={collapsed}
+          onNavClick={onNavClick}
+        />
       </nav>
 
       <div className="p-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">
