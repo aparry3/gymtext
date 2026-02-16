@@ -1,0 +1,68 @@
+{
+  "id": "mma-fight-camp-structured",
+  "metadata": {
+    "title": "plan:structured Example — MMA Fight Camp",
+    "correspondingPlanExample": "mma-fight-camp-8week",
+    "description": "Structured (parsed) version of an 8-week MMA fight camp strength & conditioning program. Demonstrates sport-specific programming integrating strength, power, and conditioning alongside technical training. Balances multiple energy systems (aerobic, anaerobic, alactic) with recovery management."
+  },
+  "planStructured": {
+    "name": "MMA Fight Camp — 8-Week Strength & Conditioning",
+    "type": "MMA-Specific S&C",
+    "coreStrategy": "Integrated strength and conditioning program designed to peak physical performance for fight night while managing fatigue from high-volume technical training (striking, grappling, sparring). Emphasizes explosive power, anaerobic capacity, and strength endurance specific to 3×5min or 5×5min MMA rounds. Strength work focuses on compound movements that transfer to grappling and striking (deadlifts for clinch strength, overhead press for collar ties, squats for takedown defense). Conditioning prioritizes fight-specific intervals matching round structure. Progressive overload through periodized blocks: Base building (Weeks 1-3) → Fight-specific prep (Weeks 4-6) → Peak/Taper (Weeks 7-8).",
+    "progressionStrategy": [
+      "Block 1 — Base Building (Weeks 1-3): Establish strength and aerobic base. Strength sessions 3x/week: compound lifts (squat, deadlift, press, pull) using moderate loads (70-75% 1RM, 3-4 sets of 6-8 reps, RPE 7-8). Aerobic conditioning 2-3x/week: 20-30min Zone 2 cardio (roadwork, bike, swim) to build mitochondrial density and recovery capacity. Anaerobic work 1-2x/week: 6-10 rounds × 30sec hard/90sec easy (rowing, bike, bag work). Technical training volume is moderate (4-5 sessions/week). Goal: Build base without excessive fatigue.",
+      "Block 2 — Fight-Specific Preparation (Weeks 4-6): Transition to explosive power and fight-specific conditioning. Strength shifts to 2x/week: maintain loads (70-75%) but add explosive intent (box squats, power cleans, push press). Reduce volume to 3 sets of 3-5 reps to manage fatigue. Anaerobic capacity increases: 3x/week fight-specific intervals (5min rounds: 30sec hard/30sec moderate, mimicking striking exchanges). Alactic power 2x/week: 8-12 rounds × 10sec sprint/50sec rest (prowler pushes, hill sprints, heavy bag blitzes). Aerobic work reduces to 1-2x/week 15-20min Zone 2 (active recovery only). Technical training peaks (6 sessions/week including sparring). Goal: Develop explosive power and fight-specific conditioning while managing cumulative fatigue.",
+      "Block 3 — Peak & Taper (Weeks 7-8): Week 7 peak conditioning, Week 8 taper for fight. Week 7: Final hard week—strength 1x (70% 2-3 sets of 3 reps, explosive intent), conditioning 2x (fight-specific 5min rounds), sparring intensity peaks. Week 8: Dramatic volume reduction—1x light strength (60% 2×3, technique work only), 1x short conditioning (3 rounds × 3min moderate pace), NO sparring last 4 days. Focus on recovery, hydration, weight cut (if applicable), mental preparation. Sleep 8-9hr/night, nutrition dialed in. Goal: Dissipate fatigue, maintain sharpness, arrive at fight night fresh and confident.",
+      "Technical Training Integration: S&C sessions are scheduled around technical training to optimize recovery. Strength on Mon/Wed/Fri mornings, technical in evenings. Heavy conditioning on Tue/Thu (no strength same day to avoid interference). Sparring days (typically Wed/Sat) have NO conditioning or heavy strength—only light technical warm-up. If technical volume spikes unexpectedly (e.g., extra sparring session), skip next S&C session to prioritize recovery.",
+      "Auto-Regulation: If morning resting heart rate is 10+ bpm above baseline, or if soreness/joint pain is excessive, replace scheduled hard session with light technical work or complete rest day. MMA training creates high systemic fatigue—S&C must adapt to technical load, not vice versa. If weight cut is required (Weeks 7-8), reduce S&C volume 50% to preserve energy for weight management.",
+      "Energy System Development: Aerobic base (Weeks 1-3) allows faster recovery between rounds and sessions. Anaerobic capacity (Weeks 4-6) sustains high output during 5min rounds. Alactic power (Weeks 4-6) enables explosive bursts (takedown attempts, knockout power). All three systems trained but emphasis shifts across blocks to peak fight-specific systems (anaerobic + alactic) while maintaining aerobic base."
+    ],
+    "adjustmentStrategy": "Scheduled taper at Week 8 (pre-fight): S&C volume drops 70-80%, intensity reduces to 60-70%, technical work is light technique only (no sparring last 4 days). Unscheduled deload protocol: If technical training volume increases unexpectedly (e.g., training camp adds extra sparring day), immediately reduce S&C by 50% that week. If injury occurs (joint pain, muscle strain), cease all S&C until cleared by medical, maintain light technical work only. Week 7-8 weight management: If cutting weight, reduce S&C volume 50% and eliminate anaerobic conditioning (preserve glycogen, manage cortisol). Hydration and electrolyte protocols critical during cut—no hard conditioning last 3 days before weigh-in.",
+    "conditioning": [
+      "Weeks 1-3: Aerobic base priority—2-3x/week 20-30min Zone 2 (roadwork, bike, swim). 1-2x/week anaerobic intervals (6-10 rounds × 30sec hard/90sec easy). No alactic work yet.",
+      "Weeks 4-6: Fight-specific conditioning—3x/week 5min round structure (30sec hard/30sec moderate × 5 rounds). 2x/week alactic power (8-12 rounds × 10sec sprint/50sec rest). 1-2x/week Zone 2 aerobic (recovery only, 15-20min).",
+      "Week 7: Peak conditioning—2x 5min rounds, 1x alactic power (reduced volume). No Zone 2 (taper begins).",
+      "Week 8: Taper conditioning—1x light 3-round session (3min rounds, moderate pace). NO hard conditioning last 4 days. Focus on hydration, weight management (if cutting), mental prep."
+    ],
+    "scheduleTemplate": [
+      {
+        "day": "Monday",
+        "focus": "Strength — Lower body emphasis + Technical PM",
+        "rationale": "Morning: Strength session focusing on squat variations (back squat, front squat, or box squat depending on phase) and posterior chain (RDLs, glute work). Builds takedown defense, sprawl power, clinch strength. Evening: Technical training (striking or grappling, 60-90min). Monday starts week fresh after Sunday rest, can handle heavy lower body loading."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "Conditioning — Anaerobic intervals + Technical PM",
+        "rationale": "Morning: Anaerobic conditioning session (fight-specific intervals: 5min rounds or 30sec hard/90sec easy depending on phase). NO strength to avoid interference effect. Evening: Technical training (drilling, pad work, 60min). Tuesday is high-intensity day for conditioning to match technical load."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Strength — Upper body emphasis + Sparring PM",
+        "rationale": "Morning: Strength session focusing on pressing (bench, overhead press, push press) and pulling (pull-ups, rows). Builds punching power, clinch control, guillotine strength. Light load or skip if sparring is scheduled same day. Evening: Sparring session (live rounds, high intensity, 30-45min). Wednesday sparring is mid-week intensity peak—S&C yields to technical priority."
+      },
+      {
+        "day": "Thursday",
+        "focus": "Conditioning — Alactic power + Technical PM",
+        "rationale": "Morning: Alactic power work (8-12 rounds × 10sec sprint/50sec rest: prowler, hill sprints, heavy bag blitzes). Develops explosive power for takedown shots, knockout combinations, scrambles. Evening: Technical training (grappling or striking, 60-90min). Thursday is second conditioning day to maintain frequency without overtraining."
+      },
+      {
+        "day": "Friday",
+        "focus": "Strength — Full body explosive + Technical PM (light)",
+        "rationale": "Morning: Strength session with explosive focus (power cleans, box squats, push press, or light deadlifts depending on phase). Moderate volume to avoid fatigue before weekend. Evening: Light technical work (drilling only, no sparring, 45-60min). Friday is end-of-week session—manage fatigue for weekend recovery."
+      },
+      {
+        "day": "Saturday",
+        "focus": "Conditioning — Aerobic base or Sparring (alternates)",
+        "rationale": "Option A (Weeks 1-3, Week 8): Aerobic conditioning (20-30min Zone 2 roadwork, bike, or swim). Builds base, aids recovery. Option B (Weeks 4-6, Week 7): Light sparring or hard technical session. Adjust based on weekly volume. No heavy strength to preserve recovery. Saturday is flexible day based on camp needs."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Complete rest",
+        "rationale": "Full rest day. No training, no S&C. Prioritize sleep (8-9hr), nutrition (refuel glycogen, high protein), hydration, and mental recovery. Active recovery acceptable (light 15min walk, stretching, sauna) but no intensity. Sunday rest is non-negotiable for MMA training—cumulative fatigue from technical + S&C requires weekly reset."
+      }
+    ],
+    "durationWeeks": 8,
+    "frequencyPerWeek": 6
+  },
+  "qualityNotes": "This MMA example demonstrates sport-specific programming distinct from strength-focused plans: (1) Multi-modal integration—strength, power, and conditioning programmed around technical training (striking, grappling, sparring), not in isolation. (2) Energy system periodization—aerobic base (Weeks 1-3) → fight-specific anaerobic/alactic (Weeks 4-6) → taper (Weeks 7-8). (3) Recovery-centric auto-regulation—S&C adapts to technical load (sparring priority), not vice versa. Heart rate monitoring, soreness, and technical volume spikes trigger immediate S&C reductions. (4) Fight camp timeline—8 weeks is standard MMA camp duration from announcement to fight night. (5) Three-block periodization (base → fight-specific → peak/taper) rather than linear progression. (6) Interference effect management—anaerobic conditioning and strength NOT scheduled same day (Tuesday/Thursday conditioning only, Monday/Wednesday/Friday strength only). (7) Weight cut considerations—Week 7-8 protocols for fighters cutting weight (reduce S&C 50%, eliminate hard conditioning, manage cortisol/hydration). (8) Sparring integration—Wednesday/Saturday sparring days have reduced or eliminated S&C to prioritize skill sharpness and injury prevention. (9) Fight-specific conditioning structure—5min round intervals matching MMA round duration (UFC: 3×5min or 5×5min). (10) Explosive power emphasis—alactic work (10sec sprints) develops knockout power and takedown explosiveness specific to MMA. Duration is 8 weeks (standard fight camp). Frequency is 6 days/week (higher than pure strength programs due to technical training integration, but includes active recovery and complete rest)."
+}
