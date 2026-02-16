@@ -1,0 +1,779 @@
+[
+  {
+    "id": "time-constrained-w6-monday",
+    "metadata": {
+      "title": "Time-Constrained Week 6 — Monday (Day 1)",
+      "weekNumber": 6,
+      "dayOfWeek": "Monday",
+      "planId": "time-efficient-strength-conditioning",
+      "phase": "Progressive Overload (Weeks 3-6, Final Week)",
+      "focus": "Full Body A: Push Emphasis",
+      "keyFeatures": [
+        "Final progressive overload week before Week 7 peak test",
+        "Push for upper end of rep ranges or slightly heavier loads",
+        "RPE 7-8 (70-75% loads, leave 2-3 reps in reserve)",
+        "35-40min session time (40-45min with optional 4th superset)",
+        "Prepare mentally for Week 7's 75-80% @ RPE 8-9 test"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body A: Push Emphasis",
+      "focus": "Final push before Week 7 peak test—finish strong",
+      "description": "Week 6, Day 1—Final week of Progressive Overload before Week 7's peak test. Loads remain 70-75% (RPE 7-8), but by now you should be handling significantly more weight than Week 3. This week, aim for upper end of rep ranges (try to hit 10 reps if range is 8-10) or slightly heavier loads. Week 8 is a scheduled deload, so don't worry about pushing hard—you'll get recovery. Session time: 35-40min.",
+      "quote": {
+        "text": "Week 6 is about finishing strong—make every rep count, maintain perfect form, and track everything.",
+        "author": "Progressive Overload Final Week Philosophy"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Should be efficient and thorough by Week 6—don't skimp (5-10min)",
+          "exercises": [
+            {
+              "name": "Light Cardio (Bike, Row, or Jog)",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Until you break a light sweat"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate and body temperature—by Week 6 this should feel automatic. You're about to lift heavier than Week 5, so don't skimp on warm-up.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Stretching",
+              "type": "Mobility",
+              "sets": "1-2",
+              "reps": "10-15/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings (forward/back, side-to-side), arm circles (forward/back), bodyweight squats (focus on depth and upright torso), light bar work (empty bar squats, presses, RDLs)—prepare for heavy barbell work. By Week 6, warm-up efficiency matters—know what you need.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Superset 1",
+          "overview": "Barbell Back Squat + Push-ups (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Barbell Back Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing push-ups)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "70-75% estimated 1RM. If Week 5 you squatted 155lbs×10 @ RPE 7-8, try 165lbs×10 or 155lbs×12. Aim for upper end of rep range. Leave 2-3 reps in reserve."
+              },
+              "tempo": "2-3 sec descent, drive explosively up",
+              "notes": "Setup: Bar on traps (high-bar) or rear delts (low-bar), feet shoulder-width, toes slightly out. Execution: Descend to parallel or below (2-3sec controlled), drive up explosively through heels. Focus: Bar speed on ascent—if rep 10 is a grind, you're at your limit; if rep 10 feels like you have 2-3 more in the tank, perfect RPE 7-8. This is your final progressive overload squat session before Week 7's heavier test (75-80% @ RPE 8-9). Make it count: if you've been hitting 8 reps comfortably, push for 10 this week. If you've been hitting 10 reps, add 5-10lbs and aim for 8-10. Track loads—you'll compare these to Week 7. Transition goal: <15sec to push-ups. Purpose: Lower body strength, quad/glute development, peak progressive overload before test week.",
+              "tags": ["lower body", "compound", "barbell"],
+              "supersetId": "S1"
+            },
+            {
+              "name": "Push-ups (Weighted or Elevated)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Weighted if needed to hit RPE. If bodyweight is still challenging, aim for 15 clean reps per set this week (upper end of range). Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled descent to chest, explosive push",
+              "notes": "Setup: Hands slightly wider than shoulders, body straight from head to heels, core engaged. Execution: Descend until chest nearly touches floor, push explosively to lockout. Week 6 progression: If you've been doing bodyweight push-ups and hitting 12 reps comfortably, push for 15 this week. If 15 bodyweight feels easy (RPE 6), add weight (backpack with 15-25lbs) and aim for 12-15 reps @ RPE 7-8. If you've been doing weighted push-ups, add 5lbs to backpack or increase reps. Focus: Maintain plank position throughout—no sagging hips. This is the final progressive overload push-up session before Week 7 (which may use barbell bench press for heavier loads). Purpose: Upper body push strength, chest/shoulder/tricep development, bodyweight strength capacity.",
+              "tags": ["upper body", "bodyweight", "push"],
+              "supersetId": "S1"
+            }
+          ]
+        },
+        {
+          "title": "Superset 2",
+          "overview": "Barbell Deadlift + Dumbbell Shoulder Press (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Barbell Deadlift (Conventional or Sumo)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6-8",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing shoulder press)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "70-75% estimated 1RM. If Week 5 you pulled 225lbs×8 @ RPE 7-8, try 235lbs×8 or 225lbs×10. Final progressive overload session before Week 7's heavier test. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled setup, explosive pull, controlled descent",
+              "notes": "Setup: Bar over mid-foot, feet hip-width (conventional) or wider with toes out (sumo). Perfect setup every rep: chest up, lats engaged (pull bar into shins), hips higher than knees. Execution: Big breath, brace core, push floor away with legs (don't pull with back), bar scrapes shins/thighs, lockout with glutes. Lower with control. Focus: This is your final progressive overload deadlift session before Week 7's heavier test—make it count. Bar speed should be fast off floor. If Week 5 you hit 8 reps comfortably, push for 10 reps this week OR add 10lbs and maintain 8 reps. Track bar speed: if first rep feels fast, load is appropriate; if it's grinding from rep 1, reduce 5-10lbs. Week 7 you'll test 75-80% loads (RPE 8-9), so Week 6 should feel manageable but challenging. Transition goal: <15sec to shoulder press. Purpose: Full-body strength, posterior chain emphasis, peak progressive overload before test.",
+              "tags": ["compound", "posterior chain", "barbell"],
+              "supersetId": "S2"
+            },
+            {
+              "name": "Dumbbell Shoulder Press (Standing or Seated)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If Week 5 you pressed 40lb dumbbells×10, try 45lb×10 or 40lb×12. Standing preferred. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Explosive press overhead, controlled descent",
+              "notes": "Setup: Standing (core engagement, harder) or seated (easier if fatigued). Dumbbells at shoulder height, palms forward. Execution: Press dumbbells overhead to full lockout (don't hyperextend back), control descent to shoulder level. Focus: Week 6 progression—if you've been using 40lb dumbbells and hitting 10 reps, try 45lb dumbbells (5lb jump per side) and aim for 8-10 reps. If 45lb feels too heavy for 8 reps, stick with 40lb and push for 12 reps. Dumbbells increase in 5lb increments, so progression can be challenging—adding reps is equally valid. Lockout fully but maintain core stability, don't arch back excessively. Standing preferred for core engagement and full-body stability (translates better to other lifts). Purpose: Shoulder strength, overhead pressing pattern, upper body strength capacity.",
+              "tags": ["upper body", "shoulders"],
+              "supersetId": "S2"
+            }
+          ]
+        },
+        {
+          "title": "Superset 3",
+          "overview": "Chest-Supported Row or Dumbbell Row + Plank (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Chest-Supported Row OR Dumbbell Row (Single-Arm)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12/arm",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing plank)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Focus on squeeze at contraction—this is back thickness work. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled pull, squeeze at top for 1-2sec, controlled descent",
+              "notes": "Chest-Supported Row (preferred if available): Lie prone on incline bench or use chest-supported row machine. Pull handles/dumbbells to sides, squeeze shoulder blades back at top for 1-2sec (emphasize contraction), control descent. Eliminates lower back fatigue—allows pure back focus. Dumbbell Row (if no chest-support): One hand and knee on bench, opposite arm rows dumbbell to hip. Pull straight back (not to chest), squeeze shoulder blade for 1-2sec at top, control descent. Week 6 progression: If Week 5 you rowed 55lb dumbbells×12, try 60lb×12 or 55lb×15. Focus on squeeze at contraction this week—time under tension at peak contraction builds back thickness. Don't rush reps—1-2sec squeeze at top is key. Purpose: Back thickness (mid-back, rhomboids), horizontal pulling strength, scapular retraction strength.",
+              "tags": ["upper body", "back"],
+              "supersetId": "S3"
+            },
+            {
+              "name": "Plank (Forearms)",
+              "type": "Core",
+              "sets": "3",
+              "reps": "",
+              "duration": "60 sec",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If you can hold perfect form for 60sec, add weight to your back (10-25lb plate or weighted vest). If form breaks before 60sec, end set immediately."
+              },
+              "tempo": "",
+              "notes": "Setup: Forearms on ground, elbows under shoulders, body straight from head to heels. Execution: Engage core and glutes—don't let hips sag or pike up. Breathe normally (don't hold breath). Focus: Week 6 progression—you should be able to hold 60sec with perfect form by now. If you can hold 60sec easily (hips don't sag, breathing controlled), add weight: place a 10-25lb plate on your back or use a weighted vest. If you can't hold 60sec with perfect form, that's your limit—end set when hips sag. Progressive overload on plank is duration (Week 1: 30-45sec → Week 6: 60sec) or load (Week 6: add 10-25lbs). Full-body tension, neutral spine. If form breaks (hips sag, back arches), end set immediately—no value in planking with poor form. Purpose: Core stability, anti-extension strength, transfer to all lifts (bracing for squats, deadlifts).",
+              "tags": ["core", "isometric"],
+              "supersetId": "S3"
+            }
+          ]
+        },
+        {
+          "title": "Optional 4th Superset (Advanced Trainees)",
+          "overview": "Only add if time/energy allows and session stays under 45min (2 sets)",
+          "exercises": [
+            {
+              "name": "Goblet Squat",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing chest flyes)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Additional quad volume if you're feeling strong. This week is about quality over quantity—only add if energy allows."
+              },
+              "tempo": "2-3 sec descent, 1 sec pause, explosive up",
+              "notes": "Same setup as Week 1 goblet squats. Hold heavy dumbbell vertically at chest, descend to parallel or below, drive up explosively. Week 6 progression: If you've been doing this optional 4th superset in previous weeks, try heavier dumbbell or push for 15 reps. If you haven't added 4th superset yet, Week 6 is a good week to try it—your work capacity has increased significantly. Purpose: Additional quad volume (if you feel like you can handle more work after 3 main supersets). Only add if session time stays under 45min total. This is optional—main 3 supersets are the priority.",
+              "tags": ["lower body", "optional"],
+              "supersetId": "S4"
+            },
+            {
+              "name": "Dumbbell Chest Flyes",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Additional chest volume (isolation). Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled descent (feel deep chest stretch), controlled squeeze to top",
+              "notes": "Setup: Lie on flat bench, dumbbells held above chest with slight elbow bend (like hugging a barrel). Execution: Lower dumbbells out to sides in arc motion (feel deep chest stretch at bottom), squeeze back to top position (dumbbells nearly touch but don't bang). Keep slight elbow bend throughout—don't straighten arms (becomes a press). Focus on stretch at bottom and squeeze at top. Purpose: Chest isolation, stretch-focused work, additional volume. Optional—only add if you have time and energy after main 3 supersets. Week 6 is about finishing strong on main work, not adding unnecessary fatigue.",
+              "tags": ["upper body", "chest", "optional"],
+              "supersetId": "S4"
+            }
+          ]
+        },
+        {
+          "title": "Optional Cardio Finisher",
+          "overview": "Only add if you have time and energy after main work (10min)",
+          "exercises": [
+            {
+              "name": "Row Intervals",
+              "type": "Cardio",
+              "sets": "8",
+              "reps": "",
+              "duration": "30 sec hard, 90 sec easy",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "RPE",
+                "value": "8-9 (hard intervals), 4 (easy intervals)",
+                "description": "Total 8 rounds = 16min. Skip if fatigued—main supersets are priority."
+              },
+              "tempo": "",
+              "notes": "30sec hard effort (RPE 8-9—breathing hard, legs burning), 90sec easy recovery (RPE 4—light spin to catch breath). Repeat 8 times. Purpose: Cardiovascular conditioning, work capacity. Week 6 finisher is longer (16min vs Week 1's 8min, Week 4's 8min), but still optional. If you're feeling fatigued from 6 weeks of progressive overload, skip the finisher this week—the main 3 supersets are what matters. Week 7 is peak week, Week 8 is deload—prioritize being fresh for Week 7's test over adding cardio fatigue now. Only do finisher if you have energy and want the conditioning work.",
+              "tags": ["conditioning", "optional"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Extra stretching—prepare for Day 3 and Week 7 (5min)",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus areas: quads (front of thigh—standing quad stretch or couch stretch), hamstrings (standing or seated), chest (doorway stretch), shoulders (cross-body and overhead), lats (overhead side stretch). Hold each stretch 20-30sec, breathe deeply. Week 6 cooldown is important—you've accumulated 6 weeks of progressive overload. You'll want to be recovered for Day 3 (Wednesday) and especially for Week 7's peak test. Don't skip cooldown this week. Purpose: Aid recovery, reduce muscle tension, improve flexibility, prepare for final push (Day 3 + Week 7).",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "time-constrained-w6-wednesday",
+    "metadata": {
+      "title": "Time-Constrained Week 6 — Wednesday (Day 3)",
+      "weekNumber": 6,
+      "dayOfWeek": "Wednesday",
+      "planId": "time-efficient-strength-conditioning",
+      "phase": "Progressive Overload (Weeks 3-6, Final Week)",
+      "focus": "Full Body B: Pull Emphasis",
+      "keyFeatures": [
+        "Second deadlift session this week (work capacity)",
+        "Pull-ups with weight progression (add 10lbs via belt)",
+        "Final progressive overload for RDLs and curls",
+        "RPE 7-8 (70-75% loads, leave 2-3 reps in reserve)",
+        "Compare to Week 5 Day 3—progressive overload check"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body B: Pull Emphasis",
+      "focus": "Second deadlift session + vertical pulling strength",
+      "description": "Week 6, Day 3—Pull emphasis. Second deadlift session this week (work capacity building). Loads may be slightly lighter than Monday due to accumulated fatigue—that's expected. Focus on form and bar speed. This is your final progressive overload session for RDLs and curls before Week 7's peak test. Push for max reps or slightly heavier dumbbells. Session time: 35-40min.",
+      "quote": {
+        "text": "Compare to Week 5 Day 3—progressive overload check. How's your pull-up strength? Back thickness from rows improving?",
+        "author": "Week 6 Reflection"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Same as Monday—efficient and thorough (5-10min)",
+          "exercises": [
+            {
+              "name": "Light Cardio (Bike, Row, or Jog)",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Until you break a light sweat"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate and body temperature",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Stretching",
+              "type": "Mobility",
+              "sets": "1-2",
+              "reps": "10-15/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings, hip circles, cat-cow (back mobility for deadlifts), scapular pull-ups or dead hangs (if doing pull-ups later—10-15sec hang to activate lats), light bar work (empty bar deadlifts to groove hinge pattern, empty bar rows). Prepare for second deadlift session and heavy vertical pulling.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Superset 1",
+          "overview": "Barbell Deadlift + Pull-ups or Lat Pulldown (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Barbell Deadlift (Conventional or Sumo)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6-8",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing pull-ups/pulldowns)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Second deadlift session this week. Loads may be slightly lighter than Monday due to fatigue—that's expected. Focus on form and bar speed. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled setup, explosive pull, controlled descent",
+              "notes": "Setup: Same as Monday—bar over mid-foot, perfect setup every rep. Execution: Push floor away with legs, bar speed fast off floor, lockout with glutes. Focus: This is your second deadlift session in 3 days (Mon + Wed). You're building work capacity and posterior chain strength without excessive volume per session (3 sets each day = 6 sets/week total, distributed). Loads: If Monday you pulled 235lbs×8, today you might pull 225-235lbs depending on accumulated fatigue. That's fine and expected—don't chase Monday's numbers if you're fatigued. Bar speed is king: if bar moves fast off floor, load is appropriate; if grinding from rep 1, reduce 10lbs. Week 6 context: This is your final progressive overload deadlift cycle before Week 7's peak test (75-80% @ RPE 8-9). Week 8 is deload, so you'll get recovery. Purpose: Work capacity, posterior chain strength, deadlift frequency builds technique competency.",
+              "tags": ["compound", "posterior chain", "barbell"],
+              "supersetId": "S1"
+            },
+            {
+              "name": "Pull-ups OR Lat Pulldown",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "6-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If Week 5 you did 10 bodyweight pull-ups, try adding 10lbs via weight belt and aim for 8 reps. If using lat pulldown and you did 120lbs×10, try 130lbs×10 or 120lbs×12. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled pull, squeeze lats at bottom for 1-2sec, controlled descent",
+              "notes": "Pull-ups: Hang from bar, hands slightly wider than shoulders (pronated grip—palms away). Pull elbows down (not back), bring chin over bar, squeeze lats at bottom for 1-2sec (emphasize contraction), control descent to full hang. Week 6 progression: If Week 5 you did 10 bodyweight reps, try adding 10lbs via weight belt or dip belt and aiming for 8 reps. If you've been doing weighted pull-ups, add 5lbs or push for more reps. Lat Pulldown (if can't do 6+ pull-ups): Sit with thighs secured, grab bar slightly wider than shoulders. Pull bar to upper chest (lean back slightly ~15 degrees), squeeze lats at bottom for 1-2sec, control return. Week 6 progression: If you did 120lbs×10 last week, try 130lbs×10 or 120lbs×12. Focus: Lat engagement (feel mid-back working), full ROM, squeeze at contraction. Purpose: Back width, vertical pulling strength, lats and upper back development.",
+              "tags": ["upper body", "back"],
+              "supersetId": "S1"
+            }
+          ]
+        },
+        {
+          "title": "Superset 2",
+          "overview": "Front Squat or Goblet Squat + Dumbbell Bench Press (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Front Squat OR Goblet Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing bench press)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If you've transitioned to front squat, continue adding weight. If still goblet, heavier dumbbell or more reps. Leave 2-3 reps in reserve."
+              },
+              "tempo": "2-3 sec descent, brief pause, explosive up",
+              "notes": "Front Squat (if using barbell): Bar on front delts, elbows high (clean grip or cross-arm), chest up. Descend to parallel or below (stay upright—don't let torso collapse forward), drive up explosively. Week 6 progression: If Week 5 you front squatted 115lbs×12, try 125lbs×12 or 115lbs×15. Goblet Squat (if still using dumbbell): Hold dumbbell vertically at chest, descend to parallel or below, drive up explosively. Week 6 progression: If Week 5 you used 60lb dumbbell×12, try 65lb×12 or 60lb×15. Choose based on progression: If you've been doing goblet and hitting 12+ reps easily with heaviest available dumbbell, consider transitioning to barbell front squat. If goblet still feels appropriate, push for upper end of rep range (15 reps). Focus: Depth, upright torso, quad engagement. Purpose: Quad-dominant squat pattern, lower body strength.",
+              "tags": ["lower body", "compound"],
+              "supersetId": "S2"
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If Week 5 you used 60lb dumbbells×10, try 65lb×10 or 60lb×12. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Explosive press, controlled descent to chest level",
+              "notes": "Setup: Lie on flat bench, feet on floor, dumbbells held at chest level. Execution: Press dumbbells up and slightly together at top (don't bang them), lower with control to chest level (elbows ~45-degree angle). Don't bounce at bottom. Week 6 progression: If Week 5 you pressed 60lb dumbbells×10, try 65lb×10 (5lb jump per side) or 60lb×12. If 65lb feels too heavy for 8 reps, stick with 60lb and push for 12 reps. Dumbbells increase in 5lb increments, so progression can be challenging—adding reps is equally valid. Focus: Full ROM, stable shoulder position, controlled eccentric. Purpose: Chest/shoulder/tricep strength, horizontal pressing pattern.",
+              "tags": ["upper body", "chest"],
+              "supersetId": "S2"
+            }
+          ]
+        },
+        {
+          "title": "Superset 3",
+          "overview": "Dumbbell RDL + Dumbbell Curls (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Dumbbell Romanian Deadlift (RDL)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing curls)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Final progressive overload session for RDLs before Week 7's peak test. Push for max reps or slightly heavier dumbbells. Leave 2-3 reps in reserve."
+              },
+              "tempo": "2-3 sec descent (feel hamstring stretch), controlled return",
+              "notes": "Setup: Hold dumbbells at sides, feet hip-width, knees slightly bent. Execution: Hinge at hips (push hips back), feel hamstring stretch as dumbbells travel to mid-shin, squeeze glutes to return. Maintain neutral spine—don't round lower back. Week 6 progression: If Week 5 you used 45lb dumbbells×12, try 50lb×12 or 45lb×15. This is your final progressive overload RDL session before Week 7's peak test. Push for upper end of rep range (12 reps) or heavier dumbbells. Focus: Hamstring eccentric stretch (this is where growth happens), glute contraction at top. Don't rush—2-3sec descent to feel full hamstring stretch. Purpose: Posterior chain strength, hip hinge pattern, hamstring development.",
+              "tags": ["posterior chain", "hinge"],
+              "supersetId": "S3"
+            },
+            {
+              "name": "Dumbbell Curls (Standing)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Final progressive overload session for curls before Week 7. Strict form—no swinging. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled curl (1-2sec), squeeze biceps at top for 1sec, controlled descent (2-3sec)",
+              "notes": "Setup: Stand with dumbbells at sides, palms forward (supinated grip). Execution: Curl dumbbells to shoulder height (don't swing or use momentum), squeeze biceps at top for 1sec (emphasize contraction), control descent to full elbow extension (2-3sec eccentric). Keep elbows pinned to sides—don't let them drift forward. Week 6 progression: If Week 5 you used 30lb dumbbells×12, try 35lb×12 or 30lb×15. This is your final progressive overload curl session before Week 7's peak test. Curls respond well to volume and time under tension—if weight jump feels too big, add reps and slow down eccentric (2-3sec descent). Focus: Bicep contraction, strict form. No body English—if you need to swing, weight is too heavy. Purpose: Bicep strength, elbow flexion pattern, arm development.",
+              "tags": ["upper body", "arms"],
+              "supersetId": "S3"
+            }
+          ]
+        },
+        {
+          "title": "Optional Cardio Finisher",
+          "overview": "Only add if you have time and energy (5min)",
+          "exercises": [
+            {
+              "name": "Burpees",
+              "type": "Cardio",
+              "sets": "5",
+              "reps": "10",
+              "duration": "30 sec rest between rounds",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "RPE",
+                "value": "8-9 (during burpees), 3-4 (during rest)",
+                "description": "Total ~5min. Skip if fatigued—main supersets are priority."
+              },
+              "tempo": "",
+              "notes": "10 burpees (chest to ground, jump to stand with hands overhead), rest 30sec. Repeat 5 times. Purpose: Full-body conditioning, metabolic conditioning. Week 6 context: You've been doing progressive overload for 6 weeks—you're likely feeling accumulated fatigue. Cardio finisher is optional and should be skipped if you're feeling run-down. Week 7 is peak test week (75-80% loads, RPE 8-9), so prioritize being fresh for that over adding cardio fatigue now. Only do finisher if you have energy left and want the conditioning work. Don't feel guilty about skipping—the main 3 supersets are what matters.",
+              "tags": ["conditioning", "optional"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Light stretching (5min)",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus areas: hamstrings (standing or seated—extra focus after RDLs and deadlifts), glutes (figure-4 stretch or pigeon pose), lower back (cat-cow or child's pose), lats (overhead and side stretches—extra focus after pull-ups/pulldowns), biceps. Hold each stretch 20-30sec. Breathe deeply. You've deadlifted twice this week (Mon + Wed)—lower back and hamstrings need recovery attention. Purpose: Aid recovery, reduce muscle tension, prepare for Friday's final progressive overload session.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "time-constrained-w6-friday",
+    "metadata": {
+      "title": "Time-Constrained Week 6 — Friday (Day 5)",
+      "weekNumber": 6,
+      "dayOfWeek": "Friday",
+      "planId": "time-efficient-strength-conditioning",
+      "phase": "Progressive Overload (Weeks 3-6, Final Week)",
+      "focus": "Full Body C: Lower Emphasis",
+      "keyFeatures": [
+        "Final progressive overload session before Week 7 peak test",
+        "Front squat or back squat variation from Monday",
+        "Barbell RDL (heavier loads than dumbbell version)",
+        "Walking lunges with max progressive overload",
+        "Week 6 complete—assess 4-week progression (Week 3-6)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body C: Lower Emphasis",
+      "focus": "Final progressive overload session—visualize success",
+      "description": "Week 6, Day 5—Final progressive overload session before Week 7's peak test. This is the last time you'll squat at RPE 7-8 before Week 7's RPE 8-9 test. Visualize success before each set. Add 5-10lbs or aim for 2 more reps than Week 5. Week 6 complete after this session—compare loads to Week 3 and Week 5. Session time: 35-40min.",
+      "quote": {
+        "text": "This is the last time you'll squat at RPE 7-8 before Week 7's RPE 8-9 test—visualize success before each set.",
+        "author": "Week 6 Final Session Philosophy"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Same routine—final push (5-10min)",
+          "exercises": [
+            {
+              "name": "Light Cardio (Bike, Row, or Jog)",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Until you break a light sweat"
+              },
+              "tempo": "",
+              "notes": "Gradually elevate heart rate and body temperature",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Stretching",
+              "type": "Mobility",
+              "sets": "1-2",
+              "reps": "10-15/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings, hip circles, ankle mobility (wall drives), bodyweight squats (extra reps—prepare for heavy squats), walking lunges (10 steps—practice for Superset 3), light bar work (empty bar squats and RDLs). This is your final progressive overload warm-up—take it seriously. Week 7 will be heavier (75-80%), Week 8 is deload. Make this session count.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Superset 1",
+          "overview": "Front Squat or Barbell Back Squat + Dumbbell Bench Press (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Front Squat OR Barbell Back Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing bench press)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If Monday you did back squat, consider front squat here for variation. If you've been alternating, continue. Add 5-10lbs or aim for 2 more reps than Week 5. Visualize success. Leave 2-3 reps in reserve."
+              },
+              "tempo": "2-3 sec descent, brief pause, explosive up",
+              "notes": "Front Squat: Bar on front delts, elbows high (clean grip or cross-arm). Descend to parallel or below (stay upright—don't let torso collapse forward), drive up explosively. Barbell Back Squat (if choosing): Same setup as Monday. Consider variation: if Monday was high-bar (bar on traps), try low-bar (bar on rear delts) today, or vice versa. Week 6 final session progression: If Week 5 you front squatted 125lbs×10, try 135lbs×10 or 125lbs×12. This is the last time you'll squat at RPE 7-8 before Week 7's RPE 8-9 test. Visualize success before each set: see yourself completing all reps with good form, bar speed fast, hitting depth. Mental preparation matters—Week 7 you'll test 75-80% loads. Focus: Depth, upright torso, quad engagement, bar speed. Purpose: Quad-dominant squat pattern, lower body strength, mental preparation for Week 7 peak test.",
+              "tags": ["lower body", "compound", "barbell"],
+              "supersetId": "S1"
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Third bench press session this week (Mon, Wed, Fri). Loads may be slightly lighter due to accumulated fatigue—that's fine. Focus on control and full ROM. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Explosive press, controlled descent",
+              "notes": "Same setup and execution as Monday and Wednesday. Press dumbbells up and slightly together, control descent to chest level. Focus: This is your third bench press session in 5 days. Chest volume is accumulating—you may feel slightly fatigued, and that's normal and expected. Don't chase Monday's or Wednesday's numbers if you're tired—focus on quality reps and hitting RPE 7-8 with good form. Week 6 context: Compare to Week 5 Day 5 (not Monday or Wednesday). If Week 5 you pressed 60lb dumbbells×10, try 65lb×10 or 60lb×12 today. Purpose: Chest/shoulder/tricep strength, volume accumulation across 3 sessions, final progressive overload before Week 7.",
+              "tags": ["upper body", "chest"],
+              "supersetId": "S1"
+            }
+          ]
+        },
+        {
+          "title": "Superset 2",
+          "overview": "Barbell RDL + Barbell Row or Dumbbell Row (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Barbell Romanian Deadlift (RDL)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing rows)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "If Week 5 you did 135lbs×12, try 145lbs×12 or 135lbs×15. Final progressive overload RDL session before Week 7. Leave 2-3 reps in reserve."
+              },
+              "tempo": "2-3 sec descent (feel hamstring stretch), explosive glute contraction to return",
+              "notes": "Setup: Barbell starts in deadlift position (on floor) or on rack at hip height. Feet hip-width, overhand grip just outside legs. Execution: Hinge at hips (push hips back), bar travels down shins to mid-shin (feel hamstring stretch), squeeze glutes to return to standing. Knees stay slightly bent throughout. Don't round lower back—maintain neutral spine. Week 6 final session progression: If Week 5 you did 135lbs×12, try 145lbs×12 or 135lbs×15. This is your final progressive overload RDL before Week 7's peak test. Push for upper end of rep range or add 10lbs. Focus: Hamstring eccentric stretch (2-3sec descent), glute contraction at top (lockout with glutes, not back). Barbell RDL allows heavier loads than dumbbell RDL—if Wednesday you used 50lb dumbbells (100lbs total), today you might use 145-165lbs on barbell. Purpose: Posterior chain strength, hip hinge pattern with heavier loads.",
+              "tags": ["posterior chain", "hinge", "barbell"],
+              "supersetId": "S2"
+            },
+            {
+              "name": "Barbell Row OR Dumbbell Row (Bent-Over, Both Arms)",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Pull to sternum, squeeze shoulder blades, control descent. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled pull, squeeze at top for 1-2sec, controlled descent",
+              "notes": "Barbell Row: Hinge at hips (similar to RDL position but holding barbell). Torso ~45-degree angle to floor. Pull barbell to sternum (underhand or overhand grip—overhand targets mid-back more, underhand targets lats more), squeeze shoulder blades together at top for 1-2sec, control descent. Don't let torso rise—maintain hinge position. Dumbbell Row (bent-over, both arms): Same bent-over position. Row dumbbells to hips (pull elbows back, not out to sides), squeeze shoulder blades together at top for 1-2sec, control descent. Don't let torso rotate—keep shoulders square. Week 6 progression: If Week 5 you rowed 95lbs barbell×12, try 105lbs×12 or 95lbs×15. Focus: Mid-back and lat contraction, squeeze at top. Purpose: Back thickness, bilateral pulling strength, core stability (no bench support).",
+              "tags": ["upper body", "back"],
+              "supersetId": "S2"
+            }
+          ]
+        },
+        {
+          "title": "Superset 3",
+          "overview": "Walking Lunges + Dumbbell Overhead Press (3 sets, 60-90sec rest)",
+          "exercises": [
+            {
+              "name": "Walking Lunges",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12/leg (24 total steps)",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec (after completing overhead press)",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Heavier dumbbells than Week 5. If you used 30lb dumbbells, try 35lb. 12 steps per leg—your legs should be burning by the end. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Controlled descent, explosive drive through front heel to next step",
+              "notes": "Setup: Hold dumbbells at sides (not overhead). Stand upright. Execution: Step forward into lunge (front thigh parallel to ground, back knee nearly touches floor), push through front heel to step forward into next lunge (don't step back—walk forward continuously). 12 steps per leg = 24 total steps per set. You'll need ~30-40 feet of space. Week 6 final session progression: If Week 5 you used 30lb dumbbells×10/leg, try 35lb×10/leg or 30lb×12/leg today. Push for 12 steps per leg this week (upper end of range). Focus: Front knee tracks over toes (don't cave inward), torso upright, balance and control. If you wobble significantly, use lighter weight—form is priority. Your legs should be burning by the end—that's the goal. Purpose: Unilateral leg strength, quad/glute emphasis, balance and stability, final lower body volume before Week 7.",
+              "tags": ["lower body", "unilateral"],
+              "supersetId": "S3"
+            },
+            {
+              "name": "Dumbbell Overhead Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90 sec",
+              "intensity": {
+                "type": "RPE",
+                "value": "7-8",
+                "description": "Third overhead press session this week (Mon, Wed, Fri). Final progressive overload session before Week 7. Standing or seated. Leave 2-3 reps in reserve."
+              },
+              "tempo": "Explosive press, controlled descent",
+              "notes": "Same setup and execution as Monday and Wednesday. Press dumbbells overhead to full lockout, control descent to shoulder level. Don't hyperextend back. Focus: This is your third overhead press session in 5 days. Shoulders are accumulating volume—you may feel slightly fatigued. That's normal and expected. Don't chase Monday's or Wednesday's numbers if you're tired—hit RPE 7-8 with good form. Week 6 final session: Compare to Week 5 Day 5 (not Mon or Wed). If Week 5 you pressed 40lb dumbbells×10, try 45lb×10 or 40lb×12 today. Purpose: Shoulder strength, overhead pressing pattern, volume accumulation, final progressive overload before Week 7 peak test.",
+              "tags": ["upper body", "shoulders"],
+              "supersetId": "S3"
+            }
+          ]
+        },
+        {
+          "title": "Optional Cardio Finisher",
+          "overview": "Only add if you have time and energy (10min)",
+          "exercises": [
+            {
+              "name": "Farmer Carries",
+              "type": "Cardio",
+              "sets": "4",
+              "reps": "",
+              "duration": "50 yards walk",
+              "distance": "50 yards",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "Very heavy dumbbells or kettlebells—challenging to hold but you can walk without stopping",
+                "description": "Total ~10min. Skip if fatigued—Week 6 complete after main supersets."
+              },
+              "tempo": "",
+              "notes": "Pick weight that's challenging to hold (e.g., 70-90lb dumbbells or kettlebells per hand if strong, 50-60lb if less experienced). Walk 50 yards with good posture (chest up, shoulders back, core tight), set weights down, rest 2min. Repeat 4 times. Purpose: Grip strength, core stability, full-body strength endurance. Week 6 context: This is the final progressive overload finisher. You've accumulated 6 weeks of training stress—you're likely feeling fatigued. Skip finisher if you're run-down. Week 7 is peak test week (75-80% loads, RPE 8-9)—prioritize being fresh for that. Week 8 is deload (40% volume reduction, no finishers). Only do finisher if you have time and energy. Don't feel guilty about skipping—Week 6 is complete after main 3 supersets.",
+              "tags": ["conditioning", "grip", "optional"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Extra focus on legs—Week 6 complete (5min)",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus areas: quads (standing quad stretch or couch stretch—extra focus after lunges and squats), hamstrings (standing or seated—extra focus after RDLs), glutes (figure-4 or pigeon pose), hip flexors (kneeling lunge stretch), calves, shoulders. Hold each stretch 20-30sec. Breathe deeply. Week 6 is complete after this session—you've accumulated 4 weeks of progressive overload (Weeks 3-6). Loads have increased 10-20%, work capacity has improved significantly, cardiovascular fitness is noticeably better. Stretching now aids recovery and prepares for Week 7's peak test. Purpose: Aid recovery, reduce muscle tension, improve flexibility. Week 6 reflection: Compare loads to Week 5 and Week 3—did you successfully add 5-10lbs or 1-2 reps across most exercises? Calculate percentage increase from Week 3 to Week 6. Typical progression: 10-20% increase in 4 weeks. If you're in that range, you're on track for Week 7's peak test.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
