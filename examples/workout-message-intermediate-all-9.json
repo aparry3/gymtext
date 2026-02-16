@@ -1,0 +1,216 @@
+[
+  {
+    "id": "intermediate-w1-monday-message",
+    "metadata": {
+      "workoutId": "intermediate-w1-monday",
+      "weekNumber": 1,
+      "dayOfWeek": "Monday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Accumulation (Weeks 1-6)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PUSH: Chest & Shoulders\n\nCompounds:\n- Barbell Bench Press: 4x8 @ RPE 7-8 (2-3min rest)\n- Incline Dumbbell Press: 3x10-12 @ RPE 7-8\n- Dumbbell Shoulder Press: 3x10 @ RPE 7-8\n\nAccessories:\n- Machine Chest Press: 3x12-15 @ RPE 8\n\nIsolation:\n- Lateral Raises: 3x15-20 @ RPE 8-9\n- Overhead Triceps Extension: 3x12-15 @ RPE 8\n\nNotes: First push day of Week 1. Start conservative (70-75% 1RM)—leave 2-3 reps in reserve. Track all weights. Rest 90-120s compounds, 60-90s accessories, 60s isolation. Session ~65min.",
+    "qualityNotes": [
+      "Week 1 accumulation baseline",
+      "Clear exercise categorization (compounds → accessories → isolation)",
+      "RPE guidance per section",
+      "Rest periods specified",
+      "Conservative start emphasized (70-75% 1RM, leave 2-3 RIR)",
+      "Tracking instruction",
+      "Session time realistic (~65min)",
+      "SMS-friendly length (~140 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w1-tuesday-message",
+    "metadata": {
+      "workoutId": "intermediate-w1-tuesday",
+      "weekNumber": 1,
+      "dayOfWeek": "Tuesday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Accumulation (Weeks 1-6)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PULL: Back & Biceps\n\nCompounds:\n- Conventional Deadlift: 4x6 @ RPE 7-8 (2-3min rest)\n- Pull-Ups OR Lat Pulldown: 4x8-10 @ RPE 7-8\n- Barbell Row: 3x10-12 @ RPE 7-8\n\nAccessories:\n- Single-Arm Dumbbell Row: 3x12/arm @ RPE 8\n- Face Pulls: 3x15-20 @ RPE 8\n\nIsolation:\n- Barbell Curls: 3x10-12 @ RPE 8\n- Hammer Curls: 3x12-15 @ RPE 8\n\nNotes: Deadlift is main posterior chain movement—focus on form and speed, don't grind reps. Track weights. Rest 2-3min deadlifts, 90s other compounds, 60s isolation. Session ~70min.",
+    "qualityNotes": [
+      "Pull day with deadlift emphasis",
+      "Deadlift execution notes (form and speed, don't grind)",
+      "Alternative provided (pull-ups OR lat pulldown)",
+      "Rest periods varied by exercise type (2-3min deadlift, 90s compounds, 60s isolation)",
+      "RPE 7-8 accumulation baseline",
+      "Session time realistic (~70min)",
+      "SMS-friendly length (~135 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w1-wednesday-message",
+    "metadata": {
+      "workoutId": "intermediate-w1-wednesday",
+      "weekNumber": 1,
+      "dayOfWeek": "Wednesday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Accumulation (Weeks 1-6)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "LEGS: Quad Emphasis\n\nCompounds:\n- Barbell Back Squat: 4x8 @ RPE 7-8, 3-1-X tempo (2-3min rest)\n- Leg Press: 3x12-15 @ RPE 8\n- Bulgarian Split Squat: 3x10/leg @ RPE 7-8\n\nIsolation:\n- Leg Extensions: 3x15-20 @ RPE 8-9\n- Leg Curls: 3x15 @ RPE 8\n\nAccessories:\n- Romanian Deadlift: 3x12 @ RPE 7-8\n- Calf Raises: 4x15-20 @ RPE 8-9\n\nNotes: Squat tempo = 3sec descent, 1sec pause, explosive up. Teaches control. Track weights. Rest 2-3min squats, 90s other compounds, 60s isolation. Session ~75min.",
+    "qualityNotes": [
+      "Legs quad emphasis with tempo squat",
+      "Tempo explicitly defined (3-1-X = 3sec descent, 1sec pause, explosive up)",
+      "Rationale provided (teaches control)",
+      "Unilateral work noted (/leg for Bulgarian split squat)",
+      "Rest periods varied (2-3min squat, 90s compounds, 60s isolation)",
+      "Session time realistic (~75min, longest day)",
+      "SMS-friendly length (~130 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w7-thursday-message",
+    "metadata": {
+      "workoutId": "intermediate-w7-thursday",
+      "weekNumber": 7,
+      "dayOfWeek": "Thursday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PUSH: Triceps & Front Delts (DELOAD)\n\nCompounds:\n- Incline Barbell Press: 2x8-10 @ RPE 6-7\n- Flat Dumbbell Press: 2x10-12 @ RPE 6-7\n- Seated Dumbbell Shoulder Press: 2x10-12 @ RPE 6-7\n- Close-Grip Bench Press: 2x10-12 @ RPE 6-7\n\nIsolation:\n- Cable Flyes: 2x12-15 @ RPE 7\n- Front Raises: 2x12-15 @ RPE 7\n- Triceps Pushdowns: 2x15-20 @ RPE 7\n\nNotes: DELOAD WEEK. Use 70-80% of Week 6 weights. Cut sets in half. Leave 3-4 reps in reserve. This is ACTIVE recovery—feel strong and controlled, not fatigued. Session ~45min.",
+    "qualityNotes": [
+      "DELOAD clearly marked (title and notes)",
+      "2 sets per exercise (50% reduction from accumulation)",
+      "RPE 6-7 (lower than accumulation)",
+      "Specific load guidance (70-80% of Week 6 weights)",
+      "RIR increased (leave 3-4 reps in reserve)",
+      "Mental framing (active recovery, feel strong and controlled, not fatigued)",
+      "Session time reduced (~45min vs 65min accumulation)",
+      "SMS-friendly length (~110 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w7-friday-message",
+    "metadata": {
+      "workoutId": "intermediate-w7-friday",
+      "weekNumber": 7,
+      "dayOfWeek": "Friday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PULL: Rear Delts & Biceps (DELOAD)\n\nCompounds:\n- Weighted Pull-Ups OR Lat Pulldown: 2x8-10 @ RPE 6-7\n- T-Bar Row OR Pendlay Row: 2x10-12 @ RPE 6-7\n- Seated Cable Row: 2x12-15 @ RPE 7\n\nIsolation:\n- Straight-Arm Pulldown: 2x15 @ RPE 7\n- Reverse Pec Deck OR Rear Delt Flyes: 2x15-20 @ RPE 7\n- Incline Dumbbell Curls: 2x12 @ RPE 7\n- Cable Curls: 2x15-20 @ RPE 7\n\nNotes: DELOAD. NO deadlift today (posterior chain rests). 2 sets per exercise, 70-80% loads, RPE 6-7. Focus on quality reps—smooth and controlled. Session ~45min.",
+    "qualityNotes": [
+      "DELOAD marked",
+      "NO deadlift explicitly stated (strategic omission for posterior chain rest)",
+      "2 sets per exercise (50% reduction)",
+      "Load guidance (70-80%)",
+      "RPE 6-7 (deload intensity)",
+      "Execution emphasis (quality reps, smooth and controlled)",
+      "Session time reduced (~45min)",
+      "SMS-friendly length (~105 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w7-saturday-message",
+    "metadata": {
+      "workoutId": "intermediate-w7-saturday",
+      "weekNumber": 7,
+      "dayOfWeek": "Saturday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "LEGS: Hamstring & Glute (DELOAD)\n\nCompounds:\n- Romanian Deadlift: 2x10 @ RPE 6-7 (2min rest)\n- Hip Thrusts: 2x12-15 @ RPE 7\n- Walking Lunges: 2x12/leg @ RPE 6-7\n\nIsolation:\n- Lying Leg Curls: 2x12-15 @ RPE 7\n- Leg Press (Narrow Stance): 2x15 @ RPE 7\n- Seated Calf Raises: 2x15-20 @ RPE 7\n\nNotes: DELOAD. NO squat today (covered Wednesday). Focus hamstring/glute with lighter loads. 2 sets, 70-80% of Week 6 weights, RPE 6-7. You should feel fresh. Deload week complete! Session ~45min.",
+    "qualityNotes": [
+      "DELOAD marked",
+      "NO squat explicitly stated (covered Wednesday)",
+      "Hamstring/glute focus clarified",
+      "2 sets per exercise",
+      "Load guidance (70-80% of Week 6)",
+      "RPE 6-7 (deload)",
+      "Recovery emphasis (you should feel fresh)",
+      "Milestone noted (deload week complete!)",
+      "Session time reduced (~45min)",
+      "SMS-friendly length (~100 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w13-monday-message",
+    "metadata": {
+      "workoutId": "intermediate-w13-monday",
+      "weekNumber": 13,
+      "dayOfWeek": "Monday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Intensification (Weeks 9-14)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PUSH: Chest & Shoulders (INTENSIFICATION)\n\nCompounds:\n- Barbell Bench Press: 4x6-8 @ RPE 8-9 (Set 4: REST-PAUSE—6 reps, rack, 15-20sec rest, 2-3 more reps)\n- Incline Dumbbell Press: 3x8-10 @ RPE 8-9 (Set 3: 4-5sec eccentric every rep)\n- Dumbbell Shoulder Press: 3x8-10 @ RPE 8-9\n\nAccessories:\n- Machine Chest Press: 3x10-12 @ RPE 8-9\n\nIsolation:\n- Lateral Raises: 3x12-15 @ RPE 9 (Set 3: DROP SET—failure, drop 30-40%, 8-10 more reps)\n- Overhead Triceps Extension: 3x10-12 @ RPE 8-9\n\nNotes: Peak intensity. RPE 8-9 (only 1-2 reps left). Advanced techniques on FINAL sets only. Form is still king. Session ~75min.",
+    "qualityNotes": [
+      "INTENSIFICATION marked (title and phase)",
+      "Advanced techniques explicitly defined with execution details",
+      "Rest-pause: 6 reps, rack, 15-20sec rest, 2-3 more reps",
+      "Slow eccentrics: 4-5sec eccentric every rep",
+      "Drop set: failure, drop 30-40%, 8-10 more reps",
+      "Final sets only emphasized (Set 3/Set 4 specified)",
+      "RPE 8-9 (peak intensity, only 1-2 reps left)",
+      "Safety reminder (Form is still king)",
+      "Session time increased (~75min due to techniques)",
+      "SMS-friendly length (~155 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w13-tuesday-message",
+    "metadata": {
+      "workoutId": "intermediate-w13-tuesday",
+      "weekNumber": 13,
+      "dayOfWeek": "Tuesday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Intensification (Weeks 9-14)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "PULL: Back & Biceps (INTENSIFICATION)\n\nCompounds:\n- Conventional Deadlift: 4x5-6 @ RPE 8-9 (Set 4: REST-PAUSE—5 reps, 20-30sec rest, 1-2 more. Form CRITICAL—don't round back)\n- Weighted Pull-Ups OR Lat Pulldown: 4x6-8 @ RPE 8-9 (Set 4: 4-5sec eccentric every rep)\n- Barbell Row: 3x8-10 @ RPE 8-9\n\nAccessories:\n- Single-Arm Dumbbell Row: 3x10/arm @ RPE 8-9\n- Face Pulls: 3x15-20 @ RPE 8-9\n\nIsolation:\n- Barbell Curls: 3x8-10 @ RPE 9 (Set 3: DROP SET—failure, drop 30%, 8-10 more)\n- Hammer Curls: 3x10-12 @ RPE 8-9\n\nNotes: Heavy deadlifts—rest-pause final set. Form critical. Expect massive biceps pump from drop set. Session ~75min.",
+    "qualityNotes": [
+      "INTENSIFICATION marked",
+      "Advanced techniques defined (rest-pause, slow eccentrics, drop set)",
+      "Deadlift safety emphasized (Form CRITICAL—don't round back)",
+      "Rest-pause rest period longer for deadlift (20-30sec vs 15-20sec bench)",
+      "Slow eccentrics on pull-ups Set 4",
+      "Drop set on barbell curls Set 3",
+      "Expectation set (Expect massive biceps pump)",
+      "RPE 8-9 throughout",
+      "Session time ~75min",
+      "SMS-friendly length (~145 words)"
+    ]
+  },
+  {
+    "id": "intermediate-w13-wednesday-message",
+    "metadata": {
+      "workoutId": "intermediate-w13-wednesday",
+      "weekNumber": 13,
+      "dayOfWeek": "Wednesday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Intensification (Weeks 9-14)",
+      "messageType": "daily_workout",
+      "experienceLevel": "intermediate"
+    },
+    "message": "LEGS: Quad Emphasis (INTENSIFICATION)\n\nCompounds:\n- Barbell Back Squat: 4x6-8 @ RPE 8-9 (Set 4: REST-PAUSE—6 reps, rack, 20sec rest, 2-3 more. Stay focused)\n- Leg Press: 3x10-12 @ RPE 8-9\n- Bulgarian Split Squat: 3x8/leg @ RPE 8-9 (Set 3: 4-5sec eccentric every rep)\n\nIsolation:\n- Leg Extensions: 3x12-15 @ RPE 9 (Set 3: DROP SET—failure, drop 40%, 10-12 more. Expect burn)\n- Leg Curls: 3x12-15 @ RPE 8-9\n\nAccessories:\n- Romanian Deadlift: 3x10-12 @ RPE 8-9\n- Calf Raises: 4x12-15 @ RPE 9\n\nNotes: Hardest week. Squat rest-pause is neurally demanding—maintain form. Legs will be torched. Expect significant DOMS tomorrow. Session ~75min.",
+    "qualityNotes": [
+      "INTENSIFICATION marked",
+      "Advanced techniques defined (rest-pause, slow eccentrics, drop set)",
+      "Squat rest-pause safety note (Stay focused, maintain form)",
+      "Bulgarian slow eccentrics Set 3",
+      "Leg extensions drop set Set 3 (Expect burn)",
+      "Mental preparation (Hardest week)",
+      "Recovery warning (Expect significant DOMS tomorrow)",
+      "Context (Legs will be torched)",
+      "RPE 8-9/9 throughout",
+      "Session time ~75min",
+      "SMS-friendly length (~140 words)"
+    ]
+  }
+]
