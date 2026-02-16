@@ -1,0 +1,149 @@
+[
+  {
+    "weekNumber": 1,
+    "phase": "Strength Emphasis (Week 1/3)",
+    "overview": "Opening week of fight camp establishes baseline strength capacity and work tolerance. Focus on building force production through moderate-volume compound lifts (4x5 @ 80-85% 1RM) while introducing alactic conditioning protocols. This week prioritizes movement quality and technical proficiency in both strength and explosive exercises—don't chase PRs. Strength sessions should feel challenging but controlled (RPE 7-8), leaving room for high-quality MMA training. Key objective: Build the foundation for power development in subsequent weeks.",
+    "days": [
+      {
+        "day": "Monday",
+        "focus": "Lower Body Power + Alactic Conditioning",
+        "activityType": "TRAINING",
+        "notes": "60min session focused on explosive lower body development and sprint capacity. Warm-up (5min dynamic movement), Neural Activation: 3x3 Trap Bar Jumps @ max intent, Max Strength: 4x5 Trap Bar Deadlift @ 80% 1RM (RPE 7-8, rest 3min), Explosive Strength: 3x5 Kettlebell Swings @ heavy load, Plyometrics: 3x5 Broad Jumps (focus on landing mechanics), Alactic Conditioning: 6 rounds x 10sec Assault Bike sprint / 50sec rest (build to 8 rounds by Week 3), Cool-down (5min stretching + breathwork). Pair with light technical MMA work or schedule on grappling-light day to manage fatigue."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "MMA Training — Technical Drilling & Light Sparring",
+        "activityType": "TRAINING",
+        "notes": "Prioritize technical drilling and positional sparring. Avoid heavy sparring immediately after yesterday's lower power session. Focus on skill acquisition: striking combinations, takedown entries, guard passing sequences. Keep rounds light-to-moderate intensity (60-70% effort) to allow lower body recovery. Optional conditioning: 3-4 rounds x 3min technical flow rolling or pad work with active rest between rounds. Hydration and nutrition are critical—this is a high-volume training day when combined with yesterday's strength work."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Upper Body Strength + Anti-Rotation Core",
+        "activityType": "TRAINING",
+        "notes": "60min session emphasizing punching power and grappling strength. Warm-up (5min band work + scapular activation), Max Strength Push: 4x5 Landmine Press @ 82% 1RM (shoulder-safe alternative to strict OHP, RPE 7-8, rest 2min), Max Strength Pull: 4x5 Weighted Pull-ups @ heavy load or Barbell Row @ 82% 1RM (rest 2min), Rotational Power: 3x6/side Med Ball Rotational Throws against wall (explosive intent), Anti-Rotation Core: 3x8/side Pallof Press @ moderate resistance, Grip/Forearm: 3x45sec Dead Hang (critical for grappling), Optional Conditioning: 4 rounds x 30sec Battle Ropes / 30sec rest. Pair with striking-focused MMA session (technical, not hard sparring)."
+      },
+      {
+        "day": "Thursday",
+        "focus": "MMA Training — Sparring & Conditioning",
+        "activityType": "TRAINING",
+        "notes": "Sparring and conditioning emphasis. Live sparring rounds (4-6 x 5min with 1min rest) at moderate-to-high intensity (70-80% effort). Focus on implementing techniques from earlier in the week under fatigue. Post-sparring conditioning: 2-3 rounds of fight-specific circuits (e.g., 30sec heavy bag → 30sec sprawls → 30sec ground-and-pound on dummy → 30sec rest, repeat). This is your highest-intensity MMA day of the week—fuel appropriately and monitor recovery closely."
+      },
+      {
+        "day": "Friday",
+        "focus": "Full Body Explosive + Fight Simulation Conditioning",
+        "activityType": "TRAINING",
+        "notes": "60min session integrating power and conditioning in fight-specific format. Warm-up (5min shadow boxing), Olympic Lift: 5x3 Hang Power Clean @ 72% 1RM (focus on bar speed, rest 2min), Explosive Upper: 3x5 Plyo Push-ups (hands leave ground), Explosive Lower: 3x5 Jump Squats @ bodyweight (prioritize landing mechanics), Fight Simulation Conditioning: 2 rounds x 5min work / 1min rest (each round: 30sec Assault Bike sprint → 30sec KB Swings → 30sec Burpees → 30sec Battle Ropes → repeat 2x), Finisher: 2x10/side Turkish Get-Up @ moderate KB, Cool-down (5min stretching + breathwork). Schedule before or after light technique work—not after hard sparring."
+      },
+      {
+        "day": "Saturday",
+        "focus": "MMA Training — Open Mat & Sparring",
+        "activityType": "TRAINING",
+        "notes": "Open mat and sparring. This is your highest-volume MMA day. Live sparring (6-8 x 5min rounds), positional sparring, and drilling. Mix striking and grappling rounds to maintain well-rounded conditioning. Intensity should be moderate-to-high (70-85% effort) with at least 2-3 rounds at near-competition pace. Recovery focus post-training: hydration, protein intake within 30min, stretching, and foam rolling. Consider contrast therapy (hot/cold) if available."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Rest / Active Recovery",
+        "activityType": "ACTIVE_RECOVERY",
+        "notes": "Complete rest or light active recovery only. Options: 20-30min easy walk, yoga flow (focus on hip and shoulder mobility), sauna session, or massage. No sparring, no conditioning, no strength work. This is a recovery day—prioritize sleep (8-9 hours), nutrition (maintenance calories, high protein), and mental preparation for Week 2. Reflect on this week's training: What felt strong? What needs attention? Film review of sparring footage is encouraged."
+      }
+    ]
+  },
+  {
+    "weekNumber": 4,
+    "phase": "Power Development (Week 1/2)",
+    "overview": "Transition week from strength emphasis to power development. Reduce max strength volume (3x3 @ 85-90% 1RM) while ramping up explosive work—Olympic lifts increase to 5 sets, plyometrics expand to 4 sets. The goal: convert accumulated strength into explosive power output. Bar speed and intent become primary metrics; if rep speed drops, reduce load. Conditioning volume increases with 3-4 rounds of fight simulation circuits. This is the most demanding week of camp—manage fatigue carefully and prioritize recovery. Expect higher perceived exertion during MMA sessions as strength work intensifies.",
+    "days": [
+      {
+        "day": "Monday",
+        "focus": "Lower Body Power + Alactic Conditioning",
+        "activityType": "TRAINING",
+        "notes": "60min session emphasizing explosive intent and power transfer. Warm-up (5min dynamic movement + joint prep), Neural Activation: 3x3 Box Jumps @ max height (focus on landing softly), Max Strength: 3x3 Safety Bar Squat @ 87% 1RM (RPE 8-9, rest 3min—reduced volume but higher intensity), Explosive Strength: 4x5 Kettlebell Swings @ heavy load (increase sets from Week 1), Plyometrics: 4x5 Lateral Bounds (add sets + lateral emphasis for MMA footwork), Alactic Conditioning: 8 rounds x 10sec Hill Sprint or Assault Bike / 50sec rest (reached target volume), Cool-down (5min + breathwork). Schedule on lighter MMA day—avoid pairing with hard sparring."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "MMA Training — Technical Emphasis & Light Sparring",
+        "activityType": "TRAINING",
+        "notes": "Technical striking and grappling emphasis. Keep intensity moderate (65-75% effort) to allow recovery from yesterday's lower power work. Focus: striking combinations with footwork, takedown defense, submission escapes. Limit live sparring to 2-3 light rounds. Optional conditioning: 3 rounds x 2min technical pad work with 1min active rest. This is a skill-acquisition day, not a grind-it-out day. Prioritize movement quality and technique refinement."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Upper Body Strength + Anti-Rotation Core",
+        "activityType": "TRAINING",
+        "notes": "60min session with increased rotational power volume. Warm-up (5min), Max Strength Push: 3x3 Bench Press @ 87% 1RM (RPE 8-9, rest 3min—transition to barbell for heavier loading), Max Strength Pull: 3x3 Weighted Pull-ups @ RPE 8-9 or Barbell Row @ 87% 1RM (rest 3min), Rotational Power: 4x6/side Med Ball Rotational Throws (increase sets, focus on explosive hip rotation), Anti-Rotation Core: 3x10/side Pallof Press @ heavier resistance, Grip/Forearm: 3x50sec Dead Hang + 2x40m Farmer's Carry @ heavy load, Conditioning: 5 rounds x 30sec Battle Ropes / 30sec rest. Pair with striking-focused MMA session."
+      },
+      {
+        "day": "Thursday",
+        "focus": "MMA Training — Moderate-to-High Sparring",
+        "activityType": "TRAINING",
+        "notes": "Sparring day with moderate-to-high intensity. Live rounds: 5 x 5min at 75-85% effort. Focus on integrating power development into striking—notice increased snap in punches, faster level changes, explosive scrambles. Post-sparring conditioning: 2 rounds of fight-specific circuits. Monitor bar speed in tomorrow's Olympic lifts; if you're overly fatigued today, scale back sparring volume by 1-2 rounds."
+      },
+      {
+        "day": "Friday",
+        "focus": "Full Body Explosive + Fight Simulation Conditioning",
+        "activityType": "TRAINING",
+        "notes": "60min session with peak explosive volume. Warm-up (5min shadow boxing), Olympic Lift: 5x3 Power Clean @ 75% 1RM (increase intensity from Week 1, bar speed should be explosive), Explosive Upper: 4x5 Med Ball Chest Pass @ heavy ball (increase sets), Explosive Lower: 4x5 Jump Squats @ 10-20% bodyweight load (add light load for power development), Fight Simulation Conditioning: 3 rounds x 5min work / 1min rest (increase to 3 rounds—this is peak conditioning volume for the week), Finisher: 2x8/side Turkish Get-Up @ moderate-heavy KB, Cool-down (5min). This is the most demanding session of the week—schedule carefully away from hard sparring."
+      },
+      {
+        "day": "Saturday",
+        "focus": "MMA Training — Hard Sparring & High Volume",
+        "activityType": "TRAINING",
+        "notes": "Open mat and hard sparring. High-volume day: 6-8 x 5min rounds with 2-3 at near-competition intensity (85-90% effort). Mix striking, grappling, and MMA rounds. This is where you test the power development work—look for faster explosive movements, improved takedown power, stronger top control. Recovery is critical: post-training nutrition within 30min, contrast therapy, and mobility work."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Rest / Active Recovery",
+        "activityType": "ACTIVE_RECOVERY",
+        "notes": "Complete rest or very light active recovery. This week was the most demanding of camp—prioritize sleep (8-9 hours), nutrition (slight calorie surplus if weight allows), and mental recovery. Options: gentle yoga (20-30min), light walk, sauna, or massage. No training stimulus. Reflect on power transfer: Are you noticing faster movements? Increased explosiveness in scrambles? Prepare mentally for the shift to fight-peaking phase next week."
+      }
+    ]
+  },
+  {
+    "weekNumber": 7,
+    "phase": "Fight Peak (Week 2/2)",
+    "overview": "Final week of active fight preparation before taper. Strength work is minimal (2x3 @ 92% 1RM for CNS priming, not muscle building), explosive work maintains quality over volume (3-4 sets with max intent), and conditioning reaches peak with 5-round fight simulations. This week integrates all training qualities—strength, power, conditioning—into fight-ready performance. Every session should feel sharp and explosive; if movements are slow or grinding, reduce load immediately. Priority shifts from building capacity to expressing capacity. Sparring intensity should be high but controlled (85-90% effort with technical precision). Mental preparation intensifies: visualize fight scenarios, practice in-cage movement, refine game plan with coaches. Next week is taper—trust the process and stay disciplined with recovery.",
+    "days": [
+      {
+        "day": "Monday",
+        "focus": "Lower Body Power + Alactic Conditioning",
+        "activityType": "TRAINING",
+        "notes": "50min session emphasizing explosive quality and freshness. Warm-up (5min dynamic prep), Neural Activation: 3x2 Trap Bar Jumps @ max height (reduced reps for freshness), Max Strength: 2x3 Trap Bar Deadlift @ 92% 1RM (RPE 9.5, rest 3min—CNS priming only, not fatiguing), Explosive Strength: 3x3 Kettlebell Swings @ heavy load (reduce volume, maintain intensity), Plyometrics: 3x3 Box Jumps (quality over quantity—every rep should be explosive), Alactic Conditioning: 6 rounds x 10sec Assault Bike sprint / 50sec rest (reduce volume slightly to maintain freshness), Cool-down (5min + breathwork). Key: movements should feel FAST. If anything grinds, stop and reduce load. Schedule away from hard sparring."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "MMA Training — Technical Refinement & Light Sparring",
+        "activityType": "TRAINING",
+        "notes": "Technical refinement and light sparring. Focus: drilling fight game plan, working specific scenarios (e.g., cage cutting, clinch entries, bottom position escapes). Live sparring: 3-4 rounds at moderate intensity (70-80% effort)—technical sharpness, not war. This is NOT the day to test toughness. You're peaking, not proving. Optional conditioning: 2 rounds x 2min pad work with active rest. Prioritize movement quality and mental clarity."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Upper Body Strength + Anti-Rotation Core",
+        "activityType": "TRAINING",
+        "notes": "50min session with minimal fatigue emphasis. Warm-up (5min), Max Strength Push: 2x3 Bench Press @ 92% 1RM (RPE 9.5, rest 3min—crisp, explosive reps), Max Strength Pull: 2x3 Weighted Pull-ups @ RPE 9 or Barbell Row @ 90% 1RM (rest 3min), Rotational Power: 3x4/side Med Ball Rotational Throws @ max velocity (reduce reps, increase intent), Anti-Rotation Core: 3x6/side Pallof Press @ heavy resistance (maintain strength, don't chase volume), Grip/Forearm: 2x45sec Dead Hang (maintenance work), Optional Conditioning: 3 rounds x 20sec Battle Ropes / 40sec rest (light finisher). Pair with striking-focused MMA session—keep it technical and sharp."
+      },
+      {
+        "day": "Thursday",
+        "focus": "MMA Training — Last Hard Sparring Before Taper",
+        "activityType": "TRAINING",
+        "notes": "Hard sparring but controlled volume. Live rounds: 4 x 5min at high intensity (85-90% effort). This is your last full-intensity sparring before taper—make it count. Focus on fight-specific scenarios: opening exchanges, cage pressure, scrambles, late-round finishing sequences. Post-sparring: 1 round of light conditioning (shadow boxing or bag work) to flush lactate. Recovery priority: nutrition, hydration, ice bath or contrast therapy, mobility work. Monitor for any injuries or excessive soreness—communicate with coaches immediately."
+      },
+      {
+        "day": "Friday",
+        "focus": "Full Body Explosive + Peak Fight Simulation Conditioning",
+        "activityType": "TRAINING",
+        "notes": "60min session with peak fight conditioning. Warm-up (5min shadow boxing), Olympic Lift: 4x2 Power Clean @ 77% 1RM (reduce reps, maintain bar speed—if any rep is slow, stop set), Explosive Upper: 3x3 Plyo Push-ups (quality reps only), Explosive Lower: 3x3 Jump Squats @ bodyweight (explosive intent, perfect landing), Fight Simulation Conditioning: 5 rounds x 5min work / 1min rest (PEAK conditioning volume—replicate fight structure exactly: 30sec Assault Bike sprint → 30sec KB Swings → 30sec Burpees → 30sec Battle Ropes → repeat 2x per round), Finisher: 1x5/side Turkish Get-Up @ moderate KB (reduce volume), Cool-down (5min + breathwork). This is the hardest conditioning session of camp—you should finish feeling like you just went 5 rounds. Schedule away from hard sparring (ideally after light technical work)."
+      },
+      {
+        "day": "Saturday",
+        "focus": "MMA Training — Final Hard Day Before Taper",
+        "activityType": "TRAINING",
+        "notes": "Final hard training day before taper. Open mat with 5-6 x 5min rounds at moderate-to-high intensity (75-85% effort). Mix striking and grappling. Focus: game plan implementation, fight-specific scenarios, mental confidence building. This is your last chance to work hard—make positions count. Post-training: film review with coaches, discuss adjustments, confirm taper plan for next week. Recovery: protein within 30min, stretching, foam rolling, mental visualization of fight success."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Active Recovery / Light Technical Work",
+        "activityType": "ACTIVE_RECOVERY",
+        "notes": "30-40min light activity only. Options: easy yoga flow (hip and shoulder mobility), 20min walk, or light shadow boxing (no intensity, pure movement). Optional: 2-3 rounds of very light technical drilling (no sparring, no resistance). This is a recovery day preparing for next week's taper. Prioritize: 8-9 hours sleep, maintenance calories (high protein, moderate carbs), hydration (3-4L water), mental preparation (visualization, game plan review, confidence building). You've done the work—next week you sharpen the blade and arrive at the cage ready to perform."
+      }
+    ]
+  }
+]
