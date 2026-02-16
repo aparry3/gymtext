@@ -1,0 +1,62 @@
+[
+  {
+    "microcycleId": "beginner-week-1",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Week 1 — Movement Pattern Introduction",
+      "phase": "Form Mastery (Weeks 1-4)",
+      "planId": "beginner-general-fitness",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner"
+    },
+    "message": "WEEK 1 — Movement Pattern Introduction\n\nYour first week of training. Focus: learn fundamental movement patterns (squat, hinge, push, pull) with light loads. Keep it conservative—every rep is a learning opportunity.\n\nThis Week:\n- Mon: Full body (lower emphasis)\n- Tue: Rest\n- Wed: Full body (upper emphasis)\n- Thu: Rest\n- Fri: Full body (balanced)\n- Sat: Active recovery (optional)\n- Sun: Rest\n\nIntensity: RPE 5-6 (light weight)\nVolume: 2 sets x 12-15 reps\n\nExpect some soreness as your body adapts—that's normal. If something hurts (not burns), stop and modify. You're building the foundation!",
+    "qualityNotes": [
+      "Week title on Line 1 (all caps for emphasis)",
+      "Brief overview (2 sentences max)",
+      "7-day breakdown (day name + brief focus)",
+      "Intensity/volume guidance at bottom",
+      "Encouraging but realistic tone",
+      "SMS-friendly length (~150 words)"
+    ]
+  },
+  {
+    "microcycleId": "beginner-week-5",
+    "weekNumber": 5,
+    "metadata": {
+      "title": "Week 5 — Progressive Overload Begins",
+      "phase": "Progressive Overload (Weeks 5-8)",
+      "planId": "beginner-general-fitness",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner"
+    },
+    "message": "WEEK 5 — Progressive Overload Begins\n\nYou've completed form mastery! Now we add weight when you hit 3x15 reps with perfect form. Track your lifts—you'll need those numbers to know when to progress.\n\nThis Week:\n- Mon: Full body (lower emphasis)\n- Tue: Rest\n- Wed: Full body (upper emphasis)\n- Thu: Rest\n- Fri: Full body (balanced)\n- Sat: Active recovery (optional)\n- Sun: Rest\n\nIntensity: RPE 6-7 (moderate challenge)\nVolume: 3 sets x 12-15 reps\n\nMovements should feel familiar now. Your focus shifts from learning the pattern to challenging the muscles. Write down your weights after each session!",
+    "qualityNotes": [
+      "Acknowledges previous phase completion",
+      "Clear progression instruction (track lifts, add weight at 3x15)",
+      "Same structure as Week 1 (consistency)",
+      "Intensity/volume updated to reflect new phase",
+      "Action-oriented: 'Write down your weights'",
+      "Still beginner-friendly language"
+    ]
+  },
+  {
+    "microcycleId": "beginner-week-9",
+    "weekNumber": 9,
+    "metadata": {
+      "title": "Week 9 — Introduction to Barbell Lifts",
+      "phase": "Barbell Introduction (Weeks 9-12)",
+      "planId": "beginner-general-fitness",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner"
+    },
+    "message": "WEEK 9 — Barbell Lifts Begin\n\nYou're ready for the big three: back squat, bench press, deadlift. Start light (just the bar or bar + 10-20lbs) to learn the new patterns. Film your lifts if possible—barbell technique matters.\n\nThis Week:\n- Mon: Full body (barbell squat intro)\n- Tue: Rest\n- Wed: Full body (barbell bench intro)\n- Thu: Rest\n- Fri: Full body (barbell deadlift intro)\n- Sat: Active recovery (optional)\n- Sun: Rest\n\nIntensity: RPE 6-7 (light weight for learning)\nVolume: 3 sets x 10-12 reps\n\nBarbells feel different than dumbbells—more stability demand. Weight is secondary this week. Master the movement first.",
+    "qualityNotes": [
+      "Major transition acknowledged (dumbbells → barbells)",
+      "Specific lifts named (squat, bench, deadlift)",
+      "Safety guidance (start light, film lifts)",
+      "Day descriptions updated to reflect barbell introduction",
+      "Reps reduced to 10-12 (learning curve acknowledgment)",
+      "Clear priority: technique over weight"
+    ]
+  }
+]
