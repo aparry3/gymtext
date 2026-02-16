@@ -339,17 +339,26 @@ export default function AgentLogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [agentIdFilter, setAgentIdFilter] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<AgentLogEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchLogs = useCallback(
-    async (agentId: string, page: number) => {
+    async (agentId: string, page: number, from?: string, to?: string) => {
       setIsLoading(true);
       setError(null);
 
       try {
         const params = new URLSearchParams();
         if (agentId && agentId !== 'all') params.set('agentId', agentId);
+        if (from) params.set('startDate', new Date(from).toISOString());
+        if (to) {
+          // End of selected day
+          const end = new Date(to);
+          end.setHours(23, 59, 59, 999);
+          params.set('endDate', end.toISOString());
+        }
         params.set('page', String(page));
         params.set('pageSize', '50');
 
@@ -374,8 +383,8 @@ export default function AgentLogsPage() {
   );
 
   useEffect(() => {
-    fetchLogs(agentIdFilter, currentPage);
-  }, [fetchLogs, agentIdFilter, currentPage, mode]);
+    fetchLogs(agentIdFilter, currentPage, startDate, endDate);
+  }, [fetchLogs, agentIdFilter, currentPage, startDate, endDate, mode]);
 
   const handleAgentIdChange = useCallback((value: string) => {
     setAgentIdFilter(value);
@@ -386,9 +395,25 @@ export default function AgentLogsPage() {
     setCurrentPage(page);
   }, []);
 
+  const handleStartDateChange = useCallback((value: string) => {
+    setStartDate(value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleEndDateChange = useCallback((value: string) => {
+    setEndDate(value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleClearDates = useCallback(() => {
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
+  }, []);
+
   const handleRefresh = useCallback(() => {
-    fetchLogs(agentIdFilter, currentPage);
-  }, [fetchLogs, agentIdFilter, currentPage]);
+    fetchLogs(agentIdFilter, currentPage, startDate, endDate);
+  }, [fetchLogs, agentIdFilter, currentPage, startDate, endDate]);
 
   const handleRowClick = useCallback((log: AgentLogEntry) => {
     setSelectedLog(log);
@@ -438,7 +463,7 @@ export default function AgentLogsPage() {
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Select value={agentIdFilter} onValueChange={handleAgentIdChange}>
             <SelectTrigger className="w-64">
               <SelectValue placeholder="All agents" />
@@ -457,6 +482,29 @@ export default function AgentLogsPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              placeholder="From"
+            />
+            <span className="text-muted-foreground text-sm">→</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => handleEndDateChange(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            />
+            {(startDate || endDate) && (
+              <Button variant="ghost" size="sm" onClick={handleClearDates} className="h-9 px-2">
+                ✕
+              </Button>
+            )}
+          </div>
+
           <div className="ml-auto">
             <Button
               variant="outline"

@@ -10,14 +10,18 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const pageSize = parseInt(searchParams.get('pageSize') || '50', 10);
     const offset = (page - 1) * pageSize;
+    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined;
+    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined;
+
+    const filters = { agentId, startDate, endDate };
 
     const [logs, total] = await Promise.all([
       services.agentLog.query({
-        agentId,
+        ...filters,
         limit: pageSize,
         offset,
       }),
-      services.agentLog.count({ agentId }),
+      services.agentLog.count(filters),
     ]);
 
     return NextResponse.json({
