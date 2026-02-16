@@ -9,6 +9,7 @@ import {
   MessageStatsChart,
   RecentUsersTable,
   PageVisitsCard,
+  ActivityFeed,
 } from '@/components/admin/dashboard';
 import { Users, CreditCard, MessageSquare, AlertTriangle, UserPlus, ClipboardPlus, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -157,6 +158,9 @@ export default function DashboardPage() {
             />
           )}
         </div>
+
+        {/* Activity Feed */}
+        <ActivityFeed isLoading={isLoading} />
       </div>
     </div>
   );

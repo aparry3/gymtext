@@ -20,17 +20,14 @@ const typeConfig = {
   signup: {
     icon: UserPlus,
     color: 'text-green-600 bg-green-50',
-    border: 'border-green-200',
   },
   enrollment: {
     icon: GraduationCap,
     color: 'text-blue-600 bg-blue-50',
-    border: 'border-blue-200',
   },
   message_failed: {
     icon: AlertTriangle,
     color: 'text-red-600 bg-red-50',
-    border: 'border-red-200',
   },
 } as const;
 
