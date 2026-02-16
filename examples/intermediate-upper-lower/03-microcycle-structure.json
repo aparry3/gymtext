@@ -1,0 +1,403 @@
+[
+  {
+    "_comment": "Week 1 — Accumulation Phase",
+    "weekNumber": 1,
+    "phase": {
+      "name": "Accumulation",
+      "blockWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Intermediate Upper/Lower Split Training Plan",
+      "client": "Marcus Johnson",
+      "totalWeeks": 16,
+      "split": "Upper/Lower"
+    },
+    "focus": "Build work capacity, increase volume, establish movement proficiency",
+    "volume": {
+      "sessionsPerWeek": 4,
+      "setsPerSessionRange": "16-24",
+      "totalSets": 78,
+      "estimatedRepsPerWeek": 800
+    },
+    "intensity": {
+      "rpeTarget": "7-8",
+      "repRangeTarget": "8-12",
+      "description": "Moderate loads, emphasis on volume accumulation"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "session": "Upper 1",
+        "theme": "Horizontal Emphasis",
+        "focus": "Bench press, horizontal rows",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Tuesday",
+        "session": "Lower 1",
+        "theme": "Squat Emphasis",
+        "focus": "Back squat, quad work",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 4,
+        "dayOfWeek": "Thursday",
+        "session": "Upper 2",
+        "theme": "Vertical Emphasis",
+        "focus": "Overhead press, pull-ups",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 5,
+        "dayOfWeek": "Friday",
+        "session": "Lower 2",
+        "theme": "Hinge Emphasis",
+        "focus": "Deadlift, posterior chain",
+        "estimatedDurationMin": 60
+      }
+    ],
+    "keyExercises": [
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_push",
+        "exercise": "Barbell Bench Press",
+        "prescription": "4×8",
+        "weight": "185lbs",
+        "rpe": "7"
+      },
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_pull",
+        "exercise": "Barbell Bent-Over Row",
+        "prescription": "4×8",
+        "weight": "165lbs",
+        "rpe": "7"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "squat",
+        "exercise": "Barbell Back Squat",
+        "prescription": "4×8",
+        "weight": "225lbs",
+        "rpe": "7-8"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "hinge",
+        "exercise": "Romanian Deadlift",
+        "prescription": "3×10",
+        "weight": "185lbs",
+        "rpe": "7"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_push",
+        "exercise": "Barbell Overhead Press",
+        "prescription": "4×8",
+        "weight": "115lbs",
+        "rpe": "7-8"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_pull",
+        "exercise": "Pull-Up",
+        "prescription": "4×8",
+        "weight": "Bodyweight or assisted",
+        "rpe": "7-8"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "hinge",
+        "exercise": "Conventional Deadlift",
+        "prescription": "4×6",
+        "weight": "265lbs",
+        "rpe": "7-8"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "squat",
+        "exercise": "Front Squat",
+        "prescription": "3×10",
+        "weight": "155lbs",
+        "rpe": "7"
+      }
+    ],
+    "progressionNotes": "First week of intermediate programming. Conservative weight selection. Volume emphasis with 8-12 rep ranges. Exercise variation between Upper 1/2 and Lower 1/2 days.",
+    "recoveryGuidance": "Minimum 1 rest day between upper/lower sessions. Wednesday provides mid-week recovery. Active recovery on weekends.",
+    "nextWeekAdjustments": "Increase reps: 4×8 → 4×10 on main lifts. Same weight to accumulate volume."
+  },
+
+  {
+    "_comment": "Week 5 — Intensification Phase",
+    "weekNumber": 5,
+    "phase": {
+      "name": "Intensification",
+      "blockWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Intermediate Upper/Lower Split Training Plan",
+      "client": "Marcus Johnson",
+      "totalWeeks": 16,
+      "split": "Upper/Lower"
+    },
+    "focus": "Build maximal strength, increase neural efficiency, move heavier loads",
+    "volume": {
+      "sessionsPerWeek": 4,
+      "setsPerSessionRange": "12-18",
+      "totalSets": 64,
+      "estimatedRepsPerWeek": 400
+    },
+    "intensity": {
+      "rpeTarget": "8-9",
+      "repRangeTarget": "4-8",
+      "description": "High loads, emphasis on maximal strength"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "session": "Upper 1",
+        "theme": "Heavy Horizontal Work",
+        "focus": "Heavy bench press, rowing",
+        "estimatedDurationMin": 65
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Tuesday",
+        "session": "Lower 1",
+        "theme": "Heavy Squat",
+        "focus": "Heavy back squat",
+        "estimatedDurationMin": 70
+      },
+      {
+        "dayNumber": 4,
+        "dayOfWeek": "Thursday",
+        "session": "Upper 2",
+        "theme": "Heavy Vertical Work",
+        "focus": "Heavy OHP, weighted pull-ups",
+        "estimatedDurationMin": 65
+      },
+      {
+        "dayNumber": 5,
+        "dayOfWeek": "Friday",
+        "session": "Lower 2",
+        "theme": "Heavy Hinge",
+        "focus": "Heavy deadlift",
+        "estimatedDurationMin": 70
+      }
+    ],
+    "keyExercises": [
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_push",
+        "exercise": "Barbell Bench Press",
+        "prescription": "5×5",
+        "weight": "210lbs",
+        "rpe": "8-9",
+        "notes": "Increased from 185lbs × 4×8 in accumulation"
+      },
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_pull",
+        "exercise": "Barbell Bent-Over Row",
+        "prescription": "5×5",
+        "weight": "185lbs",
+        "rpe": "8-9"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "squat",
+        "exercise": "Barbell Back Squat",
+        "prescription": "5×5",
+        "weight": "255lbs",
+        "rpe": "8-9",
+        "notes": "30lbs heavier than accumulation"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "hinge",
+        "exercise": "Romanian Deadlift",
+        "prescription": "4×6",
+        "weight": "205lbs",
+        "rpe": "8"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_push",
+        "exercise": "Barbell Overhead Press",
+        "prescription": "5×5",
+        "weight": "130lbs",
+        "rpe": "8-9"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_pull",
+        "exercise": "Weighted Pull-Up",
+        "prescription": "5×5",
+        "weight": "+25lbs",
+        "rpe": "8-9"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "hinge",
+        "exercise": "Conventional Deadlift",
+        "prescription": "5×4",
+        "weight": "295lbs",
+        "rpe": "8-9",
+        "notes": "30lbs heavier, fewer reps"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "squat",
+        "exercise": "Front Squat",
+        "prescription": "4×6",
+        "weight": "175lbs",
+        "rpe": "8"
+      }
+    ],
+    "progressionNotes": "Shift from volume to intensity. Rep ranges drop to 4-8. Weight increases 10-15% across all main lifts. Rest periods increase to 3-4 min. Week 4 was deload.",
+    "recoveryGuidance": "Longer rest between sets (3-4 min for main lifts). CNS fatigue higher than accumulation. Sleep and nutrition critical.",
+    "nextWeekAdjustments": "Wave loading: 4×6 next week (slightly lighter, more reps). Then 5×4 in Week 7 (heavier again). Week 8 deload."
+  },
+
+  {
+    "_comment": "Week 9 — Realization Phase",
+    "weekNumber": 9,
+    "phase": {
+      "name": "Realization",
+      "blockWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Intermediate Upper/Lower Split Training Plan",
+      "client": "Marcus Johnson",
+      "totalWeeks": 16,
+      "split": "Upper/Lower"
+    },
+    "focus": "Express peak strength, test new maxes, consolidate gains",
+    "volume": {
+      "sessionsPerWeek": 4,
+      "setsPerSessionRange": "10-16",
+      "totalSets": 41,
+      "estimatedRepsPerWeek": 200
+    },
+    "intensity": {
+      "rpeTarget": "9-10",
+      "repRangeTarget": "1-5",
+      "description": "Maximal loads, strength testing"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "session": "Upper 1",
+        "theme": "Bench Press Testing",
+        "focus": "Work up to heavy 5RM bench",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Tuesday",
+        "session": "Lower 1",
+        "theme": "Squat Testing",
+        "focus": "Work up to heavy 5RM squat",
+        "estimatedDurationMin": 70
+      },
+      {
+        "dayNumber": 4,
+        "dayOfWeek": "Thursday",
+        "session": "Upper 2",
+        "theme": "OHP Testing",
+        "focus": "Work up to heavy 5RM OHP",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 5,
+        "dayOfWeek": "Friday",
+        "session": "Lower 2",
+        "theme": "Deadlift Testing",
+        "focus": "Work up to heavy 5RM deadlift",
+        "estimatedDurationMin": 70
+      }
+    ],
+    "keyExercises": [
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_push",
+        "exercise": "Barbell Bench Press",
+        "prescription": "Work up to 5RM",
+        "weight": "230-250lbs target",
+        "rpe": "9-10",
+        "notes": "Test day, not training volume"
+      },
+      {
+        "session": "Upper 1",
+        "pattern": "horizontal_pull",
+        "exercise": "Barbell Bent-Over Row",
+        "prescription": "3×5",
+        "weight": "195lbs",
+        "rpe": "7-8",
+        "notes": "Supporting work only"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "squat",
+        "exercise": "Barbell Back Squat",
+        "prescription": "Work up to 5RM",
+        "weight": "285-310lbs target",
+        "rpe": "9-10",
+        "notes": "Test day, establish new max"
+      },
+      {
+        "session": "Lower 1",
+        "pattern": "hinge",
+        "exercise": "Romanian Deadlift",
+        "prescription": "3×5",
+        "weight": "215lbs",
+        "rpe": "7-8",
+        "notes": "Minimal volume"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_push",
+        "exercise": "Barbell Overhead Press",
+        "prescription": "Work up to 5RM",
+        "weight": "145-160lbs target",
+        "rpe": "9-10"
+      },
+      {
+        "session": "Upper 2",
+        "pattern": "vertical_pull",
+        "exercise": "Weighted Pull-Up",
+        "prescription": "Work up to heavy 5",
+        "weight": "+35-45lbs",
+        "rpe": "8-9"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "hinge",
+        "exercise": "Conventional Deadlift",
+        "prescription": "Work up to 5RM",
+        "weight": "330-365lbs target",
+        "rpe": "9-10",
+        "notes": "Peak performance test"
+      },
+      {
+        "session": "Lower 2",
+        "pattern": "squat",
+        "exercise": "Front Squat",
+        "prescription": "3×5",
+        "weight": "185lbs",
+        "rpe": "7-8",
+        "notes": "Supporting quad work"
+      }
+    ],
+    "progressionNotes": "Peak strength expression. Working up to heavy 3-5RMs on all main lifts. Volume lowest of program. Testing, not training. Week 8 was deload so coming in fresh.",
+    "recoveryGuidance": "Maximal rest between sets (4-5 min). Lowest volume but highest intensity. CNS fatigue from near-maximal loads. Sleep critical for performance.",
+    "nextWeekAdjustments": "Week 10: Continue testing, potentially heavy singles. Week 11: Final strength testing. Week 12: Active recovery and program wrap-up."
+  }
+]
