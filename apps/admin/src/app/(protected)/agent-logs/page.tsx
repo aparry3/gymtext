@@ -420,6 +420,29 @@ export default function AgentLogsPage() {
     setDialogOpen(true);
   }, []);
 
+  const handleExportCsv = useCallback(() => {
+    if (logs.length === 0) return;
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const headers = ['Time', 'Agent', 'Model', 'Duration (ms)', 'Score', 'Input', 'Response'];
+    const rows = logs.map((log) => [
+      log.createdAt,
+      log.agentId,
+      log.model || '',
+      log.durationMs?.toString() || '',
+      log.evalScore || '',
+      escape(log.input || ''),
+      escape(typeof log.response === 'string' ? log.response : JSON.stringify(log.response) || ''),
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agent-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [logs]);
+
   const handleClearLogs = useCallback(async () => {
     if (!window.confirm(`Delete all ${total} agent logs? This cannot be undone.`)) return;
 
@@ -505,7 +528,15 @@ export default function AgentLogsPage() {
             )}
           </div>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={logs.length === 0 || isLoading}
+            >
+              Export CSV
+            </Button>
             <Button
               variant="outline"
               size="sm"
