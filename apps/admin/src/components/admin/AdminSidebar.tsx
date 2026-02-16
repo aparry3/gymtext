@@ -20,6 +20,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LogOut,
   Building2,
   Landmark,
@@ -28,24 +29,34 @@ import {
   Bot,
   ScrollText,
   ArrowUpCircle,
+  Wrench,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
 
-const navItems = [
+const navItemsTop = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
-  { href: '/program-owners', label: 'Program Owners', icon: Building2 },
-  { href: '/organizations', label: 'Organizations', icon: Landmark },
-  { href: '/programs', label: 'Programs', icon: ClipboardList },
+]
+
+const navItemsBottom = [
   { href: '/exercises', label: 'Exercises', icon: Dumbbell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },
-  { href: '/registry', label: 'Registry', icon: FileText },
+]
+
+const programItems = [
+  { href: '/programs', label: 'Programs', icon: ClipboardList },
+  { href: '/program-owners', label: 'Owners & Coaches', icon: Building2 },
+  { href: '/organizations', label: 'Organizations', icon: Landmark },
+]
+
+const devAdminItems = [
+  { href: '/registry', label: 'Tool Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
-  { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
+  { href: '/promote', label: 'Deploy', icon: ArrowUpCircle },
 ]
 
 function NavItem({
@@ -79,6 +90,148 @@ function NavItem({
       <Icon className="h-5 w-5" />
       {!collapsed && label}
     </Link>
+  )
+}
+
+function ProgramsSection({
+  currentPath,
+  collapsed,
+  onNavClick,
+}: {
+  currentPath: string
+  collapsed?: boolean
+  onNavClick?: () => void
+}) {
+  const isAnyActive = programItems.some((item) => currentPath.startsWith(item.href))
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('admin-programs-open') === 'true'
+    }
+    return false
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem('admin-programs-open', open ? 'true' : 'false')
+  }, [open])
+
+  if (collapsed) {
+    return (
+      <>
+        {programItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed
+            isActive={currentPath.startsWith(item.href)}
+            onClick={onNavClick}
+          />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className={cn(
+          'flex items-center w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors gap-3',
+          isAnyActive && !open
+            ? 'bg-[hsl(var(--sidebar-accent))] text-white'
+            : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]'
+        )}
+      >
+        <ClipboardList className="h-5 w-5" />
+        <span className="flex-1 text-left">Programs</span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 transition-transform duration-200',
+            !open && '-rotate-90'
+          )}
+        />
+      </button>
+      {open && (
+        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-[hsl(var(--sidebar-border))] pl-2">
+          {programItems.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DevAdminSection({
+  currentPath,
+  collapsed,
+  onNavClick,
+}: {
+  currentPath: string
+  collapsed?: boolean
+  onNavClick?: () => void
+}) {
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('admin-dev-section-open') === 'true'
+    }
+    return false
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem('admin-dev-section-open', open ? 'true' : 'false')
+  }, [open])
+
+  // When collapsed sidebar, show items as icons without section header
+  if (collapsed) {
+    return (
+      <>
+        <div className="my-2 border-t border-[hsl(var(--sidebar-border))]" />
+        {devAdminItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed
+            isActive={currentPath.startsWith(item.href)}
+            onClick={onNavClick}
+          />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center w-full px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[hsl(var(--sidebar-foreground))]/50 hover:text-[hsl(var(--sidebar-foreground))]/80 transition-colors"
+      >
+        <Wrench className="h-3.5 w-3.5 mr-2" />
+        <span className="flex-1 text-left">Dev Admin</span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 transition-transform duration-200',
+            !open && '-rotate-90'
+          )}
+        />
+      </button>
+      {open && (
+        <div className="space-y-1">
+          {devAdminItems.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -191,7 +344,7 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
+        {navItemsTop.map((item) => (
           <NavItem
             key={item.href}
             {...item}
@@ -204,6 +357,28 @@ function SidebarContent({
             onClick={onNavClick}
           />
         ))}
+
+        <ProgramsSection
+          currentPath={currentPath}
+          collapsed={collapsed}
+          onNavClick={onNavClick}
+        />
+
+        {navItemsBottom.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed={collapsed}
+            isActive={currentPath.startsWith(item.href)}
+            onClick={onNavClick}
+          />
+        ))}
+
+        <DevAdminSection
+          currentPath={currentPath}
+          collapsed={collapsed}
+          onNavClick={onNavClick}
+        />
       </nav>
 
       <div className="p-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">

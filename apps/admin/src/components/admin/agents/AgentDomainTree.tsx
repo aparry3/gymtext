@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { AGENT_DOMAINS, type AdminAgentDefinition } from './types';
+import { Search, X } from 'lucide-react';
 
 interface AgentDomainTreeProps {
   onSelect: (agentId: string) => void;
@@ -67,14 +68,48 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
     });
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDomains = useMemo(() => {
+    if (!searchQuery.trim()) return AGENT_DOMAINS;
+    const q = searchQuery.toLowerCase();
+    return AGENT_DOMAINS.map((domain) => ({
+      ...domain,
+      agents: domain.agents.filter(
+        (a) => a.id.toLowerCase().includes(q) || a.label.toLowerCase().includes(q)
+      ),
+    })).filter((domain) => domain.agents.length > 0);
+  }, [searchQuery]);
+
   return (
     <nav className="space-y-1 p-3">
       <h3 className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
         Agent Domains
       </h3>
-      {AGENT_DOMAINS.map((domain) => {
+
+      {/* Search */}
+      <div className="relative px-1 pb-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Search agents..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-lg border border-slate-200 bg-slate-50/80 py-1.5 pl-8 pr-7 text-sm text-slate-700 placeholder:text-slate-400 focus:border-sky-300 focus:outline-none focus:ring-1 focus:ring-sky-200"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {filteredDomains.map((domain) => {
         const existingCount = domain.agents.filter((a) => existingAgents.has(a.id)).length;
-        const isExpanded = expandedDomains.has(domain.id);
+        const isExpanded = expandedDomains.has(domain.id) || !!searchQuery.trim();
 
         return (
           <Collapsible

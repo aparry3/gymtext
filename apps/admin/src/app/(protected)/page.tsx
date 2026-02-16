@@ -10,7 +10,8 @@ import {
   RecentUsersTable,
   PageVisitsCard,
 } from '@/components/admin/dashboard';
-import { Users, CreditCard, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Users, CreditCard, MessageSquare, AlertTriangle, UserPlus, ClipboardPlus, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 import type { DashboardResponse } from '@/app/api/dashboard/route';
 
 export default function DashboardPage() {
@@ -69,6 +70,31 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/users?action=add"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+          >
+            <UserPlus className="h-4 w-4" />
+            Add User
+          </Link>
+          <Link
+            href="/programs?action=add"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+          >
+            <ClipboardPlus className="h-4 w-4" />
+            Add Program
+          </Link>
+          <Link
+            href="/messages?status=failed"
+            className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50"
+          >
+            <AlertCircle className="h-4 w-4" />
+            View Failed Messages
+          </Link>
+        </div>
 
         {/* Metric Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

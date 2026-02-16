@@ -7,12 +7,15 @@ import { Pagination } from '@/components/ui/pagination';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Download } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -339,17 +342,26 @@ export default function AgentLogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [agentIdFilter, setAgentIdFilter] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<AgentLogEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchLogs = useCallback(
-    async (agentId: string, page: number) => {
+    async (agentId: string, page: number, from?: string, to?: string) => {
       setIsLoading(true);
       setError(null);
 
       try {
         const params = new URLSearchParams();
         if (agentId && agentId !== 'all') params.set('agentId', agentId);
+        if (from) params.set('startDate', new Date(from).toISOString());
+        if (to) {
+          // End of selected day
+          const end = new Date(to);
+          end.setHours(23, 59, 59, 999);
+          params.set('endDate', end.toISOString());
+        }
         params.set('page', String(page));
         params.set('pageSize', '50');
 
@@ -374,8 +386,8 @@ export default function AgentLogsPage() {
   );
 
   useEffect(() => {
-    fetchLogs(agentIdFilter, currentPage);
-  }, [fetchLogs, agentIdFilter, currentPage, mode]);
+    fetchLogs(agentIdFilter, currentPage, startDate, endDate);
+  }, [fetchLogs, agentIdFilter, currentPage, startDate, endDate, mode]);
 
   const handleAgentIdChange = useCallback((value: string) => {
     setAgentIdFilter(value);
@@ -387,8 +399,8 @@ export default function AgentLogsPage() {
   }, []);
 
   const handleRefresh = useCallback(() => {
-    fetchLogs(agentIdFilter, currentPage);
-  }, [fetchLogs, agentIdFilter, currentPage]);
+    fetchLogs(agentIdFilter, currentPage, startDate, endDate);
+  }, [fetchLogs, agentIdFilter, currentPage, startDate, endDate]);
 
   const handleRowClick = useCallback((log: AgentLogEntry) => {
     setSelectedLog(log);
@@ -411,6 +423,52 @@ export default function AgentLogsPage() {
       console.error('Error clearing agent logs:', err);
     }
   }, [total, fetchLogs, agentIdFilter]);
+
+  const handleExportCsv = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (agentIdFilter && agentIdFilter !== 'all') params.set('agentId', agentIdFilter);
+      if (startDate) params.set('startDate', new Date(startDate).toISOString());
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        params.set('endDate', end.toISOString());
+      }
+      params.set('page', '1');
+      params.set('pageSize', '10000');
+
+      const response = await fetch(`/api/agent-logs?${params.toString()}`);
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error('Failed to fetch logs for export');
+
+      const allLogs = result.data.logs as AgentLogEntry[];
+      if (allLogs.length === 0) return;
+
+      const escapeCsv = (val: string) => `"${val.replace(/"/g, '""')}"`;
+      const headers = ['Time', 'Agent', 'Model', 'Duration (ms)', 'Score', 'Input', 'Response'];
+      const rows = allLogs.map((log) => [
+        log.createdAt,
+        log.agentId,
+        log.model || '',
+        log.durationMs?.toString() || '',
+        log.evalScore || '',
+        log.input || '',
+        typeof log.response === 'string' ? log.response : JSON.stringify(log.response),
+      ]);
+
+      const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `agent-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('CSV export failed:', err);
+      setError('Failed to export CSV');
+    }
+  }, [agentIdFilter, startDate, endDate]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -438,7 +496,7 @@ export default function AgentLogsPage() {
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           <Select value={agentIdFilter} onValueChange={handleAgentIdChange}>
             <SelectTrigger className="w-64">
               <SelectValue placeholder="All agents" />
@@ -457,7 +515,73 @@ export default function AgentLogsPage() {
               ))}
             </SelectContent>
           </Select>
-          <div className="ml-auto">
+
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">From</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                className="w-36 h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">To</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                className="w-36 h-9"
+              />
+            </div>
+            {(startDate || endDate) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setStartDate(''); setEndDate(''); setCurrentPage(1); }}
+                className="h-9 px-2 text-muted-foreground"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
+          <div className="flex gap-1">
+            {[
+              { label: 'Today', days: 0 },
+              { label: '7d', days: 7 },
+              { label: '30d', days: 30 },
+            ].map(({ label, days }) => (
+              <Button
+                key={label}
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  const now = new Date();
+                  const from = new Date();
+                  from.setDate(now.getDate() - days);
+                  setStartDate(from.toISOString().slice(0, 10));
+                  setEndDate(now.toISOString().slice(0, 10));
+                  setCurrentPage(1);
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={total === 0 || isLoading}
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              Export CSV
+            </Button>
             <Button
               variant="outline"
               size="sm"
