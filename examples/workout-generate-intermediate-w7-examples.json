@@ -1,0 +1,764 @@
+[
+  {
+    "id": "intermediate-w7-thursday",
+    "metadata": {
+      "title": "Intermediate Week 7 — Thursday (Day 4) DELOAD",
+      "weekNumber": 7,
+      "dayOfWeek": "Thursday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "focus": "Push: Triceps & Front Delts (DELOAD)",
+      "keyFeatures": [
+        "Active recovery deload",
+        "50% volume reduction (half the sets)",
+        "70-80% of Week 6 loads",
+        "RPE 6-7 (leave 3-4 reps in reserve)",
+        "Same exercises, lighter execution"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Push: Triceps & Front Delts (DELOAD)",
+      "focus": "Active Recovery",
+      "description": "Second Push day of the deload week. Cut all sets in half, use 70-80% of Week 6 working weights, keep intensity at RPE 6-7. This is ACTIVE recovery—don't skip the gym, but don't push hard either. You should feel strong and controlled, not fatigued. Session time ~40-50min.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Still important—prepare joints and CNS even during deload",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — conversational pace"
+              },
+              "tempo": "",
+              "notes": "Keep it light—just prime the body, no need for extended warm-up",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Arm Circles",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward and backward — loosen shoulders",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Aparts",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate rear delts and scapular retractors",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Compounds (DELOAD)",
+          "overview": "2 sets instead of 4 — 70-80% of Week 6 loads, RPE 6-7",
+          "exercises": [
+            {
+              "name": "Incline Barbell Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Upper chest — 70-80% of Week 6 working weight"
+              },
+              "tempo": "",
+              "notes": "If you used 155lbs in Week 6, use ~115-125lbs today. Focus: Smooth reps, no grinding. Should feel crisp and controlled.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Flat Dumbbell Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Chest thickness — control the movement, no grinding"
+              },
+              "tempo": "",
+              "notes": "Lighter dumbbells than Week 6. Focus: Full ROM, squeeze at top. Leave 3-4 reps in reserve.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Dumbbell Shoulder Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Front/side delts — strict form, lighter weight"
+              },
+              "tempo": "",
+              "notes": "Focus: Press to full lockout, control descent. Should feel easy compared to accumulation weeks.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Triceps mass builder — elbows tucked, lighter load"
+              },
+              "tempo": "",
+              "notes": "Focus: Elbows close to body, smooth tempo. This should feel restorative, not taxing.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Isolation (DELOAD)",
+          "overview": "2 sets instead of 3 — lighter loads, RPE 7 max",
+          "exercises": [
+            {
+              "name": "Cable Flyes",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Chest isolation — stretch at bottom, squeeze at contraction"
+              },
+              "tempo": "",
+              "notes": "Focus: Controlled movement, feel the stretch. Don't push to failure—stop at 12-15 with reps left.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Front Raises",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Front delt isolation — lighter weight, perfect form"
+              },
+              "tempo": "",
+              "notes": "Focus: Lead with thumbs, raise to shoulder height. No swinging—strict form.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Triceps Pushdowns",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Triceps isolation — keep elbows stationary, full extension"
+              },
+              "tempo": "",
+              "notes": "Focus: Squeeze triceps at bottom, control the return. Should feel like a pump, not a grind.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Brief stretching and recovery",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Chest stretch (doorway), shoulder stretch, triceps stretch — hold each 30s per side",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 45,
+      "intensityLevel": "Low-Moderate (DELOAD)",
+      "tags": {
+        "category": ["deload", "intermediate", "active_recovery"],
+        "split": ["push"],
+        "muscles": ["chest", "front_delts", "triceps"],
+        "patterns": ["horizontal_press", "vertical_press"],
+        "equipment": ["barbell", "dumbbell", "cable", "band"]
+      }
+    }
+  },
+  {
+    "id": "intermediate-w7-friday",
+    "metadata": {
+      "title": "Intermediate Week 7 — Friday (Day 5) DELOAD",
+      "weekNumber": 7,
+      "dayOfWeek": "Friday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "focus": "Pull: Rear Delts & Biceps (DELOAD)",
+      "keyFeatures": [
+        "Active recovery deload",
+        "50% volume reduction (half the sets)",
+        "70-80% of Week 6 loads",
+        "RPE 6-7 (focus on quality reps)",
+        "No deadlift (posterior chain rest)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Pull: Rear Delts & Biceps (DELOAD)",
+      "focus": "Active Recovery",
+      "description": "Second Pull day of the deload week. Cut sets in half, use 70-80% of Week 6 weights, RPE 6-7. Focus on quality reps—smooth and controlled. No deadlift today (posterior chain gets extra rest). Session time ~40-50min.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Light prep for pulling movements",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Rowing is ideal — primes pulling muscles"
+              },
+              "tempo": "",
+              "notes": "Keep it easy—conversational pace throughout",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Aparts",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate upper back and rear delts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Retractions",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hang from pull-up bar or use lat pulldown — retract and protract shoulder blades",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Compounds (DELOAD)",
+          "overview": "2 sets instead of 4 — 70-80% loads, RPE 6-7",
+          "exercises": [
+            {
+              "name": "Weighted Pull-Ups",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Back width — focus on quality reps"
+              },
+              "tempo": "",
+              "notes": "Alternative: Lat Pulldown 2x8-10 @ RPE 6-7 (lighter weight than accumulation weeks). Focus: Smooth reps, full stretch at top, pull elbows down.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "T-Bar Row",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Back thickness — controlled pull and descent"
+              },
+              "tempo": "",
+              "notes": "Alternative: Pendlay Row 2x10-12 @ RPE 6-7. Focus: Pull to lower chest, squeeze at top, control the descent. Lighter than Week 6.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Mid-back — squeeze at contraction, feel the stretch"
+              },
+              "tempo": "",
+              "notes": "Focus: Full stretch at extension, squeeze shoulder blades together. Should feel easy—don't push to failure.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Isolation (DELOAD)",
+          "overview": "2 sets instead of 3-4 — lighter loads, RPE 7 max",
+          "exercises": [
+            {
+              "name": "Straight-Arm Pulldown",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Lat isolation — keep arms straight, pull with lats"
+              },
+              "tempo": "",
+              "notes": "Focus: Feel lats contracting, not arms. Light weight, controlled movement.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Reverse Pec Deck",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Rear delt priority — control the movement"
+              },
+              "tempo": "",
+              "notes": "Alternative: Rear Delt Flyes 2x15-20 @ RPE 7. Focus: Squeeze rear delts, control the return. Lighter than accumulation weeks.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Incline Dumbbell Curls",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Biceps stretch at bottom, squeeze at top"
+              },
+              "tempo": "",
+              "notes": "Focus: Full stretch at bottom (arms fully extended), squeeze biceps at top. Lighter weight than Week 6.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Cable Curls",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Biceps pump — constant tension"
+              },
+              "tempo": "",
+              "notes": "Focus: Squeeze biceps at contraction, control the descent. Should feel like a pump, not a burn.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Brief stretching and recovery",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Lat stretch (hang from bar or doorway), biceps stretch (extend arm against wall), forearm stretch — hold each 30s",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 45,
+      "intensityLevel": "Low-Moderate (DELOAD)",
+      "tags": {
+        "category": ["deload", "intermediate", "active_recovery"],
+        "split": ["pull"],
+        "muscles": ["lats", "mid_back", "rear_delts", "biceps"],
+        "patterns": ["vertical_pull", "horizontal_pull"],
+        "equipment": ["cable", "dumbbell", "machine", "pull_up_bar", "band"]
+      }
+    }
+  },
+  {
+    "id": "intermediate-w7-saturday",
+    "metadata": {
+      "title": "Intermediate Week 7 — Saturday (Day 6) DELOAD",
+      "weekNumber": 7,
+      "dayOfWeek": "Saturday",
+      "planId": "intermediate-hypertrophy",
+      "phase": "Deload (Weeks 7-8)",
+      "focus": "Legs: Hamstring & Glute Emphasis (DELOAD)",
+      "keyFeatures": [
+        "Active recovery deload",
+        "50% volume reduction (half the sets)",
+        "70-80% of Week 6 loads",
+        "RPE 6-7 (lighter load, focus on stretch and control)",
+        "No heavy squatting (legs get extra rest)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Legs: Hamstring & Glute Emphasis (DELOAD)",
+      "focus": "Active Recovery",
+      "description": "Second Leg day of the deload week, completing your 6-day PPL cycle. Cut sets in half, use 70-80% of Week 6 weights, RPE 6-7. Focus on hamstring stretch and glute activation—not maximal load. Legs should feel fresh after this session. This completes your deload week—you should feel significantly fresher than Week 6.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Light prep for hip-dominant work",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5-10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk or bike — no impact needed"
+              },
+              "tempo": "",
+              "notes": "Keep it light—just get blood flowing to lower body",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Mobility",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings (front-to-back and side-to-side) — loosen hips",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Glute Activation",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Banded glute bridges or clamshells — activate glutes before loading",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Compounds (DELOAD)",
+          "overview": "2 sets instead of 4 — 70-80% loads, RPE 6-7",
+          "exercises": [
+            {
+              "name": "Romanian Deadlift",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Hamstring stretch and load — lighter load, focus on hamstring stretch and control"
+              },
+              "tempo": "",
+              "notes": "If you used 185lbs in Week 6, use ~135-155lbs today. Focus: Hip hinge, feel hamstring stretch, control the descent (3sec). No grinding.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Hip Thrusts",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Glute activation — not maximal load"
+              },
+              "tempo": "",
+              "notes": "Focus: Squeeze glutes hard at top, full ROM. Barbell or Smith machine, lighter than accumulation weeks. Should feel easy.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Walking Lunges",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Quad/glute work — control the descent (each leg)"
+              },
+              "tempo": "",
+              "notes": "Bodyweight or light dumbbells. Focus: Control the descent, drive through front heel. Should feel smooth and controlled.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Isolation (DELOAD)",
+          "overview": "2 sets instead of 3 — lighter loads, RPE 7 max",
+          "exercises": [
+            {
+              "name": "Lying Leg Curls",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Hamstring isolation — lighter weight"
+              },
+              "tempo": "",
+              "notes": "Focus: Control the descent, squeeze hamstrings at contraction. Don't push to failure—stop at 12-15 with reps left.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Press (Narrow Stance)",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Glute emphasis with narrow stance — moderate load"
+              },
+              "tempo": "",
+              "notes": "Focus: Feet high and narrow on platform (glute emphasis), control descent to 90°, drive through heels.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Calf Raises",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "15-20",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "7",
+                "description": "Soleus emphasis — full ROM"
+              },
+              "tempo": "",
+              "notes": "Focus: Full stretch at bottom, full contraction at top, pause 1sec. Lighter than accumulation weeks.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretching and recovery — deload week complete!",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hamstring stretch (toe touch), quad stretch (pull foot to glute), hip flexor stretch (lunge position), calf stretch — hold each 30s per side",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 45,
+      "intensityLevel": "Low-Moderate (DELOAD)",
+      "tags": {
+        "category": ["deload", "intermediate", "active_recovery"],
+        "split": ["legs"],
+        "muscles": ["hamstrings", "glutes", "quads", "calves"],
+        "patterns": ["hinge", "lunge"],
+        "equipment": ["barbell", "dumbbell", "machine", "leg_press", "band"]
+      }
+    }
+  }
+]
