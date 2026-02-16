@@ -45,6 +45,8 @@ const COLUMN_MAP: Record<string, string> = {
   userPromptTemplate: 'user_prompt_template',
   versionId: 'version_id',
   createdAt: 'created_at',
+  evalPrompt: 'eval_prompt',
+  evalModel: 'eval_model',
 };
 
 function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
