@@ -1,0 +1,66 @@
+{
+  "id": "intermediate-hypertrophy-structured",
+  "metadata": {
+    "title": "plan:structured Example — Intermediate Hypertrophy Focus",
+    "correspondingPlanExample": "intermediate-hypertrophy",
+    "description": "Structured (parsed) version of the intermediate PPL hypertrophy plan. Demonstrates more complex periodization (block periodization with accumulation/intensification phases) and higher frequency (6 days/week) compared to beginner plan."
+  },
+  "planStructured": {
+    "name": "Intermediate Hypertrophy Focus",
+    "type": "Push/Pull/Legs",
+    "coreStrategy": "6-day Push/Pull/Legs split with volume accumulation for hypertrophy. High frequency per muscle group (2x/week) while managing fatigue through movement-pattern specificity. Uses block periodization: accumulation phase (increase volume) followed by intensification phase (increase load). Compound lifts (3-4 sets of 6-10 reps RPE 7-8), accessories (3-4 sets of 10-15 reps RPE 8-9), isolation (2-3 sets of 12-20 reps RPE 9).",
+    "progressionStrategy": [
+      "Phase 1 (Weeks 1-6): Accumulation — Gradually increase volume from 12-14 sets per muscle group to 18-20 sets. Add 1-2 sets every 2 weeks. Intensity moderate (RPE 7-8).",
+      "Phase 2 (Weeks 7-8): Deload — Reduce volume by 50%, maintain exercise selection. Moderate intensity (don't push for PRs). Dissipate accumulated fatigue.",
+      "Phase 3 (Weeks 9-14): Intensification — Increase load/intensity while maintaining volume (14-16 sets per muscle group). Add 5-10lbs to compounds when hitting top of rep range. Intensity high (RPE 8-9). Incorporate rest-pause, drop sets, slow eccentrics on accessories.",
+      "Phase 4 (Weeks 15-16): Final Deload & Assessment — Reduce volume by 60%. Take progress photos, measurements, strength tests. Plan next training block.",
+      "Exercise Variation: Rotate exercises every 4-6 weeks to prevent accommodation (e.g., flat bench → incline bench)."
+    ],
+    "adjustmentStrategy": "Scheduled deloads at Weeks 7-8 and 15-16. Cut volume by 50-60%, maintain exercise selection, keep intensity moderate (70-80% of working weights). Focus on technique refinement and recovery. Auto-regulation deload if needed mid-block: If 3+ consecutive sessions feeling flat, sleep disruption, or joint pain occurs, take 1 unscheduled deload week then resume.",
+    "conditioning": [
+      "Optional Zone 2 cardio: 2-3x/week, 20-30min (bike, incline walk, rowing)",
+      "Timing: Post-workout or off-days",
+      "Purpose: Cardiovascular health, recovery enhancement, appetite regulation"
+    ],
+    "scheduleTemplate": [
+      {
+        "day": "Monday",
+        "focus": "Push — Chest & Shoulders emphasis",
+        "rationale": "Start week fresh with pressing movements. Allows maximum energy for heavy compound pushing."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "Pull — Back & Biceps",
+        "rationale": "Antagonist pairing allows upper body recovery distribution. Back work complements Monday's pressing."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Legs — Quad emphasis",
+        "rationale": "Mid-week leg session with quad/knee-dominant movements (squats, leg press, extensions)."
+      },
+      {
+        "day": "Thursday",
+        "focus": "Push — Triceps & Front Delts",
+        "rationale": "Second push day with slightly different exercise selection. Focuses more on triceps and front delts."
+      },
+      {
+        "day": "Friday",
+        "focus": "Pull — Rear Delts & Biceps",
+        "rationale": "Second pull day completes 2x frequency for back. More emphasis on rear delts and biceps volume."
+      },
+      {
+        "day": "Saturday",
+        "focus": "Legs — Hamstring & Glute emphasis",
+        "rationale": "Second leg day with posterior chain focus (RDLs, hip thrusts, leg curls). Complements Wednesday's quad work."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Rest (or optional Zone 2 cardio)",
+        "rationale": "Complete rest or 20-30min easy cardio. Recover for Monday's push session."
+      }
+    ],
+    "durationWeeks": 16,
+    "frequencyPerWeek": 6
+  },
+  "qualityNotes": "This intermediate example demonstrates more complex periodization compared to beginner plan: (1) Block periodization with distinct accumulation and intensification phases, (2) Higher training frequency (6 days vs 3 days), (3) More detailed progression strategy with specific set/rep/RPE targets for different phases, (4) Auto-regulation built in (scheduled deloads plus mid-block flexibility), (5) Exercise rotation strategy for preventing accommodation, (6) Volume targets per muscle group (14-20 sets), (7) Longer duration (16 weeks vs 12 weeks) to accommodate accumulation/intensification cycle."
+}
