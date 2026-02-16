@@ -353,7 +353,7 @@ async function main() {
 
   // Phase 4: Update exercises.json
   console.log('--- Phase 4: Updating exercises.json ---');
-  const filePath = join(process.cwd(), 'exercises.json');
+  const filePath = join(process.cwd(), 'data', 'exercises.json');
   const raw = readFileSync(filePath, 'utf-8');
   const data: { exercises: ExerciseJson[] } = JSON.parse(raw);
 

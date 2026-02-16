@@ -52,7 +52,7 @@ const db = new Kysely<unknown>({
 
 async function main() {
   console.log('Reading exercises.json...');
-  const filePath = join(process.cwd(), 'exercises.json');
+  const filePath = join(process.cwd(), 'data', 'exercises.json');
   const raw = readFileSync(filePath, 'utf-8');
   const data: ExercisesFile = JSON.parse(raw);
   const exercises = data.exercises;

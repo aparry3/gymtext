@@ -148,10 +148,10 @@ Accuracy, consistency, and realism matter more than creativity.`;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const OUTPUT_PATH = path.resolve(__dirname, '..', 'exercises.json');
+const OUTPUT_PATH = path.resolve(__dirname, '..', 'data', 'exercises.json');
 
 function loadSchema(): Record<string, unknown> {
-  const schemaPath = path.resolve(__dirname, '..', 'exercise-schema.json');
+  const schemaPath = path.resolve(__dirname, '..', 'data', 'exercise-schema.json');
   const raw = fs.readFileSync(schemaPath, 'utf-8');
   return JSON.parse(raw);
 }
