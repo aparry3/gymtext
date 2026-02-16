@@ -1,0 +1,641 @@
+[
+  {
+    "id": "beginner-w1-monday",
+    "metadata": {
+      "title": "Beginner Week 1 — Monday (Day 1)",
+      "weekNumber": 1,
+      "dayOfWeek": "Monday",
+      "planId": "beginner-general-fitness",
+      "phase": "Form Mastery (Weeks 1-4)",
+      "focus": "Full Body — Lower Emphasis",
+      "keyFeatures": [
+        "Movement pattern introduction",
+        "Light loads (RPE 5-6)",
+        "Low volume (2 sets)",
+        "Squat and hinge pattern education"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Lower",
+      "focus": "Squat & Hinge",
+      "description": "Your first training day. Focus on learning fundamental movement patterns (squat, hinge, push) with light loads. Movement quality is the only priority — if form breaks down, reduce weight immediately.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prime the body for movement",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — conversational pace"
+              },
+              "tempo": "",
+              "notes": "Get your heart rate up gently",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Front-to-back and side-to-side",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Arm Circles",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward and backward",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Squat, hinge, and push patterns — 2 sets of 12-15 reps",
+          "exercises": [
+            {
+              "name": "Goblet Squat",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Light weight — focus on depth and upright torso"
+              },
+              "tempo": "",
+              "notes": "Use lightest dumbbell or kettlebell. Depth matters more than weight.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell RDL",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Feel hamstring stretch, soft knees"
+              },
+              "tempo": "",
+              "notes": "Light DBs — focus on hip hinge pattern. This is foundational for deadlift later.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Alternative: Push-ups 2x8-12 if no bench available"
+              },
+              "tempo": "",
+              "notes": "If using push-ups: chest-supported on bench or modified on knees if needed",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Build foundational stability",
+          "exercises": [
+            {
+              "name": "Plank",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "",
+              "duration": "20-30s",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Focus on breathing — no sagging in the hips",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Static stretching and recovery",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Quad stretch, hamstring stretch, chest stretch — hold each 30s",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 45,
+      "intensityLevel": "Low",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "core"],
+        "patterns": ["squat", "hinge", "press"],
+        "equipment": ["dumbbell", "kettlebell", "bench"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w1-wednesday",
+    "metadata": {
+      "title": "Beginner Week 1 — Wednesday (Day 3)",
+      "weekNumber": 1,
+      "dayOfWeek": "Wednesday",
+      "planId": "beginner-general-fitness",
+      "phase": "Form Mastery (Weeks 1-4)",
+      "focus": "Full Body — Upper Emphasis",
+      "keyFeatures": [
+        "Horizontal and vertical push/pull patterns",
+        "Tempo focus (3-1-1)",
+        "Light loads (RPE 5-6)",
+        "Low volume (2 sets)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Upper",
+      "focus": "Push & Pull",
+      "description": "Second training day of Week 1. Focus on upper body push/pull patterns with controlled tempo (3-1-1) to build body awareness and control.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prepare shoulders and upper back",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Same as Monday — easy conversational pace",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Apart",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate upper back and rear delts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Shrug",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Elevate and depress shoulder blades — learn scapular control",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Push and pull patterns — 2 sets of 12-15 reps with 3-1-1 tempo",
+          "exercises": [
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Same weight as Monday — consistency helps pattern learning"
+              },
+              "tempo": "3-1-1",
+              "notes": "3sec descent, 1sec pause, 1sec lift — builds control. Alternative: Push-ups 2x8-12",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Focus on pulling shoulder blades together"
+              },
+              "tempo": "3-1-1",
+              "notes": "Alternative: Chest-Supported Row if cable not available. Pull with your back, not just your arms.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Lat Pulldown",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Focus on pulling elbows down, not hands"
+              },
+              "tempo": "3-1-1",
+              "notes": "Alternative: Assisted Pull-up. This is vertical pull pattern — foundational for pull-ups.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Anti-extension and stability",
+          "exercises": [
+            {
+              "name": "Dead Bug",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — press low back into floor, move slowly",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Upper body stretching",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Shoulder stretch, lat stretch, hip flexor stretch — hold each 30s",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 45,
+      "intensityLevel": "Low",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body", "upper"],
+        "muscles": ["chest", "lats", "upper_back", "core"],
+        "patterns": ["press", "row", "pulldown"],
+        "equipment": ["dumbbell", "cable_machine", "bench"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w1-friday",
+    "metadata": {
+      "title": "Beginner Week 1 — Friday (Day 5)",
+      "weekNumber": 1,
+      "dayOfWeek": "Friday",
+      "planId": "beginner-general-fitness",
+      "phase": "Form Mastery (Weeks 1-4)",
+      "focus": "Full Body — Balanced",
+      "keyFeatures": [
+        "Reinforces all patterns learned this week",
+        "Slightly higher volume (2-3 sets)",
+        "Introduces vertical press (shoulder press)",
+        "Optional conditioning finisher"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Balanced",
+      "focus": "All Patterns",
+      "description": "Final training day of Week 1. This session ties together Monday and Wednesday's work — you should feel more confident with the movements now. Celebrate completing Week 1!",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "General preparation",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up — same as Monday/Wednesday",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Full body — 2-3 sets (add third set if exercises felt easy earlier this week)",
+          "exercises": [
+            {
+              "name": "Goblet Squat",
+              "type": "Strength",
+              "sets": "2-3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Same weight as Monday, but focus on moving more smoothly"
+              },
+              "tempo": "",
+              "notes": "You should feel more confident with the pattern now",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell RDL",
+              "type": "Strength",
+              "sets": "2-3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Feel the hip hinge — this is key for deadlift later"
+              },
+              "tempo": "",
+              "notes": "Focus on depth and hamstring stretch",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "2-3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Third pressing session this week — pattern should feel grooved"
+              },
+              "tempo": "",
+              "notes": "Same weight as Monday/Wednesday — consistency over progression this week",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "2-3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Same as Wednesday — reinforce the pattern"
+              },
+              "tempo": "",
+              "notes": "Pull shoulder blades together, squeeze at contraction",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Shoulder Press",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "5-6",
+                "description": "Introduce vertical press pattern — light weight, strict form"
+              },
+              "tempo": "",
+              "notes": "NEW MOVEMENT — slightly lower reps (10-12) since you're learning the pattern",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Balance and stability",
+          "exercises": [
+            {
+              "name": "Bird Dog",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — opposite arm/leg, hold balance for 2sec at top",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Conditioning (Optional)",
+          "overview": "Low-intensity cardio finisher",
+          "exercises": [
+            {
+              "name": "Zone 2 Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "10 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Zone",
+                "value": "Zone 2",
+                "description": "Conversational pace — easy bike, walk, or row"
+              },
+              "tempo": "",
+              "notes": "OPTIONAL — only if you have energy and time. Not mandatory.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Full body stretching",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Full body — quads, hamstrings, chest, shoulders. Hold each 30s. You've built the foundation!",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 55,
+      "intensityLevel": "Low",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "lats", "front_delts", "core"],
+        "patterns": ["squat", "hinge", "press", "row"],
+        "equipment": ["dumbbell", "cable_machine", "bench"]
+      }
+    }
+  }
+]
