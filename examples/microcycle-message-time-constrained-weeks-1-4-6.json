@@ -1,0 +1,72 @@
+[
+  {
+    "microcycleId": "time-constrained-week-1",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Week 1 — Foundation: Learn Supersets",
+      "phase": "Foundation (Weeks 1-2)",
+      "planId": "time-efficient-strength-conditioning",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner-intermediate"
+    },
+    "message": "WEEK 1 — Foundation: Learn Supersets\n\nWelcome to time-efficient training. 3 full-body sessions per week using supersets—pair 2 exercises with minimal transition time (<15sec), rest 60-90sec between supersets. Each session: 30-35 minutes.\n\nThis Week:\n- Day 1: Full Body A (Push emphasis)\n- Day 2: Rest/active recovery\n- Day 3: Full Body B (Pull emphasis)\n- Day 4: Rest/active recovery\n- Day 5: Full Body C (Lower emphasis)\n- Days 6-7: Rest\n\nScheduling: Flexible. Mon/Wed/Fri recommended, or any 3 non-consecutive days.\n\nIntensity: RPE 6-7 (moderate, learn pacing)\nSession time: 30-35 min\nOptional finishers: 5-10min cardio (skip if no time)\n\nFocus this week: Master transitions between exercises. Don't rush—quality over speed. Track transition times and loads used. Consistency over perfection—3 focused sessions beats missing workouts.",
+    "qualityNotes": [
+      "Introduces superset concept with specific metrics (<15sec transitions, 60-90sec rest)",
+      "Time commitment transparent (30-35min sessions)",
+      "Flexible scheduling emphasized (any 3 non-consecutive days)",
+      "7-day structure shows full week (training days + rest days)",
+      "Optional finishers noted (skip if no time—acknowledges busy lifestyle)",
+      "RPE 6-7 appropriate for learning phase",
+      "Focus on transitions, not load (skill acquisition first)",
+      "Consistency over perfection philosophy introduced early",
+      "Approachable tone for busy professionals"
+    ]
+  },
+  {
+    "microcycleId": "time-constrained-week-4",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Week 4 — Progressive Overload Mid-Phase",
+      "phase": "Progressive Overload (Weeks 3-6)",
+      "planId": "time-efficient-strength-conditioning",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner-intermediate"
+    },
+    "message": "WEEK 4 — Progressive Overload Mid-Phase\n\nHalfway through Progressive Overload block. Loads at 70-75% 1RM (RPE 7-8). This week: add 5-10lbs to main compounds OR add 1-2 reps per set. If you failed reps 2 weeks in a row, reduce 10% and rebuild.\n\nThis Week:\n- Day 1: Full Body A (squats, deadlifts heavier than Week 3)\n- Day 2: Rest (prioritize sleep—7-8hr minimum)\n- Day 3: Full Body B (pull-ups/rows, bench press progression)\n- Day 4: Rest (skip finisher if fatigued)\n- Day 5: Full Body C (lunges, overhead press progression)\n- Days 6-7: Rest\n\nIntensity: RPE 7-8 (challenging but sustainable)\nSession time: 35-40 min\nOptional finishers: Add if energized, skip if busy\n\nYou're stronger than Week 1. Compare loads—typical progress: 10-20% increase in 4 weeks. Track everything. Weeks 5-6 continue this progression before Week 7 peak test.",
+    "qualityNotes": [
+      "Mid-phase check-in (Week 4 of 8)",
+      "Specific progression guidance (add 5-10lbs OR 1-2 reps)",
+      "Failure protocol provided (reduce 10% if failed 2 weeks running)",
+      "Each day notes what's progressing (compounds named)",
+      "Rest days include specific guidance (prioritize sleep, permission to skip finishers)",
+      "Session time increased to 35-40min (reflects additional work)",
+      "Progression expectation stated (10-20% increase in 4 weeks)",
+      "Forward-looking context (Weeks 5-6 continue, Week 7 peak test)",
+      "Balances push with sustainability (skip if busy/fatigued)"
+    ]
+  },
+  {
+    "microcycleId": "time-constrained-week-6",
+    "weekNumber": 6,
+    "metadata": {
+      "title": "Week 6 — Final Push Before Peak Test",
+      "phase": "Progressive Overload (Weeks 3-6)",
+      "planId": "time-efficient-strength-conditioning",
+      "messageType": "weekly_preview",
+      "experienceLevel": "beginner-intermediate"
+    },
+    "message": "WEEK 6 — Final Push Before Peak Test\n\nLast week of Progressive Overload before Week 7 peak (75-80% loads @ RPE 8-9) and Week 8 deload. Push for upper end of rep ranges or add 5lbs. Make every rep count.\n\nThis Week:\n- Day 1: Full Body A (aim for 3×10 on squats or add weight)\n- Day 2: Rest (8hr sleep if possible—recovery critical)\n- Day 3: Full Body B (deadlifts 2x this week, compare to Day 1)\n- Day 4: Rest (mental prep for Friday's final session)\n- Day 5: Full Body C (finish strong—test your progress)\n- Days 6-7: Rest (reflect on 6 weeks of work)\n\nIntensity: RPE 7-8 (upper end of ranges)\nSession time: 35-40 min (potentially 40-45 with 4th superset)\n\nWeek 7: Peak test (heavier loads, see your gains). Week 8: Deload (40% volume cut, recover, assess). You've built momentum—finish strong. Compare Week 6 to Week 1 loads. That's real progress.",
+    "qualityNotes": [
+      "Context for week's role (final push before peak)",
+      "Forward-looking: Week 7 peak test, Week 8 deload outlined",
+      "Specific guidance for each day (aim for 3×10 or add weight)",
+      "Rest days include mental preparation cues",
+      "Sleep emphasis (8hr if possible)",
+      "Session time acknowledges potential 4th superset option",
+      "Reflection prompt (compare Week 6 to Week 1)",
+      "Motivational tone balanced with realism",
+      "Sets expectations for coming weeks (peak then deload)",
+      "Acknowledges effort ('You've built momentum')"
+    ]
+  }
+]
