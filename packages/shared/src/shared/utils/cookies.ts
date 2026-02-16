@@ -22,7 +22,6 @@ export function setUserCookie(
   response: NextResponse,
   userData: UserCookieData
 ): NextResponse {
-console.log('setting user cookie', userData);
   response.cookies.set({
     name: COOKIE_NAME,
     value: JSON.stringify(userData),

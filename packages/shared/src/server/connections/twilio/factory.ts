@@ -53,10 +53,6 @@ export function createTwilioClient(
     async sendSMS(to: string, message?: string, mediaUrls?: string[]): Promise<MessageInstance> {
       try {
         const messageType = mediaUrls && mediaUrls.length > 0 ? 'MMS' : 'SMS';
-        console.log(`Sending ${messageType} from:`, fromNumber, 'to:', to);
-        if (mediaUrls && mediaUrls.length > 0) {
-          console.log('Media URLs:', mediaUrls);
-        }
         if (!message && (!mediaUrls || mediaUrls.length === 0)) {
           throw new Error('Must provide either message text or media URLs');
         }

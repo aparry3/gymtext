@@ -135,11 +135,8 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
 
       try {
         const apiUrl = `/api/users/${userId}/workouts/${workoutId}`
-        console.log('Fetching workout from:', apiUrl)
-        console.log('User ID:', userId, 'Workout ID:', workoutId)
 
         const response = await fetch(apiUrl)
-        console.log('Response status:', response.status)
 
         if (!response.ok) {
           const errorText = await response.text()
@@ -148,7 +145,6 @@ export function WorkoutDetailView({ userId, workoutId, basePath, showAdminAction
         }
 
         const result = await response.json()
-        console.log('API Result:', result)
 
         if (result.success) {
           // Parse dates when loading

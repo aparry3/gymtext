@@ -202,7 +202,6 @@ export function createDailyMessageService(
 
     async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
       const workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
-      console.log(`Workout: ${workout}`);
       return workout || null;
     },
 
