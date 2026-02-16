@@ -1,0 +1,167 @@
+[
+  {
+    "id": "beginner-w1-monday",
+    "metadata": {
+      "title": "Beginner Week 1 — Monday (Day 1)",
+      "weekNumber": 1,
+      "phase": "Form Mastery",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w1-monday"
+    },
+    "message": "Full Body Lower\n\nWarm-Up:\n- Light cardio: 5min\n- Leg swings: 1x10\n- Arm circles: 1x10\n\nWorkout:\n- Goblet squat: 2x12-15\n- DB RDL: 2x12-15\n- DB bench press: 2x12-15\n\nCore:\n- Plank: 3x20-30s\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s between sets. RPE 5-6 (light weight). Movement quality is the priority — if form breaks down, reduce weight immediately.",
+    "qualityNotes": [
+      "Focus line: 'Full Body Lower'",
+      "Section structure: Warm-Up, Workout, Core, Cooldown",
+      "Compact format: setsxreps for strength, time for cardio/core",
+      "Notes section includes rest, RPE, and key coaching cue",
+      "Beginner-appropriate: low volume (2 sets), conservative intensity"
+    ]
+  },
+  {
+    "id": "beginner-w1-wednesday",
+    "metadata": {
+      "title": "Beginner Week 1 — Wednesday (Day 3)",
+      "weekNumber": 1,
+      "phase": "Form Mastery",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w1-wednesday"
+    },
+    "message": "Full Body Upper\n\nWarm-Up:\n- Light cardio: 5min\n- Band pull-apart: 2x15\n- Scapular shrug: 2x10\n\nWorkout:\n- DB bench press: 2x12-15\n- Seated cable row: 2x12-15\n- Lat pulldown: 2x12-15\n\nCore:\n- Dead bug: 3x10/side\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s between sets. RPE 5-6. Tempo: 3-1-1 (3sec down, 1sec pause, 1sec up) — builds control and body awareness.",
+    "qualityNotes": [
+      "Focus line: 'Full Body Upper'",
+      "Tempo cue in Notes (3-1-1) — important for Week 1 learning",
+      "Same structure as Monday (consistency)",
+      "Dead bug reps specified 'per side'",
+      "Conservative intensity maintained (RPE 5-6)"
+    ]
+  },
+  {
+    "id": "beginner-w1-friday",
+    "metadata": {
+      "title": "Beginner Week 1 — Friday (Day 5)",
+      "weekNumber": 1,
+      "phase": "Form Mastery",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w1-friday"
+    },
+    "message": "Full Body Balanced\n\nWarm-Up:\n- Light cardio: 5min\n\nWorkout:\n- Goblet squat: 2-3x12-15\n- DB RDL: 2-3x12-15\n- DB bench press: 2-3x12-15\n- Seated cable row: 2-3x12-15\n- DB shoulder press: 2x10-12\n\nCore:\n- Bird dog: 3x8/side\n\nConditioning (Optional):\n- Zone 2 cardio: 10min\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s. RPE 5-6. Add third set if exercises felt easy earlier this week. Celebrate completing Week 1!",
+    "qualityNotes": [
+      "Focus line: 'Full Body Balanced'",
+      "Volume flexibility: '2-3x12-15' (optional third set)",
+      "New exercise: DB shoulder press (introduced Friday)",
+      "Optional Conditioning section (Zone 2 cardio)",
+      "Celebratory note: 'Celebrate completing Week 1!'"
+    ]
+  },
+  {
+    "id": "beginner-w5-monday",
+    "metadata": {
+      "title": "Beginner Week 5 — Monday (Day 1)",
+      "weekNumber": 5,
+      "phase": "Progressive Overload",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w5-monday"
+    },
+    "message": "Full Body Lower\n\nWarm-Up:\n- Light cardio: 5min\n- Leg swings: 1x10\n- Arm circles: 1x10\n\nWorkout:\n- Goblet squat: 3x12-15\n- DB RDL: 3x12-15\n- DB bench press: 3x12-15\n- Seated cable row: 3x12-15\n\nCore:\n- Plank: 3x40-45s\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s. RPE 6-7 (increase from Week 4). Track your weights: Goblet Squat __lbs, RDL __lbs, Bench __lbs, Row __lbs. If you hit 3x15 with clean form, add 5-10lbs next Monday.",
+    "qualityNotes": [
+      "Volume increase: 3 sets (vs 2 sets in Week 1)",
+      "Intensity increase: RPE 6-7 (vs 5-6 in Week 1)",
+      "Tracking introduced: 'Track your weights: __lbs'",
+      "Progression rule: 'If you hit 3x15, add 5-10lbs'",
+      "Core progression: Plank 40-45s (vs 20-30s in Week 1)"
+    ]
+  },
+  {
+    "id": "beginner-w5-wednesday",
+    "metadata": {
+      "title": "Beginner Week 5 — Wednesday (Day 3)",
+      "weekNumber": 5,
+      "phase": "Progressive Overload",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w5-wednesday"
+    },
+    "message": "Full Body Upper\n\nWarm-Up:\n- Light cardio: 5min\n- Band pull-apart: 2x15\n- Scapular shrug: 2x10\n\nWorkout:\n- DB bench press: 3x12-15\n- Chest-supported row: 3x12-15\n- Lat pulldown: 3x12-15\n- DB shoulder press: 3x10-12\n\nCore:\n- Dead bug: 3x12/side\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s. RPE 6-7. Track weights for all exercises. Same weight as Monday for bench press — consistency helps track progress.",
+    "qualityNotes": [
+      "Volume increase: 3 sets",
+      "Dead bug progression: 12/side (vs 10/side in Week 1)",
+      "Tracking emphasized: 'Track weights for all exercises'",
+      "Consistency note: 'Same weight as Monday for bench press'",
+      "No tempo cues (Week 1 had 3-1-1, Week 5 assumes mastery)"
+    ]
+  },
+  {
+    "id": "beginner-w5-friday",
+    "metadata": {
+      "title": "Beginner Week 5 — Friday (Day 5)",
+      "weekNumber": 5,
+      "phase": "Progressive Overload",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w5-friday"
+    },
+    "message": "Full Body Balanced\n\nWarm-Up:\n- Light cardio: 5min\n\nWorkout:\n- Goblet squat: 3x12-15\n- DB RDL: 3x12-15\n- DB bench press: 3x12-15\n- Seated cable row: 3x12-15\n- DB shoulder press: 3x10-12\n\nCore:\n- Bird dog: 3x10/side\n\nConditioning (Optional):\n- Zone 2 cardio: 10-15min\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 60-90s. RPE 6-7. Review your log: Did you hit 3x15 on any exercise this week? If yes, add 5-10lbs next week (Week 6). Progressive overload in action!",
+    "qualityNotes": [
+      "Volume now strict 3 sets (vs 2-3 in Week 1)",
+      "Bird dog progression: 10/side (vs 8/side in Week 1)",
+      "Weekly review prompt: 'Review your log: Did you hit 3x15?'",
+      "Action item: 'Add 5-10lbs next week'",
+      "Motivational: 'Progressive overload in action!'"
+    ]
+  },
+  {
+    "id": "beginner-w9-monday",
+    "metadata": {
+      "title": "Beginner Week 9 — Monday (Day 1)",
+      "weekNumber": 9,
+      "phase": "Barbell Introduction",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w9-monday"
+    },
+    "message": "Barbell Squat Intro\n\nWarm-Up:\n- Light cardio: 5min\n- Bodyweight squat: 2x10\n\nWorkout:\n- BB back squat: 3x10-12\n- DB RDL: 3x12\n- DB bench press: 3x12\n- Seated cable row: 3x12\n\nCore:\n- Plank: 3x45s\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 90-120s for squats, 60-90s for other exercises. RPE 6-7. Start with JUST THE BAR (45lbs) for Set 1 of squats. If form is clean, add 10-20lbs for Sets 2-3. Film yourself (side angle). Focus: depth, chest up, knees tracking.",
+    "qualityNotes": [
+      "Focus change: 'Barbell Squat Intro' (major milestone)",
+      "Equipment transition: BB back squat (vs Goblet in W1, W5)",
+      "Start weight specified: 'JUST THE BAR (45lbs)'",
+      "Rest increased: 90-120s for squats (vs 60-90s in W5)",
+      "Film lifts: 'Film yourself (side angle)'",
+      "Form checkpoints: 'depth, chest up, knees tracking'"
+    ]
+  },
+  {
+    "id": "beginner-w9-wednesday",
+    "metadata": {
+      "title": "Beginner Week 9 — Wednesday (Day 3)",
+      "weekNumber": 9,
+      "phase": "Barbell Introduction",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w9-wednesday"
+    },
+    "message": "Barbell Bench Intro\n\nWarm-Up:\n- Light cardio: 5min\n- Push-up: 2x10\n\nWorkout:\n- BB bench press: 3x10-12\n- Chest-supported row: 3x12\n- Lat pulldown: 3x12\n- DB shoulder press: 3x10\n\nCore:\n- Dead bug: 3x12/side\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 90-120s for bench, 60-90s for other exercises. RPE 6-7. Start with bar only (45lbs) for Set 1 of bench. If form is clean, add 10-20lbs for Sets 2-3. Spotter recommended. Film yourself (front angle). Focus: controlled descent, pause on chest, elbows ~45°.",
+    "qualityNotes": [
+      "Focus: 'Barbell Bench Intro' (second barbell lift)",
+      "Equipment transition: BB bench press (vs DB in W1, W5)",
+      "Start weight: 'bar only (45lbs)'",
+      "Safety: 'Spotter recommended'",
+      "Film lifts: 'front angle' (different from squat's side angle)",
+      "Form checkpoints: 'controlled descent, pause on chest, elbows ~45°'"
+    ]
+  },
+  {
+    "id": "beginner-w9-friday",
+    "metadata": {
+      "title": "Beginner Week 9 — Friday (Day 5)",
+      "weekNumber": 9,
+      "phase": "Barbell Introduction",
+      "messageType": "TRAINING",
+      "correspondingStructuredWorkout": "beginner-w9-friday"
+    },
+    "message": "Deadlift Intro + Big Three\n\nWarm-Up:\n- Light cardio: 5min\n- Light DB RDL: 2x10\n\nWorkout:\n- BB deadlift: 3x8-10\n- BB back squat: 3x10\n- BB bench press: 3x10\n- Seated cable row: 3x12\n\nCore:\n- Bird dog: 3x10/side\n\nCooldown:\n- Static stretching: 5min\n\nNotes: Rest 2min for deadlifts, 90-120s for squat/bench, 60-90s for rows. RPE 6-7. Deadlift: Start with bar + 25lbs per side (95lbs total), or just bar if that feels heavy. Film yourself (side angle). Focus: neutral spine, hips and shoulders rise together. Celebrate: You've learned the big three!",
+    "qualityNotes": [
+      "Focus: 'Deadlift Intro + Big Three' (all three barbell lifts)",
+      "All three barbell lifts in one session (consolidation day)",
+      "Deadlift lowest reps: 8-10 (vs 10-12 for squat/bench)",
+      "Rest hierarchy: 2min (DL) > 90-120s (squat/bench) > 60-90s (rows)",
+      "Deadlift start weight: 'bar + 25lbs per side (95lbs total)'",
+      "Celebratory: 'You've learned the big three!'"
+    ]
+  }
+]
