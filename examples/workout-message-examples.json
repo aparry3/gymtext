@@ -1,0 +1,170 @@
+[
+  {
+    "id": "training-upper-strength",
+    "metadata": {
+      "title": "TRAINING — Upper Body Strength (Intermediate)",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Strength development, compound lifts",
+      "keyFeatures": ["Heavy compounds", "Low reps", "Longer rest periods"]
+    },
+    "message": "Upper Body Strength\n\nWorkout:\n- BB Bench Press: 5x5\n- Weighted Pull-up: 4x6\n- Overhead Press: 4x6\n- DB Row: 3x8/side\n- Dips: 3x8\n\nNotes: Rest 2-3min between main lifts. Aim for RPE 8.",
+    "qualityNotes": "Perfect example of TRAINING format. Clean structure: focus line, one blank line, single Workout section. Abbreviations used (BB, DB). Sets/reps format (5x5, 3x8/side). Brief notes for rest/RPE."
+  },
+  {
+    "id": "training-legs-hypertrophy",
+    "metadata": {
+      "title": "TRAINING — Leg Hypertrophy",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Muscle growth, higher volume",
+      "keyFeatures": ["Moderate-high reps", "Multiple exercises", "Tempo cue"]
+    },
+    "message": "Leg Hypertrophy\n\nWorkout:\n- BB Back Squat: 4x10-12\n- Romanian Deadlift: 4x10-12\n- Leg Press: 3x12-15\n- Walking Lunge: 3x12/leg\n- Leg Curl: 3x12-15\n- Calf Raise: 4x15-20\n\nNotes: Rest 60-90s. Control the eccentric (3s down).",
+    "qualityNotes": "Shows rep ranges (10-12, 12-15) for hypertrophy training. All exercises in one Workout section. Notes include rest and tempo guidance. Concise but complete."
+  },
+  {
+    "id": "training-push-supersets",
+    "metadata": {
+      "title": "TRAINING — Push Day with Supersets",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Chest/shoulders/triceps, time-efficient",
+      "keyFeatures": ["Superset formatting (SS1, SS2)", "Compound + accessory split"]
+    },
+    "message": "Push Day\n\nWorkout:\n- BB Bench Press: 4x8\n- SS1 Incline DB Press: 3x10\n- SS1 Cable Fly: 3x12\n- SS2 Lateral Raise: 3x15\n- SS2 Tricep Pushdown: 3x12\n\nNotes: No rest within superset pairs. Rest 60s after each pair.",
+    "qualityNotes": "Perfect superset formatting. SS1 exercises paired, SS2 exercises paired. Notes clarify how to execute supersets. Bench press not in a superset (allows heavier load)."
+  },
+  {
+    "id": "training-circuit-beginner",
+    "metadata": {
+      "title": "TRAINING — Full Body Circuit (Beginner)",
+      "activityType": "TRAINING",
+      "experienceLevel": "beginner",
+      "focus": "Full-body work capacity, simple movements",
+      "keyFeatures": ["Circuit formatting (C1, C2)", "Bodyweight + dumbbell", "Clear round structure"]
+    },
+    "message": "Full Body Circuit\n\nWorkout:\n- C1 Goblet Squat: 3x10\n- C1 Push-up: 3x12\n- C1 DB Row: 3x10/side\n- C1 Plank: 3x30s\n- C2 Reverse Lunge: 3x10/leg\n- C2 DB Shoulder Press: 3x10\n- C2 Bicycle Crunch: 3x15/side\n\nNotes: Rest 15s between exercises, 60s between rounds.",
+    "qualityNotes": "Two circuits clearly labeled (C1, C2). Beginner-friendly exercises. Notes explain rest structure. Per-side notation (/side, /leg) for unilateral moves."
+  },
+  {
+    "id": "training-lower-conditioning",
+    "metadata": {
+      "title": "TRAINING — Lower Body + Conditioning",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Strength + conditioning hybrid",
+      "keyFeatures": ["Multiple sections (Strength, Conditioning)", "Hybrid workout"]
+    },
+    "message": "Lower Body + Conditioning\n\nStrength:\n- BB Front Squat: 4x6\n- BB Hip Thrust: 4x8\n\nConditioning:\n- KB Swing: 5x15\n- Assault Bike: 3x 60s on/90s off\n\nNotes: Rest 2min between strength sets. Push hard on conditioning.",
+    "qualityNotes": "Multiple sections used appropriately (Strength, Conditioning). Interval notation for bike (60s on/90s off). Notes differentiate rest between sections."
+  },
+  {
+    "id": "training-pull-day",
+    "metadata": {
+      "title": "TRAINING — Pull Day (Back/Biceps)",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Back and bicep development",
+      "keyFeatures": ["Supersets", "Heavy deadlift first", "Accessory work"]
+    },
+    "message": "Pull Day\n\nWorkout:\n- BB Deadlift: 4x5\n- Weighted Chin-up: 4x6\n- SS1 Seated Cable Row: 3x10\n- SS1 Reverse Fly: 3x15\n- SS2 Hammer Curl: 3x12\n- SS2 BB Curl: 3x10\n\nNotes: Rest 2-3min after deadlifts and chin-ups. No rest within supersets.",
+    "qualityNotes": "Heavy compounds (deadlift, chin-up) first, then accessories in supersets. Notes specify different rest for compounds vs supersets."
+  },
+  {
+    "id": "training-bodyweight-travel",
+    "metadata": {
+      "title": "TRAINING — Bodyweight Only (No Equipment)",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Travel/home workout, no equipment",
+      "keyFeatures": ["Bodyweight only", "Core section", "Minimal equipment"]
+    },
+    "message": "Bodyweight Workout\n\nWorkout:\n- Push-up: 4x15\n- Bulgarian Split Squat: 4x10/leg\n- Pike Push-up: 3x10\n- SL Glute Bridge: 3x12/leg\n\nCore:\n- Plank: 3x45s\n- Dead Bug: 3x10/side\n- Mountain Climber: 3x20\n\nNotes: Rest 45s. No equipment needed.",
+    "qualityNotes": "Two sections (Workout, Core). Bodyweight exercises clearly described. Abbreviation SL for single-leg. Notes confirm no equipment required."
+  },
+  {
+    "id": "training-hiit-cardio",
+    "metadata": {
+      "title": "TRAINING — HIIT Intervals",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "High-intensity interval conditioning",
+      "keyFeatures": ["Warm-up section", "Interval formatting", "Cooldown"]
+    },
+    "message": "HIIT Cardio\n\nWarm-Up:\n- Light cycling: 5min\n- Build-up sprint: 3x10s\n\nIntervals:\n- All-out sprint: 8x 30s on/60s off\n\nCooldown:\n- Easy cycling: 5min\n- Foam roll quads: 2min\n\nNotes: Max effort on each sprint. Full recovery between rounds.",
+    "qualityNotes": "Three sections (Warm-Up, Intervals, Cooldown). Interval notation (30s on/60s off). Notes clarify intensity expectations."
+  },
+  {
+    "id": "training-running-intervals",
+    "metadata": {
+      "title": "TRAINING — Running Speed Work",
+      "activityType": "TRAINING",
+      "experienceLevel": "intermediate",
+      "focus": "Sport-specific running intervals",
+      "keyFeatures": ["Track session", "Pace guidance", "Running drills"]
+    },
+    "message": "Speed Work\n\nWarm-Up:\n- Easy jog: 10min\n- A-skip: 2x30m\n- High knees: 2x30m\n\nIntervals:\n- 400m repeat: 6x @ 5K pace\n- Recovery jog: 90s between reps\n\nCooldown:\n- Easy jog: 10min\n- Calf stretch: 30s/side\n\nNotes: Hit consistent splits. Don't go out too fast on rep 1.",
+    "qualityNotes": "Sport-specific (running). Distance notation (400m, 30m). Pace guidance (@ 5K pace). Recovery jog between reps. Strategic coaching note."
+  },
+  {
+    "id": "training-steady-cardio",
+    "metadata": {
+      "title": "TRAINING — Steady-State Cardio",
+      "activityType": "TRAINING",
+      "experienceLevel": "beginner",
+      "focus": "Aerobic base building",
+      "keyFeatures": ["Single exercise", "Intensity guidance", "Cooldown stretches"]
+    },
+    "message": "Easy Cardio\n\nRun:\n- Easy jog: 35min @ conversational pace\n\nCooldown:\n- Walk: 5min\n- Quad stretch: 30s/side\n- Hamstring stretch: 30s/side\n\nNotes: Keep HR under 140bpm. If you can't hold a conversation, slow down.",
+    "qualityNotes": "Simple structure for cardio-focused session. Intensity guidance (conversational pace, HR under 140bpm). Cooldown stretches included."
+  },
+  {
+    "id": "active-recovery-minimal",
+    "metadata": {
+      "title": "ACTIVE_RECOVERY — Light Movement + Mobility",
+      "activityType": "ACTIVE_RECOVERY",
+      "experienceLevel": "all",
+      "focus": "Recovery, blood flow, mobility",
+      "keyFeatures": ["No headers (per ACTIVE_RECOVERY format)", "Permissive language", "1-2 bullets"]
+    },
+    "message": "Active Recovery\n\n- Easy activity: ~30m (walk, bike, jog, row, swim, etc.)\n- Stretching: 5–10m (let me know if you need stretches)",
+    "qualityNotes": "Perfect ACTIVE_RECOVERY format: NO section headers. Exactly 2 bullets. Permissive language (~30m, 5-10m, etc.). Not prescriptive."
+  },
+  {
+    "id": "active-recovery-extended",
+    "metadata": {
+      "title": "ACTIVE_RECOVERY — Movement + Foam Rolling",
+      "activityType": "ACTIVE_RECOVERY",
+      "experienceLevel": "all",
+      "focus": "Recovery with foam rolling",
+      "keyFeatures": ["No headers", "Permissive", "Optional activities"]
+    },
+    "message": "Active Recovery\n\n- Easy activity: 20-30min (walk, light bike, swim, etc.)\n- Foam roll: 10min (quads, hamstrings, IT band, back)",
+    "qualityNotes": "ACTIVE_RECOVERY format: no headers, 2 bullets, time-based, permissive suggestions. Foam rolling listed as optional activity."
+  },
+  {
+    "id": "rest-minimal",
+    "metadata": {
+      "title": "REST — Complete Rest",
+      "activityType": "REST",
+      "experienceLevel": "all",
+      "focus": "Complete recovery",
+      "keyFeatures": ["No headers", "1 bullet max", "Minimal, supportive"]
+    },
+    "message": "Rest Day\n\n- Optional easy walk: 5–15m",
+    "qualityNotes": "Perfect REST format: no headers, 1 bullet, minimal and supportive, optional gentle movement only."
+  },
+  {
+    "id": "rest-with-context",
+    "metadata": {
+      "title": "REST — Post-Hard Week",
+      "activityType": "REST",
+      "experienceLevel": "all",
+      "focus": "Recovery after high-volume week",
+      "keyFeatures": ["No headers", "1 bullet", "Supportive messaging"]
+    },
+    "message": "Rest Day\n\n- Optional light stretching or walk: 10-15m if you feel restless",
+    "qualityNotes": "REST format: no headers, 1 bullet, gentle suggestion. \"if you feel restless\" is supportive and permissive."
+  }
+]
