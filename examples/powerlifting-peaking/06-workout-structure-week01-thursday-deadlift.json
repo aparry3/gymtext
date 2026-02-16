@@ -1,0 +1,201 @@
+{
+  "title": "Week 1 - Thursday: Deadlift Day",
+  "focus": "Competition Deadlift Volume",
+  "description": "Heavy deadlift work with deficit variation to strengthen start position. Accessory work for posterior chain and quad development.",
+  "quote": {"text": "", "author": ""},
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Prepare posterior chain and hips",
+      "exercises": [
+        {
+          "name": "Assault Bike",
+          "type": "Cardio",
+          "sets": "",
+          "reps": "",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": "Easy"},
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "Cat-Cow",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Spinal mobility",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Glute Bridge",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "15",
+          "rest": "30s",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Glute activation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Romanian Deadlift (Empty Bar)",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "30s",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Groove hip hinge",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Lift",
+      "overview": "Competition deadlift",
+      "exercises": [
+        {
+          "name": "Deadlift",
+          "type": "Strength",
+          "sets": "5",
+          "reps": "5",
+          "rest": "4 min",
+          "intensity": {"type": "Percentage", "value": "75", "description": "260lbs — RPE 7-8"},
+          "tempo": "X-0-X",
+          "notes": "Deliberate setup each rep. Reset fully between reps.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Variation Work",
+      "overview": "Start position strength",
+      "exercises": [
+        {
+          "name": "Deficit Deadlift (2-inch)",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "4",
+          "rest": "3 min",
+          "intensity": {"type": "Percentage", "value": "65", "description": "225lbs — RPE 8"},
+          "tempo": "",
+          "notes": "Stand on 2-inch platform. Focus on first pull.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Quad and posterior chain volume",
+      "exercises": [
+        {
+          "name": "Front Squat",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "6",
+          "rest": "2.5 min",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "135-155lbs. Upright torso.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Bulgarian Split Squat",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8 each",
+          "rest": "90s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "35-40lbs per hand",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hamstring Curl",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "3-1-1",
+          "notes": "Isolation for hamstrings",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Back Extension",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "15",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "10-25lbs plate. Spinal erector endurance.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Stretch hips and hamstrings",
+      "exercises": [
+        {
+          "name": "Child's Pose",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "60s",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Lower back stretch",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 90,
+  "intensityLevel": "High",
+  "tags": {
+    "category": ["strength", "powerlifting"],
+    "split": ["deadlift_day"],
+    "muscles": ["hamstrings", "glutes", "lower_back", "quads"],
+    "patterns": ["hinge", "squat"],
+    "equipment": ["barbell", "dumbbell"]
+  }
+}

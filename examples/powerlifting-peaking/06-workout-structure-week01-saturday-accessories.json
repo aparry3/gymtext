@@ -1,0 +1,209 @@
+{
+  "title": "Week 1 - Saturday: Accessories & Recovery",
+  "focus": "Hypertrophy and Active Recovery",
+  "description": "Light accessory work for muscle building and weakness correction. Lower CNS demand to support recovery from main lift days.",
+  "quote": {"text": "", "author": ""},
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "General movement prep",
+      "exercises": [
+        {
+          "name": "Rowing Machine",
+          "type": "Cardio",
+          "sets": "",
+          "reps": "",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": "Easy"},
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "Arm Circle",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "20 each direction",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Upper Body",
+      "overview": "Hypertrophy volume",
+      "exercises": [
+        {
+          "name": "Incline Dumbbell Press",
+          "type": "Strength",
+          "sets": "4",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "3-0-1",
+          "notes": "40-50lbs per hand. Upper chest.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Pull-Up",
+          "type": "Strength",
+          "sets": "4",
+          "reps": "8-10",
+          "rest": "2 min",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "Bodyweight or assisted",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Dumbbell Row",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12 each",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "50-60lbs. Unilateral back work.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Lateral Raise",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "15",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "2-1-1",
+          "notes": "15-20lbs. Side delt hypertrophy.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Bicep Curl",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "Elbow health",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Lower Body",
+      "overview": "Light isolation work",
+      "exercises": [
+        {
+          "name": "Leg Extension",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "15",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "Quad isolation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Leg Curl",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "15",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "Hamstring isolation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hip Thrust",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12",
+          "rest": "90s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "135-185lbs. Glute isolation.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Core & Conditioning",
+      "overview": "Core endurance and grip strength",
+      "exercises": [
+        {
+          "name": "Plank Variation",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "",
+          "rest": "60s",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Front or side plank",
+          "tags": [],
+          "supersetId": "",
+          "duration": "45-60s",
+          "distance": ""
+        },
+        {
+          "name": "Farmer's Carry",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "",
+          "rest": "90s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "70lbs per hand. Grip and core stability.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": "40 yards"
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 75,
+  "intensityLevel": "Low-Moderate",
+  "tags": {
+    "category": ["hypertrophy", "recovery"],
+    "split": ["accessories"],
+    "muscles": ["chest", "back", "shoulders", "arms", "legs", "core"],
+    "patterns": ["press", "pull", "carry"],
+    "equipment": ["dumbbell", "cable", "bodyweight"]
+  }
+}

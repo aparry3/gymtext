@@ -1,0 +1,204 @@
+{
+  "title": "Week 1 - Tuesday: Bench Day",
+  "focus": "Competition Bench Press Volume",
+  "description": "Bench press focus with close-grip work for lockout strength. Includes speed deadlifts to maintain technique.",
+  "quote": {
+    "text": "",
+    "author": ""
+  },
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Activate shoulders and upper back",
+      "exercises": [
+        {
+          "name": "Rowing Machine",
+          "type": "Cardio",
+          "sets": "",
+          "reps": "",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": "Easy pace"},
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "Band Pull-Apart",
+          "type": "Mobility",
+          "sets": "3",
+          "reps": "15",
+          "rest": "30s",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "Rear delt activation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Push-Up",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "30s",
+          "intensity": {"type": "Other", "value": "", "description": "Warmup"},
+          "tempo": "",
+          "notes": "Chest activation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Lift",
+      "overview": "Competition bench press",
+      "exercises": [
+        {
+          "name": "Bench Press",
+          "type": "Strength",
+          "sets": "5",
+          "reps": "5",
+          "rest": "3-4 min",
+          "intensity": {"type": "Percentage", "value": "75", "description": "132lbs — RPE 7-8"},
+          "tempo": "2-1-X",
+          "notes": "Practice comp pause on every rep. Focus on lockout.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Variation Work",
+      "overview": "Lockout strength development",
+      "exercises": [
+        {
+          "name": "Close-Grip Bench Press",
+          "type": "Strength",
+          "sets": "4",
+          "reps": "6",
+          "rest": "3 min",
+          "intensity": {"type": "Percentage", "value": "65", "description": "115lbs — RPE 7"},
+          "tempo": "",
+          "notes": "~12 inches grip width. Target triceps.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Speed deadlifts and upper back",
+      "exercises": [
+        {
+          "name": "Speed Deadlift",
+          "type": "Strength",
+          "sets": "6",
+          "reps": "2",
+          "rest": "90s",
+          "intensity": {"type": "Percentage", "value": "60", "description": "208lbs — RPE 6-7, focus on bar speed"},
+          "tempo": "X-0-X",
+          "notes": "Explosive off floor. Reset between reps.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Barbell Row",
+          "type": "Strength",
+          "sets": "4",
+          "reps": "8",
+          "rest": "2 min",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "135-155lbs. Pull to lower chest.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Overhead Press",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "2 min",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "75-85lbs. Shoulder health.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Face Pull",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "15",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "6", "description": ""},
+          "tempo": "",
+          "notes": "Rope attachment. Rear delts.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Tricep Pushdown",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12",
+          "rest": "60s",
+          "intensity": {"type": "RPE", "value": "7", "description": ""},
+          "tempo": "",
+          "notes": "Lockout isolation work",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Stretch chest and shoulders",
+      "exercises": [
+        {
+          "name": "Doorway Pec Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each side",
+          "rest": "",
+          "intensity": {"type": "Other", "value": "", "description": ""},
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 90,
+  "intensityLevel": "Moderate-High",
+  "tags": {
+    "category": ["strength", "powerlifting"],
+    "split": ["bench_day"],
+    "muscles": ["chest", "triceps", "shoulders", "upper_back"],
+    "patterns": ["press", "pull"],
+    "equipment": ["barbell", "cable"]
+  }
+}

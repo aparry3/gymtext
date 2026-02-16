@@ -1,0 +1,266 @@
+{
+  "title": "Week 1 - Monday: Squat Day",
+  "focus": "Competition Squat Volume",
+  "description": "Heavy squat work with pause squats and accessory movements. Accumulation phase emphasizes building work capacity and movement quality.",
+  "quote": {
+    "text": "The squat is the king of all exercises.",
+    "author": ""
+  },
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Prepare hips, ankles, and core for squatting",
+      "exercises": [
+        {
+          "name": "Assault Bike",
+          "type": "Cardio",
+          "sets": "",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "Easy pace"
+          },
+          "tempo": "",
+          "notes": "Get blood flowing",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "Leg Swing",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10 each direction",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Front/back and side-to-side",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Goblet Squat",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "Light warmup"
+          },
+          "tempo": "",
+          "notes": "25-35lbs kettlebell",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hip Circle",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10 each direction per leg",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Open up hip capsule",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Lift",
+      "overview": "Competition back squat volume",
+      "exercises": [
+        {
+          "name": "Back Squat",
+          "type": "Strength",
+          "sets": "5",
+          "reps": "5",
+          "rest": "3-4 min",
+          "intensity": {
+            "type": "Percentage",
+            "value": "75",
+            "description": "225lbs — RPE 7-8, should have 2-3 reps in reserve"
+          },
+          "tempo": "3-0-X",
+          "notes": "Focus on depth and bracing. This should feel manageable.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Variation Work",
+      "overview": "Build bottom position strength",
+      "exercises": [
+        {
+          "name": "Pause Squat",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "3",
+          "rest": "3 min",
+          "intensity": {
+            "type": "Percentage",
+            "value": "65",
+            "description": "195lbs — RPE 7"
+          },
+          "tempo": "3-2-X",
+          "notes": "2-second pause at bottom. Stay maximally tight during pause.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Posterior chain and quad volume",
+      "exercises": [
+        {
+          "name": "Romanian Deadlift",
+          "type": "Strength",
+          "sets": "4",
+          "reps": "8",
+          "rest": "2 min",
+          "intensity": {
+            "type": "RPE",
+            "value": "7",
+            "description": ""
+          },
+          "tempo": "3-0-1",
+          "notes": "135-155lbs. Focus on hamstring stretch.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Leg Press",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "12",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "7-8",
+            "description": ""
+          },
+          "tempo": "3-0-1",
+          "notes": "Quad volume without spinal loading",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hanging Leg Raise",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "10",
+          "rest": "60s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Core stability for squatting. No swinging.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Plank",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "",
+          "rest": "60s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Squeeze glutes and core",
+          "tags": [],
+          "supersetId": "",
+          "duration": "45s",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Stretch quads, hips, and hamstrings",
+      "exercises": [
+        {
+          "name": "Quad Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each leg",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Pigeon Pose",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each side",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Glute and hip stretch",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 90,
+  "intensityLevel": "High",
+  "tags": {
+    "category": ["strength", "powerlifting"],
+    "split": ["squat_day"],
+    "muscles": ["quads", "glutes", "hamstrings", "core"],
+    "patterns": ["squat", "hinge"],
+    "equipment": ["barbell", "kettlebell", "leg_press"]
+  }
+}
