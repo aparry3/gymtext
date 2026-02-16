@@ -1,0 +1,769 @@
+[
+  {
+    "id": "mma-w1-monday",
+    "metadata": {
+      "title": "MMA Week 1 — Monday (Lower Body Power + Alactic)",
+      "weekNumber": 1,
+      "dayOfWeek": "Monday",
+      "planId": "mma-fighter-8week",
+      "phase": "Strength Emphasis (Weeks 1-3)",
+      "focus": "Lower Body Power + Alactic Conditioning",
+      "keyFeatures": [
+        "Baseline strength building: 4x5 @ 80% 1RM (RPE 7-8)",
+        "Neural activation with trap bar jumps",
+        "Alactic conditioning: 6 rounds x 10sec sprint / 50sec rest",
+        "60min session",
+        "Pair with light MMA technical work (avoid heavy sparring)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower Body Power + Alactic Conditioning",
+      "focus": "Explosive lower body development and sprint capacity",
+      "description": "Week 1, Day 1—Opening session establishes baseline strength capacity. Focus on movement quality and technical proficiency in both strength and explosive exercises—don't chase PRs. Strength should feel challenging but controlled (RPE 7-8), leaving room for high-quality MMA training later today or tomorrow. Build the foundation for power development in Weeks 4-5.",
+      "quote": {
+        "text": "Manage fatigue carefully. Pair this session with lighter MMA day. If bar speed drops, reduce load.",
+        "author": "Week 1 Fight Camp Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Dynamic movement prep + joint mobility (5min)",
+          "exercises": [
+            {
+              "name": "Light Movement Flow",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "2-3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Light jogging, jumping jacks, or shadow boxing to elevate heart rate"
+              },
+              "tempo": "",
+              "notes": "Break a light sweat, prepare body for explosive work",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Lower Body Prep",
+              "type": "Mobility",
+              "sets": "1-2",
+              "reps": "10/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings (forward/back, side-to-side), walking lunges (5/leg), bodyweight squats (10 reps), ankle circles—prepare hips, knees, ankles for explosive loading",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Neural Activation",
+          "overview": "Prime CNS for max strength work (potentiation effect)",
+          "exercises": [
+            {
+              "name": "Trap Bar Jumps",
+              "type": "Plyometric",
+              "sets": "3",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Intent",
+                "description": "Explosive triple extension, focus on bar speed and height"
+              },
+              "tempo": "Explosive concentric (jump as high as possible)",
+              "notes": "Setup: Load trap bar light (25-35lbs per side or bodyweight only). Execution: Descend to quarter-squat position, explode up driving through feet—full triple extension (ankles, knees, hips). Land softly with bent knees. Purpose: CNS priming (potentiation) for strength work. NOT a fatiguing exercise—focus is on intent and speed, not load. Rest fully between sets.",
+              "tags": ["plyometric", "lower body"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength",
+          "overview": "Build force production capacity (4x5 @ 80% 1RM)",
+          "exercises": [
+            {
+              "name": "Trap Bar Deadlift",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "Percentage",
+                "value": "80",
+                "description": "80% 1RM, RPE 7-8 (leave 2-3 reps in reserve). Bar speed is quality metric."
+              },
+              "tempo": "Controlled descent (2-3sec), explosive concentric (fast bar speed)",
+              "notes": "Setup: Step into trap bar, feet hip-width, grab handles, chest up, shoulders back. Execution: Drive through feet, explode up to lockout (hips and knees extend simultaneously). Control descent—don't drop bar. Bar Speed Monitoring: If rep slows significantly (>3sec grind), reduce load 5-10lbs. Don't chase weight—prioritize speed and form. Purpose: Baseline strength building (80% is moderate load for Week 1). Trap bar over conventional: safer spinal loading, less technical complexity, allows more explosive intent. Fighter-specific: Builds takedown power, scramble strength, positional control.",
+              "tags": ["compound", "lower body", "posterior chain"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Strength",
+          "overview": "Rate of force development (3x5, heavy load)",
+          "exercises": [
+            {
+              "name": "Kettlebell Swings",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavy Load",
+                "description": "Use challenging KB weight—should feel explosive but not grind. Focus on hip snap."
+              },
+              "tempo": "Explosive hip extension (fast concentric), controlled backswing",
+              "notes": "Setup: KB on ground, hinge down to grip handle with both hands. Execution: Hike KB between legs (load hamstrings), explosively drive hips forward—KB swings to chest/eye level. Don't squat—this is a HINGE (hip dominant). Focus: Explosive hip snap (like a takedown level change), fast concentric, controlled backswing. Purpose: Posterior chain power (glutes/hamstrings), explosive hip extension, rate of force development. Fighter-specific: Hip snap translates to takedowns, sprawls, explosive scrambles.",
+              "tags": ["explosive", "posterior chain", "power"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Plyometrics",
+          "overview": "Elastic/reactive strength development (3x5)",
+          "exercises": [
+            {
+              "name": "Broad Jumps",
+              "type": "Plyometric",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Distance",
+                "description": "Focus on horizontal distance and landing mechanics"
+              },
+              "tempo": "Explosive takeoff, soft landing (absorb with bent knees)",
+              "notes": "Setup: Stand with feet hip-width. Execution: Swing arms back, load hips, explode forward and up—drive knees forward for max distance. Land softly on both feet, absorb impact with bent knees (don't land stiff-legged). Landing Mechanics: Critical for injury prevention. Land balanced, knees tracking over toes, immediately decelerate (stick the landing). Purpose: Horizontal power (forward drive), landing mechanics, stretch-shortening cycle. Fighter-specific: Explosive forward movement (closing distance, level changes), landing control (balance after scrambles).",
+              "tags": ["plyometric", "lower body", "horizontal power"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Alactic Conditioning",
+          "overview": "Short sprint capacity with full recovery (6 rounds x 10sec / 50sec)",
+          "exercises": [
+            {
+              "name": "Assault Bike or Hill Sprint",
+              "type": "Conditioning",
+              "sets": "6",
+              "reps": "",
+              "duration": "10 sec work / 50 sec rest",
+              "distance": "",
+              "rest": "50 sec between sprints",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Effort Sprint",
+                "description": "All-out intensity for 10sec, full recovery for 50sec"
+              },
+              "tempo": "",
+              "notes": "Execution: 10sec all-out sprint (Assault Bike, hill sprints, or rowing machine), 50sec complete rest/walk recovery. Work-to-rest ratio: 1:5 (allows alactic system recovery—no lactate buildup). Purpose: Alactic power endurance (explosive bursts without fatigue), takedown/scramble capacity. Week 1 volume: 6 rounds (build to 8 rounds by Week 3). Fighter-specific: Replicates explosive bursts in fight (takedown attempts, explosive scrambles, cage pressure), trains power without glycogen depletion. Note: This is NOT cardio—it's power/speed work. If you can't maintain max intensity for all 10sec, rest is too short or you're going too many rounds.",
+              "tags": ["conditioning", "alactic", "sprint"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Active recovery + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Light Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hip flexor stretch, hamstring stretch, quad stretch, calf stretch—hold each 20-30sec per side. Focus on muscles worked today.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Diaphragmatic Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Deep inhale (4sec), hold (2sec), slow exhale (6sec). Repeat 5-10 breaths. Downregulate nervous system after intense session.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 5min neural activation, 12min strength, 10min explosive/plyo, 10min alactic, 5min cool-down, ~13min rest periods)",
+        "MMA Integration: Pair with light technical MMA work or schedule on grappling-light day. Avoid heavy sparring immediately after—lower body will be fatigued.",
+        "Bar Speed Monitoring: Primary quality metric. If trap bar deadlift bar speed drops (rep takes >3sec), reduce load 5-10lbs. Don't grind reps in Week 1.",
+        "Hydration: Critical for MMA training later. Drink 16-24oz water post-session.",
+        "Nutrition: Protein within 30min (20-30g), carbs to replenish glycogen if MMA training follows.",
+        "Recovery: If MMA session is >4hr away, consider brief contrast shower (2min hot, 30sec cold, repeat 3x) to aid recovery."
+      ]
+    }
+  },
+  {
+    "id": "mma-w1-wednesday",
+    "metadata": {
+      "title": "MMA Week 1 — Wednesday (Upper Body Strength + Core)",
+      "weekNumber": 1,
+      "dayOfWeek": "Wednesday",
+      "planId": "mma-fighter-8week",
+      "phase": "Strength Emphasis (Weeks 1-3)",
+      "focus": "Upper Body Strength + Anti-Rotation Core",
+      "keyFeatures": [
+        "Punching power + grappling strength: 4x5 @ 82% 1RM",
+        "Shoulder-safe pressing (landmine press, not strict OHP)",
+        "Rotational power for striking",
+        "Anti-rotation core for scrambles",
+        "Grip work critical for grappling",
+        "60min session"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Upper Body Strength + Anti-Rotation Core",
+      "focus": "Punching power and grappling strength",
+      "description": "Week 1, Day 3—Mid-week upper session emphasizing pressing strength, pulling power, and rotational/anti-rotational core. Landmine press (shoulder-safe alternative to strict overhead press) builds pressing strength without shoulder stress. Heavy pulls develop grappling strength. Rotational power work translates to punching. Anti-rotation core critical for scrambles and ground control. Session pairs well with striking-focused MMA work (technical, not hard sparring).",
+      "quote": {
+        "text": "Grip strength is grappling strength. Don't skip the dead hangs—45sec feels like forever, but that's the point.",
+        "author": "Week 1 Fight Camp Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Scapular activation + band work (5min)",
+          "exercises": [
+            {
+              "name": "Light Upper Body Movement",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "2-3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Shadow boxing, arm circles, or light rowing to elevate heart rate"
+              },
+              "tempo": "",
+              "notes": "Prepare shoulders, chest, back for pressing and pulling",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Activation",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10-15/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Band pull-aparts (15 reps), scapular push-ups (10 reps), band face pulls (15 reps)—activate scapular stabilizers and rear delts",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength Push",
+          "overview": "Shoulder-safe pressing for upper body power (4x5 @ 82% 1RM)",
+          "exercises": [
+            {
+              "name": "Landmine Press (Single-Arm)",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "5/arm",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min (between arms, so ~4min total per set)",
+              "intensity": {
+                "type": "Percentage",
+                "value": "82",
+                "description": "82% estimated 1RM (heavier than Monday's 80%), RPE 7-8"
+              },
+              "tempo": "Controlled descent (2sec), explosive press (fast bar speed)",
+              "notes": "Setup: Barbell anchored in landmine attachment or corner, stagger stance (opposite foot forward for stability). Load bar on shoulder, hand gripping bar mid-shaft. Execution: Press bar overhead at ~45° angle (not vertical), full lockout, control descent to shoulder. Shoulder Safety: Landmine angle reduces shoulder impingement risk vs strict OHP. Fighter-specific: Unilateral (trains stability + core engagement), pressing pattern builds punching power. Do 5 reps right arm, rest ~30sec, 5 reps left arm, rest 2min = 1 set. Bar Speed: If press slows to grind, reduce load. Purpose: Upper body pushing strength, shoulder-safe alternative, anti-rotation core (resisting rotation during single-arm press).",
+              "tags": ["compound", "upper body", "unilateral", "shoulder-safe"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength Pull",
+          "overview": "Grappling strength foundation (4x5, heavy load)",
+          "exercises": [
+            {
+              "name": "Weighted Pull-ups",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavy Load",
+                "description": "Add weight via dip belt or weighted vest. If can't do 5 weighted, use bodyweight or band-assisted."
+              },
+              "tempo": "Controlled descent (2sec), explosive pull (chin over bar)",
+              "notes": "Setup: Hands shoulder-width or slightly wider, palms forward (pronated grip). Add weight if bodyweight pull-ups are easy (<RPE 7 for 5 reps). Execution: Pull elbows down (not hands up), drive chin over bar, control descent to full arm extension. Don't kip or swing. Modification: If weighted pull-ups are too hard, use bodyweight. If bodyweight is too hard, use band assistance. Purpose: Vertical pulling strength, lat/back development, grip strength. Fighter-specific: Critical for grappling—pulling opponent into guard, maintaining top control, clinch strength. Alternative: If no pull-up bar, substitute Barbell Row @ 82% 1RM (same 4x5 scheme).",
+              "tags": ["compound", "upper body", "back", "grappling-specific"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Rotational Power",
+          "overview": "Explosive hip rotation for punching (3x6/side)",
+          "exercises": [
+            {
+              "name": "Med Ball Rotational Throw",
+              "type": "Power",
+              "sets": "3",
+              "reps": "6/side",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Explosive Intent",
+                "description": "Throw ball against wall as hard as possible. Use 8-12lb med ball."
+              },
+              "tempo": "Explosive rotation (fast hip turn), catch and reset",
+              "notes": "Setup: Stand perpendicular to wall (3-4ft away), hold med ball at chest, feet shoulder-width. Execution: Load hips (slight squat + rotate away from wall), explode through hips and core—throw ball at wall as hard as possible. Catch rebound, reset. Focus: Hip rotation drives the throw (not just arms). Feet stay planted—power comes from hip torque. Purpose: Rotational power (transverse plane), explosive hip rotation. Fighter-specific: Punching power comes from hips, not arms. This drill trains hip-to-core-to-arm power transfer. Do 6 throws right side, 6 throws left side = 1 set.",
+              "tags": ["power", "rotational", "striking-specific"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Anti-Rotation Core",
+          "overview": "Resist rotation under load (stability for scrambles) (3x8/side)",
+          "exercises": [
+            {
+              "name": "Pallof Press",
+              "type": "Core",
+              "sets": "3",
+              "reps": "8/side",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Moderate Resistance",
+                "description": "Use cable machine or resistance band at chest height. Resistance should challenge stability."
+              },
+              "tempo": "Slow press out (2sec), hold (1sec), slow return (2sec)",
+              "notes": "Setup: Stand perpendicular to cable machine, hold handle at chest with both hands, feet shoulder-width. Execution: Press handle straight out from chest (arms extend fully), resist cable's pull trying to rotate you. Hold extended position briefly, return to chest. Don't rotate torso—stay square. Focus: Anti-rotation (core resists rotational force). Shoulders stay square, hips don't twist. Purpose: Core stability, anti-rotation strength. Fighter-specific: Scrambles, ground control, resisting opponent's rotational force in clinch. Do 8 reps right side (cable pulling from right), switch to left side = 1 set.",
+              "tags": ["core", "anti-rotation", "stability"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Grip & Forearm",
+          "overview": "Grappling-critical grip endurance (3x45sec)",
+          "exercises": [
+            {
+              "name": "Dead Hang",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "",
+              "duration": "45 sec",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Bodyweight",
+                "description": "Hang from pull-up bar with full arm extension. If can't hit 45sec, do multiple sets to accumulate 45sec total."
+              },
+              "tempo": "",
+              "notes": "Setup: Grip pull-up bar (pronated/overhand grip), hang with full arm extension, shoulders active (don't collapse into shoulder sockets). Execution: Hold for 45sec. Keep shoulders engaged, breathe normally. If grip fails before 45sec, rest 10-15sec and continue until 45sec total. Purpose: Grip endurance, forearm strength, shoulder health (active hang). Fighter-specific: CRITICAL for grappling. Controlling opponent's wrists, maintaining grips in gi/no-gi, grip endurance in later rounds. Don't skip this—it's the difference between maintaining top control and getting swept. Progression: Next week, aim for 50sec or add 5lbs via weighted vest.",
+              "tags": ["grip", "forearm", "grappling-critical"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Optional Conditioning",
+          "overview": "Only if paired with light MMA session (4 rounds x 30sec / 30sec)",
+          "exercises": [
+            {
+              "name": "Battle Ropes",
+              "type": "Conditioning",
+              "sets": "4",
+              "reps": "",
+              "duration": "30 sec work / 30 sec rest",
+              "distance": "",
+              "rest": "30 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Alternating waves, slams, or circles—keep ropes moving fast"
+              },
+              "tempo": "",
+              "notes": "Execution: 30sec all-out battle rope work (alternating waves or slams), 30sec rest. Purpose: Upper body conditioning, grip endurance, metabolic stress. Fighter-specific: Punching endurance, grip under fatigue. Optional: Only include if this session is standalone or paired with very light MMA work. If hard MMA session follows, skip this—prioritize recovery for technical training.",
+              "tags": ["conditioning", "upper body", "optional"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Stretching + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Upper Body Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Chest doorway stretch (30sec/side), lat stretch (overhead arm pull, 30sec/side), shoulder cross-body stretch (30sec/side), wrist/forearm stretches (important post-grip work)",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Diaphragmatic Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Deep inhale (4sec), hold (2sec), slow exhale (6sec). Downregulate CNS before MMA session.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 16min max strength, 8min rotational power, 8min core, 6min grip, optional 4min conditioning, 5min cool-down, ~8min rest)",
+        "MMA Integration: Pair with striking-focused MMA session (technical, not hard sparring). Shoulder fatigue from pressing makes hard sparring riskier—keep it technical.",
+        "Shoulder Safety: Landmine press is chosen over strict OHP due to injury history. If shoulders feel tweaky, reduce load or substitute push-ups.",
+        "Grip Priority: Don't skip dead hangs. 45sec feels long, but grip endurance is grappling endurance. If you fail at 30sec, rest 10sec and continue.",
+        "Hydration: 16-24oz water post-session. If striking session follows, hydrate well—dehydration affects punch speed.",
+        "Recovery: Contrast shower (hot/cold) if time allows before MMA session."
+      ]
+    }
+  },
+  {
+    "id": "mma-w1-friday",
+    "metadata": {
+      "title": "MMA Week 1 — Friday (Full Body Explosive + Fight Sim)",
+      "weekNumber": 1,
+      "dayOfWeek": "Friday",
+      "planId": "mma-fighter-8week",
+      "phase": "Strength Emphasis (Weeks 1-3)",
+      "focus": "Full Body Explosive + Fight Simulation Conditioning",
+      "keyFeatures": [
+        "Olympic lift variation: 5x3 Hang Power Clean @ 72% 1RM",
+        "Explosive upper/lower plyometrics",
+        "Fight simulation: 2 rounds x 5min work / 1min rest",
+        "Multi-modal conditioning (Assault Bike, KB, burpees, battle ropes)",
+        "60min session",
+        "Schedule before/after light technique—NOT after hard sparring"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Explosive + Fight Simulation Conditioning",
+      "focus": "Power integration and fight-specific conditioning",
+      "description": "Week 1, Day 5—End-of-week session integrating explosive power and conditioning in fight-specific format. Hang power cleans build explosive triple extension (critical for takedowns, sprawls). Plyometrics develop reactive strength. Fight simulation conditioning (2 rounds x 5min) replicates fight structure with multi-modal circuits. This session bridges S&C and fight performance—you should feel the transfer. Schedule carefully: before or after light technique work, NOT after hard sparring (you won't be fresh enough for quality Olympic lifts).",
+      "quote": {
+        "text": "Bar speed on cleans is non-negotiable. If bar slows or form breaks, reduce load immediately. Olympic lifts punish poor technique.",
+        "author": "Week 1 Fight Camp Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Shadow boxing + dynamic prep (5min)",
+          "exercises": [
+            {
+              "name": "Shadow Boxing",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Movement flow, not hard striking. Prepare for explosive session."
+              },
+              "tempo": "",
+              "notes": "Light shadow boxing focusing on footwork and movement. Don't punch hard—this is warm-up, not striking practice. Elevate heart rate, prepare nervous system for explosive work.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Full Body Prep",
+              "type": "Mobility",
+              "sets": "1-2",
+              "reps": "5-10/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Inchworms (5 reps), spiderman lunges (5/side), hip circles (10/direction), arm swings (10 forward/back), jump rope or jumping jacks (1min)—prepare full body for Olympic lift",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Olympic Lift",
+          "overview": "Explosive power development (5x3 @ 72% 1RM)",
+          "exercises": [
+            {
+              "name": "Hang Power Clean",
+              "type": "Power",
+              "sets": "5",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Percentage",
+                "value": "72",
+                "description": "72% 1RM (moderate load for Week 1), focus on bar speed. RPE 7-8."
+              },
+              "tempo": "Explosive triple extension (fast bar speed critical)",
+              "notes": "Setup: Bar at mid-thigh (hang position), grip just outside shoulders, flat back, shoulders over bar. Execution: Small dip (load hamstrings), EXPLODE up—shrug, pull elbows high, drop under bar, catch in quarter-squat (power position, not full clean). Stand to full extension. Bar Speed: This is THE quality metric. If bar doesn't accelerate explosively, reduce load. Don't grind Olympic lifts—they're speed work, not max effort. Technique Notes: Triple extension = ankles + knees + hips extend simultaneously (full body explosion). Catch should be aggressive—pull yourself under bar, don't wait for it to fall. Purpose: Full-body explosive power, rate of force development, power endurance (5 sets builds work capacity). Fighter-specific: Explosive takedowns, sprawl power, scramble speed, level changes. If bar speed deteriorates across sets, stop and reduce load next set. Alternative: If hang clean technique isn't solid, substitute Trap Bar Jump Squats (explosive intent, 5x5 @ bodyweight or light load).",
+              "tags": ["olympic lift", "power", "full body", "explosive"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Upper",
+          "overview": "Upper body reactive strength (3x5)",
+          "exercises": [
+            {
+              "name": "Plyo Push-ups",
+              "type": "Plyometric",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Explosive Intent",
+                "description": "Hands leave ground on each rep"
+              },
+              "tempo": "Explosive press (hands leave ground), soft landing",
+              "notes": "Setup: Standard push-up position, hands shoulder-width. Execution: Descend to chest, EXPLODE up—hands leave ground (catch air). Land softly with bent elbows, immediately descend into next rep. Focus: Explosive concentric (push as hard as possible), soft landing (absorb impact). Don't do slow reps between—every rep is plyometric. Modification: Too hard? Use incline plyo push-ups (hands on bench). Too easy? Add clap or switch to depth plyo push-ups (hands on boxes, drop to ground, explode back up). Purpose: Upper body reactive strength, punching power. Fighter-specific: Fast-twitch fiber recruitment for striking speed.",
+              "tags": ["plyometric", "upper body", "explosive"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Lower",
+          "overview": "Lower body reactive strength (3x5)",
+          "exercises": [
+            {
+              "name": "Jump Squats",
+              "type": "Plyometric",
+              "sets": "3",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Bodyweight",
+                "description": "Jump as high as possible, prioritize landing mechanics"
+              },
+              "tempo": "Explosive jump (max height), soft landing",
+              "notes": "Setup: Bodyweight only (no load in Week 1), feet shoulder-width. Execution: Descend to parallel, explode up—jump as high as possible. Land softly on both feet, immediately descend into next rep (minimize ground contact time). Landing Mechanics: CRITICAL. Land balanced, knees tracking over toes, absorb impact with bent knees (don't land stiff). If landing is awkward, slow down and reset. Purpose: Lower body reactive strength, vertical power, stretch-shortening cycle. Fighter-specific: Explosive level changes, takedown speed, scramble explosiveness. Week 1: Bodyweight only. Week 4+: May add 10-20% bodyweight load (hold light dumbbells or wear weighted vest).",
+              "tags": ["plyometric", "lower body", "vertical power"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Fight Simulation Conditioning",
+          "overview": "5min round structure, multi-modal circuits (2 rounds x 5min / 1min)",
+          "exercises": [
+            {
+              "name": "Fight Simulation Circuit (Round 1)",
+              "type": "Conditioning",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min work / 1 min rest",
+              "distance": "",
+              "rest": "1 min (then repeat for Round 2)",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Replicate fight pacing: 30sec hard, 30sec moderate, repeat. Multi-modal stress."
+              },
+              "tempo": "",
+              "notes": "Round Structure (5min): 30sec Assault Bike sprint (max effort) → 30sec KB Swings (heavy, explosive) → 30sec Burpees (fast pace) → 30sec Battle Ropes (high output) → repeat circuit 2x per round. Pacing: This mimics fight structure—bursts of high output (striking exchanges, scrambles) followed by moderate work (clinch, grappling). Don't pace yourself evenly—replicate fight intensity. Purpose: Multi-modal conditioning (legs, posterior chain, full body, upper body), fight-specific pacing, mental toughness. Week 1: 2 rounds. Week 4: Increases to 3 rounds. Week 7: Peaks at 5 rounds (full fight structure). Fighter-specific: This IS your fight conditioning. You should finish feeling like you went 2 rounds. If you don't, intensity wasn't high enough.",
+              "tags": ["conditioning", "fight-specific", "multi-modal"],
+              "supersetId": ""
+            },
+            {
+              "name": "Fight Simulation Circuit (Round 2)",
+              "type": "Conditioning",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min work",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Same as Round 1—maintain intensity even when fatigued"
+              },
+              "tempo": "",
+              "notes": "Same circuit structure as Round 1. Mental note: Second round is where toughness shows. Intensity may drop slightly due to fatigue—that's expected. Focus: Maintain quality movement even under fatigue (don't let technique collapse). This is where fight cardio is built. If you can push through fatigue here, you can push through Round 2-3 of a fight.",
+              "tags": ["conditioning", "fight-specific", "mental toughness"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Finisher",
+          "overview": "Full-body stability and core (2x10/side)",
+          "exercises": [
+            {
+              "name": "Turkish Get-Up",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10/side",
+              "duration": "",
+              "distance": "",
+              "rest": "60 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Moderate KB",
+                "description": "Use KB weight that's challenging but allows smooth transitions through positions"
+              },
+              "tempo": "Slow, controlled transitions through all positions",
+              "notes": "Setup: Lie on back, KB in right hand, arm extended overhead. Execution: Progress through positions—roll to elbow → hand → hip bridge → sweep leg back → lunge → stand. Reverse to return to floor. Focus: Stability through transitions, shoulder control (arm stays vertical), smooth movement. Purpose: Full-body integration, positional strength, shoulder stability, core control. Fighter-specific: Positional transitions (ground to standing), stability under load, scramble strength. Do 10 reps right side, 10 reps left side = 1 set. Week 1: Moderate KB (16-24kg for most). Don't rush—this is controlled strength, not speed work.",
+              "tags": ["full body", "stability", "positional strength"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Stretching + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Full Body Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hip flexor stretch, hamstring stretch, quad stretch, shoulder/chest stretch, wrist stretches—hold 20-30sec per side. Focus on full body after multi-modal session.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Box Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Inhale 4sec, hold 4sec, exhale 4sec, hold 4sec. Repeat 5-10 cycles. Downregulate after intense conditioning. Mental recovery as important as physical.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 10min Olympic lift, 8min plyometrics, 12min fight simulation, 5min finisher, 5min cool-down, ~15min rest)",
+        "MMA Integration: Schedule CAREFULLY. This is high-CNS-demand session. Pair with light technique work OR schedule 4-6hr before/after MMA session. Do NOT schedule after hard sparring—you won't be fresh for quality Olympic lifts.",
+        "Bar Speed Priority: Hang cleans are speed work, not max effort. If bar doesn't accelerate explosively, reduce load 5-10lbs. Don't grind Olympic lifts.",
+        "Fight Simulation Intensity: You should finish feeling like you went 2 rounds. If you don't, increase intensity within circuits (faster transitions, heavier KB, higher Assault Bike resistance).",
+        "Recovery: This is the hardest S&C session of the week. Hydrate aggressively (24-32oz post-session). Protein + carbs within 30min. If MMA session is >4hr away, consider 10-15min ice bath or contrast shower.",
+        "Weekend Prep: Saturday is highest-volume MMA day (open mat). Prioritize recovery tonight—sleep 8-9hr, eat well, manage stress. You need to arrive fresh for tomorrow's sparring."
+      ]
+    }
+  }
+]
