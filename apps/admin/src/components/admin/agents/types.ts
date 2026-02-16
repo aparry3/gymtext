@@ -143,7 +143,7 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     id: 'modifications',
     label: 'Modifications',
     agents: [
-      { id: 'modifications:router', label: 'Router' },
+      { id: 'modifications:router', label: 'Router (deprecated)' },
     ],
   },
   {
