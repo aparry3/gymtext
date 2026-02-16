@@ -1,0 +1,617 @@
+[
+  {
+    "id": "beginner-w9-monday",
+    "metadata": {
+      "title": "Beginner Week 9 — Monday (Day 1)",
+      "weekNumber": 9,
+      "dayOfWeek": "Monday",
+      "planId": "beginner-general-fitness",
+      "phase": "Barbell Introduction (Weeks 9-12)",
+      "focus": "Full Body — Barbell Squat Introduction",
+      "keyFeatures": [
+        "First barbell lift: back squat",
+        "Start very light (just the bar)",
+        "Film your lifts for form feedback",
+        "Reps reduced to 10-12 (learning curve)"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Barbell Squat Intro",
+      "focus": "Learn the Squat",
+      "description": "You're ready for barbells! Today you learn the barbell back squat — the first of the 'big three' lifts. Start light (just the bar for Set 1) to learn the new movement pattern. Barbells feel different than dumbbells due to stability demands. Film yourself if possible (side angle, full body visible). Technical mastery is the goal — weight is secondary.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prime the squat pattern with bodyweight",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Bodyweight Squat",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Prime the squat pattern before adding the bar — focus on depth and upright torso",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Barbell squat introduction + familiar exercises from previous weeks",
+          "exercises": [
+            {
+              "name": "Barbell Back Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90-120s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Start with JUST THE BAR (45lbs/20kg) for Set 1. If form is clean, add 10-20lbs for Sets 2-3."
+              },
+              "tempo": "",
+              "notes": "NEW LIFT! Focus: depth to parallel or below, chest up, knees tracking over toes, weight in heels. Film yourself (side angle). If you have a coach or training partner, ask them to watch. Track: How did the bar feel? Any wobbling? Depth issues?",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell RDL",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Keep this from previous weeks — you're confident here"
+              },
+              "tempo": "",
+              "notes": "Familiar movement — provides stability while learning barbell squat",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Will transition to barbell bench on Wednesday"
+              },
+              "tempo": "",
+              "notes": "Same weight as Weeks 5-8 — one more session before switching to barbell",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Familiar movement"
+              },
+              "tempo": "",
+              "notes": "Pull shoulder blades together, squeeze at contraction",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Continued progression",
+          "exercises": [
+            {
+              "name": "Plank",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "",
+              "duration": "45s",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Increased from 40-45sec in Week 5 — consistent progression",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretch and reflect",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Quad stretch, hip flexor stretch, hamstring stretch. Reflect: How did the barbell squat feel? Any wobbling? Depth issues? Note these for next week.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 55,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "lats", "core"],
+        "patterns": ["squat", "hinge", "press", "row"],
+        "equipment": ["barbell", "dumbbell", "cable_machine", "bench", "squat_rack"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w9-wednesday",
+    "metadata": {
+      "title": "Beginner Week 9 — Wednesday (Day 3)",
+      "weekNumber": 9,
+      "dayOfWeek": "Wednesday",
+      "planId": "beginner-general-fitness",
+      "phase": "Barbell Introduction (Weeks 9-12)",
+      "focus": "Full Body — Barbell Bench Press Introduction",
+      "keyFeatures": [
+        "Second barbell lift: bench press",
+        "Start with bar only",
+        "Spotter recommended",
+        "Focus on controlled descent and explosive press"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Barbell Bench Intro",
+      "focus": "Learn the Bench",
+      "description": "Second barbell lift! Today you learn the barbell bench press. Setup: lie on bench, feet flat on floor, grip slightly wider than shoulders, bar over chest (nipple line), lower to chest with control, press straight up. Have a spotter if possible. Start with just the bar to dial in technique.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prime the pressing pattern",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Push-up",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Prime the horizontal press pattern before adding the bar",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Barbell bench press introduction + familiar upper body work",
+          "exercises": [
+            {
+              "name": "Barbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "90-120s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Start with bar only (45lbs/20kg) for Set 1. If form is clean, add 10-20lbs for Sets 2-3."
+              },
+              "tempo": "",
+              "notes": "NEW LIFT! Focus: controlled descent (2-3sec), pause on chest, explosive press, keep elbows ~45° from body. Spotter recommended. Film yourself (front angle). Track: Bar path straight? Any elbow flare? Pause on chest?",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Chest-Supported Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Familiar movement"
+              },
+              "tempo": "",
+              "notes": "Alternative: Barbell Row if you feel confident (same setup as RDL but pull bar to sternum). Pull shoulder blades together.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Lat Pulldown",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Focus on pulling elbows down"
+              },
+              "tempo": "",
+              "notes": "Controlled descent — familiar movement provides stability",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Shoulder Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Strict form — no leg drive"
+              },
+              "tempo": "",
+              "notes": "Same weight as previous weeks",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Anti-extension work",
+          "exercises": [
+            {
+              "name": "Dead Bug",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — press low back into floor, move slowly",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Stretch and reflect",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Chest stretch, shoulder stretch, lat stretch. Reflect: How did the barbell bench feel? Bar path straight? Comfortable grip width?",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 55,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body", "upper"],
+        "muscles": ["chest", "lats", "upper_back", "front_delts", "triceps", "core"],
+        "patterns": ["press", "row", "pulldown"],
+        "equipment": ["barbell", "dumbbell", "cable_machine", "bench"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w9-friday",
+    "metadata": {
+      "title": "Beginner Week 9 — Friday (Day 5)",
+      "weekNumber": 9,
+      "dayOfWeek": "Friday",
+      "planId": "beginner-general-fitness",
+      "phase": "Barbell Introduction (Weeks 9-12)",
+      "focus": "Full Body — Barbell Deadlift Introduction + Big Three Practice",
+      "keyFeatures": [
+        "Third barbell lift: deadlift",
+        "Second squat session (more confident)",
+        "Second bench session (groove the pattern)",
+        "Celebrate learning all three lifts"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Deadlift Intro",
+      "focus": "Learn the Deadlift",
+      "description": "Final 'big three' lift! Today you learn the conventional deadlift. Setup: feet hip-width, bar over mid-foot, grip just outside legs, hinge at hips, keep back neutral, push floor away to stand up. Film this (side angle) — back position is critical. You'll also practice squat and bench a second time this week. Celebrate: You've now learned the big three!",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prime the hinge pattern",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Light Dumbbell RDL",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light",
+                "description": "Very light weight"
+              },
+              "tempo": "",
+              "notes": "Prime the hip hinge pattern before deadlifting — feel the hamstring stretch",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "All three barbell lifts in one session — technical practice day",
+          "exercises": [
+            {
+              "name": "Barbell Deadlift",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "8-10",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Start with bar + 25lbs per side (95lbs total), or just bar if that feels heavy"
+              },
+              "tempo": "",
+              "notes": "NEW LIFT! Slightly lower reps (8-10) because deadlift is very demanding. Focus: neutral spine, push through heels, hips and shoulders rise together. Film yourself (side angle). Rest 2min between sets — deadlifts are taxing. Track: Did your back stay neutral? Hips and shoulders rise together?",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Barbell Back Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "90-120s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Second squat session this week — should feel more confident than Monday"
+              },
+              "tempo": "",
+              "notes": "Same weight as Monday (or slightly heavier if Monday felt easy). You've grooved the pattern — focus on smooth execution.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Barbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "90-120s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Second bench session — grooved the pattern on Wednesday"
+              },
+              "tempo": "",
+              "notes": "Same weight as Wednesday (or slightly heavier if Wednesday felt easy). Spotter recommended.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Familiar movement"
+              },
+              "tempo": "",
+              "notes": "Pull shoulder blades together, squeeze at contraction",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Balance and stability",
+          "exercises": [
+            {
+              "name": "Bird Dog",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — opposite arm/leg, hold balance for 2sec at top",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Full body stretch and celebration",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Full body — quads, hamstrings, glutes, chest, shoulders. Celebrate: You've learned all three barbell lifts! Weeks 10-12 will refine these movements and add weight progressively. Review your videos this weekend.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 65,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "lats", "lower_back", "core"],
+        "patterns": ["deadlift", "squat", "press", "row"],
+        "equipment": ["barbell", "cable_machine", "bench", "squat_rack"]
+      }
+    }
+  }
+]
