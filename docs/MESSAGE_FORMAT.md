@@ -28,7 +28,7 @@ Notes: [if any]
 
 1. **Line 1 — Focus**: A short label for the session (e.g., "Upper Body Strength", "Active Recovery", "Rest Day"). Always present.
 2. **Blank line** after Focus.
-3. **Section Titles** end with a colon. Group exercises logically (Warm-Up, Main Work, Accessory, Cooldown, etc.).
+3. **Section Titles** end with a colon. For standard weight training, combine all strength exercises into a single **Workout:** section (no separate Main Work/Accessory). Use distinct sections for different training modes (Warm-Up, Workout, Core, Conditioning, Cooldown, etc.).
 4. **Exercises** start with `- ` (dash + space). Format: `Exercise name: prescription`.
 5. **Prescription formats**:
    - Strength/hypertrophy: `setsxreps` (e.g., `4x6`, `3x10-12`)
@@ -36,7 +36,8 @@ Notes: [if any]
    - Distance: `distance` (e.g., `400m`, `1mi`)
    - Cardio steady-state: `time @ intensity` (e.g., `30min @ moderate pace`)
    - Intervals: `rounds x work/rest` (e.g., `8x 20s on/10s off`)
-6. **Notes** are optional. Use for important cues (rest periods, RPE, tempo, equipment notes). Keep brief.
+6. **Abbreviations** — Use standard fitness abbreviations to keep lines short (e.g., BB = barbell, DB = dumbbell, KB = kettlebell). Don't over-abbreviate — every line should be immediately understandable.
+7. **Notes** are optional. Use for important cues (rest periods, RPE, tempo, equipment notes). Keep brief.
 
 ### Special Formatting
 
