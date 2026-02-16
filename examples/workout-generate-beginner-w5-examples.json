@@ -1,0 +1,677 @@
+[
+  {
+    "id": "beginner-w5-monday",
+    "metadata": {
+      "title": "Beginner Week 5 — Monday (Day 1)",
+      "weekNumber": 5,
+      "dayOfWeek": "Monday",
+      "planId": "beginner-general-fitness",
+      "phase": "Progressive Overload (Weeks 5-8)",
+      "focus": "Full Body — Lower Emphasis",
+      "keyFeatures": [
+        "Progressive overload begins",
+        "Increased volume (3 sets)",
+        "Increased intensity (RPE 6-7)",
+        "Tracking weights introduced"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Lower",
+      "focus": "Squat & Hinge",
+      "description": "Week 5 marks the start of progressive overload. You've completed form mastery (Weeks 1-4) — now we add weight when you hit 3x15 reps with perfect form. Track your lifts in a simple log (notebook or phone). Your focus shifts from learning the pattern to challenging the muscles.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prime the body for heavier loads",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row — conversational pace"
+              },
+              "tempo": "",
+              "notes": "Same warm-up structure as Weeks 1-4",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Leg Swings",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Front-to-back and side-to-side",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Arm Circles",
+              "type": "Mobility",
+              "sets": "1",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Forward and backward",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Progressive overload — 3 sets of 12-15 reps. If you hit 3x15, add 5-10lbs next week.",
+          "exercises": [
+            {
+              "name": "Goblet Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Increase weight from Week 4 — should feel challenging by final reps"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Goblet Squat __lbs. If you hit 3x15 with clean form, add 5-10lbs next Monday.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell RDL",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Focus on hip hinge depth, feel hamstrings stretch"
+              },
+              "tempo": "",
+              "notes": "Track your weight: RDL __lbs. Same progression rule — add weight at 3x15.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Push for 15 reps on all sets — if you get it, add weight next Monday"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Bench __lbs. This is your progression marker.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Pull shoulder blades together, squeeze at contraction"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Row __lbs. Same progression as other lifts.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Increased duration from Week 1",
+          "exercises": [
+            {
+              "name": "Plank",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "",
+              "duration": "40-45s",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Increased from 20-30sec in Week 1 — you're stronger now",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Static stretching and recovery",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Quad stretch, hamstring stretch, chest stretch — hold each 30s",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 50,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "lats", "core"],
+        "patterns": ["squat", "hinge", "press", "row"],
+        "equipment": ["dumbbell", "kettlebell", "cable_machine", "bench"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w5-wednesday",
+    "metadata": {
+      "title": "Beginner Week 5 — Wednesday (Day 3)",
+      "weekNumber": 5,
+      "dayOfWeek": "Wednesday",
+      "planId": "beginner-general-fitness",
+      "phase": "Progressive Overload (Weeks 5-8)",
+      "focus": "Full Body — Upper Emphasis",
+      "keyFeatures": [
+        "Upper body progressive overload",
+        "Volume increase (3 sets)",
+        "Intensity RPE 6-7",
+        "Tracking weights for all exercises"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Upper",
+      "focus": "Push & Pull",
+      "description": "Upper body focus day. Same exercises as Week 1-4, but higher volume (3 sets) and intensity (RPE 6-7). Track your weights — consistency helps you see progress.",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Prepare shoulders and upper back",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Band Pull-Apart",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "15",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Activate upper back and rear delts",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular Shrug",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Elevate and depress shoulder blades",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Upper body progressive overload — 3 sets of 12-15 reps",
+          "exercises": [
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Same weight as Monday — consistency helps track progress"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Bench __lbs. Second pressing session this week.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Chest-Supported Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Increase weight if Week 4 felt easy"
+              },
+              "tempo": "",
+              "notes": "Alternative: Seated Cable Row. Track your weight: Row __lbs.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Lat Pulldown",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Focus on pulling elbows down, controlled descent"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Pulldown __lbs. Alternative: Assisted Pull-up.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Shoulder Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Still building confidence — reps slightly lower than other exercises"
+              },
+              "tempo": "",
+              "notes": "Track your weight: Shoulder Press __lbs. Strict form — no leg drive.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Increased volume from Week 1",
+          "exercises": [
+            {
+              "name": "Dead Bug",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — increased from 10/side in Week 1. Press low back into floor.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Upper body stretching",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Shoulder stretch, lat stretch, hip flexor stretch — hold each 30s",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 50,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body", "upper"],
+        "muscles": ["chest", "lats", "upper_back", "front_delts", "core"],
+        "patterns": ["press", "row", "pulldown"],
+        "equipment": ["dumbbell", "cable_machine", "bench"]
+      }
+    }
+  },
+  {
+    "id": "beginner-w5-friday",
+    "metadata": {
+      "title": "Beginner Week 5 — Friday (Day 5)",
+      "weekNumber": 5,
+      "dayOfWeek": "Friday",
+      "planId": "beginner-general-fitness",
+      "phase": "Progressive Overload (Weeks 5-8)",
+      "focus": "Full Body — Balanced",
+      "keyFeatures": [
+        "Highest volume day of the week",
+        "All exercises 3 sets",
+        "Review weekly progress",
+        "Prepare for Week 6 load increases"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Balanced",
+      "focus": "All Patterns",
+      "description": "Highest volume day of Week 5. Third pressing session this week — you should feel strong and confident. Review your log at the end: Did you hit 3x15 on any exercise? If yes, add 5-10lbs next week (Week 6). Progressive overload in action!",
+      "quote": {
+        "text": "",
+        "author": ""
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "General preparation",
+          "exercises": [
+            {
+              "name": "Light Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Walk, bike, or row"
+              },
+              "tempo": "",
+              "notes": "Standard warm-up",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Workout",
+          "overview": "Full body — 3 sets of 12-15 reps across all exercises",
+          "exercises": [
+            {
+              "name": "Goblet Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Same weight as Monday. Push for 15 reps on all sets."
+              },
+              "tempo": "",
+              "notes": "Third squat session this week. Did you hit 3x15? Write it down!",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell RDL",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Same weight as Monday. Focus on hip hinge depth."
+              },
+              "tempo": "",
+              "notes": "Feel the hamstring stretch. Did you hit 3x15?",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Third pressing session this week — you should feel strong and confident"
+              },
+              "tempo": "",
+              "notes": "Same weight as Monday/Wednesday. Consistency = progress tracking.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Seated Cable Row",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "12-15",
+              "duration": "",
+              "distance": "",
+              "rest": "60-90s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Same weight as Monday. Pull shoulder blades together."
+              },
+              "tempo": "",
+              "notes": "Squeeze at contraction. Did you hit 3x15?",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dumbbell Shoulder Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10-12",
+              "duration": "",
+              "distance": "",
+              "rest": "60s",
+              "intensity": {
+                "type": "RPE",
+                "value": "6-7",
+                "description": "Same weight as Wednesday. Reps slightly lower (10-12)."
+              },
+              "tempo": "",
+              "notes": "Strict form — no leg drive. Did you hit 3x12?",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Core",
+          "overview": "Increased volume from Week 1",
+          "exercises": [
+            {
+              "name": "Bird Dog",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "10",
+              "duration": "",
+              "distance": "",
+              "rest": "30s",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Per side — increased from 8/side in Week 1. Opposite arm/leg, hold balance.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Conditioning (Optional)",
+          "overview": "Low-intensity cardio finisher",
+          "exercises": [
+            {
+              "name": "Zone 2 Cardio",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "10-15 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Zone",
+                "value": "Zone 2",
+                "description": "Easy effort, conversational pace — bike, walk, or row"
+              },
+              "tempo": "",
+              "notes": "OPTIONAL — only if you have energy. Not mandatory.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cooldown",
+          "overview": "Full body stretching and weekly review",
+          "exercises": [
+            {
+              "name": "Static Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "5 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Full body stretch. Review your log: Which exercises hit 3x15? Add 5-10lbs to those next week!",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "estimatedDurationMin": 60,
+      "intensityLevel": "Moderate",
+      "tags": {
+        "category": ["strength", "beginner"],
+        "split": ["full_body"],
+        "muscles": ["quads", "hamstrings", "glutes", "chest", "lats", "front_delts", "core"],
+        "patterns": ["squat", "hinge", "press", "row"],
+        "equipment": ["dumbbell", "cable_machine", "bench", "kettlebell"]
+      }
+    }
+  }
+]
