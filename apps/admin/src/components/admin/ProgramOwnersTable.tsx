@@ -1,13 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { EmptyState } from './EmptyState'
 import { AdminProgramOwner, ProgramOwnerSort } from './types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatRelative } from '@/shared/utils/date'
+import { EmptyState } from './EmptyState'
+import { Building2 } from 'lucide-react'
 
 interface ProgramOwnersTableProps {
   owners: AdminProgramOwner[]
@@ -41,11 +42,13 @@ export function ProgramOwnersTable({
 
   if (owners.length === 0) {
     return (
-      <EmptyState
-        icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-12 w-12"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>}
-        title="No owners or coaches found"
-        description="Add program owners and coaches to manage your fitness programs."
-      />
+      <div className="rounded-2xl bg-white shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.05]">
+        <EmptyState
+          icon={Building2}
+          title="No program owners found"
+          description="No program owners match your current filters. Try creating a new coach or organization."
+        />
+      </div>
     )
   }
 

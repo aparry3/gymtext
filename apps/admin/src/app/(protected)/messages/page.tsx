@@ -193,40 +193,35 @@ function AdminMessagesPageContent() {
           )}
 
           {/* Quick Filters */}
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: 'Failed', filter: { status: 'failed' as const }, variant: 'destructive' as const },
-              { label: 'Pending', filter: { status: 'pending' as const }, variant: 'outline' as const },
-              { label: 'Inbound', filter: { direction: 'inbound' as const }, variant: 'outline' as const },
-              { label: 'Outbound', filter: { direction: 'outbound' as const }, variant: 'outline' as const },
-            ].map(({ label, filter, variant }) => {
-              const isActive =
-                ('status' in filter && filters.status === filter.status) ||
-                ('direction' in filter && filters.direction === filter.direction);
-              return (
-                <Button
-                  key={label}
-                  variant={isActive ? 'default' : variant}
-                  size="sm"
-                  onClick={() => {
-                    if (isActive) {
-                      handleFiltersChange({ ...filters, ...('status' in filter ? { status: undefined } : { direction: undefined }) });
-                    } else {
-                      handleFiltersChange({ ...filters, ...filter });
-                    }
-                  }}
-                  disabled={isLoading}
-                >
-                  {label}
-                  {'status' in filter && filter.status === 'failed' && stats.failed > 0 && (
-                    <span className="ml-1.5 rounded-full bg-white/20 px-1.5 text-xs">{stats.failed}</span>
-                  )}
-                  {'status' in filter && filter.status === 'pending' && stats.pending > 0 && (
-                    <span className="ml-1.5 rounded-full bg-white/20 px-1.5 text-xs">{stats.pending}</span>
-                  )}
-                </Button>
-              );
-            })}
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={filters.status === 'failed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFiltersChange({ ...filters, status: filters.status === 'failed' ? undefined : 'failed' })}
+            >
+              Failed
+            </Button>
+            <Button
+              variant={filters.status === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFiltersChange({ ...filters, status: filters.status === 'pending' ? undefined : 'pending' })}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={filters.direction === 'inbound' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFiltersChange({ ...filters, direction: filters.direction === 'inbound' ? undefined : 'inbound' })}
+            >
+              Inbound
+            </Button>
+            <Button
+              variant={filters.direction === 'outbound' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFiltersChange({ ...filters, direction: filters.direction === 'outbound' ? undefined : 'outbound' })}
+            >
+              Outbound
+            </Button>
           </div>
 
           {/* Filters */}

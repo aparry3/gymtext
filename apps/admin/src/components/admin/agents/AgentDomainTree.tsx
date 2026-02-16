@@ -27,6 +27,22 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
+function formatRelativeTime(isoString: string): string {
+  const now = new Date();
+  const past = new Date(isoString);
+  const diffMs = now.getTime() - past.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
 export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreeProps) {
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(() => {
     // Start with all domains expanded
@@ -36,16 +52,26 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
   // Track which agents exist in the database
   const [existingAgents, setExistingAgents] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [agentStats, setAgentStats] = useState<Record<string, { invocationCount: number; lastUsed: string }>>({});
 
-  // Fetch existing agents on mount
+  // Fetch existing agents and stats on mount
   useEffect(() => {
     async function fetchAgents() {
       try {
-        const response = await fetch('/api/agent-definitions');
-        const result = await response.json();
-        if (result.success) {
-          const agentIds = new Set<string>(result.data.map((d: AdminAgentDefinition) => d.agentId));
+        const [defsResponse, statsResponse] = await Promise.all([
+          fetch('/api/agent-definitions'),
+          fetch('/api/agent-definitions/stats'),
+        ]);
+        
+        const defsResult = await defsResponse.json();
+        if (defsResult.success) {
+          const agentIds = new Set<string>(defsResult.data.map((d: AdminAgentDefinition) => d.agentId));
           setExistingAgents(agentIds);
+        }
+
+        const statsResult = await statsResponse.json();
+        if (statsResult.success) {
+          setAgentStats(statsResult.data);
         }
       } catch (err) {
         console.error('Failed to fetch agents:', err);
@@ -129,6 +155,7 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
                 {domain.agents.map((agent) => {
                   const exists = existingAgents.has(agent.id);
                   const isSelected = selectedAgentId === agent.id;
+                  const stats = agentStats[agent.id];
 
                   return (
                     <li key={agent.id}>
@@ -141,9 +168,16 @@ export function AgentDomainTree({ onSelect, selectedAgentId }: AgentDomainTreePr
                           isSelected && 'bg-sky-100/70 text-sky-800 font-medium hover:bg-sky-100'
                         )}
                       >
-                        {agent.label}
+                        <div className="flex items-center justify-between">
+                          <span>{agent.label}</span>
+                          {exists && stats && (
+                            <span className="text-xs text-slate-400 ml-2 tabular-nums">
+                              {stats.invocationCount.toLocaleString()} · {formatRelativeTime(stats.lastUsed)}
+                            </span>
+                          )}
+                        </div>
                         {!exists && (
-                          <span className="ml-1 text-xs text-slate-400">(not seeded)</span>
+                          <span className="text-xs text-slate-400">(not seeded)</span>
                         )}
                       </button>
                     </li>
