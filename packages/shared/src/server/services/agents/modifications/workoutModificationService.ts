@@ -140,10 +140,17 @@ export function createWorkoutModificationService(
           const modifyResponse = modifyResult.response as { overview: string; wasModified: boolean; modifications: string };
           const workoutDescription = modifyResponse.overview;
 
+          // Resolve dayFormat from microcycle activity type
+          const structured = microcycle.structured as MicrocycleStructure | null | undefined;
+          const dayFormatExt = structured?.days?.[targetDayIndex]?.activityType
+            ? { dayFormat: structured.days[targetDayIndex].activityType }
+            : undefined;
+
           // Step 2: Parallel — message + structured + microcycle:modify
           const messagePromise = agentRunner.invoke('workout:message', {
             input: workoutDescription,
             params: { user },
+            extensions: dayFormatExt,
           }).then(async (msgResult) => {
             const msg = normalizeWhitespace(msgResult.response as string);
             if (isToday && messagingOrchestrator) {

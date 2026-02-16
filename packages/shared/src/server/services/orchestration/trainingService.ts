@@ -438,6 +438,19 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const MAX_REGENERATION_ATTEMPTS = 3;
       const maxLength = getSmsMaxLength();
 
+      // Resolve dayFormat extension from microcycle activity type
+      let dayFormatExtensions: Record<string, string> | undefined;
+      if (workout.microcycleId) {
+        const microcycle = await microcycleService.getMicrocycleById(workout.microcycleId);
+        if (microcycle) {
+          const dayIndex = getWeekday(new Date(workout.date), user.timezone) - 1;
+          const activityType = getDayActivityType(microcycle, dayIndex);
+          if (activityType) {
+            dayFormatExtensions = { dayFormat: activityType };
+          }
+        }
+      }
+
       // 1. Generate message, regenerating if too long
       let message: string = '';
       let attempt = 0;
@@ -453,6 +466,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const result = await agentRunner.invoke('workout:message', {
           input,
           params: { user, date: new Date(workout.date) },
+          extensions: dayFormatExtensions,
         });
         message = result.response as string;
 

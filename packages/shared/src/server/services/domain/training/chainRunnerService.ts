@@ -13,6 +13,7 @@ import type { AgentRunnerInstance } from '@/server/agents/runner';
 
 // Exercise resolution
 import { resolveExercisesInStructure } from '../../orchestration/trainingService';
+import { getWeekday } from '@/shared/utils/date';
 import type { ExerciseResolutionServiceInstance } from '../exercise/exerciseResolutionService';
 import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
 
@@ -183,7 +184,21 @@ export function createChainRunnerService(
   const runWorkoutMessageChain = async (workout: WorkoutInstance, user: UserWithProfile): Promise<WorkoutInstance> => {
     console.log(`[ChainRunner] Running message chain for workout ${workout.id}`);
     if (!workout.description) throw new Error(`Workout ${workout.id} has no description to create message from`);
-    const result = await agentRunner.invoke('workout:message', { input: workout.description, params: { user } });
+
+    // Resolve dayFormat extension from microcycle activity type
+    let extensions: Record<string, string> | undefined;
+    if (workout.microcycleId) {
+      const microcycle = await microcycleService.getMicrocycleById(workout.microcycleId);
+      if (microcycle) {
+        const structured = microcycle.structured as MicrocycleStructure | null | undefined;
+        const dayIndex = getWeekday(new Date(workout.date), user.timezone) - 1;
+        if (structured?.days?.[dayIndex]?.activityType) {
+          extensions = { dayFormat: structured.days[dayIndex].activityType };
+        }
+      }
+    }
+
+    const result = await agentRunner.invoke('workout:message', { input: workout.description, params: { user }, extensions });
     const updated = await workoutService.updateWorkout(workout.id, { message: result.response as string });
     if (!updated) throw new Error(`Failed to update workout: ${workout.id}`);
     return updated;

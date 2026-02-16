@@ -218,9 +218,28 @@ export function createAgentRunner(deps: AgentRunnerDeps): AgentRunnerInstance {
           ? subExtended.examples as AgentExample[]
           : undefined;
 
+        // Resolve extensions for sub-agent (inherit parent's explicit extensions)
+        let subSystemPrompt = subAgentDef.systemPrompt;
+        if (agentExtensionService && params.extensions) {
+          const mergedExtKeys: Record<string, string> = {
+            ...(subExtended.defaultExtensions || {}),
+            ...params.extensions,
+          };
+          for (const [extType, extKey] of Object.entries(mergedExtKeys)) {
+            if (!extKey) continue;
+            const ext = await agentExtensionService.getExtension(config.agentId, extType, extKey);
+            if (ext?.systemPrompt) {
+              subSystemPrompt = ext.systemPromptMode === 'override'
+                ? ext.systemPrompt
+                : subSystemPrompt + '\n\n' + ext.systemPrompt;
+            }
+          }
+        }
+
         // Create the sub-agent
         const subAgent = createAgent({
           ...subAgentDef,
+          systemPrompt: subSystemPrompt,
           context: subContext,
           schema: subExtended.schemaJson
             ? (subExtended.schemaJson as unknown as undefined)
