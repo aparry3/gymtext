@@ -1,0 +1,101 @@
+{
+  "name": "Time-Efficient Strength & Conditioning",
+  "description": "8-week full-body program designed for busy professionals. 3 workouts per week, 30-45 minutes each. Uses supersets and circuits to maximize efficiency without sacrificing results. Emphasizes compound movements with minimal rest periods. Includes optional cardio finishers. Flexible scheduling—train any 3 non-consecutive days (Mon/Wed/Fri recommended).",
+  "durationWeeks": 8,
+  "frequency": "3 days per week",
+  "experienceLevel": "beginner-intermediate",
+  "goals": [
+    "Build strength with minimal time commitment",
+    "Improve cardiovascular conditioning",
+    "Increase work capacity through density training",
+    "Maintain muscle mass despite busy schedule"
+  ],
+  "equipment": [
+    "Barbell",
+    "Dumbbells",
+    "Pull-up bar or lat pulldown machine",
+    "Bench",
+    "Cardio equipment (optional for finishers)"
+  ],
+  "phases": [
+    {
+      "name": "Foundation",
+      "weeks": "1-2",
+      "focus": "Learn superset technique, establish baseline strength, build work capacity",
+      "description": "Introduction to time-efficient training. Learn to transition quickly between exercises with minimal rest. Moderate weights (60-65% estimated 1RM, RPE 6-7) to allow focus on movement quality and pacing. Each workout contains 3 supersets of compound movements. Rest 60-90sec between supersets. Session time: 30-35 minutes."
+    },
+    {
+      "name": "Progressive Overload",
+      "weeks": "3-6",
+      "focus": "Increase load and volume systematically",
+      "description": "Gradual progression in weights and/or reps each week. Weeks 3-4: add 5-10lbs to compounds or add 1-2 reps per set. Weeks 5-6: continue progression, may add a fourth superset or circuit finisher for advanced trainees. Intensity increases to 70-75% estimated 1RM (RPE 7-8). Rest periods stay tight (60-90sec). Session time: 35-40 minutes."
+    },
+    {
+      "name": "Peak & Reassess",
+      "weeks": "7-8",
+      "focus": "Test strength gains, prepare for next block",
+      "description": "Week 7: Peak week—slightly heavier loads (75-80% estimated 1RM, RPE 8-9), maintain volume. Week 8: Deload—reduce volume by 40%, lighter loads (60-70% of Week 7), active recovery. Use Week 8 to assess progress and plan next 8-week block (repeat with heavier weights, add advanced techniques, or transition to more specialized program)."
+    }
+  ],
+  "weeklyStructure": {
+    "split": "Full Body",
+    "trainingDays": [
+      {
+        "day": "Day 1 (e.g., Monday)",
+        "focus": "Full Body A — Push Emphasis",
+        "exercises": "Superset 1: Squat + Push-ups, Superset 2: Deadlift + Dumbbell Shoulder Press, Superset 3: Dumbbell Row + Plank. Optional: 5-10min cardio finisher (row intervals, bike sprints, or incline walk).",
+        "estimatedDuration": "30-40 min (excluding finisher)"
+      },
+      {
+        "day": "Day 2 (e.g., Wednesday)",
+        "focus": "Full Body B — Pull Emphasis",
+        "exercises": "Superset 1: Deadlift + Pull-ups (or Lat Pulldown), Superset 2: Goblet Squat + Dumbbell Bench Press, Superset 3: Dumbbell Romanian Deadlift + Dumbbell Curls. Optional: 5-10min cardio finisher (jump rope, burpees, or sled push if available).",
+        "estimatedDuration": "30-40 min (excluding finisher)"
+      },
+      {
+        "day": "Day 3 (e.g., Friday)",
+        "focus": "Full Body C — Lower Emphasis",
+        "exercises": "Superset 1: Front Squat (or Goblet Squat) + Dumbbell Bench Press, Superset 2: Barbell Romanian Deadlift + Pull-ups (or Rows), Superset 3: Walking Lunges + Dumbbell Overhead Press. Optional: 5-10min cardio finisher (assault bike, hill sprints, or farmer carries).",
+        "estimatedDuration": "30-40 min (excluding finisher)"
+      }
+    ],
+    "restDays": "At least 1 day between training sessions. Recommended: Mon/Wed/Fri or Tue/Thu/Sat. Rest days: light walking, mobility work, or complete rest."
+  },
+  "progressionRules": [
+    {
+      "phase": "Foundation (Weeks 1-2)",
+      "rule": "Focus on movement quality and pacing. If all sets feel RPE 6-7 (leave 3-4 reps in reserve) and you maintain <90sec rest between supersets, weights are appropriate. Track transition time—goal is <15sec between exercises in a superset."
+    },
+    {
+      "phase": "Progressive Overload (Weeks 3-6)",
+      "rule": "Add weight when you complete all prescribed reps at RPE 7-8. For main compounds (squat, deadlift, bench, press): add 5-10lbs per week if RPE allows. For accessories: add 2.5-5lbs or add 1-2 reps per set. If you fail to complete reps for 2 consecutive sessions, reduce weight by 10% and rebuild."
+    },
+    {
+      "phase": "Peak & Reassess (Weeks 7-8)",
+      "rule": "Week 7: Push intensity to RPE 8-9, test what you can handle for prescribed reps (8-10 range). Week 8 deload: reduce volume by 40% (e.g., 3 sets → 2 sets), use 60-70% of Week 7 loads, RPE 6-7 max. Assess progress: compare Week 1 weights to Week 7 weights for same exercises."
+    }
+  ],
+  "deloadStrategy": "Week 8 is a scheduled deload. Reduce volume by 40% (fewer sets), use lighter loads (60-70% of Week 7 working weights), maintain movement patterns. Rest periods can extend to 90-120sec. No cardio finishers during deload. Focus on recovery: sleep 7-8 hours, eat at maintenance calories, light mobility work on rest days.",
+  "safetyNotes": [
+    "Supersets are demanding—ensure proper warm-up (5-10min light cardio + dynamic stretching before first superset)",
+    "Rest periods are short (60-90sec)—if form breaks down significantly, extend rest to 2min or reduce weight",
+    "Cardio finishers are optional—only add if you have energy and time. Skip if fatigued.",
+    "If training 3x/week is too much, reduce to 2x/week (Day 1 and Day 3) until work capacity improves",
+    "Listen to your body—if consistently exhausted or sleep-deprived, skip cardio finishers or take an extra rest day"
+  ],
+  "nutritionGuidance": "Time-constrained training is metabolically demanding. Eat at maintenance calories or slight surplus (200-300 cal above maintenance). Prioritize protein (0.8-1g per lb bodyweight). Pre-workout: light meal 1-2hr before (carbs + protein, e.g., banana + Greek yogurt). Post-workout: protein shake or meal within 1-2hr. Hydrate throughout the day—half your bodyweight in oz of water minimum.",
+  "cardioFinishers": {
+    "description": "Optional 5-10 minute high-intensity finishers to improve conditioning without adding significant time. Choose one per session if time/energy allows.",
+    "options": [
+      "Row intervals: 8 rounds of 20sec hard, 40sec easy",
+      "Assault bike: 10 rounds of 15sec sprint, 45sec easy",
+      "Jump rope: 5 rounds of 1min on, 30sec off",
+      "Hill sprints: 6-8 sprints of 10-15sec, walk back down for recovery",
+      "Farmer carries: 4 rounds of 40-50 yards with heavy dumbbells or kettlebells",
+      "Burpees: 5 rounds of 10 burpees, rest 30sec between rounds"
+    ]
+  },
+  "flexibilityNotes": "This program is designed for flexibility. If you miss a session, don't double up the next day—just continue the sequence (if you miss Day 2 Wednesday, do it Thursday and push Day 3 to Saturday). If you can only train 2x/week, alternate Day 1 and Day 3 each week. The key is consistency over perfection—3 focused 35min sessions beats one 90min session per week.",
+  "expectedOutcomes": "After 8 weeks: strength increase of 10-20% on main lifts (squat, deadlift, bench, press), improved work capacity (ability to maintain intensity with short rest), better cardiovascular conditioning from finishers, visible muscle definition from density training. Most users report feeling more energized and less stressed despite busy schedules—short, intense workouts are mentally manageable and produce endorphin release without excessive fatigue.",
+  "nextSteps": "After Week 8 deload, assess progress and goals. Option 1: Repeat this 8-week program with 10-20% heavier starting weights. Option 2: Transition to 4-day upper/lower split if you gain more time availability. Option 3: Add advanced techniques (rest-pause, drop sets) to current 3-day structure for continued progression. Option 4: Specialize toward a specific goal (strength, hypertrophy, or endurance) with more targeted programming."
+}
