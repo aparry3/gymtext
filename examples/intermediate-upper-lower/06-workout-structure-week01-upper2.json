@@ -1,0 +1,29 @@
+{
+  "_comment": "Week 1, Upper 2 — Vertical Emphasis",
+  "title": "Intermediate Upper/Lower — Upper 2",
+  "focus": "Vertical Push/Pull",
+  "description": "Second upper session. Overhead press and pull-up emphasis with chest and arm accessories.",
+  "program": {
+    "name": "Intermediate Upper/Lower Split",
+    "client": "Marcus Johnson",
+    "week": 1,
+    "phase": "Accumulation",
+    "session": "Upper 2"
+  },
+  "sections": [
+    {
+      "title": "Main Work",
+      "exercises": [
+        {"name": "Barbell Overhead Press", "type": "Strength", "sets": "4", "reps": "8", "rest": "3min", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "1-0-1", "notes": "115lbs", "tags": ["shoulders", "push"]},
+        {"name": "Pull-Up", "type": "Strength", "sets": "4", "reps": "8", "rest": "2-3min", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "1-1-2", "notes": "BW or assisted", "tags": ["back", "pull", "lats"]},
+        {"name": "Incline Barbell Bench Press", "type": "Strength", "sets": "3", "reps": "10", "rest": "2min", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "2-0-1", "notes": "155lbs", "tags": ["chest", "upper_chest"]},
+        {"name": "Cable Lat Pulldown", "type": "Strength", "sets": "3", "reps": "12", "rest": "90s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "1-1-2", "notes": "150lbs, close grip", "tags": ["back", "lats"]},
+        {"name": "Cable Face Pull", "type": "Strength", "sets": "3", "reps": "15", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "1-1-2", "notes": "50lbs", "tags": ["shoulders", "rear_delts"]},
+        {"name": "Cable Overhead Tricep Extension", "type": "Strength", "sets": "3", "reps": "12", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-1-2", "notes": "60lbs", "tags": ["triceps"]}
+      ]
+    }
+  ],
+  "estimatedDurationMin": 60,
+  "intensityLevel": "Moderate",
+  "tags": {"category": ["strength", "intermediate"], "split": ["upper"], "equipment": ["barbell", "cable", "bodyweight"]}
+}

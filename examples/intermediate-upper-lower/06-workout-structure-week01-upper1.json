@@ -1,0 +1,29 @@
+{
+  "_comment": "Week 1, Upper 1 — Horizontal Emphasis",
+  "title": "Intermediate Upper/Lower — Upper 1",
+  "focus": "Horizontal Push/Pull",
+  "description": "First upper session. Bench press and rowing emphasis with shoulder and arm accessories.",
+  "program": {
+    "name": "Intermediate Upper/Lower Split",
+    "client": "Marcus Johnson",
+    "week": 1,
+    "phase": "Accumulation",
+    "session": "Upper 1"
+  },
+  "sections": [
+    {
+      "title": "Main Work",
+      "exercises": [
+        {"name": "Barbell Bench Press", "type": "Strength", "sets": "4", "reps": "8", "rest": "2-3min", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-0-1", "notes": "185lbs", "tags": ["chest", "push"]},
+        {"name": "Barbell Bent-Over Row", "type": "Strength", "sets": "4", "reps": "8", "rest": "2-3min", "intensity": {"type": "RPE", "value": "7"}, "tempo": "1-1-1", "notes": "165lbs", "tags": ["back", "pull"]},
+        {"name": "Incline Dumbbell Bench Press", "type": "Strength", "sets": "3", "reps": "10", "rest": "90s", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "2-0-1", "notes": "60lbs each", "tags": ["chest", "upper_chest"]},
+        {"name": "Chest-Supported T-Bar Row", "type": "Strength", "sets": "3", "reps": "12", "rest": "90s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "1-1-2", "notes": "90lbs", "tags": ["back"]},
+        {"name": "Dumbbell Lateral Raise", "type": "Strength", "sets": "3", "reps": "15", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-1-2", "notes": "20lbs each", "tags": ["shoulders"]},
+        {"name": "EZ-Bar Curl", "type": "Strength", "sets": "3", "reps": "12", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-1-2", "notes": "70lbs", "tags": ["biceps"]}
+      ]
+    }
+  ],
+  "estimatedDurationMin": 60,
+  "intensityLevel": "Moderate",
+  "tags": {"category": ["strength", "intermediate"], "split": ["upper"], "equipment": ["barbell", "dumbbell", "machine"]}
+}

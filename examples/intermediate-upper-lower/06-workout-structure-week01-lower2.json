@@ -1,0 +1,29 @@
+{
+  "_comment": "Week 1, Lower 2 — Hinge Emphasis",
+  "title": "Intermediate Upper/Lower — Lower 2",
+  "focus": "Hinge & Posterior Chain",
+  "description": "Second lower session. Deadlift emphasis with posterior chain and glute work.",
+  "program": {
+    "name": "Intermediate Upper/Lower Split",
+    "client": "Marcus Johnson",
+    "week": 1,
+    "phase": "Accumulation",
+    "session": "Lower 2"
+  },
+  "sections": [
+    {
+      "title": "Main Work",
+      "exercises": [
+        {"name": "Conventional Deadlift", "type": "Strength", "sets": "4", "reps": "6", "rest": "3-4min", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "1-0-1", "notes": "265lbs", "tags": ["hinge", "deadlift", "posterior_chain"]},
+        {"name": "Front Squat", "type": "Strength", "sets": "3", "reps": "10", "rest": "2min", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-0-1", "notes": "155lbs", "tags": ["squat", "quads"]},
+        {"name": "Barbell Hip Thrust", "type": "Strength", "sets": "3", "reps": "12", "rest": "90s", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "1-2-1", "notes": "225lbs", "tags": ["glutes", "hips"]},
+        {"name": "Glute-Ham Raise", "type": "Strength", "sets": "3", "reps": "8", "rest": "90s", "intensity": {"type": "RPE", "value": "8"}, "tempo": "3-0-1", "notes": "Bodyweight", "tags": ["hamstrings", "glutes"]},
+        {"name": "Leg Extension", "type": "Strength", "sets": "3", "reps": "15", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-1-1", "notes": "110lbs", "tags": ["quads"]},
+        {"name": "Seated Calf Raise", "type": "Strength", "sets": "3", "reps": "20", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-2-1", "notes": "90lbs", "tags": ["calves"]}
+      ]
+    }
+  ],
+  "estimatedDurationMin": 60,
+  "intensityLevel": "Moderate",
+  "tags": {"category": ["strength", "intermediate"], "split": ["lower"], "equipment": ["barbell", "machine", "bodyweight"]}
+}

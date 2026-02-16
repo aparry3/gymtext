@@ -1,0 +1,29 @@
+{
+  "_comment": "Week 1, Lower 1 — Squat Emphasis",
+  "title": "Intermediate Upper/Lower — Lower 1",
+  "focus": "Squat & Quad Dominant",
+  "description": "First lower session. Back squat emphasis with quad-dominant accessories.",
+  "program": {
+    "name": "Intermediate Upper/Lower Split",
+    "client": "Marcus Johnson",
+    "week": 1,
+    "phase": "Accumulation",
+    "session": "Lower 1"
+  },
+  "sections": [
+    {
+      "title": "Main Work",
+      "exercises": [
+        {"name": "Barbell Back Squat", "type": "Strength", "sets": "4", "reps": "8", "rest": "3min", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "3-0-1", "notes": "225lbs", "tags": ["squat", "quads", "glutes"]},
+        {"name": "Romanian Deadlift", "type": "Strength", "sets": "3", "reps": "10", "rest": "2min", "intensity": {"type": "RPE", "value": "7"}, "tempo": "3-1-1", "notes": "185lbs", "tags": ["hinge", "hamstrings"]},
+        {"name": "Leg Press", "type": "Strength", "sets": "3", "reps": "12", "rest": "90s", "intensity": {"type": "RPE", "value": "7-8"}, "tempo": "2-0-1", "notes": "360lbs", "tags": ["quads"]},
+        {"name": "Walking Lunge", "type": "Strength", "sets": "3", "reps": "10 each", "rest": "90s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "1-0-1", "notes": "50lbs each", "tags": ["lunge", "quads"]},
+        {"name": "Leg Curl", "type": "Strength", "sets": "3", "reps": "12", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-1-2", "notes": "90lbs", "tags": ["hamstrings"]},
+        {"name": "Standing Calf Raise", "type": "Strength", "sets": "3", "reps": "15", "rest": "60s", "intensity": {"type": "RPE", "value": "7"}, "tempo": "2-2-1", "notes": "225lbs", "tags": ["calves"]}
+      ]
+    }
+  ],
+  "estimatedDurationMin": 60,
+  "intensityLevel": "Moderate",
+  "tags": {"category": ["strength", "intermediate"], "split": ["lower"], "equipment": ["barbell", "machine", "dumbbell"]}
+}
