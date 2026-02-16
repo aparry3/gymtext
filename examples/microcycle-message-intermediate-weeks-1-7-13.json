@@ -1,0 +1,69 @@
+[
+  {
+    "microcycleId": "intermediate-week-1",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Week 1 — Accumulation Phase Launch",
+      "phase": "Accumulation (Weeks 1-6)",
+      "planId": "intermediate-hypertrophy",
+      "messageType": "weekly_preview",
+      "experienceLevel": "intermediate"
+    },
+    "message": "WEEK 1 — Accumulation Phase Launch\n\nWelcome to 6-day PPL training. You're hitting each muscle group 2x/week now. Start conservative (RPE 7-8) to establish your baseline—leave 2-3 reps in reserve. Track everything: weight, reps, RPE.\n\nThis Week:\n- Mon: Push (chest/shoulders)\n- Tue: Pull (back/biceps)\n- Wed: Legs (quad emphasis)\n- Thu: Push (triceps/front delts)\n- Fri: Pull (rear delts/biceps)\n- Sat: Legs (hamstring/glute)\n- Sun: Rest/optional Zone 2\n\nIntensity: RPE 7-8 (moderate load)\nVolume: 12-14 sets per muscle group\n\nDon't max out Week 1. Build volume tolerance over the next 6 weeks—that's how accumulation works.",
+    "qualityNotes": [
+      "Emphasizes frequency increase (6 days, 2x per muscle)",
+      "Conservative start acknowledged (RPE 7-8, leave reps in reserve)",
+      "Explicit tracking instruction (weight, reps, RPE)",
+      "7-day PPL structure clearly outlined",
+      "Sets per muscle group specified (12-14)",
+      "Educates on accumulation phase concept",
+      "Confident tone appropriate for intermediate trainees"
+    ]
+  },
+  {
+    "microcycleId": "intermediate-week-7",
+    "weekNumber": 7,
+    "metadata": {
+      "title": "Week 7 — Deload Week",
+      "phase": "Deload (Weeks 7-8)",
+      "planId": "intermediate-hypertrophy",
+      "messageType": "weekly_preview",
+      "experienceLevel": "intermediate"
+    },
+    "message": "WEEK 7 — Deload Week\n\nTime to recover from 6 weeks of accumulation. Cut volume 50% (half your sets), reduce load to 70-80% of Week 6 weights, RPE 6-7 max. This is ACTIVE recovery—don't skip the gym, but don't push hard either.\n\nThis Week:\n- Mon: Push (deload)\n- Tue: Pull (deload)\n- Wed: Legs (deload)\n- Thu: Push (deload)\n- Fri: Pull (deload)\n- Sat: Legs (deload)\n- Sun: Full rest (no cardio)\n\nIntensity: RPE 6-7 (lighter loads)\nVolume: 6-7 sets per muscle group\n\nDeloads aren't breaks—they're when adaptation happens. Sleep 8-9 hours, eat at maintenance. You'll feel fresh by Week 8, ready for intensification phase.",
+    "qualityNotes": [
+      "Clearly states deload parameters (50% volume, 70-80% loads)",
+      "Frames as 'active recovery' (not skipping gym)",
+      "All 6 training days marked as deload (consistency)",
+      "Sunday explicitly 'Full rest (no cardio)' for max recovery",
+      "Volume halved: 12-14 sets → 6-7 sets",
+      "Reframes potential guilt: 'Deloads aren't breaks—they're when adaptation happens'",
+      "Sleep/nutrition guidance maintained during deload",
+      "Forward-looking: prepares for intensification phase"
+    ]
+  },
+  {
+    "microcycleId": "intermediate-week-13",
+    "weekNumber": 13,
+    "metadata": {
+      "title": "Week 13 — Peak Intensification",
+      "phase": "Intensification (Weeks 9-14)",
+      "planId": "intermediate-hypertrophy",
+      "messageType": "weekly_preview",
+      "experienceLevel": "intermediate"
+    },
+    "message": "WEEK 13 — Peak Intensification\n\nHardest week of the program. RPE 8-9 across the board. Deploy advanced techniques: rest-pause on compounds (failure → 15sec rest → 2-3 more reps), drop sets on isolation (failure → reduce 30% → failure again), slow eccentrics (4-5sec) on accessories.\n\nThis Week:\n- Mon: Push (rest-pause bench)\n- Tue: Pull (rest-pause deadlift)\n- Wed: Legs (rest-pause squat)\n- Thu: Push (drop set laterals/pushdowns)\n- Fri: Pull (drop set rear delts/curls)\n- Sat: Legs (drop set RDL/leg curls)\n- Sun: Full rest (8-9hr sleep non-negotiable)\n\nIntensity: RPE 8-9 (heavy)\nVolume: 14-16 sets per muscle group\n\nThis is where growth happens. Form is still king—don't sacrifice technique for reps. One more week, then final deload.",
+    "qualityNotes": [
+      "Prepares trainee mentally ('Hardest week of the program')",
+      "Explicitly defines advanced techniques with execution details",
+      "Rest-pause: failure → 15sec rest → 2-3 more reps",
+      "Drop sets: failure → reduce 30% → failure again",
+      "Slow eccentrics: 4-5sec negatives",
+      "Each day notes which technique is featured (rest-pause Monday/Tuesday/Wednesday, drop sets Thursday/Friday/Saturday)",
+      "Sunday emphasizes critical recovery (8-9hr sleep)",
+      "Volume maintained/slightly increased: 14-16 sets (vs 12-14 in accumulation)",
+      "Safety reminder: 'Form is still king'",
+      "Context: 'One more week, then final deload' (end in sight)"
+    ]
+  }
+]
