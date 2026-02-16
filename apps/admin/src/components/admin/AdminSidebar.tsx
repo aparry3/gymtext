@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ComponentType } from 'react'
+import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -20,6 +20,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LogOut,
   Building2,
   Landmark,
@@ -28,24 +29,66 @@ import {
   Bot,
   ScrollText,
   ArrowUpCircle,
+  Wrench,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
 
-const navItems = [
+interface NavItemDef {
+  href: string
+  label: string
+  icon: ComponentType<{ className?: string }>
+}
+
+interface NavGroupDef {
+  key: string
+  label: string
+  icon: ComponentType<{ className?: string }>
+  defaultExpanded?: boolean
+  items: NavItemDef[]
+}
+
+type NavEntry = NavItemDef | NavGroupDef | 'divider'
+
+function isGroup(entry: NavEntry): entry is NavGroupDef {
+  return typeof entry === 'object' && 'items' in entry
+}
+
+function isDivider(entry: NavEntry): entry is 'divider' {
+  return entry === 'divider'
+}
+
+const navEntries: NavEntry[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
-  { href: '/program-owners', label: 'Program Owners', icon: Building2 },
-  { href: '/organizations', label: 'Organizations', icon: Landmark },
-  { href: '/programs', label: 'Programs', icon: ClipboardList },
-  { href: '/exercises', label: 'Exercises', icon: Dumbbell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
+  {
+    key: 'programs',
+    label: 'Programs',
+    icon: ClipboardList,
+    defaultExpanded: true,
+    items: [
+      { href: '/programs', label: 'Programs', icon: ClipboardList },
+      { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+      { href: '/organizations', label: 'Organizations', icon: Landmark },
+      { href: '/exercises', label: 'Exercises', icon: Dumbbell },
+    ],
+  },
   { href: '/demos', label: 'Demos', icon: Presentation },
-  { href: '/registry', label: 'Registry', icon: FileText },
-  { href: '/agents', label: 'Agents', icon: Bot },
-  { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
-  { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
+  'divider',
+  {
+    key: 'dev-admin',
+    label: 'Dev Admin',
+    icon: Wrench,
+    defaultExpanded: false,
+    items: [
+      { href: '/agents', label: 'Agents', icon: Bot },
+      { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
+      { href: '/registry', label: 'Tool Registry', icon: FileText },
+      { href: '/promote', label: 'Deploy', icon: ArrowUpCircle },
+    ],
+  },
 ]
 
 function NavItem({
@@ -79,6 +122,103 @@ function NavItem({
       <Icon className="h-5 w-5" />
       {!collapsed && label}
     </Link>
+  )
+}
+
+function NavGroup({
+  group,
+  currentPath,
+  collapsed,
+  onNavClick,
+}: {
+  group: NavGroupDef
+  currentPath: string
+  collapsed?: boolean
+  onNavClick?: () => void
+}) {
+  const storageKey = `admin-nav-group-${group.key}`
+  const hasActiveChild = group.items.some((item) => currentPath.startsWith(item.href))
+
+  const [expanded, setExpanded] = useState(() => {
+    if (typeof window === 'undefined') return group.defaultExpanded ?? true
+    const stored = window.localStorage.getItem(storageKey)
+    if (stored !== null) return stored === 'true'
+    return group.defaultExpanded ?? true
+  })
+
+  const toggle = useCallback(() => {
+    setExpanded((prev) => {
+      const next = !prev
+      window.localStorage.setItem(storageKey, String(next))
+      return next
+    })
+  }, [storageKey])
+
+  const Icon = group.icon
+
+  // Collapsed sidebar: just show the group icon, highlight if a child is active
+  if (collapsed) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={toggle}
+          title={group.label}
+          className={cn(
+            'flex w-full items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+            hasActiveChild
+              ? 'bg-[hsl(var(--sidebar-accent))] text-white'
+              : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]'
+          )}
+        >
+          <Icon className="h-5 w-5" />
+        </button>
+        {expanded &&
+          group.items.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              collapsed
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <button
+        onClick={toggle}
+        className={cn(
+          'flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+          hasActiveChild
+            ? 'text-white'
+            : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]'
+        )}
+      >
+        <Icon className="h-5 w-5" />
+        <span className="flex-1 text-left">{group.label}</span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 transition-transform',
+            !expanded && '-rotate-90'
+          )}
+        />
+      </button>
+      {expanded && (
+        <div className="ml-4 space-y-0.5 mt-0.5">
+          {group.items.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -191,19 +331,40 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
-          <NavItem
-            key={item.href}
-            {...item}
-            collapsed={collapsed}
-            isActive={
-              item.href === '/'
-                ? currentPath === '/'
-                : currentPath.startsWith(item.href)
-            }
-            onClick={onNavClick}
-          />
-        ))}
+        {navEntries.map((entry, i) => {
+          if (isDivider(entry)) {
+            return (
+              <div
+                key={`divider-${i}`}
+                className="my-3 border-t border-[hsl(var(--sidebar-border))]"
+              />
+            )
+          }
+          if (isGroup(entry)) {
+            return (
+              <NavGroup
+                key={entry.key}
+                group={entry}
+                currentPath={currentPath}
+                collapsed={collapsed}
+                onNavClick={onNavClick}
+              />
+            )
+          }
+          return (
+            <NavItem
+              key={entry.href}
+              {...entry}
+              collapsed={collapsed}
+              isActive={
+                entry.href === '/'
+                  ? currentPath === '/'
+                  : currentPath.startsWith(entry.href)
+              }
+              onClick={onNavClick}
+            />
+          )
+        })}
       </nav>
 
       <div className="p-4 border-t border-[hsl(var(--sidebar-border))] space-y-3">
