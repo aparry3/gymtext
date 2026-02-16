@@ -45,7 +45,7 @@ const navItems = [
 
 const programItems = [
   { href: '/programs', label: 'Programs', icon: ClipboardList },
-  { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+  { href: '/program-owners', label: 'Owners & Coaches', icon: Building2 },
   { href: '/organizations', label: 'Organizations', icon: Landmark },
 ]
 
