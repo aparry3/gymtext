@@ -1,0 +1,356 @@
+[
+  {
+    "_comment": "Week 1 — Movement Foundation Phase",
+    "weekNumber": 1,
+    "phase": {
+      "name": "Movement Foundation",
+      "phaseWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Beginner 3-Day Full-Body Training Plan",
+      "client": "Sarah Chen",
+      "totalWeeks": 12
+    },
+    "focus": "Learn movement patterns, establish baseline, build training habit",
+    "volume": {
+      "sessionsPerWeek": 3,
+      "setsPerSession": 9,
+      "totalSets": 27,
+      "estimatedRepsPerWeek": 270
+    },
+    "intensity": {
+      "rpeTarget": "6-7",
+      "description": "Moderate, technique-focused"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "theme": "Squat Emphasis",
+        "focus": "Lower Focus + Horizontal Push/Pull",
+        "estimatedDurationMin": 45
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Wednesday",
+        "theme": "Hinge Emphasis",
+        "focus": "Hinge Focus + Vertical Push/Pull",
+        "estimatedDurationMin": 45
+      },
+      {
+        "dayNumber": 3,
+        "dayOfWeek": "Friday",
+        "theme": "Lunge Emphasis",
+        "focus": "Lunge Focus + Mixed Angles",
+        "estimatedDurationMin": 45
+      }
+    ],
+    "keyExercises": [
+      {
+        "pattern": "squat",
+        "exercise": "Goblet Squat",
+        "equipment": "dumbbell",
+        "prescription": "3×8",
+        "weight": "15lbs",
+        "rpe": "6"
+      },
+      {
+        "pattern": "hinge",
+        "exercise": "Dumbbell Romanian Deadlift",
+        "equipment": "dumbbell",
+        "prescription": "3×8",
+        "weight": "25lbs",
+        "rpe": "6-7"
+      },
+      {
+        "pattern": "horizontal_push",
+        "exercise": "Dumbbell Bench Press",
+        "equipment": "dumbbell",
+        "prescription": "3×8",
+        "weight": "15lbs per hand",
+        "rpe": "6"
+      },
+      {
+        "pattern": "horizontal_pull",
+        "exercise": "Dumbbell Single-Arm Row",
+        "equipment": "dumbbell",
+        "prescription": "3×8 each",
+        "weight": "20lbs",
+        "rpe": "6"
+      },
+      {
+        "pattern": "vertical_push",
+        "exercise": "Seated Dumbbell Shoulder Press",
+        "equipment": "dumbbell",
+        "prescription": "3×8",
+        "weight": "12lbs per hand",
+        "rpe": "6"
+      },
+      {
+        "pattern": "vertical_pull",
+        "exercise": "Lat Pulldown",
+        "equipment": "machine",
+        "prescription": "3×10",
+        "weight": "50lbs",
+        "rpe": "6"
+      },
+      {
+        "pattern": "lunge",
+        "exercise": "Dumbbell Reverse Lunge",
+        "equipment": "dumbbell",
+        "prescription": "3×8 each",
+        "weight": "15lbs per hand",
+        "rpe": "6-7"
+      }
+    ],
+    "progressionNotes": "First week of structured training. All exercises use dumbbells or machines. Weight selection is conservative. Emphasize movement quality over load.",
+    "recoveryGuidance": "Minimum 1 rest day between sessions. Active recovery encouraged: walking, light yoga, stretching.",
+    "nextWeekAdjustments": "Increase reps to 3×10. Keep same exercises. Add 5lbs to movements that felt too easy."
+  },
+
+  {
+    "_comment": "Week 5 — Strength Development Phase",
+    "weekNumber": 5,
+    "phase": {
+      "name": "Strength Development",
+      "phaseWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Beginner 3-Day Full-Body Training Plan",
+      "client": "Sarah Chen",
+      "totalWeeks": 12
+    },
+    "focus": "Introduce barbell movements, increase load intensity, build strength foundation",
+    "volume": {
+      "sessionsPerWeek": 3,
+      "setsPerSession": 13,
+      "totalSets": 37,
+      "estimatedRepsPerWeek": 340
+    },
+    "intensity": {
+      "rpeTarget": "7-8",
+      "description": "Challenging loads with 2-3 reps in reserve"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "theme": "Barbell Back Squat Introduction",
+        "focus": "Squat + Horizontal Push/Pull",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Wednesday",
+        "theme": "Hinge Focus with Increased Intensity",
+        "focus": "Barbell RDL + Vertical Push/Pull",
+        "estimatedDurationMin": 60
+      },
+      {
+        "dayNumber": 3,
+        "dayOfWeek": "Friday",
+        "theme": "Barbell Bench Press Introduction",
+        "focus": "Bench Press + Lunge + Pulling",
+        "estimatedDurationMin": 60
+      }
+    ],
+    "keyExercises": [
+      {
+        "pattern": "squat",
+        "exercise": "Barbell Back Squat",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "65lbs",
+        "rpe": "6-7",
+        "notes": "NEW MOVEMENT — learning week, conservative weight"
+      },
+      {
+        "pattern": "hinge",
+        "exercise": "Barbell Romanian Deadlift",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "95lbs",
+        "rpe": "7-8",
+        "notes": "Progressed from dumbbell RDL"
+      },
+      {
+        "pattern": "horizontal_push",
+        "exercise": "Barbell Bench Press",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "55lbs",
+        "rpe": "6-7",
+        "notes": "NEW MOVEMENT — learning week, conservative weight"
+      },
+      {
+        "pattern": "horizontal_pull",
+        "exercise": "Chest-Supported Dumbbell Row",
+        "equipment": "dumbbell",
+        "prescription": "4×8",
+        "weight": "35lbs per hand",
+        "rpe": "7-8"
+      },
+      {
+        "pattern": "vertical_push",
+        "exercise": "Seated Dumbbell Shoulder Press",
+        "equipment": "dumbbell",
+        "prescription": "4×8",
+        "weight": "25lbs per hand",
+        "rpe": "7-8"
+      },
+      {
+        "pattern": "vertical_pull",
+        "exercise": "Lat Pulldown (Wide Grip)",
+        "equipment": "machine",
+        "prescription": "4×10",
+        "weight": "85lbs",
+        "rpe": "7-8"
+      },
+      {
+        "pattern": "lunge",
+        "exercise": "Bulgarian Split Squat",
+        "equipment": "dumbbell",
+        "prescription": "3×8 each",
+        "weight": "20lbs per hand",
+        "rpe": "7-8",
+        "notes": "NEW MOVEMENT — rear foot elevated"
+      }
+    ],
+    "progressionNotes": "Major milestone: barbell movements introduced (back squat, bench press, RDL). Rep scheme lowered to 4×6 to accommodate heavier loads. Emphasis on technique with barbell. Week 4 was deload, so coming in fresh.",
+    "recoveryGuidance": "Longer sessions (~60 min) due to extended rest periods (2-3 min for main lifts). Prioritize sleep and nutrition to support increased training stress.",
+    "nextWeekAdjustments": "Increase reps to 4×8. Barbell squat: 65→75lbs. Barbell bench: 55→60lbs. Barbell RDL: 95→105lbs. Continue RPE 7-8."
+  },
+
+  {
+    "_comment": "Week 9 — Consolidation & Testing Phase",
+    "weekNumber": 9,
+    "phase": {
+      "name": "Consolidation & Testing",
+      "phaseWeek": 1,
+      "totalWeeks": 4
+    },
+    "program": {
+      "name": "Beginner 3-Day Full-Body Training Plan",
+      "client": "Sarah Chen",
+      "totalWeeks": 12
+    },
+    "focus": "Consolidate strength gains, introduce heavier loads, test capacity",
+    "volume": {
+      "sessionsPerWeek": 3,
+      "setsPerSession": 16,
+      "totalSets": 46,
+      "estimatedRepsPerWeek": 420
+    },
+    "intensity": {
+      "rpeTarget": "8-9",
+      "description": "Heavy loads with 1-2 reps in reserve, approaching maximal"
+    },
+    "schedule": [
+      {
+        "dayNumber": 1,
+        "dayOfWeek": "Monday",
+        "theme": "Heavy Squat with Volume",
+        "focus": "Squat + Horizontal Press/Pull",
+        "estimatedDurationMin": 70
+      },
+      {
+        "dayNumber": 2,
+        "dayOfWeek": "Wednesday",
+        "theme": "Conventional Deadlift Introduction",
+        "focus": "Deadlift + Vertical Push/Pull",
+        "estimatedDurationMin": 70
+      },
+      {
+        "dayNumber": 3,
+        "dayOfWeek": "Friday",
+        "theme": "Pressing Volume + Pulling Emphasis",
+        "focus": "Paused Bench + Lunge + Back Work",
+        "estimatedDurationMin": 70
+      }
+    ],
+    "keyExercises": [
+      {
+        "pattern": "squat",
+        "exercise": "Barbell Back Squat",
+        "equipment": "barbell",
+        "prescription": "4×8",
+        "weight": "155lbs",
+        "rpe": "8-9",
+        "notes": "Significant progression from 65lbs in Week 5"
+      },
+      {
+        "pattern": "hinge",
+        "exercise": "Conventional Deadlift",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "155lbs",
+        "rpe": "7-8",
+        "notes": "NEW MOVEMENT — full range hinge, progressed from RDL"
+      },
+      {
+        "pattern": "horizontal_push",
+        "exercise": "Barbell Bench Press",
+        "equipment": "barbell",
+        "prescription": "4×8",
+        "weight": "95lbs",
+        "rpe": "8-9"
+      },
+      {
+        "pattern": "horizontal_push_variation",
+        "exercise": "Barbell Bench Press (Paused)",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "85lbs",
+        "rpe": "8-9",
+        "notes": "2-second pause on chest, builds strength off chest"
+      },
+      {
+        "pattern": "horizontal_pull",
+        "exercise": "Barbell Bent-Over Row",
+        "equipment": "barbell",
+        "prescription": "4×8",
+        "weight": "95lbs",
+        "rpe": "8"
+      },
+      {
+        "pattern": "horizontal_pull_variation",
+        "exercise": "Pendlay Row",
+        "equipment": "barbell",
+        "prescription": "4×8",
+        "weight": "95lbs",
+        "rpe": "8-9",
+        "notes": "Dead-stop row from floor, explosive"
+      },
+      {
+        "pattern": "vertical_push",
+        "exercise": "Standing Barbell Overhead Press",
+        "equipment": "barbell",
+        "prescription": "4×6",
+        "weight": "65lbs",
+        "rpe": "8-9"
+      },
+      {
+        "pattern": "vertical_pull",
+        "exercise": "Assisted Pull-Up",
+        "equipment": "machine",
+        "prescription": "4×6",
+        "weight": "40-50lbs assistance",
+        "rpe": "8",
+        "notes": "NEW MOVEMENT — progressed from lat pulldown"
+      },
+      {
+        "pattern": "lunge",
+        "exercise": "Dumbbell Walking Lunge",
+        "equipment": "dumbbell",
+        "prescription": "4×10 each",
+        "weight": "35lbs per hand",
+        "rpe": "8"
+      }
+    ],
+    "progressionNotes": "Peak strength phase. Conventional deadlift introduced (full range hinge). Assisted pull-ups introduced (vertical pulling progression). Variations introduced: paused bench, Pendlay rows. Intensity is RPE 8-9 across the board. Week 8 was deload.",
+    "recoveryGuidance": "Longest sessions (~70 min) and highest intensity of program. Prioritize sleep (8+ hours), nutrition (adequate protein and calories), and active recovery between sessions. Monitor fatigue closely.",
+    "nextWeekAdjustments": "Continue 4×8, minor weight increases (+5lbs where possible). Week 11: shift to 3×3 at near-maximal loads for strength testing. Week 12: test 3-5 rep maxes, then active recovery."
+  }
+]
