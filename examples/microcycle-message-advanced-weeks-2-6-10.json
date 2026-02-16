@@ -1,0 +1,83 @@
+[
+  {
+    "microcycleId": "advanced-powerlifting-week-2",
+    "weekNumber": 2,
+    "metadata": {
+      "title": "Week 2 — Accumulation Phase (Volume Building)",
+      "phase": "Accumulation (Weeks 1-4)",
+      "planId": "advanced-powerlifting-peak",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced"
+    },
+    "message": "WEEK 2 — Accumulation Phase\n\nBuilding on Week 1's foundation. Competition lifts 2-3x/week: 5×5 squat (Mon), 5×5 bench (Tue), 5×4 deadlift (Thu), plus volume bench Saturday. RPE 7-8 (~70-75% 1RM). If Week 1 felt RPE 7, add 5-10lbs. If RPE 8.5, hold weight and focus on bar speed.\n\nThis Week:\n- Mon: Squat (5×5) + pause squats\n- Tue: Bench (5×5) + close-grip bench\n- Wed: Rest/active recovery\n- Thu: Deadlift (5×4) + deficit DL + front squat\n- Fri: Rest\n- Sat: Volume bench (4×8) + accessories\n- Sun: Rest\n\nIntensity: RPE 7-8 (moderate)\nVolume: 4-5 sets per main lift\n\nSecondary variations address weak points. Accessories 3-4 sets × 8-12 reps. Track: weight, reps, RPE, bar speed. Sleep 7-8hr, eat at slight surplus.",
+    "qualityNotes": [
+      "Assumes powerlifting knowledge (references competition lifts, secondary variations)",
+      "Explicit progression guidance based on Week 1 RPE (if RPE 7 → add weight, if RPE 8.5 → hold weight)",
+      "Bar speed emphasized as fatigue indicator",
+      "Training frequency clearly stated (2-3x per lift across week)",
+      "Upper/Lower split structure (Mon/Tue squat/bench, Thu/Sat deadlift/volume bench)",
+      "Rest days explicitly marked (Wed/Fri/Sun)",
+      "Secondary variations noted (pause squats, close-grip bench, deficit DL)",
+      "Volume and intensity parameters specified (4-5 sets, RPE 7-8, 70-75% 1RM)",
+      "Accessory prescription included (3-4 sets × 8-12 reps)",
+      "Recording instructions comprehensive (weight, reps, RPE, bar speed)",
+      "Sleep and nutrition guidance (7-8hr, slight surplus)",
+      "Confident, direct tone appropriate for advanced trainees"
+    ]
+  },
+  {
+    "microcycleId": "advanced-powerlifting-week-6",
+    "weekNumber": 6,
+    "metadata": {
+      "title": "Week 6 — Strength Building (Wave Loading 82.5%)",
+      "phase": "Strength Building (Weeks 5-8)",
+      "planId": "advanced-powerlifting-peak",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced"
+    },
+    "message": "WEEK 6 — Wave Loading 82.5%\n\nMid-strength block. Loads increase to 82.5% for 4×3 on all comp lifts (Week 5 was 80%, Week 7 will be 85%). RPE 8-9—only 1-2 reps in reserve. Bar speed is critical: if 3rd rep grinds (>3sec), reduce load 5-10lbs.\n\nThis Week:\n- Mon: Squat (4×3 @ 82.5%)\n- Tue: Bench (4×3 @ 82.5%)\n- Wed: Rest (CNS recovery)\n- Thu: Deadlift (4×2-3 @ 82.5%)\n- Fri: Rest\n- Sat: Volume bench (3×6-8 @ 70-75% of Tue)\n- Sun: Rest\n\nIntensity: RPE 8-9 (heavy)\nVolume: 4 sets × 3 reps (12 total reps)\n\nAccessories reduced to 3 sets × 6-8 reps. Variations eliminated—comp lifts only. Week 7 peaks at 85%, then Week 8 deload dissipates fatigue before peaking phase. Trust the wave.",
+    "qualityNotes": [
+      "Wave loading context provided (Week 5: 80%, Week 6: 82.5%, Week 7: 85%)",
+      "Specific percentage and set×rep scheme (4×3 @ 82.5%)",
+      "RPE target with precision (8-9, only 1-2 reps in reserve)",
+      "Bar speed as load adjustment trigger (if 3rd rep >3sec, reduce 5-10lbs)",
+      "CNS recovery explicitly noted (Wednesday rest after heavy squat/bench)",
+      "Deadlift rep flexibility acknowledged (4×2-3, some lifters only do doubles at 82.5%)",
+      "Volume bench clearly defined as percentage of Tuesday's load (70-75%)",
+      "Accessory reduction strategy noted (3 sets × 6-8 reps, down from 3-4 sets × 8-12)",
+      "Variations eliminated (comp lifts only—no more pause squats, deficit DLs)",
+      "Forward-looking context (Week 7 peaks, Week 8 deload, then peaking phase)",
+      "'Trust the wave' reinforces periodization strategy",
+      "Tone assumes advanced understanding (no explanation of wave loading concept)"
+    ]
+  },
+  {
+    "microcycleId": "advanced-powerlifting-week-10",
+    "weekNumber": 10,
+    "metadata": {
+      "title": "Week 10 — Peaking Phase (Heavy Doubles 92.5%)",
+      "phase": "Peaking (Weeks 9-11)",
+      "planId": "advanced-powerlifting-peak",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced"
+    },
+    "message": "WEEK 10 — Heavy Doubles 92.5%\n\nPeaking block week 2. You're lifting 92.5% for 3×2 on comp lifts. RPE 9.5—1st rep decent speed, 2nd rep will slow but should complete clean. If bar stalls or form breaks, weight's too heavy. Competition > hitting percentages.\n\nThis Week:\n- Mon: Squat (3×2 @ 92.5%)\n- Tue: Bench (3×2 @ 92.5%, spotter mandatory)\n- Wed: Rest (CNS recovery mandatory)\n- Thu: Deadlift (3×1-2 @ 92.5%, singles acceptable)\n- Fri: Rest\n- Sat: Light bench (2×5 @ 60-65%), light accessories\n- Sun: Rest\n\nIntensity: RPE 9.5 (near-maximal)\nVolume: 6 total reps per lift\n\nAccessories eliminated or 2×8-10 maintenance only. NO conditioning. Sleep 8-9hr non-negotiable. Week 11: heavy singles (95-97.5%). Week 12: taper + compete. You're on track.",
+    "qualityNotes": [
+      "Peaking context provided (Week 10 of 11-week peaking block, Week 12 is competition)",
+      "Near-maximal intensity acknowledged (92.5%, RPE 9.5)",
+      "Realistic bar speed expectations (1st rep decent, 2nd rep will slow)",
+      "Safety-first mentality ('If bar stalls or form breaks, weight's too heavy')",
+      "Competition prioritization ('Competition > hitting percentages')",
+      "Spotter explicitly required (Tuesday bench at 92.5%)",
+      "Deadlift flexibility (3×1-2, singles acceptable at this intensity)",
+      "Wednesday rest marked as 'mandatory' (CNS recovery after 92.5% squat/bench)",
+      "Saturday work clearly defined as 'light' (2×5 @ 60-65%)",
+      "Accessories strategy: 'eliminated or 2×8-10 maintenance only'",
+      "Conditioning explicitly prohibited (NO conditioning—energy preservation)",
+      "Sleep prescription upgraded (8-9hr 'non-negotiable')",
+      "Forward-looking roadmap (Week 11: heavy singles, Week 12: taper + compete)",
+      "'You're on track' provides confidence/reassurance",
+      "Tone is terse, technical, competition-focused"
+    ]
+  }
+]
