@@ -1,0 +1,332 @@
+[
+  {
+    "planId": "beginner-general-fitness",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Beginner Week 1 — Movement Pattern Introduction",
+      "phase": "Form Mastery Phase",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 1 — Movement Pattern Introduction. This week focuses on learning fundamental movement patterns with light loads. The goal is to establish proper technique, build confidence, and create a sustainable training rhythm. Expect some muscle soreness (DOMS) as your body adapts to new stimulus. Intensity stays conservative (RPE 5-6) to allow for skill acquisition without excessive fatigue.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis. Primary focus: Squat and hinge pattern education. Start with bodyweight movements (air squats, Romanian deadlift with PVC pipe) before adding external load. Volume: 2 sets of 12-15 reps per exercise. Movement quality is the priority—if form breaks down, reduce weight or reps. Include 5min warmup (light cardio + dynamic stretches) and 5min cooldown (static stretches, especially hip flexors and hamstrings). Today introduces the squat pattern (goblet squat or leg press), hinge pattern (dumbbell RDL), horizontal push (dumbbell bench press or machine chest press), and core (plank hold 3x20-30sec).",
+        "Day 2 (Tuesday) — Rest. Optional: 10-15min easy walk if you feel restless. Stay hydrated and focus on recovery. Muscle soreness is normal—gentle movement can help.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis. Primary focus: Horizontal and vertical push/pull patterns. Volume: 2 sets of 12-15 reps. Today emphasizes upper body movement quality. Horizontal push (dumbbell bench press or push-ups), horizontal pull (seated cable row or chest-supported row), vertical pull (lat pulldown or assisted pull-up), and core (dead bug 3x10/side). Focus on scapular control during pulling movements—retract and depress shoulder blades. Keep loads light enough to maintain 3-1-1 tempo (3sec lower, 1sec pause, 1sec lift).",
+        "Day 4 (Thursday) — Rest. Full recovery day. No structured training. If experiencing significant soreness, consider light stretching or foam rolling (5-10min). Sleep and nutrition are your training tools today.",
+        "Day 5 (Friday) — Full Body: Balanced. Primary focus: Reinforcing all patterns learned this week. Volume: 2-3 sets of 12-15 reps. This session ties together Monday and Wednesday's work. Include squat pattern (goblet squat), hinge pattern (RDL), horizontal push (dumbbell bench), horizontal pull (cable row), vertical push (dumbbell shoulder press), and core (bird dog 3x8/side). Optional: 10min easy cardio post-workout (bike, walk, rowing) at conversational pace. Celebrate completing your first week!",
+        "Day 6 (Saturday) — Active Recovery (Optional). Suggested: 20-30min easy walk, yoga, swimming, or any low-intensity movement you enjoy. Purpose: Blood flow and mental recovery without adding training stress. Not mandatory—full rest is also fine.",
+        "Day 7 (Sunday) — Rest. Complete recovery. Reflect on your first week. Note what felt good, what was challenging, and any questions to address next week. Prepare for Week 2: similar structure but slightly more confidence with the movements."
+      ]
+    }
+  },
+  {
+    "planId": "beginner-general-fitness",
+    "weekNumber": 2,
+    "metadata": {
+      "title": "Beginner Week 2 — Building Confidence",
+      "phase": "Form Mastery Phase",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 2 — Building Confidence. Now that you've been introduced to the movements, this week adds slightly more load while maintaining perfect form. Intensity rises to RPE 6-7. Volume stays at 2-3 sets of 12-15 reps. The goal is to build neuromuscular efficiency—your body is learning to coordinate these patterns. You may notice movements feeling smoother. Continue prioritizing technique over weight. If you hit 3 sets of 15 reps with clean form, add 2.5-5lbs next session.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis. Squat pattern (goblet squat: add 5lbs if Week 1 felt easy), hinge pattern (DB RDL: focus on hip hinge, not knee bend), horizontal push (DB bench press), horizontal pull (cable row), core (plank 3x30-40sec). Volume: 3 sets of 12-15 reps. Rest 60-90sec between sets. Film a set if possible to check form. Key cue for squats: chest up, weight in heels. For RDL: soft knees, push hips back, feel hamstring stretch.",
+        "Day 2 (Tuesday) — Rest. Optional light walk. Monitor recovery: soreness should be decreasing compared to Week 1. If still very sore, today's rest is critical.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis. Horizontal push (DB bench press or push-ups: if doing push-ups, aim for 10+ strict reps), horizontal pull (chest-supported row), vertical pull (lat pulldown: focus on pulling elbows down, not hands), vertical push (DB shoulder press: light weight, control the descent), core (dead bug 3x12/side). Volume: 3 sets of 12-15 reps. Tempo: 3-1-1. Rest: 60-90sec.",
+        "Day 4 (Thursday) — Rest. Full recovery day.",
+        "Day 5 (Friday) — Full Body: Balanced. All patterns from this week. Squat (goblet or leg press), hinge (RDL or cable pull-through), horizontal push (DB bench), horizontal pull (cable row), vertical movement (alternate: DB shoulder press this week), core (bird dog 3x10/side). Volume: 3 sets of 12-15 reps. Optional: 10-15min Zone 2 cardio (easy effort, should be able to hold a conversation).",
+        "Day 6 (Saturday) — Active Recovery (Optional). 20-30min easy movement: walk, bike, yoga. Focus on enjoyment, not effort.",
+        "Day 7 (Sunday) — Rest. Prepare mentally for Week 3. You're building a habit. Consistency matters more than perfection."
+      ]
+    }
+  },
+  {
+    "planId": "beginner-general-fitness",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Beginner Week 4 — Deload & Skill Reinforcement",
+      "phase": "Form Mastery Phase (Deload)",
+      "isDeload": true
+    },
+    "microcycleOutput": {
+      "overview": "Week 4 — Deload & Skill Reinforcement. Planned recovery week. Reduce volume by 40-50% (drop to 2 sets per exercise) while maintaining moderate intensity (use current weights, don't push for PRs). The goal is active recovery—keep the movement patterns fresh while allowing your body to dissipate accumulated fatigue. You may feel like you *could* do more; resist the urge. This deload sets you up for productive Weeks 5-8. Focus on movement quality and mental recovery.",
+      "isDeload": true,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis (Deload). Squat pattern, hinge pattern, horizontal push, core. Volume: 2 sets of 12-15 reps (reduced from 3 sets). Intensity: Use your current weights, don't add load. RPE: 5-6 (should feel easy). Tempo: Emphasize control. This is a skill practice day, not a stimulus day.",
+        "Day 2 (Tuesday) — Rest.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis (Deload). Horizontal push, horizontal pull, vertical movement, core. Volume: 2 sets of 12-15 reps. Intensity: Current weights, RPE 5-6. Focus: Perfect reps. Film yourself. Analyze form.",
+        "Day 4 (Thursday) — Rest.",
+        "Day 5 (Friday) — Full Body: Balanced (Deload). All patterns. Volume: 2 sets of 12-15 reps. Intensity: Light. Optional cardio: 10min easy effort. This session should leave you feeling refreshed, not fatigued.",
+        "Day 6 (Saturday) — Active Recovery (Optional). Light movement: yoga, stretching, 20min easy walk. Focus on mobility: hip openers, thoracic spine rotation, ankle mobility.",
+        "Day 7 (Sunday) — Rest. Reflect on the past 4 weeks. You've built a foundation. Week 5 begins progressive overload—adding weight when you hit the top of the rep range with clean form."
+      ]
+    }
+  },
+  {
+    "planId": "intermediate-hypertrophy",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Intermediate Week 1 — Accumulation Phase Begins",
+      "phase": "Volume Accumulation (Weeks 1-6)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 1 — Accumulation Phase Begins. Starting volume: 12-14 sets per muscle group. Intensity: Moderate (RPE 7-8 on compounds). The goal this week is to establish your baseline and build work capacity for the accumulation block ahead. Focus on controlled eccentrics and time under tension. Compound lifts use 6-10 reps, accessories 10-15 reps, isolation 12-20 reps. Tempo: 2-0-1-0 for compounds, 3-0-1-0 for accessories. Rest periods: 2-3min compounds, 60-90sec accessories, 45-60sec isolation. Track your lifts—you'll add volume (sets) every 2 weeks.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Push: Chest & Shoulders Emphasis. Primary compounds: Flat barbell bench press 4x8, incline dumbbell press 3x10. Accessories: Cable fly 3x12, overhead press 3x8, lateral raise 3x15. Core: Cable crunch 3x15. Total chest volume: 10 sets. RPE: 7-8 on compounds. Emphasis: Full ROM on bench, squeeze pecs at top of fly. Rest 2-3min between compound sets.",
+        "Day 2 (Tuesday) — Pull: Back & Biceps. Primary compounds: Barbell row 4x8, weighted pull-up 3x8. Accessories: Cable row 3x12, face pull 3x15, barbell curl 3x12, hammer curl 3x15. Total back volume: 13 sets. RPE: 7-8. Emphasis: Retract scapula on rows, full stretch on pull-ups. Control the eccentric (3sec down).",
+        "Day 3 (Wednesday) — Legs: Quad Emphasis. Primary compounds: Back squat 4x8, leg press 3x12. Accessories: Leg extension 3x15, walking lunge 3x10/leg, calf raise 3x15. Core: Plank 3x45sec. Total quad volume: 13 sets. RPE: 7-8. Emphasis: Depth on squats (hip crease below knee), control the descent.",
+        "Day 4 (Thursday) — Push: Triceps & Front Delts. Primary compounds: Incline barbell bench 4x8, close-grip bench 3x10. Accessories: Dumbbell shoulder press 3x12, tricep pushdown 3x15, overhead tricep extension 3x12. Total chest volume: 7 sets. RPE: 7-8. Different angle than Monday (incline vs flat) to manage fatigue.",
+        "Day 5 (Friday) — Pull: Rear Delts & Biceps. Primary compounds: Deadlift 3x6 (conservative volume, focus on form), lat pulldown 4x12. Accessories: Rear delt fly 3x15, cable curl 3x15, preacher curl 3x12. Total back volume: 10 sets. RPE: 7-8. Deadlift: Build to working weight, don't max out. This is accumulation, not peaking.",
+        "Day 6 (Saturday) — Legs: Hamstring & Glute Emphasis. Primary compounds: Romanian deadlift 4x10, Bulgarian split squat 3x10/leg. Accessories: Leg curl 3x12, hip thrust 3x12, calf raise 3x15. Total posterior chain volume: 13 sets. RPE: 7-8. Emphasis: Hip hinge on RDL, glute squeeze at top of hip thrust.",
+        "Day 7 (Sunday) — Rest or optional 20-30min Zone 2 cardio (bike, incline walk). If doing cardio, keep it conversational pace. Purpose: Recovery enhancement, not training stimulus."
+      ]
+    }
+  },
+  {
+    "planId": "intermediate-hypertrophy",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Intermediate Week 4 — Mid-Accumulation Volume Increase",
+      "phase": "Volume Accumulation (Weeks 1-6)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 4 — Mid-Accumulation Volume Increase. Volume: 16-18 sets per muscle group (up from 12-14 in Week 1). Intensity: Still moderate (RPE 7-8). You've added 1-2 sets every 2 weeks. By now, work capacity should be noticeably higher. The goal is to continue building volume tolerance while avoiding excessive fatigue. Monitor recovery closely—if sleep is disrupted or joints ache, this is your signal to maintain current volume rather than push higher. Stick to the plan: Week 7-8 is a deload, so push through this week knowing recovery is scheduled.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Push: Chest & Shoulders. Compounds: Flat bench 4x8, incline DB press 4x10 (added 1 set from Week 1). Accessories: Cable fly 3x12, OHP 4x8 (added 1 set), lateral raise 4x15 (added 1 set). Core: Cable crunch 3x15. Total chest: 11 sets. RPE: 7-8. Fatigue is accumulating—this is expected. Don't chase PRs; focus on hitting prescribed reps at RPE 7-8.",
+        "Day 2 (Tuesday) — Pull: Back & Biceps. Compounds: Barbell row 4x8, weighted pull-up 4x8 (added 1 set). Accessories: Cable row 4x12 (added 1 set), face pull 3x15, barbell curl 3x12, hammer curl 3x15. Total back: 15 sets. Emphasis: Quality over ego. If form degrades, reduce weight slightly.",
+        "Day 3 (Wednesday) — Legs: Quad Emphasis. Compounds: Back squat 4x8, leg press 4x12 (added 1 set). Accessories: Leg extension 4x15 (added 1 set), walking lunge 3x10/leg, calf raise 3x15. Core: Plank 3x60sec. Total quad: 15 sets. Monitor knee health. If joints hurt (not muscle soreness), back off.",
+        "Day 4 (Thursday) — Push: Triceps & Front Delts. Compounds: Incline bench 4x8, close-grip bench 4x10 (added 1 set). Accessories: DB shoulder press 3x12, tricep pushdown 4x15 (added 1 set), overhead tricep ext 3x12. Total chest: 8 sets.",
+        "Day 5 (Friday) — Pull: Rear Delts & Biceps. Compounds: Deadlift 4x6 (added 1 set—still conservative), lat pulldown 4x12. Accessories: Rear delt fly 4x15 (added 1 set), cable curl 3x15, preacher curl 3x12. Total back: 12 sets. Deadlift: Don't exceed RPE 8. Save max effort for Intensification phase (Weeks 9-14).",
+        "Day 6 (Saturday) — Legs: Hamstring & Glute. Compounds: RDL 4x10, Bulgarian split squat 4x10/leg (added 1 set). Accessories: Leg curl 4x12 (added 1 set), hip thrust 3x12, calf raise 3x15. Total posterior: 15 sets.",
+        "Day 7 (Sunday) — Rest or 20-30min Zone 2 cardio. Recovery is critical. You're at peak volume for the accumulation block. Week 5-6 will maintain this volume before Week 7-8 deload."
+      ]
+    }
+  },
+  {
+    "planId": "intermediate-hypertrophy",
+    "weekNumber": 7,
+    "metadata": {
+      "title": "Intermediate Week 7 — Deload Before Intensification",
+      "phase": "Deload (Weeks 7-8)",
+      "isDeload": true
+    },
+    "microcycleOutput": {
+      "overview": "Week 7 — Deload Before Intensification. Volume: Reduce by 50% (cut sets in half). Intensity: Moderate (70-80% of working weights). The goal is to dissipate 6 weeks of accumulated fatigue while maintaining movement patterns. This deload sets you up for the Intensification phase (Weeks 9-14) where you'll push intensity higher. You should feel refreshed by the end of this week. Resist the urge to add extra work. Trust the process—deloads are when adaptation happens. Optional: Increase mobility work, stretching, and active recovery.",
+      "isDeload": true,
+      "days": [
+        "Day 1 (Monday) — Push: Chest & Shoulders (Deload). Compounds: Flat bench 2x8 @ 75%, incline DB press 2x10 @ 75%. Accessories: Cable fly 2x12, OHP 2x8 @ 75%, lateral raise 2x15. Total chest: 6 sets (down from 11). RPE: 5-6. Focus: Movement quality, not effort.",
+        "Day 2 (Tuesday) — Pull: Back & Biceps (Deload). Compounds: Barbell row 2x8 @ 75%, weighted pull-up 2x8 @ 75%. Accessories: Cable row 2x12, face pull 2x15, barbell curl 2x12. Total back: 8 sets (down from 15). RPE: 5-6.",
+        "Day 3 (Wednesday) — Legs: Quad (Deload). Compounds: Back squat 2x8 @ 75%, leg press 2x12 @ 75%. Accessories: Leg extension 2x15, walking lunge 2x10/leg. Total quad: 8 sets (down from 15). RPE: 5-6. Joints should feel good.",
+        "Day 4 (Thursday) — Push: Triceps & Front Delts (Deload). Compounds: Incline bench 2x8 @ 75%, close-grip bench 2x10. Accessories: DB shoulder press 2x12, tricep pushdown 2x15. Total chest: 4 sets.",
+        "Day 5 (Friday) — Pull: Rear Delts & Biceps (Deload). Compounds: Deadlift 2x6 @ 70% (extra light), lat pulldown 2x12. Accessories: Rear delt fly 2x15, cable curl 2x15. Total back: 6 sets.",
+        "Day 6 (Saturday) — Legs: Hamstring & Glute (Deload). Compounds: RDL 2x10, Bulgarian split squat 2x10/leg. Accessories: Leg curl 2x12, hip thrust 2x12. Total posterior: 8 sets.",
+        "Day 7 (Sunday) — Rest. Optional: Yoga, stretching, foam rolling. Prepare for Week 8 (second deload week) and then Intensification phase begins Week 9."
+      ]
+    }
+  },
+  {
+    "planId": "advanced-powerlifting-peaking",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Advanced Powerlifting Week 1 — Volume Block Begins",
+      "phase": "Volume Block (Weeks 1-4)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 1 — Volume Block Begins. Competition lift intensity: 75-80% 1RM. Volume: High (4-5 sets per lift). The goal is to build work capacity and technical proficiency with moderate loads. Squat: 4x5 @ 77%, Bench: 4x6 @ 75%, Deadlift: 3x4 @ 78% (conservative due to lower back history). Accessories: Competition variations (pause squats, close-grip bench) and weak point work. RPE target: 7.5-8.5. Film every comp lift to monitor technique. This block builds the strength base for Weeks 5-8 and 9-11.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Lower: Squat Emphasis. Competition squat: 4x5 @ 77% 1RM (e.g., 345lbs if max is 450). Rest 4min between sets. Accessories: Pause squat (3sec pause in hole) 3x5 @ 65%, leg press 3x10, leg curl 3x12, ab wheel 3x8. Focus: Depth, bracing, bar path. Film top set. Total lower volume: manageable. RPE: 8 on top set.",
+        "Day 2 (Tuesday) — Upper: Bench Emphasis. Competition bench: 4x6 @ 75% (e.g., 235lbs if max is 315). Rest 3-4min. Accessories: Incline DB press 3x10, barbell row 4x8, tricep pushdown 3x12, face pull 3x15. Focus: Pause on chest (competition standard), leg drive, controlled descent. RPE: 8.",
+        "Day 3 (Wednesday) — Rest or light mobility. Optional: 15min easy walk, foam rolling, stretching. No lifting.",
+        "Day 4 (Thursday) — Lower: Deadlift Emphasis. Competition deadlift: 3x4 @ 78% (e.g., 380lbs if max is 485). Rest 5min between sets. Conservative volume (3 sets, not 4-5) to protect lower back. Accessories: Romanian deadlift 3x8, good morning 3x10, core work (plank 3x60sec, bird dog 3x10/side). Focus: Setup, brace, pull the slack out before initiating. RPE: 7.5-8.",
+        "Day 5 (Friday) — Upper: Bench Volume. Bench variation: Close-grip bench 4x8 @ 70%, overhead press 3x8, weighted dip 3x10, barbell row 3x8, rear delt fly 3x15. Focus: Building pressing volume without overloading shoulders. This is the second upper day—cumulative volume adds up.",
+        "Day 6 (Saturday) — Optional technique work or rest. If feeling recovered: Light squat or deadlift @ 50-60% for 3x3 (skill maintenance, not training stimulus). If fatigued: Full rest.",
+        "Day 7 (Sunday) — Rest. Reflect on Week 1. Volume block is about building the base. Don't chase PRs yet. Trust the process."
+      ]
+    }
+  },
+  {
+    "planId": "advanced-powerlifting-peaking",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Advanced Powerlifting Week 4 — Volume Block Peak",
+      "phase": "Volume Block (Weeks 1-4)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 4 — Volume Block Peak. Final week of volume phase. Intensity: 80-82% 1RM. Volume: Maintaining 4-5 sets. This is the hardest week of the block—highest cumulative fatigue. Week 5 transitions to Strength Block (lower volume, higher intensity). The goal: Complete prescribed volume at RPE 8-8.5 while maintaining technique. If form degrades, reduce load by 5%. Week 8 is a scheduled deload, so you're 4 weeks from recovery. Mental toughness matters this week.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Lower: Squat. Competition squat: 5x5 @ 82% (e.g., 370lbs). Rest 4-5min. Increased volume (5 sets vs 4 in Week 1). Accessories: Pause squat 3x5 @ 67%, front squat 3x6, leg curl 3x12, ab wheel 3x10. Focus: Depth consistency. Every rep must hit IPF depth. Film working sets. RPE: 8.5.",
+        "Day 2 (Tuesday) — Upper: Bench. Competition bench: 5x6 @ 78% (e.g., 245lbs). Rest 4min. Accessories: Incline DB press 3x10, barbell row 4x8, close-grip bench 3x8, tricep overhead ext 3x12. Focus: Bar path (straight line), pause discipline. RPE: 8.",
+        "Day 3 (Wednesday) — Rest. Mobility, stretching, light cardio (15min max). Monitor recovery. Fatigue is high.",
+        "Day 4 (Thursday) — Lower: Deadlift. Competition deadlift: 4x4 @ 80% (e.g., 390lbs). Increased from 3 sets in Week 1 to 4 sets now. Rest 5min. Accessories: RDL 3x8, good morning 3x10, single-leg RDL 3x8/leg, core. Focus: Lockout speed. If bar speed slows dramatically, you're too heavy. RPE: 8-8.5.",
+        "Day 5 (Friday) — Upper: Bench Volume. Close-grip bench 5x8 @ 72%, OHP 4x8, weighted dip 3x10, barbell row 4x8. Cumulative pressing volume is high. Monitor elbow/shoulder health.",
+        "Day 6 (Saturday) — Rest (recommended). If feeling unusually good: Light technique work @ 55-60%, 3x3. Otherwise, full rest.",
+        "Day 7 (Sunday) — Rest. Celebrate completing the Volume Block. Week 5 begins Strength Block (lower volume, heavier weights, 82-88% range)."
+      ]
+    }
+  },
+  {
+    "planId": "advanced-powerlifting-peaking",
+    "weekNumber": 8,
+    "metadata": {
+      "title": "Advanced Powerlifting Week 8 — Deload Between Strength and Peaking",
+      "phase": "Deload (Week 8)",
+      "isDeload": true
+    },
+    "microcycleOutput": {
+      "overview": "Week 8 — Deload Between Strength and Peaking Blocks. Volume: Reduce by 60% (cut sets in half or more). Intensity: 70-75% 1RM (no heavy singles). Exercise selection: Competition lifts only, minimal accessories. Purpose: Dissipate 7 weeks of accumulated fatigue before final 3-week peaking block (Weeks 9-11). You should feel significantly recovered by Sunday. This is strategic rest. Resist the urge to test maxes or add extra work. Week 9 begins peaking—singles, doubles, triples at 87-95%.",
+      "isDeload": true,
+      "days": [
+        "Day 1 (Monday) — Lower: Squat (Deload). Competition squat: 2x5 @ 72% (e.g., 325lbs if max is 450). Rest 3min. Accessories: Pause squat 2x5 @ 60%, leg curl 2x12. Total: 4 sets. RPE: 6. Movements should feel crisp and easy.",
+        "Day 2 (Tuesday) — Upper: Bench (Deload). Competition bench: 2x6 @ 70% (e.g., 220lbs). Rest 3min. Accessories: Barbell row 3x8, tricep pushdown 2x12. Total: 5 sets. RPE: 6.",
+        "Day 3 (Wednesday) — Rest. Light mobility work only.",
+        "Day 4 (Thursday) — Lower: Deadlift (Deload). Competition deadlift: 2x4 @ 72% (e.g., 350lbs). Rest 4min. Accessories: RDL 2x8. Total: 4 sets. RPE: 6. Back should feel completely fresh.",
+        "Day 5 (Friday) — Upper: Bench Volume (Deload). Close-grip bench 2x8 @ 65%, OHP 2x8, barbell row 3x8. Total: 7 sets. RPE: 6.",
+        "Day 6 (Saturday) — Rest. No lifting. Optional: Yoga, stretching, sauna, massage. Focus on recovery modalities.",
+        "Day 7 (Sunday) — Rest. Mental preparation for peaking block. Visualize successful heavy attempts. Review meet-day routine (warm-up protocol, attempt selection). Week 9: Competition lifts at 87-90%, singles and doubles. The final push begins."
+      ]
+    }
+  },
+  {
+    "planId": "time-constrained-busy-professional",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Time-Constrained Week 1 — Baseline Establishment",
+      "phase": "Moderate Volume (Weeks 1-3)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 1 — Baseline Establishment. Volume: 3 sets of 6-8 reps on compounds, 2 sets of 12-15 reps on accessories. Intensity: RPE 7. Session duration: 45min MAX. The goal is to re-establish your baseline after transitioning to a time-efficient program. Workouts follow a strict structure: 5min warmup, 25min compound block, 10min accessory supersets, 5min cooldown. Set timers for rest periods (2-3min compounds, 60-90sec supersets). No junk volume—every set serves a purpose.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis. Compounds: Back squat 3x6 @ RPE 7, deadlift 3x6 @ RPE 7, dumbbell bench press 3x8. Accessory superset: A1) Leg curl 2x12 + A2) Calf raise 2x15. Total time: 45min. Rest strictly: 2-3min compounds, 90sec supersets. If running over time, cut the superset to 1 round—don't sacrifice sleep or work.",
+        "Day 2 (Tuesday) — Rest or 15-20min walk (optional). Active recovery focus.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis. Compounds: Overhead press 3x6, barbell row 3x8, goblet squat 3x8. Accessory superset: A1) Bicep curl 2x12 + A2) Tricep pushdown 2x12. Total time: 45min. Emphasis: OHP and row quality. Full ROM, control the negative.",
+        "Day 4 (Thursday) — Rest.",
+        "Day 5 (Friday) — Full Body: Balanced. Compounds: Front squat 3x6, Romanian deadlift 3x8, dumbbell bench 3x8, pull-up 3x8 (or lat pulldown). Accessory superset: A1) Plank 2x45sec + A2) Side plank 2x30sec/side. Total time: 45min. This session ties together the week. Higher volume (4 compounds instead of 3).",
+        "Day 6 (Saturday) — Active Recovery (Optional). 30min walk, bike ride, or yoga. No structured lifting. Purpose: General movement, not training stimulus.",
+        "Day 7 (Sunday) — Rest. Reflect on Week 1. Did you hit 45min consistently? Any exercises running long? Adjust next week if needed (e.g., swap a slow-setup exercise for something faster)."
+      ]
+    }
+  },
+  {
+    "planId": "time-constrained-busy-professional",
+    "weekNumber": 3,
+    "metadata": {
+      "title": "Time-Constrained Week 3 — Moderate Volume Peak",
+      "phase": "Moderate Volume (Weeks 1-3)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 3 — Moderate Volume Peak. Final week before deload (Week 4). Volume: 3 sets of 6-8 reps compounds, 2-3 sets accessories (added 1 set from Week 1). Intensity: RPE 7-8. You should be hitting the top of the rep range (8 reps) on compounds by now. Next cycle (Weeks 5-7) will reduce reps (5-6) and increase weight. This week solidifies your work capacity. Session duration: Still 45min—added volume comes from efficiency (shorter rest if needed).",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis. Compounds: Back squat 3x8 @ RPE 7-8, deadlift 3x8, DB bench 3x8. Accessory superset: A1) Leg curl 3x12 + A2) Calf raise 3x15 (added 1 round from Week 1). Total: 45min. If you hit 3x8 cleanly, you'll add 5-10lbs in Week 5 (Strength Emphasis phase).",
+        "Day 2 (Tuesday) — Rest or 15-20min walk.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis. Compounds: OHP 3x8, barbell row 3x8, Bulgarian split squat 3x8/leg. Accessory superset: A1) Bicep curl 3x12 + A2) Tricep pushdown 3x12 (added 1 round). Total: 45min.",
+        "Day 4 (Thursday) — Rest.",
+        "Day 5 (Friday) — Full Body: Balanced. Compounds: Front squat 3x8, RDL 3x8, DB bench 3x8, pull-up 3x8. Accessory superset: A1) Plank 3x45sec + A2) Side plank 3x30sec/side. Total: 45min. This is the highest volume week. Week 4 is deload.",
+        "Day 6 (Saturday) — Active Recovery (Optional). 30min walk, bike, yoga.",
+        "Day 7 (Sunday) — Rest. Prepare for deload week. Week 4 reduces volume and intensity to allow recovery before Strength Emphasis phase (Weeks 5-7)."
+      ]
+    }
+  },
+  {
+    "planId": "time-constrained-busy-professional",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Time-Constrained Week 4 — Deload",
+      "phase": "Deload (Week 4)",
+      "isDeload": true
+    },
+    "microcycleOutput": {
+      "overview": "Week 4 — Deload. Volume: Reduce by 33% (2 sets per exercise, down from 3). Intensity: Reduce by 20% (use 80% of your working weights). Session duration: 35-40min (even faster than usual). Purpose: Active recovery while maintaining movement patterns. This deload sets you up for Weeks 5-7 (Strength Emphasis: 3x5-6 reps at higher weights). You should feel refreshed by Sunday. If life got crazy this week and you can only train 2 days, that's fine—it's a deload anyway.",
+      "isDeload": true,
+      "days": [
+        "Day 1 (Monday) — Full Body: Lower Emphasis (Deload). Compounds: Back squat 2x6 @ 80% of working weight, deadlift 2x6 @ 80%, DB bench 2x8. Accessory superset: A1) Leg curl 2x10 + A2) Calf raise 2x12. Total: 35-40min. RPE: 6. Movements should feel easy.",
+        "Day 2 (Tuesday) — Rest.",
+        "Day 3 (Wednesday) — Full Body: Upper Emphasis (Deload). Compounds: OHP 2x6 @ 80%, barbell row 2x8, goblet squat 2x8. Accessory superset: A1) Bicep curl 2x10 + A2) Tricep pushdown 2x10. Total: 35-40min. RPE: 6.",
+        "Day 4 (Thursday) — Rest.",
+        "Day 5 (Friday) — Full Body: Balanced (Deload). Compounds: Front squat 2x6, RDL 2x8, DB bench 2x8, pull-up 2x8. Accessory superset: A1) Plank 2x30sec + A2) Side plank 2x20sec/side. Total: 35-40min. RPE: 6.",
+        "Day 6 (Saturday) — Active Recovery (Optional). 30min easy movement.",
+        "Day 7 (Sunday) — Rest. Week 5 begins Strength Emphasis: 3x5-6 reps at heavier weights. You'll add 5-10lbs to compounds from Weeks 1-3."
+      ]
+    }
+  },
+  {
+    "planId": "sport-specific-mma",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "MMA Week 1 — Strength Emphasis Begins",
+      "phase": "Strength Emphasis (Weeks 1-3)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 1 — Strength Emphasis Begins (8-week training camp). Max strength lifts: 4x5 @ 80-85% 1RM. Goal: Build force production capacity. Conditioning: Moderate volume (alactic focus, 6-8 rounds of sprint intervals). MMA training: 5x/week (striking, grappling, technical work). Strength sessions are time-efficient (60min) and designed to ENHANCE MMA performance, not compete with it. Monitor recovery closely—if you're too sore to spar effectively, reduce strength volume. Technical skill > gym numbers.",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Lower Power + Alactic Conditioning. Neural activation: Trap bar jump 3x3 @ max effort. Max strength: Trap bar deadlift 4x5 @ 82% 1RM (e.g., 330lbs if max is 400). Explosive: KB swing 3x5. Plyometrics: Broad jump 3x5. Alactic conditioning: 6 rounds x 10sec Assault Bike sprint / 50sec rest. Cooldown: 5min stretching + breathing drills. Total: 60min. RPE: 8 on deadlift.",
+        "Day 2 (Tuesday) — MMA Training (Striking, Grappling). No strength work. Technical focus. Avoid heavy sparring today (legs recovering from Monday).",
+        "Day 3 (Wednesday) — Upper Strength + Anti-Rotation Core. Max push: Bench press 4x5 @ 83% (landmine press if shoulder flares up). Max pull: Barbell row 4x5 @ heavy load. Rotational power: Med ball rotational throw 3x6/side. Anti-rotation: Pallof press 3x8/side. Grip: Dead hang 3x30sec. Optional: 5 rounds x 30sec battle ropes / 30sec rest. Cooldown: 5min. Total: 60min.",
+        "Day 4 (Thursday) — MMA Training (Sparring, Conditioning). Pair with Wednesday's upper session (no interference).",
+        "Day 5 (Friday) — Full Body Explosive + Fight Sim. Olympic lift: Power clean 5x3 @ 75% 1RM. Explosive upper: Plyo push-up 3x5. Explosive lower: Jump squat 3x5 (bodyweight). Fight simulation: 3 rounds x 5min work / 1min rest (30sec Assault Bike → 30sec KB swing → 30sec burpee → 30sec battle rope, repeat 2x). Finisher: Turkish get-up 2x10/side OR 2min plank. Cooldown: 5min. Total: 60min.",
+        "Day 6 (Saturday) — MMA Training (Sparring, Open Mat). Full intensity technical work.",
+        "Day 7 (Sunday) — Rest or Active Recovery. Yoga, mobility, sauna, massage. No sparring. Prepare for Week 2."
+      ]
+    }
+  },
+  {
+    "planId": "sport-specific-mma",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "MMA Week 4 — Power Development Phase",
+      "phase": "Power Development (Weeks 4-5)",
+      "isDeload": false
+    },
+    "microcycleOutput": {
+      "overview": "Week 4 — Power Development Phase. Max strength lifts: 3x3 @ 85-90% 1RM (reduced volume, increased intensity from Week 1-3). Explosive lifts: Increased emphasis (Olympic lifts 5 sets, plyometrics 4 sets). Goal: Convert strength into explosive power. Conditioning: Moderate-high volume (fight simulation 3-4 rounds). This is the transition week—Weeks 1-3 built strength, Weeks 6-7 will peak power and conditioning. Week 4-5 bridge the gap. Monitor fatigue—if excessively tired, take an unscheduled deload day (reduce volume 50%).",
+      "isDeload": false,
+      "days": [
+        "Day 1 (Monday) — Lower Power + Conditioning. Neural: Trap bar jump 4x3 (added 1 set from Week 1). Max strength: Trap bar deadlift 3x3 @ 87% (e.g., 350lbs). Explosive: KB swing 4x5 (added 1 set). Plyometrics: Broad jump 4x5. Alactic: 8 rounds x 10sec sprint / 50sec rest (up from 6 rounds). Cooldown: 5min. Total: 60min. RPE: 9 on deadlift (heavier than Week 1).",
+        "Day 2 (Tuesday) — MMA Training. Technical striking/grappling. Avoid heavy sparring.",
+        "Day 3 (Wednesday) — Upper Strength + Core. Max push: Bench 3x3 @ 88%. Max pull: Barbell row 3x5. Rotational power: Med ball throw 4x6/side (added 1 set). Anti-rotation: Pallof 3x8/side. Grip: Farmer's carry 3x40m. Optional: Battle ropes 5 rounds. Total: 60min.",
+        "Day 4 (Thursday) — MMA Training (Sparring). Moderate-high intensity.",
+        "Day 5 (Friday) — Full Body Explosive + Fight Sim. Olympic lift: Power clean 5x3 @ 78% (increased from 75%). Explosive upper: Plyo push-up 4x5. Explosive lower: Jump squat 4x5. Fight sim: 4 rounds x 5min / 1min rest (up from 3 rounds). Finisher: TGU 2x10/side. Total: 60min. This is the peak conditioning week before taper.",
+        "Day 6 (Saturday) — MMA Training. Sparring, open mat.",
+        "Day 7 (Sunday) — Rest or Active Recovery. Week 5 continues Power Development. Week 6-7 = Fight Peak. Week 8 = Taper."
+      ]
+    }
+  },
+  {
+    "planId": "sport-specific-mma",
+    "weekNumber": 8,
+    "metadata": {
+      "title": "MMA Week 8 — Fight Week Taper",
+      "phase": "Taper (Week 8)",
+      "isDeload": true
+    },
+    "microcycleOutput": {
+      "overview": "Week 8 — Fight Week Taper. Strength: 2x3 @ 75-80% (light, crisp reps). Power: 3x3 (explosive intent, low volume). Conditioning: Cut by 70% (1-2 light rounds only). Goal: Dissipate fatigue, maintain sharpness, arrive at fight fresh. Monday/Tuesday: Light strength + power work. Wednesday: Technical MMA only (no sparring). Thursday: Complete rest. Friday: Weigh-in. Saturday: FIGHT. This is strategic rest. Trust the taper. Do NOT add extra work. Visualize successful performance. Practice breathwork to manage adrenaline.",
+      "isDeload": true,
+      "days": [
+        "Day 1 (Monday) — Light Lower Power (Taper). Neural: Trap bar jump 2x3 @ max intent (but low volume). Max strength: Trap bar deadlift 2x3 @ 78% (e.g., 310lbs). Explosive: KB swing 2x5. NO plyometrics. NO alactic conditioning. Cooldown: 5min. Total: 30-35min. RPE: 6-7. Focus: Crispness, not effort.",
+        "Day 2 (Tuesday) — Light Upper Strength (Taper). Max push: Bench 2x3 @ 77%. Max pull: Barbell row 2x5. Rotational power: Med ball throw 2x5/side. NO grip work. NO battle ropes. Cooldown: 5min. Total: 30-35min. RPE: 6-7.",
+        "Day 3 (Wednesday) — Technical MMA Only. Light drilling, shadow boxing, visualization. NO sparring. NO hard conditioning. Active recovery focus.",
+        "Day 4 (Thursday) — Complete Rest. No training. No gym. Sleep, eat, hydrate. Mental preparation. Visualize successful rounds. Practice breathing drills (box breathing: 4sec in, 4sec hold, 4sec out, 4sec hold).",
+        "Day 5 (Friday) — Weigh-In. Light movement only (shadowboxing, stretching). Post-weigh-in: Rehydrate, eat quality carbs, rest.",
+        "Day 6 (Saturday) — FIGHT DAY. Warm-up: Shadow boxing, light drills, dynamic stretches. Trust your preparation. Stay calm. Execute the game plan. Breathe. GO WIN.",
+        "Day 7 (Sunday) — Post-Fight Recovery. Rest, hydrate, eat. Celebrate or analyze performance. Plan next training block (if needed). You did the work. Trust the process."
+      ]
+    }
+  }
+]
