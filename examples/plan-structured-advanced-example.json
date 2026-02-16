@@ -1,0 +1,67 @@
+{
+  "id": "advanced-powerlifting-structured",
+  "metadata": {
+    "title": "plan:structured Example — Advanced Powerlifting Peaking",
+    "correspondingPlanExample": "advanced-powerlifting-peak",
+    "description": "Structured (parsed) version of an advanced powerlifting peaking program. Demonstrates sport-specific programming with linear periodization toward competition, auto-regulation, and sophisticated periodization compared to beginner/intermediate examples."
+  },
+  "planStructured": {
+    "name": "Advanced Powerlifting Peaking — 12-Week Competition Prep",
+    "type": "Upper/Lower",
+    "coreStrategy": "4-day upper/lower split designed to peak squat, bench press, and deadlift for competition. Combines high-frequency practice of competition lifts with strategic accessory work targeting weak points. Progressive overload through linear periodization: volume accumulation (Weeks 1-4) → strength building (Weeks 5-8) → peaking (Weeks 9-11) → taper (Week 12). Main lifts use RPE-based auto-regulation. Competition lifts performed 2-3x/week with varying intensities.",
+    "progressionStrategy": [
+      "Block 1 — Accumulation (Weeks 1-4): Build work capacity with higher volume (4-5 sets of 5-8 reps at RPE 7-8). Focus on technique refinement and hypertrophy. Secondary variations (pause squats, close-grip bench, deficit deadlifts) build foundational strength. Accessories target weak points with 3-4 sets of 8-12 reps.",
+      "Block 2 — Strength Building (Weeks 5-8): Shift toward heavier loads with moderate volume (3-4 sets of 3-5 reps at RPE 8-9). Introduce competition-specific variations. Wave loading patterns (e.g., Week 5: 80% 4x4, Week 6: 82.5% 4x3, Week 7: 85% 3x3, Week 8: deload). Reduce accessory volume slightly to manage fatigue.",
+      "Block 3 — Peaking (Weeks 9-11): Low volume, high intensity (2-3 sets of 1-3 reps at RPE 9-10). Week 9: Heavy triples (90% 3x3). Week 10: Heavy doubles (92.5% 3x2). Week 11: Heavy singles (95-97.5% work up to top single RPE 9.5). Minimal accessories—only mobility and recovery work. Competition lift practice exclusively (no variations).",
+      "Block 4 — Taper (Week 12): Dramatic volume reduction (50-60% cut) while maintaining intensity. Light technique work early in week (70-80% for easy doubles/triples). Wednesday: Openers only (attempt opener weights for each lift). Thursday-Saturday: Complete rest. Sunday: Competition day.",
+      "Auto-Regulation: All main lifts use RPE targets rather than fixed percentages. If RPE feels 1+ point higher than prescribed, reduce load 5-10%. If 1+ point lower, add 5-10%. Allows day-to-day fluctuation management while progressing toward peak.",
+      "Accessory Progression: Weeks 1-4 use 3-4 sets of 8-12 reps (hypertrophy focus). Weeks 5-8 shift to 3 sets of 6-8 reps (strength focus). Weeks 9-12 reduce accessories to 2 sets of 8-10 reps or eliminate entirely during taper."
+    ],
+    "adjustmentStrategy": "Scheduled deload at Week 8 (end of strength block): reduce volume 40%, maintain intensity at 70-75% of Week 7 loads, focus on technique and recovery. Unscheduled deload protocol: If 2+ consecutive sessions hit RPE 1.5+ points above target, or if joint pain/sleep disruption occurs, insert immediate deload week (40% volume, 70% intensity) then resume block. Taper week is non-negotiable—respect the fatigue dissipation period. Competition day nutrition, sleep, and warm-up protocols detailed in Week 12 notes.",
+    "conditioning": [
+      "Weeks 1-4: Optional 2x/week 15-20min Zone 2 cardio (bike, walk) on off-days or post-lift. Keeps conditioning baseline without interfering with recovery.",
+      "Weeks 5-8: Reduce to 1x/week 15min if desired. Priority shifts to lifting recovery.",
+      "Weeks 9-12: No conditioning. All energy reserved for peaking and competition prep."
+    ],
+    "scheduleTemplate": [
+      {
+        "day": "Monday",
+        "focus": "Lower — Squat emphasis",
+        "rationale": "Primary squat day. Competition squat or close variation (high-bar, low-bar depending on preference). Heaviest squat volume of the week. Accessory work targets quad/glute development and weak points (e.g., pause squats if coming out of hole is weak, or front squats for quad development)."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "Upper — Bench emphasis",
+        "rationale": "Primary bench day. Competition bench press. Heaviest pressing volume. Accessories focus on lockout strength (close-grip bench, board press), stability (dumbbell work), and upper back (rows, rear delts). Triceps and shoulder health prioritized."
+      },
+      {
+        "day": "Thursday",
+        "focus": "Lower — Deadlift emphasis",
+        "rationale": "Primary deadlift day. Competition deadlift or close variation (conventional vs sumo based on preference). Secondary squat work at lighter intensity (60-70% for speed or technique). Posterior chain accessories (RDLs, good mornings, hamstring curls, glute work)."
+      },
+      {
+        "day": "Saturday",
+        "focus": "Upper — Volume bench + accessory emphasis",
+        "rationale": "Secondary bench day at reduced intensity (70-80% of Tuesday's loads). Higher rep ranges (5-8 reps). Accessory work for arm development (biceps, triceps), upper back volume (pull-ups, rows), and shoulder health (face pulls, band work, rotator cuff exercises). Balances pressing volume across the week."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Rest or active recovery",
+        "rationale": "Off-day between heavy lower and heavy upper. Optional light mobility work, stretching, or easy 10-15min walk. No lifting."
+      },
+      {
+        "day": "Friday",
+        "focus": "Rest or active recovery",
+        "rationale": "Recovery day between deadlift session and volume upper day. Allows CNS recovery from heavy pulls. Optional light stretching or 10min walk."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Rest",
+        "rationale": "Complete rest before Monday's squat session. Prioritize sleep, nutrition, and hydration."
+      }
+    ],
+    "durationWeeks": 12,
+    "frequencyPerWeek": 4
+  },
+  "qualityNotes": "This advanced example demonstrates significantly more complex programming than beginner/intermediate examples: (1) Sport-specific periodization (powerlifting peaking cycle with competition as endpoint), (2) Four-block linear periodization (accumulation → strength → peaking → taper) with distinct volume/intensity/RPE targets per block, (3) RPE-based auto-regulation built into every main lift (not just scheduled deloads), (4) Wave loading patterns in strength block (undulating intensity week-to-week), (5) Exercise variation strategy (competition lifts vs variations) mapped to specific training phases, (6) Strategic conditioning reduction as peaking progresses, (7) Detailed taper protocol for competition prep (volume cuts, opener practice, rest schedule), (8) Accessory programming that adapts across blocks (hypertrophy → strength → minimal), (9) Unscheduled deload protocol with specific triggers (RPE deviation, joint pain, sleep disruption), (10) Competition-day considerations in final week. Duration is 12 weeks (typical powerlifting peaking cycle). Frequency is 4 days/week (allows recovery between heavy sessions, unlike 6-day intermediate hypertrophy split)."
+}
