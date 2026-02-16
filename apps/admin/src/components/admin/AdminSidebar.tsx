@@ -45,7 +45,7 @@ const navItems = [
   { href: '/registry', label: 'Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
-  { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
+  { href: '/promote', label: 'Deploy', icon: ArrowUpCircle },
 ]
 
 function NavItem({
