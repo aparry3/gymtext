@@ -37,13 +37,16 @@ import { useEnvironment } from '@/context/EnvironmentContext'
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
-  { href: '/program-owners', label: 'Program Owners', icon: Building2 },
-  { href: '/organizations', label: 'Organizations', icon: Landmark },
-  { href: '/programs', label: 'Programs', icon: ClipboardList },
   { href: '/exercises', label: 'Exercises', icon: Dumbbell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/demos', label: 'Demos', icon: Presentation },
+]
+
+const programItems = [
+  { href: '/programs', label: 'Programs', icon: ClipboardList },
+  { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+  { href: '/organizations', label: 'Organizations', icon: Landmark },
 ]
 
 const devAdminItems = [
@@ -131,6 +134,88 @@ function EnvironmentToggleSidebar({ collapsed }: { collapsed?: boolean }) {
       >
         Sandbox
       </button>
+    </div>
+  )
+}
+
+const PROGRAMS_STORAGE_KEY = 'admin-programs-open'
+
+function ProgramsSection({
+  currentPath,
+  collapsed,
+  onNavClick,
+}: {
+  currentPath: string
+  collapsed?: boolean
+  onNavClick?: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = programItems.some((item) => currentPath.startsWith(item.href))
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(PROGRAMS_STORAGE_KEY)
+    if (stored === 'true') setOpen(true)
+  }, [])
+
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive])
+
+  const toggle = () => {
+    setOpen((prev) => {
+      window.localStorage.setItem(PROGRAMS_STORAGE_KEY, (!prev).toString())
+      return !prev
+    })
+  }
+
+  if (collapsed) {
+    return (
+      <>
+        {programItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed
+            isActive={currentPath.startsWith(item.href)}
+            onClick={onNavClick}
+          />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <div>
+      <button
+        onClick={toggle}
+        className={cn(
+          'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+          isActive
+            ? 'text-white'
+            : 'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-muted))]'
+        )}
+      >
+        <ClipboardList className="h-5 w-5" />
+        <span className="flex-1 text-left">Programs</span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 transition-transform duration-200',
+            open ? 'rotate-0' : '-rotate-90'
+          )}
+        />
+      </button>
+      {open && (
+        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-[hsl(var(--sidebar-border))] pl-2">
+          {programItems.map((item) => (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={currentPath.startsWith(item.href)}
+              onClick={onNavClick}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -276,7 +361,8 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
+        {/* Home + Users */}
+        {navItems.slice(0, 2).map((item) => (
           <NavItem
             key={item.href}
             {...item}
@@ -286,6 +372,23 @@ function SidebarContent({
                 ? currentPath === '/'
                 : currentPath.startsWith(item.href)
             }
+            onClick={onNavClick}
+          />
+        ))}
+
+        <ProgramsSection
+          currentPath={currentPath}
+          collapsed={collapsed}
+          onNavClick={onNavClick}
+        />
+
+        {/* Exercises, Messages, Calendar, Demos */}
+        {navItems.slice(2).map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            collapsed={collapsed}
+            isActive={currentPath.startsWith(item.href)}
             onClick={onNavClick}
           />
         ))}
