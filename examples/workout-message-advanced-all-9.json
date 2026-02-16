@@ -1,0 +1,110 @@
+[
+  {
+    "id": "advanced-w2-monday-message",
+    "metadata": {
+      "title": "Advanced Week 2 — Monday",
+      "weekNumber": 2,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Lower: Squat"
+    },
+    "message": "WEEK 2 — MONDAY: Squat (Accumulation)\n\nMain Lift:\n- Competition Squat: 5×5 @ RPE 7-8 (~70-75% 1RM), rest 3min\n\nSecondary:\n- Pause Squat (2sec): 4×3 @ RPE 7, rest 2-3min\n\nAccessories:\n- RDL: 3×8 @ RPE 7-8, rest 2min\n- Bulgarian Split Squat: 3×10/leg @ RPE 8, rest 90sec\n- Leg Press: 3×12-15 @ RPE 8, rest 90sec\n\nNotes: Building work capacity. If Week 1 felt RPE 7, add 5-10lbs today. Focus on bar speed—if it slows significantly on reps 4-5, reduce next set. Track: weight, reps, RPE, bar speed notes. Session: ~85min."
+  },
+  {
+    "id": "advanced-w2-tuesday-message",
+    "metadata": {
+      "title": "Advanced Week 2 — Tuesday",
+      "weekNumber": 2,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Upper: Bench"
+    },
+    "message": "WEEK 2 — TUESDAY: Bench (Accumulation)\n\nMain Lift:\n- Competition Bench: 5×5 @ RPE 7-8 (~70-75% 1RM), rest 3min\n\nSecondary:\n- Close-Grip Bench: 4×6 @ RPE 7-8, rest 2-3min\n\nAccessories:\n- Incline DB Press: 3×8-10 @ RPE 8, rest 2min\n- Barbell Row: 4×8 @ RPE 7-8, rest 2min\n- Face Pulls: 3×15-20 @ RPE 8, rest 90sec\n- DB Overhead Triceps Ext: 3×10-12 @ RPE 8, rest 90sec\n\nNotes: Primary bench day—heaviest pressing volume. Perfect setup critical (feet, arch, shoulder blades). If Week 1 felt easy, add 5lbs. Upper back work (rows/face pulls) prevents shoulder issues. Session: ~80min."
+  },
+  {
+    "id": "advanced-w2-thursday-message",
+    "metadata": {
+      "title": "Advanced Week 2 — Thursday",
+      "weekNumber": 2,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Accumulation (Weeks 1-4)",
+      "focus": "Lower: Deadlift"
+    },
+    "message": "WEEK 2 — THURSDAY: Deadlift (Accumulation)\n\nMain Lift:\n- Competition Deadlift: 5×4 @ RPE 7-8 (~70-75% 1RM), rest 3min\n\nSecondary:\n- Deficit Deadlift (1-2\"): 4×3 @ RPE 7, rest 3min\n- Front Squat: 3×6 @ RPE 7-8 (~60-65% back squat 1RM), rest 2-3min\n\nAccessories:\n- GHR/Nordic Curls: 3×8-10 @ RPE 8, rest 2min\n- Leg Curls: 3×12-15 @ RPE 8, rest 90sec\n\nNotes: Most taxing day. Perfect setup every rep: bar over mid-foot, lats engaged, big brace. Don't grind reps—if bar speed slows or back rounds, stop set. Front squat maintains frequency (2x/week). Session: ~90min."
+  },
+  {
+    "id": "advanced-w6-monday-message",
+    "metadata": {
+      "title": "Advanced Week 6 — Monday",
+      "weekNumber": 6,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading",
+      "focus": "Lower: Squat"
+    },
+    "message": "WEEK 6 — MONDAY: Squat (Wave Loading: 82.5%)\n\nMain Lift:\n- Competition Squat: 4×3 @ RPE 8-9 (82.5% 1RM), rest 3-4min\n\nSecondary:\n- Front Squat: 3×5 @ RPE 8, rest 3min\n\nAccessories:\n- RDL: 3×6-8 @ RPE 8, rest 2min\n- Leg Press: 3×10-12 @ RPE 8, rest 90sec\n\nNotes: Week 2 of wave (Week 5: 80%, Week 6: 82.5%, Week 7: 85%). Bar speed critical—third rep should be hard but fast. If grinds >3sec, reduce 10lbs next set. Rest 3-4min (full recovery essential). Accessories reduced to preserve energy. Week 7 will be hardest, then Week 8 deload. Session: ~80min."
+  },
+  {
+    "id": "advanced-w6-tuesday-message",
+    "metadata": {
+      "title": "Advanced Week 6 — Tuesday",
+      "weekNumber": 6,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading",
+      "focus": "Upper: Bench"
+    },
+    "message": "WEEK 6 — TUESDAY: Bench (Wave Loading: 82.5%)\n\nMain Lift:\n- Competition Bench: 4×3 @ RPE 8-9 (82.5% 1RM), rest 3-4min\n\nSecondary:\n- Close-Grip Bench: 3×5 @ RPE 8, rest 3min\n\nAccessories:\n- Barbell Row: 3×6-8 @ RPE 8, rest 2min\n- Incline DB Press: 3×8-10 @ RPE 8, rest 2min\n- Face Pulls: 3×15-20 @ RPE 7-8, rest 90sec\n\nNotes: 82.5% feels significantly heavier than Week 5's 80%. Perfect setup non-negotiable—spotter assists liftoff. Third rep challenging but controlled; if stalls mid-press, reduce 5lbs. Face pulls maintained (shoulder health). Competition > percentages. Session: ~75min."
+  },
+  {
+    "id": "advanced-w6-thursday-message",
+    "metadata": {
+      "title": "Advanced Week 6 — Thursday",
+      "weekNumber": 6,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Strength Building (Weeks 5-8) — Wave Loading",
+      "focus": "Lower: Deadlift"
+    },
+    "message": "WEEK 6 — THURSDAY: Deadlift (Wave Loading: 82.5%)\n\nMain Lift:\n- Competition Deadlift: 4×2-3 @ RPE 8-9 (82.5% 1RM), rest 3-4min\n\nSecondary:\n- Deficit Deadlift: 3×2 @ RPE 7-8, rest 3min\n- Front Squat: 3×5 @ RPE 7-8, rest 2-3min\n\nAccessories:\n- GHR: 3×8 @ RPE 8, rest 2min\n\nNotes: Deadlifts at 82.5% are brutal. Some lifters only manage 2 reps (acceptable). If second or third rep grinds >4-5sec or form breaks, STOP SET. Perfect setup every rep. Friday is rest—use it. Sleep 7-8hr tonight. Session: ~85min."
+  },
+  {
+    "id": "advanced-w10-monday-message",
+    "metadata": {
+      "title": "Advanced Week 10 — Monday",
+      "weekNumber": 10,
+      "dayOfWeek": "Monday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Lower: Squat"
+    },
+    "message": "WEEK 10 — MONDAY: Squat (Peaking: 92.5% Doubles)\n\nMain Lift:\n- Competition Squat: 3×2 @ RPE 9.5 (92.5% 1RM), rest 4-5min\n\nMaintenance:\n- Light Front Squat: 2×5 @ RPE 7 (~55-60% back squat), rest 2-3min\n- Light RDL: 2×8-10 @ RPE 6-7, rest 2min\n\nNotes: Near-maximal. First rep should move with decent speed; second will grind—expected. If second stalls or >6sec, reduce 10lbs. All accessories eliminated except light maintenance. Rest 4-5min between sets. Sleep 8-9hr non-negotiable. Visualize Thursday's deadlifts. Session: ~75min."
+  },
+  {
+    "id": "advanced-w10-tuesday-message",
+    "metadata": {
+      "title": "Advanced Week 10 — Tuesday",
+      "weekNumber": 10,
+      "dayOfWeek": "Tuesday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Upper: Bench"
+    },
+    "message": "WEEK 10 — TUESDAY: Bench (Peaking: 92.5% Doubles)\n\nMain Lift:\n- Competition Bench: 3×2 @ RPE 9.5 (92.5% 1RM), rest 4-5min\n\nMaintenance:\n- Light Close-Grip: 2×5 @ RPE 7, rest 2-3min\n- Face Pulls: 2×15-20 @ RPE 6-7, rest 90sec\n\nNotes: Setup is everything. Spotter MUST be present—communicate liftoff. First rep controlled; second will slow but must complete without assistance. If bar stalls, weight too heavy. All energy to competition lifts. Week 11: heavy singles (95-97.5%), then Week 12 taper. Session: ~70min."
+  },
+  {
+    "id": "advanced-w10-thursday-message",
+    "metadata": {
+      "title": "Advanced Week 10 — Thursday",
+      "weekNumber": 10,
+      "dayOfWeek": "Thursday",
+      "planId": "advanced-powerlifting-peak",
+      "phase": "Peaking (Weeks 9-11)",
+      "focus": "Lower: Deadlift"
+    },
+    "message": "WEEK 10 — THURSDAY: Deadlift (Peaking: 92.5% Singles/Doubles)\n\nMain Lift:\n- Competition Deadlift: 3×1-2 @ RPE 9.5 (92.5% 1RM), rest 5min\n\nMaintenance:\n- Light High-Bar Squat: 2×5 @ RPE 6, rest 2-3min\n\nNotes: CRITICAL: If first rep >4sec or RPE 9.5, do NOT attempt second. Quality > Quantity. Perfect setup: bar mid-foot, lats engaged, 360° brace. Many lifters do singles only—that's smart. Most demanding session of program. Friday: complete rest. Sleep 8-9hr. Session: ~80min."
+  }
+]
