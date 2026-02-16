@@ -1,0 +1,446 @@
+# INTERMEDIATE UPPER/LOWER SPLIT TRAINING PLAN
+
+## Client Profile
+- **Name:** Marcus Johnson
+- **Age:** 32
+- **Training Experience:** 2 years consistent training (completed beginner program)
+- **Current Lifts:** Squat 275lbs × 5, Bench 225lbs × 5, Deadlift 315lbs × 5
+- **Goal:** Continue strength and muscle development, break through intermediate plateau
+- **Schedule:** 4 days per week (Mon/Tue/Thu/Fri preferred)
+- **Equipment Access:** Fully equipped gym (barbells, machines, cables, dumbbells)
+- **Health Status:** No injuries, cleared for intensive training
+
+## Program Overview
+
+This is a 16-week block-periodized upper/lower split designed for intermediate lifters who have exhausted linear progression and need more sophisticated programming. The split allows higher training frequency (each muscle group trained 2x/week) while managing fatigue through strategic exercise selection and volume manipulation.
+
+**Why Upper/Lower for Intermediates:**
+- Increased training frequency (2x/week per muscle group) drives better adaptations than once-weekly splits
+- Allows accumulation of higher volumes than full-body training
+- Exercise variation between Upper 1/2 and Lower 1/2 prevents staleness and overuse
+- Easier to recover from than daily body-part splits
+- Flexible enough to accommodate life/work schedule
+
+## Training Philosophy
+
+**Frequency Over Intensity:** Hitting muscles 2x/week with moderate volume per session beats crushing them once with excessive volume. Recovery happens between sessions.
+
+**Block Periodization:** Training is organized into focused blocks, each with a specific adaptation goal. Blocks build on each other rather than trying to do everything simultaneously.
+
+**Variation for Adaptation:** Upper 1 and Upper 2 use different exercises/rep schemes for the same muscle groups. This provides novel stimuli while managing fatigue.
+
+**Auto-Regulation:** RPE and RIR targets allow adjustment based on daily readiness. Not every session needs to be maximal.
+
+## Program Structure
+
+**Duration:** 16 weeks (4 blocks × 4 weeks each)
+
+**Frequency:** 4 sessions per week
+- Monday: Upper 1 (Horizontal emphasis)
+- Tuesday: Lower 1 (Squat emphasis)
+- Thursday: Upper 2 (Vertical emphasis)
+- Friday: Lower 2 (Hinge emphasis)
+
+**Rest Days:** Wednesday, Saturday, Sunday (active recovery encouraged)
+
+**Block Structure:**
+- Block 1: Accumulation (Weeks 1-4) — High volume, moderate intensity
+- Block 2: Intensification (Weeks 5-8) — Moderate volume, high intensity
+- Block 3: Realization (Weeks 9-12) — Lower volume, peak intensity
+- Block 4: Overreach + Deload (Weeks 13-16) — Functional overreach followed by recovery
+
+## Session Templates
+
+### Upper 1: Horizontal Emphasis
+**Primary Focus:** Bench press, horizontal rows
+**Secondary:** Shoulders, arms
+
+**Structure:**
+- Main horizontal push (bench press variation): 4-5 sets
+- Main horizontal pull (row variation): 4-5 sets
+- Supplemental press: 3-4 sets
+- Supplemental pull: 3-4 sets
+- Shoulder accessory: 2-3 sets
+- Arm isolation: 2-3 sets
+
+**Volume:** 18-24 total working sets
+
+### Lower 1: Squat Emphasis
+**Primary Focus:** Squat pattern, quad development
+**Secondary:** Posterior chain, calves
+
+**Structure:**
+- Main squat (back squat or front squat): 4-5 sets
+- Secondary hinge (RDL or good morning): 3-4 sets
+- Quad accessory (leg press, split squat): 3-4 sets
+- Hamstring accessory: 2-3 sets
+- Calves: 2-3 sets
+
+**Volume:** 16-22 total working sets
+
+### Upper 2: Vertical Emphasis
+**Primary Focus:** Overhead press, vertical pull
+**Secondary:** Chest, arms
+
+**Structure:**
+- Main vertical press (OHP or incline press): 4-5 sets
+- Main vertical pull (pull-up or lat pulldown): 4-5 sets
+- Supplemental press (incline or decline work): 3-4 sets
+- Supplemental pull (chin-up or close-grip pulldown): 3-4 sets
+- Shoulder accessory: 2-3 sets
+- Arm isolation: 2-3 sets
+
+**Volume:** 18-24 total working sets
+
+### Lower 2: Hinge Emphasis
+**Primary Focus:** Deadlift pattern, posterior chain
+**Secondary:** Quad work, glutes
+
+**Structure:**
+- Main hinge (conventional or sumo deadlift): 3-5 sets
+- Secondary squat (front squat, hack squat): 3-4 sets
+- Glute accessory (hip thrust, glute-ham raise): 3-4 sets
+- Hamstring accessory: 2-3 sets
+- Calves: 2-3 sets
+
+**Volume:** 16-22 total working sets
+
+## Exercise Selection Principles
+
+**Movement Pairs:** Upper 1/2 and Lower 1/2 use different exercises for the same patterns
+- Upper 1: Flat bench press → Upper 2: Overhead press
+- Upper 1: BB row → Upper 2: Pull-up
+- Lower 1: Back squat → Lower 2: Front squat
+- Lower 1: RDL → Lower 2: Conventional deadlift
+
+**Variation Rationale:**
+- Different loading vectors prevent overuse injuries
+- Novel stimuli drive continued adaptation
+- Allows one movement to "peak" while another accumulates volume
+- Psychological benefit (less boredom)
+
+**Exercise Stability:** Main movements remain consistent within each block. Accessories can rotate more frequently based on need.
+
+## Block 1: Accumulation Phase (Weeks 1-4)
+
+**Goal:** Build work capacity, increase muscle mass, establish movement proficiency
+
+**Volume:** High (18-24 sets Upper, 16-22 sets Lower)
+**Intensity:** Moderate (RPE 7-8, mostly 8-12 rep range)
+**Progression:** Add reps or sets week-to-week
+
+**Rep Schemes:**
+- Main lifts: 4×8-10 → progress to 4×10-12 over the block
+- Secondary lifts: 3×10-12
+- Accessories: 3×12-15
+
+**Intensity Prescription:**
+- Main lifts: RPE 7-8 (2-3 reps in reserve)
+- Secondary lifts: RPE 7-8
+- Accessories: RPE 7 (fatigue accumulation, not maximal)
+
+**Week 4: Deload**
+- Reduce volume by 40% (fewer sets)
+- Maintain intensity (same weight, fewer sets)
+- Same exercises (maintain skill)
+
+**Expected Adaptations:**
+- Increased muscle mass (hypertrophy)
+- Improved work capacity (can handle more volume)
+- Enhanced technique on all main lifts
+- Slight body weight increase (+2-4lbs)
+
+## Block 2: Intensification Phase (Weeks 5-8)
+
+**Goal:** Build maximal strength, increase neural efficiency, move heavier loads
+
+**Volume:** Moderate (14-18 sets Upper, 12-16 sets Lower)
+**Intensity:** High (RPE 8-9, mostly 4-8 rep range)
+**Progression:** Add weight week-to-week
+
+**Rep Schemes:**
+- Main lifts: 5×5 → 4×6 → 5×4 → 4×5 (wave loading across weeks)
+- Secondary lifts: 4×6-8
+- Accessories: 3×8-12
+
+**Intensity Prescription:**
+- Main lifts: RPE 8-9 (1-2 reps in reserve, heavy)
+- Secondary lifts: RPE 8
+- Accessories: RPE 7-8
+
+**Week 8: Deload**
+- Reduce volume by 50% (significantly fewer sets)
+- Reduce intensity by 10% (lighter weight)
+- Maintain exercise selection
+
+**Expected Adaptations:**
+- Significant strength gains on all main lifts
+- Improved rate of force development
+- Enhanced neural drive and motor unit recruitment
+- Body weight stable or slight decrease (fat loss from intensity)
+
+## Block 3: Realization Phase (Weeks 9-12)
+
+**Goal:** Express peak strength, test new maxes, consolidate gains
+
+**Volume:** Low-Moderate (12-16 sets Upper, 10-14 sets Lower)
+**Intensity:** Very High (RPE 9-10, mostly 1-5 rep range)
+**Progression:** Test strength, work up to heavy singles/triples
+
+**Rep Schemes:**
+- Main lifts: Work up to heavy 3RM or 5RM (Weeks 9-10), then heavy singles (Week 11)
+- Secondary lifts: 3×5-8
+- Accessories: 2-3×8-12 (reduced accessory work)
+
+**Intensity Prescription:**
+- Main lifts: RPE 9-10 (maximal or near-maximal)
+- Secondary lifts: RPE 7-8
+- Accessories: RPE 6-7 (maintain, don't accumulate fatigue)
+
+**Week 12: Testing Week**
+- Work up to new 3-5 rep maxes on main lifts
+- Minimal accessories (only what supports main lifts)
+- Celebrate strength gains, document progress
+
+**Expected Adaptations:**
+- Peak strength expression across all lifts
+- New rep maxes established (programming next cycle)
+- Confidence in handling heavy weights
+- Total body weight likely decreased slightly (volume reduced, intensity high)
+
+## Block 4: Overreach + Recovery (Weeks 13-16)
+
+**Goal:** Push limits, then recover fully, prepare for next training phase
+
+### Weeks 13-14: Functional Overreach
+**Volume:** Very High (return to Block 1 volumes or slightly higher)
+**Intensity:** Moderate-High (RPE 8-9)
+**Purpose:** Deliberately accumulate fatigue to create supercompensation effect
+
+**Rep Schemes:**
+- Main lifts: 5×8-10 (high volume at submaximal weight)
+- Secondary lifts: 4×10-12
+- Accessories: 3-4×12-15
+
+**Warning Signs:** This is intentionally hard. Expect to feel fatigued, sore, and slightly beat up by end of Week 14. That's the point.
+
+### Weeks 15-16: Recovery Block
+**Volume:** Low (10-12 sets Upper, 8-10 sets Lower)
+**Intensity:** Low-Moderate (RPE 6-7)
+**Purpose:** Full recovery, allow supercompensation, prepare for next cycle
+
+**Rep Schemes:**
+- Main lifts: 3×8 at easy weight
+- Secondary lifts: 2×10
+- Accessories: 2×12
+
+**Outcome:** By end of Week 16, Marcus should feel fresh, recovered, and stronger than ever. Ready to start next training cycle with new rep maxes.
+
+## Progressive Overload Strategies
+
+**Accumulation Block:** Volume progression
+- Week 1: 4×8
+- Week 2: 4×10
+- Week 3: 4×12
+- Week 4: Deload (3×10 at reduced weight)
+
+**Intensification Block:** Wave loading
+- Week 5: 5×5 @ 80% estimated max
+- Week 6: 4×6 @ 82%
+- Week 7: 5×4 @ 85%
+- Week 8: Deload (3×5 @ 75%)
+
+**Realization Block:** Testing
+- Weeks 9-10: Work up to heavy 3-5RM
+- Week 11: Singles @ 90-95%
+- Week 12: Test new maxes
+
+**Beyond Linear:** Intermediates can't add 5-10lbs every session. Progression happens across blocks, not week-to-week.
+
+## Intensity Guidelines
+
+**RPE (Rate of Perceived Exertion):**
+- **RPE 6-7:** Could do 3-4 more reps, moderate effort
+- **RPE 7-8:** Could do 2-3 more reps, hard effort
+- **RPE 8-9:** Could do 1-2 more reps, very hard
+- **RPE 9-10:** Could do 0-1 more reps, maximal effort
+
+**RIR (Reps in Reserve):**
+- Same concept as RPE, just framed differently
+- RPE 8 = 2 RIR
+- Easier to self-assess mid-set
+
+**Auto-Regulation:** If a prescribed RPE 8 set feels like RPE 9, reduce weight slightly. If it feels like RPE 6-7, add weight. The goal is the stimulus, not arbitrary numbers.
+
+## Training Recommendations
+
+**Warm-Up Protocol:**
+- 5 min light cardio
+- Dynamic stretching (arm circles, leg swings, thoracic rotation)
+- Movement-specific warm-up (empty bar or light dumbbells)
+- Ramp sets to working weight (2-3 sets building up)
+
+**Rest Periods:**
+- Main lifts: 2-4 minutes (longer in intensification and realization blocks)
+- Secondary lifts: 90-120s
+- Accessories: 60-90s
+- Adjust based on recovery (if still breathing hard, wait longer)
+
+**Tempo:**
+- Accumulation: Controlled eccentrics (2-3s down)
+- Intensification: Explosive concentrics, controlled eccentrics
+- Realization: Maximal intent on every rep
+
+**Form Non-Negotiables:**
+- Full range of motion on all exercises
+- Controlled eccentrics (no dropping weights)
+- Proper breathing and bracing
+- If form breaks down, end the set
+
+**Recovery Between Sessions:**
+- Minimum 1 rest day between upper/lower (built into schedule)
+- Active recovery on off days (walking, light cardio, mobility)
+- Sleep 7-9 hours per night (intermediates need more recovery than beginners)
+- Manage life stress (training + work stress = cumulative fatigue)
+
+## Metrics & Tracking
+
+**Weekly Assessment:**
+- Bodyweight (Monday AM, same conditions)
+- Subjective readiness (1-10 scale: sleep, energy, soreness, motivation)
+- Training log (weight, reps, RPE for all working sets)
+
+**Block Assessment (every 4 weeks):**
+- Body composition (scale + mirror, optional measurements)
+- Strength testing (new 3-5RM on main lifts during realization)
+- Fatigue status (how recovered do you feel?)
+- Goal check-in (are we making progress toward objectives?)
+
+**Progress Indicators:**
+- Weight moved on main lifts (primary metric)
+- RPE at same weight (if last block's RPE 8 is now RPE 7, you're stronger)
+- Work capacity (can you handle more volume without excessive fatigue?)
+- Body composition (muscle mass increasing, fat stable or decreasing)
+
+**Red Flags:**
+- Persistent joint pain (modify exercise or reduce load)
+- Sleep disruption (may indicate overtraining)
+- Loss of appetite (CNS fatigue)
+- Motivation crash (psychological overtraining)
+- Strength regression lasting >2 weeks (inadequate recovery)
+
+## Nutritional Guidance (General)
+
+**Protein:** 1.8-2.2g per kg bodyweight daily
+- ~160-180g daily for Marcus (80kg bodyweight)
+- Distributed across 4-5 meals
+
+**Calories:**
+- Accumulation blocks: Slight surplus (+200-300 cal/day) to support muscle growth
+- Intensification/Realization: Maintenance or slight deficit (body recomp)
+- Overreach: Slight surplus (need energy for high volumes)
+- Recovery: Maintenance
+
+**Peri-Workout:**
+- Pre-workout: Carbs + protein 1-2 hours before (fuel session)
+- Intra-workout: Optional for very long sessions (BCAAs or carbs)
+- Post-workout: Protein + carbs within 2 hours (recovery)
+
+**Hydration:** 3-4L water daily, more on training days
+
+## Expected Outcomes
+
+**By Week 4 (End of Accumulation):**
+- Noticeable muscle growth (especially upper body)
+- Improved work capacity (handling higher volumes comfortably)
+- Movement proficiency on all lifts
+- Body weight increased 2-4lbs
+
+**By Week 8 (End of Intensification):**
+- Significant strength gains (10-20% on main lifts from start)
+- Body feels leaner and more muscular
+- Confidence with heavier loads
+- Technique refined under heavy loading
+
+**By Week 12 (End of Realization):**
+- New rep maxes established across all main lifts
+- Peak strength expression
+- Clear understanding of current capabilities
+- Ready to test or compete
+
+**By Week 16 (End of Recovery):**
+- Fully recovered and feeling fresh
+- Stronger than at Week 12 (supercompensation)
+- Mentally refreshed and motivated for next cycle
+- Ready to start new training phase with updated maxes
+
+**Typical Strength Targets (Marcus, Starting → Week 12):**
+- Bench Press: 225lbs × 5 → 250lbs × 5 (+25lbs)
+- Back Squat: 275lbs × 5 → 315lbs × 5 (+40lbs)
+- Deadlift: 315lbs × 5 → 365lbs × 5 (+50lbs)
+- Overhead Press: 135lbs × 5 → 155lbs × 5 (+20lbs)
+
+## Troubleshooting & Modifications
+
+**If progress stalls:**
+- Check recovery (sleep, stress, nutrition)
+- Reduce volume by 10-20% for 1-2 weeks
+- Swap out exercises causing issues
+- Consider life factors (work stress, relationship issues)
+
+**If joints hurt:**
+- Modify exercise (change grip, stance, or implement)
+- Reduce range of motion temporarily
+- Add extra warm-up sets
+- Incorporate prehab work (band work, light isolation)
+
+**If motivation drops:**
+- Take an unplanned deload week
+- Swap in fun variations (specialty bars, different equipment)
+- Train with a partner
+- Revisit goals and why you're doing this
+
+**If schedule disrupted:**
+- Missing 1 session: Just skip it, continue next session
+- Missing 2+ sessions: Repeat last week when you return
+- Minimum 3 sessions/week to maintain progress (cut one day if needed)
+
+**Exercise Substitutions (if equipment unavailable or injury):**
+- Bench press → Dumbbell bench, floor press, machine press
+- Back squat → Front squat, safety bar squat, leg press
+- Deadlift → Trap bar deadlift, RDL, heavy KB swings
+- Pull-ups → Lat pulldown, assisted pull-ups, inverted rows
+
+## Next Steps After Program Completion
+
+Upon completion of 16 weeks, Marcus will be assessed for:
+1. Strength testing results and comparison to starting point
+2. Body composition changes and goal re-evaluation
+3. Program selection for next phase:
+   - Continue upper/lower with updated maxes
+   - Progress to push/pull/legs (5-6x/week)
+   - Specialize in powerlifting or hypertrophy
+   - Periodized plan for specific competition
+4. Address any weak points identified during training
+5. Incorporate advanced techniques as appropriate (clusters, pauses, tempo variations)
+
+## Coach Notes
+
+This program is designed for the intermediate lifter who has "graduated" from beginner linear progression. The key is patience—progress happens across blocks, not session-to-session.
+
+Block periodization allows focused adaptation. Don't try to be maximally strong and maximally muscular simultaneously. Trust the process.
+
+Exercise variation between Upper 1/2 and Lower 1/2 is critical. This isn't arbitrary—different angles and loading patterns prevent overuse while maintaining frequency.
+
+Auto-regulation (RPE/RIR) is essential at this level. Not every session will feel perfect. Adjust as needed, but don't sandbag. The prescribed stimulus is there for a reason.
+
+Week 4, 8, 12, and 15-16 are deload/recovery periods. These are NOT optional. Recovery is when adaptation happens. Skipping deloads leads to burnout, injury, or regression.
+
+Celebrate wins: new rep maxes, improved work capacity, better technique. Progress isn't always linear, but over 16 weeks, Marcus will be significantly stronger and more muscular.
+
+---
+
+**Program created:** February 16, 2026  
+**Trainer:** GymText AI Training System  
+**Client:** Marcus Johnson (fictional example for system training)  
+**Level:** Intermediate (2+ years consistent training experience)
