@@ -28,6 +28,7 @@ import {
   Bot,
   ScrollText,
   ArrowUpCircle,
+  BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -45,6 +46,7 @@ const navItems = [
   { href: '/registry', label: 'Registry', icon: FileText },
   { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
+  { href: '/evals', label: 'Evals', icon: BarChart3 },
   { href: '/promote', label: 'Promote', icon: ArrowUpCircle },
 ]
 
