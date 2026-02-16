@@ -1,0 +1,64 @@
+{
+  "id": "beginner-general-fitness-structured",
+  "metadata": {
+    "title": "plan:structured Example — Beginner General Fitness Foundation",
+    "correspondingPlanExample": "beginner-general-fitness",
+    "description": "Structured (parsed) version of the beginner plan text. Shows how plan:structured agent should parse the plan:generate output into UI-renderable format."
+  },
+  "planStructured": {
+    "name": "Beginner General Fitness Foundation",
+    "type": "Full Body Stabilization",
+    "coreStrategy": "3-day full-body training using NASM Stabilization Endurance Phase principles. Focus on movement quality, skill acquisition, and building sustainable training habits. Low intensity (50-60% 1RM), high reps (12-15), controlled tempo (3-1-1). Prioritize form mastery over progressive overload in early weeks.",
+    "progressionStrategy": [
+      "Weeks 1-4: Focus on form mastery. Add weight only when form is clean for all reps.",
+      "Weeks 5-8: Increase load by 5-10lbs when you hit 3 sets of 15 reps with perfect form.",
+      "Weeks 9-12: Continue load increases or add complexity (e.g., single-leg variations).",
+      "Skill milestones: Week 1-2 learn patterns with light loads, Week 3-4 build confidence with moderate loads, Week 5-8 progressive overload with consistent form, Week 9-12 introduction to barbell lifts."
+    ],
+    "adjustmentStrategy": "Deload every 4th week OR if experiencing unusual fatigue/soreness. Reduce volume by 40-50% (drop to 2 sets per exercise), keep intensity moderate (stick with current weights, don't push for PRs), focus on movement quality and active recovery.",
+    "conditioning": [
+      "Optional Zone 2 cardio post-workout: 10-15min easy effort",
+      "Weekend active recovery: low-intensity movement for enjoyment (walking, swimming, yoga)"
+    ],
+    "scheduleTemplate": [
+      {
+        "day": "Monday",
+        "focus": "Full Body — Lower emphasis",
+        "rationale": "Start the week with foundational lower body patterns (squat, hinge). Resistance training with emphasis on squat, hinge, and push patterns."
+      },
+      {
+        "day": "Tuesday",
+        "focus": "Rest",
+        "rationale": "Rest or optional light walk (10-20min). Recovery day between sessions."
+      },
+      {
+        "day": "Wednesday",
+        "focus": "Full Body — Upper emphasis",
+        "rationale": "Mid-week session focuses on upper body patterning (push, pull, core). Resistance training with emphasis on horizontal/vertical push and pull movements."
+      },
+      {
+        "day": "Thursday",
+        "focus": "Rest",
+        "rationale": "Full rest day. Allow body to recover from Wednesday's session."
+      },
+      {
+        "day": "Friday",
+        "focus": "Full Body — Balanced",
+        "rationale": "End-of-week session reinforces all patterns learned earlier. Includes all movement patterns: squat, hinge, push, pull, core."
+      },
+      {
+        "day": "Saturday",
+        "focus": "Active Recovery (Optional)",
+        "rationale": "Optional active recovery: yoga, walking, swimming. Low-intensity movement for enjoyment and blood flow."
+      },
+      {
+        "day": "Sunday",
+        "focus": "Rest",
+        "rationale": "Complete rest. Prepare for the upcoming week."
+      }
+    ],
+    "durationWeeks": 12,
+    "frequencyPerWeek": 3
+  },
+  "qualityNotes": "This structured example demonstrates proper parsing of a beginner plan into the PlanStructure schema. Key features: (1) Clear weekly schedule with 7 days mapped, (2) Progression strategy broken into discrete phases with skill milestones, (3) Core strategy captures the NASM philosophy and beginner-specific focus, (4) Conditioning kept simple and optional (appropriate for beginners), (5) Adjustment strategy specifies deload triggers and implementation."
+}
