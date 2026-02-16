@@ -1,0 +1,85 @@
+[
+  {
+    "microcycleId": "mma-week-1",
+    "weekNumber": 1,
+    "metadata": {
+      "title": "Week 1 — Strength Emphasis (Fight Camp Opening)",
+      "phase": "Strength Emphasis (Weeks 1-3)",
+      "planId": "mma-fighter",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced",
+      "sportContext": "mma"
+    },
+    "message": "WEEK 1 — Strength Emphasis (Fight Camp Opening)\n\nOpening week builds baseline strength capacity (4x5 @ 80-85% 1RM) and introduces alactic conditioning (6 rounds x 10sec sprints). Focus on movement quality and technical proficiency—don't chase PRs. Leave room for high-quality MMA training. Build the foundation for power development in Weeks 4-5.\n\nThis Week:\n- Mon: Lower Power + Alactic (60min)\n- Tue: MMA Technical (light sparring)\n- Wed: Upper Strength + Core (60min)\n- Thu: MMA Sparring (moderate-high)\n- Fri: Explosive + Fight Sim (60min)\n- Sat: MMA Open Mat (highest volume)\n- Sun: Rest/Active Recovery\n\nS&C Intensity: RPE 7-8 (controlled)\nSparring: 60-85% effort\nRecovery: 8-9hr sleep, maintenance calories\n\nManage fatigue carefully. Pair lower power (Mon) with lighter MMA day (Tue). If bar speed drops, reduce load. Strength serves your fight game—not the other way around.",
+    "qualityNotes": [
+      "Fight camp context (8-week cycle)",
+      "Strength parameters specified (4x5 @ 80-85% 1RM)",
+      "Conditioning volume stated (6 rounds x 10sec)",
+      "Mental framing: 'don't chase PRs', 'build foundation'",
+      "7-day breakdown shows 3 S&C + 3 MMA + 1 recovery",
+      "Session durations provided (60min S&C)",
+      "Dual intensity guidance: S&C (RPE 7-8), Sparring (60-85% effort)",
+      "Recovery parameters (8-9hr sleep, maintenance calories)",
+      "Interference management: 'Pair lower power with lighter MMA day'",
+      "Bar speed monitoring introduced",
+      "Philosophy: 'Strength serves your fight game' (hierarchy clear)"
+    ]
+  },
+  {
+    "microcycleId": "mma-week-4",
+    "weekNumber": 4,
+    "metadata": {
+      "title": "Week 4 — Power Development (Peak Training Demand)",
+      "phase": "Power Development (Weeks 4-5)",
+      "planId": "mma-fighter",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced",
+      "sportContext": "mma"
+    },
+    "message": "WEEK 4 — Power Development (Peak Training Demand)\n\nMost demanding week of camp. Strength volume drops (3x3 @ 85-90%) but explosive work ramps up (5 sets Olympic lifts, 4 sets plyos). Goal: convert accumulated strength into explosive power. Bar speed and intent are primary metrics—if rep speed drops, reduce load. Conditioning peaks: 3 rounds fight simulation. Expect higher perceived exertion during MMA sessions.\n\nThis Week:\n- Mon: Lower Power + 8rd Alactic (60min)\n- Tue: MMA Technical (moderate, recover)\n- Wed: Upper Strength + Core (60min)\n- Thu: MMA Sparring (test power transfer)\n- Fri: Explosive + 3rd Fight Sim (60min)\n- Sat: MMA Hard Sparring (2-3 comp rounds)\n- Sun: Rest/Recovery (mental prep)\n\nS&C Intensity: RPE 8-9 (high)\nSparring: 75-90% effort\nRecovery: 8-9hr sleep, calorie surplus if weight allows\n\nThis is peak demand—manage carefully. If overly fatigued Thu, scale back sparring 1-2 rounds. Monitor bar speed Fri Olympic lifts. Notice increased snap in punches, faster scrambles. Week 5 continues power, then Week 6-7 shift to fight peak.",
+    "qualityNotes": [
+      "Peak demand acknowledged upfront ('Most demanding week')",
+      "Strength progression: 4x5 → 3x3 (volume down, intensity up)",
+      "Explosive work increase specified (5 sets Olympic, 4 sets plyos)",
+      "Bar speed as primary metric emphasized",
+      "Conditioning peak: 3 rounds fight simulation",
+      "7-day breakdown shows progression to harder sparring",
+      "Alactic rounds specified (8 rounds, increased from Week 1)",
+      "Fight simulation rounds noted (3rd, peak conditioning)",
+      "Dual intensity guidance: S&C (RPE 8-9), Sparring (75-90%)",
+      "Recovery needs higher (calorie surplus option)",
+      "Auto-regulation guidance: 'scale back sparring 1-2 rounds if fatigued'",
+      "Performance indicators: 'increased snap, faster scrambles'",
+      "Forward-looking: preview Weeks 5-7 (power continues, then fight peak)"
+    ]
+  },
+  {
+    "microcycleId": "mma-week-7",
+    "weekNumber": 7,
+    "metadata": {
+      "title": "Week 7 — Fight Peak (Final Active Preparation)",
+      "phase": "Fight Peak (Weeks 6-7)",
+      "planId": "mma-fighter",
+      "messageType": "weekly_preview",
+      "experienceLevel": "advanced",
+      "sportContext": "mma"
+    },
+    "message": "WEEK 7 — Fight Peak (Final Active Preparation)\n\nFinal week of active prep before taper. Strength is minimal (2x3 @ 92% CNS priming only, not muscle building). Explosive work maintains quality over volume (3-4 sets max intent). Conditioning peaks: 5 rounds fight simulation (full fight structure). Every session should feel SHARP—if movements grind, reduce load immediately. Priority shifts from building capacity to expressing capacity.\n\nThis Week:\n- Mon: Lower Power + 6rd Alactic (50min)\n- Tue: MMA Technical (game plan drilling)\n- Wed: Upper Strength + Core (50min)\n- Thu: MMA Last Hard Sparring (4x5min)\n- Fri: Explosive + 5rd Peak Sim (60min)\n- Sat: MMA Final Hard Day (game plan)\n- Sun: Active Recovery (mental prep)\n\nS&C Intensity: RPE 9-9.5 (crisp, explosive)\nSparring: 85-90% effort (controlled)\nRecovery: 8-9hr sleep NON-NEGOTIABLE, 3-4L water\n\nYou're peaking, not proving toughness. Thu is last full-intensity sparring. Fri conditioning session should feel like you went 5 rounds. Sat: game plan implementation, film review with coaches. Next week is taper—trust the process, arrive fresh, perform.",
+    "qualityNotes": [
+      "Final active week context (before Week 8 taper)",
+      "Strength purpose clarified (2x3 @ 92% CNS priming, not building)",
+      "Explosive work reduced to quality emphasis (3-4 sets)",
+      "Conditioning peak: 5 rounds fight simulation (full fight structure)",
+      "Mental framing: 'SHARP', 'expressing capacity', 'peaking not proving'",
+      "7-day breakdown shows final hard work before taper",
+      "Session durations reduced for S&C (50min vs 60min, freshness priority)",
+      "Fight-specific day labels (game plan drilling, last hard sparring, final hard day)",
+      "Dual intensity guidance: S&C (RPE 9-9.5 crisp), Sparring (85-90% controlled)",
+      "Recovery non-negotiable (8-9hr sleep, 3-4L water)",
+      "Thu context: 'last full-intensity sparring'",
+      "Fri expectation: 'should feel like you went 5 rounds'",
+      "Sat context: 'game plan implementation, film review with coaches'",
+      "Forward-looking: 'Next week is taper—trust the process, arrive fresh'"
+    ]
+  }
+]
