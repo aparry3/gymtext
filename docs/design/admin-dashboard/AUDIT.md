@@ -107,9 +107,9 @@ Clean, focused list for daily business operations:
 
 1. **Dashboard** — Overview of activity
 2. **Users** — User management
-3. **Programs** — Programs, Owners, Organizations (grouped)
-4. **Exercises** — Exercise library
-5. **Messages** — Message monitoring
+3. **Messages** — Message monitoring
+4. **Programs** — Programs, Owners, Organizations (grouped)
+5. **Exercises** — Exercise library
 6. **Calendar** — Day images/themes
 7. **Demos** — Demo showcase
 
@@ -128,12 +128,12 @@ Collapsible section or separate area for technical tools:
 ┌─ User Admin ──────────┐
 │ Dashboard             │
 │ Users                 │
+│ Messages              │
 │ Programs ▸            │ ← Expandable sub-menu
 │   - Programs          │
 │   - Program Owners    │
 │   - Organizations     │
 │ Exercises             │
-│ Messages              │
 │ Calendar              │
 │ Demos                 │
 ├───────────────────────┤
