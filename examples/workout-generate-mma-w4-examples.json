@@ -1,0 +1,812 @@
+[
+  {
+    "id": "mma-w4-monday",
+    "metadata": {
+      "title": "MMA Week 4 — Monday (Lower Body Power + Peak Alactic)",
+      "weekNumber": 4,
+      "dayOfWeek": "Monday",
+      "planId": "mma-fighter-8week",
+      "phase": "Power Development (Weeks 4-5)",
+      "focus": "Lower Body Power + Alactic Conditioning (Peak Volume)",
+      "keyFeatures": [
+        "Power development: 3x3 @ 87% 1RM (RPE 8-9, reduced volume but higher intensity)",
+        "Box jumps for max height (neural activation)",
+        "Increased explosive work: 4 sets plyometrics (vs 3 in Week 1)",
+        "Alactic conditioning peaks: 8 rounds x 10sec sprint / 50sec rest",
+        "60min session",
+        "This is peak training demand—manage fatigue carefully"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Lower Body Power + Peak Alactic Conditioning",
+      "focus": "Explosive intent and power transfer",
+      "description": "Week 4, Day 1—Peak training demand week. Strength volume drops (3x3 @ 87% vs Week 1's 4x5 @ 80%) but explosive work ramps up significantly. Box jumps emphasize max height. Lateral bounds added for MMA-specific footwork. Alactic conditioning peaks at 8 rounds (target volume reached). RPE 8-9 (high intensity, leave 1-2 reps in reserve). Bar speed and intent are primary metrics—if rep speed drops, reduce load immediately. This is the most demanding lower power session of camp. Pair with lighter MMA day to manage fatigue.",
+      "quote": {
+        "text": "Bar speed is your metric. If the bar doesn't accelerate explosively, you're using too much weight. This is power work, not max effort grinding.",
+        "author": "Week 4 Power Development Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Dynamic movement + joint prep (5min)",
+          "exercises": [
+            {
+              "name": "Light Movement Flow",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "2-3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Light jogging, jumping jacks, or shadow boxing"
+              },
+              "tempo": "",
+              "notes": "Elevate heart rate, prepare for explosive work. Week 4: You should feel fresh despite accumulated fatigue—if not, today's volume may need scaling.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Lower Body Prep",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Leg swings (forward/back, lateral), walking lunges (5/leg), bodyweight squats (10 reps), ankle circles, hip openers. Prepare for max-height jumps and heavy squats.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Neural Activation",
+          "overview": "Prime CNS for max strength work with max-height jumps",
+          "exercises": [
+            {
+              "name": "Box Jumps",
+              "type": "Plyometric",
+              "sets": "3",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Height",
+                "description": "Jump to highest box possible with safe landing"
+              },
+              "tempo": "Explosive takeoff, soft landing (absorb with bent knees)",
+              "notes": "Setup: Choose box height you can reach cleanly (24-36in for most). Execution: Swing arms, load hips, explode up—land softly on box, step down (don't jump down). Focus: Max height, not speed. Stick every landing—balance and control. Purpose: CNS potentiation for strength work. Week 4 Note: Box jumps (vs Week 1 trap bar jumps) emphasize vertical power and landing mechanics. If you miss the box or landing is awkward, reduce height.",
+              "tags": ["plyometric", "neural activation"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength",
+          "overview": "Reduced volume, higher intensity (3x3 @ 87% 1RM)",
+          "exercises": [
+            {
+              "name": "Safety Bar Squat",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "Percentage",
+                "value": "87",
+                "description": "87% 1RM, RPE 8-9 (leave 1-2 reps in reserve). Bar speed critical."
+              },
+              "tempo": "Controlled descent (2-3sec), explosive concentric (FAST bar speed)",
+              "notes": "Setup: Safety bar on upper back (camber pad on shoulders), hands on handles, feet shoulder-width. Execution: Descend to parallel or below, pause briefly, EXPLODE up—drive through midfoot. Bar Speed: THE quality metric. If bar slows (grind >3sec), STOP and reduce load 5-10lbs next set. Don't chase weight. Week 4 Transition: Safety bar (vs Week 1 trap bar deadlift) allows higher intensity squatting with less low-back stress. Cambered bar keeps torso more upright. Purpose: Lower body power at higher intensity (87% vs Week 1's 80%). Volume reduced (3x3 vs 4x5) to manage fatigue while increasing load. Fighter-specific: Builds explosive squat strength for level changes, takedown defense, cage pressure. Safety Note: If first rep feels slow or grindy, reduce load immediately. This is Week 4—don't push through bad reps.",
+              "tags": ["compound", "lower body", "squat"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Strength",
+          "overview": "Increased volume from Week 1 (4x5 vs 3x5)",
+          "exercises": [
+            {
+              "name": "Kettlebell Swings",
+              "type": "Strength",
+              "sets": "4",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavy Load",
+                "description": "Use same or slightly heavier KB than Week 1. Explosive hip snap every rep."
+              },
+              "tempo": "Explosive hip extension, controlled backswing",
+              "notes": "Setup: KB on ground, hinge down to grip. Execution: Hike KB between legs (load hamstrings), EXPLODE hips forward—KB swings to chest/eye level. Focus: Hip snap speed (not arm strength). Every rep should be ballistic. Week 4: 4 sets (vs Week 1's 3 sets) increases explosive strength volume. If hip snap slows or you're muscling it with arms, rest longer or reduce KB weight. Purpose: Posterior chain power, rate of force development. Fighter-specific: Takedown explosiveness, sprawl power, scramble speed.",
+              "tags": ["explosive", "posterior chain", "power"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Plyometrics",
+          "overview": "Lateral emphasis + increased volume (4x5 vs 3x5)",
+          "exercises": [
+            {
+              "name": "Lateral Bounds",
+              "type": "Plyometric",
+              "sets": "4",
+              "reps": "5/side",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Distance",
+                "description": "Explosive lateral power with balance on landing"
+              },
+              "tempo": "Explosive takeoff (single-leg push), soft landing (absorb impact)",
+              "notes": "Setup: Stand on right leg, left leg off ground. Execution: Load right leg (slight knee bend), explode laterally to left—drive off right foot, land on left foot. Stick landing (balance, absorb with bent knee), immediately bound back to right. Landing Mechanics: CRITICAL. Single-leg landing requires balance and stability. If landing is wobbly or knee caves in, reduce distance or slow down. Week 4: Lateral bounds (vs Week 1 broad jumps) emphasize MMA-specific footwork—lateral movement, angles, cage cutting. 4 sets (vs Week 1's 3) increases plyometric volume. Purpose: Lateral power, single-leg stability, reactive strength. Fighter-specific: Angle changes, lateral movement (cutting off cage), footwork for striking. Do 5 bounds right-to-left, then 5 bounds left-to-right = 1 set.",
+              "tags": ["plyometric", "lateral power", "single-leg"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Alactic Conditioning",
+          "overview": "Peak volume (8 rounds x 10sec / 50sec)",
+          "exercises": [
+            {
+              "name": "Hill Sprint or Assault Bike",
+              "type": "Conditioning",
+              "sets": "8",
+              "reps": "",
+              "duration": "10 sec work / 50 sec rest",
+              "distance": "",
+              "rest": "50 sec between sprints",
+              "intensity": {
+                "type": "Other",
+                "value": "Max Effort Sprint",
+                "description": "All-out for 10sec, full recovery 50sec. This is peak alactic volume."
+              },
+              "tempo": "",
+              "notes": "Execution: 10sec all-out sprint (hill, Assault Bike, or rowing machine), 50sec complete rest/walk. Work-to-rest: 1:5 (alactic system recovery). Week 4: 8 rounds (reached target from Week 1's 6 rounds). This is peak alactic conditioning volume for the camp. If you can't maintain max intensity all 10sec by Round 7-8, you're either not recovering fully (extend rest to 60sec) or total volume is too high (cap at 6-7 rounds). Purpose: Alactic power endurance, explosive burst capacity without lactate accumulation. Fighter-specific: Takedown attempts, cage pressure bursts, explosive scrambles. This is NOT cardio—it's speed/power work. Mental Note: Week 4 is most demanding week. These 8 rounds should feel challenging but doable. If they feel impossible, you're over-reaching—communicate with coaches about scaling Thursday sparring.",
+              "tags": ["conditioning", "alactic", "sprint"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Active recovery + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Light Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hip flexor stretch, hamstring stretch, quad stretch, calf stretch—hold 20-30sec per side. Focus on posterior chain (worked heavily today).",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Box Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Inhale 4sec, hold 4sec, exhale 4sec, hold 4sec. Repeat 5-10 cycles. Downregulate CNS after peak-intensity session.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 5min neural activation, 9min strength, 12min explosive/plyo, 13min alactic, 5min cool-down, ~11min rest)",
+        "Peak Demand Week: This is the most demanding lower power session of camp. Intensity is high (87% vs Week 1's 80%), explosive volume is increased (4 sets plyos/swings vs 3), and alactic conditioning peaks (8 rounds vs 6).",
+        "Bar Speed Monitoring: CRITICAL this week. If safety bar squat bar speed drops (rep takes >3sec), reduce load 5-10lbs immediately. Don't grind reps in power development phase.",
+        "MMA Integration: Pair with lighter MMA day. Yesterday (Sunday) was rest. Today's lower power work will fatigue legs—keep Tuesday technical (light sparring, 65-75% effort max).",
+        "Auto-Regulation: If you're overly fatigued from Thursday's sparring (last week), scale back today's volume: reduce to 2x3 squats or 6 alactic rounds. Communicate with coaches.",
+        "Hydration: 24oz water post-session. If MMA training follows within 4hr, add electrolytes (sodium/potassium).",
+        "Nutrition: Protein + carbs within 30min (25-30g protein, 40-50g carbs). Week 4 is peak demand—fuel appropriately.",
+        "Recovery: If MMA session is >4hr away, consider 10-15min contrast shower (2min hot, 30sec cold, repeat 3x) or ice bath (lower body, 10min)."
+      ]
+    }
+  },
+  {
+    "id": "mma-w4-wednesday",
+    "metadata": {
+      "title": "MMA Week 4 — Wednesday (Upper Body Strength + Core)",
+      "weekNumber": 4,
+      "dayOfWeek": "Wednesday",
+      "planId": "mma-fighter-8week",
+      "phase": "Power Development (Weeks 4-5)",
+      "focus": "Upper Body Strength + Anti-Rotation Core (Increased Intensity)",
+      "keyFeatures": [
+        "Transition to barbell bench: 3x3 @ 87% 1RM (heavier loading than landmine)",
+        "Increased rotational power: 4 sets med ball throws (vs 3 in Week 1)",
+        "Grip work extended: 3x50sec dead hangs + farmer's carries",
+        "Conditioning volume up: 5 rounds battle ropes (vs 4 in Week 1)",
+        "60min session",
+        "RPE 8-9 throughout"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Upper Body Strength + Anti-Rotation Core",
+      "focus": "Pressing power and grappling strength at peak intensity",
+      "description": "Week 4, Day 3—Upper session with increased rotational power volume and heavier pressing loads. Barbell bench press (vs Week 1 landmine press) allows bilateral heavy loading. Pull-ups at RPE 8-9 (near-maximal intensity). Med ball rotational throws increase to 4 sets (emphasizing hip-to-core-to-arm power transfer for striking). Grip work extended with farmer's carries added. This session tests power transfer—you should notice increased snap in punches during tomorrow's sparring. Pair with striking-focused MMA work (technical, not hard sparring).",
+      "quote": {
+        "text": "Focus on explosive hip rotation in med ball throws. Punching power comes from hips, not arms. If you're throwing with arms only, reduce ball weight and reset.",
+        "author": "Week 4 Power Development Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Scapular activation + rotational prep (5min)",
+          "exercises": [
+            {
+              "name": "Light Upper Body Movement",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "2-3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Easy",
+                "description": "Shadow boxing, arm circles, or light rowing"
+              },
+              "tempo": "",
+              "notes": "Prepare shoulders, chest, back for heavy pressing and pulling. Week 4: Focus on rotational movement (shadow boxing with hip rotation) to prep for med ball throws.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Scapular + Rotational Activation",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "10-15/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Band pull-aparts (15 reps), scapular push-ups (10 reps), band face pulls (15 reps), light med ball rotations (10/side @ light ball). Activate scapular stabilizers, rear delts, and rotational core.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength Push",
+          "overview": "Barbell bilateral pressing (3x3 @ 87% 1RM)",
+          "exercises": [
+            {
+              "name": "Barbell Bench Press",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "Percentage",
+                "value": "87",
+                "description": "87% 1RM, RPE 8-9 (leave 1-2 reps in reserve). Bar speed critical."
+              },
+              "tempo": "Controlled descent (2sec to chest), explosive press (fast bar speed)",
+              "notes": "Setup: Lie on bench, feet flat on floor, grip slightly wider than shoulders, bar over chest, shoulder blades retracted. Execution: Lower bar to chest (touch sternum), pause briefly, EXPLODE up—bar should accelerate fast. Lock out fully. Bar Speed: Primary metric. If bar slows (grind >3sec), reduce load 5-10lbs next set. Week 4 Transition: Barbell bench (vs Week 1 landmine press) allows heavier bilateral loading and more specificity to pressing strength. Landmine was unilateral/shoulder-safe; barbell is heavier but requires shoulder health. If shoulders feel tweaky, revert to landmine at 87% or reduce load. Purpose: Upper body pressing power at high intensity. Builds pressing strength for punching power (force production). Fighter-specific: Pressing opponents off in clinch, pushing through guard, punching force development. Safety: Spotter recommended at 87% 3RM. If no spotter, use safety pins or reduce load slightly.",
+              "tags": ["compound", "upper body", "pressing"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Max Strength Pull",
+          "overview": "Heavy pull-ups (3x3 @ RPE 8-9)",
+          "exercises": [
+            {
+              "name": "Weighted Pull-ups",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "3 min",
+              "intensity": {
+                "type": "Other",
+                "value": "RPE 8-9",
+                "description": "Add significant weight via dip belt. Should feel near-maximal."
+              },
+              "tempo": "Controlled descent (2sec), explosive pull (chin over bar fast)",
+              "notes": "Setup: Hands shoulder-width, palms forward, weighted vest or dip belt with plates. Execution: From dead hang, pull elbows down (not hands up), explode chin over bar, control descent to full extension. Week 4: RPE 8-9 (vs Week 1's heavy but controlled). 3 reps should feel near-maximal—if you can do 5+ reps, add more weight. If you can't get 3 clean reps, reduce weight. Purpose: Vertical pulling strength at high intensity. Critical for grappling—pulling opponent into guard, maintaining top control, clinch strength. Alternative: If weighted pull-ups aren't feasible, substitute Barbell Row @ 87% 1RM (same 3x3 scheme). Fighter-specific: Grappling strength, pulling power, lat/back development.",
+              "tags": ["compound", "upper body", "back", "grappling-specific"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Rotational Power",
+          "overview": "Increased volume (4x6/side vs Week 1's 3x6/side)",
+          "exercises": [
+            {
+              "name": "Med Ball Rotational Throw",
+              "type": "Power",
+              "sets": "4",
+              "reps": "6/side",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Explosive Intent",
+                "description": "Throw as hard as possible. Use 10-14lb med ball (heavier than Week 1 if tolerable)."
+              },
+              "tempo": "Explosive hip rotation (fast turnover), catch and reset",
+              "notes": "Setup: Stand perpendicular to wall (3-4ft away), hold med ball at chest, feet shoulder-width. Execution: Load hips (slight squat + rotate away from wall), EXPLODE through hips and core—throw ball at wall as hard as possible. Catch rebound, reset. Focus: Hip rotation drives throw (not arms). Feet stay planted—power from hip torque. Week 4: 4 sets (vs Week 1's 3 sets) increases rotational power volume. If you're throwing with arms (no hip snap), reduce ball weight and focus on hip rotation. Purpose: Transverse plane power, explosive hip rotation, power transfer. Fighter-specific: Punching power generation. Hip-to-core-to-arm kinetic chain. This is THE exercise for striking power. Do 6 throws right side, 6 throws left side = 1 set. Mental Note: Tomorrow's sparring—you should feel increased snap in punches. If not, rotation quality needs work.",
+              "tags": ["power", "rotational", "striking-specific"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Anti-Rotation Core",
+          "overview": "Increased reps (3x10/side vs Week 1's 3x8/side)",
+          "exercises": [
+            {
+              "name": "Pallof Press",
+              "type": "Core",
+              "sets": "3",
+              "reps": "10/side",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavier Resistance",
+                "description": "Use same or slightly heavier cable/band than Week 1. Should challenge stability."
+              },
+              "tempo": "Slow press (2sec), hold (1sec), slow return (2sec)",
+              "notes": "Setup: Stand perpendicular to cable machine, hold handle at chest, feet shoulder-width. Execution: Press handle straight out (arms extend fully), resist cable's rotational pull. Hold extended position briefly, return to chest. Don't rotate torso—stay square. Week 4: 10 reps/side (vs Week 1's 8 reps). Increased volume builds anti-rotation endurance. If you can't maintain square shoulders for 10 reps, reduce resistance. Purpose: Core stability, anti-rotation strength. Fighter-specific: Resisting opponent's rotational force in scrambles, clinch, ground control. Do 10 reps right side (cable pulling from right), switch to left side = 1 set.",
+              "tags": ["core", "anti-rotation", "stability"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Grip & Forearm",
+          "overview": "Extended grip work: dead hangs + farmer's carries",
+          "exercises": [
+            {
+              "name": "Dead Hang",
+              "type": "Strength",
+              "sets": "3",
+              "reps": "",
+              "duration": "50 sec",
+              "distance": "",
+              "rest": "60 sec (then immediately farmer's carry)",
+              "intensity": {
+                "type": "Other",
+                "value": "Bodyweight",
+                "description": "Hang from pull-up bar, full arm extension. Week 4: 50sec (vs Week 1's 45sec)."
+              },
+              "tempo": "",
+              "notes": "Setup: Grip pull-up bar (pronated grip), hang with full arm extension, shoulders active. Execution: Hold for 50sec. Keep shoulders engaged, breathe normally. If grip fails before 50sec, rest 10-15sec and continue. Week 4: 50sec (increased from Week 1's 45sec). If you hit 50sec easily, add 5lbs next week or increase to 55sec. Purpose: Grip endurance, forearm strength, shoulder health. Fighter-specific: Grappling grip endurance, maintaining grips in later rounds.",
+              "tags": ["grip", "forearm", "grappling-critical"],
+              "supersetId": "GRIP"
+            },
+            {
+              "name": "Farmer's Carry",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "",
+              "duration": "",
+              "distance": "40 m",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavy Load",
+                "description": "Use heavy dumbbells or kettlebells (challenging but not dropping). Week 4 addition."
+              },
+              "tempo": "Controlled walk, upright posture",
+              "notes": "Setup: Pick up heavy DB/KB in each hand (same weight both sides). Execution: Walk 40m (or ~30sec) with upright posture, shoulders back, core engaged. Don't let weight pull shoulders forward. Turn around, walk back = 1 set. Week 4 Addition: Farmer's carries supplement dead hangs—builds grip under movement/load (vs static hang). Purpose: Grip strength, core stability under load, postural strength. Fighter-specific: Controlling opponent while moving (clinch work, cage pressure), grip endurance under dynamic load. Do immediately after dead hang (rest 60sec between), then rest 90sec before next round.",
+              "tags": ["grip", "forearm", "core", "loaded carry"],
+              "supersetId": "GRIP"
+            }
+          ]
+        },
+        {
+          "title": "Conditioning",
+          "overview": "Increased volume (5 rounds vs Week 1's 4 rounds)",
+          "exercises": [
+            {
+              "name": "Battle Ropes",
+              "type": "Conditioning",
+              "sets": "5",
+              "reps": "",
+              "duration": "30 sec work / 30 sec rest",
+              "distance": "",
+              "rest": "30 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Alternating waves, slams, or circles—keep ropes moving fast"
+              },
+              "tempo": "",
+              "notes": "Execution: 30sec all-out battle rope work, 30sec rest. Week 4: 5 rounds (vs Week 1's 4 rounds). If paired with hard MMA session today, consider dropping to 4 rounds—don't compromise technical training for conditioning finisher. Purpose: Upper body conditioning, grip under fatigue, punching endurance. Fighter-specific: Late-round punching output, grip endurance when fatigued.",
+              "tags": ["conditioning", "upper body"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Stretching + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Upper Body Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Chest doorway stretch (30sec/side), lat stretch (30sec/side), shoulder cross-body stretch (30sec/side), wrist/forearm stretches (critical after grip work), thoracic spine rotations.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Diaphragmatic Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Deep inhale (4sec), hold (2sec), slow exhale (6sec). Downregulate CNS before MMA session.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 18min max strength push/pull, 10min rotational power, 6min core, 8min grip, 6min conditioning, 5min cool-down, ~2min rest)",
+        "Peak Demand Week: Upper strength at RPE 8-9 throughout. Bench press @ 87% is near-maximal (vs Week 1's landmine @ 82%). Rotational power volume increased (4 sets vs 3). Grip work extended (dead hangs + farmer's carries).",
+        "Power Transfer: Tomorrow (Thursday) is sparring day. You should notice increased snap in punches—that's the rotational power work paying off. If not, technique needs refinement (hip rotation, not arm punching).",
+        "MMA Integration: Pair with striking-focused MMA (technical, NOT hard sparring). Shoulders are fatigued from heavy bench—hard sparring increases injury risk.",
+        "Auto-Regulation: If overly fatigued from Tuesday's MMA, scale back: reduce bench to 2x3 or skip battle ropes. Prioritize quality MMA training over S&C finishers.",
+        "Hydration: 24oz water post-session. If striking session follows, hydrate well—dehydration affects punch speed and power.",
+        "Nutrition: Protein + carbs within 30min (25-30g protein). Week 4 is peak demand—calorie surplus if weight allows.",
+        "Recovery: Contrast shower (hot/cold) if time allows before MMA session."
+      ]
+    }
+  },
+  {
+    "id": "mma-w4-friday",
+    "metadata": {
+      "title": "MMA Week 4 — Friday (Full Body Explosive + Peak Fight Sim)",
+      "weekNumber": 4,
+      "dayOfWeek": "Friday",
+      "planId": "mma-fighter-8week",
+      "phase": "Power Development (Weeks 4-5)",
+      "focus": "Full Body Explosive + Fight Simulation Conditioning (Peak Volume)",
+      "keyFeatures": [
+        "Power clean intensity up: 5x3 @ 75% 1RM (vs 72% Week 1)",
+        "Increased explosive volume: 4 sets plyometrics (vs 3 in Week 1)",
+        "Jump squats with light load: 10-20% bodyweight",
+        "Fight simulation peaks: 3 rounds x 5min work / 1min rest",
+        "60min session (most demanding S&C of the week)",
+        "Schedule carefully—NOT after hard sparring"
+      ]
+    },
+    "structuredWorkout": {
+      "title": "Full Body Explosive + Peak Fight Simulation Conditioning",
+      "focus": "Power expression and peak fight conditioning",
+      "description": "Week 4, Day 5—Peak explosive and conditioning session. Power cleans @ 75% (increased from Week 1's 72%). Plyometric volume increased (4 sets upper/lower vs 3). Jump squats add light load (10-20% bodyweight). Fight simulation conditioning peaks at 3 rounds x 5min (vs Week 1's 2 rounds)—this is the hardest conditioning session of camp so far. You should finish feeling like you went 3 rounds. Bar speed on cleans is non-negotiable—if bar slows, reduce load immediately. Schedule CAREFULLY: before or after light technique work, 4-6hr before/after MMA session, or as standalone. Do NOT schedule after hard sparring (yesterday's sparring may leave you too fatigued for quality Olympic lifts).",
+      "quote": {
+        "text": "Monitor bar speed on Friday Olympic lifts carefully. If Thursday's sparring was hard, you may need to reduce load 5-10lbs. Quality over ego.",
+        "author": "Week 4 Power Development Programming"
+      },
+      "sections": [
+        {
+          "title": "Warm-Up",
+          "overview": "Shadow boxing + dynamic full-body prep (5min)",
+          "exercises": [
+            {
+              "name": "Shadow Boxing",
+              "type": "Cardio",
+              "sets": "",
+              "reps": "",
+              "duration": "3 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "Light-Moderate",
+                "description": "Movement flow with some snap (not full power). Prepare for explosive session."
+              },
+              "tempo": "",
+              "notes": "Light shadow boxing with footwork and combination flow. Throw some punches with snap (not full power)—notice if Wednesday's rotational work translated to increased hand speed. Elevate heart rate, prepare nervous system.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Dynamic Full Body Prep",
+              "type": "Mobility",
+              "sets": "2",
+              "reps": "5-10/movement",
+              "duration": "",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Inchworms (5 reps), spiderman lunges (5/side), hip circles (10/direction), arm swings (10 forward/back), jump rope or jumping jacks (1min), light barbell clean practice (empty bar × 5 reps)—prepare for Olympic lift.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Olympic Lift",
+          "overview": "Increased intensity (5x3 @ 75% 1RM vs Week 1's 72%)",
+          "exercises": [
+            {
+              "name": "Power Clean",
+              "type": "Power",
+              "sets": "5",
+              "reps": "3",
+              "duration": "",
+              "distance": "",
+              "rest": "2 min",
+              "intensity": {
+                "type": "Percentage",
+                "value": "75",
+                "description": "75% 1RM (increased from Week 1's 72%). Bar speed should be explosive. RPE 8-9."
+              },
+              "tempo": "Explosive triple extension (FAST bar speed critical)",
+              "notes": "Setup: Bar on floor, feet hip-width, grip just outside shoulders, shoulders over bar, flat back. Execution: First pull (deadlift to mid-thigh), small dip (load hamstrings), EXPLODE up—shrug, pull elbows high, drop under bar, catch in quarter-squat. Stand to full extension. Bar Speed: THE quality metric. If bar doesn't accelerate explosively, reduce load. Week 4: 75% (vs Week 1's 72%)—heavier load tests power expression. If Thursday sparring was hard, you may be fatigued—don't force 75% if bar speed is slow. Drop to 70-72% and maintain speed. Technique: Triple extension = ankles + knees + hips extend simultaneously. Catch should be aggressive—pull yourself under bar. Purpose: Full-body explosive power at higher load. Week 4 tests if Week 1-3 strength building transfers to power. Fighter-specific: Explosive takedowns, sprawl power, scramble speed, level changes. Auto-Regulation: If bar speed deteriorates across sets (Set 4-5 slower than Set 1-2), stop and reduce load 5-10lbs. Don't grind Olympic lifts.",
+              "tags": ["olympic lift", "power", "full body", "explosive"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Upper",
+          "overview": "Increased volume (4x5 vs Week 1's 3x5)",
+          "exercises": [
+            {
+              "name": "Med Ball Chest Pass",
+              "type": "Plyometric",
+              "sets": "4",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Heavy Ball",
+                "description": "Use 12-16lb med ball (heavier than Week 1's plyo push-ups). Explosive throw."
+              },
+              "tempo": "Explosive throw (max velocity), catch and reset",
+              "notes": "Setup: Stand 6-8ft from wall, hold heavy med ball at chest, feet shoulder-width. Execution: Load (slight chest press back), EXPLODE forward—throw ball at wall as hard as possible. Catch rebound (absorb with bent elbows), reset. Focus: Explosive pressing power (horizontal plane). Full triple extension (ankles, knees, hips) helps generate power. Week 4: Med ball chest pass (vs Week 1's plyo push-ups) allows heavier load and more sport-specific pressing pattern (like a push/shove in clinch). 4 sets (vs Week 1's 3) increases explosive upper volume. Purpose: Upper body reactive strength, horizontal pressing power. Fighter-specific: Pushing power in clinch, pressing opponent off in guard, explosive hand speed.",
+              "tags": ["plyometric", "upper body", "explosive"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Explosive Lower",
+          "overview": "Added light load (4x5 with 10-20% bodyweight)",
+          "exercises": [
+            {
+              "name": "Jump Squats",
+              "type": "Plyometric",
+              "sets": "4",
+              "reps": "5",
+              "duration": "",
+              "distance": "",
+              "rest": "90 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "10-20% Bodyweight Load",
+                "description": "Hold light dumbbells or wear weighted vest. Jump as high as possible."
+              },
+              "tempo": "Explosive jump (max height), soft landing (absorb impact)",
+              "notes": "Setup: Hold light DBs at sides (10-20lbs each) or wear weighted vest (10-20% bodyweight). Feet shoulder-width. Execution: Descend to parallel, explode up—jump as high as possible. Land softly on both feet, absorb with bent knees (don't land stiff). Immediately descend into next rep. Week 4: Light load added (vs Week 1's bodyweight only). 10-20% load increases power output without compromising landing mechanics. 4 sets (vs Week 1's 3). Landing Mechanics: CRITICAL. Land balanced, knees tracking over toes, absorb impact. If landing is awkward, drop the load and go bodyweight. Purpose: Lower body reactive strength, vertical power, loaded plyometrics. Fighter-specific: Explosive level changes, takedown speed, loaded scrambles.",
+              "tags": ["plyometric", "lower body", "vertical power"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Fight Simulation Conditioning",
+          "overview": "Peak volume (3 rounds x 5min / 1min vs Week 1's 2 rounds)",
+          "exercises": [
+            {
+              "name": "Fight Simulation Circuit (Round 1)",
+              "type": "Conditioning",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min work / 1 min rest",
+              "distance": "",
+              "rest": "1 min (then Round 2)",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "30sec hard/30sec moderate pattern. Peak conditioning volume."
+              },
+              "tempo": "",
+              "notes": "Round 1 Structure (5min): 30sec Assault Bike sprint → 30sec KB Swings (heavy) → 30sec Burpees (fast) → 30sec Battle Ropes → repeat 2x. Pacing: Mimic fight—bursts of high output (exchanges, scrambles) + moderate work (clinch, positional). Week 4: 3 rounds (vs Week 1's 2 rounds). This is PEAK fight conditioning volume. Purpose: Multi-modal conditioning, fight pacing, mental toughness. You should finish feeling like you went 3 rounds.",
+              "tags": ["conditioning", "fight-specific", "multi-modal"],
+              "supersetId": ""
+            },
+            {
+              "name": "Fight Simulation Circuit (Round 2)",
+              "type": "Conditioning",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min work / 1 min rest",
+              "distance": "",
+              "rest": "1 min (then Round 3)",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Same as Round 1—maintain intensity despite fatigue"
+              },
+              "tempo": "",
+              "notes": "Same circuit structure. Round 2: Fatigue accumulates—intensity may drop slightly (expected). Focus: Maintain quality movement even under fatigue. Don't let technique collapse. This is where mental toughness is built.",
+              "tags": ["conditioning", "fight-specific", "mental toughness"],
+              "supersetId": ""
+            },
+            {
+              "name": "Fight Simulation Circuit (Round 3)",
+              "type": "Conditioning",
+              "sets": "1",
+              "reps": "",
+              "duration": "5 min work",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "High Intensity",
+                "description": "Final round—dig deep, maintain output"
+              },
+              "tempo": "",
+              "notes": "Same circuit structure. Round 3: Final push. This round separates fighters—can you maintain output when fatigued? Mental Note: If you can push through Round 3 with quality, you're building the conditioning to go 3 rounds in a fight. Week 4 Peak: This is the hardest conditioning you've done so far in camp. Next week (Week 5) maintains 3 rounds. Week 7 peaks at 5 rounds (full fight).",
+              "tags": ["conditioning", "fight-specific", "peak volume"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Finisher",
+          "overview": "Reduced volume from Week 1 (2x8/side vs 2x10/side)",
+          "exercises": [
+            {
+              "name": "Turkish Get-Up",
+              "type": "Strength",
+              "sets": "2",
+              "reps": "8/side",
+              "duration": "",
+              "distance": "",
+              "rest": "60 sec",
+              "intensity": {
+                "type": "Other",
+                "value": "Moderate-Heavy KB",
+                "description": "Use slightly heavier KB than Week 1 if tolerable (20-28kg for most)"
+              },
+              "tempo": "Slow, controlled transitions",
+              "notes": "Setup: Lie on back, KB in right hand overhead. Execution: Progress through positions—roll to elbow → hand → bridge → sweep → lunge → stand. Reverse. Week 4: 8 reps/side (vs Week 1's 10 reps) with heavier KB—same total work, heavier load. Focus: Stability through transitions, shoulder control, smooth movement. Purpose: Full-body integration, positional strength, shoulder stability. Fighter-specific: Positional transitions (ground to standing), stability under load. Do 8 reps right side, 8 reps left side = 1 set.",
+              "tags": ["full body", "stability", "positional strength"],
+              "supersetId": ""
+            }
+          ]
+        },
+        {
+          "title": "Cool-Down",
+          "overview": "Stretching + breathwork (5min)",
+          "exercises": [
+            {
+              "name": "Full Body Stretching",
+              "type": "Mobility",
+              "sets": "",
+              "reps": "",
+              "duration": "3-4 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Hip flexor stretch, hamstring stretch, quad stretch, shoulder/chest stretch, wrist stretches, thoracic rotations—hold 20-30sec per side. Full body after multi-modal session.",
+              "tags": [],
+              "supersetId": ""
+            },
+            {
+              "name": "Box Breathing",
+              "type": "Other",
+              "sets": "",
+              "reps": "5-10",
+              "duration": "1-2 min",
+              "distance": "",
+              "rest": "",
+              "intensity": {
+                "type": "Other",
+                "value": "",
+                "description": ""
+              },
+              "tempo": "",
+              "notes": "Inhale 4sec, hold 4sec, exhale 4sec, hold 4sec. Repeat 5-10 cycles. Downregulate after most demanding session of week.",
+              "tags": [],
+              "supersetId": ""
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Session Time: ~60min (5min warm-up, 10min Olympic lift, 10min plyometrics, 17min fight simulation, 4min finisher, 5min cool-down, ~9min rest)",
+        "Most Demanding S&C Session: This is the hardest S&C of Week 4. Power cleans @ 75%, 4 sets plyos, 3 rounds fight simulation. If you finish feeling like you went 3 rounds, intensity was right.",
+        "Bar Speed Priority on Cleans: If Thursday sparring was hard, you may be fatigued. Don't force 75% if bar speed is slow—drop to 70-72% and maintain quality.",
+        "Fight Simulation Intensity: 3 rounds x 5min is peak so far (vs Week 1's 2 rounds). Week 7 will hit 5 rounds (full fight structure). If you can't maintain intensity all 3 rounds, pacing needs work.",
+        "MMA Integration: Schedule CAREFULLY. This is high-CNS-demand session. Options: (1) Standalone session, (2) 4-6hr before/after MMA, (3) Before/after light technique. Do NOT schedule after hard sparring—you won't be fresh for quality Olympic lifts.",
+        "Auto-Regulation: If overly fatigued, scale back: reduce power cleans to 4 sets or drop fight simulation to 2 rounds. Prioritize Saturday's open mat (highest-volume MMA day).",
+        "Recovery: Most critical of the week. Hydrate aggressively (32oz post-session). Protein + carbs within 30min (30g protein, 50g carbs). If MMA session >4hr away, consider 15min ice bath. Sleep 8-9hr tonight—Saturday is highest MMA volume (open mat, 6-8 rounds sparring).",
+        "Weekend Prep: Tonight and tomorrow morning—prioritize recovery. Eat well, sleep 8-9hr, manage stress. You need to arrive fresh for Saturday's open mat. Sunday is rest/recovery—use it."
+      ]
+    }
+  }
+]
