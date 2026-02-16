@@ -1,0 +1,65 @@
+[
+  {
+    "id": "time-constrained-w1-monday",
+    "weekNumber": 1,
+    "dayOfWeek": "Monday",
+    "phase": "Foundation",
+    "message": "WEEK 1 MON — Full Body A: Push Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Goblet Squat: 10-12 reps @ RPE 6-7\n- Push-ups: 8-12 reps @ RPE 6-7\n\nSuperset 2:\n- Dumbbell RDL: 10-12 reps @ RPE 6-7\n- DB Shoulder Press: 8-10 reps @ RPE 6-7\n\nSuperset 3:\n- DB Row: 10/arm @ RPE 6-7\n- Plank: 30-45sec\n\nNotes: Welcome to time-efficient training. Focus on mastering superset pacing: transition between exercises in <15sec, rest 60-90sec after completing BOTH exercises. Loads are moderate (60-65%) to allow focus on technique. Don't rush through exercises—move deliberately between them. Session: ~30-35min. Optional 5min row finisher if time/energy allows."
+  },
+  {
+    "id": "time-constrained-w1-wednesday",
+    "weekNumber": 1,
+    "dayOfWeek": "Wednesday",
+    "phase": "Foundation",
+    "message": "WEEK 1 WED — Full Body B: Pull Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Barbell Deadlift: 8-10 reps @ RPE 6-7 (lighter than normal, focus on form)\n- Pull-ups OR Lat Pulldown: 6-10 reps @ RPE 6-7\n\nSuperset 2:\n- Goblet Squat: 10-12 reps @ RPE 6-7\n- DB Bench Press: 8-10 reps @ RPE 6-7\n\nSuperset 3:\n- DB RDL: 10-12 reps @ RPE 6-7\n- DB Curls: 10-12 reps @ RPE 6-7\n\nNotes: Pull emphasis today. Introduce barbell deadlift (bar speed fast, form perfect). Compare transition times to Monday—getting more efficient? If gasping for air or form breaks down, extend rest to 2min and dial back intensity. Session: ~30-35min. Optional 5min jump rope if time allows."
+  },
+  {
+    "id": "time-constrained-w1-friday",
+    "weekNumber": 1,
+    "dayOfWeek": "Friday",
+    "phase": "Foundation",
+    "message": "WEEK 1 FRI — Full Body C: Lower Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Front Squat OR Goblet Squat: 8-10 reps @ RPE 6-7\n- DB Bench Press: 8-10 reps @ RPE 6-7\n\nSuperset 2:\n- Barbell RDL: 10-12 reps @ RPE 6-7 (barbell allows heavier load than DBs)\n- DB Row (bent-over): 10/arm @ RPE 6-7\n\nSuperset 3:\n- Walking Lunges: 10/leg @ RPE 6-7 (20 total steps)\n- DB Overhead Press: 8-10 reps @ RPE 6-7\n\nNotes: Lower emphasis. Week 1 complete! You've trained each major movement pattern 3x this week. Reflect: Did you hit all 3 sessions? Transitions smooth (<15sec)? Week 2 continues Foundation—same structure, potentially heavier if Week 1 felt easy (RPE 6). Session: ~30-35min."
+  },
+  {
+    "id": "time-constrained-w4-tuesday",
+    "weekNumber": 4,
+    "dayOfWeek": "Tuesday",
+    "phase": "Progressive Overload Mid",
+    "message": "WEEK 4 TUE — Full Body A: Push Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Barbell Back Squat: 8-10 reps @ RPE 7-8 (70-75% 1RM; if Week 3 you did 135×10, try 145×10 or 135×12)\n- Push-ups: 10-15 reps @ RPE 7-8 (weighted/elevated if bodyweight too easy)\n\nSuperset 2:\n- Barbell Deadlift: 6-8 reps @ RPE 7-8 (if Week 3 you pulled 185×8, try 205×8 or 185×10)\n- DB Shoulder Press: 8-10 reps @ RPE 7-8\n\nSuperset 3:\n- Chest-Supported Row OR DB Row: 10-12/arm @ RPE 7-8\n- Plank: 45-60sec (increase from Week 1's 30-45s)\n\nNotes: Progressive overload in action—compare loads to Week 3. Track everything. Optional 4th superset if time/energy: Goblet Squat 2×12-15 + Chest Flyes 2×12-15. Session: ~35-40min. Finisher optional."
+  },
+  {
+    "id": "time-constrained-w4-thursday",
+    "weekNumber": 4,
+    "dayOfWeek": "Thursday",
+    "phase": "Progressive Overload Mid",
+    "message": "WEEK 4 THU — Full Body B: Pull Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Barbell Deadlift: 6-8 reps @ RPE 7-8 (second session this week; loads may be slightly lighter than Tuesday due to fatigue—that's fine)\n- Pull-ups OR Lat Pulldown: 6-10 reps @ RPE 7-8 (if Week 3 you did 8 bodyweight, try +5-10lbs or 10 reps)\n\nSuperset 2:\n- Goblet Squat OR Front Squat: 10-12 reps @ RPE 7-8\n- DB Bench Press: 8-10 reps @ RPE 7-8\n\nSuperset 3:\n- DB RDL: 10-12 reps @ RPE 7-8 (add 2.5-5lbs if Week 3 felt easy)\n- DB Curls: 10-12 reps @ RPE 7-8\n\nNotes: Pull emphasis. Deadlifts 2x/week builds work capacity (3 sets Tue + 3 sets Thu = 6 sets distributed). Bar speed is king—if grinding from rep 1, reduce 10lbs. Session: ~35-40min."
+  },
+  {
+    "id": "time-constrained-w4-saturday",
+    "weekNumber": 4,
+    "dayOfWeek": "Saturday",
+    "phase": "Progressive Overload Mid",
+    "message": "WEEK 4 SAT — Full Body C: Lower Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Front Squat OR Barbell Back Squat: 8-10 reps @ RPE 7-8 (variation from Tuesday if you did back squat there)\n- DB Bench Press: 8-10 reps @ RPE 7-8 (third bench session this week—may be slightly lighter due to fatigue)\n\nSuperset 2:\n- Barbell RDL: 10-12 reps @ RPE 7-8 (if Week 3 you did 95×12, try 115×12 or 95×15)\n- DB Row OR Barbell Row: 10/arm @ RPE 7-8\n\nSuperset 3:\n- Walking Lunges: 10-12/leg @ RPE 7-8 (heavier DBs than Week 3)\n- DB Overhead Press: 8-10 reps @ RPE 7-8\n\nNotes: Lower emphasis. Week 4 complete! Compare totals to Week 3—lifting 5-10% more? Progressive overload isn't linear but trend matters. Session: ~35-40min."
+  },
+  {
+    "id": "time-constrained-w6-monday",
+    "weekNumber": 6,
+    "dayOfWeek": "Monday",
+    "phase": "Progressive Overload Final",
+    "message": "WEEK 6 MON — Full Body A: Push Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Barbell Back Squat: 8-10 reps @ RPE 7-8 (if Week 5 you did 155×10, try 165×10 or 155×12; final progressive overload squat before Week 7 @ RPE 8-9)\n- Push-ups: 12-15 reps @ RPE 7-8 (weighted if needed)\n\nSuperset 2:\n- Barbell Deadlift: 6-8 reps @ RPE 7-8 (final progressive overload DL; if Week 5 you pulled 225×8, try 235×8)\n- DB Shoulder Press: 8-10 reps @ RPE 7-8\n\nSuperset 3:\n- Chest-Supported Row OR DB Row: 10-12/arm @ RPE 7-8 (1-2sec squeeze at top)\n- Plank: 60sec OR add 10-25lb plate if 60s is easy\n\nNotes: Final week before Week 7 peak test. Visualize success. Week 8 is deload (40% volume reduction). Session: ~35-40min."
+  },
+  {
+    "id": "time-constrained-w6-wednesday",
+    "weekNumber": 6,
+    "dayOfWeek": "Wednesday",
+    "phase": "Progressive Overload Final",
+    "message": "WEEK 6 WED — Full Body B: Pull Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Barbell Deadlift: 6-8 reps @ RPE 7-8 (second session; may be lighter than Monday due to fatigue—that's expected)\n- Pull-ups OR Lat Pulldown: 6-10 reps @ RPE 7-8 (if Week 5 you did 10 bodyweight, try +10lbs and aim for 8)\n\nSuperset 2:\n- Front Squat OR Goblet Squat: 10-12 reps @ RPE 7-8\n- DB Bench Press: 8-10 reps @ RPE 7-8\n\nSuperset 3:\n- DB RDL: 10-12 reps @ RPE 7-8 (final progressive overload RDL; push for max reps or heavier DBs)\n- DB Curls: 10-12 reps @ RPE 7-8 (2-3sec eccentric if weight jump feels too big)\n\nNotes: Compare to Week 5 Day 3—progressive overload check. How's pull-up strength? Session: ~35-40min. Skip finisher if fatigued—Week 7 is peak test next week."
+  },
+  {
+    "id": "time-constrained-w6-friday",
+    "weekNumber": 6,
+    "dayOfWeek": "Friday",
+    "phase": "Progressive Overload Final",
+    "message": "WEEK 6 FRI — Full Body C: Lower Emphasis\n\nSuperset 1 (3 sets, <15sec transition, 60-90s rest):\n- Front Squat OR Barbell Back Squat: 8-10 reps @ RPE 7-8 (last time at RPE 7-8 before Week 7 @ RPE 8-9; if Week 5 you did 125×10, try 135×10)\n- DB Bench Press: 8-10 reps @ RPE 7-8 (third bench session this week)\n\nSuperset 2:\n- Barbell RDL: 10-12 reps @ RPE 7-8 (final progressive overload RDL; if Week 5 you did 135×12, try 145×12)\n- Barbell Row OR DB Row: 10-12 reps @ RPE 7-8\n\nSuperset 3:\n- Walking Lunges: 12/leg @ RPE 7-8 (upper end of range, 24 total steps)\n- DB Overhead Press: 8-10 reps @ RPE 7-8\n\nNotes: Week 6 complete! Compare to Week 3 and Week 5—how much have you progressed? Typical: 10-20% increase over 4 weeks. Week 7 is peak test (75-80%, RPE 8-9), Week 8 is deload. Session: ~35-40min."
+  }
+]
