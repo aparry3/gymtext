@@ -1,0 +1,286 @@
+{
+  "_comment": "Week 1, Day 3 — Lunge Emphasis (Structured Workout)",
+  "title": "Beginner Full Body — Day 3",
+  "focus": "Lunge & Mixed Push/Pull Angles",
+  "description": "Final session of Week 1. Introduction to single-leg pattern (reverse lunge), incline pressing angle, and cable rowing. Celebration of completing first training week.",
+  "quote": {
+    "text": "Week 1 complete. This is how habits are built—one session at a time.",
+    "author": ""
+  },
+  "program": {
+    "name": "Beginner 3-Day Full-Body Training Plan",
+    "client": "Sarah Chen",
+    "week": 1,
+    "phase": "Movement Foundation",
+    "dayNumber": 3
+  },
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Prepare legs for single-leg work, activate hips for stability",
+      "exercises": [
+        {
+          "name": "Light Jog",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1-2",
+            "description": "Light jog or jump rope"
+          },
+          "tempo": "",
+          "notes": "4.0-5.0 mph treadmill or jump rope. Use bike if too sore.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "3 min",
+          "distance": ""
+        },
+        {
+          "name": "Leg Swings (Forward/Back)",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10 each leg",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Hold wall for balance, swing leg forward and back",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Leg Swings (Lateral)",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10 each leg",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Stand perpendicular to wall, swing leg side to side",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Bodyweight Reverse Lunge (Pattern Practice)",
+          "type": "Mobility",
+          "sets": "2",
+          "reps": "6 each leg",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "No weight"
+          },
+          "tempo": "",
+          "notes": "Step straight back, both knees to 90°, push through front heel",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Work",
+      "overview": "Primary strength movements—lunge, incline press, horizontal pull",
+      "exercises": [
+        {
+          "name": "Dumbbell Reverse Lunge",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8 each",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6-7",
+            "description": "Balance challenge makes this harder"
+          },
+          "tempo": "2-0-2",
+          "notes": "15lbs per hand. Step straight back, lower to 90/90, push through front heel. Hold wall for balance if needed.",
+          "tags": ["lunge", "legs", "quads", "glutes"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Incline Dumbbell Bench Press",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "3-0-1",
+          "notes": "12lbs per hand. 30-45° incline. Lower to upper chest, press up and slightly back.",
+          "tags": ["chest", "upper_chest", "front_delts", "triceps"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Cable Seated Row",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "2-1-2",
+          "notes": "60lbs. Pull to lower sternum, elbows straight back, squeeze shoulder blades.",
+          "tags": ["back", "lats", "rhomboids", "pull"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Supplemental movements—hinge reinforcement, shoulder isolation",
+      "exercises": [
+        {
+          "name": "Dumbbell Romanian Deadlift",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Reinforcing hinge pattern"
+          },
+          "tempo": "3-1-1",
+          "notes": "25lbs per hand (same as Day 2). Third time doing RDL this week—competency building.",
+          "tags": ["hinge", "hamstrings", "glutes"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Dumbbell Lateral Raise",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "12",
+          "rest": "60s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "First shoulder isolation"
+          },
+          "tempo": "2-1-2",
+          "notes": "8lbs per hand. Slight elbow bend, raise to shoulder height, lead with elbows.",
+          "tags": ["shoulders", "side_delts"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Celebrate Week 1 completion, stretch legs and hips",
+      "exercises": [
+        {
+          "name": "Walk",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1",
+            "description": "Victory lap"
+          },
+          "tempo": "",
+          "notes": "Easy pace, reflect on completing first week",
+          "tags": [],
+          "supersetId": "",
+          "duration": "2 min",
+          "distance": ""
+        },
+        {
+          "name": "Standing Quad Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Pull foot to butt, push hips forward slightly",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hip Flexor Stretch (Half-Kneeling)",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Push hips forward, keep torso upright",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Deep Breathing",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "5",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Inhale 4s, hold 2s, exhale 6s. Finish session mindfully.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "1 min",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 45,
+  "intensityLevel": "Low-Moderate",
+  "tags": {
+    "category": ["strength", "beginner"],
+    "split": ["full_body"],
+    "muscles": ["quads", "glutes", "upper_chest", "lats", "hamstrings", "side_delts"],
+    "patterns": ["lunge", "press", "row", "hinge"],
+    "equipment": ["dumbbell", "cable", "bodyweight"]
+  }
+}

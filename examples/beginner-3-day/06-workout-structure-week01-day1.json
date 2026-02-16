@@ -1,0 +1,286 @@
+{
+  "_comment": "Week 1, Day 1 — Squat Emphasis (Structured Workout)",
+  "title": "Beginner Full Body — Day 1",
+  "focus": "Squat & Horizontal Push/Pull",
+  "description": "First training session. Introduction to squat pattern, horizontal pressing and pulling movements. Emphasis on learning technique with moderate loads.",
+  "quote": {
+    "text": "The first step is always the hardest. You showed up—that's what matters.",
+    "author": ""
+  },
+  "program": {
+    "name": "Beginner 3-Day Full-Body Training Plan",
+    "client": "Sarah Chen",
+    "week": 1,
+    "phase": "Movement Foundation",
+    "dayNumber": 1
+  },
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Raise core temperature, activate muscles, prepare movement patterns",
+      "exercises": [
+        {
+          "name": "Treadmill Walk",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1",
+            "description": "Easy conversational pace"
+          },
+          "tempo": "",
+          "notes": "3.0-3.5 mph, 0% incline",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "Cat-Cow Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Breathe with each rep, slow and controlled",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Glute Bridge",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "12",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "Bodyweight"
+          },
+          "tempo": "1-1-1",
+          "notes": "Squeeze glutes at top, hold 1s",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Goblet Squat (Bodyweight Pattern Practice)",
+          "type": "Mobility",
+          "sets": "2",
+          "reps": "8",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "No weight, pattern learning"
+          },
+          "tempo": "",
+          "notes": "Hands at chest, practice depth and bracing",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Work",
+      "overview": "Primary strength movements—squat, horizontal press, horizontal pull",
+      "exercises": [
+        {
+          "name": "Goblet Squat",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort, 3-4 reps in reserve"
+          },
+          "tempo": "3-0-1",
+          "notes": "15lbs dumbbell. Sit back into hips, elbows between knees, chest up. Film sets 1 and 3.",
+          "tags": ["squat", "legs", "quads", "glutes"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Dumbbell Bench Press",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "3-0-1",
+          "notes": "15lbs per hand. Shoulder blades pinned, lower to chest level, press through feet.",
+          "tags": ["chest", "push", "triceps"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Dumbbell Single-Arm Row",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8 each",
+          "rest": "60s per side",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "1-1-1",
+          "notes": "20lbs. Opposite hand and knee on bench. Pull elbow to ceiling, squeeze shoulder blade.",
+          "tags": ["back", "pull", "lats"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Supplemental movements—hinge pattern introduction, core stability",
+      "exercises": [
+        {
+          "name": "Dumbbell Romanian Deadlift",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "3-1-1",
+          "notes": "20lbs per hand. Push hips back, feel hamstring stretch, flat back.",
+          "tags": ["hinge", "hamstrings", "glutes"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Front Plank",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "",
+          "rest": "60s",
+          "intensity": {
+            "type": "RPE",
+            "value": "7",
+            "description": "Core fatigue expected"
+          },
+          "tempo": "",
+          "notes": "Bodyweight. Squeeze glutes, don't let hips sag. Breathe normally.",
+          "tags": ["core", "abs"],
+          "supersetId": "",
+          "duration": "30s",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Bring heart rate down, start recovery, reduce soreness",
+      "exercises": [
+        {
+          "name": "Walk",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1",
+            "description": "Easy pace"
+          },
+          "tempo": "",
+          "notes": "Around gym, normalize breathing",
+          "tags": [],
+          "supersetId": "",
+          "duration": "2 min",
+          "distance": ""
+        },
+        {
+          "name": "Child's Pose",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Knees wide, hips to heels, arms extended. Deep breathing.",
+          "tags": [],
+          "supersetId": "",
+          "duration": "60s",
+          "distance": ""
+        },
+        {
+          "name": "Cat-Cow Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "10",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Slow, breathe with each rep",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Hip Flexor Stretch (Half-Kneeling)",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "30s each",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Push hips forward gently, keep torso upright",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 45,
+  "intensityLevel": "Low-Moderate",
+  "tags": {
+    "category": ["strength", "beginner"],
+    "split": ["full_body"],
+    "muscles": ["quads", "glutes", "chest", "lats", "hamstrings", "abs"],
+    "patterns": ["squat", "press", "row", "hinge"],
+    "equipment": ["dumbbell", "bodyweight", "bench"]
+  }
+}

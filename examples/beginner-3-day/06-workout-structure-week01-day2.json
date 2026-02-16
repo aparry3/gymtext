@@ -1,0 +1,268 @@
+{
+  "_comment": "Week 1, Day 2 — Hinge Emphasis (Structured Workout)",
+  "title": "Beginner Full Body — Day 2",
+  "focus": "Hinge & Vertical Push/Pull",
+  "description": "Second training session. Introduction to hip hinge pattern (Romanian deadlift), vertical pressing (overhead), and vertical pulling (lat pulldown).",
+  "quote": {
+    "text": "Session two. You're building the habit.",
+    "author": ""
+  },
+  "program": {
+    "name": "Beginner 3-Day Full-Body Training Plan",
+    "client": "Sarah Chen",
+    "week": 1,
+    "phase": "Movement Foundation",
+    "dayNumber": 2
+  },
+  "sections": [
+    {
+      "title": "Warm Up",
+      "overview": "Prepare hips and hamstrings for hinging, activate shoulders for pressing",
+      "exercises": [
+        {
+          "name": "Stationary Bike",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1",
+            "description": "Easy resistance"
+          },
+          "tempo": "",
+          "notes": "Warm up legs and hips",
+          "tags": [],
+          "supersetId": "",
+          "duration": "5 min",
+          "distance": ""
+        },
+        {
+          "name": "World's Greatest Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "5 each side",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Hip mobility, thoracic rotation",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Glute Bridge",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "12",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "Bodyweight"
+          },
+          "tempo": "1-1-1",
+          "notes": "Squeeze glutes at top, not just lifting hips",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Bodyweight Hinge (Pattern Practice)",
+          "type": "Mobility",
+          "sets": "2",
+          "reps": "8",
+          "rest": "30s",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": "No weight"
+          },
+          "tempo": "",
+          "notes": "Hands on thighs, push hips back, feel hamstring stretch",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Main Work",
+      "overview": "Primary strength movements—hinge, vertical press, vertical pull",
+      "exercises": [
+        {
+          "name": "Dumbbell Romanian Deadlift",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "2 min",
+          "intensity": {
+            "type": "RPE",
+            "value": "6-7",
+            "description": "Hardest movement today"
+          },
+          "tempo": "3-1-1",
+          "notes": "25lbs per hand. Push hips BACK, not down. Feel hamstring stretch. Flat back entire time. Film all sets.",
+          "tags": ["hinge", "hamstrings", "glutes"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Seated Dumbbell Shoulder Press",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "8",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "2-0-1",
+          "notes": "12lbs per hand. Back supported, press slightly back, full lockout overhead.",
+          "tags": ["shoulders", "front_delts", "triceps"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Lat Pulldown",
+          "type": "Strength",
+          "sets": "3",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Moderate effort"
+          },
+          "tempo": "2-1-1",
+          "notes": "50lbs. Pull elbows to ribs, chest up, squeeze shoulder blades at bottom.",
+          "tags": ["back", "lats", "pull"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Accessory Work",
+      "overview": "Supplemental movements—squat volume, arm work",
+      "exercises": [
+        {
+          "name": "Goblet Squat",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "10",
+          "rest": "90s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "Sub-maximal squat day"
+          },
+          "tempo": "2-0-1",
+          "notes": "20lbs dumbbell (increased from Day 1). Maintain squat pattern.",
+          "tags": ["squat", "legs", "quads"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Dumbbell Bicep Curl",
+          "type": "Strength",
+          "sets": "2",
+          "reps": "12",
+          "rest": "60s",
+          "intensity": {
+            "type": "RPE",
+            "value": "6",
+            "description": "First isolation exercise"
+          },
+          "tempo": "2-1-2",
+          "notes": "12lbs per hand. Elbows pinned to sides, full range of motion.",
+          "tags": ["arms", "biceps"],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        }
+      ]
+    },
+    {
+      "title": "Cooldown",
+      "overview": "Stretch hamstrings and shoulders after hinge and pressing work",
+      "exercises": [
+        {
+          "name": "Walk",
+          "type": "Cardio",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Zone",
+            "value": "1",
+            "description": "Easy pace"
+          },
+          "tempo": "",
+          "notes": "Normalize breathing",
+          "tags": [],
+          "supersetId": "",
+          "duration": "2 min",
+          "distance": ""
+        },
+        {
+          "name": "Pigeon Pose",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "60s each",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Hip opener, glute stretch after hinging",
+          "tags": [],
+          "supersetId": "",
+          "duration": "",
+          "distance": ""
+        },
+        {
+          "name": "Seated Hamstring Stretch",
+          "type": "Mobility",
+          "sets": "1",
+          "reps": "",
+          "rest": "",
+          "intensity": {
+            "type": "Other",
+            "value": "",
+            "description": ""
+          },
+          "tempo": "",
+          "notes": "Legs extended, reach toward toes, keep back flat",
+          "tags": [],
+          "supersetId": "",
+          "duration": "60s",
+          "distance": ""
+        }
+      ]
+    }
+  ],
+  "estimatedDurationMin": 45,
+  "intensityLevel": "Low-Moderate",
+  "tags": {
+    "category": ["strength", "beginner"],
+    "split": ["full_body"],
+    "muscles": ["hamstrings", "glutes", "front_delts", "lats", "quads", "biceps"],
+    "patterns": ["hinge", "press", "pull", "squat"],
+    "equipment": ["dumbbell", "machine", "bodyweight"]
+  }
+}
