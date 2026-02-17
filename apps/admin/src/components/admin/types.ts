@@ -552,3 +552,97 @@ export interface ExerciseAliasFormData {
   source?: AliasSource;
   confidenceScore?: number;
 }
+
+// ============================================
+// Agent Domain Types (for agent-logs filtering)
+// ============================================
+
+export interface AgentDomain {
+  id: string;
+  label: string;
+  agents: AgentConfig[];
+}
+
+export interface AgentConfig {
+  id: string;
+  label: string;
+}
+
+export const AGENT_DOMAINS: AgentDomain[] = [
+  {
+    id: 'chat',
+    label: 'Chat',
+    agents: [
+      { id: 'chat:generate', label: 'Generate' },
+    ],
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    agents: [
+      { id: 'profile:fitness', label: 'Fitness' },
+      { id: 'profile:structured', label: 'Structured' },
+      { id: 'profile:user', label: 'User' },
+    ],
+  },
+  {
+    id: 'plan',
+    label: 'Plans',
+    agents: [
+      { id: 'plan:generate', label: 'Generate' },
+      { id: 'plan:structured', label: 'Structured' },
+      { id: 'plan:message', label: 'Message' },
+      { id: 'plan:modify', label: 'Modify' },
+    ],
+  },
+  {
+    id: 'workout',
+    label: 'Workouts',
+    agents: [
+      { id: 'workout:generate', label: 'Generate' },
+      { id: 'workout:structured', label: 'Structured' },
+      { id: 'workout:structured:validate', label: 'Validate' },
+      { id: 'workout:message', label: 'Message' },
+      { id: 'workout:modify', label: 'Modify' },
+    ],
+  },
+  {
+    id: 'microcycle',
+    label: 'Microcycles',
+    agents: [
+      { id: 'microcycle:generate', label: 'Generate' },
+      { id: 'microcycle:structured', label: 'Structured' },
+      { id: 'microcycle:message', label: 'Message' },
+      { id: 'microcycle:modify', label: 'Modify' },
+    ],
+  },
+  {
+    id: 'modifications',
+    label: 'Modifications',
+    agents: [
+      { id: 'modifications:router', label: 'Router' },
+    ],
+  },
+  {
+    id: 'program',
+    label: 'Programs',
+    agents: [
+      { id: 'program:parse', label: 'Parse' },
+    ],
+  },
+  {
+    id: 'messaging',
+    label: 'Messaging',
+    agents: [
+      { id: 'messaging:plan-summary', label: 'Plan Summary' },
+      { id: 'messaging:plan-ready', label: 'Plan Ready' },
+    ],
+  },
+  {
+    id: 'blog',
+    label: 'Blog',
+    agents: [
+      { id: 'blog:metadata', label: 'Metadata' },
+    ],
+  },
+];

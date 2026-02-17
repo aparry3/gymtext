@@ -12,7 +12,7 @@ import { OnboardingRepository, SignupData } from '@/server/repositories/onboardi
 import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
 // Profile agent imports for inline agent creation
-import { createAgent, PROMPT_IDS } from '@/server/agents';
+import { createAgent, AGENTS } from '@/server/agents';
 import { buildProfileUpdateUserMessage } from '@/server/services/agents/prompts/profile';
 import { ProfileUpdateOutputSchema } from '@/server/services/agents/schemas';
 
@@ -180,7 +180,7 @@ async function generateProfileFromSignupData(
   const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
 
   const agent = await createAgent({
-    name: PROMPT_IDS.PROFILE_FITNESS,
+    name: AGENTS.PROFILE_UPDATE,
     schema: ProfileUpdateOutputSchema,
   });
 

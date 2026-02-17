@@ -2,7 +2,7 @@
  * Agent Definition Model
  *
  * Represents database-driven agent configurations.
- * Stores prompts alongside model metadata for runtime configuration.
+ * Simplified for the new dossier-based agent architecture.
  */
 
 import type { Insertable, Selectable, Updateable } from 'kysely';
@@ -15,13 +15,13 @@ export type AgentDefinitionUpdate = Updateable<AgentDefinitions>;
 
 /**
  * Database-loaded agent configuration
- * Used by createAgent() when dbConfig is provided
+ * Used by the agent runner when loading agent definitions
  */
 export interface DbAgentConfig {
   /** System prompt instructions */
   systemPrompt: string;
-  /** Optional user prompt template */
-  userPrompt: string | null;
+  /** User prompt template with {{variable}} substitution */
+  userPromptTemplate: string | null;
   /** Model identifier (e.g., 'gpt-5-nano') */
   model: string;
   /** Maximum tokens for response */
@@ -30,6 +30,10 @@ export interface DbAgentConfig {
   temperature: number;
   /** Maximum iterations for tool loops */
   maxIterations: number;
-  /** Maximum retry attempts on validation failure */
-  maxRetries: number;
+  /** Tool IDs available to this agent */
+  toolIds: string[] | null;
+  /** Example messages for few-shot prompting */
+  examples: unknown | null;
+  /** Eval rubric for quality assessment */
+  evalRubric: string | null;
 }

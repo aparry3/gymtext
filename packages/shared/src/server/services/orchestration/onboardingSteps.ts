@@ -231,7 +231,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
       }
 
       console.log(`[Onboarding] Step 5: Creating workout for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
-      const workout = await trainingService.prepareWorkoutForDate(user, targetDate, microcycle);
+      const workout = await trainingService.prepareWorkoutForDate(user, targetDate);
       if (!workout) {
         throw new Error(`Failed to generate workout for user ${user.id}`);
       }

@@ -1,18 +1,16 @@
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import {
-  buildProfileUpdateUserMessage,
   buildUserFieldsUserMessage,
 } from '../prompts/profile';
-import type { ProfileUpdateOutput, UserFieldsOutput } from '../types/profile';
-import type { StructuredProfile } from '@/server/models/profile';
+import type { UserFieldsOutput } from '../types/profile';
 import type { CommonTimezone } from '@/shared/utils/timezone';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../../domain/user/userService';
-import type { FitnessProfileServiceInstance } from '../../domain/user/fitnessProfileService';
 import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
-import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * ProfileServiceInstance interface
@@ -23,44 +21,24 @@ export interface ProfileServiceInstance {
 
 export interface ProfileServiceDeps {
   user: UserServiceInstance;
-  fitnessProfile: FitnessProfileServiceInstance;
   workoutInstance: WorkoutInstanceServiceInstance;
-  agentRunner: AgentRunnerInstance;
+  dossier: DossierServiceInstance;
+  agentRunner: SimpleAgentRunnerInstance;
 }
 
 /**
  * Create a ProfileService instance with injected dependencies
  *
- * ProfileService - Orchestration service for profile and user field agents
+ * ProfileService - Orchestration service for profile updates
  *
- * Handles profile updates via the profile agent AND user field updates
- * (timezone, send time, name) via the user fields agent.
+ * Handles profile updates via the profile:update agent (dossier-based)
+ * and user field updates (timezone, send time, name) via profile:user agent.
  * Both agents run in parallel for efficiency.
- *
- * Uses entity services (UserService, FitnessProfileService) for data access.
- *
- * This is an ORCHESTRATION service - it coordinates agent calls.
- * For entity CRUD operations, use FitnessProfileService directly.
  */
 export function createProfileService(deps: ProfileServiceDeps): ProfileServiceInstance {
-  const { user: userService, fitnessProfile: fitnessProfileService, workoutInstance: workoutInstanceService, agentRunner } = deps;
+  const { user: userService, workoutInstance: workoutInstanceService, dossier: dossierService, agentRunner: simpleAgentRunner } = deps;
 
   return {
-    /**
-     * Update profile and user fields from a user message
-     *
-     * Runs both agents in parallel:
-     * 1. Profile agent - updates the fitness profile dossier
-     * 2. User fields agent - extracts timezone, send time, and name changes
-     *
-     * Fetches context via entity services, calls both agents,
-     * persists updates, and returns a standardized ToolResult.
-     *
-     * @param userId - The user's ID
-     * @param message - The user's message to extract info from
-     * @param previousMessages - Optional conversation history for context
-     * @returns ToolResult with response summary and optional messages
-     */
     async updateProfile(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
       console.log('[PROFILE_SERVICE] Processing profile update:', {
         userId,
@@ -68,14 +46,14 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
       });
 
       try {
-        // Fetch context via entity services
         const user = await userService.getUser(userId);
         if (!user) {
           console.warn('[PROFILE_SERVICE] User not found:', userId);
           return { toolType: 'action', response: 'User not found.' };
         }
 
-        const currentProfile = await fitnessProfileService.getCurrentProfile(userId) ?? '';
+        // Fetch current profile dossier
+        const currentProfile = await dossierService.getProfile(userId) ?? '';
         const currentDate = formatForAI(new Date(), user.timezone);
 
         // Convert previous messages to agent format
@@ -84,32 +62,37 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           content: m.content,
         }));
 
-        // Run BOTH agents in parallel for efficiency
+        // Run profile update + user fields agents in parallel
         const [profileAgentResult, userFieldsAgentResult] = await Promise.all([
-          // Profile agent - updates fitness profile dossier
-          // Sub-agent (profile:structured) runs conditionally when wasUpdated=true (DB config)
-          agentRunner.invoke('profile:fitness', {
-            input: buildProfileUpdateUserMessage(currentProfile, message, user, currentDate),
-            params: { user },
+          // Profile agent - updates fitness profile dossier via simpleAgentRunner
+          simpleAgentRunner.invoke('profile:update', {
+            input: message,
+            context: currentProfile ? [`<Profile>${currentProfile}</Profile>`] : [],
+            params: { user, currentDate },
             previousMessages: previousMsgs,
           }),
           // User fields agent - extracts timezone, send time, name changes
-          agentRunner.invoke('profile:user', {
+          simpleAgentRunner.invoke('profile:user', {
             input: buildUserFieldsUserMessage(message, user, currentDate),
             params: { user },
             previousMessages: previousMsgs,
           }),
         ]);
 
-        // Extract typed results
-        const profileResult: ProfileUpdateOutput = {
-          updatedProfile: (profileAgentResult.response as Record<string, unknown>).updatedProfile as string,
-          wasUpdated: (profileAgentResult.response as Record<string, unknown>).wasUpdated as boolean,
-          updateSummary: ((profileAgentResult.response as Record<string, unknown>).updateSummary as string) || '',
-          structured: (profileAgentResult as Record<string, unknown>).structured as StructuredProfile | null ?? null,
-        };
+        // Profile update: the agent returns updated markdown
+        const updatedProfile = profileAgentResult.response;
+        const profileWasUpdated = updatedProfile && updatedProfile !== currentProfile;
 
-        const userFieldsResponse = userFieldsAgentResult.response as Record<string, unknown>;
+        // User fields result - parse JSON string from simple runner
+        let userFieldsResponse: Record<string, unknown>;
+        try {
+          userFieldsResponse = typeof userFieldsAgentResult.response === 'string'
+            ? JSON.parse(userFieldsAgentResult.response)
+            : userFieldsAgentResult.response as Record<string, unknown>;
+        } catch {
+          console.warn('[PROFILE_SERVICE] Could not parse user fields response, skipping user field updates');
+          userFieldsResponse = { hasUpdates: false };
+        }
         const userFieldsResult: UserFieldsOutput = {
           timezone: (userFieldsResponse.timezone as CommonTimezone | null) ?? null,
           preferredSendHour: (userFieldsResponse.preferredSendHour as number | null) ?? null,
@@ -118,18 +101,10 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           updateSummary: (userFieldsResponse.updateSummary as string) || '',
         };
 
-        // Persist profile updates (structured data now included from update agent)
-        if (profileResult.wasUpdated) {
-          await fitnessProfileService.saveProfileWithStructured(
-            userId,
-            profileResult.updatedProfile,
-            profileResult.structured
-          );
-
-          console.log('[PROFILE_SERVICE] Profile updated:', {
-            summary: profileResult.updateSummary,
-            hasStructured: profileResult.structured !== null,
-          });
+        // Persist profile update via dossier service
+        if (profileWasUpdated) {
+          await dossierService.updateProfile(userId, updatedProfile);
+          console.log('[PROFILE_SERVICE] Profile dossier updated');
         } else {
           console.log('[PROFILE_SERVICE] No profile updates detected');
         }
@@ -138,39 +113,30 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
         if (userFieldsResult.hasUpdates) {
           const userUpdates: { preferredSendHour?: number; timezone?: string; name?: string } = {};
 
-          // Timezone: !! handles null and empty string
           if (!!userFieldsResult.timezone) {
             userUpdates.timezone = userFieldsResult.timezone;
             console.log('[PROFILE_SERVICE] Timezone update:', userFieldsResult.timezone);
           }
 
-          // PreferredSendHour: can't use !! because 0 (midnight) is valid
-          // Check for null and -1 sentinel explicitly
           if (userFieldsResult.preferredSendHour != null && userFieldsResult.preferredSendHour !== -1) {
             userUpdates.preferredSendHour = userFieldsResult.preferredSendHour;
           }
 
-          // Name: !! handles null and empty string
           if (!!userFieldsResult.name) {
             userUpdates.name = userFieldsResult.name;
           }
 
-          // Persist user updates if any valid fields
           if (Object.keys(userUpdates).length > 0) {
             await userService.updatePreferences(userId, userUpdates);
             console.log('[PROFILE_SERVICE] User fields updated:', userUpdates);
 
-            // Check if time-related fields changed - ensure user has today's workout
             if (userUpdates.timezone !== undefined || userUpdates.preferredSendHour !== undefined) {
               const newTimezone = userUpdates.timezone ?? user.timezone;
               const currentTime = now(newTimezone);
-
-              // Check if workout already exists for today (prevents duplicates)
               const todayStart = currentTime.startOf('day').toJSDate();
               const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayStart);
 
               if (!existingWorkout) {
-                // No workout exists - trigger immediate send via Inngest
                 await inngest.send({
                   name: 'workout/scheduled',
                   data: {
@@ -186,13 +152,10 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
 
         // Combine summaries for response
         const summaries: string[] = [];
-        if (profileResult.wasUpdated) {
-          summaries.push(`Profile: ${profileResult.updateSummary}`);
+        if (profileWasUpdated) {
+          summaries.push('Profile updated');
         }
-        if (userFieldsResult.hasUpdates && Object.keys(userFieldsResult).some(k =>
-          k !== 'hasUpdates' && k !== 'updateSummary' &&
-          userFieldsResult[k as keyof typeof userFieldsResult] !== null
-        )) {
+        if (userFieldsResult.hasUpdates && userFieldsResult.updateSummary) {
           summaries.push(`Settings: ${userFieldsResult.updateSummary}`);
         }
 

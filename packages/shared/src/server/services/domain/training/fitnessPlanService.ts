@@ -12,11 +12,6 @@ export interface FitnessPlanServiceInstance {
   getCurrentPlan(userId: string): Promise<FitnessPlan | null>;
   getPlanById(planId: string): Promise<FitnessPlan | null>;
   getPlanHistory(userId: string): Promise<FitnessPlan[]>;
-  updateFitnessPlan(
-    planId: string,
-    updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
-  ): Promise<FitnessPlan | null>;
-  deleteFitnessPlan(planId: string): Promise<boolean>;
 }
 
 /**
@@ -31,32 +26,24 @@ export function createFitnessPlanService(
   return {
     async insertPlan(plan: FitnessPlan): Promise<FitnessPlan> {
       console.log('[FitnessPlanService] Inserting plan:', plan.description?.substring(0, 200));
-      return await repos.fitnessPlan.insertFitnessPlan(plan);
+      return await repos.fitnessPlan.create(
+        plan.clientId,
+        plan.content ?? plan.description,
+        plan.startDate,
+        plan.description,
+      );
     },
 
     async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
-      return await repos.fitnessPlan.getCurrentPlan(userId);
+      return await repos.fitnessPlan.getLatest(userId);
     },
 
     async getPlanById(planId: string): Promise<FitnessPlan | null> {
-      return await repos.fitnessPlan.getFitnessPlan(planId);
+      return await repos.fitnessPlan.getById(planId);
     },
 
     async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
-      return await repos.fitnessPlan.getPlanHistory(userId);
-    },
-
-    async updateFitnessPlan(
-      planId: string,
-      updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
-    ): Promise<FitnessPlan | null> {
-      return await repos.fitnessPlan.updateFitnessPlan(planId, updates);
-    },
-
-    async deleteFitnessPlan(planId: string): Promise<boolean> {
-      return await repos.fitnessPlan.deleteFitnessPlan(planId);
+      return await repos.fitnessPlan.getHistory(userId);
     },
   };
 }
-
-// =============================================================================

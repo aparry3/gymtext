@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServices, getRepositories } from '@/lib/context';
+import { getServices } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
  * GET /api/users/[id]/profile
  *
- * Get user profile data including units preference and structured profile
+ * Get user profile data including units preference and profile text
  *
  * Authorization:
  * - Admin can access any user
@@ -36,7 +36,6 @@ export async function GET(
 
     // Fetch user data
     const services = getServices();
-    const repos = getRepositories();
 
     const user = await services.user.getUserById(userId);
     if (!user) {
@@ -46,8 +45,8 @@ export async function GET(
       );
     }
 
-    // Fetch structured profile
-    const structuredProfile = await repos.profile.getCurrentStructuredProfile(userId);
+    // Get markdown profile text
+    const profileText = await services.fitnessProfile.getCurrentProfile(userId);
 
     // Get units from user (with fallback for migration)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,7 +58,7 @@ export async function GET(
         id: user.id,
         name: user.name,
         units,
-        profile: structuredProfile,
+        profile: profileText,
       },
     });
   } catch (error) {

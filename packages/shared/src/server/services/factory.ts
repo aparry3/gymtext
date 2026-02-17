@@ -3,11 +3,6 @@
  *
  * Creates service instances with injected repositories.
  * Services are stateless - repos are passed to each factory function.
- *
- * @example
- * const repos = createRepositories(db);
- * const services = createServices(repos);
- * await services.user.getUserById(userId);
  */
 import type { Kysely } from 'kysely';
 import type { DB } from '../models/_types';
@@ -15,7 +10,6 @@ import type Stripe from 'stripe';
 import { createRepositories, type RepositoryContainer } from '../repositories/factory';
 import type { ITwilioClient } from '../connections/twilio/factory';
 
-// Domain service factory functions
 import { createUserService, type UserServiceInstance } from './domain/user/userService';
 import { createFitnessProfileService, type FitnessProfileServiceInstance } from './domain/user/fitnessProfileService';
 import { createOnboardingDataService, type OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
@@ -27,8 +21,6 @@ import { createMicrocycleService, type MicrocycleServiceInstance } from './domai
 import { createProgressService, type ProgressServiceInstance } from './domain/training/progressService';
 import { createSubscriptionService, type SubscriptionServiceInstance } from './domain/subscription/subscriptionService';
 import { createDayConfigService, type DayConfigServiceInstance } from './domain/calendar/dayConfigService';
-
-// More domain service factory functions
 import { createShortLinkService, type ShortLinkServiceInstance } from './domain/links/shortLinkService';
 import { createReferralService, type ReferralServiceInstance } from './domain/referral/referralService';
 import { createAdminAuthService, type AdminAuthServiceInstance } from './domain/auth/adminAuthService';
@@ -39,7 +31,6 @@ import { createWeeklyMessageService, type WeeklyMessageServiceInstance } from '.
 import { createOnboardingService, type OnboardingServiceInstance } from './orchestration/onboardingService';
 import { createOnboardingCoordinator, type OnboardingCoordinatorInstance } from './orchestration/onboardingCoordinator';
 import { createMessagingOrchestrator, type MessagingOrchestratorInstance } from './orchestration/messagingOrchestrator';
-import { createChainRunnerService, type ChainRunnerServiceInstance } from './domain/training/chainRunnerService';
 import { createMessagingAgentService, type MessagingAgentServiceInstance } from './agents/messaging/messagingAgentService';
 import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
 import { createPlanModificationService, type PlanModificationServiceInstance } from './agents/modifications/planModificationService';
@@ -52,41 +43,22 @@ import { createBlogService, type BlogServiceInstance } from './domain/blog/blogS
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
-import { createAgentExtensionService, type AgentExtensionServiceInstance } from './domain/agents/agentExtensionService';
-import { createContextTemplateService, type ContextTemplateServiceInstance } from './domain/context/contextTemplateService';
-
-// Agent services
+import { createDossierService, type DossierServiceInstance } from './domain/dossier/dossierService';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
-
-// Agent Runner infrastructure
-import { ToolRegistry } from '@/server/agents/tools';
-import { registerAllTools } from '@/server/agents/tools';
-import { createAgentRunner, type AgentRunnerInstance } from '@/server/agents/runner';
-
-// Context Registry
-import { ContextRegistry, registerAllContextProviders } from '@/server/agents/context';
-
-// Program domain services
+import { ToolRegistry, registerAllTools } from '@/server/agents/tools';
+import { createSimpleAgentRunner, type SimpleAgentRunnerInstance } from '@/server/agents/runner';
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
 import { createProgramVersionService, type ProgramVersionServiceInstance } from './domain/program/programVersionService';
-import { createPlanInstanceService, type PlanInstanceServiceInstance } from './domain/training/planInstanceService';
 
-/**
- * External clients that can be injected for environment switching
- */
 export interface ExternalClients {
   stripeClient?: Stripe;
   twilioClient?: ITwilioClient;
 }
 
-/**
- * Container for all service instances
- */
 export interface ServiceContainer {
-  // Core services
   user: UserServiceInstance;
   fitnessProfile: FitnessProfileServiceInstance;
   onboardingData: OnboardingDataServiceInstance;
@@ -98,8 +70,6 @@ export interface ServiceContainer {
   progress: ProgressServiceInstance;
   subscription: SubscriptionServiceInstance;
   dayConfig: DayConfigServiceInstance;
-
-  // Additional services
   shortLink: ShortLinkServiceInstance;
   referral: ReferralServiceInstance;
   adminAuth: AdminAuthServiceInstance;
@@ -110,83 +80,31 @@ export interface ServiceContainer {
   weeklyMessage: WeeklyMessageServiceInstance;
   onboarding: OnboardingServiceInstance;
   onboardingCoordinator: OnboardingCoordinatorInstance;
-  chainRunner: ChainRunnerServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   planModification: PlanModificationServiceInstance;
   modification: ModificationServiceInstance;
-
-  // Training orchestration
   training: TrainingServiceInstance;
-
-  // Agent services
   programAgent: ProgramAgentServiceInstance;
-
-  // Orchestration services
   chat: ChatServiceInstance;
-
-  // Program domain services
   programOwner: ProgramOwnerServiceInstance;
   program: ProgramServiceInstance;
   enrollment: EnrollmentServiceInstance;
   programVersion: ProgramVersionServiceInstance;
-  planInstance: PlanInstanceServiceInstance;
-
-  // Exercise resolution
   exerciseResolution: ExerciseResolutionServiceInstance;
-
-  // Exercise metrics (workout tracking)
   exerciseMetrics: ExerciseMetricsServiceInstance;
-
-  // Blog
   blog: BlogServiceInstance;
-
-  // Organization
   organization: OrganizationServiceInstance;
-
-  // Agent definitions
   agentDefinition: AgentDefinitionServiceInstance;
-
-  // Agent logs
   agentLog: AgentLogServiceInstance;
-
-  // Agent extensions
-  agentExtension: AgentExtensionServiceInstance;
-
-  // Context templates
-  contextTemplate: ContextTemplateServiceInstance;
-
-  // Agent Runner (new declarative agent system)
-  agentRunner: AgentRunnerInstance;
-
-  // Registries (for admin metadata API)
+  dossier: DossierServiceInstance;
+  agentRunner: SimpleAgentRunnerInstance;
   toolRegistry: ToolRegistry;
-  contextRegistry: ContextRegistry;
 }
 
-/**
- * Create all service instances with the given repositories
- *
- * Services are created in dependency order:
- * 1. Services with no service dependencies (only repos)
- * 2. ContextRegistry (needed by agents)
- * 3. Services that depend on other services
- * 4. Orchestration services
- * 5. Modification services
- *
- * @param repos - Repository container
- * @param clients - Optional external clients for environment switching
- * @returns Service container with all service instances
- */
-export function createServices(
-  repos: RepositoryContainer,
-  clients?: ExternalClients
-): ServiceContainer {
-  // =========================================================================
-  // Phase 1: Create services with no service dependencies (repos only)
-  // =========================================================================
+export function createServices(repos: RepositoryContainer, clients?: ExternalClients): ServiceContainer {
+  // Phase 1: repos-only services
   const user = createUserService(repos);
-  // Note: fitnessProfile is created below after agentDefinition is available
   const onboardingData = createOnboardingDataService(repos);
   const fitnessPlan = createFitnessPlanService(repos);
   const workoutInstance = createWorkoutInstanceService(repos);
@@ -198,51 +116,23 @@ export function createServices(
   const queue = createQueueService(repos);
   const agentDefinition = createAgentDefinitionService(repos);
   const agentLog = createAgentLogService(repos);
-  const agentExtension = createAgentExtensionService(repos);
-  const contextTemplate = createContextTemplateService(repos);
-
-  // fitnessProfile needs agentDefinitionService for profile agents
-  const fitnessProfile = createFitnessProfileService(repos, agentDefinition);
-
-  // Program domain services (repos-only)
+  const dossier = createDossierService(repos);
+  // fitnessProfile uses agentRunner which is created later, so use lazy getter
+  const getAgentRunner = (): SimpleAgentRunnerInstance => agentRunner;
+  const fitnessProfile = createFitnessProfileService(repos, getAgentRunner);
   const programOwner = createProgramOwnerService(repos);
   const program = createProgramService(repos);
   const enrollment = createEnrollmentService(repos);
   const programVersion = createProgramVersionService(repos);
-  const planInstance = createPlanInstanceService(repos);
-
-  // Exercise resolution (repos-only)
   const exerciseResolution = createExerciseResolutionService(repos);
-
-  // Exercise metrics (repos-only)
   const exerciseMetrics = createExerciseMetricsService(repos);
-
-  // Blog (repos-only)
   const blog = createBlogService(repos);
-
-  // Organization (repos-only)
   const organization = createOrganizationService(repos);
 
-  // =========================================================================
-  // Phase 2: Create ContextRegistry (needed by agents)
-  // =========================================================================
-  const contextRegistry = new ContextRegistry();
-  registerAllContextProviders(contextRegistry, {
-    fitnessPlanService: fitnessPlan,
-    workoutInstanceService: workoutInstance,
-    microcycleService: microcycle,
-    enrollmentService: enrollment,
-    exerciseRepo: repos.exercise,
-    contextTemplateService: contextTemplate,
-    repos,
-  });
-
-  // =========================================================================
-  // Phase 3: Create services that depend on other services
-  // =========================================================================
+  // Phase 2: Services with service deps
   const message = createMessageService(repos, { user });
 
-  // Services needing external clients - use lazy initialization
+  // Lazy external-client services
   let _referral: ReferralServiceInstance | null = null;
   let _adminAuth: AdminAuthServiceInstance | null = null;
   let _userAuth: UserAuthServiceInstance | null = null;
@@ -254,427 +144,181 @@ export function createServices(
       if (clients?.stripeClient) {
         _referral = createReferralService(repos, { stripeClient: clients.stripeClient });
       } else {
-        // Synchronous fallback - create with promise that resolves immediately for prod
         const { getStripeSecrets } = require('../config');
         const Stripe = require('stripe').default;
         const { secretKey } = getStripeSecrets();
-        const stripeClient = new Stripe(secretKey, { apiVersion: '2023-10-16' });
-        _referral = createReferralService(repos, { stripeClient });
+        _referral = createReferralService(repos, { stripeClient: new Stripe(secretKey, { apiVersion: '2023-10-16' }) });
       }
     }
     return _referral;
   };
-
   const getAdminAuth = (): AdminAuthServiceInstance => {
     if (!_adminAuth) {
-      if (clients?.twilioClient) {
-        _adminAuth = createAdminAuthService(repos, { twilioClient: clients.twilioClient });
-      } else {
-        const { twilioClient } = require('../connections/twilio/twilio');
-        _adminAuth = createAdminAuthService(repos, { twilioClient });
-      }
+      const tc = clients?.twilioClient ?? require('../connections/twilio/twilio').twilioClient;
+      _adminAuth = createAdminAuthService(repos, { twilioClient: tc });
     }
     return _adminAuth;
   };
-
   const getUserAuth = (): UserAuthServiceInstance => {
     if (!_userAuth) {
-      if (clients?.twilioClient) {
-        _userAuth = createUserAuthService(repos, {
-          twilioClient: clients.twilioClient,
-          adminAuth: getAdminAuth()
-        });
-      } else {
-        const { twilioClient } = require('../connections/twilio/twilio');
-        _userAuth = createUserAuthService(repos, {
-          twilioClient,
-          adminAuth: getAdminAuth()
-        });
-      }
+      const tc = clients?.twilioClient ?? require('../connections/twilio/twilio').twilioClient;
+      _userAuth = createUserAuthService(repos, { twilioClient: tc, adminAuth: getAdminAuth() });
     }
     return _userAuth;
   };
-
   const getProgramOwnerAuth = (): ProgramOwnerAuthServiceInstance => {
     if (!_programOwnerAuth) {
-      if (clients?.twilioClient) {
-        _programOwnerAuth = createProgramOwnerAuthService(repos, { twilioClient: clients.twilioClient });
-      } else {
-        const { twilioClient } = require('../connections/twilio/twilio');
-        _programOwnerAuth = createProgramOwnerAuthService(repos, { twilioClient });
-      }
+      const tc = clients?.twilioClient ?? require('../connections/twilio/twilio').twilioClient;
+      _programOwnerAuth = createProgramOwnerAuthService(repos, { twilioClient: tc });
     }
     return _programOwnerAuth;
   };
-
   const getMessagingOrchestrator = (): MessagingOrchestratorInstance => {
     if (!_messagingOrchestrator) {
-      if (clients?.twilioClient) {
-        _messagingOrchestrator = createMessagingOrchestrator({
-          message,
-          queue,
-          user,
-          subscription,
-          twilioClient: clients.twilioClient,
-        });
-      } else {
-        const { twilioClient } = require('../connections/twilio/twilio');
-        _messagingOrchestrator = createMessagingOrchestrator({
-          message,
-          queue,
-          user,
-          subscription,
-          twilioClient,
-        });
-      }
+      const tc = clients?.twilioClient ?? require('../connections/twilio/twilio').twilioClient;
+      _messagingOrchestrator = createMessagingOrchestrator({ message, queue, user, subscription, twilioClient: tc });
     }
     return _messagingOrchestrator;
   };
 
-  // =========================================================================
-  // Phase 3.5: Create AgentRunner (needs contextService + lazy getters)
-  // getServices() is lazy - called at invoke time, not at creation time.
-  // Services referenced inside (profile, modification, etc.) are assigned later.
-  // =========================================================================
+  // Phase 3: Agent Runner
   const toolRegistry = new ToolRegistry();
   registerAllTools(toolRegistry);
 
-  // Forward-declared services used by getServices() lambda — assigned in later phases
   let profile: ProfileServiceInstance;
   let workoutModification: WorkoutModificationServiceInstance;
   let planModification: PlanModificationServiceInstance;
 
-  const agentRunner = createAgentRunner({
-    agentDefinitionService: agentDefinition,
-    contextRegistry,
-    toolRegistry,
-    agentLogRepository: repos.agentLog,
-    agentExtensionService: agentExtension,
-    getServices: () => ({
-      profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
-      workoutModification: {
-        modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
-        modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const buildToolServices = (): any => ({
+    profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
+    workoutModification: {
+      modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
+      modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
+    },
+    planModification: {
+      modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
+    },
+    training: {
+      getOrGenerateWorkout: async (userId: string, timezone: string) => {
+        const { now: nowFn } = require('@/shared/utils/date');
+        const todayDt = nowFn(timezone);
+        const todayDate = todayDt.toJSDate();
+        const weekDossier = await dossier.getWeekForDate(userId, todayDate);
+        if (weekDossier?.content) {
+          return { toolType: 'query' as const, response: `User's workout schedule for this week:\n${weekDossier.content}`, messages: undefined };
+        }
+        const u = await user.getUser(userId);
+        if (!u) return { toolType: 'query' as const, response: 'User not found.' };
+        const generatedWorkout = await training.prepareWorkoutForDate(u, todayDt);
+        if (!generatedWorkout) return { toolType: 'query' as const, response: 'No workout scheduled for today.' };
+        return { toolType: 'query' as const, response: generatedWorkout.message || generatedWorkout.description || 'Workout generated.', messages: generatedWorkout.message ? [generatedWorkout.message] : undefined };
       },
-      planModification: {
-        modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
-      },
-      queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
-      training: {
-        getOrGenerateWorkout: async (userId: string, timezone: string) => {
-          const { now } = require('@/shared/utils/date');
-          const todayDt = now(timezone);
-          const todayDate = todayDt.toJSDate();
-
-          const existingWorkout = await workoutInstance.getWorkoutByUserIdAndDate(userId, todayDate);
-          if (existingWorkout) {
-            return {
-              toolType: 'query' as const,
-              response: `User's workout for today: ${existingWorkout.sessionType || 'Workout'} - ${existingWorkout.description || 'Custom workout'}`,
-              messages: existingWorkout.message ? [existingWorkout.message] : undefined,
-            };
-          }
-
-          const u = await user.getUser(userId);
-          if (!u) return { toolType: 'query' as const, response: 'User not found.' };
-
-          const generatedWorkout = await training.prepareWorkoutForDate(u, todayDt);
-          if (!generatedWorkout) {
-            return {
-              toolType: 'query' as const,
-              response: 'No workout scheduled for today.',
-            };
-          }
-
-          return {
-            toolType: 'query' as const,
-            response: `User's workout for today: ${generatedWorkout.sessionType || 'Workout'} - ${generatedWorkout.description || 'Custom workout'}`,
-            messages: generatedWorkout.message ? [generatedWorkout.message] : undefined,
-          };
-        },
-      },
-    }),
+    },
+    queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
   });
 
-  // =========================================================================
-  // Phase 3.6: Create training service (needs agentRunner)
-  // =========================================================================
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agentRunner = createSimpleAgentRunner({
+    agentDefinitionService: agentDefinition as any,
+    toolRegistry,
+    getServices: buildToolServices,
+    agentLogRepository: repos.agentLog,
+  });
+
+  // Phase 4: Training and orchestration services
   const training = createTrainingService({
     user,
-    fitnessProfile,
-    fitnessPlan,
-    progress,
-    microcycle,
+    dossier,
     workoutInstance,
     shortLink,
-    enrollment,
-    program,
-    programOwner,
     agentRunner,
-    exerciseResolution,
-    exerciseUse: repos.exerciseUse,
   });
 
   const programAgent = createProgramAgentService(agentRunner);
-
-  // =========================================================================
-  // Phase 4: Create agent and orchestration services
-  // =========================================================================
   const messagingAgent = createMessagingAgentService(agentRunner);
 
   const dailyMessage = createDailyMessageService(repos, {
-    user,
-    workoutInstance,
+    user, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
-    dayConfig,
-    training,
+    dayConfig, training,
   });
 
   const weeklyMessage = createWeeklyMessageService({
     user,
     messagingOrchestrator: getMessagingOrchestrator(),
-    training,
-    fitnessPlan,
-    messagingAgent,
-    enrollment,
-    dayConfig,
+    training, fitnessPlan, messagingAgent, enrollment, dayConfig,
   });
 
   const onboarding = createOnboardingService({
-    fitnessPlan,
-    training,
-    dailyMessage,
+    fitnessPlan, training, dailyMessage,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
   });
 
   const onboardingCoordinator = createOnboardingCoordinator(repos, {
-    onboardingData,
-    user,
-    onboarding,
+    onboardingData, user, onboarding,
   });
 
-  // =========================================================================
-  // Phase 5: Create modification, profile, and remaining AgentRunner-dependent services
-  // Assigns forward-declared variables used by getServices() lambda in Phase 3.5
-  // =========================================================================
+  // Phase 5: Modification, profile, and remaining services
   workoutModification = createWorkoutModificationService({
-    user,
-    microcycle,
-    workoutInstance,
-    training,
-    fitnessPlan,
+    user, dossier, workoutInstance, training,
     agentRunner,
-    exerciseResolution,
-    exerciseUse: repos.exerciseUse,
     messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   profile = createProfileService({
-    user,
-    fitnessProfile,
-    workoutInstance,
+    user, workoutInstance, dossier,
     agentRunner,
   });
 
-  planModification = createPlanModificationService(repos, {
-    user,
-    fitnessPlan,
-    workoutModification,
-    agentRunner,
+  planModification = createPlanModificationService({
+    user, dossier, workoutModification, agentRunner,
   });
 
   const modification = createModificationService({
-    user,
-    workoutModification,
-    planModification,
+    user, workoutModification, planModification,
   });
 
   const chat = createChatService({
-    message,
-    user,
-    agentRunner,
+    message, user, dossier, agentRunner,
   });
 
-  const chainRunner = createChainRunnerService(repos, {
-    fitnessPlan,
-    microcycle,
-    workoutInstance,
-    user,
-    fitnessProfile,
-    agentRunner,
-    exerciseResolution,
-    exerciseUse: repos.exerciseUse,
-  });
-
-  // =========================================================================
-  // Return complete service container
-  // =========================================================================
   return {
-    // Core services
-    user,
-    fitnessProfile,
-    onboardingData,
-    message,
-    queue,
-    fitnessPlan,
-    workoutInstance,
-    microcycle,
-    progress,
-    subscription,
-    dayConfig,
-
-    // Additional services (use getters for lazy-loaded ones)
-    shortLink,
+    user, fitnessProfile, onboardingData, message, queue, fitnessPlan,
+    workoutInstance, microcycle, progress, subscription, dayConfig, shortLink,
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
     get programOwnerAuth() { return getProgramOwnerAuth(); },
     get messagingOrchestrator() { return getMessagingOrchestrator(); },
-    dailyMessage,
-    weeklyMessage,
-    onboarding,
-    onboardingCoordinator,
-    chainRunner,
-    messagingAgent,
-    workoutModification,
-    planModification,
-    modification,
-
-    // Training orchestration
-    training,
-
-    // Agent services
-    programAgent,
-
-    // Chat orchestration
-    chat,
-
-    // Program domain services
-    programOwner,
-    program,
-    enrollment,
-    programVersion,
-    planInstance,
-
-    // Exercise resolution
-    exerciseResolution,
-
-    // Exercise metrics
-    exerciseMetrics,
-
-    // Blog
-    blog,
-
-    // Organization
-    organization,
-
-    // Agent definitions
-    agentDefinition,
-
-    // Agent logs
-    agentLog,
-
-    // Agent extensions
-    agentExtension,
-
-    // Context templates
-    contextTemplate,
-
-    // Agent Runner
-    agentRunner,
-
-    // Registries
-    toolRegistry,
-    contextRegistry,
+    dailyMessage, weeklyMessage, onboarding, onboardingCoordinator,
+    messagingAgent, workoutModification, planModification,
+    modification, training, programAgent, chat,
+    programOwner, program, enrollment, programVersion,
+    exerciseResolution, exerciseMetrics, blog, organization,
+    agentDefinition, agentLog, dossier,
+    agentRunner, toolRegistry,
   };
 }
 
-/**
- * Create services directly from a database instance
- *
- * Convenience function that creates repositories and services in one call.
- *
- * @param db - Kysely database instance
- * @param clients - Optional external clients for environment switching
- * @returns Service container
- */
-export function createServicesFromDb(
-  db: Kysely<DB>,
-  clients?: ExternalClients
-): ServiceContainer {
+export function createServicesFromDb(db: Kysely<DB>, clients?: ExternalClients): ServiceContainer {
   return createServices(createRepositories(db), clients);
 }
 
-// Re-export types for convenience
 export type {
-  // Core service types
-  UserServiceInstance,
-  FitnessProfileServiceInstance,
-  OnboardingDataServiceInstance,
-  MessageServiceInstance,
-  QueueServiceInstance,
-  FitnessPlanServiceInstance,
-  WorkoutInstanceServiceInstance,
-  MicrocycleServiceInstance,
-  ProgressServiceInstance,
-  SubscriptionServiceInstance,
-  DayConfigServiceInstance,
-
-  // Additional service types
-  ShortLinkServiceInstance,
-  ReferralServiceInstance,
-  AdminAuthServiceInstance,
-  UserAuthServiceInstance,
-  ProgramOwnerAuthServiceInstance,
-  MessagingOrchestratorInstance,
-  DailyMessageServiceInstance,
-  WeeklyMessageServiceInstance,
-  OnboardingServiceInstance,
-  OnboardingCoordinatorInstance,
-  ChainRunnerServiceInstance,
-  MessagingAgentServiceInstance,
-  WorkoutModificationServiceInstance,
-  PlanModificationServiceInstance,
-  ModificationServiceInstance,
-
-  // Training orchestration
-  TrainingServiceInstance,
-
-  // Agent services
-  ProgramAgentServiceInstance,
-
-  // Program domain services
-  ProgramOwnerServiceInstance,
-  ProgramServiceInstance,
-  EnrollmentServiceInstance,
-  ProgramVersionServiceInstance,
-  PlanInstanceServiceInstance,
-
-  // Exercise resolution
-  ExerciseResolutionServiceInstance,
-
-  // Exercise metrics
-  ExerciseMetricsServiceInstance,
-
-  // Blog
-  BlogServiceInstance,
-
-  // Organization
-  OrganizationServiceInstance,
-
-  // Agent definitions
-  AgentDefinitionServiceInstance,
-
-  // Agent logs
-  AgentLogServiceInstance,
-
-  // Agent extensions
-  AgentExtensionServiceInstance,
-
-  // Context templates
-  ContextTemplateServiceInstance,
-
-  // Agent Runner
-  AgentRunnerInstance,
+  UserServiceInstance, FitnessProfileServiceInstance, OnboardingDataServiceInstance,
+  MessageServiceInstance, QueueServiceInstance, FitnessPlanServiceInstance,
+  WorkoutInstanceServiceInstance, MicrocycleServiceInstance, ProgressServiceInstance,
+  SubscriptionServiceInstance, DayConfigServiceInstance, ShortLinkServiceInstance,
+  ReferralServiceInstance, AdminAuthServiceInstance, UserAuthServiceInstance,
+  ProgramOwnerAuthServiceInstance, MessagingOrchestratorInstance,
+  DailyMessageServiceInstance, WeeklyMessageServiceInstance, OnboardingServiceInstance,
+  OnboardingCoordinatorInstance, MessagingAgentServiceInstance,
+  WorkoutModificationServiceInstance, PlanModificationServiceInstance, ModificationServiceInstance,
+  TrainingServiceInstance, ProgramAgentServiceInstance, ProgramOwnerServiceInstance,
+  ProgramServiceInstance, EnrollmentServiceInstance, ProgramVersionServiceInstance,
+  ExerciseResolutionServiceInstance, ExerciseMetricsServiceInstance,
+  BlogServiceInstance, OrganizationServiceInstance, AgentDefinitionServiceInstance,
+  AgentLogServiceInstance, DossierServiceInstance, SimpleAgentRunnerInstance,
 };

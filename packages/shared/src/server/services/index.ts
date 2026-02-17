@@ -36,8 +36,6 @@ export { createShortLinkService } from './domain/links/shortLinkService';
 export { createReferralService } from './domain/referral/referralService';
 export { createAdminAuthService } from './domain/auth/adminAuthService';
 export { createUserAuthService } from './domain/auth/userAuthService';
-export { createChainRunnerService } from './domain/training/chainRunnerService';
-
 // Orchestration service factory functions
 export { createDailyMessageService } from './orchestration/dailyMessageService';
 export { createWeeklyMessageService } from './orchestration/weeklyMessageService';
@@ -68,8 +66,6 @@ export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
 export type { ReferralServiceInstance } from './domain/referral/referralService';
 export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 export type { UserAuthServiceInstance } from './domain/auth/userAuthService';
-export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './domain/training/chainRunnerService';
-
 // Orchestration service instance types
 export type { DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 export type { WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';

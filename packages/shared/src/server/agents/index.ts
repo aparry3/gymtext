@@ -31,8 +31,8 @@ export { createAgent } from './createAgent';
 // ============================================
 // Agent Constants (use these in createAgent calls)
 // ============================================
-export { AGENTS, PROMPT_IDS, CONTEXT_IDS, PROMPT_ROLES } from './constants';
-export type { AgentId, PromptId, ContextId, PromptRole } from './constants';
+export { AGENTS } from './constants';
+export type { AgentId } from './constants';
 
 // ============================================
 // Model Initialization
@@ -53,7 +53,6 @@ export type {
 
   // Configurable agent types
   AgentDefinition,
-  AgentDefinitionOverrides,
   ModelConfig,
   ConfigurableAgent,
   SubAgentBatch,
@@ -65,10 +64,6 @@ export type {
   DbAgentConfig,
   InvokeParams,
 
-  // Validation types
-  ValidationResult,
-  RetryContext,
-
   // Output types
   InferSchemaOutput,
   AgentComposedOutput,
@@ -79,9 +74,7 @@ export type {
   ToolExecutionResult,
 
   // Logging types
-  AgentLoggingContext,
-  ValidationFailureEntry,
-  ChainFailureEntry,
+  AgentLogEntry,
 } from './types';
 
 // ============================================
@@ -90,12 +83,11 @@ export type {
 export { buildMessages, buildLoopContinuationMessage } from './utils';
 export type { BuildMessagesConfig } from './utils';
 
+export { resolveTemplate } from './templateUtils/templateEngine';
+
 // ============================================
 // Executors (for advanced use cases)
 // ============================================
-export { executeSubAgents } from './subAgentExecutor';
-export type { SubAgentExecutorConfig } from './subAgentExecutor';
-
 export { executeToolLoop } from './toolExecutor';
 export type { ToolLoopConfig, ToolLoopResult, ToolCallRecord } from './toolExecutor';
 
@@ -106,19 +98,11 @@ export { ToolRegistry } from './tools';
 export type { ToolDefinition, ToolExecutionContext } from './tools';
 
 // ============================================
-// Declarative Engine
-// ============================================
-export { resolveInputMapping, evaluateRules, resolveTemplate } from './declarative';
-export type { InputMapping, ValidationRule as DeclarativeValidationRule, MappingContext } from './declarative';
-
-// ============================================
 // Agent Runner
 // ============================================
-export { createAgentRunner } from './runner';
-export type { AgentRunnerInstance, AgentRunnerDeps, AgentInvokeParams } from './runner';
-
-// ============================================
-// Context Registry
-// ============================================
-export { ContextRegistry, registerAllContextProviders } from './context';
-export type { ContextProvider, ContextRegistryDeps } from './context';
+export { createSimpleAgentRunner } from './runner';
+export type {
+  SimpleAgentRunnerDeps,
+  SimpleAgentRunnerInstance,
+  SimpleAgentInvokeParams,
+} from './runner';

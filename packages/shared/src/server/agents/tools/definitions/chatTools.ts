@@ -40,7 +40,7 @@ All context is automatically provided - no parameters needed.`,
 
 export const modifyWorkoutTool: ToolDefinition = {
   name: 'modify_workout',
-  description: `Modify today's workout — same muscle group but different constraints.
+  description: `Modify today's workout - same muscle group but different constraints.
 
 Use this tool when the user wants to change TODAY'S workout:
 - Different exercises: "give me different back exercises"
@@ -79,7 +79,7 @@ The acknowledgment message is sent to the user immediately. Your final response 
 
 export const modifyWeekTool: ToolDefinition = {
   name: 'modify_week',
-  description: `Restructure the weekly schedule — move sessions, swap days, multi-day changes.
+  description: `Restructure the weekly schedule - move sessions, swap days, multi-day changes.
 
 Use this tool when the user wants to rearrange their WEEKLY SCHEDULE:
 - Move sessions: "move legs to Wednesday"
@@ -131,7 +131,7 @@ The acknowledgment message is sent to the user immediately. Your final response 
 
 export const modifyPlanTool: ToolDefinition = {
   name: 'modify_plan',
-  description: `Make program-level changes — frequency, training split, overall goals.
+  description: `Make program-level changes - frequency, training split, overall goals.
 
 Use this tool for changes that affect the ENTIRE TRAINING PROGRAM:
 - Frequency: "I want to train 5 days instead of 4"
@@ -173,9 +173,9 @@ Use this tool when the user asks about their workout for today, such as:
 - "What exercises do I have?"
 
 This tool will:
-1. Check if a workout already exists for today
-2. If not, generate one based on their fitness plan
-3. Return the full workout details and send the workout message
+1. Check the week dossier for today's workout
+2. If no week exists, trigger generation
+3. Return the workout text and send the workout message
 
 IMPORTANT: Only use this for TODAY's workout. Do not use for future dates.
 If [CONTEXT: WORKOUT] says "No workout scheduled", use this tool to generate it.

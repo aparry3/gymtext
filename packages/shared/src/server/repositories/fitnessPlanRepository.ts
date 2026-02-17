@@ -1,29 +1,47 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import {
-  FitnessPlanModel,
-  type FitnessPlan,
-} from '@/server/models/fitnessPlan';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
 
 /**
  * Repository for fitness plan database operations
  *
- * Plans are now simple structured text - no more JSON mesocycles array
+ * Simplified dossier-based: plans are stored as plain text content
  */
 export class FitnessPlanRepository extends BaseRepository {
   /**
-   * Insert a new fitness plan
+   * Get the latest fitness plan for a user
    */
-  async insertFitnessPlan(fitnessPlan: FitnessPlan): Promise<FitnessPlan> {
-    // Build insert values - handle both old schema (legacyClientId) and new schema (clientId only)
+  async getLatest(userId: string): Promise<FitnessPlan | null> {
+    const result = await this.db
+      .selectFrom('fitnessPlans')
+      .selectAll()
+      .where('clientId', '=', userId)
+      .orderBy('createdAt', 'desc')
+      .executeTakeFirst();
+
+    if (!result) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = result as any;
+    return {
+      id: result.id,
+      clientId: result.clientId,
+      content: row.content ?? null,
+      description: result.description || '',
+      startDate: new Date(result.startDate as unknown as string | number | Date),
+      createdAt: new Date(result.createdAt as unknown as string | number | Date),
+    };
+  }
+
+  /**
+   * Create a new fitness plan
+   */
+  async create(userId: string, content: string, startDate: Date, description?: string): Promise<FitnessPlan> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertValues: any = {
-      programId: fitnessPlan.programId ?? null,
-      clientId: fitnessPlan.clientId,
-      publishedAt: fitnessPlan.publishedAt ?? null,
-      description: fitnessPlan.description,
-      message: fitnessPlan.message,
-      structured: fitnessPlan.structured ? JSON.stringify(fitnessPlan.structured) : null,
-      startDate: fitnessPlan.startDate,
+      clientId: userId,
+      content,
+      description: description ?? content,
+      startDate,
     };
 
     const result = await this.db
@@ -32,94 +50,65 @@ export class FitnessPlanRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return FitnessPlanModel.fromDB(result);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = result as any;
+    return {
+      id: result.id,
+      clientId: result.clientId,
+      content: row.content ?? null,
+      description: result.description || '',
+      startDate: new Date(result.startDate as unknown as string | number | Date),
+      createdAt: new Date(result.createdAt as unknown as string | number | Date),
+    };
   }
 
   /**
-   * Get a fitness plan by ID
+   * Get plan history for a user
    */
-  async getFitnessPlan(id: string): Promise<FitnessPlan | null> {
-    const result = await this.db
-      .selectFrom('fitnessPlans')
-      .selectAll()
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    if (!result) return null;
-    return FitnessPlanModel.fromDB(result);
-  }
-
-  /**
-   * Get the current (latest) fitness plan for a user
-   */
-  async getCurrentPlan(userId: string): Promise<FitnessPlan | null> {
-    const result = await this.db
-      .selectFrom('fitnessPlans')
-      .selectAll()
-      .where('clientId', '=', userId)
-      .orderBy('createdAt', 'desc')
-      .executeTakeFirst();
-
-    if (!result) return null;
-    return FitnessPlanModel.fromDB(result);
-  }
-
-  /**
-   * Get all fitness plans for a user (for history)
-   * Returns plans ordered by creation date (newest first)
-   */
-  async getPlanHistory(userId: string): Promise<FitnessPlan[]> {
+  async getHistory(userId: string, limit: number = 10): Promise<FitnessPlan[]> {
     const results = await this.db
       .selectFrom('fitnessPlans')
       .selectAll()
       .where('clientId', '=', userId)
       .orderBy('createdAt', 'desc')
+      .limit(limit)
       .execute();
 
-    return results.map(FitnessPlanModel.fromDB);
+    return results.map((result) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const row = result as any;
+      return {
+        id: result.id,
+        clientId: result.clientId,
+        content: row.content ?? null,
+        description: result.description || '',
+        startDate: new Date(result.startDate as unknown as string | number | Date),
+        createdAt: new Date(result.createdAt as unknown as string | number | Date),
+      };
+    });
   }
 
   /**
-   * Update a fitness plan
+   * Get a fitness plan by ID
    */
-  async updateFitnessPlan(
-    id: string,
-    updates: Partial<Pick<FitnessPlan, 'description' | 'message' | 'structured'>>
-  ): Promise<FitnessPlan | null> {
-    const updateData: Record<string, unknown> = {
-      updatedAt: new Date(),
-    };
-
-    if (updates.description !== undefined) {
-      updateData.description = updates.description;
-    }
-    if (updates.message !== undefined) {
-      updateData.message = updates.message;
-    }
-    if (updates.structured !== undefined) {
-      updateData.structured = updates.structured ? JSON.stringify(updates.structured) : null;
-    }
-
+  async getById(id: string): Promise<FitnessPlan | null> {
     const result = await this.db
-      .updateTable('fitnessPlans')
-      .set(updateData)
+      .selectFrom('fitnessPlans')
+      .selectAll()
       .where('id', '=', id)
-      .returningAll()
       .executeTakeFirst();
 
     if (!result) return null;
-    return FitnessPlanModel.fromDB(result);
-  }
 
-  /**
-   * Delete a fitness plan by ID
-   */
-  async deleteFitnessPlan(id: string): Promise<boolean> {
-    const result = await this.db
-      .deleteFrom('fitnessPlans')
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    return Number(result.numDeletedRows) > 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = result as any;
+    return {
+      id: result.id,
+      clientId: result.clientId,
+      content: row.content ?? null,
+      description: result.description || '',
+      startDate: new Date(result.startDate as unknown as string | number | Date),
+      createdAt: new Date(result.createdAt as unknown as string | number | Date),
+    };
   }
 }
