@@ -74,7 +74,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
     user: userService,
     onboardingData: onboardingDataService,
     fitnessProfile: fitnessProfileService,
-    fitnessPlan: fitnessPlanService,
+    markdown: markdownService,
     training: trainingService,
     onboardingCoordinator,
     enrollment: enrollmentService,
@@ -164,7 +164,7 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
 
       // Only check for existing plan if not forcing creation
       if (!forceCreate) {
-        const existingPlan = await fitnessPlanService.getCurrentPlan(user.id);
+        const existingPlan = await markdownService.getPlan(user.id);
         if (existingPlan) {
           console.log(`[Onboarding] Step 3: Plan already exists for ${user.id}`);
           return { plan: existingPlan, wasCreated: false };

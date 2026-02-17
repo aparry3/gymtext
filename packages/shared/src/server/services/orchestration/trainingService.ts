@@ -15,7 +15,7 @@ import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { DossierServiceInstance } from '../domain/dossier/dossierService';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 
 
 // Agent services
@@ -41,12 +41,13 @@ export interface TrainingServiceInstance {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prepareMicrocycleForDate(userId: string, planOrDate: any, dateOrTimezone?: any, timezone?: string): Promise<any>;
   prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null>;
+  formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string>;
   regenerateWorkoutMessage(user: UserWithProfile, workout: WorkoutData): Promise<string>;
 }
 
 export interface TrainingServiceDeps {
   user: UserServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
 
@@ -57,7 +58,7 @@ export interface TrainingServiceDeps {
 export function createTrainingService(deps: TrainingServiceDeps): TrainingServiceInstance {
   const {
     user: userService,
-    dossier: dossierService,
+    markdown: markdownService,
     agentRunner: simpleAgentRunner,
   } = deps;
 
@@ -66,7 +67,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
       // Fetch profile dossier for context
-      const profileDossier = await dossierService.getProfile(user.id);
+      const profileDossier = await markdownService.getProfile(user.id);
 
       const context: string[] = [];
       if (profileDossier) {
@@ -84,7 +85,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       console.log('[TrainingService] Generated plan:', planContent.substring(0, 200));
 
       // Save to database via dossier service
-      const savedPlan = await dossierService.createPlan(user.id, planContent, new Date());
+      const savedPlan = await markdownService.createPlan(user.id, planContent, new Date());
       console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
 
       return savedPlan;
@@ -112,7 +113,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         timezone = timezoneArg ?? 'America/New_York';
       }
       // Check if week dossier already exists for this date
-      const existingWeek = await dossierService.getWeekForDate(userId, targetDate);
+      const existingWeek = await markdownService.getWeekForDate(userId, targetDate);
       if (existingWeek) {
         // Return backward-compatible format for old callers
         return { microcycle: existingWeek, progress: {}, wasCreated: false };
@@ -125,13 +126,13 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       }
 
       // Get plan for context
-      const plan = await dossierService.getPlan(userId);
+      const plan = await markdownService.getPlan(userId);
       if (!plan) {
         throw new Error(`[TrainingService] No fitness plan found for user: ${userId}`);
       }
 
       // Fetch profile dossier for context
-      const profileDossier = await dossierService.getProfile(userId);
+      const profileDossier = await markdownService.getProfile(userId);
 
       const context: string[] = [];
       if (profileDossier) {
@@ -154,7 +155,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const weekContent = result.response;
 
       // Save to database via dossier service
-      const microcycle = await dossierService.createWeek(
+      const microcycle = await markdownService.createWeek(
         userId,
         plan.id!,
         weekContent,
@@ -185,7 +186,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         }
 
         // Fetch profile for context
-        const profileDossier = await dossierService.getProfile(user.id);
+        const profileDossier = await markdownService.getProfile(user.id);
 
         const context: string[] = [];
         if (profileDossier) {
@@ -221,13 +222,30 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       }
     },
 
+    async formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string> {
+      const profileDossier = await markdownService.getProfile(user.id);
+
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
+      }
+
+      const result = await simpleAgentRunner.invoke('week:format', {
+        input: weekContent,
+        context,
+        params: { user },
+      });
+
+      return result.response;
+    },
+
     async regenerateWorkoutMessage(
       user: UserWithProfile,
       workout: WorkoutData
     ): Promise<string> {
       // Fetch context
-      const profileDossier = await dossierService.getProfile(user.id);
-      const weekDossier = await dossierService.getWeekForDate(user.id, new Date(workout.date));
+      const profileDossier = await markdownService.getProfile(user.id);
+      const weekDossier = await markdownService.getWeekForDate(user.id, new Date(workout.date));
 
       const context: string[] = [];
       if (profileDossier) {

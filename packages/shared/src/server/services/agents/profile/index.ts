@@ -9,7 +9,7 @@ import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../../domain/user/userService';
 
-import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
+import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 /**
@@ -21,7 +21,7 @@ export interface ProfileServiceInstance {
 
 export interface ProfileServiceDeps {
   user: UserServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
 
@@ -35,7 +35,7 @@ export interface ProfileServiceDeps {
  * Both agents run in parallel for efficiency.
  */
 export function createProfileService(deps: ProfileServiceDeps): ProfileServiceInstance {
-  const { user: userService, dossier: dossierService, agentRunner: simpleAgentRunner } = deps;
+  const { user: userService, markdown: markdownService, agentRunner: simpleAgentRunner } = deps;
 
   return {
     async updateProfile(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
@@ -52,7 +52,7 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
         }
 
         // Fetch current profile dossier
-        const currentProfile = await dossierService.getProfile(userId) ?? '';
+        const currentProfile = await markdownService.getProfile(userId) ?? '';
         const currentDate = formatForAI(new Date(), user.timezone);
 
         // Convert previous messages to agent format
@@ -102,7 +102,7 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
 
         // Persist profile update via dossier service
         if (profileWasUpdated) {
-          await dossierService.updateProfile(userId, updatedProfile);
+          await markdownService.updateProfile(userId, updatedProfile);
           console.log('[PROFILE_SERVICE] Profile dossier updated');
         } else {
           console.log('[PROFILE_SERVICE] No profile updates detected');

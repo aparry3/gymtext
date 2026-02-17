@@ -3,7 +3,7 @@ import type { Profile } from '@/server/repositories/profileRepository';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
 
-export interface DossierServiceInstance {
+export interface MarkdownServiceInstance {
   getProfile(userId: string): Promise<string | null>;
   updateProfile(userId: string, content: string): Promise<Profile>;
   getPlan(userId: string): Promise<FitnessPlan | null>;
@@ -13,7 +13,7 @@ export interface DossierServiceInstance {
   createWeek(userId: string, planId: string, content: string, startDate: Date): Promise<Microcycle>;
 }
 
-export function createDossierService(repos: RepositoryContainer): DossierServiceInstance {
+export function createMarkdownService(repos: RepositoryContainer): MarkdownServiceInstance {
   return {
     async getProfile(userId: string): Promise<string | null> {
       return repos.profile.getCurrentProfileText(userId);

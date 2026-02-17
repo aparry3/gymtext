@@ -1,7 +1,7 @@
 import { now, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import type { UserServiceInstance } from '../../domain/user/userService';
-import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
+import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 
 import type { TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
@@ -44,7 +44,7 @@ export interface WorkoutModificationServiceInstance {
 
 export interface WorkoutModificationServiceDeps {
   user: UserServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   training: TrainingServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   messagingOrchestrator?: MessagingOrchestratorInstance;
@@ -55,7 +55,7 @@ export function createWorkoutModificationService(
 ): WorkoutModificationServiceInstance {
   const {
     user: userService,
-    dossier: dossierService,
+    markdown: markdownService,
     training: trainingService,
     agentRunner: simpleAgentRunner,
     messagingOrchestrator,
@@ -76,7 +76,7 @@ export function createWorkoutModificationService(
         const isToday = workoutDateTime.hasSame(today, 'day');
 
         // Read week dossier
-        const weekDossier = await dossierService.getWeekForDate(userId, workoutDate);
+        const weekDossier = await markdownService.getWeekForDate(userId, workoutDate);
         if (!weekDossier?.content) {
           return { success: false, messages: [], error: 'No week plan found. Please create a plan first.' };
         }
@@ -84,7 +84,7 @@ export function createWorkoutModificationService(
         const targetDay = getDayOfWeek(workoutDate, timezone);
 
         // Build context
-        const profileDossier = await dossierService.getProfile(userId);
+        const profileDossier = await markdownService.getProfile(userId);
         const context: string[] = [];
         if (profileDossier) {
           context.push(`<Profile>${profileDossier}</Profile>`);
@@ -101,9 +101,9 @@ export function createWorkoutModificationService(
         const modifiedWeekContent = result.response;
 
         // Write new week version via dossier service
-        const plan = await dossierService.getPlan(userId);
+        const plan = await markdownService.getPlan(userId);
         if (plan?.id) {
-          await dossierService.createWeek(
+          await markdownService.createWeek(
             userId,
             plan.id,
             modifiedWeekContent,
@@ -144,7 +144,7 @@ export function createWorkoutModificationService(
         const referenceDate = weekStartDate ?? today.toJSDate();
 
         // Read week dossier
-        const weekDossier = await dossierService.getWeekForDate(userId, referenceDate);
+        const weekDossier = await markdownService.getWeekForDate(userId, referenceDate);
         if (!weekDossier?.content) {
           // Try to generate one first
           try {
@@ -154,14 +154,14 @@ export function createWorkoutModificationService(
           }
         }
 
-        const currentWeek = weekDossier ?? await dossierService.getWeekForDate(userId, referenceDate);
+        const currentWeek = weekDossier ?? await markdownService.getWeekForDate(userId, referenceDate);
         if (!currentWeek?.content) {
           return { success: false, messages: [], error: 'Could not find or create week plan.' };
         }
 
         // Build context
-        const profileDossier = await dossierService.getProfile(userId);
-        const planDossier = await dossierService.getPlan(userId);
+        const profileDossier = await markdownService.getProfile(userId);
+        const planDossier = await markdownService.getPlan(userId);
         const context: string[] = [];
         if (profileDossier) {
           context.push(`<Profile>${profileDossier}</Profile>`);
@@ -182,7 +182,7 @@ export function createWorkoutModificationService(
 
         // Write new week version
         if (planDossier?.id) {
-          await dossierService.createWeek(
+          await markdownService.createWeek(
             userId,
             planDossier.id,
             modifiedWeekContent,

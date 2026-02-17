@@ -3,11 +3,10 @@ import { inngest } from '@/server/connections/inngest/client';
 import { now, getNextWeekStart } from '@/shared/utils/date';
 import { getUrlsConfig } from '@/shared/config';
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
-import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 
 interface MessageResult {
@@ -60,9 +59,8 @@ export interface WeeklyMessageServiceDeps {
   user: UserServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   training: TrainingServiceInstance;
-  fitnessPlan: FitnessPlanServiceInstance;
+  markdown: MarkdownServiceInstance;
   messagingAgent: MessagingAgentServiceInstance;
-  enrollment: EnrollmentServiceInstance;
   dayConfig: DayConfigServiceInstance;
 }
 
@@ -79,8 +77,7 @@ export function createWeeklyMessageService(
     user: userService,
     messagingOrchestrator,
     training: trainingService,
-    messagingAgent: messagingAgentService,
-    enrollment: enrollmentService,
+    markdown: markdownService,
     dayConfig: dayConfigService,
   } = deps;
 
@@ -128,16 +125,10 @@ export function createWeeklyMessageService(
       try {
         console.log(`[WeeklyMessageService] Processing weekly message for user ${user.id}`);
 
-        // Get enrollment and current fitness plan instance
-        const enrollmentResult = await enrollmentService.getEnrollmentWithProgramVersion(user.id);
-        if (!enrollmentResult) {
-          console.error(`[WeeklyMessageService] No active enrollment found for user ${user.id}`);
-          return { success: false, userId: user.id, error: 'No active enrollment found' };
-        }
-
-        const { currentPlanInstance: plan } = enrollmentResult;
+        // Get fitness plan via markdown service
+        const plan = await markdownService.getPlan(user.id);
         if (!plan) {
-          console.error(`[WeeklyMessageService] No fitness plan version found for user ${user.id}`);
+          console.error(`[WeeklyMessageService] No fitness plan found for user ${user.id}`);
           return { success: false, userId: user.id, error: 'No fitness plan found' };
         }
 
@@ -162,10 +153,16 @@ export function createWeeklyMessageService(
           return { success: false, userId: user.id, error: 'Could not generate next week\'s training pattern' };
         }
 
-        const breakdownMessage = nextWeekMicrocycle.message;
+        if (!nextWeekMicrocycle.content) {
+          console.error(`[WeeklyMessageService] No content found for microcycle ${nextWeekMicrocycle.id}`);
+          return { success: false, userId: user.id, error: 'No content found for next week\'s microcycle' };
+        }
+
+        // Format week content into an SMS-friendly message via week:format agent
+        const breakdownMessage = await trainingService.formatWeekMessage(user, nextWeekMicrocycle.content);
         if (!breakdownMessage) {
-          console.error(`[WeeklyMessageService] No breakdown message stored for microcycle ${nextWeekMicrocycle.id}`);
-          return { success: false, userId: user.id, error: 'No breakdown message found for next week\'s microcycle' };
+          console.error(`[WeeklyMessageService] Failed to format week message for user ${user.id}`);
+          return { success: false, userId: user.id, error: 'Failed to format weekly message' };
         }
 
         // Get image URL (custom or default)

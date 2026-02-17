@@ -17,6 +17,7 @@ export const AGENTS = {
   MESSAGING_PLAN_SUMMARY: 'messaging:plan-summary',
   MESSAGING_PLAN_READY: 'messaging:plan-ready',
   PROGRAM_PARSE: 'program:parse',
+  WEEK_FORMAT: 'week:format',
   BLOG_METADATA: 'blog:metadata',
 } as const;
 
