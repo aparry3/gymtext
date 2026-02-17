@@ -30,7 +30,13 @@ export class LocalMessagingClient implements IMessagingClient {
     this.eventEmitter.setMaxListeners(100);
   }
 
-  async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult> {
+  async sendMessage(
+    user: UserWithProfile,
+    message?: string,
+    mediaUrls?: string[],
+    templateSid?: string,
+    templateVariables?: Record<string, string>
+  ): Promise<MessageResult> {
     const messageId = `local-${Date.now()}-${++this.messageCounter}`;
     const timestamp = new Date();
     const to = user.phoneNumber;

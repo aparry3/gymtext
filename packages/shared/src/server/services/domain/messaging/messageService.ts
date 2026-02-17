@@ -25,7 +25,7 @@ export interface StoreOutboundMessageParams {
   to: string;
   content: string;
   from?: string;
-  provider?: 'twilio' | 'local' | 'websocket';
+  provider?: 'twilio' | 'whatsapp' | 'local' | 'websocket';
   providerMessageId?: string;
   metadata?: Record<string, unknown>;
   deliveryStatus?: MessageDeliveryStatus;

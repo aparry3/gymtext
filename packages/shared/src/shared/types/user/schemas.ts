@@ -14,6 +14,13 @@ export const UserSchema = z.object({
   stripeCustomerId: z.string().nullable(),
   preferredSendHour: z.number().int().min(0).max(23),
   timezone: z.string(),
+  
+  // WhatsApp and messaging preferences
+  preferredMessagingProvider: z.enum(['twilio', 'whatsapp']).nullable(),
+  whatsappOptIn: z.boolean().nullable(),
+  whatsappOptInDate: z.date().nullable(),
+  whatsappNumber: z.string().nullable(),
+  
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -163,6 +170,12 @@ export const CreateUserSchema = z.object({
   preferredSendHour: z.number().int().min(0).max(23).nullish(),
   timezone: z.string().nullish(),
   units: UnitsSchema.default('imperial'),
+  
+  // WhatsApp and messaging preferences
+  preferredMessagingProvider: z.enum(['twilio', 'whatsapp']).nullish(),
+  whatsappOptIn: z.boolean().nullish(),
+  whatsappOptInDate: z.date().nullish(),
+  whatsappNumber: z.string().nullish(),
 });
 
 // Schema for updating a user
