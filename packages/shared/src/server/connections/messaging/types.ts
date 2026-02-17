@@ -7,7 +7,7 @@
 
 import type { UserWithProfile } from '@/server/models/user';
 
-export type MessagingProvider = 'twilio' | 'local' | 'websocket';
+export type MessagingProvider = 'twilio' | 'whatsapp' | 'local' | 'websocket';
 
 export interface MessageResult {
   /** Unique identifier for the message from the provider */
@@ -41,7 +41,15 @@ export interface IMessagingClient {
    * @param user - User object containing phone number and other properties
    * @param message - Optional message content to send (can be undefined for MMS-only messages)
    * @param mediaUrls - Optional array of media URLs for MMS (images, videos, etc.)
+   * @param templateSid - Optional WhatsApp template SID for business-initiated messages
+   * @param templateVariables - Optional variables for template substitution
    * @returns Promise resolving to message result with delivery status
    */
-  sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult>;
+  sendMessage(
+    user: UserWithProfile,
+    message?: string,
+    mediaUrls?: string[],
+    templateSid?: string,
+    templateVariables?: Record<string, string>
+  ): Promise<MessageResult>;
 }

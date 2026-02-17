@@ -7,6 +7,7 @@
 
 import type { IMessagingClient, MessagingProvider } from './types';
 import { twilioMessagingClient } from './twilioClient';
+import { whatsappMessagingClient } from './whatsappClient';
 import { localMessagingClient } from './localClient';
 import { getMessagingConfig } from '@/shared/config';
 
@@ -37,6 +38,8 @@ export function getMessagingClientByProvider(provider: MessagingProvider): IMess
       return localMessagingClient;
     case 'twilio':
       return twilioMessagingClient;
+    case 'whatsapp':
+      return whatsappMessagingClient;
     default:
       throw new Error(`Unknown messaging provider: ${provider}`);
   }
