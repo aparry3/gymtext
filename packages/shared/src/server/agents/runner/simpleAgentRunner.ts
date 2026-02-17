@@ -34,15 +34,12 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       console.log(`[SimpleAgentRunner] Invoking ${agentId}`);
 
       // 1. Fetch agent config
-      const [definition, extended] = await Promise.all([
-        agentDefinitionService.getDefinition(agentId),
-        agentDefinitionService.getExtendedConfig(agentId),
-      ]);
+      const config = await agentDefinitionService.getAgentDefinition(agentId);
 
       // 2. Resolve tools if present
       const user = params.params?.user as UserWithProfile | undefined;
       let tools;
-      if (extended.toolIds && extended.toolIds.length > 0) {
+      if (config.toolIds && config.toolIds.length > 0) {
         if (!user) throw new Error(`[SimpleAgentRunner] Agent ${agentId} requires user for tool resolution`);
         const toolCtx: ToolExecutionContext = {
           user,
@@ -51,24 +48,24 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
           services: getServices(),
           extras: params.params as Record<string, unknown>,
         };
-        tools = toolRegistry.resolve(extended.toolIds, toolCtx);
+        tools = toolRegistry.resolve(config.toolIds, toolCtx);
       }
 
       // 3. Build user prompt
       let userPrompt = params.input || '';
-      if (extended.userPromptTemplate) {
+      if (config.userPromptTemplate) {
         const templateData: Record<string, unknown> = {
           input: params.input || '',
           ...(params.params || {}),
         };
-        userPrompt = resolveTemplate(extended.userPromptTemplate, templateData);
+        userPrompt = resolveTemplate(config.userPromptTemplate, templateData);
       }
 
       // 4. Build messages
       const context = params.context || [];
-      const examples = extended.examples as AgentExample[] | undefined;
+      const examples = config.examples as AgentExample[] | undefined;
       const messages = buildMessages({
-        systemPrompt: definition.systemPrompt,
+        systemPrompt: config.systemPrompt,
         userPrompt,
         context,
         examples: examples || undefined,
@@ -81,26 +78,26 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
 
       if (tools && tools.length > 0) {
         const model = initializeModel(undefined, {
-          model: definition.model,
-          temperature: definition.temperature,
-          maxTokens: definition.maxTokens,
+          model: config.model,
+          temperature: config.temperature,
+          maxTokens: config.maxTokens,
         }, { tools });
 
         const result = await executeToolLoop({
           model,
           messages,
           tools,
-          name: definition.name,
-          maxIterations: definition.maxIterations ?? 5,
+          name: agentId,
+          maxIterations: config.maxIterations ?? 5,
         });
 
         response = result.response;
         accumulatedMessages = result.messages.length > 0 ? result.messages : undefined;
       } else {
         const model = initializeModel<string>(undefined, {
-          model: definition.model,
-          temperature: definition.temperature,
-          maxTokens: definition.maxTokens,
+          model: config.model,
+          temperature: config.temperature,
+          maxTokens: config.maxTokens,
         });
 
         response = await model.invoke(messages);
@@ -111,7 +108,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         const durationMs = Date.now() - startTime;
         agentLogRepository.log({
           agentId,
-          model: definition.model,
+          model: config.model,
           messages: messages as unknown as JsonValue,
           input: params.input || '',
           response: response as unknown as JsonValue,

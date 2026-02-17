@@ -9,7 +9,7 @@ export * from './userRepository';
 export * from './messageRepository';
 export * from './profileRepository';
 export * from './fitnessPlanRepository';
-export * from './workoutInstanceRepository';
+
 export * from './microcycleRepository';
 export * from './subscriptionRepository';
 export * from './onboardingRepository';

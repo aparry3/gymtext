@@ -8,18 +8,15 @@
  * All AI generation goes through SimpleAgentRunner.
  */
 import { DateTime } from 'luxon';
-import { now, getDayOfWeekName } from '@/shared/utils/date';
+import { getDayOfWeekName } from '@/shared/utils/date';
 import { normalizeWhitespace } from '@/server/utils/formatters';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
-
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { DossierServiceInstance } from '../domain/dossier/dossierService';
-import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
-import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
+
 
 // Agent services
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
@@ -27,6 +24,13 @@ import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 // =============================================================================
 // Types
 // =============================================================================
+
+export interface WorkoutData {
+  id: string;
+  message: string;
+  description?: string;
+  date: Date;
+}
 
 export interface TrainingServiceInstance {
   createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan>;
@@ -36,15 +40,13 @@ export interface TrainingServiceInstance {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prepareMicrocycleForDate(userId: string, planOrDate: any, dateOrTimezone?: any, timezone?: string): Promise<any>;
-  prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null>;
-  regenerateWorkoutMessage(user: UserWithProfile, workout: WorkoutInstance): Promise<string>;
+  prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null>;
+  regenerateWorkoutMessage(user: UserWithProfile, workout: WorkoutData): Promise<string>;
 }
 
 export interface TrainingServiceDeps {
   user: UserServiceInstance;
   dossier: DossierServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
-  shortLink: ShortLinkServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
 
@@ -56,8 +58,6 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
   const {
     user: userService,
     dossier: dossierService,
-    workoutInstance: workoutInstanceService,
-    shortLink: shortLinkService,
     agentRunner: simpleAgentRunner,
   } = deps;
 
@@ -172,16 +172,10 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     async prepareWorkoutForDate(
       user: UserWithProfile,
       targetDate: DateTime
-    ): Promise<WorkoutInstance | null> {
+    ): Promise<WorkoutData | null> {
       try {
         const timezone = user.timezone || 'America/New_York';
         const todayDate = targetDate.toJSDate();
-
-        // Check for existing workout
-        const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, todayDate);
-        if (existingWorkout) {
-          return existingWorkout;
-        }
 
         // Ensure week dossier exists
         const { microcycle } = await this.prepareMicrocycleForDate(user.id, todayDate, timezone);
@@ -211,41 +205,16 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         });
 
         const workoutMessage = normalizeWhitespace(result.response);
+        const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
-        // Create workout record
-        const workoutData: NewWorkoutInstance = {
-          clientId: user.id,
-          microcycleId: microcycle.id,
-          date: todayDate,
-          sessionType: 'workout',
-          goal: dayName,
-          description: workoutMessage,
+        console.log(`[TrainingService] Generated workout for user ${user.id} on ${targetDate.toISODate()}`);
+
+        return {
+          id: workoutId,
           message: workoutMessage,
-          completedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          description: workoutMessage,
+          date: todayDate,
         };
-
-        const savedWorkout = await workoutInstanceService.createWorkout(workoutData);
-        console.log(`[TrainingService] Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
-
-        // Create short link and update message
-        try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id, savedWorkout.id);
-          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-
-          if (savedWorkout.message) {
-            const dayOfWeekTitle = getDayOfWeekName(todayDate, timezone);
-            savedWorkout.message = normalizeWhitespace(
-              `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n(More details: ${fullUrl})`
-            );
-            await workoutInstanceService.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
-          }
-        } catch (error) {
-          console.error(`[TrainingService] Failed to create short link for workout ${savedWorkout.id}:`, error);
-        }
-
-        return savedWorkout;
       } catch (error) {
         console.error(`[TrainingService] Error generating workout for user ${user.id}:`, error);
         throw error;
@@ -254,7 +223,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
     async regenerateWorkoutMessage(
       user: UserWithProfile,
-      workout: WorkoutInstance
+      workout: WorkoutData
     ): Promise<string> {
       // Fetch context
       const profileDossier = await dossierService.getProfile(user.id);
@@ -274,12 +243,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         params: { user, date: new Date(workout.date) },
       });
 
-      const message = result.response;
-
-      // Save the regenerated message
-      await workoutInstanceService.updateWorkoutMessage(workout.id, message);
-
-      return message;
+      return result.response;
     },
   };
 }

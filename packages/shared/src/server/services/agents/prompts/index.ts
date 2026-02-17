@@ -2,7 +2,7 @@
  * Centralized prompts for all agent services
  *
  * NOTE: System prompt string constants have been removed from this module.
- * Runtime prompts are fetched from the database via PROMPT_IDS.
+ * Runtime prompts are fetched from the database via agent definitions.
  *
  * Schemas have been moved to schemas/*.ts
  * Types have been moved to types/*.ts

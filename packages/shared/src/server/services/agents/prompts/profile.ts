@@ -2,7 +2,7 @@
  * Profile Prompts - All prompts related to profile agents
  *
  * NOTE: System prompt string constants have been removed.
- * Runtime prompts are fetched from the database via PROMPT_IDS.
+ * Runtime prompts are fetched from the database via agent definitions.
  * Only template functions are kept here.
  */
 

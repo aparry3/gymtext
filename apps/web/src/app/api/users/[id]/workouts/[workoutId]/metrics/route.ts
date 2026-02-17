@@ -42,16 +42,6 @@ export async function GET(
     }
 
     const services = getServices();
-
-    // Verify the workout belongs to the user
-    const workout = await services.workoutInstance.getWorkoutById(workoutId, requestedUserId);
-    if (!workout) {
-      return NextResponse.json(
-        { success: false, message: 'Workout not found' },
-        { status: 404 }
-      );
-    }
-
     const metrics = await services.exerciseMetrics.getWorkoutMetrics(workoutId);
 
     return NextResponse.json({
@@ -123,15 +113,6 @@ export async function POST(
     }
 
     const services = getServices();
-
-    // Verify the workout belongs to the user
-    const workout = await services.workoutInstance.getWorkoutById(workoutId, requestedUserId);
-    if (!workout) {
-      return NextResponse.json(
-        { success: false, message: 'Workout not found' },
-        { status: 404 }
-      );
-    }
 
     const metric = await services.exerciseMetrics.saveExerciseProgress(
       requestedUserId,

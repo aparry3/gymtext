@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminContext } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -7,9 +6,7 @@ import { checkAuthorization } from '@/server/utils/authMiddleware';
  *
  * Get a specific workout
  *
- * Authorization:
- * - Admin can access any user
- * - Regular user can only access their own data
+ * Note: WorkoutInstance storage has been removed. Workouts are now generated on-demand.
  */
 export async function GET(
   request: NextRequest,
@@ -45,23 +42,10 @@ export async function GET(
       );
     }
 
-    const { services } = await getAdminContext();
-    const workout = await services.workoutInstance.getWorkoutById(
-      workoutId,
-      requestedUserId
+    return NextResponse.json(
+      { success: false, message: 'Workout instances are no longer stored' },
+      { status: 404 }
     );
-
-    if (!workout) {
-      return NextResponse.json(
-        { success: false, message: 'Workout not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: workout,
-    });
   } catch (error) {
     console.error('Error fetching workout:', error);
     return NextResponse.json(
@@ -76,9 +60,7 @@ export async function GET(
  *
  * Delete a specific workout
  *
- * Authorization:
- * - Admin can delete any user's workouts
- * - Regular users cannot delete workouts (admin only)
+ * Note: WorkoutInstance storage has been removed.
  */
 export async function DELETE(
   request: NextRequest,
@@ -114,34 +96,10 @@ export async function DELETE(
       );
     }
 
-    // Only admins can delete workouts
-    if (!auth.isAdmin) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Only administrators can delete workouts',
-        },
-        { status: 403 }
-      );
-    }
-
-    const { services } = await getAdminContext();
-    const deleted = await services.workoutInstance.deleteWorkout(
-      workoutId,
-      requestedUserId
+    return NextResponse.json(
+      { success: false, message: 'Workout instances are no longer stored' },
+      { status: 404 }
     );
-
-    if (!deleted) {
-      return NextResponse.json(
-        { success: false, message: 'Workout not found or already deleted' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Workout deleted successfully',
-    });
   } catch (error) {
     console.error('Error deleting workout:', error);
     return NextResponse.json(

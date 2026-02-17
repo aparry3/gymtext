@@ -2,6 +2,7 @@ import type { Message } from '../types';
 import type { ToolRegistry } from '../tools/toolRegistry';
 import type { ToolServiceContainer } from '../tools/types';
 import type { NewAgentLog } from '@/server/models/agentLog';
+import type { DbAgentConfig } from '@/server/models/agentDefinition';
 
 export interface SimpleAgentInvokeParams {
   input?: string;
@@ -12,21 +13,7 @@ export interface SimpleAgentInvokeParams {
 
 export interface SimpleAgentRunnerDeps {
   agentDefinitionService: {
-    getDefinition: (agentId: string) => Promise<{
-      name: string;
-      systemPrompt: string;
-      model?: string;
-      maxTokens?: number;
-      temperature?: number;
-      maxIterations?: number;
-      [key: string]: unknown;
-    }>;
-    getExtendedConfig: (agentId: string) => Promise<{
-      toolIds: string[] | null;
-      userPromptTemplate: string | null;
-      examples: unknown[] | null;
-      [key: string]: unknown;
-    }>;
+    getAgentDefinition: (agentId: string) => Promise<DbAgentConfig>;
   };
   toolRegistry: ToolRegistry;
   getServices: () => ToolServiceContainer;

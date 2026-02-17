@@ -1,3 +1,9 @@
+/**
+ * ARCHIVED: This migration script uses the old createAgent() pattern which has been removed.
+ * It needs to be updated to use simpleAgentRunner before it can be used again.
+ * See the agent infrastructure cleanup (Feb 2026) for context.
+ */
+
 import { Command } from 'commander';
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
@@ -11,10 +17,8 @@ import { now, formatForAI } from '@/shared/utils/date';
 import { OnboardingRepository, SignupData } from '@/server/repositories/onboardingRepository';
 import { formatSignupDataForLLM } from '@/server/services/user/signupDataFormatter';
 import { createEmptyProfile } from '@/server/utils/profile/jsonToMarkdown';
-// Profile agent imports for inline agent creation
-import { createAgent, AGENTS } from '@/server/agents';
+import { AGENTS } from '@/server/agents';
 import { buildProfileUpdateUserMessage } from '@/server/services/agents/prompts/profile';
-import { ProfileUpdateOutputSchema } from '@/server/services/agents/schemas';
 
 /**
  * Data Migration Script: Full Reset & Regenerate Training Data for All Users
@@ -172,21 +176,11 @@ async function generateProfileFromSignupData(
 
   const message = messageParts.join('\n\n');
 
-  // Start with empty profile
-  const currentProfile = createEmptyProfile(user);
-
-  // Use Profile Update Agent to build profile from signup data
-  const currentDate = formatForAI(new Date(), user.timezone);
-  const userPrompt = buildProfileUpdateUserMessage(currentProfile, message, user, currentDate);
-
-  const agent = await createAgent({
-    name: AGENTS.PROFILE_UPDATE,
-    schema: ProfileUpdateOutputSchema,
-  });
-
-  const result = await agent.invoke(userPrompt);
-
-  return result.response.updatedProfile;
+  // ARCHIVED: This function used the old createAgent() pattern.
+  // To restore, update to use simpleAgentRunner.invoke(AGENTS.PROFILE_UPDATE, ...).
+  throw new Error(
+    'This migration script is archived. Update to use simpleAgentRunner before running.'
+  );
 }
 
 // ============================================================================

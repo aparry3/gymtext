@@ -71,7 +71,6 @@ export class AgentDefinitionRepository extends BaseRepository {
    * Get all active agent definitions (latest version of each)
    */
   async getAllActive(): Promise<AgentDefinition[]> {
-    // Get distinct agent_ids first, then get latest version for each
     const latestVersions = await this.db
       .selectFrom('agentDefinitions as ad')
       .selectAll('ad')
@@ -126,11 +125,7 @@ export class AgentDefinitionRepository extends BaseRepository {
       .insertInto('agentDefinitions')
       .values({
         ...definition,
-        subAgents: toJsonParam(definition.subAgents),
-        schemaJson: toJsonParam(definition.schemaJson),
-        validationRules: toJsonParam(definition.validationRules),
         examples: toJsonParam(definition.examples),
-        defaultExtensions: toJsonParam(definition.defaultExtensions),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -156,24 +151,16 @@ export class AgentDefinitionRepository extends BaseRepository {
       .values({
         agentId,
         systemPrompt: update.systemPrompt ?? current.systemPrompt,
-        userPrompt: update.userPrompt !== undefined ? update.userPrompt : current.userPrompt,
         model: update.model ?? current.model,
         maxTokens: update.maxTokens ?? current.maxTokens,
         temperature: update.temperature ?? current.temperature,
         maxIterations: update.maxIterations ?? current.maxIterations,
-        maxRetries: update.maxRetries ?? current.maxRetries,
         description: update.description !== undefined ? update.description : current.description,
         isActive: update.isActive ?? current.isActive,
         toolIds: update.toolIds !== undefined ? update.toolIds : current.toolIds,
-        contextTypes: update.contextTypes !== undefined ? update.contextTypes : current.contextTypes,
-        subAgents: toJsonParam(update.subAgents !== undefined ? update.subAgents : current.subAgents),
-        schemaJson: toJsonParam(update.schemaJson !== undefined ? update.schemaJson : current.schemaJson),
-        validationRules: toJsonParam(update.validationRules !== undefined ? update.validationRules : current.validationRules),
         userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
         examples: toJsonParam(update.examples !== undefined ? update.examples : current.examples),
-        evalPrompt: update.evalPrompt !== undefined ? update.evalPrompt : current.evalPrompt,
-        evalModel: update.evalModel !== undefined ? update.evalModel : current.evalModel,
-        defaultExtensions: toJsonParam(update.defaultExtensions !== undefined ? update.defaultExtensions : current.defaultExtensions),
+        evalRubric: update.evalRubric !== undefined ? update.evalRubric : current.evalRubric,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -197,24 +184,16 @@ export class AgentDefinitionRepository extends BaseRepository {
       .values({
         agentId: version.agentId,
         systemPrompt: version.systemPrompt,
-        userPrompt: version.userPrompt,
         model: version.model,
         maxTokens: version.maxTokens,
         temperature: version.temperature,
         maxIterations: version.maxIterations,
-        maxRetries: version.maxRetries,
         description: version.description,
         isActive: version.isActive,
         toolIds: version.toolIds,
-        contextTypes: version.contextTypes,
-        subAgents: toJsonParam(version.subAgents),
-        schemaJson: toJsonParam(version.schemaJson),
-        validationRules: toJsonParam(version.validationRules),
         userPromptTemplate: version.userPromptTemplate,
         examples: toJsonParam(version.examples),
-        evalPrompt: version.evalPrompt,
-        evalModel: version.evalModel,
-        defaultExtensions: toJsonParam(version.defaultExtensions),
+        evalRubric: version.evalRubric,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
