@@ -2,7 +2,7 @@ import { now, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
-import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
+
 import type { TrainingServiceInstance } from '../../orchestration/trainingService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 import type { MessagingOrchestratorInstance } from '../../orchestration/messagingOrchestrator';
@@ -45,7 +45,6 @@ export interface WorkoutModificationServiceInstance {
 export interface WorkoutModificationServiceDeps {
   user: UserServiceInstance;
   dossier: DossierServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
   training: TrainingServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   messagingOrchestrator?: MessagingOrchestratorInstance;
@@ -57,7 +56,6 @@ export function createWorkoutModificationService(
   const {
     user: userService,
     dossier: dossierService,
-    workoutInstance: workoutInstanceService,
     training: trainingService,
     agentRunner: simpleAgentRunner,
     messagingOrchestrator,
@@ -111,12 +109,6 @@ export function createWorkoutModificationService(
             modifiedWeekContent,
             weekDossier.startDate
           );
-        }
-
-        // Delete existing workout so it regenerates with new week content
-        const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, workoutDate);
-        if (existingWorkout && !existingWorkout.completedAt) {
-          await workoutInstanceService.deleteWorkout(existingWorkout.id, userId);
         }
 
         // If today, regenerate immediately
@@ -198,31 +190,9 @@ export function createWorkoutModificationService(
           );
         }
 
-        // Delete affected future workouts so they regenerate
-        const isFutureWeek = !!weekStartDate;
-        const weekStart = weekStartDate
-          ? DateTime.fromJSDate(weekStartDate, { zone: timezone }).startOf('week')
-          : today.startOf('week');
-        const todayIndex = isFutureWeek ? -1 : Math.floor(today.diff(weekStart, 'days').days);
-        let todayAffected = false;
-
-        for (let i = 0; i < 7; i++) {
-          if (!isFutureWeek && i < todayIndex) continue;
-
-          const dayDate = weekStart.plus({ days: i });
-          const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, dayDate.toJSDate());
-
-          if (existingWorkout && !existingWorkout.completedAt) {
-            await workoutInstanceService.deleteWorkout(existingWorkout.id, userId);
-          }
-
-          if (!isFutureWeek && i === todayIndex) {
-            todayAffected = true;
-          }
-        }
-
         // If today is affected, regenerate immediately
-        if (todayAffected) {
+        const isFutureWeek = !!weekStartDate;
+        if (!isFutureWeek) {
           const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today);
           if (generatedWorkout?.message && messagingOrchestrator) {
             await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');

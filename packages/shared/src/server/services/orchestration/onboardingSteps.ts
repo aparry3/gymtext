@@ -24,8 +24,8 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { WorkoutInstance } from '@/server/models/workout';
 import type { ServiceContainer } from '../factory';
+import type { WorkoutData } from './trainingService';
 
 // Return types for each step
 export interface LoadDataResult {
@@ -49,7 +49,7 @@ export interface MicrocycleResult {
 }
 
 export interface WorkoutResult {
-  workout: WorkoutInstance;
+  workout: WorkoutData;
   wasCreated: boolean;
 }
 
@@ -75,7 +75,6 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
     onboardingData: onboardingDataService,
     fitnessProfile: fitnessProfileService,
     fitnessPlan: fitnessPlanService,
-    workoutInstance: workoutInstanceService,
     training: trainingService,
     onboardingCoordinator,
     enrollment: enrollmentService,
@@ -216,19 +215,10 @@ export function createOnboardingSteps(services: ServiceContainer): OnboardingSte
      */
     async getOrCreateWorkout(
       user: UserWithProfile,
-      microcycle: Microcycle,
+      _microcycle: Microcycle,
       forceCreate = false
     ): Promise<WorkoutResult> {
       const targetDate = now(user.timezone).startOf('day');
-
-      // Only check for existing workout if not forcing creation
-      if (!forceCreate) {
-        const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(user.id, targetDate.toJSDate());
-        if (existingWorkout) {
-          console.log(`[Onboarding] Step 5: Workout already exists for ${user.id}`);
-          return { workout: existingWorkout, wasCreated: false };
-        }
-      }
 
       console.log(`[Onboarding] Step 5: Creating workout for ${user.id} (LLM)${forceCreate ? ' [forceCreate]' : ''}`);
       const workout = await trainingService.prepareWorkoutForDate(user, targetDate);

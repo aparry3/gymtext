@@ -12,10 +12,6 @@ export interface AgentLogServiceInstance {
   }): Promise<AgentLog[]>;
   count(filters: { agentId?: string }): Promise<number>;
   deleteAll(): Promise<number>;
-  avgScorePerAgent(filters?: {
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<Array<{ agentId: string; avgScore: number; count: number }>>;
 }
 
 /**
@@ -35,10 +31,6 @@ export function createAgentLogService(
 
     async deleteAll() {
       return repos.agentLog.deleteAll();
-    },
-
-    async avgScorePerAgent(filters) {
-      return repos.agentLog.avgScorePerAgent(filters);
     },
   };
 }

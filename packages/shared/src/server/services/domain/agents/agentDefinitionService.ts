@@ -1,28 +1,6 @@
-import type { ZodSchema } from 'zod';
 import type { DbAgentConfig } from '@/server/models/agentDefinition';
 import type { AgentDefinition as DbAgentDefinitionRow } from '@/server/models/agentDefinition';
 import type { RepositoryContainer } from '../../../repositories/factory';
-import type {
-  AgentDefinition,
-  AgentDefinitionOverrides,
-  ModelId,
-} from '@/server/agents/types';
-
-/**
- * Extended agent config from the DB columns
- */
-interface ExtendedAgentConfig {
-  toolIds: string[] | null;
-  contextTypes: string[] | null;
-  subAgents: unknown[] | null;
-  schemaJson: Record<string, unknown> | null;
-  validationRules: unknown[] | null;
-  userPromptTemplate: string | null;
-  examples: unknown[] | null;
-  evalPrompt: string | null;
-  evalModel: string | null;
-  defaultExtensions: Record<string, string> | null;
-}
 
 interface CacheEntry {
   data: DbAgentConfig;
@@ -53,35 +31,6 @@ export interface AgentDefinitionServiceInstance {
    * Returns a map of agentId -> DbAgentConfig
    */
   getAgentDefinitions(agentIds: string[]): Promise<Map<string, DbAgentConfig>>;
-
-  /**
-   * Get a complete agent definition, ready for createAgent()
-   * Fetches from DB (cached) and merges with optional overrides
-   *
-   * This is the primary way to create agents from the new database-driven system:
-   * ```typescript
-   * const definition = await agentDefinitionService.getDefinition(AGENTS.CHAT_GENERATE, {
-   *   tools: [...],
-   *   temperature: 0.5,  // Override DB value
-   * });
-   * const agent = createAgent(definition);
-   * await agent.invoke({ message, context, previousMessages });
-   * ```
-   *
-   * @param id - Agent identifier (e.g., AGENTS.CHAT_GENERATE)
-   * @param overrides - Optional DB field overrides and code-provided config
-   */
-  getDefinition<TSchema extends ZodSchema | undefined = undefined>(
-    id: string,
-    overrides?: AgentDefinitionOverrides<TSchema>
-  ): Promise<AgentDefinition<TSchema>>;
-
-  /**
-   * Get the extended configuration for an agent (new DB columns)
-   * Returns tool_ids, context_types, sub_agents, etc.
-   * Uses the same cache as getAgentDefinition().
-   */
-  getExtendedConfig(agentId: string): Promise<ExtendedAgentConfig>;
 
   /**
    * Invalidate cache for a specific agent
@@ -120,7 +69,7 @@ export function createAgentDefinitionService(
     maxIterations: row.maxIterations ?? 5,
     toolIds: (row.toolIds as string[] | null) ?? null,
     examples: (row.examples as unknown) ?? null,
-    evalRubric: (row.evalPrompt as string | null) ?? null,
+    evalRubric: row.evalRubric ?? null,
   });
 
   /**
@@ -146,22 +95,6 @@ export function createAgentDefinitionService(
     cache.set(agentId, entry);
     return entry;
   };
-
-  /**
-   * Extract extended config from a raw DB row
-   */
-  const toExtendedConfig = (raw: DbAgentDefinitionRow): ExtendedAgentConfig => ({
-    toolIds: (raw.toolIds as string[] | null) ?? null,
-    contextTypes: (raw.contextTypes as string[] | null) ?? null,
-    subAgents: (raw.subAgents as unknown as unknown[] | null) ?? null,
-    schemaJson: (raw.schemaJson as unknown as Record<string, unknown> | null) ?? null,
-    validationRules: (raw.validationRules as unknown as unknown[] | null) ?? null,
-    userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
-    examples: (raw.examples as unknown[] | null) ?? null,
-    evalPrompt: (raw.evalPrompt as string | null) ?? null,
-    evalModel: (raw.evalModel as string | null) ?? null,
-    defaultExtensions: (raw.defaultExtensions as Record<string, string> | null) ?? null,
-  });
 
   return {
     async getAgentDefinition(agentId: string): Promise<DbAgentConfig> {
@@ -220,44 +153,6 @@ export function createAgentDefinitionService(
       }
 
       return result;
-    },
-
-    async getDefinition<TSchema extends ZodSchema | undefined = undefined>(
-      id: string,
-      overrides?: AgentDefinitionOverrides<TSchema>
-    ): Promise<AgentDefinition<TSchema>> {
-      const dbConfig = await this.getAgentDefinition(id);
-
-      return {
-        name: id,
-        // Resolved DB values (with optional overrides)
-        systemPrompt: dbConfig.systemPrompt,
-        dbUserPrompt: dbConfig.userPromptTemplate,
-        model: (overrides?.model ?? dbConfig.model) as ModelId,
-        maxTokens: overrides?.maxTokens ?? dbConfig.maxTokens,
-        temperature: overrides?.temperature ?? dbConfig.temperature,
-        maxIterations: overrides?.maxIterations ?? dbConfig.maxIterations,
-        maxRetries: overrides?.maxRetries ?? 1,
-        // Code-provided additions
-        tools: overrides?.tools,
-        schema: overrides?.schema,
-        subAgents: overrides?.subAgents,
-        validate: overrides?.validate,
-        userPrompt: overrides?.userPrompt,
-        loggingContext: overrides?.loggingContext,
-        context: overrides?.context,
-      };
-    },
-
-    async getExtendedConfig(agentId: string): Promise<ExtendedAgentConfig> {
-      // Check cache first
-      const cached = cache.get(agentId);
-      if (cached && cached.expiresAt > Date.now()) {
-        return toExtendedConfig(cached.raw);
-      }
-
-      const entry = await fetchAndCache(agentId);
-      return toExtendedConfig(entry.raw);
     },
 
     invalidateCache(agentId: string): void {

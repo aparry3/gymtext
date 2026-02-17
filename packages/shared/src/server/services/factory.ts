@@ -16,7 +16,7 @@ import { createOnboardingDataService, type OnboardingDataServiceInstance } from 
 import { createMessageService, type MessageServiceInstance } from './domain/messaging/messageService';
 import { createQueueService, type QueueServiceInstance } from './domain/messaging/queueService';
 import { createFitnessPlanService, type FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
-import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
+
 import { createMicrocycleService, type MicrocycleServiceInstance } from './domain/training/microcycleService';
 import { createProgressService, type ProgressServiceInstance } from './domain/training/progressService';
 import { createSubscriptionService, type SubscriptionServiceInstance } from './domain/subscription/subscriptionService';
@@ -65,7 +65,7 @@ export interface ServiceContainer {
   message: MessageServiceInstance;
   queue: QueueServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
+
   microcycle: MicrocycleServiceInstance;
   progress: ProgressServiceInstance;
   subscription: SubscriptionServiceInstance;
@@ -107,7 +107,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const user = createUserService(repos);
   const onboardingData = createOnboardingDataService(repos);
   const fitnessPlan = createFitnessPlanService(repos);
-  const workoutInstance = createWorkoutInstanceService(repos);
+
   const microcycle = createMicrocycleService(repos);
   const progress = createProgressService(repos);
   const subscription = createSubscriptionService(repos);
@@ -230,16 +230,14 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const training = createTrainingService({
     user,
     dossier,
-    workoutInstance,
-    shortLink,
     agentRunner,
   });
 
   const programAgent = createProgramAgentService(agentRunner);
   const messagingAgent = createMessagingAgentService(agentRunner);
 
-  const dailyMessage = createDailyMessageService(repos, {
-    user, workoutInstance,
+  const dailyMessage = createDailyMessageService({
+    user,
     messagingOrchestrator: getMessagingOrchestrator(),
     dayConfig, training,
   });
@@ -262,13 +260,13 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
 
   // Phase 5: Modification, profile, and remaining services
   workoutModification = createWorkoutModificationService({
-    user, dossier, workoutInstance, training,
+    user, dossier, training,
     agentRunner,
     messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   profile = createProfileService({
-    user, workoutInstance, dossier,
+    user, dossier,
     agentRunner,
   });
 
@@ -286,7 +284,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
 
   return {
     user, fitnessProfile, onboardingData, message, queue, fitnessPlan,
-    workoutInstance, microcycle, progress, subscription, dayConfig, shortLink,
+    microcycle, progress, subscription, dayConfig, shortLink,
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
     get userAuth() { return getUserAuth(); },
@@ -309,7 +307,7 @@ export function createServicesFromDb(db: Kysely<DB>, clients?: ExternalClients):
 export type {
   UserServiceInstance, FitnessProfileServiceInstance, OnboardingDataServiceInstance,
   MessageServiceInstance, QueueServiceInstance, FitnessPlanServiceInstance,
-  WorkoutInstanceServiceInstance, MicrocycleServiceInstance, ProgressServiceInstance,
+  MicrocycleServiceInstance, ProgressServiceInstance,
   SubscriptionServiceInstance, DayConfigServiceInstance, ShortLinkServiceInstance,
   ReferralServiceInstance, AdminAuthServiceInstance, UserAuthServiceInstance,
   ProgramOwnerAuthServiceInstance, MessagingOrchestratorInstance,

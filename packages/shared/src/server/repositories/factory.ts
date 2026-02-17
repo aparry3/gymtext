@@ -17,7 +17,7 @@ import { UserRepository } from './userRepository';
 import { MessageRepository } from './messageRepository';
 import { ProfileRepository } from './profileRepository';
 import { FitnessPlanRepository } from './fitnessPlanRepository';
-import { WorkoutInstanceRepository } from './workoutInstanceRepository';
+
 import { MicrocycleRepository } from './microcycleRepository';
 import { SubscriptionRepository } from './subscriptionRepository';
 import { OnboardingRepository } from './onboardingRepository';
@@ -54,7 +54,7 @@ export interface RepositoryContainer {
   message: MessageRepository;
   profile: ProfileRepository;
   fitnessPlan: FitnessPlanRepository;
-  workoutInstance: WorkoutInstanceRepository;
+
   microcycle: MicrocycleRepository;
   subscription: SubscriptionRepository;
   onboarding: OnboardingRepository;
@@ -108,7 +108,7 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     message: new MessageRepository(db),
     profile: new ProfileRepository(db),
     fitnessPlan: new FitnessPlanRepository(db),
-    workoutInstance: new WorkoutInstanceRepository(db),
+
     microcycle: new MicrocycleRepository(db),
     subscription: new SubscriptionRepository(db),
     onboarding: new OnboardingRepository(db),

@@ -8,7 +8,7 @@ import type { CommonTimezone } from '@/shared/utils/timezone';
 import type { ToolResult } from '../types/shared';
 import type { Message } from '@/server/models/message';
 import type { UserServiceInstance } from '../../domain/user/userService';
-import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
+
 import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
@@ -21,7 +21,6 @@ export interface ProfileServiceInstance {
 
 export interface ProfileServiceDeps {
   user: UserServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
   dossier: DossierServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
@@ -36,7 +35,7 @@ export interface ProfileServiceDeps {
  * Both agents run in parallel for efficiency.
  */
 export function createProfileService(deps: ProfileServiceDeps): ProfileServiceInstance {
-  const { user: userService, workoutInstance: workoutInstanceService, dossier: dossierService, agentRunner: simpleAgentRunner } = deps;
+  const { user: userService, dossier: dossierService, agentRunner: simpleAgentRunner } = deps;
 
   return {
     async updateProfile(userId: string, message: string, previousMessages?: Message[]): Promise<ToolResult> {
@@ -133,19 +132,14 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
             if (userUpdates.timezone !== undefined || userUpdates.preferredSendHour !== undefined) {
               const newTimezone = userUpdates.timezone ?? user.timezone;
               const currentTime = now(newTimezone);
-              const todayStart = currentTime.startOf('day').toJSDate();
-              const existingWorkout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, todayStart);
-
-              if (!existingWorkout) {
-                await inngest.send({
-                  name: 'workout/scheduled',
-                  data: {
-                    userId,
-                    targetDate: currentTime.startOf('day').toISO(),
-                  },
-                });
-                console.log('[PROFILE_SERVICE] Triggered immediate workout for missed send time');
-              }
+              await inngest.send({
+                name: 'workout/scheduled',
+                data: {
+                  userId,
+                  targetDate: currentTime.startOf('day').toISO(),
+                },
+              });
+              console.log('[PROFILE_SERVICE] Triggered immediate workout for timezone/send time change');
             }
           }
         }

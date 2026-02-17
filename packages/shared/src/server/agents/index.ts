@@ -1,35 +1,13 @@
 /**
- * Configurable Agent System
+ * Agent System
  *
- * A declarative, composable way to define AI agents.
- * This is the primary way to create agents in the codebase.
- *
- * @example
- * ```typescript
- * import { createAgent } from '@/server/agents';
- *
- * const myAgent = createAgent({
- *   name: 'my-agent',
- *   systemPrompt: 'You are a helpful assistant.',
- *   userPrompt: (input) => `Help with: ${input}`,
- *   schema: OutputSchema,
- * }, {
- *   model: 'gpt-5-nano',
- *   maxTokens: 4000,
- * });
- *
- * const result = await myAgent.invoke('something');
- * // result.response contains the schema-typed output
- * ```
+ * Database-driven agents executed via simpleAgentRunner.
+ * Agent definitions are stored in the agent_definitions table.
+ * Services invoke agents via agentRunner.invoke(agentId, params).
  */
 
 // ============================================
-// Main Agent Factory
-// ============================================
-export { createAgent } from './createAgent';
-
-// ============================================
-// Agent Constants (use these in createAgent calls)
+// Agent Constants
 // ============================================
 export { AGENTS } from './constants';
 export type { AgentId } from './constants';
@@ -52,26 +30,15 @@ export type {
   ToolResult,
 
   // Configurable agent types
-  AgentDefinition,
-  ModelConfig,
-  ConfigurableAgent,
-  SubAgentBatch,
-  SubAgentEntry,
-  SubAgentConfig,
   ModelId,
-
-  // Database config types
-  DbAgentConfig,
-  InvokeParams,
-
-  // Output types
-  InferSchemaOutput,
-  AgentComposedOutput,
 
   // Message types
   Message,
   ToolCall,
   ToolExecutionResult,
+
+  // Example types
+  AgentExample,
 
   // Logging types
   AgentLogEntry,

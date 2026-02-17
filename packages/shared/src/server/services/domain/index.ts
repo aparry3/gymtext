@@ -7,11 +7,11 @@
 
 // Training services
 export { createFitnessPlanService } from './training/fitnessPlanService';
-export { createWorkoutInstanceService } from './training/workoutInstanceService';
+
 export { createMicrocycleService } from './training/microcycleService';
 export { createProgressService } from './training/progressService';
 export type { FitnessPlanServiceInstance } from './training/fitnessPlanService';
-export type { WorkoutInstanceServiceInstance } from './training/workoutInstanceService';
+
 export type { MicrocycleServiceInstance } from './training/microcycleService';
 export type { ProgressServiceInstance, ProgressInfo } from './training/progressService';
 

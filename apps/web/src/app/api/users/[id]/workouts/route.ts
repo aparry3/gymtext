@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServices } from '@/lib/context';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
 
 /**
@@ -7,17 +6,7 @@ import { checkAuthorization } from '@/server/utils/authMiddleware';
  *
  * Get user's workouts
  *
- * Query params:
- * - limit: number (default 10) - returns N most recent workouts by date DESC
- * - startDate: ISO date string (optional, for date range filter)
- * - endDate: ISO date string (optional, for date range filter)
- *
- * Default behavior: Returns recent workouts ordered by date descending.
- * Frontend determines "today" / "tomorrow" using browser timezone.
- *
- * Authorization:
- * - Admin can access any user
- * - Regular user can only access their own data
+ * Note: WorkoutInstance storage has been removed. Workouts are now generated on-demand.
  */
 export async function GET(
   request: NextRequest,
@@ -25,8 +14,6 @@ export async function GET(
 ) {
   try {
     const { id: requestedUserId } = await params;
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
 
     if (!requestedUserId) {
       return NextResponse.json(
@@ -48,37 +35,9 @@ export async function GET(
       );
     }
 
-    const startDateParam = searchParams.get('startDate');
-    const endDateParam = searchParams.get('endDate');
-
-    // If filtering by date range
-    const services = getServices();
-    if (startDateParam && endDateParam) {
-      const startDate = new Date(startDateParam);
-      const endDate = new Date(endDateParam);
-
-      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-        const workouts = await services.workoutInstance.getWorkoutsByDateRange(
-          requestedUserId,
-          startDate,
-          endDate
-        );
-        return NextResponse.json({
-          success: true,
-          data: workouts,
-        });
-      }
-    }
-
-    // Default: return recent workouts by date DESC
-    const workouts = await services.workoutInstance.getRecentWorkouts(
-      requestedUserId,
-      limit
-    );
-
     return NextResponse.json({
       success: true,
-      data: workouts,
+      data: [],
     });
   } catch (error) {
     console.error('Error fetching workouts:', error);
