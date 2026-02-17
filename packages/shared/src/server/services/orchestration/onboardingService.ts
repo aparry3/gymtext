@@ -45,15 +45,15 @@ export function createOnboardingService(
   const prepareCombinedPlanMicrocycleMessage = async (user: UserWithProfile): Promise<string> => {
     const plan = await fitnessPlanService.getCurrentPlan(user.id);
     if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
-    if (!plan.message) throw new Error(`No plan message found for user ${user.id}`);
+    if (!plan.content) throw new Error(`No plan content found for user ${user.id}`);
 
     const currentDate = now(user.timezone).toJSDate();
     const { microcycle } = await trainingService.prepareMicrocycleForDate(user.id, plan, currentDate, user.timezone);
     if (!microcycle) throw new Error(`No microcycle found for user ${user.id}`);
-    if (!microcycle.message) throw new Error(`No microcycle message found for user ${user.id}`);
+    if (!microcycle.content) throw new Error(`No microcycle content found for user ${user.id}`);
 
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.message, microcycle.message, currentWeekday);
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday);
     console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
     return message;
   };

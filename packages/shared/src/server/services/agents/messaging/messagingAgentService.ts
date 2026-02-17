@@ -2,7 +2,7 @@ import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Message } from '@/server/models/conversation';
 import type { DayOfWeek } from '@/shared/utils/date';
-import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 // =============================================================================
 // Factory Pattern
@@ -23,7 +23,7 @@ export interface MessagingAgentServiceInstance {
  * @param agentRunner - AgentRunner for invoking agents
  */
 export function createMessagingAgentService(
-  agentRunner: AgentRunnerInstance
+  agentRunner: SimpleAgentRunnerInstance
 ): MessagingAgentServiceInstance {
   return {
     /**
@@ -82,7 +82,10 @@ Text me anytime with questions about your workouts, your plan, or if you just ne
         params: { user },
         previousMessages: previousMsgs,
       });
-      return (result.response as { messages: string[] }).messages;
+      const parsed = typeof result.response === 'string'
+        ? JSON.parse(result.response) as { messages: string[] }
+        : result.response as unknown as { messages: string[] };
+      return parsed.messages;
     },
 
     /**

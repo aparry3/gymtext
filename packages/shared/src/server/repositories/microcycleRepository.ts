@@ -1,143 +1,74 @@
 import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 import { DB } from '@/server/models/_types';
-import { Microcycle, MicrocycleModel } from '@/server/models/microcycle';
+import { Microcycle } from '@/server/models/microcycle';
 
 /**
  * Repository for microcycle database operations
  *
- * Microcycles now use:
- * - absoluteWeek: Week number from plan start (1-indexed)
- * - days: Ordered array of day descriptions
- * - No mesocycleIndex or weekNumber
+ * Simplified dossier-based: microcycles are stored as plain text content
  */
 export class MicrocycleRepository {
   constructor(private db: Kysely<DB>) {}
 
-  async createMicrocycle(microcycle: Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Microcycle> {
-    const result = await this.db
-      .insertInto('microcycles')
-      .values({
-        id: uuidv4(),
-        clientId: microcycle.clientId,
-        absoluteWeek: microcycle.absoluteWeek,
-        days: microcycle.days,
-        description: microcycle.description,
-        message: microcycle.message,
-        structured: microcycle.structured ? JSON.stringify(microcycle.structured) : null,
-        startDate: microcycle.startDate,
-        endDate: microcycle.endDate,
-        isActive: microcycle.isActive,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return MicrocycleModel.fromDB(result as any);
-  }
-
-  async getActiveMicrocycle(clientId: string): Promise<Microcycle | null> {
+  /**
+   * Get the latest microcycle for a user
+   */
+  async getLatest(clientId: string): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('isActive', '=', true)
       .orderBy('createdAt', 'desc')
       .executeTakeFirst();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result ? MicrocycleModel.fromDB(result as any) : null;
+    if (!result) return null;
+    return this.toMicrocycle(result);
   }
 
   /**
-   * Get microcycle by absolute week number
-   * Queries by clientId + absoluteWeek only (not fitnessPlanId)
-   * Returns most recently updated if duplicates exist
+   * Get microcycle for a specific date
+   * Returns the most recent microcycle with start_date <= targetDate
    */
-  async getMicrocycleByAbsoluteWeek(
-    clientId: string,
-    absoluteWeek: number
-  ): Promise<Microcycle | null> {
+  async getByDate(clientId: string, targetDate: Date): Promise<Microcycle | null> {
     const result = await this.db
       .selectFrom('microcycles')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('absoluteWeek', '=', absoluteWeek)
-      .orderBy('updatedAt', 'desc')
+      .where('startDate', '<=', targetDate)
+      .orderBy('startDate', 'desc')
       .executeTakeFirst();
 
+    if (!result) return null;
+    return this.toMicrocycle(result);
+  }
+
+  /**
+   * Create a new microcycle
+   */
+  async create(clientId: string, planId: string, content: string, startDate: Date): Promise<Microcycle> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result ? MicrocycleModel.fromDB(result as any) : null;
-  }
-
-  async deactivatePreviousMicrocycles(clientId: string): Promise<void> {
-    await this.db
-      .updateTable('microcycles')
-      .set({ isActive: false })
-      .where('clientId', '=', clientId)
-      .where('isActive', '=', true)
-      .execute();
-  }
-
-  async updateMicrocycle(id: string, updates: Partial<Omit<Microcycle, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Microcycle | null> {
-    const updateData: Record<string, unknown> = {};
-
-    if (updates.days !== undefined) {
-      updateData.days = updates.days;
-    }
-    if (updates.description !== undefined) {
-      updateData.description = updates.description;
-    }
-    if (updates.message !== undefined) {
-      updateData.message = updates.message;
-    }
-    if (updates.structured !== undefined) {
-      updateData.structured = updates.structured ? JSON.stringify(updates.structured) : null;
-    }
-    if (updates.isActive !== undefined) {
-      updateData.isActive = updates.isActive;
-    }
-    if (updates.startDate !== undefined) {
-      updateData.startDate = updates.startDate;
-    }
-    if (updates.endDate !== undefined) {
-      updateData.endDate = updates.endDate;
-    }
-    if (updates.absoluteWeek !== undefined) {
-      updateData.absoluteWeek = updates.absoluteWeek;
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      // No updates to perform
-      return this.getMicrocycleById(id);
-    }
+    const insertValues: any = {
+      id: uuidv4(),
+      clientId,
+      planId,
+      content,
+      startDate,
+    };
 
     const result = await this.db
-      .updateTable('microcycles')
-      .set({
-        ...updateData,
-        updatedAt: new Date(),
-      })
-      .where('id', '=', id)
+      .insertInto('microcycles')
+      .values(insertValues)
       .returningAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result ? MicrocycleModel.fromDB(result as any) : null;
+    return this.toMicrocycle(result);
   }
 
-  async getMicrocycleById(id: string): Promise<Microcycle | null> {
-    const result = await this.db
-      .selectFrom('microcycles')
-      .selectAll()
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result ? MicrocycleModel.fromDB(result as any) : null;
-  }
-
-  async getRecentMicrocycles(clientId: string, limit: number = 5): Promise<Microcycle[]> {
+  /**
+   * Get microcycle history for a user
+   */
+  async getHistory(clientId: string, limit: number = 10): Promise<Microcycle[]> {
     const results = await this.db
       .selectFrom('microcycles')
       .selectAll()
@@ -146,55 +77,32 @@ export class MicrocycleRepository {
       .limit(limit)
       .execute();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((r) => MicrocycleModel.fromDB(r as any));
+    return results.map(r => this.toMicrocycle(r));
   }
 
-  async deleteMicrocycle(id: string): Promise<boolean> {
+  /**
+   * Get a microcycle by ID
+   */
+  async getById(id: string): Promise<Microcycle | null> {
     const result = await this.db
-      .deleteFrom('microcycles')
+      .selectFrom('microcycles')
+      .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
 
-    return result.numDeletedRows > 0;
+    if (!result) return null;
+    return this.toMicrocycle(result);
   }
 
-  /**
-   * Get all microcycles for a client ordered by absolute week
-   */
-  async getAllMicrocycles(clientId: string): Promise<Microcycle[]> {
-    const results = await this.db
-      .selectFrom('microcycles')
-      .selectAll()
-      .where('clientId', '=', clientId)
-      .orderBy('absoluteWeek', 'asc')
-      .execute();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((r) => MicrocycleModel.fromDB(r as any));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private toMicrocycle(row: any): Microcycle {
+    return {
+      id: row.id as string,
+      clientId: row.clientId as string,
+      planId: row.planId ?? null,
+      content: row.content ?? null,
+      startDate: new Date(row.startDate),
+      createdAt: new Date(row.createdAt),
+    };
   }
-
-  /**
-   * Get microcycle for a specific date
-   * Used for date-based progress tracking - finds the microcycle that contains the target date
-   * Queries by clientId + date range only (not fitnessPlanId)
-   * Returns most recently updated if duplicates exist
-   */
-  async getMicrocycleByDate(
-    clientId: string,
-    targetDate: Date
-  ): Promise<Microcycle | null> {
-    const result = await this.db
-      .selectFrom('microcycles')
-      .selectAll()
-      .where('clientId', '=', clientId)
-      .where('startDate', '<=', targetDate)
-      .where('endDate', '>=', targetDate)
-      .orderBy('updatedAt', 'desc')
-      .executeTakeFirst();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result ? MicrocycleModel.fromDB(result as any) : null;
-  }
-
 }

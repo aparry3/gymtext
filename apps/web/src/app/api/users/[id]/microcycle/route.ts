@@ -8,9 +8,10 @@ import { checkAuthorization } from '@/server/utils/authMiddleware'
  * Get microcycle for the user
  *
  * Query params:
- * - absoluteWeek: (optional) Week number from plan start (1-indexed)
+ * - absoluteWeek: (optional) Week number from plan start (1-indexed).
+ *   Calculates a target date from the plan's start date and looks up by date.
  *
- * If no params provided, returns current week's microcycle using user's timezone
+ * If no params provided, returns the latest microcycle for the user.
  *
  * Authorization:
  * - Admin can access any user
@@ -44,18 +45,30 @@ export async function GET(
 
     const services = getServices()
 
-    // If absoluteWeek provided, use it (existing behavior)
+    // If absoluteWeek param provided, calculate date from plan
     if (absoluteWeekParam !== null) {
       const absoluteWeek = parseInt(absoluteWeekParam, 10)
 
       if (isNaN(absoluteWeek) || absoluteWeek < 1) {
         return NextResponse.json(
-          { success: false, message: 'Invalid absolute week number (must be >= 1)' },
+          { success: false, message: 'Invalid absolute week number' },
           { status: 400 }
         )
       }
 
-      const microcycle = await services.microcycle.getMicrocycleByAbsoluteWeek(userId, absoluteWeek)
+      const plan = await services.fitnessPlan.getCurrentPlan(userId)
+      if (!plan) {
+        return NextResponse.json(
+          { success: false, message: 'No fitness plan found' },
+          { status: 404 }
+        )
+      }
+
+      // Calculate target date: plan start + (week-1) * 7 days
+      const targetDate = new Date(plan.startDate)
+      targetDate.setDate(targetDate.getDate() + (absoluteWeek - 1) * 7)
+
+      const microcycle = await services.microcycle.getMicrocycleByDate(userId, targetDate)
 
       if (!microcycle) {
         return NextResponse.json(
@@ -70,46 +83,19 @@ export async function GET(
       })
     }
 
-    // No params: return current week's microcycle using user's timezone
-    const user = await services.user.getUser(userId)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const plan = await services.fitnessPlan.getCurrentPlan(userId)
-    if (!plan) {
-      return NextResponse.json(
-        { success: false, message: 'No fitness plan found for user' },
-        { status: 404 }
-      )
-    }
-
-    const progress = await services.progress.getCurrentProgress(plan, user.timezone)
-    if (!progress) {
-      return NextResponse.json(
-        { success: false, message: 'Could not calculate current progress' },
-        { status: 404 }
-      )
-    }
-
-    const microcycle = await services.microcycle.getMicrocycleByAbsoluteWeek(userId, progress.absoluteWeek)
+    // No params: current week
+    const microcycle = await services.microcycle.getLatestMicrocycle(userId)
 
     if (!microcycle) {
       return NextResponse.json(
-        { success: false, message: 'Microcycle not found for current week' },
+        { success: false, message: 'No microcycle found' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        ...microcycle,
-        absoluteWeek: progress.absoluteWeek
-      }
+      data: microcycle
     })
   } catch (error) {
     console.error('Error fetching microcycle:', error)

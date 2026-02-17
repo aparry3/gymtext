@@ -7,9 +7,22 @@ import type {
   AgentDefinitionOverrides,
   ModelId,
 } from '@/server/agents/types';
-import type { ExtendedAgentConfig } from '@/server/agents/runner/types';
-import type { ValidationRule } from '@/server/agents/declarative/types';
-import type { SubAgentDbConfig } from '@/server/agents/runner/types';
+
+/**
+ * Extended agent config from the DB columns
+ */
+interface ExtendedAgentConfig {
+  toolIds: string[] | null;
+  contextTypes: string[] | null;
+  subAgents: unknown[] | null;
+  schemaJson: Record<string, unknown> | null;
+  validationRules: unknown[] | null;
+  userPromptTemplate: string | null;
+  examples: unknown[] | null;
+  evalPrompt: string | null;
+  evalModel: string | null;
+  defaultExtensions: Record<string, string> | null;
+}
 
 interface CacheEntry {
   data: DbAgentConfig;
@@ -98,22 +111,16 @@ export function createAgentDefinitionService(
   /**
    * Convert database row to DbAgentConfig
    */
-  const toDbAgentConfig = (row: {
-    systemPrompt: string;
-    userPrompt: string | null;
-    model: string;
-    maxTokens: number | null;
-    temperature: string | null;
-    maxIterations: number | null;
-    maxRetries: number | null;
-  }): DbAgentConfig => ({
+  const toDbAgentConfig = (row: DbAgentDefinitionRow): DbAgentConfig => ({
     systemPrompt: row.systemPrompt,
-    userPrompt: row.userPrompt,
+    userPromptTemplate: (row.userPromptTemplate as string | null) ?? null,
     model: row.model,
     maxTokens: row.maxTokens ?? 16000,
-    temperature: row.temperature ? parseFloat(row.temperature) : 1.0,
+    temperature: row.temperature ? parseFloat(String(row.temperature)) : 1.0,
     maxIterations: row.maxIterations ?? 5,
-    maxRetries: row.maxRetries ?? 1,
+    toolIds: (row.toolIds as string[] | null) ?? null,
+    examples: (row.examples as unknown) ?? null,
+    evalRubric: (row.evalPrompt as string | null) ?? null,
   });
 
   /**
@@ -146,9 +153,9 @@ export function createAgentDefinitionService(
   const toExtendedConfig = (raw: DbAgentDefinitionRow): ExtendedAgentConfig => ({
     toolIds: (raw.toolIds as string[] | null) ?? null,
     contextTypes: (raw.contextTypes as string[] | null) ?? null,
-    subAgents: (raw.subAgents as unknown as SubAgentDbConfig[] | null) ?? null,
+    subAgents: (raw.subAgents as unknown as unknown[] | null) ?? null,
     schemaJson: (raw.schemaJson as unknown as Record<string, unknown> | null) ?? null,
-    validationRules: (raw.validationRules as unknown as ValidationRule[] | null) ?? null,
+    validationRules: (raw.validationRules as unknown as unknown[] | null) ?? null,
     userPromptTemplate: (raw.userPromptTemplate as string | null) ?? null,
     examples: (raw.examples as unknown[] | null) ?? null,
     evalPrompt: (raw.evalPrompt as string | null) ?? null,
@@ -225,12 +232,12 @@ export function createAgentDefinitionService(
         name: id,
         // Resolved DB values (with optional overrides)
         systemPrompt: dbConfig.systemPrompt,
-        dbUserPrompt: dbConfig.userPrompt,
+        dbUserPrompt: dbConfig.userPromptTemplate,
         model: (overrides?.model ?? dbConfig.model) as ModelId,
         maxTokens: overrides?.maxTokens ?? dbConfig.maxTokens,
         temperature: overrides?.temperature ?? dbConfig.temperature,
         maxIterations: overrides?.maxIterations ?? dbConfig.maxIterations,
-        maxRetries: overrides?.maxRetries ?? dbConfig.maxRetries,
+        maxRetries: overrides?.maxRetries ?? 1,
         // Code-provided additions
         tools: overrides?.tools,
         schema: overrides?.schema,
