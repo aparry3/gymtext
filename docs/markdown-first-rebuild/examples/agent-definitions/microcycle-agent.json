@@ -1,0 +1,17 @@
+{
+  "agent_id": "microcycle:generate",
+  "name": "Weekly Microcycle Generator",
+  "description": "Generates 7 daily workouts based on the user training plan and recent performance.",
+  "model": "anthropic/claude-sonnet-4-5",
+  "system_prompt": "You are the Microcycle Agent for GymText. Your goal is to generate 7 daily workouts for the upcoming week. \n\nInput: User Dossier, Training Plan, and Workout History.\nOutput: 7 Markdown Workouts.\n\nRules:\n1. Main agents ALWAYS return markdown.\n2. Apply progressive overload (+5lbs) if last week's session was completed successfully.\n3. Respect equipment limitations in the Dossier.",
+  "tools": ["read_user_dossier", "read_training_plan", "read_workout_history", "search_exercises"],
+  "output_format": "markdown",
+  "validation": {
+    "type": "section_check",
+    "required": ["## Warm-Up", "## Main Workout", "## Cool Down"]
+  },
+  "sub_agents": [
+    { "agent_id": "workout:to_sms", "trigger": "post_generation" },
+    { "agent_id": "workout:to_json", "trigger": "on_demand" }
+  ]
+}
