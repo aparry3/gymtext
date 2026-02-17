@@ -18,7 +18,7 @@ import { getEnvironmentSettings } from '@/server/config';
 import { now } from '@/shared/utils/date';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { DossierServiceInstance } from '../domain/dossier/dossierService';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 // Configuration from shared config
@@ -34,7 +34,7 @@ export interface ChatServiceInstance {
 export interface ChatServiceDeps {
   message: MessageServiceInstance;
   user: UserServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
 
@@ -48,7 +48,7 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
   const {
     message: messageService,
     user: userService,
-    dossier: dossierService,
+    markdown: markdownService,
     agentRunner: simpleAgentRunner,
   } = deps;
 
@@ -86,9 +86,9 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
         const todayDate = now(timezone).toJSDate();
 
         const [profileDossier, planDossier, weekDossier] = await Promise.all([
-          dossierService.getProfile(user.id),
-          dossierService.getPlan(user.id),
-          dossierService.getWeekForDate(user.id, todayDate),
+          markdownService.getProfile(user.id),
+          markdownService.getPlan(user.id),
+          markdownService.getWeekForDate(user.id, todayDate),
         ]);
 
         // Build context strings

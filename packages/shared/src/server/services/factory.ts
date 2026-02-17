@@ -43,7 +43,7 @@ import { createBlogService, type BlogServiceInstance } from './domain/blog/blogS
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
-import { createDossierService, type DossierServiceInstance } from './domain/dossier/dossierService';
+import { createMarkdownService, type MarkdownServiceInstance } from './domain/markdown/markdownService';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
 import { ToolRegistry, registerAllTools } from '@/server/agents/tools';
@@ -97,7 +97,7 @@ export interface ServiceContainer {
   organization: OrganizationServiceInstance;
   agentDefinition: AgentDefinitionServiceInstance;
   agentLog: AgentLogServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   toolRegistry: ToolRegistry;
 }
@@ -116,7 +116,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const queue = createQueueService(repos);
   const agentDefinition = createAgentDefinitionService(repos);
   const agentLog = createAgentLogService(repos);
-  const dossier = createDossierService(repos);
+  const markdown = createMarkdownService(repos);
   // fitnessProfile uses agentRunner which is created later, so use lazy getter
   const getAgentRunner = (): SimpleAgentRunnerInstance => agentRunner;
   const fitnessProfile = createFitnessProfileService(repos, getAgentRunner);
@@ -204,7 +204,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
         const { now: nowFn } = require('@/shared/utils/date');
         const todayDt = nowFn(timezone);
         const todayDate = todayDt.toJSDate();
-        const weekDossier = await dossier.getWeekForDate(userId, todayDate);
+        const weekDossier = await markdown.getWeekForDate(userId, todayDate);
         if (weekDossier?.content) {
           return { toolType: 'query' as const, response: `User's workout schedule for this week:\n${weekDossier.content}`, messages: undefined };
         }
@@ -229,7 +229,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   // Phase 4: Training and orchestration services
   const training = createTrainingService({
     user,
-    dossier,
+    markdown,
     agentRunner,
   });
 
@@ -245,11 +245,11 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const weeklyMessage = createWeeklyMessageService({
     user,
     messagingOrchestrator: getMessagingOrchestrator(),
-    training, fitnessPlan, messagingAgent, enrollment, dayConfig,
+    training, markdown, messagingAgent, dayConfig,
   });
 
   const onboarding = createOnboardingService({
-    fitnessPlan, training, dailyMessage,
+    markdown, training,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
   });
@@ -260,18 +260,18 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
 
   // Phase 5: Modification, profile, and remaining services
   workoutModification = createWorkoutModificationService({
-    user, dossier, training,
+    user, markdown, training,
     agentRunner,
     messagingOrchestrator: getMessagingOrchestrator(),
   });
 
   profile = createProfileService({
-    user, dossier,
+    user, markdown,
     agentRunner,
   });
 
   planModification = createPlanModificationService({
-    user, dossier, workoutModification, agentRunner,
+    user, markdown, workoutModification, agentRunner,
   });
 
   const modification = createModificationService({
@@ -279,7 +279,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const chat = createChatService({
-    message, user, dossier, agentRunner,
+    message, user, markdown, agentRunner,
   });
 
   return {
@@ -295,7 +295,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     modification, training, programAgent, chat,
     programOwner, program, enrollment, programVersion,
     exerciseResolution, exerciseMetrics, blog, organization,
-    agentDefinition, agentLog, dossier,
+    agentDefinition, agentLog, markdown,
     agentRunner, toolRegistry,
   };
 }
@@ -318,5 +318,5 @@ export type {
   ProgramServiceInstance, EnrollmentServiceInstance, ProgramVersionServiceInstance,
   ExerciseResolutionServiceInstance, ExerciseMetricsServiceInstance,
   BlogServiceInstance, OrganizationServiceInstance, AgentDefinitionServiceInstance,
-  AgentLogServiceInstance, DossierServiceInstance, SimpleAgentRunnerInstance,
+  AgentLogServiceInstance, MarkdownServiceInstance, SimpleAgentRunnerInstance,
 };

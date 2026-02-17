@@ -1,5 +1,5 @@
 import type { UserServiceInstance } from '../../domain/user/userService';
-import type { DossierServiceInstance } from '../../domain/dossier/dossierService';
+import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 import type { WorkoutModificationServiceInstance } from './workoutModificationService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
@@ -26,7 +26,7 @@ export interface PlanModificationServiceInstance {
 
 export interface PlanModificationServiceDeps {
   user: UserServiceInstance;
-  dossier: DossierServiceInstance;
+  markdown: MarkdownServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
 }
@@ -34,7 +34,7 @@ export interface PlanModificationServiceDeps {
 export function createPlanModificationService(
   deps: PlanModificationServiceDeps
 ): PlanModificationServiceInstance {
-  const { user: userService, dossier: dossierService, workoutModification: workoutModificationService, agentRunner: simpleAgentRunner } = deps;
+  const { user: userService, markdown: markdownService, workoutModification: workoutModificationService, agentRunner: simpleAgentRunner } = deps;
 
   return {
     async modifyPlan(params: ModifyPlanParams): Promise<ModifyPlanResult> {
@@ -46,11 +46,11 @@ export function createPlanModificationService(
         if (!user) return { success: false, messages: [], error: 'User not found' };
 
         // Read current plan dossier
-        const currentPlan = await dossierService.getPlan(userId);
+        const currentPlan = await markdownService.getPlan(userId);
         if (!currentPlan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
 
         // Build context
-        const profileDossier = await dossierService.getProfile(userId);
+        const profileDossier = await markdownService.getProfile(userId);
         const context: string[] = [];
         if (profileDossier) {
           context.push(`<Profile>${profileDossier}</Profile>`);
@@ -74,7 +74,7 @@ export function createPlanModificationService(
         const modifiedPlanContent = planResult.response;
 
         // Write new plan version via dossier service
-        await dossierService.createPlan(userId, modifiedPlanContent, new Date());
+        await markdownService.createPlan(userId, modifiedPlanContent, new Date());
         console.log('[MODIFY_PLAN] Saved new plan version');
 
         if (weekResult.success) {
