@@ -5,10 +5,10 @@
  */
 
 export type { IMessagingClient, MessageResult, MessagingProvider } from './types';
+export { MessageProvider } from './types';
 export type { LocalMessage } from './localClient';
 
 export { TwilioMessagingClient, twilioMessagingClient } from './twilioClient';
-export { WhatsAppMessagingClient, whatsappMessagingClient } from './whatsappClient';
 export { WhatsAppCloudClient, createWhatsAppCloudClient, getWhatsAppCloudConfig } from './whatsappCloudClient';
 export { LocalMessagingClient, localMessagingClient } from './localClient';
 export { getMessagingClient, getMessagingClientByProvider, messagingClient } from './factory';

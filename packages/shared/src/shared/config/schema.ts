@@ -31,7 +31,7 @@ export const ChatConfigSchema = z.object({
 // ============================================================================
 // Messaging Configuration
 // ============================================================================
-export const MessagingProviderSchema = z.enum(['twilio', 'whatsapp', 'whatsapp-cloud', 'local', 'websocket']);
+export const MessagingProviderSchema = z.enum(['twilio', 'whatsapp', 'local', 'websocket']);
 
 export const MessagingConfigSchema = z.object({
   // Use local provider in development, twilio in production

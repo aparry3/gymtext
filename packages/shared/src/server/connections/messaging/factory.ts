@@ -6,14 +6,14 @@
  */
 
 import type { IMessagingClient, MessagingProvider } from './types';
+import { MessageProvider } from './types';
 import { twilioMessagingClient } from './twilioClient';
-import { whatsappMessagingClient } from './whatsappClient';
 import { localMessagingClient } from './localClient';
 import { createWhatsAppCloudClient } from './whatsappCloudClient';
 import { getMessagingConfig } from '@/shared/config';
 
 // Lazy-loaded WhatsApp Cloud client (only created when needed)
-let whatsappCloudClientInstance: IMessagingClient | null = null;
+let whatsappClientInstance: IMessagingClient | null = null;
 
 /**
  * Get the messaging client based on environment configuration
@@ -23,19 +23,16 @@ export function getMessagingClient(): IMessagingClient {
   const { provider } = getMessagingConfig();
 
   switch (provider) {
-    case 'local':
+    case MessageProvider.LOCAL:
       console.log('[MessagingFactory] Using LocalMessagingClient (no SMS will be sent)');
       return localMessagingClient;
-    case 'whatsapp-cloud':
-      console.log('[MessagingFactory] Using WhatsAppCloudClient (direct Meta integration)');
-      if (!whatsappCloudClientInstance) {
-        whatsappCloudClientInstance = createWhatsAppCloudClient();
+    case MessageProvider.WHATSAPP:
+      console.log('[MessagingFactory] Using WhatsApp Cloud API (direct Meta integration)');
+      if (!whatsappClientInstance) {
+        whatsappClientInstance = createWhatsAppCloudClient();
       }
-      return whatsappCloudClientInstance;
-    case 'whatsapp':
-      console.log('[MessagingFactory] Using WhatsAppMessagingClient (Twilio)');
-      return whatsappMessagingClient;
-    case 'twilio':
+      return whatsappClientInstance;
+    case MessageProvider.TWILIO:
     default:
       return twilioMessagingClient;
   }
@@ -47,17 +44,15 @@ export function getMessagingClient(): IMessagingClient {
  */
 export function getMessagingClientByProvider(provider: MessagingProvider): IMessagingClient {
   switch (provider) {
-    case 'local':
+    case MessageProvider.LOCAL:
       return localMessagingClient;
-    case 'twilio':
+    case MessageProvider.TWILIO:
       return twilioMessagingClient;
-    case 'whatsapp':
-      return whatsappMessagingClient;
-    case 'whatsapp-cloud':
-      if (!whatsappCloudClientInstance) {
-        whatsappCloudClientInstance = createWhatsAppCloudClient();
+    case MessageProvider.WHATSAPP:
+      if (!whatsappClientInstance) {
+        whatsappClientInstance = createWhatsAppCloudClient();
       }
-      return whatsappCloudClientInstance;
+      return whatsappClientInstance;
     default:
       throw new Error(`Unknown messaging provider: ${provider}`);
   }

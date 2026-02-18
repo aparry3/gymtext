@@ -43,7 +43,7 @@ interface WhatsAppErrorResponse {
  * Supports both template messages (business-initiated) and free-form messages (within 24h window).
  */
 export class WhatsAppCloudClient implements IMessagingClient {
-  public readonly provider: MessagingProvider = 'whatsapp-cloud';
+  public readonly provider: MessagingProvider = 'whatsapp';
 
   private config: WhatsAppCloudConfig;
 
