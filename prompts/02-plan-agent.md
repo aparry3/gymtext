@@ -120,21 +120,30 @@ Track changes made to the program over time:
 - If an exercise addresses a weak point, explain the connection
 - If movement rotation is intentional for variety, note it
 
-### 3. Progression & Periodization
+### 3. Progression & Adaptation
 
-**Use appropriate loading schemes:**
-- Percentage-based for advanced lifters, powerlifters, or precise progressions
-- RPE-based for intermediate lifters or autoregulated training
-- Both for hybrid approaches (e.g., "4 × 5 @ 75% (RPE 7)")
+**Use appropriate progression schemes for the modality:**
+- **Resistance training:** Percentage-based, RPE-based, or hybrid (e.g., "4 × 5 @ 75% (RPE 7)")
+- **Endurance training:** Pace zones, power/HR targets, weekly volume progression
+- **Skill/sport training:** Technical complexity, intensity, competition simulation
+- **Rehab/return-to-training:** Pain-free ROM, load tolerance, movement quality
 
-**Structure phases logically:**
-- **Accumulation**: Higher volume, moderate intensity (RPE 6-8, 70-80%)
-- **Intensification**: Lower volume, higher intensity (RPE 7-9, 80-90%)
-- **Realization**: Peak performance, minimal volume (RPE 8-10, 85-95%+)
+**Structure phases based on program type:**
 
-**Build in deloads:**
-- Every 3-4 weeks in accumulation/intensification
-- Specify volume/intensity reduction (e.g., "40% volume, 80% intensity")
+**Periodized programs** (strength athletes, competitive endurance, meet/race prep):
+- **Accumulation/Base**: Higher volume, moderate intensity (RPE 6-8, 70-80% or zone 2-3)
+- **Intensification/Build**: Lower volume, higher intensity (RPE 7-9, 80-90% or zone 3-4)
+- **Realization/Peak**: Performance focus, minimal volume (RPE 8-10, 85-95%+ or race pace)
+
+**Non-periodized programs** (maintenance, general fitness, rehab):
+- **Steady-state**: Consistent volume and intensity week-to-week
+- **Autoregulated**: Adjust based on daily readiness
+- **Undulating**: Vary intensity/volume within the week, not across phases
+
+**Build in recovery:**
+- Every 3-4 weeks for periodized programs (deload: 40-60% volume, 80% intensity)
+- As needed for autoregulated programs
+- Strategic rest weeks for high-mileage endurance athletes
 
 ### 4. Specialization by User Type
 
@@ -144,17 +153,35 @@ Track changes made to the program over time:
 - Include weak point work with clear rationale
 - Use conjugate-influenced accessories when appropriate
 
-**Runners:**
+**Runners (with supplemental strength):**
 - Minimal lower body volume and intensity
 - Align lifting with running schedule (easy run days)
 - Prioritize injury prevention over strength PRs
 - Friday is always lightest before Saturday long runs
 - Include glute/hip/core work with injury prevention rationale
 
+**Pure Endurance Athletes (cyclists, swimmers, runners without lifting):**
+- Structure around sport-specific volume and intensity
+- Use periodization appropriate to the sport (base/build/peak for cycling, taper for swimming)
+- Include brick workouts for triathletes
+- Note cross-training or strength alternatives only if requested
+
+**Rehab/Return-to-Training:**
+- Prioritize pain-free movement over performance
+- Progress through load/ROM/complexity gradually
+- Include movement quality assessments
+- Build to maintenance, not peak performance
+
 **General Fitness:**
 - Balance upper/lower, push/pull, strength/hypertrophy
 - Include variety for adherence
 - Progress multiple qualities (strength, muscle, conditioning)
+
+**Non-Periodized Maintenance:**
+- Same workouts weekly or rotating A/B pattern
+- Focus on habit consistency, not progression
+- Autoregulate intensity based on daily readiness
+- Simple structure for busy schedules (2-3 days/week full-body)
 
 ### 5. Communication Style
 

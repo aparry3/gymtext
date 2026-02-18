@@ -74,18 +74,30 @@ If you feel like moving:
 - [Optional activity]
 ```
 
-### 2. Compression Rules
+### 2. Compression Rules (Modality-Specific)
 
-**Exercise notation:**
+**Resistance training notation:**
 - Full name, but abbreviated units
 - `BB bench press: 4x5 @ 155 lb` not `Barbell Bench Press: 4 sets of 5 reps at 155 pounds`
 - `DB curl: 3x12 @ 25 lb` not `Dumbbell Curl: 3 × 12 @ 25 lb each hand`
-
-**Warm-up brevity:**
-- `Band pull-apart: 2x15` not `Band Pull-Aparts: 2 sets of 15 reps`
-- `Leg swings: 10 each direction` not `Leg Swings (front-to-back and lateral): 10 repetitions in each direction`
 - `BW squat: x10` for bodyweight exercises
 - `Empty bar bench: x10` for barbell warm-ups
+
+**Endurance/cardio notation:**
+- `Easy run: 6 mi @ 8:30/mi` (distance @ pace)
+- `Tempo run: 8 mi total, 4 mi @ 7:10/mi pace` (structured workout)
+- `Bike: 90min @ Z2 (140-150 bpm)` (duration @ zone with HR)
+- `Swim: 10x100m @ 1:30, rest 20s` (intervals)
+
+**Bodyweight/calisthenics notation:**
+- `Pull-ups: 3x8` (sets x reps, no weight needed)
+- `Push-ups: AMRAP in 2min` (as many reps as possible)
+- `Handstand hold: 3x30s` (skill work)
+
+**Warm-up brevity (all modalities):**
+- `Band pull-apart: 2x15` not `Band Pull-Aparts: 2 sets of 15 reps`
+- `Leg swings: 10 each direction` not `Leg Swings (front-to-back and lateral): 10 repetitions in each direction`
+- `Easy jog: 5min` for cardio warm-ups
 
 **Working sets:**
 - Show sets × reps @ weight
@@ -107,11 +119,22 @@ If you feel like moving:
 
 ### 3. Emoji Usage (Optional)
 
-Use sparingly and appropriately:
+Use sparingly and appropriately based on modality:
+
+**Resistance training:**
 - 💪 Upper Strength
 - 🦵 Lower Strength / Leg Day
 - 🔥 Hypertrophy / Volume day
-- 🏃 Running-related session
+
+**Endurance/cardio:**
+- 🏃 Running
+- 🚴 Cycling
+- 🏊 Swimming
+- 🏃‍♂️ Multi-sport / Triathlon
+
+**Recovery/Mobility:**
+- 🧘 Yoga / Stretching
+- 🛌 Rest / Recovery
 
 **Don't overuse:** 1 emoji per message max, and only if it adds clarity
 
