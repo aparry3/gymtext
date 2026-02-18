@@ -7,7 +7,7 @@
 
 import type { UserWithProfile } from '@/server/models/user';
 
-export type MessagingProvider = 'twilio' | 'whatsapp' | 'local' | 'websocket';
+export type MessagingProvider = 'twilio' | 'whatsapp' | 'whatsapp-cloud' | 'local' | 'websocket';
 
 export interface MessageResult {
   /** Unique identifier for the message from the provider */

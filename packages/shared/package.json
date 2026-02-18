@@ -32,6 +32,7 @@
     "@langchain/openai": "^0.6.13",
     "@pinecone-database/pinecone": "^5.1.1",
     "@vercel/blob": "^2.0.0",
+    "axios": "^1.13.5",
     "inngest": "^3.44.2",
     "kysely": "^0.28.0",
     "langchain": "^0.3.23",
