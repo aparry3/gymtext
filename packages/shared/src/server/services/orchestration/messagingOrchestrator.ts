@@ -1,7 +1,8 @@
 import { UserWithProfile } from '../../models/user';
 import { Message, MessageDeliveryStatus } from '../../models/message';
 import { inngest } from '../../connections/inngest/client';
-import { messagingClient } from '../../connections/messaging';
+import { messagingClient, getMessagingClientByProvider } from '../../connections/messaging';
+import { MessageProvider } from '../../connections/messaging/types';
 import { isMessageTooLong, getSmsMaxLength } from '../../utils/smsValidation';
 import { isNonRetryableError, isUnsubscribedError } from '../../utils/twilioErrors';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
@@ -16,6 +17,8 @@ import type { ITwilioClient } from '../../connections/twilio/factory';
 export interface QueuedMessageContent {
   content?: string;
   mediaUrls?: string[];
+  templateSid?: string;
+  templateVariables?: Record<string, string>;
 }
 
 /**
@@ -46,7 +49,8 @@ export interface MessagingOrchestratorInstance {
   queueMessage(
     user: UserWithProfile,
     content: QueuedMessageContent,
-    queueName: string
+    queueName: string,
+    provider?: 'twilio' | 'whatsapp'
   ): Promise<{ messageId: string; queueEntryId: string }>;
 
   /**
@@ -56,14 +60,20 @@ export interface MessagingOrchestratorInstance {
   queueMessages(
     user: UserWithProfile,
     messages: QueuedMessageContent[],
-    queueName: string
+    queueName: string,
+    provider?: 'twilio' | 'whatsapp'
   ): Promise<{ messageIds: string[]; queueEntryIds: string[] }>;
 
   /**
    * Send a message immediately without queuing
    * Used for direct chat responses where ordering doesn't matter
    */
-  sendImmediate(user: UserWithProfile, content: string, mediaUrls?: string[]): Promise<SendResult>;
+  sendImmediate(
+    user: UserWithProfile,
+    content: string,
+    mediaUrls?: string[],
+    provider?: 'twilio' | 'whatsapp'
+  ): Promise<SendResult>;
 
   /**
    * Process the next pending message in a queue
@@ -158,17 +168,6 @@ export function createMessagingOrchestrator(
   } = deps;
 
   /**
-   * Internal helper to send a message via the messaging client
-   */
-  const sendViaProvider = async (
-    user: UserWithProfile,
-    content: string | undefined,
-    mediaUrls?: string[]
-  ): Promise<{ messageId?: string; status?: string }> => {
-    return await messagingClient.sendMessage(user, content, mediaUrls);
-  };
-
-  /**
    * Internal helper to handle unsubscribed user (21610 error)
    */
   const handleUnsubscribedUser = async (clientId: string): Promise<void> => {
@@ -190,8 +189,13 @@ export function createMessagingOrchestrator(
     async queueMessage(
       user: UserWithProfile,
       content: QueuedMessageContent,
-      queueName: string
+      queueName: string,
+      provider?: 'twilio' | 'whatsapp'
     ): Promise<{ messageId: string; queueEntryId: string }> {
+      // Determine messaging provider (only twilio or whatsapp for actual messaging)
+      const messageProvider: 'twilio' | 'whatsapp' = provider || 
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+      
       // Validate message length
       const maxLength = getSmsMaxLength();
       if (content.content && isMessageTooLong(content.content)) {
@@ -204,8 +208,13 @@ export function createMessagingOrchestrator(
       const message = await messageService.storeOutboundMessage({
         clientId: user.id,
         to: user.phoneNumber,
-        content: content.content || '[MMS only]',
-        metadata: content.mediaUrls ? { mediaUrls: content.mediaUrls } : undefined,
+        content: content.content || content.templateSid ? '[Template Message]' : '[MMS only]',
+        provider: messageProvider,
+        metadata: {
+          ...(content.mediaUrls && { mediaUrls: content.mediaUrls }),
+          ...(content.templateSid && { templateSid: content.templateSid }),
+          ...(content.templateVariables && { templateVariables: content.templateVariables }),
+        },
         deliveryStatus: 'queued',
       });
 
@@ -232,13 +241,18 @@ export function createMessagingOrchestrator(
     async queueMessages(
       user: UserWithProfile,
       messages: QueuedMessageContent[],
-      queueName: string
+      queueName: string,
+      provider?: 'twilio' | 'whatsapp'
     ): Promise<{ messageIds: string[]; queueEntryIds: string[] }> {
       if (messages.length === 0) {
         return { messageIds: [], queueEntryIds: [] };
       }
 
-      console.log(`[MessagingOrchestrator] Queueing ${messages.length} messages for user ${user.id} in queue '${queueName}'`);
+      // Determine messaging provider (only twilio or whatsapp for actual messaging)
+      const messageProvider: 'twilio' | 'whatsapp' = provider || 
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+
+      console.log(`[MessagingOrchestrator] Queueing ${messages.length} messages for user ${user.id} in queue '${queueName}' via ${messageProvider}`);
 
       // Validate all message lengths
       const maxLength = getSmsMaxLength();
@@ -256,8 +270,13 @@ export function createMessagingOrchestrator(
         const stored = await messageService.storeOutboundMessage({
           clientId: user.id,
           to: user.phoneNumber,
-          content: msg.content || '[MMS only]',
-          metadata: msg.mediaUrls ? { mediaUrls: msg.mediaUrls } : undefined,
+          content: msg.content || msg.templateSid ? '[Template Message]' : '[MMS only]',
+          provider: messageProvider,
+          metadata: {
+            ...(msg.mediaUrls && { mediaUrls: msg.mediaUrls }),
+            ...(msg.templateSid && { templateSid: msg.templateSid }),
+            ...(msg.templateVariables && { templateVariables: msg.templateVariables }),
+          },
           deliveryStatus: 'queued',
         });
 
@@ -288,12 +307,22 @@ export function createMessagingOrchestrator(
       };
     },
 
-    async sendImmediate(user: UserWithProfile, content: string, mediaUrls?: string[]): Promise<SendResult> {
+    async sendImmediate(
+      user: UserWithProfile,
+      content: string,
+      mediaUrls?: string[],
+      provider?: 'twilio' | 'whatsapp'
+    ): Promise<SendResult> {
+      // Determine messaging provider (only twilio or whatsapp for actual messaging)
+      const messageProvider: 'twilio' | 'whatsapp' = provider || 
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+      
       // Store the message first
       const message = await messageService.storeOutboundMessage({
         clientId: user.id,
         to: user.phoneNumber,
         content,
+        provider: messageProvider,
         metadata: mediaUrls ? { mediaUrls } : undefined,
         deliveryStatus: 'sent',
       });
@@ -303,8 +332,11 @@ export function createMessagingOrchestrator(
       }
 
       try {
+        // Get the appropriate messaging client
+        const client = getMessagingClientByProvider(messageProvider);
+        
         // Send via provider
-        const result = await sendViaProvider(user, content, mediaUrls);
+        const result = await client.sendMessage(user, content, mediaUrls);
 
         // Update with provider message ID
         if (result.messageId) {
@@ -424,17 +456,36 @@ export function createMessagingOrchestrator(
       // Update message status to sent
       await messageService.updateDeliveryStatus(message.id, 'sent');
 
-      // Get media URLs from message metadata
+      // Get message metadata
       let mediaUrls: string[] | undefined;
+      let templateSid: string | undefined;
+      let templateVariables: Record<string, string> | undefined;
+      
       if (message.metadata && typeof message.metadata === 'object') {
-        const meta = message.metadata as { mediaUrls?: string[] };
+        const meta = message.metadata as { 
+          mediaUrls?: string[];
+          templateSid?: string;
+          templateVariables?: Record<string, string>;
+        };
         mediaUrls = meta.mediaUrls;
+        templateSid = meta.templateSid;
+        templateVariables = meta.templateVariables;
       }
 
-      console.log(`[MessagingOrchestrator] Sending queued message ${message.id}`);
+      // Get the provider for this message (default to twilio if not set)
+      const messageProvider = (message.provider as 'twilio' | 'whatsapp') || 'twilio';
+      const client = getMessagingClientByProvider(messageProvider);
+
+      console.log(`[MessagingOrchestrator] Sending queued message ${message.id} via ${messageProvider}`);
 
       try {
-        const result = await sendViaProvider(user, message.content, mediaUrls);
+        const result = await client.sendMessage(
+          user,
+          templateSid ? undefined : message.content,
+          mediaUrls,
+          templateSid,
+          templateVariables
+        );
 
         if (result.messageId) {
           await messageService.updateProviderMessageId(message.id, result.messageId);
