@@ -310,8 +310,3 @@ export const createWhatsAppCloudClient = (): WhatsAppCloudClient => {
   const config = getWhatsAppCloudConfig();
   return new WhatsAppCloudClient(config);
 };
-
-// Export singleton instance
-// Note: This will throw if environment variables are not set
-// Use getMessagingClientByProvider('whatsapp-cloud') in factory instead
-export const whatsappCloudClient = createWhatsAppCloudClient();
