@@ -171,11 +171,10 @@ export const CreateUserSchema = z.object({
   timezone: z.string().nullish(),
   units: UnitsSchema.default('imperial'),
   
-  // WhatsApp and messaging preferences
+  // Messaging preferences (SMS via Twilio or WhatsApp - one or the other)
   preferredMessagingProvider: z.enum(['twilio', 'whatsapp']).nullish(),
-  whatsappOptIn: z.boolean().nullish(),
-  whatsappOptInDate: z.date().nullish(),
-  whatsappNumber: z.string().nullish(),
+  messagingOptIn: z.boolean().nullish(),
+  messagingOptInDate: z.date().nullish(),
 });
 
 // Schema for updating a user

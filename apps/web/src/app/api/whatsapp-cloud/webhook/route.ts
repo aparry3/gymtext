@@ -282,7 +282,7 @@ async function handleStopCommand(user: any, fromPhone: string, services: any): P
     user,
     confirmationMessage,
     undefined,
-    'whatsapp-cloud'
+    'whatsapp'
   );
 }
 
@@ -303,7 +303,7 @@ async function handleStartCommand(user: any, fromPhone: string, services: any): 
     user,
     confirmationMessage,
     undefined,
-    'whatsapp-cloud'
+    'whatsapp'
   );
 }
 

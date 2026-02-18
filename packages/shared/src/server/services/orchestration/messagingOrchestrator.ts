@@ -2,6 +2,7 @@ import { UserWithProfile } from '../../models/user';
 import { Message, MessageDeliveryStatus } from '../../models/message';
 import { inngest } from '../../connections/inngest/client';
 import { messagingClient, getMessagingClientByProvider } from '../../connections/messaging';
+import { MessageProvider } from '../../connections/messaging/types';
 import { isMessageTooLong, getSmsMaxLength } from '../../utils/smsValidation';
 import { isNonRetryableError, isUnsubscribedError } from '../../utils/twilioErrors';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
@@ -193,7 +194,7 @@ export function createMessagingOrchestrator(
     ): Promise<{ messageId: string; queueEntryId: string }> {
       // Determine messaging provider (only twilio or whatsapp for actual messaging)
       const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === 'whatsapp' ? 'whatsapp' : 'twilio');
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
       
       // Validate message length
       const maxLength = getSmsMaxLength();
@@ -249,7 +250,7 @@ export function createMessagingOrchestrator(
 
       // Determine messaging provider (only twilio or whatsapp for actual messaging)
       const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === 'whatsapp' ? 'whatsapp' : 'twilio');
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
 
       console.log(`[MessagingOrchestrator] Queueing ${messages.length} messages for user ${user.id} in queue '${queueName}' via ${messageProvider}`);
 
@@ -314,7 +315,7 @@ export function createMessagingOrchestrator(
     ): Promise<SendResult> {
       // Determine messaging provider (only twilio or whatsapp for actual messaging)
       const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === 'whatsapp' ? 'whatsapp' : 'twilio');
+        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
       
       // Store the message first
       const message = await messageService.storeOutboundMessage({
