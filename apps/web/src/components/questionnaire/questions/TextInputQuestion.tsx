@@ -20,6 +20,8 @@ interface TextInputQuestionProps {
   isSubmit?: boolean;
   isLoading?: boolean;
   onConsentChange?: (smsConsent: boolean, termsConsent: boolean) => void;
+  messagingProvider?: 'sms' | 'whatsapp';
+  onMessagingProviderChange?: (provider: 'sms' | 'whatsapp') => void;
 }
 
 /**
@@ -54,6 +56,8 @@ export function TextInputQuestion({
   isSubmit = false,
   isLoading = false,
   onConsentChange,
+  messagingProvider = 'sms',
+  onMessagingProviderChange,
 }: TextInputQuestionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isPhone = question.type === 'phone';
@@ -145,7 +149,42 @@ export function TextInputQuestion({
       {/* Consent checkboxes - always shown for phone questions */}
       {isPhone && (
         <div className="flex flex-col gap-4">
-          {/* SMS Consent with full Twilio disclosures */}
+          {/* Messaging Provider Toggle */}
+          <div className="flex flex-col gap-3">
+            <label className="text-sm font-medium text-[hsl(var(--questionnaire-foreground))]">
+              How would you like to receive your workouts?
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onMessagingProviderChange?.('sms')}
+                className={`
+                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
+                  ${messagingProvider === 'sms'
+                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
+                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
+                  }
+                `}
+              >
+                SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => onMessagingProviderChange?.('whatsapp')}
+                className={`
+                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
+                  ${messagingProvider === 'whatsapp'
+                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
+                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
+                  }
+                `}
+              >
+                WhatsApp
+              </button>
+            </div>
+          </div>
+
+          {/* SMS/WhatsApp Consent with full Twilio disclosures */}
           <label className="flex items-start gap-3 cursor-pointer group">
             <input
               type="checkbox"
@@ -158,10 +197,18 @@ export function TextInputQuestion({
                        transition-colors cursor-pointer"
             />
             <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-relaxed select-none">
-              By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText 
-              at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message 
-              and data rates may apply. Reply HELP for help or STOP to cancel. Your mobile information will not be shared 
-              with third parties.
+              {messagingProvider === 'whatsapp' ? (
+                <>
+                  I want to receive my daily workout reminders and training delivery via WhatsApp at the phone number provided. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to cancel.
+                </>
+              ) : (
+                <>
+                  By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText
+                  at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message
+                  and data rates may apply. Reply HELP for help or STOP to cancel. Your mobile information will not be shared
+                  with third parties.
+                </>
+              )}
             </span>
           </label>
 
