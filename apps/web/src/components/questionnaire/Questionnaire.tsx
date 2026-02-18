@@ -43,6 +43,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
   // Track consent separately from questionnaire answers
   const [smsConsent, setSmsConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
+  const [messagingProvider, setMessagingProvider] = useState<'sms' | 'whatsapp'>('sms');
   const {
     currentQuestion,
     currentIndex,
@@ -219,6 +220,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         // SMS consent (from phone question checkboxes)
         smsConsent,
         smsConsentedAt: smsConsent ? new Date().toISOString() : undefined,
+        // Messaging provider preference (SMS or WhatsApp)
+        preferredMessagingProvider: messagingProvider,
 
         // Program info
         ...(programId && { programId }),
@@ -306,6 +309,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
             onConsentChange={currentQuestion.type === 'phone' ? handleConsentChange : undefined}
+            messagingProvider={messagingProvider}
+            onMessagingProviderChange={setMessagingProvider}
           />
         );
 
