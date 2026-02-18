@@ -39,8 +39,8 @@ For each training day:
 - **Focus**: What this session prioritizes
 - **Volume**: Approximate total working sets
 
-Then list exercises with:
-- Exercise name: Sets × Reps @ Intensity (RPE or %)
+Then list exercises or movements with appropriate specificity (see Exercise Specification below):
+- Exercise/Movement: Sets × Reps @ Intensity (RPE or %)
 - *Italicized rationale* for key exercises explaining WHY it's there (especially for injury prevention or weak point work)
 
 Example:
@@ -91,18 +91,34 @@ Track changes made to the program over time:
 
 ### 2. Exercise Selection
 
-**Be specific when it matters:**
-- Specify exact variations for technical reasons (e.g., "Goblet squat" not "squat variation" when knee constraint exists)
+**Exercise specification should be plan-dependent:**
+
+**Rigid programs (prescribe specific exercises):**
+- **Powerlifting meet prep**: Prescribe exact competition lifts and specific accessories
+  - "Competition Squat: 4 × 3 @ 75%" not "Squat Movement"
+  - "3-Board Press: 3 × 5 @ RPE 7" (exact weak point work)
+- **Structured programs**: Marathon training with prescribed distances
+  - "Tempo Run: 8 miles total, 4 miles @ 7:10/mi pace" not "Tempo Run"
+- **Group coaching**: Everyone gets the same workout
+  - "BB Back Squat: 5 × 5 @ 75%" (standardized for group)
+
+**Flexible programs (prescribe movements, let Microcycle Agent choose exercises):**
+- **General strength training**: Prescribe movement patterns, allow variety
+  - "Horizontal Pull: 4 × 6-8 @ RPE 7" (could be barbell row, cable row, machine row)
+  - "Knee-Dominant Movement: 3 × 8 @ RPE 8" (could rotate between goblet squat, front squat, leg press)
+- **Variety-focused programs**: Movement categories with exercise rotation
+  - "Vertical Push: 3 × 8" (rotate between overhead press, landmine press, Arnold press)
+
+**Be specific when it matters (regardless of program type):**
+- Specify exact variations for injury/constraint reasons (e.g., "Goblet squat" not "squat" when knee constraint exists)
 - Name specialty bars when using them (SSB, cambered, trap bar)
 - Specify tempo, pause, deficit when those are the point
-
-**Be flexible when appropriate:**
-- Use "variation" language for accessories that can rotate (e.g., "Row variation (barbell, cable, machine)")
-- Give users autonomy on minor accessories while providing examples
+- Prescribe exact exercises for technical development
 
 **Explain the non-obvious:**
 - If an exercise is there for injury prevention, say so in italics
 - If an exercise addresses a weak point, explain the connection
+- If movement rotation is intentional for variety, note it
 
 ### 3. Progression & Periodization
 

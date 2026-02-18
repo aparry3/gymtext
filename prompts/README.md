@@ -12,6 +12,22 @@ Profile → Plan → Microcycle → Workout Messages
 
 Each agent is a specialist that takes specific input and produces specific output, which feeds into the next agent.
 
+### PLAN vs PROGRAM
+
+In the GymText system, **PLAN** and **PROGRAM** are distinct entities:
+
+- **PROGRAM**: A predefined training template or framework with varying levels of rigidity
+  - **Examples**: "Marathon Training Program" (prescribed daily distances), "Conjugate Method" (structured exercise rotation), "Group Coaching Program" (everyone gets same workout daily)
+  - **Range**: From flexible templates ("tailor to user's profile") to rigid prescriptions ("everyone runs 8 miles on Tuesday")
+  - **Default**: The default program is essentially "create a customized plan based on the user's profile"
+
+- **PLAN**: A user's personalized fitness plan, created from a program + their profile
+  - **Combines**: Program structure + User constraints/preferences/schedule
+  - **Adapts**: Shifts training days, adds complementary work, adjusts volume/intensity
+  - **Examples**: Runner follows "Marathon Program" but adds 3 lifting days and shifts long run to Sunday for schedule reasons
+
+**All users are part of a program** (even if it's the flexible default), and **all users have a plan** (the specific implementation of that program for them).
+
 ## Agent Flow
 
 ### 1. Profile Agent (`01-profile-agent.md`)
