@@ -27,6 +27,7 @@ interface QuestionnaireProps {
 export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [messagingProvider, setMessagingProvider] = useState<'sms' | 'whatsapp'>('sms');
 
   const {
     currentQuestion,
@@ -85,9 +86,10 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
-        // SMS consent
-        smsConsent: true,
-        smsConsentedAt: new Date().toISOString(),
+        // Messaging consent and provider preference
+        messagingOptIn: true,
+        messagingOptInDate: new Date().toISOString(),
+        preferredMessagingProvider: messagingProvider,
 
         // Program info
         ...(programId && { programId }),
@@ -158,6 +160,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             onNext={handleNext}
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
+            messagingProvider={messagingProvider}
+            onMessagingProviderChange={setMessagingProvider}
           />
         );
 

@@ -18,6 +18,8 @@ interface TextInputQuestionProps {
   onNext: () => void;
   isSubmit?: boolean;
   isLoading?: boolean;
+  messagingProvider?: 'sms' | 'whatsapp';
+  onMessagingProviderChange?: (provider: 'sms' | 'whatsapp') => void;
 }
 
 /**
@@ -51,6 +53,8 @@ export function TextInputQuestion({
   onNext,
   isSubmit = false,
   isLoading = false,
+  messagingProvider = 'sms',
+  onMessagingProviderChange,
 }: TextInputQuestionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isPhone = question.type === 'phone';
@@ -133,6 +137,42 @@ export function TextInputQuestion({
 
       {isPhone && isSubmit && (
         <div className="flex flex-col gap-4">
+          {/* Messaging Provider Toggle */}
+          <div className="flex flex-col gap-3">
+            <label className="text-sm font-medium text-[hsl(var(--questionnaire-foreground))]">
+              How would you like to receive your workouts?
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onMessagingProviderChange?.('sms')}
+                className={`
+                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
+                  ${messagingProvider === 'sms'
+                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
+                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
+                  }
+                `}
+              >
+                SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => onMessagingProviderChange?.('whatsapp')}
+                className={`
+                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
+                  ${messagingProvider === 'whatsapp'
+                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
+                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
+                  }
+                `}
+              >
+                WhatsApp
+              </button>
+            </div>
+          </div>
+
+          {/* Messaging Consent - Text changes based on provider */}
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -141,9 +181,19 @@ export function TextInputQuestion({
               className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))] accent-[hsl(var(--questionnaire-accent))]"
             />
             <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-snug">
-              I agree to receive recurring automated text messages from GymText at the phone number provided for training delivery and support. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help and STOP to cancel.
+              {messagingProvider === 'whatsapp' ? (
+                <>
+                  I want to receive my daily workout reminders and training delivery via WhatsApp at the phone number provided. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to cancel.
+                </>
+              ) : (
+                <>
+                  I agree to receive recurring automated text messages from GymText at the phone number provided for training delivery and support. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help and STOP to cancel.
+                </>
+              )}
             </span>
           </label>
+
+          {/* Terms and Privacy */}
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
