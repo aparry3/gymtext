@@ -159,19 +159,27 @@ After all workouts, provide a summary:
 - If RPE was higher/lower than target, note it
 - If form broke down, document it
 
-### 3. Include Warm-Up Sets
+### 3. Include Warm-Up (Modality-Specific)
 
-**Competition lifts and main compounds need warm-ups:**
+**For resistance training — load ramp-up:**
+- Competition lifts and main compounds need warm-up sets:
 ```
 - **Set 1:** 95 lbs × 8 (warm-up)
 - **Set 2:** 125 lbs × 5 (warm-up)
 - **Set 3:** 150 lbs × 5 (RPE 7.5) ← first working set
 ```
-
-**Accessories can start with just 1 warm-up or go straight to working weight:**
+- Accessories can start with 1 warm-up or go straight to working weight:
 ```
 - **Set 1:** 15 lbs × 12 (straight to working weight, lateral raises)
 ```
+
+**For endurance/cardio — movement prep:**
+- Dynamic stretching and activation (not load progression)
+- Example: "5min easy jog, then: leg swings x10, high knees x20, butt kicks x20, skips x30m"
+
+**For bodyweight training — ROM and skill prep:**
+- Easier progressions or partial ROM
+- Example: "Knee push-ups x10, assisted pull-up x5, hollow hold 20s"
 
 ### 4. Write Useful Notes
 
@@ -208,22 +216,32 @@ After all workouts, provide a summary:
 - Note variety in exercise selection
 - Track multiple metrics (strength, reps, volume)
 
-### 6. Progression Logic
+### 6. Progression Logic (Modality-Specific)
 
-**Week-to-week progression (within a phase):**
+**Resistance training progression:**
 - Week 1-2: Establish working weights at prescribed RPE
 - Week 3: Push to top of RPE range, add reps where possible
 - Week 4: Deload or peak week depending on phase
-
-**Show realistic progression:**
 - Main compounds: +5 lb per week if RPE allows
 - Accessories: +2.5-5 lb or +1-2 reps
-- Some exercises hold weight (especially during high-fatigue weeks)
+
+**Endurance/cardio progression:**
+- Build weekly volume gradually (10% rule for running mileage)
+- Increase intensity via pace, power, or HR zones
+- Example: Week 1: 8 mi @ 8:00/mi, Week 2: 8.5 mi @ 8:00/mi, Week 3: 9 mi @ 7:50/mi
+
+**Bodyweight progression:**
+- Add reps, reduce rest, or progress to harder variation
+- Example: Week 1: 3x8 push-ups, Week 2: 3x10 push-ups, Week 3: 3x8 decline push-ups
+
+**Rehab/return-to-training progression:**
+- Increase pain-free ROM, then load, then complexity
+- Example: Week 1: BW squat to 90°, Week 2: BW squat to parallel, Week 3: Goblet squat 10lb to parallel
 
 **Document when NOT to progress:**
-- Peak mileage weeks for runners
+- Peak mileage/volume weeks for endurance athletes
 - Pre-deload fatigue accumulation weeks
-- Active constraint monitoring periods
+- Active constraint monitoring periods (injury, illness, high stress)
 
 ### 7. Rest Periods
 

@@ -49,13 +49,21 @@ Use this format:
 
 ### METRICS
 
-Organize by category relevant to the user's goals:
+**Order metrics by user priority** — put the user's primary training modality first.
 
-**Strength** (for strength-focused users)
+**Strength** (resistance training focused)
 - Current lifts with dates and reps (e.g., "Bench Press: 145 lb x 5 (2026-01-15)")
+- For bodyweight training: max reps or progression level (e.g., "Pull-ups: 12 unbroken (2026-01-15)")
 
-**Endurance** (for endurance-focused users)
-- Race times, paces, weekly mileage
+**Endurance** (cardio/sport focused)
+- Race times, paces, weekly mileage/volume
+- Sport-specific metrics (e.g., "100m freestyle: 58s (2026-01-15)")
+- Heart rate zones if training with HR
+
+**Movement Quality** (rehab/mobility focused)
+- Pain-free ranges of motion
+- Movement screens or assessments
+- Functional milestones (e.g., "Pain-free bodyweight squat to parallel")
 
 **Body Composition**
 - Current weight and BF% if available
@@ -91,9 +99,15 @@ Format: `## YYYY-MM-DD — Title` followed by bullet points
 
 **Powerlifter**: Include weight class, meet history in IDENTITY, competition lifts and training PRs separately in METRICS
 
-**Runner**: Include running background in IDENTITY, pace zones and weekly mileage in METRICS, note that lifting serves running (not vice versa) in preferences
+**Runner (with supplemental strength)**: Include running background in IDENTITY, pace zones and weekly mileage in METRICS, note that lifting serves running (not vice versa) in preferences
+
+**Pure Endurance Athlete (cyclist, swimmer, runner without lifting)**: Prioritize endurance metrics (power zones, pace/splits, weekly volume), minimal or no strength metrics, include sport-specific equipment and constraints
+
+**Rehab/Return-to-Training**: Prioritize Movement Quality metrics, document injury history and current limitations in CONSTRAINTS, goals focus on pain-free movement and function restoration
 
 **General Fitness**: Balance across strength and body composition metrics, note variety preference
+
+**Non-Periodized Maintenance**: Goals emphasize habit consistency over progression (e.g., "Maintain 3x/week for 6 months"), metrics track adherence and feeling over performance PRs
 
 ## Update Protocol
 
