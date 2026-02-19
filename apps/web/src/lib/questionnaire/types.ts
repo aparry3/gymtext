@@ -4,7 +4,7 @@
  * Types for the full-page clickthrough signup questionnaire.
  */
 
-export type QuestionType = 'select' | 'multiselect' | 'text' | 'phone' | 'boolean' | 'consent';
+export type QuestionType = 'select' | 'multiselect' | 'text' | 'phone' | 'boolean';
 
 export interface QuestionOption {
   /** Value stored in answers */
@@ -34,15 +34,6 @@ export interface QuestionnaireQuestion {
   placeholder?: string;
   /** Source: 'base' or 'program' */
   source: 'base' | 'program';
-  /** Additional metadata for specific question types */
-  metadata?: {
-    /** For consent questions: full consent text with links */
-    consentText?: string;
-    /** For consent questions: checkbox label */
-    checkboxLabel?: string;
-    /** For consent questions: whether checkbox starts selected */
-    preSelected?: boolean;
-  };
 }
 
 export interface QuestionnaireState {
