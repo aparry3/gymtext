@@ -16,6 +16,7 @@ import { SingleSelectQuestion } from './questions/SingleSelectQuestion';
 import { MultiSelectQuestion } from './questions/MultiSelectQuestion';
 import { TextInputQuestion } from './questions/TextInputQuestion';
 import { BooleanQuestion } from './questions/BooleanQuestion';
+import { ConsentQuestion } from './questions/ConsentQuestion';
 
 interface QuestionnaireProps {
   programId?: string;
@@ -86,8 +87,8 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         acceptedRisks: true,
 
         // SMS consent
-        smsConsent: true,
-        smsConsentedAt: new Date().toISOString(),
+        smsConsent: answers.smsConsent as boolean,
+        smsConsentedAt: answers.smsConsent ? new Date().toISOString() : undefined,
 
         // Program info
         ...(programId && { programId }),
@@ -166,6 +167,16 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
           <BooleanQuestion
             question={currentQuestion}
             value={currentValue as string | undefined}
+            onChange={(v) => setAnswer(v)}
+            onNext={handleNext}
+          />
+        );
+
+      case 'consent':
+        return (
+          <ConsentQuestion
+            question={currentQuestion}
+            value={currentValue as boolean | undefined}
             onChange={(v) => setAnswer(v)}
             onNext={handleNext}
           />
