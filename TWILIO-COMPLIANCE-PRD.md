@@ -9,13 +9,18 @@
 
 ## Executive Summary
 
-This PRD outlines the required changes to bring GymText into full compliance with Twilio's A2P 10DLC requirements. The primary issues are:
+This PRD outlines changes to meet Twilio's A2P 10DLC compliance requirements and improve the user signup experience.
 
-1. **Messages sent before payment** - Welcome SMS is currently sent before Stripe checkout completion
-2. **Incomplete opt-in disclosure** - `/start` page lacks required Twilio opt-in language
-3. **Missing opt-in page** - No dedicated `/opt-in` page for Twilio campaign submission
+### Twilio 10DLC Compliance Requirements (Required for Campaign Approval)
 
-**Goal:** Ensure all text messaging occurs AFTER successful subscription payment and includes all required Twilio disclosures.
+1. **Incomplete opt-in disclosure** - `/start` page lacks required Twilio opt-in language
+2. **Missing opt-in page** - No dedicated `/opt-in` page for Twilio campaign submission
+
+### UX Improvements (Not Compliance-Related)
+
+1. **Message timing** - Move welcome SMS to AFTER Stripe checkout completion (better UX, not a compliance requirement)
+
+**Goal:** Meet all Twilio compliance requirements for campaign approval and improve signup flow UX.
 
 ---
 
@@ -51,37 +56,45 @@ This PRD outlines the required changes to bring GymText into full compliance wit
 7. Webhook attempts to send onboarding messages
 
 **Issues:**
-- Welcome message sent BEFORE payment (violates Twilio compliance)
+
+**Twilio Compliance Issues:**
 - Phone input has minimal helpText: "We'll text you your workouts"
 - No explicit opt-in checkbox
 - SMS consent hardcoded to `true` in Questionnaire component
-- No opt-in language with required disclosures
+- No opt-in language with required disclosures (frequency, STOP to cancel, data rates, etc.)
 - No dedicated opt-in page for Twilio campaign linking
+
+**UX Issues (Not Compliance):**
+- Welcome message sent BEFORE payment (works, but not ideal UX)
 
 ### Desired State
 
-**Flow:**
+**Flow (with compliance + UX improvements):**
 1. User visits `/start` page
-2. User fills out questionnaire with **compliant opt-in disclosure**
-3. User checks **explicit opt-in checkbox** (NOT pre-selected)
+2. User fills out questionnaire with **compliant opt-in disclosure** ✅ *Required for Twilio compliance*
+3. User checks **explicit opt-in checkbox** (NOT pre-selected) ✅ *Required for Twilio compliance*
 4. User submits form → `POST /api/users/signup`
 5. Signup route:
    - Creates user
    - Creates Stripe customer
-   - **✅ NO messages sent**
+   - **NO messages sent** 🎨 *UX preference (not compliance requirement)*
    - Creates Stripe checkout session
    - Redirects to Stripe checkout
 6. User completes payment
 7. Stripe webhook fires (`checkout.session.completed`)
 8. Webhook:
    - Creates subscription
-   - **✅ Sends Twilio-compliant welcome message**
+   - **Sends Twilio-compliant welcome message** ✅ *Compliance requirement (message format)*
    - Sends onboarding messages (if ready)
 
-**Additional:**
-- Dedicated `/opt-in` page with full disclosure for Twilio campaign submission
-- All required disclaimers visible at point of consent
-- Privacy policy includes mobile data non-sharing statement
+**Additional (Twilio Compliance):**
+- Dedicated `/opt-in` page with full disclosure for Twilio campaign submission ✅
+- All required disclaimers visible at point of consent ✅
+- Privacy policy includes mobile data non-sharing statement ✅
+
+**Legend:**
+- ✅ = Required for Twilio 10DLC compliance
+- 🎨 = UX improvement (not compliance-related)
 
 ---
 
@@ -393,7 +406,9 @@ If opt-in is behind login (not applicable for GymText):
 
 ## Technical Implementation
 
-### Phase 1: Remove Premature Welcome Message
+### Phase 1: Move Welcome Message (UX Improvement 🎨)
+
+**Priority:** Optional (UX preference, not compliance requirement)
 
 **File:** `apps/web/src/app/api/users/signup/route.ts`
 
@@ -410,15 +425,18 @@ if (userWithProfile) {
 
 **Change to:**
 ```typescript
-// ❌ DO NOT send welcome message here - wait for checkout completion
-console.log('[Signup] Skipping welcome message until payment complete');
+// Skipping welcome message here - will send after payment complete
+console.log('[Signup] Welcome message will be sent post-payment');
 ```
 
 **Explanation:**
-- Remove all message sending from signup route
-- Messages should ONLY be sent from webhook after payment
+- This is a **UX preference** (better user experience to send after payment)
+- **NOT a Twilio compliance requirement** (sending before payment is allowed if consent is collected)
+- Move message trigger to Stripe webhook for better timing
 
-### Phase 2: Add Compliant Welcome Message to Webhook
+### Phase 2: Update Welcome Message Format (Twilio Compliance ✅)
+
+**Priority:** REQUIRED for Twilio 10DLC approval
 
 **File:** `apps/web/src/app/api/stripe/webhook/route.ts`
 

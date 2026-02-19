@@ -31,64 +31,76 @@
 
 ---
 
-## Critical Findings
+## Key Findings
 
-### 🚨 Compliance Violation Found
+### ✅ Twilio Compliance Requirements
 
-**Issue:** Welcome SMS is sent BEFORE user completes payment
+**What's required for campaign approval:**
+1. **Opt-in consent checkbox** with all required disclosures (frequency, STOP, data rates, etc.)
+2. **Compliant welcome message format** (brand name, HELP/STOP, data rates disclaimer)
+3. **`/opt-in` page** with full disclosure for Twilio to review
+4. **Privacy policy** must include mobile data non-sharing statement
 
-**Location:** `apps/web/src/app/api/users/signup/route.ts` (line ~227)
+### 🎨 UX Improvement Opportunity (Optional)
 
 **Current flow:**
 1. User fills out `/start` form
 2. Signup route creates user
-3. **❌ Welcome SMS sent immediately**
+3. Welcome SMS sent immediately
 4. Redirect to Stripe checkout
 5. User completes payment
 
-**Problem:** Twilio requires explicit opt-in BEFORE sending any messages. Currently, messages are sent before payment (and technically before complete subscription confirmation).
+**Suggested improvement:**
+Move welcome message to AFTER payment completes (better UX, not required for compliance)
 
-**Fix:** Move ALL message sending to AFTER `checkout.session.completed` webhook fires.
+**Location:** `apps/web/src/app/api/users/signup/route.ts` (line ~227)
 
 ---
 
 ## What Needs to Change
 
-### 1. Remove Premature Welcome Message (CRITICAL)
-**File:** `apps/web/src/app/api/users/signup/route.ts`
-**Action:** Delete/comment out lines ~220-230 that send welcome message
-**Impact:** No messages sent until payment completes
+### Twilio Compliance Requirements ✅
 
-### 2. Add Compliant Welcome Message to Webhook (CRITICAL)
-**File:** `apps/web/src/app/api/stripe/webhook/route.ts`
-**Action:** Send welcome message AFTER subscription creation
-**Message:** See PRD for exact compliant text
-**Impact:** Welcome message sent at correct time with required disclosures
+### 1. Update Welcome Message Format (REQUIRED)
+**File:** `apps/web/src/app/api/users/signup/route.ts` OR `apps/web/src/app/api/stripe/webhook/route.ts`
+**Action:** Update welcome message to include all required elements
+**Impact:** Message includes brand name, HELP/STOP instructions, data rates disclaimer
 
-### 3. Update Opt-in Form Language (REQUIRED)
+### 2. Add Compliant Opt-in Checkbox (REQUIRED)
+**File:** `apps/web/src/lib/questionnaire/baseQuestions.ts`
 **File:** `apps/web/src/lib/questionnaire/baseQuestions.ts`
 **Action:** 
 - Add SMS consent checkbox question
-- Include all required disclosures
+- Include all required disclosures (frequency, STOP, data rates, privacy link, etc.)
 - Checkbox must NOT be pre-selected
 **Impact:** Clear, compliant opt-in mechanism
 
-### 4. Create Consent Question Component (REQUIRED)
+### 3. Create Consent Question Component (REQUIRED)
 **File:** `apps/web/src/components/questionnaire/questions/ConsentQuestion.tsx` (NEW)
 **Action:** Build new component for consent checkboxes
 **Impact:** Reusable component for compliant consent collection
 
-### 5. Update Privacy Policy (REQUIRED)
+### 4. Update Privacy Policy (REQUIRED)
 **File:** Check if `apps/web/src/app/privacy/page.tsx` exists
 **Action:** Add mobile data non-sharing statement
 **Required text:** "Your mobile information will not be shared with third parties or affiliates for marketing purposes"
 **Impact:** Twilio campaign approval depends on this
 
-### 6. Create `/opt-in` Page (REQUIRED FOR CAMPAIGN)
+### 5. Create `/opt-in` Page (REQUIRED FOR CAMPAIGN)
 **File:** `apps/web/src/app/opt-in/page.tsx` (NEW)
 **Action:** Create public page showing full opt-in disclosure
 **Purpose:** Twilio needs this URL when submitting campaign
 **Impact:** Required for campaign approval
+
+---
+
+### UX Improvements (Optional) 🎨
+
+### 6. Move Welcome Message Timing
+**File:** `apps/web/src/app/api/users/signup/route.ts` → `apps/web/src/app/api/stripe/webhook/route.ts`
+**Action:** Move welcome message trigger from signup route to Stripe webhook (after payment)
+**Impact:** Better UX - users receive welcome message after payment confirmation
+**Note:** This is NOT a compliance requirement; sending before payment is allowed if consent is collected
 
 ---
 
@@ -177,25 +189,18 @@ gymtext.com/opt-in.
 
 ## Implementation Priority
 
-### Phase 1: Critical Fixes (Deploy ASAP)
-1. Remove welcome message from signup route
-2. Add welcome message to webhook
-3. Update privacy policy
+### Phase 1: Twilio Compliance (Required for Campaign Approval)
+1. Update welcome message format to include all required elements
+2. Update privacy policy with mobile data non-sharing statement
+3. Add compliant opt-in checkbox to /start page
+4. Create /opt-in page
 
-**Why:** Fixes active compliance violation
+**Why:** Required for Twilio 10DLC campaign approval
 
-### Phase 2: Opt-in Form (Before Campaign Submission)
-1. Create ConsentQuestion component
-2. Add consent checkbox to `/start`
-3. Update form submission logic
+### Phase 2: UX Improvements (Optional)
+1. Move welcome message from signup route to Stripe webhook
 
-**Why:** Required for compliant opt-in
-
-### Phase 3: Opt-in Page (Before Campaign Submission)
-1. Create `/opt-in` page
-2. Take screenshots
-
-**Why:** Required for Twilio campaign approval
+**Why:** Better user experience (not compliance-related)
 
 ---
 
