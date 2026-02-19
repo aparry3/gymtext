@@ -36,24 +36,23 @@
 ### ✅ Twilio Compliance Requirements
 
 **What's required for campaign approval:**
-1. **Opt-in consent checkbox** with all required disclosures (frequency, STOP, data rates, etc.)
-2. **Compliant welcome message format** (brand name, HELP/STOP, data rates disclaimer)
+1. **Two separate opt-in checkboxes:**
+   - Checkbox 1: Terms of Service and Privacy Policy consent
+   - Checkbox 2: SMS consent with all required disclosures (frequency, STOP, data rates, etc.)
+2. **Immediate confirmation messages** sent right after signup (with SMS consent):
+   - Message 1: Welcome/confirmation (brand name, data rates, STOP instructions)
+   - Message 2: Checkout reminder
 3. **`/opt-in` page** with full disclosure for Twilio to review
 4. **Privacy policy** must include mobile data non-sharing statement
 
-### 🎨 UX Improvement Opportunity (Optional)
+### ✅ Correct Message Flow
 
-**Current flow:**
-1. User fills out `/start` form
-2. Signup route creates user
-3. Welcome SMS sent immediately
-4. Redirect to Stripe checkout
-5. User completes payment
+**IMMEDIATELY after signup (with SMS consent checked):**
+1. Welcome confirmation message: "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel."
+2. Checkout reminder: "Finish checking out and we will get your fitness program over to you."
 
-**Suggested improvement:**
-Move welcome message to AFTER payment completes (better UX, not required for compliance)
-
-**Location:** `apps/web/src/app/api/users/signup/route.ts` (line ~227)
+**AFTER Stripe checkout completes:**
+3. Actual GymText programming/workout messages begin
 
 ---
 
@@ -94,39 +93,56 @@ Move welcome message to AFTER payment completes (better UX, not required for com
 
 ---
 
-### UX Improvements (Optional) 🎨
+### Additional Implementation Details
 
-### 6. Move Welcome Message Timing
-**File:** `apps/web/src/app/api/users/signup/route.ts` → `apps/web/src/app/api/stripe/webhook/route.ts`
-**Action:** Move welcome message trigger from signup route to Stripe webhook (after payment)
-**Impact:** Better UX - users receive welcome message after payment confirmation
-**Note:** This is NOT a compliance requirement; sending before payment is allowed if consent is collected
+**Two-checkbox structure:**
+- Checkbox 1: Terms of Service and Privacy Policy consent
+- Checkbox 2: SMS consent (with full Twilio disclosures)
+- Both must be separate and NOT pre-selected
+
+**Message flow:**
+- IMMEDIATELY after signup (with consents checked): Welcome confirmation + checkout reminder
+- AFTER Stripe checkout: Actual GymText programming/workout messages
 
 ---
 
-## Compliant Welcome Message
+## Compliant Confirmation Messages
 
-**Send AFTER checkout completion:**
+**Send IMMEDIATELY after signup (with SMS consent checked):**
 
+**Message 1: Welcome/Confirmation**
 ```
 Welcome to GymText! We're excited to go on this fitness journey with you. 
-You'll receive daily workout messages to help you reach your goals. Reply 
-HELP for support or STOP to cancel. Msg & data rates may apply.
+Message and data rates may apply. Reply STOP to cancel.
 ```
 
-**Includes all required elements:**
+**Message 2: Checkout Reminder**
+```
+Finish checking out and we will get your fitness program over to you.
+```
+
+**Message 1 includes all required Twilio elements:**
 - ✅ Brand name (GymText)
-- ✅ Program description
-- ✅ Help instructions
-- ✅ Opt-out instructions
+- ✅ Confirmation of enrollment
 - ✅ Data rates disclaimer
+- ✅ Opt-out instructions (STOP)
+
+**Then AFTER checkout completion:**
+- Actual GymText programming/workout messages begin
 
 ---
 
-## Opt-in Checkbox Text
+## Opt-in Checkbox Text (TWO SEPARATE CHECKBOXES)
 
 **Add to `/start` page after phone number input:**
 
+**Checkbox 1: Terms and Privacy**
+```
+I agree to the Terms of Service and Privacy Policy.
+[Links to gymtext.com/terms and gymtext.com/privacy]
+```
+
+**Checkbox 2: SMS Consent (with full Twilio disclosures)**
 ```
 By checking this box, I agree to receive recurring automated fitness and 
 workout text messages from GymText at the mobile number provided. You will 
@@ -137,7 +153,8 @@ Your mobile information will not be shared with third parties.
 ```
 
 **Key requirements:**
-- ❌ Checkbox CANNOT be pre-selected
+- ❌ Both checkboxes CANNOT be pre-selected
+- ✅ Must be TWO SEPARATE checkboxes (not combined)
 - ✅ Must include "msg and data rates may apply"
 - ✅ Must link to Terms and Privacy
 - ✅ Must include opt-out instructions
@@ -190,31 +207,31 @@ gymtext.com/opt-in.
 ## Implementation Priority
 
 ### Phase 1: Twilio Compliance (Required for Campaign Approval)
-1. Update welcome message format to include all required elements
-2. Update privacy policy with mobile data non-sharing statement
-3. Add compliant opt-in checkbox to /start page
-4. Create /opt-in page
+1. **Add two separate checkboxes to /start page:**
+   - Terms/Privacy consent checkbox
+   - SMS consent checkbox (with all Twilio disclosures)
+2. **Update message flow in signup route:**
+   - Send TWO immediate messages after signup (welcome + checkout reminder)
+   - Keep programming messages in Stripe webhook (after payment)
+3. **Update privacy policy** with mobile data non-sharing statement
+4. **Create /opt-in page** with full disclosure
 
 **Why:** Required for Twilio 10DLC campaign approval
-
-### Phase 2: UX Improvements (Optional)
-1. Move welcome message from signup route to Stripe webhook
-
-**Why:** Better user experience (not compliance-related)
 
 ---
 
 ## Testing Checklist
 
 Before going live:
-- [ ] No messages sent during signup (before Stripe)
-- [ ] Welcome message sends AFTER Stripe webhook
-- [ ] Welcome message includes all required elements
-- [ ] Consent checkbox appears on `/start`
-- [ ] Consent checkbox is NOT pre-selected
+- [ ] TWO separate checkboxes appear on `/start` (Terms/Privacy + SMS)
+- [ ] Both checkboxes are NOT pre-selected
 - [ ] All consent disclosure text visible
 - [ ] Links to Terms/Privacy work
-- [ ] Privacy policy includes mobile data statement
+- [ ] IMMEDIATE messages send after signup (with consents checked):
+  - [ ] Message 1: Welcome confirmation with required elements
+  - [ ] Message 2: Checkout reminder
+- [ ] Programming messages send AFTER Stripe webhook (not before)
+- [ ] Privacy policy includes mobile data non-sharing statement
 - [ ] `/opt-in` page is public (no login required)
 - [ ] Test STOP keyword
 - [ ] Test HELP keyword

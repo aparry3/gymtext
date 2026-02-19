@@ -59,33 +59,34 @@ This PRD outlines changes to meet Twilio's A2P 10DLC compliance requirements and
 
 **Twilio Compliance Issues:**
 - Phone input has minimal helpText: "We'll text you your workouts"
-- No explicit opt-in checkbox
+- No separate SMS consent checkbox (need TWO checkboxes: Terms/Privacy AND SMS consent)
 - SMS consent hardcoded to `true` in Questionnaire component
 - No opt-in language with required disclosures (frequency, STOP to cancel, data rates, etc.)
 - No dedicated opt-in page for Twilio campaign linking
-
-**UX Issues (Not Compliance):**
-- Welcome message sent BEFORE payment (works, but not ideal UX)
+- Welcome confirmation messages not sent immediately after consent (should send before checkout)
 
 ### Desired State
 
-**Flow (with compliance + UX improvements):**
+**Flow (with compliance requirements):**
 1. User visits `/start` page
-2. User fills out questionnaire with **compliant opt-in disclosure** ✅ *Required for Twilio compliance*
-3. User checks **explicit opt-in checkbox** (NOT pre-selected) ✅ *Required for Twilio compliance*
-4. User submits form → `POST /api/users/signup`
-5. Signup route:
+2. User fills out questionnaire with **two separate checkboxes:** ✅ *Required for Twilio compliance*
+   - **Checkbox 1:** Terms of Service and Privacy Policy consent
+   - **Checkbox 2:** SMS consent with full Twilio-required disclosures (frequency, STOP, data rates, privacy link, etc.)
+   - Both checkboxes must NOT be pre-selected
+3. User submits form (both consents checked) → `POST /api/users/signup`
+4. Signup route:
    - Creates user
    - Creates Stripe customer
-   - **NO messages sent** 🎨 *UX preference (not compliance requirement)*
+   - **IMMEDIATELY sends two confirmation messages:** ✅ *Required for Twilio compliance*
+     1. **Welcome/confirmation message:** "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel."
+     2. **Checkout reminder:** "Finish checking out and we will get your fitness program over to you."
    - Creates Stripe checkout session
    - Redirects to Stripe checkout
-6. User completes payment
-7. Stripe webhook fires (`checkout.session.completed`)
-8. Webhook:
+5. User completes payment
+6. Stripe webhook fires (`checkout.session.completed`)
+7. Webhook:
    - Creates subscription
-   - **Sends Twilio-compliant welcome message** ✅ *Compliance requirement (message format)*
-   - Sends onboarding messages (if ready)
+   - **Begins actual GymText programming/workout messages**
 
 **Additional (Twilio Compliance):**
 - Dedicated `/opt-in` page with full disclosure for Twilio campaign submission ✅
@@ -149,14 +150,16 @@ Twilio requires an **opt-in confirmation message** sent immediately after user o
 
 ---
 
-## Compliant Welcome Message
+## Compliant Confirmation Messages
 
-**Trigger:** Send AFTER `checkout.session.completed` webhook (when subscription is created)
+**Trigger:** Send IMMEDIATELY after signup form submission (when user checks SMS consent checkbox)
 
-**Message:**
+Twilio requires immediate confirmation messages for recurring message programs. Send TWO messages:
+
+### Message 1: Welcome/Confirmation (Twilio-Required)
 
 ```
-Welcome to GymText! We're excited to go on this fitness journey with you. You'll receive daily workout messages to help you reach your goals. Reply HELP for support or STOP to cancel. Msg & data rates may apply.
+Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel.
 ```
 
 **Breakdown:**
@@ -165,18 +168,42 @@ Welcome to GymText! We're excited to go on this fitness journey with you. You'll
 |---------|---------|
 | Brand name | "GymText" |
 | Welcome/engagement | "We're excited to go on this fitness journey with you" |
-| Program description | "You'll receive daily workout messages to help you reach your goals" |
-| Help instructions | "Reply HELP for support" |
-| Opt-out instructions | "STOP to cancel" |
-| Data rates disclaimer | "Msg & data rates may apply" |
+| Data rates disclaimer | "Message and data rates may apply" |
+| Opt-out instructions | "Reply STOP to cancel" |
 
-**Character count:** 160 characters (fits in single SMS)
+**Length:** 126 characters (fits in single SMS)
+
+**Required elements included:**
+- ✅ Brand name (GymText)
+- ✅ Confirmation of enrollment (implicit in welcome)
+- ✅ Data rates disclaimer
+- ✅ Opt-out instructions (STOP)
+
+### Message 2: Checkout Reminder
+
+```
+Finish checking out and we will get your fitness program over to you.
+```
+
+**Breakdown:**
+
+| Element | Content |
+|---------|---------|
+| Action prompt | "Finish checking out" |
+| Value proposition | "we will get your fitness program over to you" |
+
+**Length:** 69 characters (fits in single SMS)
+
+**Purpose:**
+- Guides user to complete payment
+- Sets expectation for what happens after checkout
+- Friendly and encouraging tone
 
 **Notes:**
-- Friendly and on-brand
-- Includes ALL required Twilio elements
-- Natural reading flow
-- Can be customized per user (e.g., include first name)
+- Both messages send immediately after signup (before checkout)
+- Message 1 satisfies Twilio's confirmation message requirement
+- Message 2 prompts user to complete payment
+- Actual programming/workout messages begin AFTER checkout completes
 
 ---
 
@@ -215,15 +242,34 @@ Keep existing question but update helpText:
 }
 ```
 
-### SMS Consent Checkbox (NEW)
+### Consent Checkboxes (TWO SEPARATE CHECKBOXES REQUIRED)
 
 Add immediately after phone input question:
 
+**Checkbox 1: Terms and Privacy Consent**
+```tsx
+{
+  id: 'termsConsent',
+  questionText: 'Terms and Conditions',
+  type: 'consent',
+  required: true,
+  source: 'base',
+  consentText: `I agree to the Terms of Service and Privacy Policy.`,
+  checkboxLabel: 'I agree to the Terms of Service and Privacy Policy',
+  links: [
+    { text: 'Terms of Service', url: 'https://gymtext.com/terms' },
+    { text: 'Privacy Policy', url: 'https://gymtext.com/privacy' }
+  ],
+  preSelected: false
+}
+```
+
+**Checkbox 2: SMS Consent (with full Twilio disclosures)**
 ```tsx
 {
   id: 'smsConsent',
   questionText: 'SMS Messaging Consent',
-  type: 'consent',  // New question type
+  type: 'consent',
   required: true,
   source: 'base',
   consentText: `By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to cancel. View our Terms of Service at gymtext.com/terms and Privacy Policy at gymtext.com/privacy. Your mobile information will not be shared with third parties.`,
@@ -231,6 +277,8 @@ Add immediately after phone input question:
   preSelected: false  // MUST NOT be pre-selected
 }
 ```
+
+**Important:** These must be TWO SEPARATE checkboxes, not combined. Twilio requires standalone SMS consent.
 
 **Implementation Notes:**
 
@@ -406,9 +454,9 @@ If opt-in is behind login (not applicable for GymText):
 
 ## Technical Implementation
 
-### Phase 1: Move Welcome Message (UX Improvement 🎨)
+### Phase 1: Send Immediate Confirmation Messages (Twilio Compliance ✅)
 
-**Priority:** Optional (UX preference, not compliance requirement)
+**Priority:** REQUIRED for Twilio 10DLC approval
 
 **File:** `apps/web/src/app/api/users/signup/route.ts`
 
@@ -423,20 +471,44 @@ if (userWithProfile) {
 }
 ```
 
-**Change to:**
+**Update to send TWO immediate messages:**
 ```typescript
-// Skipping welcome message here - will send after payment complete
-console.log('[Signup] Welcome message will be sent post-payment');
+// Send Twilio-compliant confirmation messages immediately after signup
+console.log('[Signup] Sending confirmation messages');
+const userWithProfile = await services.user.getUser(userId);
+if (userWithProfile && userWithProfile.smsConsent) {
+  // Message 1: Welcome/confirmation message (Twilio-required)
+  const welcomeMessage = createCompliantWelcomeMessage();
+  await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
+  
+  // Message 2: Checkout reminder
+  const checkoutReminder = createCheckoutReminderMessage();
+  await services.messagingOrchestrator.sendImmediate(userWithProfile, checkoutReminder);
+  
+  console.log('[Signup] Sent welcome + checkout reminder messages');
+}
+```
+
+**Helper functions to add:**
+```typescript
+function createCompliantWelcomeMessage(): string {
+  return "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel.";
+}
+
+function createCheckoutReminderMessage(): string {
+  return "Finish checking out and we will get your fitness program over to you.";
+}
 ```
 
 **Explanation:**
-- This is a **UX preference** (better user experience to send after payment)
-- **NOT a Twilio compliance requirement** (sending before payment is allowed if consent is collected)
-- Move message trigger to Stripe webhook for better timing
+- Twilio requires immediate confirmation message after opt-in for recurring programs
+- Two messages: (1) compliant welcome with disclaimers, (2) checkout reminder
+- These are sent BEFORE payment, but AFTER explicit SMS consent is collected
+- Programming messages wait until after payment
 
-### Phase 2: Update Welcome Message Format (Twilio Compliance ✅)
+### Phase 2: Send Programming Messages After Payment
 
-**Priority:** REQUIRED for Twilio 10DLC approval
+**Priority:** REQUIRED
 
 **File:** `apps/web/src/app/api/stripe/webhook/route.ts`
 
@@ -469,36 +541,26 @@ await repos.subscription.create({
 
 console.log(`[Stripe Webhook] Subscription created for user ${userId}`);
 
-// ✅ NOW send Twilio-compliant welcome message
-console.log(`[Stripe Webhook] Sending welcome message to user ${userId}`);
+// ✅ NOW send actual GymText programming/workout messages
+console.log(`[Stripe Webhook] Starting programming messages for user ${userId}`);
 try {
   const userWithProfile = await services.user.getUser(userId);
   if (userWithProfile) {
-    const welcomeMessage = createCompliantWelcomeMessage(userWithProfile.name);
-    await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
-    console.log(`[Stripe Webhook] Welcome message sent to user ${userId}`);
+    // User already received welcome + checkout reminder during signup
+    // Now send the actual workout programming messages
+    await services.messagingOrchestrator.sendOnboardingMessages(userWithProfile);
+    console.log(`[Stripe Webhook] Programming messages started for user ${userId}`);
   }
 } catch (error) {
-  console.error(`[Stripe Webhook] Failed to send welcome message to user ${userId}:`, error);
+  console.error(`[Stripe Webhook] Failed to send programming messages to user ${userId}:`, error);
   // Don't fail webhook if message sending fails
 }
 ```
 
-**Helper function to add:**
-```typescript
-/**
- * Create Twilio-compliant welcome message
- * Includes all required elements: brand name, program description, HELP, STOP, data rates
- */
-function createCompliantWelcomeMessage(userName: string): string {
-  return `Welcome to GymText${userName ? `, ${userName}` : ''}! We're excited to go on this fitness journey with you. You'll receive daily workout messages to help you reach your goals. Reply HELP for support or STOP to cancel. Msg & data rates may apply.`;
-}
-```
-
 **Notes:**
-- Welcome message sent AFTER subscription is created
-- Includes all required Twilio elements
-- Personalized with user's name
+- Welcome/confirmation messages were already sent during signup (Phase 1)
+- This webhook triggers the actual GymText programming/workout messages
+- User has now completed payment, so full service begins
 - Failures logged but don't block webhook
 
 ### Phase 3: Update Opt-in Form
