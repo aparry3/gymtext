@@ -27,6 +27,9 @@ interface QuestionnaireProps {
 export function Questionnaire({ programId, programName, ownerWordmarkUrl, questions }: QuestionnaireProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Track consent separately from questionnaire answers
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [termsConsent, setTermsConsent] = useState(false);
 
   const {
     currentQuestion,
@@ -41,6 +44,11 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
     isComplete,
     hasValidAnswer,
   } = useQuestionnaire({ programId, questions });
+
+  const handleConsentChange = (sms: boolean, terms: boolean) => {
+    setSmsConsent(sms);
+    setTermsConsent(terms);
+  };
 
   const handleNext = () => {
     if (isComplete && hasValidAnswer) {
@@ -85,9 +93,9 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
-        // SMS consent
-        smsConsent: true,
-        smsConsentedAt: new Date().toISOString(),
+        // SMS consent (from phone question checkboxes)
+        smsConsent,
+        smsConsentedAt: smsConsent ? new Date().toISOString() : undefined,
 
         // Program info
         ...(programId && { programId }),
@@ -158,6 +166,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             onNext={handleNext}
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
+            onConsentChange={currentQuestion.type === 'phone' ? handleConsentChange : undefined}
           />
         );
 

@@ -4,7 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "passThroughEnv": ["DATABASE_URL"]
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -42,12 +43,13 @@
     },
     "db:codegen": {
       "cache": false,
-      "env": ["DATABASE_URL"]
+      "passThroughEnv": ["DATABASE_URL"]
     },
     "@gymtext/shared#build": {
       "dependsOn": ["db:codegen"],
       "outputs": ["dist/**"],
       "env": [
+        "DATABASE_URL",
         "NODE_ENV"
       ]
     },
