@@ -77,9 +77,8 @@ This PRD outlines changes to meet Twilio's A2P 10DLC compliance requirements and
 4. Signup route:
    - Creates user
    - Creates Stripe customer
-   - **IMMEDIATELY sends two confirmation messages:** ✅ *Required for Twilio compliance*
-     1. **Welcome/confirmation message:** "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel."
-     2. **Checkout reminder:** "Finish checking out and we will get your fitness program over to you."
+   - **IMMEDIATELY sends one welcome message:** ✅ *Required for Twilio compliance*
+     - **Welcome/confirmation message:** "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out."
    - Creates Stripe checkout session
    - Redirects to Stripe checkout
 5. User completes payment
@@ -150,16 +149,16 @@ Twilio requires an **opt-in confirmation message** sent immediately after user o
 
 ---
 
-## Compliant Confirmation Messages
+## Compliant Welcome Message
 
 **Trigger:** Send IMMEDIATELY after signup form submission (when user checks SMS consent checkbox)
 
-Twilio requires immediate confirmation messages for recurring message programs. Send TWO messages:
+Twilio requires an immediate confirmation message for recurring message programs.
 
-### Message 1: Welcome/Confirmation (Twilio-Required)
+### Welcome Message (Twilio-Required)
 
 ```
-Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel.
+Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out.
 ```
 
 **Breakdown:**
@@ -167,42 +166,22 @@ Welcome to GymText! We're excited to go on this fitness journey with you. Messag
 | Element | Content |
 |---------|---------|
 | Brand name | "GymText" |
-| Welcome/engagement | "We're excited to go on this fitness journey with you" |
-| Data rates disclaimer | "Message and data rates may apply" |
-| Opt-out instructions | "Reply STOP to cancel" |
+| Welcome/engagement | "Ready to transform your fitness?" |
+| Program description | "We'll be texting you daily workouts starting soon" |
+| Data rates disclaimer | "Msg & data rates may apply" |
+| Opt-out instructions | "Reply STOP to opt out" |
 
-**Length:** 126 characters (fits in single SMS)
+**Length:** 146 characters (fits in single SMS)
 
 **Required elements included:**
 - ✅ Brand name (GymText)
-- ✅ Confirmation of enrollment (implicit in welcome)
+- ✅ Confirmation of enrollment (starting soon)
 - ✅ Data rates disclaimer
 - ✅ Opt-out instructions (STOP)
 
-### Message 2: Checkout Reminder
-
-```
-Finish checking out and we will get your fitness program over to you.
-```
-
-**Breakdown:**
-
-| Element | Content |
-|---------|---------|
-| Action prompt | "Finish checking out" |
-| Value proposition | "we will get your fitness program over to you" |
-
-**Length:** 69 characters (fits in single SMS)
-
-**Purpose:**
-- Guides user to complete payment
-- Sets expectation for what happens after checkout
-- Friendly and encouraging tone
-
 **Notes:**
-- Both messages send immediately after signup (before checkout)
-- Message 1 satisfies Twilio's confirmation message requirement
-- Message 2 prompts user to complete payment
+- Message sends immediately after signup (before checkout)
+- Satisfies Twilio's confirmation message requirement
 - Actual programming/workout messages begin AFTER checkout completes
 
 ---
@@ -454,7 +433,7 @@ If opt-in is behind login (not applicable for GymText):
 
 ## Technical Implementation
 
-### Phase 1: Send Immediate Confirmation Messages (Twilio Compliance ✅)
+### Phase 1: Send Immediate Welcome Message (Twilio Compliance ✅)
 
 **Priority:** REQUIRED for Twilio 10DLC approval
 
@@ -471,39 +450,36 @@ if (userWithProfile) {
 }
 ```
 
-**Update to send TWO immediate messages:**
+**Update to send ONE Twilio-compliant message:**
 ```typescript
-// Send Twilio-compliant confirmation messages immediately after signup
-console.log('[Signup] Sending confirmation messages');
+// Send Twilio-compliant welcome message immediately after signup
+console.log('[Signup] Sending welcome message');
 const userWithProfile = await services.user.getUser(userId);
 if (userWithProfile && userWithProfile.smsConsent) {
-  // Message 1: Welcome/confirmation message (Twilio-required)
-  const welcomeMessage = createCompliantWelcomeMessage();
-  await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
-  
-  // Message 2: Checkout reminder
-  const checkoutReminder = createCheckoutReminderMessage();
-  await services.messagingOrchestrator.sendImmediate(userWithProfile, checkoutReminder);
-  
-  console.log('[Signup] Sent welcome + checkout reminder messages');
-}
-```
-
-**Helper functions to add:**
-```typescript
-function createCompliantWelcomeMessage(): string {
-  return "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel.";
-}
-
-function createCheckoutReminderMessage(): string {
-  return "Finish checking out and we will get your fitness program over to you.";
+  try {
+    // Queue single welcome message with Twilio-required disclosures
+    await services.messagingOrchestrator.queueMessages(
+      userWithProfile,
+      [
+        {
+          content:
+            "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out.",
+        },
+      ],
+      'onboarding'
+    );
+    console.log('[Signup] Sent welcome message');
+  } catch (error) {
+    console.error('[Signup] Failed to send welcome message:', error);
+    // Don't block signup if message sending fails
+  }
 }
 ```
 
 **Explanation:**
 - Twilio requires immediate confirmation message after opt-in for recurring programs
-- Two messages: (1) compliant welcome with disclaimers, (2) checkout reminder
-- These are sent BEFORE payment, but AFTER explicit SMS consent is collected
+- Single message with all required disclaimers (brand, data rates, opt-out)
+- Sent BEFORE payment, but AFTER explicit SMS consent is collected
 - Programming messages wait until after payment
 
 ### Phase 2: Send Programming Messages After Payment

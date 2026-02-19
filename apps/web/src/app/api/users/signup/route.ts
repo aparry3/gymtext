@@ -222,12 +222,12 @@ async function completeSignupFlow(
   }
   await services.onboardingData.createOnboardingRecord(userId, extractSignupData(formData));
 
-  // Send Twilio-compliant confirmation messages
-  console.log('[Signup] Sending confirmation messages');
+  // Send Twilio-compliant welcome message
+  console.log('[Signup] Sending welcome message');
   const userWithProfile = await services.user.getUser(userId);
   if (userWithProfile && userWithProfile.smsConsent) {
     try {
-      // Queue both messages to ensure correct order
+      // Queue single welcome message with Twilio-required disclosures
       await services.messagingOrchestrator.queueMessages(
         userWithProfile,
         [
@@ -235,16 +235,12 @@ async function completeSignupFlow(
             content:
               "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out.",
           },
-          {
-            content:
-              "Almost there! Complete checkout now to unlock your personalized program. Your transformation starts today. 💪",
-          },
         ],
         'onboarding'
       );
-      console.log('[Signup] Sent welcome + checkout reminder messages');
+      console.log('[Signup] Sent welcome message');
     } catch (error) {
-      console.error('[Signup] Failed to send confirmation messages:', error);
+      console.error('[Signup] Failed to send welcome message:', error);
       // Don't block signup if message sending fails
     }
   }

@@ -14,7 +14,7 @@ This RFC outlines the implementation approach for Twilio 10DLC compliance requir
 
 **Key Changes:**
 1. Remove pre-checkout welcome message (current compliance violation)
-2. Add two Twilio-compliant confirmation messages immediately after signup
+2. Add one Twilio-compliant welcome message immediately after signup
 3. Add separate SMS consent checkbox with full disclosures
 4. Create public `/opt-in` page for campaign submission
 5. Update privacy policy with required mobile data statement
@@ -77,8 +77,7 @@ sequenceDiagram
 
     User->>SignupAPI: Submit with SMS consent ✓
     SignupAPI->>SignupAPI: Create user
-    SignupAPI->>Twilio: ✓ Message 1: Welcome + disclaimers
-    SignupAPI->>Twilio: ✓ Message 2: Checkout reminder
+    SignupAPI->>Twilio: ✓ Welcome message with Twilio disclaimers
     SignupAPI->>Stripe: Create checkout session
     SignupAPI->>User: Redirect to Stripe
     User->>Stripe: Complete payment
@@ -88,10 +87,10 @@ sequenceDiagram
 ```
 
 **Benefits:**
-- ✓ Messages sent AFTER explicit SMS consent
+- ✓ Message sent AFTER explicit SMS consent
 - ✓ Separate SMS consent checkbox with full Twilio disclosures
 - ✓ Compliant welcome message with required elements
-- ✓ Clear separation: confirmation messages → checkout → programming messages
+- ✓ Clear separation: welcome message → checkout → programming messages
 
 ---
 
@@ -142,44 +141,49 @@ if (userWithProfile) {
 
 **New Code:**
 ```typescript
-// Send Twilio-compliant confirmation messages immediately after signup
-console.log('[Signup] Sending confirmation messages');
+// Send Twilio-compliant welcome message immediately after signup
+console.log('[Signup] Sending welcome message');
 const userWithProfile = await services.user.getUser(userId);
 if (userWithProfile && userWithProfile.smsConsent) {
-  // Message 1: Welcome/confirmation message (Twilio-required)
-  const welcomeMessage = 
-    "Welcome to GymText! We're excited to go on this fitness journey with you. " +
-    "Message and data rates may apply. Reply STOP to cancel.";
-  await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
-  
-  // Message 2: Checkout reminder
-  const checkoutReminder = 
-    "Finish checking out and we will get your fitness program over to you.";
-  await services.messagingOrchestrator.sendImmediate(userWithProfile, checkoutReminder);
-  
-  console.log('[Signup] Sent welcome + checkout reminder messages');
+  try {
+    // Queue single welcome message with Twilio-required disclosures
+    await services.messagingOrchestrator.queueMessages(
+      userWithProfile,
+      [
+        {
+          content:
+            "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out.",
+        },
+      ],
+      'onboarding'
+    );
+    console.log('[Signup] Sent welcome message');
+  } catch (error) {
+    console.error('[Signup] Failed to send welcome message:', error);
+    // Don't block signup if message sending fails
+  }
 }
 ```
 
 **Key Changes:**
 - Replace AI-generated welcome message with static Twilio-compliant text
-- Send TWO messages instead of one:
-  1. Welcome with required disclaimers
-  2. Checkout reminder
+- Send ONE message with all required Twilio disclaimers
 - Add SMS consent check (`userWithProfile.smsConsent`) - critical for Phase 3
-- Use existing `sendImmediate` method (Aaron's guidance: use message orchestrator)
+- Use message orchestrator queue (Aaron's guidance)
+- Wrap in try-catch to prevent blocking signup on message failures
 
-**Why Static Messages?**
-- Twilio requires specific wording: "Message and data rates may apply", "Reply STOP to cancel"
+**Why Static Message?**
+- Twilio requires specific wording: "Msg & data rates may apply", "Reply STOP to opt out"
 - AI-generated messages might vary and miss required elements
 - Campaign approval requires consistent message samples
-- Can always enhance later, compliance first
+- Compliance first, can enhance later
 
 **Testing:**
-- Verify both messages send in correct order
-- Verify messages only send when `smsConsent` is true
+- Verify message sends with correct content
+- Verify message only sends when `smsConsent` is true
 - Check message content matches Twilio requirements exactly
 - Test with existing users (should still work with hardcoded consent)
+- Verify signup succeeds even if message sending fails
 
 ---
 
@@ -228,12 +232,12 @@ The webhook already:
 - Handles failures gracefully (doesn't block webhook)
 
 **What happens now:**
-1. User gets welcome + checkout reminder BEFORE checkout (Phase 1)
+1. User gets welcome message BEFORE checkout (Phase 1)
 2. User completes payment via Stripe
 3. Webhook fires and sends actual workout programming messages
 
 **Perfect separation:**
-- Confirmation messages = before payment (Phase 1)
+- Welcome message = before payment (Phase 1)
 - Programming messages = after payment (existing code)
 
 **Testing:**
@@ -632,7 +636,7 @@ We maintain your mobile information solely for the purpose of delivering your Gy
 
 | File | Phase | Changes | Lines |
 |------|-------|---------|-------|
-| `apps/web/src/app/api/users/signup/route.ts` | 1 | Replace welcome message with two compliant messages | ~10 |
+| `apps/web/src/app/api/users/signup/route.ts` | 1 | Replace welcome message with one compliant message | ~10 |
 | `apps/web/src/lib/questionnaire/types.ts` | 3.1 | Add 'consent' type, add metadata interface | ~5 |
 | `apps/web/src/lib/questionnaire/baseQuestions.ts` | 3.3 | Add smsConsent question to both arrays | ~20 |
 | `apps/web/src/components/questionnaire/Questionnaire.tsx` | 3.4 | Add consent case, update submission logic | ~15 |
@@ -671,7 +675,7 @@ Given timeline constraints, focus on manual testing. Unit tests can be added lat
    - Fill out questionnaire
    - Check SMS consent checkbox
    - Submit form
-   - Verify TWO messages received (welcome + checkout reminder)
+   - Verify ONE welcome message received
    - Complete Stripe checkout
    - Verify programming messages received after payment
 
@@ -686,8 +690,8 @@ Given timeline constraints, focus on manual testing. Unit tests can be added lat
    - Verify messages still send correctly
 
 4. **Message Content Validation**
-   - Verify Message 1 includes: brand name, "Message and data rates may apply", "Reply STOP to cancel"
-   - Verify Message 2 has checkout reminder text
+   - Verify message includes: brand name, "Msg & data rates may apply", "Reply STOP to opt out"
+   - Verify message mentions daily workouts starting soon
    - Verify no AI-generated variations
 
 5. **Webhook Flow**
@@ -701,8 +705,8 @@ Given timeline constraints, focus on manual testing. Unit tests can be added lat
 - [ ] Consent checkbox NOT pre-selected
 - [ ] Links to Terms and Privacy work
 - [ ] Validation prevents submission without consent
-- [ ] Two messages send after signup (before checkout)
-- [ ] Messages have correct Twilio-required wording
+- [ ] One welcome message sends after signup (before checkout)
+- [ ] Message has correct Twilio-required wording
 - [ ] Programming messages send after Stripe webhook
 - [ ] `/opt-in` page is publicly accessible
 - [ ] Privacy policy includes mobile data statement
@@ -720,23 +724,23 @@ Given timeline constraints, focus on manual testing. Unit tests can be added lat
 
 ### Risk 1: Message Sending Failures
 
-**Risk:** `sendImmediate()` call fails, blocking signup
+**Risk:** Message queue call fails, blocking signup
 
-**Impact:** User doesn't get confirmation messages, signup might fail
+**Impact:** User doesn't get welcome message, signup might fail
 
 **Mitigation:**
 - Wrap message sending in try-catch (don't block signup)
 - Log failures for monitoring
-- Signup succeeds even if messages fail
-- Consider queueing messages instead of immediate send
+- Signup succeeds even if message fails
+- Already using message queue (more reliable than immediate send)
 
 **Code Pattern:**
 ```typescript
 try {
-  await services.messagingOrchestrator.sendImmediate(user, message1);
-  await services.messagingOrchestrator.sendImmediate(user, message2);
+  await services.messagingOrchestrator.queueMessages(userWithProfile, [...], 'onboarding');
+  console.log('[Signup] Sent welcome message');
 } catch (error) {
-  console.error('[Signup] Failed to send confirmation messages:', error);
+  console.error('[Signup] Failed to send welcome message:', error);
   // Don't throw - allow signup to continue
 }
 ```
@@ -767,21 +771,7 @@ try {
 
 **Action:** OPEN QUESTION - need to verify privacy page location
 
-### Risk 4: Message Order Not Guaranteed
-
-**Risk:** Message 2 might arrive before Message 1
-
-**Impact:** Confusing user experience (but not compliance violation)
-
-**Mitigation:**
-- `sendImmediate()` uses Twilio API which should maintain order
-- Two separate API calls might arrive out of order
-- Could add small delay between messages (100ms)
-- Or queue both messages instead of immediate send
-
-**Recommendation:** Test in production-like environment, add delay if needed
-
-### Risk 5: Twilio Campaign Still Rejected
+### Risk 4: Twilio Campaign Still Rejected
 
 **Risk:** Implement everything but Twilio still rejects campaign
 
@@ -884,9 +874,8 @@ try {
    - If not, should we create one?
 
 5. **Message Wording Approval**
-   - Approve exact wording for two messages:
-     1. "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel."
-     2. "Finish checking out and we will get your fitness program over to you."
+   - Approve exact wording for welcome message:
+     - "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out."
 
 6. **Timeline**
    - When do you need this deployed?
@@ -956,7 +945,7 @@ try {
 This implementation follows Twilio's exact compliance requirements while maintaining GymText's existing user flow. The phased approach allows for safe, testable deployment with minimal risk.
 
 **Key Success Criteria:**
-- ✓ Two compliant confirmation messages send after signup
+- ✓ One compliant welcome message sends after signup
 - ✓ Separate SMS consent checkbox with full disclosures
 - ✓ Public opt-in page for Twilio submission
 - ✓ Privacy policy includes mobile data statement
