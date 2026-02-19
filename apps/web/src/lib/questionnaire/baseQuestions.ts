@@ -111,18 +111,6 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     placeholder: '(555) 555-5555',
     source: 'base',
   },
-  {
-    id: 'smsConsent',
-    questionText: 'SMS Messaging Consent',
-    type: 'consent',
-    required: true,
-    source: 'base',
-    metadata: {
-      consentText: `By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to cancel. View our <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>. Your mobile information will not be shared with third parties.`,
-      checkboxLabel: 'I consent to receive text messages from GymText',
-      preSelected: false,
-    },
-  },
 ];
 
 /**
@@ -168,18 +156,6 @@ export const programBaseQuestions: QuestionnaireQuestion[] = [
     helpText: "We'll text you your workouts",
     placeholder: '(555) 555-5555',
     source: 'base',
-  },
-  {
-    id: 'smsConsent',
-    questionText: 'SMS Messaging Consent',
-    type: 'consent',
-    required: true,
-    source: 'base',
-    metadata: {
-      consentText: `By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to cancel. View our <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>. Your mobile information will not be shared with third parties.`,
-      checkboxLabel: 'I consent to receive text messages from GymText',
-      preSelected: false,
-    },
   },
 ];
 
