@@ -35,6 +35,9 @@ pnpm migrate:down       # Rollback last migration
 pnpm test               # Run Vitest tests
 pnpm test:ui            # Run tests with Vitest UI
 pnpm sms:test           # Test SMS functionality (requires Twilio config)
+
+# Local SMS Testing (no Twilio required)
+pnpm local:sms          # Monitor local SMS messages in real-time via SSE
 ```
 
 ## Architecture Overview
