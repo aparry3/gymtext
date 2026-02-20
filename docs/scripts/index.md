@@ -1,6 +1,8 @@
 # Scripts Overview
 
-The `scripts/` directory contains various development, migration, and utility scripts.
+> **Note:** For comprehensive script documentation with detailed examples, troubleshooting, and workflows, see **[Scripts Reference](../reference/SCRIPTS.md)**.
+
+This page provides a quick overview. The reference guide above has complete details.
 
 ## Directory Structure
 
