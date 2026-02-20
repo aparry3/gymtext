@@ -40,7 +40,7 @@
     "agent:list": "source .env.local && tsx scripts/agent-definition.ts list",
     "agent:update-prompts": "source .env.local && tsx scripts/update-agent-prompts.ts",
     "seed:templates": "source .env.local && npx tsx scripts/seed-context-templates.ts",
-    "local:sms": "node packages/local-sms-cli/dist/index.js"
+    "local:sms": "source .env.local && tsx packages/local-sms-cli/src/index.ts"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.1",
