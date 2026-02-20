@@ -43,6 +43,12 @@ const AGENT_MAPPINGS = [
     systemPromptFile: '04-workout-message-agent.md',
     userPromptFile: '04-workout-message-agent-USER.md',
   },
+  {
+    agentId: 'week:modify',
+    description: 'Modifies existing weekly training schedules',
+    systemPromptFile: '05-week-modify-agent.md',
+    userPromptFile: '05-week-modify-agent-USER.md',
+  },
 ];
 
 const TEXT_ARRAY_COLS = new Set(['tool_ids', 'context_types']);
