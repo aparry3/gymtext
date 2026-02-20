@@ -580,8 +580,7 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     id: 'profile',
     label: 'Profile',
     agents: [
-      { id: 'profile:fitness', label: 'Fitness' },
-      { id: 'profile:structured', label: 'Structured' },
+      { id: 'profile:update', label: 'Update' },
       { id: 'profile:user', label: 'User' },
     ],
   },
@@ -590,8 +589,6 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     label: 'Plans',
     agents: [
       { id: 'plan:generate', label: 'Generate' },
-      { id: 'plan:structured', label: 'Structured' },
-      { id: 'plan:message', label: 'Message' },
       { id: 'plan:modify', label: 'Modify' },
     ],
   },
@@ -599,28 +596,17 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     id: 'workout',
     label: 'Workouts',
     agents: [
-      { id: 'workout:generate', label: 'Generate' },
-      { id: 'workout:structured', label: 'Structured' },
-      { id: 'workout:structured:validate', label: 'Validate' },
-      { id: 'workout:message', label: 'Message' },
+      { id: 'workout:format', label: 'Format' },
       { id: 'workout:modify', label: 'Modify' },
     ],
   },
   {
-    id: 'microcycle',
-    label: 'Microcycles',
+    id: 'week',
+    label: 'Weeks',
     agents: [
-      { id: 'microcycle:generate', label: 'Generate' },
-      { id: 'microcycle:structured', label: 'Structured' },
-      { id: 'microcycle:message', label: 'Message' },
-      { id: 'microcycle:modify', label: 'Modify' },
-    ],
-  },
-  {
-    id: 'modifications',
-    label: 'Modifications',
-    agents: [
-      { id: 'modifications:router', label: 'Router' },
+      { id: 'week:generate', label: 'Generate' },
+      { id: 'week:modify', label: 'Modify' },
+      { id: 'week:format', label: 'Format' },
     ],
   },
   {

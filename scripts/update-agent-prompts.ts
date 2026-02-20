@@ -20,25 +20,25 @@ import { Pool } from 'pg';
 // Mapping of prompt files to agent IDs
 const AGENT_MAPPINGS = [
   {
-    agentId: 'profile:create',
+    agentId: 'profile:update',
     description: 'Creates and maintains detailed fitness profiles',
     systemPromptFile: '01-profile-agent.md',
     userPromptFile: '01-profile-agent-USER.md',
   },
   {
-    agentId: 'plan:create',
+    agentId: 'plan:generate',
     description: 'Designs comprehensive periodized training programs',
     systemPromptFile: '02-plan-agent.md',
     userPromptFile: '02-plan-agent-USER.md',
   },
   {
-    agentId: 'microcycle:create',
+    agentId: 'week:generate',
     description: 'Creates specific, executable workouts for one week',
     systemPromptFile: '03-microcycle-agent.md',
     userPromptFile: '03-microcycle-agent-USER.md',
   },
   {
-    agentId: 'message:workout',
+    agentId: 'workout:format',
     description: 'Formats daily workout messages for text delivery',
     systemPromptFile: '04-workout-message-agent.md',
     userPromptFile: '04-workout-message-agent-USER.md',
