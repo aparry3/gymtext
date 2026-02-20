@@ -16,7 +16,11 @@ export const UserSchema = z.object({
   timezone: z.string(),
   
   // WhatsApp and messaging preferences
-  preferredMessagingProvider: z.enum(['twilio', 'whatsapp']).nullable(),
+  preferredMessagingProvider: z.string().nullable()
+    .refine((val) => val === null || ['twilio', 'whatsapp'].includes(val), {
+      message: 'Must be "twilio" or "whatsapp"'
+    })
+    .transform((val) => val as 'twilio' | 'whatsapp' | null),
   whatsappOptIn: z.boolean().nullable(),
   whatsappOptInDate: z.date().nullable(),
   whatsappNumber: z.string().nullable(),
@@ -172,7 +176,11 @@ export const CreateUserSchema = z.object({
   units: UnitsSchema.default('imperial'),
   
   // Messaging preferences (SMS via Twilio or WhatsApp - one or the other)
-  preferredMessagingProvider: z.enum(['twilio', 'whatsapp']).nullish(),
+  preferredMessagingProvider: z.string().nullish()
+    .refine((val) => val == null || ['twilio', 'whatsapp'].includes(val), {
+      message: 'Must be "twilio" or "whatsapp"'
+    })
+    .transform((val) => val as 'twilio' | 'whatsapp' | null | undefined),
   messagingOptIn: z.boolean().nullish(),
   messagingOptInDate: z.date().nullish(),
 });
