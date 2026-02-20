@@ -57,7 +57,7 @@ const AGENT_MAPPINGS: Array<{
     userPromptFile: '03-microcycle-agent-USER.md',
   },
   {
-    agentId: 'workout:message',
+    agentId: 'workout:format',
     description: 'Formats daily workout messages for text delivery',
     systemPromptFile: '04-workout-message-agent.md',
     userPromptFile: '04-workout-message-agent-USER.md',
