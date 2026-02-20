@@ -325,7 +325,7 @@ async function main() {
       }
     } else {
       // Run migrations in a transaction for safety
-      results = await db.transaction(async (tx) => {
+      results = await db.transaction().execute(async (tx) => {
         const txResults: MigrationResult[] = [];
         for (const mapping of mappingsToProcess) {
           const result = await migrateAgent(tx, mapping, dryRun);
