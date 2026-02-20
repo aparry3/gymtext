@@ -42,12 +42,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     WHERE agent_id = 'modifications:router' AND is_active = true
   `.execute(db);
 
-  // profile:fitness - schema + sub-agents
+  // profile:update - schema + sub-agents
   await sql`
     UPDATE agent_definitions SET
       schema_json = '{"type":"object","required":["updatedProfile","wasUpdated","updateSummary"],"properties":{"updatedProfile":{"type":"string","description":"The complete updated Markdown profile document"},"wasUpdated":{"type":"boolean","description":"Whether any changes were made to the profile"},"updateSummary":{"type":"string","description":"Brief summary of changes made. Empty string if nothing was updated."}},"additionalProperties":false}'::jsonb,
       sub_agents = '[{"batch":0,"key":"structured","agentId":"profile:structured","condition":[{"field":"wasUpdated","check":"truthy"}],"inputMapping":{"dossierText":"$result.updatedProfile","currentDate":"$now"}}]'::jsonb
-    WHERE agent_id = 'profile:fitness' AND is_active = true
+    WHERE agent_id = 'profile:update' AND is_active = true
   `.execute(db);
 
   // profile:structured - schema + template

@@ -39,7 +39,7 @@ const AGENT_MAPPINGS: Array<{
   userPromptFile?: string;
 }> = [
   {
-    agentId: 'profile:fitness',
+    agentId: 'profile:update',
     description: 'Creates and maintains detailed fitness profiles',
     systemPromptFile: '01-profile-agent.md',
     userPromptFile: '01-profile-agent-USER.md',

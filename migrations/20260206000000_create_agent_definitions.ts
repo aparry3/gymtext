@@ -84,7 +84,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     'chat:generate': { model: 'gpt-5.1', maxTokens: 4000, temperature: 0.8, description: 'Main chat agent for conversational responses' },
 
     // Profile
-    'profile:fitness': { model: 'gpt-5-nano', maxTokens: 8000, temperature: 0.5, description: 'Updates fitness profile dossier from user messages' },
+    'profile:update': { model: 'gpt-5-nano', maxTokens: 8000, temperature: 0.5, description: 'Updates fitness profile dossier from user messages' },
     'profile:structured': { model: 'gpt-5-nano', maxTokens: 4000, temperature: 0.3, description: 'Extracts structured profile data' },
     'profile:user': { model: 'gpt-5-nano', maxTokens: 2000, temperature: 0.3, description: 'Extracts user fields (timezone, send time, name)' },
 

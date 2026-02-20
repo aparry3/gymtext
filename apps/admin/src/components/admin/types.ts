@@ -580,7 +580,7 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     id: 'profile',
     label: 'Profile',
     agents: [
-      { id: 'profile:fitness', label: 'Fitness' },
+      { id: 'profile:update', label: 'Fitness' },
       { id: 'profile:structured', label: 'Structured' },
       { id: 'profile:user', label: 'User' },
     ],

@@ -66,7 +66,14 @@ const ServerEnvSchema = z.object({
 // Validation
 // =============================================================================
 
-function validateServerEnv() {
+function validateServerEnv(): z.infer<typeof ServerEnvSchema> | undefined {
+  // Skip validation during build (when Next.js is running in build mode)
+  // This allows `pnpm build` to work locally without all env vars
+  if (process.env.NEXT_BUILD === '1' || process.env.__NEXT_BUILDING) {
+    console.warn('⚠️  Skipping server env validation during build');
+    return undefined;
+  }
+
   const result = ServerEnvSchema.safeParse(process.env);
 
   if (!result.success) {
@@ -84,13 +91,18 @@ function validateServerEnv() {
 }
 
 // Singleton - validated once at startup
-let _serverEnv: z.infer<typeof ServerEnvSchema> | null = null;
+let _serverEnv: z.infer<typeof ServerEnvSchema> | null | undefined = null;
 
 /**
  * Get validated server environment variables.
  * Caches the result for subsequent calls.
+ * Returns undefined during build to allow builds to proceed without all env vars.
  */
 export function getServerEnv() {
+  if (_serverEnv === undefined) {
+    // Already validated and returned undefined during build
+    return null;
+  }
   if (!_serverEnv) {
     _serverEnv = validateServerEnv();
   }
