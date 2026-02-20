@@ -57,6 +57,11 @@
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
     },
+    "@gymtext/local-sms-cli#build": {
+      "cache": false,
+      "dependsOn": [],
+      "outputs": ["dist/**"]
+    },
     "@gymtext/shared#build": {
       "dependsOn": ["db:codegen"],
       "outputs": ["dist/**"],
@@ -165,7 +170,8 @@
         "WHATSAPP_TEMPLATE_DAILY_WORKOUT",
         "WHATSAPP_TEMPLATE_WEEKLY_CHECKIN",
         "WHATSAPP_TEMPLATE_WELCOME",
-        "WHATSAPP_TEMPLATE_SUBSCRIPTION_REMINDER"
+        "WHATSAPP_TEMPLATE_SUBSCRIPTION_REMINDER",
+        "MESSAGING_PROVIDER"
       ]
     }
   }
