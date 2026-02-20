@@ -30,6 +30,8 @@
     "db:anonymize": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts",
     "db:anonymize:dry": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts --dry-run",
     "sms:test": "source .env.local && tsx scripts/sms-test.ts",
+    "local:sms": "node tools/local-sms-cli/dist/index.js",
+    "local:sms:build": "cd tools/local-sms-cli && pnpm exec tsc",
     "favicon:generate": "node scripts/generate-favicons.js",
     "backup:local": "source .env.local && ./scripts/backup-db.sh",
     "backup:prod": "source .env.production && ./scripts/backup-db.sh",

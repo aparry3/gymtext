@@ -7,7 +7,7 @@
     "gymtext-sms": "./dist/index.js"
   },
   "scripts": {
-    "build": "echo 'CLI - dev-only tool, no build needed'",
+    "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js"
   },
