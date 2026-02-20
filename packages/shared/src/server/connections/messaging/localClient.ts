@@ -99,5 +99,6 @@ export class LocalMessagingClient implements IMessagingClient {
   }
 }
 
-// Export singleton instance
-export const localMessagingClient = new LocalMessagingClient();
+// Export singleton instance (survives Next.js HMR reloads)
+const globalForLocal = globalThis as unknown as { __localMessagingClient?: LocalMessagingClient };
+export const localMessagingClient = globalForLocal.__localMessagingClient ??= new LocalMessagingClient();

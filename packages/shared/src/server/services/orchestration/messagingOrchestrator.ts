@@ -2,7 +2,8 @@ import { UserWithProfile } from '../../models/user';
 import { Message, MessageDeliveryStatus } from '../../models/message';
 import { inngest } from '../../connections/inngest/client';
 import { messagingClient, getMessagingClientByProvider } from '../../connections/messaging';
-import { MessageProvider } from '../../connections/messaging/types';
+import { MessageProvider, type MessagingProvider } from '../../connections/messaging/types';
+import { getMessagingConfig } from '@/shared/config';
 import { isMessageTooLong, getSmsMaxLength } from '../../utils/smsValidation';
 import { isNonRetryableError, isUnsubscribedError } from '../../utils/twilioErrors';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
@@ -50,7 +51,7 @@ export interface MessagingOrchestratorInstance {
     user: UserWithProfile,
     content: QueuedMessageContent,
     queueName: string,
-    provider?: 'twilio' | 'whatsapp'
+    provider?: MessagingProvider
   ): Promise<{ messageId: string; queueEntryId: string }>;
 
   /**
@@ -61,7 +62,7 @@ export interface MessagingOrchestratorInstance {
     user: UserWithProfile,
     messages: QueuedMessageContent[],
     queueName: string,
-    provider?: 'twilio' | 'whatsapp'
+    provider?: MessagingProvider
   ): Promise<{ messageIds: string[]; queueEntryIds: string[] }>;
 
   /**
@@ -72,7 +73,7 @@ export interface MessagingOrchestratorInstance {
     user: UserWithProfile,
     content: string,
     mediaUrls?: string[],
-    provider?: 'twilio' | 'whatsapp'
+    provider?: MessagingProvider
   ): Promise<SendResult>;
 
   /**
@@ -185,16 +186,30 @@ export function createMessagingOrchestrator(
     console.log(`[MessagingOrchestrator] Cancelled ${cancelledCount} pending messages for unsubscribed user`);
   };
 
+  /**
+   * Resolve the messaging provider, respecting the configured provider.
+   * When MESSAGING_PROVIDER=local, always use local regardless of explicit/user preference.
+   */
+  function resolveProvider(
+    explicitProvider?: MessagingProvider,
+    userPreferred?: string | null
+  ): MessagingProvider {
+    const { provider: configuredProvider } = getMessagingConfig();
+    if (configuredProvider === MessageProvider.LOCAL) {
+      return MessageProvider.LOCAL;
+    }
+    return explicitProvider ||
+      (userPreferred === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+  }
+
   return {
     async queueMessage(
       user: UserWithProfile,
       content: QueuedMessageContent,
       queueName: string,
-      provider?: 'twilio' | 'whatsapp'
+      provider?: MessagingProvider
     ): Promise<{ messageId: string; queueEntryId: string }> {
-      // Determine messaging provider (only twilio or whatsapp for actual messaging)
-      const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+      const messageProvider = resolveProvider(provider, user.preferredMessagingProvider);
       
       // Validate message length
       const maxLength = getSmsMaxLength();
@@ -208,7 +223,7 @@ export function createMessagingOrchestrator(
       const message = await messageService.storeOutboundMessage({
         clientId: user.id,
         to: user.phoneNumber,
-        content: content.content || content.templateSid ? '[Template Message]' : '[MMS only]',
+        content: content.content || (content.templateSid ? '[Template Message]' : '[MMS only]'),
         provider: messageProvider,
         metadata: {
           ...(content.mediaUrls && { mediaUrls: content.mediaUrls }),
@@ -242,15 +257,13 @@ export function createMessagingOrchestrator(
       user: UserWithProfile,
       messages: QueuedMessageContent[],
       queueName: string,
-      provider?: 'twilio' | 'whatsapp'
+      provider?: MessagingProvider
     ): Promise<{ messageIds: string[]; queueEntryIds: string[] }> {
       if (messages.length === 0) {
         return { messageIds: [], queueEntryIds: [] };
       }
 
-      // Determine messaging provider (only twilio or whatsapp for actual messaging)
-      const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+      const messageProvider = resolveProvider(provider, user.preferredMessagingProvider);
 
       console.log(`[MessagingOrchestrator] Queueing ${messages.length} messages for user ${user.id} in queue '${queueName}' via ${messageProvider}`);
 
@@ -270,7 +283,7 @@ export function createMessagingOrchestrator(
         const stored = await messageService.storeOutboundMessage({
           clientId: user.id,
           to: user.phoneNumber,
-          content: msg.content || msg.templateSid ? '[Template Message]' : '[MMS only]',
+          content: msg.content || (msg.templateSid ? '[Template Message]' : '[MMS only]'),
           provider: messageProvider,
           metadata: {
             ...(msg.mediaUrls && { mediaUrls: msg.mediaUrls }),
@@ -311,11 +324,9 @@ export function createMessagingOrchestrator(
       user: UserWithProfile,
       content: string,
       mediaUrls?: string[],
-      provider?: 'twilio' | 'whatsapp'
+      provider?: MessagingProvider
     ): Promise<SendResult> {
-      // Determine messaging provider (only twilio or whatsapp for actual messaging)
-      const messageProvider: 'twilio' | 'whatsapp' = provider || 
-        (user.preferredMessagingProvider === MessageProvider.WHATSAPP ? MessageProvider.WHATSAPP : MessageProvider.TWILIO);
+      const messageProvider = resolveProvider(provider, user.preferredMessagingProvider);
       
       // Store the message first
       const message = await messageService.storeOutboundMessage({
@@ -472,8 +483,8 @@ export function createMessagingOrchestrator(
         templateVariables = meta.templateVariables;
       }
 
-      // Get the provider for this message (default to twilio if not set)
-      const messageProvider = (message.provider as 'twilio' | 'whatsapp') || 'twilio';
+      // Get the provider for this message, respecting local config override
+      const messageProvider = resolveProvider(message.provider as MessagingProvider | undefined);
       const client = getMessagingClientByProvider(messageProvider);
 
       console.log(`[MessagingOrchestrator] Sending queued message ${message.id} via ${messageProvider}`);

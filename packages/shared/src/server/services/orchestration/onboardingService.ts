@@ -4,6 +4,7 @@ import type { MarkdownServiceInstance } from '../domain/markdown/markdownService
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+import { WELCOME_MESSAGE } from './messagingConstants';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -17,6 +18,7 @@ export interface OnboardingServiceInstance {
   createFirstMicrocycle(user: UserWithProfile): Promise<void>;
   createFirstWorkout(user: UserWithProfile): Promise<void>;
   sendOnboardingMessages(user: UserWithProfile): Promise<void>;
+  sendWelcomeMessage(user: UserWithProfile): Promise<void>;
 }
 
 export interface OnboardingServiceDeps {
@@ -103,6 +105,21 @@ export function createOnboardingService(
       } catch (error) {
         console.error(`[Onboarding] Failed to create first workout for ${user.id}:`, error);
         throw error;
+      }
+    },
+
+    async sendWelcomeMessage(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Sending welcome message to ${user.id}`);
+      try {
+        await messagingOrchestrator.queueMessages(
+          user,
+          [{ content: WELCOME_MESSAGE }],
+          'onboarding'
+        );
+        console.log(`[Onboarding] Queued welcome message for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to queue welcome message for ${user.id}:`, error);
+        // Don't throw - welcome message failure shouldn't block signup
       }
     },
 
