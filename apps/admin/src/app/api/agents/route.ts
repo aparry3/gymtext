@@ -1,6 +1,30 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 
+type DbAgent = {
+  agentId: string
+  description: string | null
+  isActive: boolean
+  systemPrompt: string | null
+  userPromptTemplate: string | null
+  examples: unknown | null
+  model: string
+  temperature: unknown
+  maxTokens: number
+  maxIterations: number
+  toolIds: string[] | null
+  createdAt: Date
+  versionId: number
+}
+
+function parseTemperature(value: unknown): number {
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return Number((value as { value: number | string }).value)
+  }
+
+  return Number(value)
+}
+
 /**
  * GET /api/agents
  * 
@@ -20,13 +44,21 @@ export async function GET(request: Request) {
 
     const { db } = await getAdminContext();
 
-    // Build query - select only active agents by default
+    // Select latest active version for each agent_id (append-only table)
     let query = db
-      .selectFrom('agentDefinitions')
-      .selectAll()
-      .where('isActive', '=', true);
+      .selectFrom('agentDefinitions as ad')
+      .selectAll('ad')
+      .where(({ eb, selectFrom }) =>
+        eb(
+          'ad.versionId',
+          '=',
+          selectFrom('agentDefinitions as inner')
+            .select((eb) => eb.fn.max('inner.versionId').as('maxVersionId'))
+            .where('inner.agentId', '=', eb.ref('ad.agentId'))
+        )
+      )
+      .where('ad.isActive', '=', true);
 
-    // Apply category filter if provided
     if (category) {
       const categoryPrefix: Record<string, string> = {
         workouts: 'workout:',
@@ -37,18 +69,14 @@ export async function GET(request: Request) {
 
       const prefix = categoryPrefix[category];
       if (prefix) {
-        query = query.where('agentId', 'like', `${prefix}%`);
+        query = query.where('ad.agentId', 'like', `${prefix}%`);
       }
     }
 
-    // Order by agentId
-    const agents = await query.orderBy('agentId', 'asc').execute();
+    const agents = await query.orderBy('ad.agentId', 'asc').execute();
 
     // Transform to response format (snake_case for API)
-    const transformedAgents = agents.map((agent: any) => {
-      const temp = agent.temperature;
-      const tempValue = typeof temp === 'object' && temp !== null ? Number((temp as any).value) : Number(temp);
-      
+    const transformedAgents = (agents as DbAgent[]).map((agent) => {
       return {
         agent_id: agent.agentId,
         description: agent.description,
@@ -57,7 +85,7 @@ export async function GET(request: Request) {
         user_prompt_template: agent.userPromptTemplate,
         examples: agent.examples,
         model: agent.model,
-        temperature: tempValue,
+        temperature: parseTemperature(agent.temperature),
         max_tokens: agent.maxTokens,
         max_iterations: agent.maxIterations,
         max_retries: 3,
@@ -161,9 +189,6 @@ export async function POST(request: Request) {
       .executeTakeFirstOrThrow();
 
     // Transform to response format
-    const temp = result.temperature as any;
-    const tempValue = typeof temp === 'object' && temp !== null ? Number((temp as any).value) : Number(temp);
-
     const transformedAgent = {
       agent_id: result.agentId,
       description: result.description,
@@ -172,7 +197,7 @@ export async function POST(request: Request) {
       user_prompt_template: result.userPromptTemplate,
       examples: result.examples,
       model: result.model,
-      temperature: tempValue,
+      temperature: parseTemperature(result.temperature),
       max_tokens: result.maxTokens,
       max_iterations: result.maxIterations,
       max_retries: 3,

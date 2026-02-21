@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Dumbbell,
   ScrollText,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -67,6 +68,7 @@ const navEntries: NavEntry[] = [
     ],
   },
   'divider',
+  { href: '/agents', label: 'Agents', icon: Bot },
   { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
 ]
 
