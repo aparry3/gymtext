@@ -41,6 +41,8 @@
     "agent:get": "source .env.local && tsx scripts/agent-definition.ts get",
     "agent:list": "source .env.local && tsx scripts/agent-definition.ts list",
     "agent:update-prompts": "source .env.local && tsx scripts/update-agent-prompts.ts",
+    "agent:update-user-prompts": "source .env.local && tsx scripts/update-user-prompts.ts",
+    "agent:update-user-prompts:dry": "source .env.local && tsx scripts/update-user-prompts.ts --dry-run",
     "seed:templates": "source .env.local && npx tsx scripts/seed-context-templates.ts"
   },
   "dependencies": {
