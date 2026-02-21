@@ -179,7 +179,7 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
     saveState(state);
   }, [state]);
 
-  const currentQuestion = visibleQuestions[state.currentIndex];
+  const currentQuestion = state.questions[state.currentIndex];
   const currentAnswer = state.answers[currentQuestion?.id];
 
   const hasValidAnswer = useCallback(() => {

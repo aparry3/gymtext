@@ -110,6 +110,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     placeholder: 'e.g., I currently go to pilates on Wed and Thurs. I like to run and lift, don\'t mind overlap, want to exercise 6 days a week',
     source: 'base',
     showIfAnswerEquals: 'tell_me_more',
+    parentId: 'days',
   },
   {
     id: 'location',
@@ -132,6 +133,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     placeholder: 'Describe your gym setup...',
     source: 'base',
     showIfAnswerEquals: 'tell_me_more',
+    parentId: 'location',
   },
   {
     id: 'equipment',
@@ -149,9 +151,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'full_gym', label: 'Full Gym Access' },
     ],
     source: 'base',
-    // Only show this question if location is "home" (Home Gym)
-    // Skip for: bodyweight, commercial_gym, tell_me_more
-    hideIfAnswerEquals: ['bodyweight', 'commercial_gym', 'tell_me_more'],
+    showIfAnswerEquals: 'home',
     parentId: 'location',
   },
   {

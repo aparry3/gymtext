@@ -195,8 +195,27 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
 
   return (
     <div className="questionnaire-theme flex min-h-screen-safe flex-col bg-[hsl(var(--questionnaire-bg))]">
+      {/* Close button - top left */}
+      <div className="pt-safe mt-2 px-4">
+        <Link
+          href="/"
+          className="inline-flex rounded-full p-2 transition-opacity hover:opacity-70"
+          aria-label="Close and return to home"
+        >
+          <svg
+            className="h-5 w-5 text-[hsl(var(--questionnaire-muted-foreground))]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </Link>
+      </div>
+
       {/* Branding header */}
-      <div className="flex flex-col items-center gap-1 pt-safe mt-6 py-4">
+      <div className="flex flex-col items-center gap-1 py-4">
         {ownerWordmarkUrl ? (
           <img src={ownerWordmarkUrl} alt="" className="h-8 object-contain" />
         ) : (
@@ -210,29 +229,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       {/* Header with progress */}
       <header className="flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-4">
-          {/* Close button - always visible */}
-          <Link
-            href="/"
-            className="rounded-full p-2 transition-opacity hover:opacity-70"
-            aria-label="Close and return to home"
-          >
-            <svg
-              className="h-6 w-6 text-[hsl(var(--questionnaire-foreground))]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Link>
-
-          {/* Question counter */}
-          <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
-            {currentIndex + 1} of {totalQuestions}
-          </span>
-
-          {/* Back button */}
+          {/* Back button - left */}
           <button
             type="button"
             onClick={goBack}
@@ -251,6 +248,32 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
               strokeWidth={2}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Question counter */}
+          <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))]">
+            {currentIndex + 1} of {totalQuestions}
+          </span>
+
+          {/* Forward button - right, only visible if current question already answered */}
+          <button
+            type="button"
+            onClick={handleNext}
+            className={`
+              rounded-full p-2 transition-opacity
+              ${hasValidAnswer ? 'opacity-100 hover:opacity-70' : 'opacity-0 pointer-events-none'}
+            `}
+            aria-label="Go forward"
+          >
+            <svg
+              className="h-6 w-6 text-[hsl(var(--questionnaire-foreground))]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
