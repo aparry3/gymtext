@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { TextareaHTMLAttributes } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useEnvironment } from '@/context/EnvironmentContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -125,6 +127,8 @@ interface AutoGrowTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextArea
   minHeight?: number
 }
 
+type PromptEditorMode = 'edit' | 'split' | 'preview'
+
 function AutoGrowTextarea({ value, className, onChange, minHeight = 220, ...props }: AutoGrowTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -154,6 +158,75 @@ function AutoGrowTextarea({ value, className, onChange, minHeight = 220, ...prop
         className
       )}
     />
+  )
+}
+
+interface MarkdownPromptEditorProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  minHeight: number
+  defaultMode?: PromptEditorMode
+}
+
+function MarkdownPromptEditor({
+  label,
+  value,
+  onChange,
+  placeholder,
+  minHeight,
+  defaultMode = 'split',
+}: MarkdownPromptEditorProps) {
+  const [mode, setMode] = useState<PromptEditorMode>(defaultMode)
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <label className="block text-sm font-medium text-slate-700">{label}</label>
+        <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+          {(['edit', 'split', 'preview'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setMode(option)}
+              className={cn(
+                'px-2.5 py-1 text-xs capitalize rounded transition-colors',
+                mode === option ? 'bg-sky-100 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+              )}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={cn('grid gap-3', mode === 'split' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1')}>
+        {(mode === 'edit' || mode === 'split') && (
+          <AutoGrowTextarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            minHeight={minHeight}
+            placeholder={placeholder}
+          />
+        )}
+
+        {(mode === 'preview' || mode === 'split') && (
+          <div
+            className="w-full px-3 py-3 text-sm border border-slate-300 rounded-lg bg-white overflow-auto"
+            style={{ minHeight }}
+          >
+            {value.trim() ? (
+              <div className="space-y-3 text-slate-800 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_pre]:bg-slate-100 [&_pre]:p-3 [&_pre]:rounded-md [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_p]:leading-relaxed">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+              </div>
+            ) : (
+              <p className="text-slate-400 italic">Nothing to preview yet.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -429,35 +502,30 @@ export default function AgentsPage() {
                       </div>
 
                       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-5">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">System Prompt</label>
-                          <AutoGrowTextarea
-                            value={formData.system_prompt || ''}
-                            onChange={(e) => handleInputChange('system_prompt', e.target.value)}
-                            minHeight={280}
-                            placeholder="Enter system prompt..."
-                          />
-                        </div>
+                        <MarkdownPromptEditor
+                          label="System Prompt"
+                          value={formData.system_prompt || ''}
+                          onChange={(value) => handleInputChange('system_prompt', value)}
+                          minHeight={280}
+                          placeholder="Enter system prompt..."
+                        />
 
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">Examples</label>
-                          <AutoGrowTextarea
-                            value={formData.examples || ''}
-                            onChange={(e) => handleInputChange('examples', e.target.value)}
-                            minHeight={220}
-                            placeholder="Enter examples (JSON or text)..."
-                          />
-                        </div>
+                        <MarkdownPromptEditor
+                          label="Examples"
+                          value={formData.examples || ''}
+                          onChange={(value) => handleInputChange('examples', value)}
+                          minHeight={220}
+                          placeholder="Enter examples (JSON or text)..."
+                          defaultMode="edit"
+                        />
 
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">User Prompt Template</label>
-                          <AutoGrowTextarea
-                            value={formData.user_prompt_template || ''}
-                            onChange={(e) => handleInputChange('user_prompt_template', e.target.value)}
-                            minHeight={260}
-                            placeholder="Enter user prompt template..."
-                          />
-                        </div>
+                        <MarkdownPromptEditor
+                          label="User Prompt Template"
+                          value={formData.user_prompt_template || ''}
+                          onChange={(value) => handleInputChange('user_prompt_template', value)}
+                          minHeight={260}
+                          placeholder="Enter user prompt template..."
+                        />
                       </div>
                     </section>
 
