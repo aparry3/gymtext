@@ -4,7 +4,7 @@
  * Handles AI operations for parsing raw program text into formatted markdown.
  * Takes raw text (from file parser) and outputs structured workout program markdown.
  */
-import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * Result from the program parsing agent
@@ -32,7 +32,7 @@ export interface ProgramAgentServiceInstance {
  * @param agentRunner - AgentRunner for invoking agents
  */
 export function createProgramAgentService(
-  agentRunner: AgentRunnerInstance
+  agentRunner: SimpleAgentRunnerInstance
 ): ProgramAgentServiceInstance {
   return {
     async parseProgram(rawText: string): Promise<ProgramParseResult> {

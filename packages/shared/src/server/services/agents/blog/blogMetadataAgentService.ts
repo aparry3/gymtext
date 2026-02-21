@@ -4,7 +4,7 @@
  * Handles AI operations for generating blog metadata from content.
  * Takes raw HTML content and outputs structured metadata (title, description, tags, SEO fields).
  */
-import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 /**
  * Result from the blog metadata generation agent
@@ -62,7 +62,7 @@ function truncateContent(content: string, maxLength = 8000): string {
  * @param agentRunner - AgentRunner for invoking agents
  */
 export function createBlogMetadataAgentService(
-  agentRunner: AgentRunnerInstance
+  agentRunner: SimpleAgentRunnerInstance
 ): BlogMetadataAgentServiceInstance {
   return {
     async generateMetadata(content: string): Promise<BlogMetadataResult> {
@@ -79,7 +79,14 @@ export function createBlogMetadataAgentService(
         input: cleanContent,
       });
 
-      const output = result.response as BlogMetadataResult;
+      let output: BlogMetadataResult;
+      try {
+        output = typeof result.response === 'string'
+          ? JSON.parse(result.response) as BlogMetadataResult
+          : result.response as unknown as BlogMetadataResult;
+      } catch {
+        throw new Error(`[BlogMetadataAgentService] Failed to parse metadata response: ${result.response}`);
+      }
 
       console.log('[BlogMetadataAgentService] Generated metadata:', {
         title: output.title,

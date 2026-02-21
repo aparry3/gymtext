@@ -1,10 +1,10 @@
 import { UserWithProfile } from '../../models/user';
-import { now, startOfDay, getDayOfWeek } from '@/shared/utils/date';
-import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
-import type { DailyMessageServiceInstance } from './dailyMessageService';
+import { now, getDayOfWeek } from '@/shared/utils/date';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+import { WELCOME_MESSAGE } from './messagingConstants';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -18,12 +18,12 @@ export interface OnboardingServiceInstance {
   createFirstMicrocycle(user: UserWithProfile): Promise<void>;
   createFirstWorkout(user: UserWithProfile): Promise<void>;
   sendOnboardingMessages(user: UserWithProfile): Promise<void>;
+  sendWelcomeMessage(user: UserWithProfile): Promise<void>;
 }
 
 export interface OnboardingServiceDeps {
-  fitnessPlan: FitnessPlanServiceInstance;
+  markdown: MarkdownServiceInstance;
   training: TrainingServiceInstance;
-  dailyMessage: DailyMessageServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   messagingAgent: MessagingAgentServiceInstance;
 }
@@ -35,33 +35,32 @@ export function createOnboardingService(
   deps: OnboardingServiceDeps
 ): OnboardingServiceInstance {
   const {
-    fitnessPlan: fitnessPlanService,
+    markdown: markdownService,
     training: trainingService,
-    dailyMessage: dailyMessageService,
     messagingOrchestrator,
     messagingAgent: messagingAgentService,
   } = deps;
 
   const prepareCombinedPlanMicrocycleMessage = async (user: UserWithProfile): Promise<string> => {
-    const plan = await fitnessPlanService.getCurrentPlan(user.id);
+    const plan = await markdownService.getPlan(user.id);
     if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
-    if (!plan.message) throw new Error(`No plan message found for user ${user.id}`);
+    if (!plan.content) throw new Error(`No plan content found for user ${user.id}`);
 
     const currentDate = now(user.timezone).toJSDate();
     const { microcycle } = await trainingService.prepareMicrocycleForDate(user.id, plan, currentDate, user.timezone);
     if (!microcycle) throw new Error(`No microcycle found for user ${user.id}`);
-    if (!microcycle.message) throw new Error(`No microcycle message found for user ${user.id}`);
+    if (!microcycle.content) throw new Error(`No microcycle content found for user ${user.id}`);
 
     const currentWeekday = getDayOfWeek(undefined, user.timezone);
-    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.message, microcycle.message, currentWeekday);
+    const message = await messagingAgentService.generatePlanMicrocycleCombinedMessage(plan.content, microcycle.content, currentWeekday);
     console.log(`[Onboarding] Prepared combined plan+microcycle message for ${user.id}`);
     return message;
   };
 
   const prepareWorkoutMessage = async (user: UserWithProfile): Promise<string> => {
-    const targetDate = startOfDay(now(user.timezone).toJSDate(), user.timezone);
-    const workout = await dailyMessageService.getTodaysWorkout(user.id, targetDate);
-    if (!workout) throw new Error(`No workout found for user ${user.id} on ${targetDate.toISOString()}`);
+    const targetDate = now(user.timezone).startOf('day');
+    const workout = await trainingService.prepareWorkoutForDate(user, targetDate);
+    if (!workout) throw new Error(`No workout found for user ${user.id} on ${targetDate.toISO()}`);
     if (!workout.message) throw new Error(`No workout message found for ${workout.id}`);
     console.log(`[Onboarding] Prepared workout message for ${user.id}`);
     return workout.message;
@@ -82,7 +81,7 @@ export function createOnboardingService(
     async createFirstMicrocycle(user: UserWithProfile): Promise<void> {
       console.log(`[Onboarding] Creating first microcycle for ${user.id}`);
       try {
-        const plan = await fitnessPlanService.getCurrentPlan(user.id);
+        const plan = await markdownService.getPlan(user.id);
         if (!plan) throw new Error(`No fitness plan found for user ${user.id}`);
 
         const currentDate = now(user.timezone).toJSDate();
@@ -106,6 +105,21 @@ export function createOnboardingService(
       } catch (error) {
         console.error(`[Onboarding] Failed to create first workout for ${user.id}:`, error);
         throw error;
+      }
+    },
+
+    async sendWelcomeMessage(user: UserWithProfile): Promise<void> {
+      console.log(`[Onboarding] Sending welcome message to ${user.id}`);
+      try {
+        await messagingOrchestrator.queueMessages(
+          user,
+          [{ content: WELCOME_MESSAGE }],
+          'onboarding'
+        );
+        console.log(`[Onboarding] Queued welcome message for ${user.id}`);
+      } catch (error) {
+        console.error(`[Onboarding] Failed to queue welcome message for ${user.id}:`, error);
+        // Don't throw - welcome message failure shouldn't block signup
       }
     },
 

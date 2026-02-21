@@ -1,478 +1,299 @@
 /**
  * TrainingService
  *
- * Orchestrates training-related workflows including workout generation,
- * microcycle creation, and coordination between domain services and AI agents.
+ * Orchestrates training-related workflows including plan generation,
+ * week (microcycle) generation, and workout formatting.
  *
- * This service follows the orchestration pattern - it coordinates between
- * domain services (CRUD) and agent services (AI) without doing either directly.
+ * Uses dossier-based markdown content stored via DossierService.
+ * All AI generation goes through SimpleAgentRunner.
  */
 import { DateTime } from 'luxon';
-import { getWeekday, getDayOfWeekName } from '@/shared/utils/date';
+import { getDayOfWeekName } from '@/shared/utils/date';
 import { normalizeWhitespace } from '@/server/utils/formatters';
-import { isMessageTooLong, getSmsMaxLength } from '@/server/utils/smsValidation';
 import type { UserWithProfile } from '@/server/models/user';
-import { FitnessPlanModel, type FitnessPlan, type FitnessPlanOverview, type PlanStructure } from '@/server/models/fitnessPlan';
+import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
-import type { WorkoutInstance, NewWorkoutInstance } from '@/server/models/workout';
-import type { ProgressInfo } from '../domain/training/progressService';
-
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { FitnessProfileServiceInstance } from '../domain/user/fitnessProfileService';
-import type { FitnessPlanServiceInstance } from '../domain/training/fitnessPlanService';
-import type { ProgressServiceInstance } from '../domain/training/progressService';
-import type { MicrocycleServiceInstance } from '../domain/training/microcycleService';
-import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
-import type { ShortLinkServiceInstance } from '../domain/links/shortLinkService';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
 
-// Program domain services
-import type { EnrollmentServiceInstance } from '../domain/program/enrollmentService';
-import type { ProgramServiceInstance } from '../domain/program/programService';
-import type { ProgramOwnerServiceInstance } from '../domain/program/programOwnerService';
 
 // Agent services
-import type { AgentRunnerInstance } from '@/server/agents/runner';
-
-// Exercise resolution
-import type { ExerciseResolutionServiceInstance } from '../domain/exercise/exerciseResolutionService';
-import type { ExerciseUseRepository } from '@/server/repositories/exerciseUseRepository';
-
-// Workout structure types
-import type { WorkoutStructure } from '@/server/models/workout';
-
-// Microcycle structure types
-import type { MicrocycleStructure } from '@/shared/types/microcycle';
-import { flattenWorkoutTags } from '@/shared/types/workout/tags';
-
-// =============================================================================
-// Exported Helpers
-// =============================================================================
-
-/**
- * Resolve exercise names in a workout structure to canonical IDs
- * Extracted as a reusable function for use by trainingService and workoutModificationService
- *
- * @param structure - The workout structure containing exercises to resolve
- * @param exerciseResolution - The exercise resolution service instance
- * @param exerciseUse - Optional exercise use repository for tracking usage
- * @param userId - Optional user ID for tracking exercise usage
- */
-export async function resolveExercisesInStructure(
-  structure: WorkoutStructure,
-  exerciseResolution: ExerciseResolutionServiceInstance,
-  exerciseUse?: ExerciseUseRepository,
-  userId?: string
-): Promise<void> {
-  if (!structure?.sections) return;
-
-  for (const section of structure.sections) {
-    for (const activity of section.exercises) {
-      try {
-        const result = await exerciseResolution.resolve(activity.name, {
-          learnAlias: true,
-          aliasSource: 'ai',
-        });
-        if (result) {
-          activity.nameRaw = activity.name;
-          activity.name = result.exercise.name;
-          activity.exerciseId = result.exercise.id;
-          activity.resolution = {
-            method: result.method === 'exact' || result.method === 'exact_lex' ? 'exact' : 'fuzzy',
-            confidence: result.confidence,
-            version: 1,
-          };
-          // Track exercise usage for popularity scoring
-          if (exerciseUse && userId) {
-            exerciseUse.trackUse(result.exercise.id, userId, 'workout').catch(() => {});
-          }
-        } else {
-          // Clear any LLM-generated fake IDs and mark as unresolved
-          activity.nameRaw = activity.name;
-          activity.exerciseId = null;
-          activity.resolution = {
-            method: 'unresolved',
-            confidence: 0,
-            version: 1,
-          };
-        }
-      } catch (err) {
-        console.warn(`[TrainingService] Exercise resolution failed for "${activity.name}":`, err);
-        // Clear any LLM-generated fake IDs on error
-        activity.nameRaw = activity.name;
-        activity.exerciseId = null;
-        activity.resolution = {
-          method: 'unresolved',
-          confidence: 0,
-          version: 1,
-        };
-      }
-    }
-  }
-}
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 // =============================================================================
 // Types
 // =============================================================================
 
+export interface WorkoutData {
+  id: string;
+  message: string;
+  description?: string;
+  date: Date;
+}
+
 export interface TrainingServiceInstance {
-  /**
-   * Generate a fitness plan for a user
-   * Orchestrates: AI generation, database storage
-   */
   createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan>;
-
   /**
-   * Generate a workout for a specific date
-   * Orchestrates: fitness plan lookup, progress calculation, microcycle creation, workout generation
+   * Generate a microcycle for a specific date.
+   * Supports both new signature (userId, date, timezone) and old signature (userId, plan, date, timezone).
    */
-  prepareWorkoutForDate(
-    user: UserWithProfile,
-    targetDate: DateTime,
-    providedMicrocycle?: Microcycle
-  ): Promise<WorkoutInstance | null>;
-
-  /**
-   * Generate a microcycle for a specific date/week
-   * Orchestrates: user lookup, progress calculation, AI generation, database storage
-   */
-  prepareMicrocycleForDate(
-    userId: string,
-    plan: FitnessPlan,
-    targetDate: Date,
-    timezone?: string
-  ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }>;
-
-  /**
-   * Regenerate a workout message with proper day format context
-   * Used when a workout exists but needs a new/shorter message
-   *
-   * @param user - User with profile
-   * @param workout - Existing workout instance
-   * @returns The regenerated message (already saved to database)
-   */
-  regenerateWorkoutMessage(
-    user: UserWithProfile,
-    workout: WorkoutInstance
-  ): Promise<string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prepareMicrocycleForDate(userId: string, planOrDate: any, dateOrTimezone?: any, timezone?: string): Promise<any>;
+  prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null>;
+  formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string>;
+  regenerateWorkoutMessage(user: UserWithProfile, workout: WorkoutData): Promise<string>;
 }
 
 export interface TrainingServiceDeps {
-  // Domain services
   user: UserServiceInstance;
-  fitnessProfile: FitnessProfileServiceInstance;
-  fitnessPlan: FitnessPlanServiceInstance;
-  progress: ProgressServiceInstance;
-  microcycle: MicrocycleServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
-  shortLink: ShortLinkServiceInstance;
-
-  // Program domain services
-  enrollment: EnrollmentServiceInstance;
-  program: ProgramServiceInstance;
-  programOwner: ProgramOwnerServiceInstance;
-
-  // Agent services
-  agentRunner: AgentRunnerInstance;
-
-  // Exercise resolution (optional — skipped if not provided)
-  exerciseResolution?: ExerciseResolutionServiceInstance;
-  exerciseUse?: ExerciseUseRepository;
+  markdown: MarkdownServiceInstance;
+  agentRunner: SimpleAgentRunnerInstance;
 }
 
 // =============================================================================
 // Factory
 // =============================================================================
 
-/**
- * Create a TrainingService instance with injected dependencies
- */
 export function createTrainingService(deps: TrainingServiceDeps): TrainingServiceInstance {
   const {
     user: userService,
-    fitnessProfile: fitnessProfileService,
-    fitnessPlan: fitnessPlanService,
-    progress: progressService,
-    microcycle: microcycleService,
-    workoutInstance: workoutInstanceService,
-    shortLink: shortLinkService,
-    enrollment: enrollmentService,
-    program: programService,
-    programOwner: programOwnerService,
-    agentRunner,
-    exerciseResolution,
-    exerciseUse,
+    markdown: markdownService,
+    agentRunner: simpleAgentRunner,
   } = deps;
 
-  /**
-   * Build extension overrides from the user's structured profile.
-   * Returns experienceLevel if available, otherwise undefined (falls back to agent defaults).
-   */
-  async function buildUserExtensions(userId: string): Promise<Record<string, string> | undefined> {
-    try {
-      const structured = await fitnessProfileService.getCurrentStructuredProfile(userId);
-      if (structured?.experienceLevel) {
-        return { experienceLevel: structured.experienceLevel };
-      }
-    } catch {
-      // Structured profile not available — fall through to defaults
-    }
-    return undefined;
-  }
-
-  /**
-   * Resolve the day's activity type from the microcycle structured data.
-   * Returns the dayFormat extension key (TRAINING, ACTIVE_RECOVERY, REST) or undefined.
-   */
-  function getDayActivityType(microcycle: Microcycle, dayIndex: number): string | undefined {
-    const structured = microcycle.structured as MicrocycleStructure | null | undefined;
-    if (structured?.days?.[dayIndex]?.activityType) {
-      return structured.days[dayIndex].activityType;
-    }
-    return undefined;
-  }
-
   return {
-    async createFitnessPlan(user: UserWithProfile, options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
+    async createFitnessPlan(user: UserWithProfile, _options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
-      // 1. Generate plan via AI agent
-      const result = await agentRunner.invoke('plan:generate', { params: { user } });
-      const agentResponse: FitnessPlanOverview = {
-        description: result.response as string,
-        message: (result as Record<string, unknown>).message as string,
-        structure: (result as Record<string, unknown>).structure as PlanStructure,
-      };
+      // Fetch profile dossier for context
+      const profileDossier = await markdownService.getProfile(user.id);
 
-      // 2. Create plan model from agent response
-      const fitnessPlan = FitnessPlanModel.fromFitnessPlanOverview(user, agentResponse, options);
-      console.log('[TrainingService] Generated plan:', fitnessPlan.description?.substring(0, 200));
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
+      }
 
-      // 3. Save to database
-      const savedPlan = await fitnessPlanService.insertPlan(fitnessPlan);
+      // Generate plan via AI agent
+      const result = await simpleAgentRunner.invoke('plan:generate', {
+        input: `${user.name || 'this user'}'s profile and goals.`,
+        context,
+        params: { user },
+      });
+
+      const planContent = result.response;
+      console.log('[TrainingService] Generated plan:', planContent.substring(0, 200));
+
+      // Save to database via dossier service
+      const savedPlan = await markdownService.createPlan(user.id, planContent, new Date());
       console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
 
       return savedPlan;
     },
 
+    async prepareMicrocycleForDate(
+      userId: string,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      planOrDate: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      dateOrTimezone?: any,
+      timezoneArg?: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ): Promise<any> {
+      // Support both old signature (userId, plan, date, timezone) and new (userId, date, timezone)
+      let targetDate: Date;
+      let timezone: string;
+      if (planOrDate instanceof Date) {
+        // New signature: (userId, date, timezone?)
+        targetDate = planOrDate;
+        timezone = (typeof dateOrTimezone === 'string' ? dateOrTimezone : undefined) ?? 'America/New_York';
+      } else {
+        // Old signature: (userId, plan, date, timezone?)
+        targetDate = dateOrTimezone as Date;
+        timezone = timezoneArg ?? 'America/New_York';
+      }
+      // Check if week dossier already exists for this date
+      const existingWeek = await markdownService.getWeekForDate(userId, targetDate);
+      if (existingWeek) {
+        // Return backward-compatible format for old callers
+        return { microcycle: existingWeek, progress: {}, wasCreated: false };
+      }
+
+      // Get user for AI context
+      const user = await userService.getUser(userId);
+      if (!user) {
+        throw new Error(`[TrainingService] User not found: ${userId}`);
+      }
+
+      // Get plan for context
+      const plan = await markdownService.getPlan(userId);
+      if (!plan) {
+        throw new Error(`[TrainingService] No fitness plan found for user: ${userId}`);
+      }
+
+      // Fetch profile dossier for context
+      const profileDossier = await markdownService.getProfile(userId);
+
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
+      }
+      if (plan.content) {
+        context.push(`<Plan>${plan.content}</Plan>`);
+      } else if (plan.description) {
+        context.push(`<Plan>${plan.description}</Plan>`);
+      }
+
+      // Generate week dossier via AI agent
+      const weekStart = DateTime.fromJSDate(targetDate, { zone: timezone }).startOf('week');
+      const result = await simpleAgentRunner.invoke('week:generate', {
+        input: `Week starting ${weekStart.toISODate()}.`,
+        context,
+        params: { user },
+      });
+
+      const weekContent = result.response;
+
+      // Save to database via dossier service
+      const microcycle = await markdownService.createWeek(
+        userId,
+        plan.id!,
+        weekContent,
+        weekStart.toJSDate()
+      );
+
+      console.log(
+        `[TrainingService] Created week for user ${userId} starting ${weekStart.toISODate()}`
+      );
+
+      // Return backward-compatible format for old callers
+      return { microcycle, progress: {}, wasCreated: true };
+    },
+
     async prepareWorkoutForDate(
       user: UserWithProfile,
-      targetDate: DateTime,
-      providedMicrocycle?: Microcycle
-    ): Promise<WorkoutInstance | null> {
+      targetDate: DateTime
+    ): Promise<WorkoutData | null> {
       try {
-        // 1. Get enrollment and current fitness plan instance
-        const enrollmentResult = await enrollmentService.getEnrollmentWithProgramVersion(user.id);
-        if (!enrollmentResult) {
-          console.log(`[TrainingService] No active enrollment for user ${user.id}`);
-          return null;
-        }
+        const timezone = user.timezone || 'America/New_York';
+        const todayDate = targetDate.toJSDate();
 
-        let { enrollment, currentPlanInstance: plan } = enrollmentResult;
-
-        // If there's no plan version, we cannot proceed
-        if (!plan) {
-          console.log(`[TrainingService] Program has no version for user ${user.id}`);
-          return null;
-        }
-
-        // 2. Get progress for the target date
-        const progress = await progressService.getProgressForDate(plan, targetDate.toJSDate(), user.timezone);
-        if (!progress) {
-          console.log(`[TrainingService] No progress found for user ${user.id} on ${targetDate.toISODate()}`);
-          return null;
-        }
-
-        // 3. Get or create microcycle for the week
-        let microcycle: Microcycle | null = providedMicrocycle ?? null;
+        // Ensure week dossier exists
+        const { microcycle } = await this.prepareMicrocycleForDate(user.id, todayDate, timezone);
         if (!microcycle) {
-          const result = await this.prepareMicrocycleForDate(user.id, plan, targetDate.toJSDate(), user.timezone);
-          microcycle = result.microcycle;
-        }
-        if (!microcycle) {
-          console.log(`[TrainingService] Could not get/create microcycle for user ${user.id}`);
+          console.log(`[TrainingService] Could not get/create week for user ${user.id}`);
           return null;
         }
 
-        // 4. Extract day overview from microcycle (for goal field)
-        const dayIndex = getWeekday(targetDate.toJSDate(), user.timezone) - 1;
-        const dayOverview = microcycle.days?.[dayIndex];
+        // Fetch profile, plan, and previous week for richer context
+        const [profileDossier, plan, previousWeek] = await Promise.all([
+          markdownService.getProfile(user.id),
+          markdownService.getPlan(user.id),
+          markdownService.getWeekForDate(
+            user.id,
+            DateTime.fromJSDate(microcycle.startDate, { zone: timezone }).minus({ weeks: 1 }).toJSDate()
+          ),
+        ]);
 
-        if (!dayOverview || typeof dayOverview !== 'string') {
-          console.log(`[TrainingService] No overview found for day index ${dayIndex} in microcycle ${microcycle.id}`);
-          return null;
+        const context: string[] = [];
+        if (profileDossier) {
+          context.push(`<Profile>${profileDossier}</Profile>`);
+        }
+        if (plan?.content) {
+          context.push(`<Plan>${plan.content}</Plan>`);
+        }
+        if (previousWeek?.content) {
+          context.push(`<Previous Week>${previousWeek.content}</Previous Week>`);
+        }
+        if (microcycle.content) {
+          context.push(`<Week>${microcycle.content}</Week>`);
         }
 
-        // 5. Build extensions from user profile + day activity type
-        const userExtensions = await buildUserExtensions(user.id);
-        const activityType = getDayActivityType(microcycle, dayIndex);
-        const extensions: Record<string, string> = {
-          ...userExtensions,
-          ...(activityType ? { dayFormat: activityType } : {}),
-        };
+        const dayName = getDayOfWeekName(todayDate, timezone);
 
-        // 5b. Generate workout via AI agent
-        const workoutResult = await agentRunner.invoke('workout:generate', {
-          params: { user, date: targetDate.toJSDate() },
-          extensions: Object.keys(extensions).length > 0 ? extensions : undefined,
+        // Format workout via AI agent
+        const result = await simpleAgentRunner.invoke('workout:format', {
+          input: `${dayName} (${targetDate.toISODate()})`,
+          context,
+          params: { user, date: todayDate },
         });
-        const description = workoutResult.response as string;
-        const message = (workoutResult as Record<string, unknown>).message as string;
-        const structure = (workoutResult as Record<string, unknown>).structure as WorkoutStructure;
 
-        // 5b. Resolve exercise names to canonical IDs and track usage
-        if (structure && exerciseResolution) {
-          await resolveExercisesInStructure(structure, exerciseResolution, exerciseUse, user.id);
-        }
+        const workoutMessage = normalizeWhitespace(result.response);
+        const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
-        const theme = structure?.title || 'Workout';
-        const details = { theme };
+        console.log(`[TrainingService] Generated workout for user ${user.id} on ${targetDate.toISODate()}`);
 
-        // 5c. Flatten workout tags from structure
-        const tags = structure?.tags ? flattenWorkoutTags(structure.tags) : [];
-
-        // 6. Create workout record
-        const workoutData: NewWorkoutInstance = {
-          clientId: user.id,
-          microcycleId: microcycle.id,
-          date: targetDate.toJSDate(),
-          sessionType: 'workout',
-          goal: dayOverview.substring(0, 100),
-          details: JSON.parse(JSON.stringify(details)),
-          description,
-          message,
-          structured: structure,
-          tags,
-          completedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+        return {
+          id: workoutId,
+          message: workoutMessage,
+          description: workoutMessage,
+          date: todayDate,
         };
-
-        const savedWorkout = await workoutInstanceService.createWorkout(workoutData);
-        console.log(`[TrainingService] Generated and saved workout for user ${user.id} on ${targetDate.toISODate()}`);
-
-        // 7. Create short link and update message
-        try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id, savedWorkout.id);
-          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-          console.log(`[TrainingService] Created short link for workout ${savedWorkout.id}: ${fullUrl}`);
-
-          if (savedWorkout.message) {
-            const dayOfWeekTitle = getDayOfWeekName(targetDate.toJSDate(), user.timezone);
-            savedWorkout.message = normalizeWhitespace(
-              `${dayOfWeekTitle}\n\n${savedWorkout.message}\n\n(More details: ${fullUrl})`
-            );
-            await workoutInstanceService.updateWorkoutMessage(savedWorkout.id, savedWorkout.message);
-          }
-        } catch (error) {
-          console.error(`[TrainingService] Failed to create short link for workout ${savedWorkout.id}:`, error);
-        }
-
-        return savedWorkout;
       } catch (error) {
         console.error(`[TrainingService] Error generating workout for user ${user.id}:`, error);
         throw error;
       }
     },
 
-    async prepareMicrocycleForDate(
-      userId: string,
-      plan: FitnessPlan,
-      targetDate: Date,
-      timezone: string = 'America/New_York'
-    ): Promise<{ microcycle: Microcycle; progress: ProgressInfo; wasCreated: boolean }> {
-      // 1. Calculate progress for the date
-      const progress = await progressService.getProgressForDate(plan, targetDate, timezone);
-      if (!progress) {
-        throw new Error(`[TrainingService] Could not calculate progress for date ${targetDate}`);
+    async formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string> {
+      const profileDossier = await markdownService.getProfile(user.id);
+
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
       }
 
-      // 2. Check if microcycle already exists
-      if (progress.microcycle) {
-        return { microcycle: progress.microcycle, progress, wasCreated: false };
-      }
-
-      // 3. Get user for AI context
-      const user = await userService.getUser(userId);
-      if (!user) {
-        throw new Error(`[TrainingService] User not found: ${userId}`);
-      }
-
-      // 4. Generate microcycle via AI agent (with experience level extension)
-      const mcExtensions = await buildUserExtensions(user.id);
-      const mcResult = await agentRunner.invoke('microcycle:generate', {
-        input: `Absolute Week: ${progress.absoluteWeek}`,
+      const result = await simpleAgentRunner.invoke('week:format', {
+        input: weekContent,
+        context,
         params: { user },
-        extensions: mcExtensions,
-      });
-      const mcResponse = mcResult.response as { days: string[]; overview: string };
-      const days = mcResponse.days;
-      const description = mcResponse.overview;
-      const message = (mcResult as Record<string, unknown>).message as string;
-      const structure = (mcResult as Record<string, unknown>).structure as Microcycle['structured'];
-
-      // 5. Create microcycle record
-      const microcycle = await microcycleService.createMicrocycle({
-        clientId: userId,
-        absoluteWeek: progress.absoluteWeek,
-        days,
-        description,
-        message,
-        structured: structure,
-        startDate: progress.weekStartDate,
-        endDate: progress.weekEndDate,
-        isActive: false,
       });
 
-      console.log(
-        `[TrainingService] Created microcycle for user ${userId}, week ${progress.absoluteWeek} (${progress.weekStartDate.toISOString()} - ${progress.weekEndDate.toISOString()})`
-      );
-
-      return { microcycle, progress: { ...progress, microcycle }, wasCreated: true };
+      return result.response;
     },
 
     async regenerateWorkoutMessage(
       user: UserWithProfile,
-      workout: WorkoutInstance
+      workout: WorkoutData
     ): Promise<string> {
-      const MAX_REGENERATION_ATTEMPTS = 3;
-      const maxLength = getSmsMaxLength();
+      // Fetch context
+      const timezone = user.timezone || 'America/New_York';
+      const workoutDate = new Date(workout.date);
+      const [profileDossier, plan, weekDossier] = await Promise.all([
+        markdownService.getProfile(user.id),
+        markdownService.getPlan(user.id),
+        markdownService.getWeekForDate(user.id, workoutDate),
+      ]);
 
-      // 1. Generate message, regenerating if too long
-      let message: string = '';
-      let attempt = 0;
+      // Fetch previous week if we have a current week
+      const previousWeek = weekDossier
+        ? await markdownService.getWeekForDate(
+            user.id,
+            DateTime.fromJSDate(weekDossier.startDate, { zone: timezone }).minus({ weeks: 1 }).toJSDate()
+          )
+        : null;
 
-      while (attempt < MAX_REGENERATION_ATTEMPTS) {
-        attempt++;
-
-        // Add length constraint on retry attempts
-        const input = attempt === 1
-          ? workout.description || ''
-          : `${workout.description}\n\nIMPORTANT: Keep the message under ${maxLength} characters. Be more concise.`;
-
-        const result = await agentRunner.invoke('workout:message', {
-          input,
-          params: { user, date: new Date(workout.date) },
-        });
-        message = result.response as string;
-
-        if (!isMessageTooLong(message)) {
-          console.log(`[TrainingService] Message generated successfully on attempt ${attempt} (${message.length} chars)`);
-          break;
-        }
-
-        console.warn(`[TrainingService] Message too long on attempt ${attempt} (${message.length} chars), regenerating...`);
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
+      }
+      if (plan?.content) {
+        context.push(`<Plan>${plan.content}</Plan>`);
+      }
+      if (previousWeek?.content) {
+        context.push(`<Previous Week>${previousWeek.content}</Previous Week>`);
+      }
+      if (weekDossier?.content) {
+        context.push(`<Week>${weekDossier.content}</Week>`);
       }
 
-      // 3. Final check - if still too long after max attempts, throw error
-      if (isMessageTooLong(message)) {
-        throw new Error(`Failed to generate message under ${maxLength} chars after ${MAX_REGENERATION_ATTEMPTS} attempts`);
-      }
+      const result = await simpleAgentRunner.invoke('workout:format', {
+        input: workout.description || '',
+        context,
+        params: { user, date: new Date(workout.date) },
+      });
 
-      // 4. Save the regenerated message
-      await workoutInstanceService.updateWorkoutMessage(workout.id, message);
-
-      return message;
+      return result.response;
     },
   };
 }

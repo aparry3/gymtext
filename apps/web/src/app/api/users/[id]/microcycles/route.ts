@@ -36,7 +36,7 @@ export async function GET(
 
     // Get all microcycles for the user
     const services = getServices()
-    const microcycles = await services.microcycle.getAllMicrocycles(userId)
+    const microcycles = await services.microcycle.getMicrocycleHistory(userId)
 
     return NextResponse.json({
       success: true,

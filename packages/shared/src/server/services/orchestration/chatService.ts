@@ -3,22 +3,23 @@
  *
  * Orchestrates chat message handling by coordinating between:
  * - Message service (fetching/splitting messages)
- * - AgentRunner (AI response generation with tools)
+ * - SimpleAgentRunner (AI response generation with tools)
+ * - Dossier service (profile, plan, week context)
  *
  * This service handles:
  * - Message fetching and splitting (pending vs context)
+ * - Fetching dossier context (profile, plan, week)
  * - SMS length constraint enforcement
  * - Error handling and fallback messages
- *
- * Tool setup (update_profile, make_modification, get_workout) is handled
- * declaratively by the AgentRunner from DB config.
  */
 import type { UserWithProfile } from '@/server/models/user';
 import { getChatConfig } from '@/shared/config';
 import { getEnvironmentSettings } from '@/server/config';
+import { now } from '@/shared/utils/date';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { AgentRunnerInstance } from '@/server/agents/runner';
+import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
+import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
 
 // Configuration from shared config
 const { smsMaxLength: SMS_MAX_LENGTH, contextMinutes: CHAT_CONTEXT_MINUTES } = getChatConfig();
@@ -33,22 +34,22 @@ export interface ChatServiceInstance {
 export interface ChatServiceDeps {
   message: MessageServiceInstance;
   user: UserServiceInstance;
-  agentRunner: AgentRunnerInstance;
+  markdown: MarkdownServiceInstance;
+  agentRunner: SimpleAgentRunnerInstance;
 }
 
 /**
  * Create a ChatService instance with injected dependencies
  *
  * ChatService handles incoming SMS messages and generates AI-powered responses.
- *
- * The AgentRunner resolves tools (update_profile, get_workout, make_modification)
- * from DB config on chat:generate.
+ * Context (profile, plan, week dossiers) is fetched and passed as XML-tagged strings.
  */
 export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
   const {
     message: messageService,
     user: userService,
-    agentRunner,
+    markdown: markdownService,
+    agentRunner: simpleAgentRunner,
   } = deps;
 
   return {
@@ -80,16 +81,40 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
           ? user
           : await userService.getUser(user.id) || user;
 
+        // Fetch dossier context in parallel
+        const timezone = user.timezone || 'America/New_York';
+        const todayDate = now(timezone).toJSDate();
+
+        const [profileDossier, planDossier, weekDossier] = await Promise.all([
+          markdownService.getProfile(user.id),
+          markdownService.getPlan(user.id),
+          markdownService.getWeekForDate(user.id, todayDate),
+        ]);
+
+        // Build context strings
+        const dossierContext: string[] = [];
+        if (profileDossier) {
+          dossierContext.push(`<Profile>${profileDossier}</Profile>`);
+        }
+        if (planDossier?.content) {
+          dossierContext.push(`<Plan>${planDossier.content}</Plan>`);
+        } else if (planDossier?.description) {
+          dossierContext.push(`<Plan>${planDossier.description}</Plan>`);
+        }
+        if (weekDossier?.content) {
+          dossierContext.push(`<Week>${weekDossier.content}</Week>`);
+        }
+
         // Convert context messages to the agent message format
         const previousMessages = context.map(m => ({
           role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
           content: m.content,
         }));
 
-        // Invoke chat agent via AgentRunner
-        // Tools (update_profile, get_workout, make_modification) are resolved from DB config
-        const result = await agentRunner.invoke('chat:generate', {
+        // Invoke chat agent via SimpleAgentRunner with dossier context
+        const result = await simpleAgentRunner.invoke('chat:generate', {
           input: message,
+          context: dossierContext,
           params: { user: userWithProfile },
           previousMessages,
         });

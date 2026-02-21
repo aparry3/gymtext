@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            Last updated: January 27, 2026
+            Last updated: February 19, 2026
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -268,7 +268,43 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                5. Data Retention
+                5. Mobile Information and SMS Messaging
+              </h2>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                When you provide your mobile phone number and opt in to receive text messages:
+              </p>
+              <ul className="mb-4 list-disc pl-6 text-muted-foreground space-y-2">
+                <li>
+                  We collect and store your mobile phone number to deliver daily workout messages
+                  and fitness coaching via SMS
+                </li>
+                <li>
+                  <strong>Your mobile information will not be shared with third parties or affiliates
+                  for marketing purposes</strong>
+                </li>
+                <li>
+                  We use Twilio as our messaging service provider to deliver SMS messages
+                </li>
+                <li>
+                  You can opt out of messages at any time by texting STOP to any message from GymText
+                </li>
+                <li>
+                  Standard message and data rates from your carrier may apply
+                </li>
+                <li>
+                  Message frequency varies but typically includes daily workout messages
+                  (approximately 30 messages per month)
+                </li>
+              </ul>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                We maintain your mobile information solely for the purpose of delivering your
+                GymText workout program and related service communications.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="mb-4 text-2xl font-semibold text-foreground">
+                6. Data Retention
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 We retain your personal information for as long as your account is
@@ -304,7 +340,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                6. Your Rights and Choices
+                7. Your Rights and Choices
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 You have the following rights regarding your personal information:
@@ -346,7 +382,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                7. California Privacy Rights (CCPA)
+                8. California Privacy Rights (CCPA)
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 If you are a California resident, you have additional rights under the
@@ -396,7 +432,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                8. Data Security
+                9. Data Security
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 We implement appropriate technical and organizational measures to
@@ -418,7 +454,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                9. Children&apos;s Privacy
+                10. Children&apos;s Privacy
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 GymText is not intended for use by anyone under 18 years of age. We do
@@ -441,7 +477,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                10. International Data Transfers
+                11. International Data Transfers
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 Your information may be transferred to and processed in countries other
@@ -454,7 +490,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                11. Cookies and Tracking Technologies
+                12. Cookies and Tracking Technologies
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 We use cookies and similar tracking technologies on our website to:
@@ -473,7 +509,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                12. Changes to This Privacy Policy
+                13. Changes to This Privacy Policy
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 We may update this Privacy Policy from time to time. We will notify you
@@ -489,7 +525,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="mb-4 text-2xl font-semibold text-foreground">
-                13. Contact Us
+                14. Contact Us
               </h2>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 If you have questions, concerns, or requests regarding this Privacy

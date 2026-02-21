@@ -35,6 +35,9 @@ pnpm migrate:down       # Rollback last migration
 pnpm test               # Run Vitest tests
 pnpm test:ui            # Run tests with Vitest UI
 pnpm sms:test           # Test SMS functionality (requires Twilio config)
+
+# Local SMS Testing (no Twilio required)
+pnpm local:sms          # Monitor local SMS messages in real-time via SSE
 ```
 
 ## Architecture Overview
@@ -431,5 +434,11 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 - Sandbox variables only needed for admin app environment switching
 
 ### Code Quality and Validation
+- **ALWAYS run `pnpm build` to verify changes** - TypeScript compilation (`tsc`) alone is NOT sufficient
+  - `tsc` only checks types, it does NOT verify that the Next.js build will succeed
+  - Next.js builds involve additional steps: bundling, tree-shaking, route generation, static optimization
+  - Code that passes `tsc` can still fail `pnpm build` due to: import errors, missing dependencies, circular dependencies, build-time configuration issues
+  - **Why this matters**: A failed build in CI/production means broken deployments, even if types are valid
+  - **Best practice**: Run `pnpm build` before committing significant changes
 - Be sure that any implementations continue to pass `pnpm build` and `pnpm lint`
 - When making db schema changes, all migrations should utilize Kysely

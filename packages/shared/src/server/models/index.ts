@@ -1,7 +1,7 @@
 // Model class exports
 export { UserModel } from './user';
 export { FitnessPlanModel } from './fitnessPlan';
-export { WorkoutInstanceModel } from './workout';
+
 export { MicrocycleModel } from './microcycle';
 
 // User types (DB types + shared types re-exported)
@@ -19,14 +19,13 @@ export type {
 // Fitness plan types (DB types + shared types)
 export type {
   FitnessPlan, NewFitnessPlan, FitnessPlanUpdate,
-  FitnessPlanDB, FitnessPlanOverview,
-  PlanStructure, PlanStatus, PlanCurrentState
+  FitnessPlanDB,
+  PlanStructure
 } from './fitnessPlan';
 export { PlanStructureSchema, PlanScheduleTemplateSchema } from './fitnessPlan';
 
-// Workout types (DB types + shared types)
+// Workout types (shared types)
 export type {
-  WorkoutInstance, NewWorkoutInstance, WorkoutInstanceUpdate,
   WorkoutStructure, WorkoutActivity, WorkoutSection, Intensity, ExerciseResolution
 } from './workout';
 export { WorkoutStructureSchema, WorkoutActivitySchema, WorkoutSectionSchema, IntensitySchema, ExerciseResolutionSchema } from './workout';
@@ -42,12 +41,6 @@ export { StructuredProfileSchema, StructuredConstraintSchema, ExperienceLevelSch
 
 // PageVisit types
 export type { PageVisit, NewPageVisit } from './pageVisit';
-
-// Context template types
-export type { ContextTemplate, NewContextTemplate } from './contextTemplate';
-
-// Agent extension types
-export type { AgentExtension, NewAgentExtension } from './agentExtension';
 
 // Agent definition types
 export type {

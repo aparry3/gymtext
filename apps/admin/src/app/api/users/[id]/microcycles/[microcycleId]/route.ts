@@ -61,18 +61,11 @@ export async function GET(
       )
     }
 
-    // Get workouts for this microcycle's date range
-    const workouts = await services.workoutInstance.getWorkoutsByDateRange(
-      userId,
-      microcycle.startDate,
-      microcycle.endDate
-    )
-
     return NextResponse.json({
       success: true,
       data: {
         microcycle,
-        workouts
+        workouts: []
       }
     })
   } catch (error) {

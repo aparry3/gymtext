@@ -17,7 +17,7 @@ import { UserRepository } from './userRepository';
 import { MessageRepository } from './messageRepository';
 import { ProfileRepository } from './profileRepository';
 import { FitnessPlanRepository } from './fitnessPlanRepository';
-import { WorkoutInstanceRepository } from './workoutInstanceRepository';
+
 import { MicrocycleRepository } from './microcycleRepository';
 import { SubscriptionRepository } from './subscriptionRepository';
 import { OnboardingRepository } from './onboardingRepository';
@@ -45,8 +45,6 @@ import { BlogPostRepository } from './blogPostRepository';
 import { OrganizationRepository } from './organizationRepository';
 import { AgentDefinitionRepository } from './agentDefinitionRepository';
 import { AgentLogRepository } from './agentLogRepository';
-import { ContextTemplateRepository } from './contextTemplateRepository';
-import { AgentExtensionRepository } from './agentExtensionRepository';
 
 /**
  * Container for all repository instances
@@ -56,7 +54,7 @@ export interface RepositoryContainer {
   message: MessageRepository;
   profile: ProfileRepository;
   fitnessPlan: FitnessPlanRepository;
-  workoutInstance: WorkoutInstanceRepository;
+
   microcycle: MicrocycleRepository;
   subscription: SubscriptionRepository;
   onboarding: OnboardingRepository;
@@ -84,8 +82,6 @@ export interface RepositoryContainer {
   organization: OrganizationRepository;
   agentDefinition: AgentDefinitionRepository;
   agentLog: AgentLogRepository;
-  contextTemplate: ContextTemplateRepository;
-  agentExtension: AgentExtensionRepository;
   // Direct db access for complex queries
   db: Kysely<DB>;
 }
@@ -112,7 +108,7 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     message: new MessageRepository(db),
     profile: new ProfileRepository(db),
     fitnessPlan: new FitnessPlanRepository(db),
-    workoutInstance: new WorkoutInstanceRepository(db),
+
     microcycle: new MicrocycleRepository(db),
     subscription: new SubscriptionRepository(db),
     onboarding: new OnboardingRepository(db),
@@ -140,8 +136,6 @@ export function createRepositories(db: Kysely<DB>): RepositoryContainer {
     organization: new OrganizationRepository(db),
     agentDefinition: new AgentDefinitionRepository(db),
     agentLog: new AgentLogRepository(db),
-    contextTemplate: new ContextTemplateRepository(db),
-    agentExtension: new AgentExtensionRepository(db),
     db,
   };
 

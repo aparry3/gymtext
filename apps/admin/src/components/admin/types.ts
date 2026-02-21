@@ -552,3 +552,83 @@ export interface ExerciseAliasFormData {
   source?: AliasSource;
   confidenceScore?: number;
 }
+
+// ============================================
+// Agent Domain Types (for agent-logs filtering)
+// ============================================
+
+export interface AgentDomain {
+  id: string;
+  label: string;
+  agents: AgentConfig[];
+}
+
+export interface AgentConfig {
+  id: string;
+  label: string;
+}
+
+export const AGENT_DOMAINS: AgentDomain[] = [
+  {
+    id: 'chat',
+    label: 'Chat',
+    agents: [
+      { id: 'chat:generate', label: 'Generate' },
+    ],
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    agents: [
+      { id: 'profile:update', label: 'Update' },
+      { id: 'profile:user', label: 'User' },
+    ],
+  },
+  {
+    id: 'plan',
+    label: 'Plans',
+    agents: [
+      { id: 'plan:generate', label: 'Generate' },
+      { id: 'plan:modify', label: 'Modify' },
+    ],
+  },
+  {
+    id: 'workout',
+    label: 'Workouts',
+    agents: [
+      { id: 'workout:format', label: 'Format' },
+      { id: 'workout:modify', label: 'Modify' },
+    ],
+  },
+  {
+    id: 'week',
+    label: 'Weeks',
+    agents: [
+      { id: 'week:generate', label: 'Generate' },
+      { id: 'week:modify', label: 'Modify' },
+      { id: 'week:format', label: 'Format' },
+    ],
+  },
+  {
+    id: 'program',
+    label: 'Programs',
+    agents: [
+      { id: 'program:parse', label: 'Parse' },
+    ],
+  },
+  {
+    id: 'messaging',
+    label: 'Messaging',
+    agents: [
+      { id: 'messaging:plan-summary', label: 'Plan Summary' },
+      { id: 'messaging:plan-ready', label: 'Plan Ready' },
+    ],
+  },
+  {
+    id: 'blog',
+    label: 'Blog',
+    agents: [
+      { id: 'blog:metadata', label: 'Metadata' },
+    ],
+  },
+];

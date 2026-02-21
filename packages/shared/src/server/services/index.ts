@@ -27,7 +27,7 @@ export { createOnboardingDataService } from './domain/user/onboardingDataService
 export { createMessageService } from './domain/messaging/messageService';
 export { createQueueService } from './domain/messaging/queueService';
 export { createFitnessPlanService } from './domain/training/fitnessPlanService';
-export { createWorkoutInstanceService } from './domain/training/workoutInstanceService';
+
 export { createMicrocycleService } from './domain/training/microcycleService';
 export { createProgressService } from './domain/training/progressService';
 export { createSubscriptionService } from './domain/subscription/subscriptionService';
@@ -36,8 +36,6 @@ export { createShortLinkService } from './domain/links/shortLinkService';
 export { createReferralService } from './domain/referral/referralService';
 export { createAdminAuthService } from './domain/auth/adminAuthService';
 export { createUserAuthService } from './domain/auth/userAuthService';
-export { createChainRunnerService } from './domain/training/chainRunnerService';
-
 // Orchestration service factory functions
 export { createDailyMessageService } from './orchestration/dailyMessageService';
 export { createWeeklyMessageService } from './orchestration/weeklyMessageService';
@@ -59,7 +57,7 @@ export type { OnboardingDataServiceInstance } from './domain/user/onboardingData
 export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
 export type { QueueServiceInstance } from './domain/messaging/queueService';
 export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
-export type { WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
+
 export type { MicrocycleServiceInstance } from './domain/training/microcycleService';
 export type { ProgressServiceInstance, ProgressInfo } from './domain/training/progressService';
 export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './domain/subscription/subscriptionService';
@@ -68,8 +66,6 @@ export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
 export type { ReferralServiceInstance } from './domain/referral/referralService';
 export type { AdminAuthServiceInstance } from './domain/auth/adminAuthService';
 export type { UserAuthServiceInstance } from './domain/auth/userAuthService';
-export type { ChainRunnerServiceInstance, ChainOperation, ChainRunResult, ProfileRegenerationResult } from './domain/training/chainRunnerService';
-
 // Orchestration service instance types
 export type { DailyMessageServiceInstance } from './orchestration/dailyMessageService';
 export type { WeeklyMessageServiceInstance } from './orchestration/weeklyMessageService';

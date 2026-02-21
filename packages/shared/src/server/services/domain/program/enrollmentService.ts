@@ -161,7 +161,7 @@ export function createEnrollmentService(
       }
 
       // Get the current plan instance for this user
-      const currentPlanInstance = await repos.fitnessPlan.getCurrentPlan(clientId);
+      const currentPlanInstance = await repos.fitnessPlan.getLatest(clientId);
 
       return { enrollment, programVersion, currentPlanInstance };
     },

@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AGENT_DOMAINS } from '@/components/admin/agents/types';
+import { AGENT_DOMAINS } from '@/components/admin/types';
 
 interface AgentLogEntry {
   id: string;

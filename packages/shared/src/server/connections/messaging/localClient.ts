@@ -30,7 +30,13 @@ export class LocalMessagingClient implements IMessagingClient {
     this.eventEmitter.setMaxListeners(100);
   }
 
-  async sendMessage(user: UserWithProfile, message?: string, mediaUrls?: string[]): Promise<MessageResult> {
+  async sendMessage(
+    user: UserWithProfile,
+    message?: string,
+    mediaUrls?: string[],
+    templateSid?: string,
+    templateVariables?: Record<string, string>
+  ): Promise<MessageResult> {
     const messageId = `local-${Date.now()}-${++this.messageCounter}`;
     const timestamp = new Date();
     const to = user.phoneNumber;
@@ -93,5 +99,6 @@ export class LocalMessagingClient implements IMessagingClient {
   }
 }
 
-// Export singleton instance
-export const localMessagingClient = new LocalMessagingClient();
+// Export singleton instance (survives Next.js HMR reloads)
+const globalForLocal = globalThis as unknown as { __localMessagingClient?: LocalMessagingClient };
+export const localMessagingClient = globalForLocal.__localMessagingClient ??= new LocalMessagingClient();

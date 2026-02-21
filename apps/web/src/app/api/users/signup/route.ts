@@ -222,12 +222,17 @@ async function completeSignupFlow(
   }
   await services.onboardingData.createOnboardingRecord(userId, extractSignupData(formData));
 
-  // Send welcome SMS
-  console.log('[Signup] Sending welcome SMS');
-  const userWithProfile = await services.user.getUser(userId);
-  if (userWithProfile) {
-    const welcomeMessage = await services.messagingAgent.generateWelcomeMessage(userWithProfile);
-    await services.messagingOrchestrator.sendImmediate(userWithProfile, welcomeMessage);
+  // Send Twilio-compliant welcome message if user consented to SMS
+  console.log('[Signup] smsConsent:', formData.smsConsent);
+  if (formData.smsConsent) {
+    const userWithProfile = await services.user.getUser(userId);
+    if (userWithProfile) {
+      await services.onboarding.sendWelcomeMessage(userWithProfile);
+    } else {
+      console.error(`[Signup] Could not fetch user ${userId} for welcome message`);
+    }
+  } else {
+    console.log('[Signup] Skipping welcome message - no SMS consent');
   }
 
   // Trigger async Inngest onboarding job
@@ -331,9 +336,11 @@ function extractSignupData(formData: Record<string, unknown>): SignupData {
     primaryGoals: formData.primaryGoals as SignupData['primaryGoals'],
     goalsElaboration: formData.goalsElaboration as string | undefined,
     experienceLevel: formData.experienceLevel as SignupData['experienceLevel'],
+    experienceElaboration: formData.experienceElaboration as string | undefined,
     desiredDaysPerWeek: formData.desiredDaysPerWeek as SignupData['desiredDaysPerWeek'],
     availabilityElaboration: formData.availabilityElaboration as string | undefined,
     trainingLocation: formData.trainingLocation as SignupData['trainingLocation'],
+    locationElaboration: formData.locationElaboration as string | undefined,
     equipment: formData.equipment as string[],
     injuries: formData.injuries as string | undefined,
     acceptedRisks: formData.acceptedRisks as boolean,

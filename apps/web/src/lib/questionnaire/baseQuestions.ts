@@ -10,9 +10,38 @@ import type { QuestionnaireQuestion } from './types';
 
 /**
  * Full base questions for non-program signup.
- * Order: fitness-focused first, bio (name, phone) at end.
+ * Order: bio (name, gender) first, then fitness questions, phone at end.
  */
 export const baseQuestions: QuestionnaireQuestion[] = [
+  {
+    id: 'name',
+    questionText: "What's your name?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your first name',
+    source: 'base',
+  },
+  {
+    id: 'age',
+    questionText: "What's your age?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your age',
+    source: 'base',
+  },
+  {
+    id: 'gender',
+    questionText: "What's your gender?",
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    ],
+    source: 'base',
+  },
   {
     id: 'goals',
     questionText: 'What are your fitness goals?',
@@ -24,8 +53,18 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'endurance', label: 'Build Endurance', description: 'Improve stamina and cardiovascular health' },
       { value: 'weight_loss', label: 'Lose Weight', description: 'Burn fat and get leaner' },
       { value: 'general_fitness', label: 'General Fitness', description: 'Overall health and wellness' },
+      { value: 'tell_me_more', label: 'Tell me more', description: 'I want to describe my goals in detail' },
     ],
     source: 'base',
+  },
+  {
+    id: 'goals_detail',
+    questionText: 'Tell us more about your fitness goals',
+    type: 'text',
+    required: false,
+    placeholder: 'Describe your goals in detail...',
+    source: 'base',
+    showIfAnswerContains: 'tell_me_more',
   },
   {
     id: 'experience',
@@ -36,8 +75,18 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'beginner', label: 'Beginner', description: 'New to structured training' },
       { value: 'intermediate', label: 'Intermediate', description: '1-3 years of consistent training' },
       { value: 'advanced', label: 'Advanced', description: '3+ years of dedicated training' },
+      { value: 'tell_me_more', label: 'Tell me more', description: 'I want to describe my experience' },
     ],
     source: 'base',
+  },
+  {
+    id: 'experience_detail',
+    questionText: 'Tell us more about your fitness experience',
+    type: 'text',
+    required: false,
+    placeholder: 'Describe your fitness background...',
+    source: 'base',
+    showIfAnswerEquals: 'tell_me_more',
   },
   {
     id: 'days',
@@ -49,8 +98,19 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: '4_per_week', label: '4 days', description: 'Great balance of training and recovery' },
       { value: '5_per_week', label: '5 days', description: 'Ideal for intermediate trainees' },
       { value: '6_per_week', label: '6 days', description: 'For serious athletes' },
+      { value: 'tell_me_more', label: 'Tell me more', description: 'My schedule varies' },
     ],
     source: 'base',
+  },
+  {
+    id: 'availability_detail',
+    questionText: 'Tell us more about your availability',
+    type: 'text',
+    required: false,
+    placeholder: 'e.g., I currently go to pilates on Wed and Thurs. I like to run and lift, don\'t mind overlap, want to exercise 6 days a week',
+    source: 'base',
+    showIfAnswerEquals: 'tell_me_more',
+    parentId: 'days',
   },
   {
     id: 'location',
@@ -61,8 +121,19 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'commercial_gym', label: 'Commercial Gym', description: 'Full access to machines and equipment' },
       { value: 'home', label: 'Home Gym', description: 'Training with your own equipment' },
       { value: 'bodyweight', label: 'Bodyweight Only', description: 'No equipment needed' },
+      { value: 'tell_me_more', label: 'Tell me more', description: 'I want to describe my setup in detail' },
     ],
     source: 'base',
+  },
+  {
+    id: 'equipment_location_detail',
+    questionText: 'Tell us more about your training location',
+    type: 'text',
+    required: false,
+    placeholder: 'Describe your gym setup...',
+    source: 'base',
+    showIfAnswerEquals: 'tell_me_more',
+    parentId: 'location',
   },
   {
     id: 'equipment',
@@ -80,27 +151,8 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'full_gym', label: 'Full Gym Access' },
     ],
     source: 'base',
-  },
-  {
-    id: 'name',
-    questionText: "What's your name?",
-    type: 'text',
-    required: true,
-    placeholder: 'Enter your first name',
-    source: 'base',
-  },
-  {
-    id: 'gender',
-    questionText: "What's your gender?",
-    type: 'select',
-    required: true,
-    options: [
-      { value: 'male', label: 'Male' },
-      { value: 'female', label: 'Female' },
-      { value: 'other', label: 'Other' },
-      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-    ],
-    source: 'base',
+    showIfAnswerEquals: 'home',
+    parentId: 'location',
   },
   {
     id: 'phone',

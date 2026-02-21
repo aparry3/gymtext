@@ -19,6 +19,8 @@ export type CreateFitnessProfileData = Partial<FitnessProfile>;
 
 export type UserWithProfile = User & {
   profile?: string | null; // Joined from profiles table
+  smsConsent?: boolean; // SMS consent flag
+  smsConsentedAt?: Date | null; // SMS consent timestamp
 }
 
 /**

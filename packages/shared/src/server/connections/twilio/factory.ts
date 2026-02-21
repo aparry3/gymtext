@@ -22,6 +22,8 @@ export interface TwilioCredentials {
 export interface ITwilioClient {
   sendSMS(to: string, message?: string, mediaUrls?: string[]): Promise<MessageInstance>;
   sendMMS(to: string, message: string | undefined, mediaUrls: string[]): Promise<MessageInstance>;
+  sendWhatsAppMessage(to: string, from: string, message?: string, mediaUrls?: string[]): Promise<MessageInstance>;
+  sendTemplateMessage(to: string, from: string, contentSid: string, contentVariables?: Record<string, string>): Promise<MessageInstance>;
   getMessageStatus(messageSid: string): Promise<MessageInstance>;
   getFromNumber(): string;
 }
@@ -77,6 +79,49 @@ export function createTwilioClient(
 
     async sendMMS(to: string, message: string | undefined, mediaUrls: string[]): Promise<MessageInstance> {
       return this.sendSMS(to, message, mediaUrls);
+    },
+
+    async sendWhatsAppMessage(to: string, from: string, message?: string, mediaUrls?: string[]): Promise<MessageInstance> {
+      try {
+        console.log('Sending WhatsApp message from:', from, 'to:', to);
+
+        const response = await client.messages.create({
+          ...(message && { body: message }),
+          from: from, // whatsapp:+14155238886
+          to: to,     // whatsapp:+15005550006
+          statusCallback: statusCallbackUrl,
+          ...(mediaUrls && mediaUrls.length > 0 && { mediaUrl: mediaUrls }),
+        });
+
+        return response;
+      } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        throw error;
+      }
+    },
+
+    async sendTemplateMessage(
+      to: string,
+      from: string,
+      contentSid: string,
+      contentVariables?: Record<string, string>
+    ): Promise<MessageInstance> {
+      try {
+        console.log('Sending WhatsApp template message:', contentSid, 'from:', from, 'to:', to);
+
+        const response = await client.messages.create({
+          from: from,
+          to: to,
+          contentSid: contentSid,
+          ...(contentVariables && { contentVariables: JSON.stringify(contentVariables) }),
+          statusCallback: statusCallbackUrl,
+        });
+
+        return response;
+      } catch (error) {
+        console.error('Error sending template message:', error);
+        throw error;
+      }
     },
 
     async getMessageStatus(messageSid: string): Promise<MessageInstance> {

@@ -1,8 +1,7 @@
-import type { ModelConfig } from '@/server/agents';
 import type { WorkoutStructure } from '@/server/models/workout';
 import type { UserWithProfile } from '@/server/models/user';
-import type { WorkoutInstance } from '@/server/models/workout';
 import type { ExperienceLevel } from '@/server/models/profile';
+import type { WorkoutData } from '../../orchestration/trainingService';
 
 // Re-export for convenience
 export type { WorkoutStructure };
@@ -42,13 +41,6 @@ export interface WorkoutGenerateOutput {
   structure: WorkoutStructure;
 }
 
-/**
- * Dependencies for workout generate agent
- */
-export interface WorkoutGenerateAgentDeps {
-  config?: ModelConfig;
-}
-
 // Alias for result type
 export type WorkoutGenerateResult = WorkoutGenerateOutput;
 
@@ -62,7 +54,7 @@ export type WorkoutGenerateResult = WorkoutGenerateOutput;
 export interface ModifyWorkoutInput {
   user: UserWithProfile;
   date: Date;
-  workout: WorkoutInstance;
+  workout: WorkoutData;
   changeRequest: string;
 }
 
@@ -79,32 +71,5 @@ export interface ModifyWorkoutOutput {
   structure?: WorkoutStructure;
 }
 
-/**
- * Dependencies for workout modification agent
- */
-export interface ModifyWorkoutAgentDeps {
-  config?: ModelConfig;
-}
-
 // Alias for result type
 export type WorkoutModifyResult = ModifyWorkoutOutput;
-
-// =============================================================================
-// Shared Step Agent Config Types
-// =============================================================================
-
-/**
- * Configuration for workout message agent
- */
-export interface WorkoutMessageConfig {
-  operationName?: string;
-  agentConfig?: ModelConfig;
-}
-
-/**
- * Configuration for structured workout agent
- */
-export interface StructuredWorkoutConfig {
-  operationName?: string;
-  agentConfig?: ModelConfig;
-}

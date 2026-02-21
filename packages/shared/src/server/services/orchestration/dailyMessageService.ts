@@ -1,15 +1,12 @@
 import { UserWithProfile } from '@/server/models/user';
-import { WorkoutInstance } from '@/server/models/workout';
 import { DateTime } from 'luxon';
 import { now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
 import { getUrlsConfig } from '@/shared/config';
-import type { RepositoryContainer } from '../../repositories/factory';
 import type { UserServiceInstance } from '../domain/user/userService';
-import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
-import type { TrainingServiceInstance } from './trainingService';
+import type { TrainingServiceInstance, WorkoutData } from './trainingService';
 
 interface MessageResult {
   success: boolean;
@@ -53,15 +50,14 @@ export interface EligibilityResult {
 export interface DailyMessageServiceInstance {
   scheduleMessagesForHour(utcHour: number): Promise<SchedulingResult>;
   sendDailyMessage(user: UserWithProfile): Promise<MessageResult>;
-  getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null>;
-  generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null>;
+  getTodaysWorkout(userId: string, date: Date): Promise<WorkoutData | null>;
+  generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null>;
   triggerForUser(userId: string, options: TriggerOptions): Promise<TriggerResult>;
   checkUserEligibility(userId: string): Promise<EligibilityResult>;
 }
 
 export interface DailyMessageServiceDeps {
   user: UserServiceInstance;
-  workoutInstance: WorkoutInstanceServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   dayConfig: DayConfigServiceInstance;
   training: TrainingServiceInstance;
@@ -70,17 +66,14 @@ export interface DailyMessageServiceDeps {
 /**
  * Create a DailyMessageService instance with injected dependencies
  *
- * @param repos - Repository container with all repositories
  * @param deps - Service dependencies
  * @returns DailyMessageServiceInstance
  */
 export function createDailyMessageService(
-  repos: RepositoryContainer,
   deps: DailyMessageServiceDeps
 ): DailyMessageServiceInstance {
   const {
     user: userService,
-    workoutInstance: workoutInstanceService,
     messagingOrchestrator,
     dayConfig: dayConfigService,
     training: trainingService,
@@ -101,16 +94,9 @@ export function createDailyMessageService(
           return { scheduled: 0, failed: 0, duration: Date.now() - startTime, errors: [] };
         }
 
-        const userDatePairs = candidateUsers.map(user => {
-          const todayStart = now(user.timezone).startOf('day').toJSDate();
-          const todayEnd = now(user.timezone).startOf('day').plus({ days: 1 }).toJSDate();
-          return { userId: user.id, startOfDay: todayStart, endOfDay: todayEnd };
-        });
+        const usersToSchedule = candidateUsers;
 
-        const userIdsWithWorkouts = await repos.workoutInstance.findUserIdsWithWorkoutsForUserDates(userDatePairs);
-        const usersToSchedule = candidateUsers.filter(u => !userIdsWithWorkouts.has(u.id));
-
-        console.log(`[DailyMessageService] ${userIdsWithWorkouts.size} users already have workouts, scheduling ${usersToSchedule.length} users`);
+        console.log(`[DailyMessageService] Scheduling ${usersToSchedule.length} users`);
 
         if (usersToSchedule.length === 0) {
           return { scheduled: 0, failed: 0, duration: Date.now() - startTime, errors: [] };
@@ -200,13 +186,12 @@ export function createDailyMessageService(
       }
     },
 
-    async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutInstance | null> {
-      const workout = await workoutInstanceService.getWorkoutByUserIdAndDate(userId, date);
-      console.log(`Workout: ${workout}`);
-      return workout || null;
+    async getTodaysWorkout(_userId: string, _date: Date): Promise<WorkoutData | null> {
+      // Workouts are now generated on-demand, no stored instances to look up
+      return null;
     },
 
-    async generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutInstance | null> {
+    async generateWorkout(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null> {
       return trainingService.prepareWorkoutForDate(user, targetDate);
     },
 
@@ -227,17 +212,6 @@ export function createDailyMessageService(
             eligible: false,
             reason: `Current local time (${localHour}:00) is before preferred send hour (${user.preferredSendHour}:00)`,
           };
-        }
-
-        // Check if workout already exists for today
-        const todayStart = userNow.startOf('day').toJSDate();
-        const todayEnd = userNow.startOf('day').plus({ days: 1 }).toJSDate();
-        const userIdsWithWorkouts = await repos.workoutInstance.findUserIdsWithWorkoutsForUserDates([
-          { userId, startOfDay: todayStart, endOfDay: todayEnd },
-        ]);
-
-        if (userIdsWithWorkouts.has(userId)) {
-          return { eligible: false, reason: 'User already has a workout for today' };
         }
 
         return { eligible: true, reason: 'User is eligible for daily message' };
