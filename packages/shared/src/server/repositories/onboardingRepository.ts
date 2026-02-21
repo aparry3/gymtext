@@ -18,9 +18,11 @@ export interface SignupData {
   primaryGoals?: ('strength' | 'endurance' | 'weight_loss' | 'general_fitness')[];
   goalsElaboration?: string;
   experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  experienceElaboration?: string;
   desiredDaysPerWeek?: '3_per_week' | '4_per_week' | '5_per_week' | '6_per_week';
   availabilityElaboration?: string;
   trainingLocation?: 'home' | 'commercial_gym' | 'bodyweight';
+  locationElaboration?: string;
   equipment?: string[];
   acceptedRisks?: boolean;
 
