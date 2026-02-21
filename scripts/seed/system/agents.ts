@@ -162,6 +162,101 @@ Phases should build logically:
     eval_prompt: 'Evaluate the program for logical progression, balance, and appropriateness.',
     eval_model: 'gpt-4o',
   },
+  {
+    agent_id: 'workout:structured',
+    name: 'Structured Workout',
+    description: 'Generates a structured workout with sets, reps, weight, RPE, and tempo for each exercise',
+    system_prompt: 'PLACEHOLDER - prompt to be added',
+    user_prompt: 'PLACEHOLDER - prompt to be added',
+    max_tokens: 2048,
+    max_iterations: 3,
+    max_retries: 2,
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_exercises', 'save_workout'],
+    context_types: ['user', 'userProfile', 'dateContext', 'fitnessPlan', 'dayOverview', 'currentMicrocycle', 'plannedExercises'],
+    sub_agents: null,
+    schema_json: {
+      type: 'object',
+      properties: {
+        exercises: { type: 'array', items: { type: 'object' } },
+        notes: { type: 'string' },
+      },
+      required: ['exercises'],
+    },
+    validation_rules: {
+      minExercises: 3,
+      maxExercises: 12,
+    },
+    user_prompt_template: `{{#with user}}{{/with}}
+
+{{> currentMicrocycle}}
+
+Today's focus: {{workoutFocus}}`,
+    version_id: '1.0.0',
+    eval_prompt: 'Evaluate the generated workout for safety, appropriateness, and completeness.',
+    eval_model: 'gpt-4o',
+  },
+  {
+    agent_id: 'week:modify',
+    name: 'Week Modifier',
+    description: 'Modifies an existing week in the training program based on user feedback',
+    system_prompt: 'PLACEHOLDER - prompt to be added',
+    user_prompt: 'PLACEHOLDER - prompt to be added',
+    max_tokens: 2048,
+    max_iterations: 3,
+    max_retries: 2,
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
+    context_types: ['user', 'userProfile', 'dateContext', 'fitnessPlan', 'weekOverview'],
+    sub_agents: null,
+    schema_json: {
+      type: 'object',
+      properties: {
+        week: { type: 'object' },
+        notes: { type: 'string' },
+      },
+      required: ['week'],
+    },
+    validation_rules: null,
+    user_prompt_template: `{{> weekOverview}}
+
+User request: {{modificationRequest}}`,
+    version_id: '1.0.0',
+    eval_prompt: null,
+    eval_model: null,
+  },
+  {
+    agent_id: 'plan:modify',
+    name: 'Plan Modifier',
+    description: 'Modifies the training program based on user feedback or changes in circumstances',
+    system_prompt: 'PLACEHOLDER - prompt to be added',
+    user_prompt: 'PLACEHOLDER - prompt to be added',
+    max_tokens: 4096,
+    max_iterations: 5,
+    max_retries: 2,
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_programs', 'save_program'],
+    context_types: ['user', 'userProfile', 'dateContext', 'fitnessPlan'],
+    sub_agents: null,
+    schema_json: {
+      type: 'object',
+      properties: {
+        program: { type: 'object' },
+        changes: { type: 'array' },
+        notes: { type: 'string' },
+      },
+      required: ['program', 'changes'],
+    },
+    validation_rules: null,
+    user_prompt_template: `{{> userProfile}}
+
+Current program: {{programName}}
+
+User request: {{modificationRequest}}`,
+    version_id: '1.0.0',
+    eval_prompt: null,
+    eval_model: null,
+  },
 ];
 
 export async function seedAgents(): Promise<void> {
