@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import type { TextareaHTMLAttributes } from 'react'
 import { useEnvironment } from '@/context/EnvironmentContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,6 +119,43 @@ const MODELS = [
   { value: 'o1-mini', label: 'O1 Mini' },
   { value: 'o3-mini', label: 'O3 Mini' },
 ]
+
+interface AutoGrowTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value'> {
+  value: string
+  minHeight?: number
+}
+
+function AutoGrowTextarea({ value, className, onChange, minHeight = 220, ...props }: AutoGrowTextareaProps) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const resize = useCallback(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    textarea.style.height = '0px'
+    textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`
+  }, [minHeight])
+
+  useEffect(() => {
+    resize()
+  }, [value, resize])
+
+  return (
+    <textarea
+      {...props}
+      ref={textareaRef}
+      value={value}
+      onChange={(event) => {
+        onChange?.(event)
+        resize()
+      }}
+      className={cn(
+        'w-full px-3 py-3 text-sm border border-slate-300 rounded-lg bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono resize-none overflow-hidden',
+        className
+      )}
+    />
+  )
+}
 
 export default function AgentsPage() {
   const { mode } = useEnvironment()
@@ -257,8 +295,8 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] min-h-0 bg-gradient-to-br from-slate-50 via-white to-sky-50/40 flex flex-col">
-      <div className="px-4 md:px-6 py-4 border-b border-slate-200/70 bg-white/90 backdrop-blur-sm">
+    <div className="h-[calc(100dvh-4rem)] md:h-[100dvh] min-h-0 bg-gradient-to-br from-slate-50 via-white to-sky-50/40 flex flex-col overflow-hidden">
+      <div className="px-3 md:px-5 py-3 border-b border-slate-200/70 bg-white/90 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center border border-sky-200">
@@ -291,8 +329,8 @@ export default function AgentsPage() {
 
       {!isLoading && agents.length > 0 && (
         <div className="flex-1 min-h-0 flex overflow-hidden">
-          <aside className="w-80 border-r border-slate-200 bg-white/90 backdrop-blur-sm overflow-y-auto">
-            <div className="p-4 space-y-3">
+          <aside className="w-72 lg:w-80 border-r border-slate-200 bg-white/90 backdrop-blur-sm overflow-y-auto">
+            <div className="p-3 md:p-4 space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-semibold text-slate-800">Agent Categories</h2>
                 <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">{agents.length}</span>
@@ -344,9 +382,9 @@ export default function AgentsPage() {
           </aside>
 
           {selectedAgent && (
-            <div className="flex-1 min-h-0 p-4 md:p-6 overflow-hidden">
+            <div className="flex-1 min-h-0 p-3 md:p-4 overflow-hidden">
               <div className="h-full rounded-2xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] flex flex-col overflow-hidden">
-                <div className="px-5 md:px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-white to-sky-50/70 flex items-center justify-between gap-4">
+                <div className="px-4 md:px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-white to-sky-50/70 flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Sparkles className="w-4 h-4 text-sky-600" />
@@ -382,8 +420,8 @@ export default function AgentsPage() {
                   </Button>
                 </div>
 
-                <div className="flex-1 min-h-0 p-4 md:p-6">
-                  <div className="h-full min-h-0 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="flex-1 min-h-0 p-3 md:p-4">
+                  <div className="h-full min-h-0 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
                     <section className="min-h-0 rounded-xl border border-slate-200 bg-white flex flex-col">
                       <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-2">
                         <Bot className="w-4 h-4 text-sky-600" />
@@ -393,33 +431,30 @@ export default function AgentsPage() {
                       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-5">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1.5">System Prompt</label>
-                          <textarea
+                          <AutoGrowTextarea
                             value={formData.system_prompt || ''}
                             onChange={(e) => handleInputChange('system_prompt', e.target.value)}
-                            rows={14}
-                            className="w-full min-h-[280px] px-3 py-3 text-sm border border-slate-300 rounded-lg bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono resize-y"
+                            minHeight={280}
                             placeholder="Enter system prompt..."
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1.5">Examples</label>
-                          <textarea
+                          <AutoGrowTextarea
                             value={formData.examples || ''}
                             onChange={(e) => handleInputChange('examples', e.target.value)}
-                            rows={10}
-                            className="w-full min-h-[220px] px-3 py-3 text-sm border border-slate-300 rounded-lg bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono resize-y"
+                            minHeight={220}
                             placeholder="Enter examples (JSON or text)..."
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1.5">User Prompt Template</label>
-                          <textarea
+                          <AutoGrowTextarea
                             value={formData.user_prompt_template || ''}
                             onChange={(e) => handleInputChange('user_prompt_template', e.target.value)}
-                            rows={12}
-                            className="w-full min-h-[260px] px-3 py-3 text-sm border border-slate-300 rounded-lg bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 font-mono resize-y"
+                            minHeight={260}
                             placeholder="Enter user prompt template..."
                           />
                         </div>
