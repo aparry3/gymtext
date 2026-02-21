@@ -101,9 +101,11 @@ function getVisibleQuestions(
   answers: Record<string, string | string[]>
 ): QuestionnaireQuestion[] {
   return questions.filter((question) => {
+    // Determine which question ID to check for conditions
+    const checkId = question.parentId || question.id.replace('_detail', '');
     // Check hide conditions first (these take precedence)
     if (question.hideIfAnswerEquals) {
-      const parentAnswer = answers[question.id.replace('_detail', '')];
+      const parentAnswer = answers[checkId];
       const hideValues = Array.isArray(question.hideIfAnswerEquals)
         ? question.hideIfAnswerEquals
         : [question.hideIfAnswerEquals];
@@ -113,7 +115,7 @@ function getVisibleQuestions(
     }
 
     if (question.hideIfAnswerContains) {
-      const parentAnswer = answers[question.id.replace('_detail', '')];
+      const parentAnswer = answers[checkId];
       if (Array.isArray(parentAnswer) && parentAnswer.includes(question.hideIfAnswerContains)) {
         return false;
       }
@@ -125,12 +127,12 @@ function getVisibleQuestions(
 
     // Check show conditions
     if (question.showIfAnswerEquals) {
-      const parentAnswer = answers[question.id.replace('_detail', '')];
+      const parentAnswer = answers[checkId];
       return parentAnswer === question.showIfAnswerEquals;
     }
 
     if (question.showIfAnswerContains) {
-      const parentAnswer = answers[question.id.replace('_detail', '')];
+      const parentAnswer = answers[checkId];
       if (Array.isArray(parentAnswer)) {
         return parentAnswer.includes(question.showIfAnswerContains);
       }
@@ -212,8 +214,9 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
       let nextIndex = prev.currentIndex + 1;
       while (nextIndex < prev.questions.length) {
         const question = prev.questions[nextIndex];
-        const parentId = question.id.replace('_detail', '');
-        const parentAnswer = prev.answers[parentId];
+        // Determine which question ID to check for conditions
+        const checkId = question.parentId || question.id.replace('_detail', '');
+        const parentAnswer = prev.answers[checkId];
 
         // Check hide conditions first
         if (question.hideIfAnswerEquals) {
@@ -271,8 +274,9 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
       let prevIndex = prev.currentIndex - 1;
       while (prevIndex >= 0) {
         const question = prev.questions[prevIndex];
-        const parentId = question.id.replace('_detail', '');
-        const parentAnswer = prev.answers[parentId];
+        // Determine which question ID to check for conditions
+        const checkId = question.parentId || question.id.replace('_detail', '');
+        const parentAnswer = prev.answers[checkId];
 
         // Check hide conditions
         if (question.hideIfAnswerEquals) {

@@ -22,6 +22,14 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     source: 'base',
   },
   {
+    id: 'age',
+    questionText: "What's your age?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your age',
+    source: 'base',
+  },
+  {
     id: 'gender',
     questionText: "What's your gender?",
     type: 'select',
@@ -144,6 +152,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     // Only show this question if location is "home" (Home Gym)
     // Skip for: bodyweight, commercial_gym, tell_me_more
     hideIfAnswerEquals: ['bodyweight', 'commercial_gym', 'tell_me_more'],
+    parentId: 'location',
   },
   {
     id: 'phone',
