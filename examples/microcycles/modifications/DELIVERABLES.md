@@ -205,7 +205,7 @@ Located in: `examples/microcycles/modifications/`
 
 ### 1. Update Agent Definitions
 - Add modify capability to `plan:create` and `microcycle:create` agents
-- OR create new agent IDs: `plan:modify`, `microcycle:modify`
+- OR create new agent IDs: `plan:modify`, `week:modify`
 - Decision depends on whether you want separate agents or unified create/modify agents
 
 ### 2. User Prompt Templates

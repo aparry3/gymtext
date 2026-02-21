@@ -16,7 +16,6 @@ scripts/
 ├── seed-exercises.ts        # Seed exercise database
 ├── seed-exercise-embeddings.ts # Seed vector embeddings
 ├── seed-context-templates.ts # Seed prompt templates
-├── migrate-prompts.ts       # Migrate agent prompts
 ├── update-agent-prompts.ts # Update agent prompts
 ├── agent-definition.ts      # Manage agent definitions
 ├── sms-test.ts             # Test SMS functionality

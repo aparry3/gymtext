@@ -46,8 +46,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   `.execute(db);
   console.log('  Seeded workout:generate default_extensions');
 
-  // 3. Seed new versions for microcycle:generate with default_extensions
-  console.log('Seeding microcycle:generate with default_extensions...');
+  // 3. Seed new versions for week:generate with default_extensions
+  console.log('Seeding week:generate with default_extensions...');
   await sql`
     INSERT INTO agent_definitions (
       agent_id, system_prompt, user_prompt, model,
@@ -67,11 +67,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       eval_prompt, eval_model,
       '{"experienceLevel": "intermediate"}'::jsonb
     FROM agent_definitions
-    WHERE agent_id = 'microcycle:generate'
+    WHERE agent_id = 'week:generate'
     ORDER BY created_at DESC
     LIMIT 1
   `.execute(db);
-  console.log('  Seeded microcycle:generate default_extensions');
+  console.log('  Seeded week:generate default_extensions');
 
   console.log('Migration complete!');
 }
@@ -94,7 +94,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     DELETE FROM agent_definitions
     WHERE version_id IN (
       SELECT version_id FROM agent_definitions
-      WHERE agent_id = 'microcycle:generate' AND default_extensions IS NOT NULL
+      WHERE agent_id = 'week:generate' AND default_extensions IS NOT NULL
       ORDER BY created_at DESC
       LIMIT 1
     )

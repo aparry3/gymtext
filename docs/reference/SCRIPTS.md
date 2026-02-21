@@ -687,7 +687,7 @@ Migrates agent prompts to the database.
 pnpm migrate:prompts
 ```
 
-**What it does:** Runs `tsx scripts/migrate-prompts.ts` which imports prompt templates into the database.
+**What it does:** Runs `tsx scripts/update-agent-prompts.ts` which imports prompt templates into the database.
 
 **When to use:**
 - Initial setup of agent prompts

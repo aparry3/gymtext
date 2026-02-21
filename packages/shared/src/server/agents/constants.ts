@@ -8,6 +8,7 @@
 export const AGENTS = {
   CHAT_GENERATE: 'chat:generate',
   PROFILE_UPDATE: 'profile:update',
+  PROFILE_USER: 'profile:user',
   PLAN_GENERATE: 'plan:generate',
   WEEK_GENERATE: 'week:generate',
   WORKOUT_FORMAT: 'workout:format',

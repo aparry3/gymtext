@@ -13,7 +13,7 @@ import { Kysely, sql } from 'kysely';
  *    Append-only versioned by (agent_id, extension_type, extension_key, created_at DESC).
  *
  * Also updates agent_definitions to remove experienceLevel from context_types
- * for workout:generate and microcycle:generate (those will use extensions instead).
+ * for workout:generate and week:generate (those will use extensions instead).
  */
 
 export async function up(db: Kysely<unknown>): Promise<void> {
@@ -106,18 +106,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     console.log(`  Seeded workout:generate experienceLevel ${key}`);
   }
 
-  // Experience level extensions for microcycle:generate
-  const microcycleExperiencePromptIds: Array<{ key: string; promptId: string }> = [
-    { key: 'beginner', promptId: 'microcycle:generate:experience:beginner' },
-    { key: 'intermediate', promptId: 'microcycle:generate:experience:intermediate' },
-    { key: 'advanced', promptId: 'microcycle:generate:experience:advanced' },
+  // Experience level extensions for week:generate
+  const weekExperiencePromptIds: Array<{ key: string; promptId: string }> = [
+    { key: 'beginner', promptId: 'week:generate:experience:beginner' },
+    { key: 'intermediate', promptId: 'week:generate:experience:intermediate' },
+    { key: 'advanced', promptId: 'week:generate:experience:advanced' },
   ];
 
-  for (const { key, promptId } of microcycleExperiencePromptIds) {
+  for (const { key, promptId } of weekExperiencePromptIds) {
     await sql`
       INSERT INTO agent_extensions (agent_id, extension_type, extension_key, content)
       SELECT
-        'microcycle:generate',
+        'week:generate',
         'experienceLevel',
         ${key},
         p.value
@@ -128,7 +128,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         LIMIT 1
       ) p
     `.execute(db);
-    console.log(`  Seeded microcycle:generate experienceLevel ${key}`);
+    console.log(`  Seeded week:generate experienceLevel ${key}`);
   }
 
   // Day format extensions for workout:generate
@@ -187,7 +187,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   `.execute(db);
   console.log('  Updated workout:generate context_types');
 
-  // Insert new version for microcycle:generate without experienceLevel
+  // Insert new version for week:generate without experienceLevel
   await sql`
     INSERT INTO agent_definitions (
       agent_id, system_prompt, user_prompt, model,
@@ -207,11 +207,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       user_prompt_template, examples, sub_agents,
       eval_prompt, eval_model
     FROM agent_definitions
-    WHERE agent_id = 'microcycle:generate'
+    WHERE agent_id = 'week:generate'
     ORDER BY created_at DESC
     LIMIT 1
   `.execute(db);
-  console.log('  Updated microcycle:generate context_types');
+  console.log('  Updated week:generate context_types');
 
   console.log('Migration complete!');
 }
@@ -230,12 +230,12 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     )
   `.execute(db);
 
-  // Restore experienceLevel in context_types for microcycle:generate
+  // Restore experienceLevel in context_types for week:generate
   await sql`
     DELETE FROM agent_definitions
     WHERE version_id = (
       SELECT version_id FROM agent_definitions
-      WHERE agent_id = 'microcycle:generate'
+      WHERE agent_id = 'week:generate'
       ORDER BY created_at DESC
       LIMIT 1
     )

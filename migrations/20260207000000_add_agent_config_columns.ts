@@ -113,29 +113,29 @@ Parse this profile into the structured format. Extract all relevant information 
     WHERE agent_id = 'workout:modify' AND is_active = true
   `.execute(db);
 
-  // microcycle:generate - context + schema + sub-agents
+  // week:generate - context + schema + sub-agents
   await sql`
     UPDATE agent_definitions SET
       context_types = ARRAY['fitnessPlan', 'userProfile', 'experienceLevel', 'trainingMeta'],
       schema_json = '{"type":"object","required":["overview","isDeload","days"],"properties":{"overview":{"type":"string","description":"Comprehensive weekly overview"},"isDeload":{"type":"boolean","default":false,"description":"Whether this is a deload week"},"days":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"string"},"description":"Exactly 7 day overview strings"}},"additionalProperties":false}'::jsonb,
-      sub_agents = '[{"batch":0,"key":"message","agentId":"microcycle:message","inputMapping":{"overview":"$result.overview","days":"$result.days","isDeload":"$result.isDeload"}},{"batch":0,"key":"structure","agentId":"microcycle:structured","inputMapping":{"overview":"$result.overview","days":"$result.days","absoluteWeek":"$extras.absoluteWeek","isDeload":"$result.isDeload"}}]'::jsonb
-    WHERE agent_id = 'microcycle:generate' AND is_active = true
+      sub_agents = '[{"batch":0,"key":"message","agentId":"week:message","inputMapping":{"overview":"$result.overview","days":"$result.days","isDeload":"$result.isDeload"}},{"batch":0,"key":"structure","agentId":"week:structured","inputMapping":{"overview":"$result.overview","days":"$result.days","absoluteWeek":"$extras.absoluteWeek","isDeload":"$result.isDeload"}}]'::jsonb
+    WHERE agent_id = 'week:generate' AND is_active = true
   `.execute(db);
 
-  // microcycle:structured - schema
+  // week:structured - schema
   await sql`
     UPDATE agent_definitions SET
       schema_json = '{"type":"object","required":["days"],"properties":{"overview":{"type":"string","default":""},"isDeload":{"type":"boolean","default":false},"weekNumber":{"type":"number","default":-1},"phase":{"type":"string","default":""},"days":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"object","required":["day"],"properties":{"day":{"type":"string","enum":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]},"focus":{"type":"string","default":""},"activityType":{"type":"string","enum":["TRAINING","ACTIVE_RECOVERY","REST"],"default":"TRAINING"},"notes":{"type":"string","default":""}}}}},"additionalProperties":false}'::jsonb
-    WHERE agent_id = 'microcycle:structured' AND is_active = true
+    WHERE agent_id = 'week:structured' AND is_active = true
   `.execute(db);
 
-  // microcycle:modify - context + schema + sub-agents
+  // week:modify - context + schema + sub-agents
   await sql`
     UPDATE agent_definitions SET
-      context_types = ARRAY['user', 'userProfile', 'currentMicrocycle', 'dateContext'],
-      schema_json = '{"type":"object","required":["overview","isDeload","days","wasModified","modifications"],"properties":{"overview":{"type":"string"},"isDeload":{"type":"boolean","default":false},"days":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"string"}},"wasModified":{"type":"boolean","description":"Whether the microcycle was actually modified"},"modifications":{"type":"string","default":"","description":"Explanation of what changed and why"}},"additionalProperties":false}'::jsonb,
-      sub_agents = '[{"batch":0,"key":"message","agentId":"microcycle:message","inputMapping":{"overview":"$result.overview","days":"$result.days","isDeload":"$result.isDeload"}},{"batch":0,"key":"structure","agentId":"microcycle:structured","inputMapping":{"overview":"$result.overview","days":"$result.days","absoluteWeek":"$extras.absoluteWeek","isDeload":"$result.isDeload"}}]'::jsonb
-    WHERE agent_id = 'microcycle:modify' AND is_active = true
+      context_types = ARRAY['user', 'userProfile', 'currentWeek', 'dateContext'],
+      schema_json = '{"type":"object","required":["overview","isDeload","days","wasModified","modifications"],"properties":{"overview":{"type":"string"},"isDeload":{"type":"boolean","default":false},"days":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"string"}},"wasModified":{"type":"boolean","description":"Whether the week was actually modified"},"modifications":{"type":"string","default":"","description":"Explanation of what changed and why"}},"additionalProperties":false}'::jsonb,
+      sub_agents = '[{"batch":0,"key":"message","agentId":"week:message","inputMapping":{"overview":"$result.overview","days":"$result.days","isDeload":"$result.isDeload"}},{"batch":0,"key":"structure","agentId":"week:structured","inputMapping":{"overview":"$result.overview","days":"$result.days","absoluteWeek":"$extras.absoluteWeek","isDeload":"$result.isDeload"}}]'::jsonb
+    WHERE agent_id = 'week:modify' AND is_active = true
   `.execute(db);
 
   // plan:generate - context + sub-agents

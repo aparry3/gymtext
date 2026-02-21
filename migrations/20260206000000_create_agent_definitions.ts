@@ -101,11 +101,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     'workout:message': { model: 'gpt-5-nano', maxTokens: 2000, temperature: 0.7, description: 'Formats workout as SMS message' },
     'workout:modify': { model: 'gpt-5-mini', maxTokens: 8000, temperature: 0.6, description: 'Modifies existing workouts' },
 
-    // Microcycles
-    'microcycle:generate': { model: 'gpt-5.1', maxTokens: 8000, temperature: 0.7, description: 'Generates weekly training pattern' },
-    'microcycle:structured': { model: 'gpt-5-nano', maxTokens: 8000, temperature: 0.5, description: 'Structures microcycle output' },
-    'microcycle:message': { model: 'gpt-5-nano', maxTokens: 2000, temperature: 0.7, description: 'Generates microcycle messages' },
-    'microcycle:modify': { model: 'gpt-5-mini', maxTokens: 8000, temperature: 0.6, description: 'Modifies existing microcycles' },
+    // Weeks (formerly microcycles)
+    'week:generate': { model: 'gpt-5.1', maxTokens: 8000, temperature: 0.7, description: 'Generates weekly training pattern' },
+    'week:structured': { model: 'gpt-5-nano', maxTokens: 8000, temperature: 0.5, description: 'Structures week output' },
+    'week:message': { model: 'gpt-5-nano', maxTokens: 2000, temperature: 0.7, description: 'Generates week messages' },
+    'week:modify': { model: 'gpt-5-mini', maxTokens: 8000, temperature: 0.6, description: 'Modifies existing weeks' },
 
     // Modifications
     'modifications:router': { model: 'gpt-5-nano', maxTokens: 2000, temperature: 0.3, description: 'Routes modification requests to appropriate handler' },
