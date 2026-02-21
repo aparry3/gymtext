@@ -33,7 +33,7 @@ The platform uses AI agents to:
 ### For Reference
 
 - **[Environment Variables](./reference/environment-variables.md)** - All required env vars
-- **[Scripts Reference](./reference/SCRIPTS.md)** - Complete script documentation
+- **[Scripts Reference](./development/SCRIPTS.md)** - Complete script documentation
 - **[Tools](./tools/index.md)** - Development tools
 - **[Troubleshooting](./reference/troubleshooting.md)** - Common issues and solutions
 

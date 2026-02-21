@@ -1,6 +1,6 @@
 # Scripts Overview
 
-> **Note:** For comprehensive script documentation with detailed examples, troubleshooting, and workflows, see **[Scripts Reference](../reference/SCRIPTS.md)**.
+> **Note:** For comprehensive script documentation with detailed examples, troubleshooting, and workflows, see **[Scripts Reference](../development/SCRIPTS.md)**.
 
 This page provides a quick overview. The reference guide above has complete details.
 
