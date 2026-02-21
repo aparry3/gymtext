@@ -23,7 +23,12 @@ import {
   ClipboardList,
   Dumbbell,
   ScrollText,
-  Bot,
+  ArrowUpCircle,
+  Wrench,
+  Calendar,
+  Landmark,
+  Presentation,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEnvironment } from '@/context/EnvironmentContext'
@@ -56,6 +61,7 @@ const navEntries: NavEntry[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
   {
     key: 'programs',
     label: 'Programs',
@@ -64,12 +70,24 @@ const navEntries: NavEntry[] = [
     items: [
       { href: '/programs', label: 'Programs', icon: ClipboardList },
       { href: '/program-owners', label: 'Program Owners', icon: Building2 },
+      { href: '/organizations', label: 'Organizations', icon: Landmark },
       { href: '/exercises', label: 'Exercises', icon: Dumbbell },
     ],
   },
+  { href: '/demos', label: 'Demos', icon: Presentation },
   'divider',
-  { href: '/agents', label: 'Agents', icon: Bot },
-  { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
+  {
+    key: 'dev-admin',
+    label: 'Dev Admin',
+    icon: Wrench,
+    defaultExpanded: false,
+    items: [
+      { href: '/agents', label: 'Agents', icon: ScrollText },
+      { href: '/agent-logs', label: 'Agent Logs', icon: ScrollText },
+      { href: '/registry', label: 'Tool Registry', icon: FileText },
+      { href: '/promote', label: 'Deploy', icon: ArrowUpCircle },
+    ],
+  },
 ]
 
 function NavItem({
