@@ -10,9 +10,30 @@ import type { QuestionnaireQuestion } from './types';
 
 /**
  * Full base questions for non-program signup.
- * Order: fitness-focused first, bio (name, phone) at end.
+ * Order: bio (name, gender) first, then fitness questions, phone at end.
  */
 export const baseQuestions: QuestionnaireQuestion[] = [
+  {
+    id: 'name',
+    questionText: "What's your name?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your first name',
+    source: 'base',
+  },
+  {
+    id: 'gender',
+    questionText: "What's your gender?",
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    ],
+    source: 'base',
+  },
   {
     id: 'goals',
     questionText: 'What are your fitness goals?',
@@ -91,7 +112,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'commercial_gym', label: 'Commercial Gym', description: 'Full access to machines and equipment' },
       { value: 'home', label: 'Home Gym', description: 'Training with your own equipment' },
       { value: 'bodyweight', label: 'Bodyweight Only', description: 'No equipment needed' },
-      { value: 'more_details', label: 'More details', description: 'I want to provide more info about my setup' },
+      { value: 'tell_me_more', label: 'Tell me more', description: 'I want to describe my setup in detail' },
     ],
     source: 'base',
   },
@@ -102,7 +123,7 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     required: false,
     placeholder: 'Describe your gym setup...',
     source: 'base',
-    showIfAnswerEquals: 'more_details',
+    showIfAnswerEquals: 'tell_me_more',
   },
   {
     id: 'equipment',
@@ -120,29 +141,9 @@ export const baseQuestions: QuestionnaireQuestion[] = [
       { value: 'full_gym', label: 'Full Gym Access' },
     ],
     source: 'base',
-    // Skip this question if location is bodyweight or commercial_gym
-    hideIfAnswerEquals: ['bodyweight', 'commercial_gym'],
-  },
-  {
-    id: 'name',
-    questionText: "What's your name?",
-    type: 'text',
-    required: true,
-    placeholder: 'Enter your first name',
-    source: 'base',
-  },
-  {
-    id: 'gender',
-    questionText: "What's your gender?",
-    type: 'select',
-    required: true,
-    options: [
-      { value: 'male', label: 'Male' },
-      { value: 'female', label: 'Female' },
-      { value: 'other', label: 'Other' },
-      { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-    ],
-    source: 'base',
+    // Only show this question if location is "home" (Home Gym)
+    // Skip for: bodyweight, commercial_gym, tell_me_more
+    hideIfAnswerEquals: ['bodyweight', 'commercial_gym', 'tell_me_more'],
   },
   {
     id: 'phone',
