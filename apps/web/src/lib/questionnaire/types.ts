@@ -34,6 +34,14 @@ export interface QuestionnaireQuestion {
   placeholder?: string;
   /** Source: 'base' or 'program' */
   source: 'base' | 'program';
+  /** Conditional: only show this question if the parent question has this value */
+  showIfAnswerEquals?: string;
+  /** Conditional: show this question if the answer includes this value (for multiselect) */
+  showIfAnswerContains?: string;
+  /** Conditional: hide this question if the parent question has this value */
+  hideIfAnswerEquals?: string | string[];
+  /** Conditional: hide this question if the answer includes this value (for multiselect) */
+  hideIfAnswerContains?: string;
 }
 
 export interface QuestionnaireState {

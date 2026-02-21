@@ -93,6 +93,54 @@ function clearState(): void {
   }
 }
 
+/**
+ * Get the visible questions based on conditional logic
+ */
+function getVisibleQuestions(
+  questions: QuestionnaireQuestion[],
+  answers: Record<string, string | string[]>
+): QuestionnaireQuestion[] {
+  return questions.filter((question) => {
+    // Check hide conditions first (these take precedence)
+    if (question.hideIfAnswerEquals) {
+      const parentAnswer = answers[question.id.replace('_detail', '')];
+      const hideValues = Array.isArray(question.hideIfAnswerEquals)
+        ? question.hideIfAnswerEquals
+        : [question.hideIfAnswerEquals];
+      if (hideValues.includes(parentAnswer as string)) {
+        return false;
+      }
+    }
+
+    if (question.hideIfAnswerContains) {
+      const parentAnswer = answers[question.id.replace('_detail', '')];
+      if (Array.isArray(parentAnswer) && parentAnswer.includes(question.hideIfAnswerContains)) {
+        return false;
+      }
+      // Also check string answers
+      if (typeof parentAnswer === 'string' && parentAnswer === question.hideIfAnswerContains) {
+        return false;
+      }
+    }
+
+    // Check show conditions
+    if (question.showIfAnswerEquals) {
+      const parentAnswer = answers[question.id.replace('_detail', '')];
+      return parentAnswer === question.showIfAnswerEquals;
+    }
+
+    if (question.showIfAnswerContains) {
+      const parentAnswer = answers[question.id.replace('_detail', '')];
+      if (Array.isArray(parentAnswer)) {
+        return parentAnswer.includes(question.showIfAnswerContains);
+      }
+      return false;
+    }
+
+    return true;
+  });
+}
+
 export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptions): UseQuestionnaireReturn {
   const [state, setState] = useState<QuestionnaireState>(() => {
     // Try to restore from localStorage
@@ -113,6 +161,9 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
 
   const wasRestored = useRef(false);
 
+  // Get visible questions based on current answers
+  const visibleQuestions = getVisibleQuestions(state.questions, state.answers);
+
   // Check if state was restored on initial load
   useEffect(() => {
     const restored = loadState(programId);
@@ -126,7 +177,7 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
     saveState(state);
   }, [state]);
 
-  const currentQuestion = state.questions[state.currentIndex];
+  const currentQuestion = visibleQuestions[state.currentIndex];
   const currentAnswer = state.answers[currentQuestion?.id];
 
   const hasValidAnswer = useCallback(() => {
@@ -157,13 +208,58 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
 
   const goNext = useCallback(() => {
     setState((prev) => {
-      if (prev.currentIndex >= prev.questions.length - 1) {
+      // Find next visible question
+      let nextIndex = prev.currentIndex + 1;
+      while (nextIndex < prev.questions.length) {
+        const question = prev.questions[nextIndex];
+        const parentId = question.id.replace('_detail', '');
+        const parentAnswer = prev.answers[parentId];
+
+        // Check hide conditions first
+        if (question.hideIfAnswerEquals) {
+          const hideValues = Array.isArray(question.hideIfAnswerEquals) 
+            ? question.hideIfAnswerEquals 
+            : [question.hideIfAnswerEquals];
+          if (hideValues.includes(parentAnswer as string)) {
+            nextIndex++;
+            continue;
+          }
+        }
+        if (question.hideIfAnswerContains) {
+          if (Array.isArray(parentAnswer) && parentAnswer.includes(question.hideIfAnswerContains)) {
+            nextIndex++;
+            continue;
+          }
+          if (typeof parentAnswer === 'string' && parentAnswer === question.hideIfAnswerContains) {
+            nextIndex++;
+            continue;
+          }
+        }
+
+        // Check show conditions
+        if (question.showIfAnswerEquals) {
+          if (parentAnswer !== question.showIfAnswerEquals) {
+            nextIndex++;
+            continue;
+          }
+        }
+        if (question.showIfAnswerContains) {
+          if (!Array.isArray(parentAnswer) || !parentAnswer.includes(question.showIfAnswerContains)) {
+            nextIndex++;
+            continue;
+          }
+        }
+        // Question is visible, stop here
+        break;
+      }
+
+      if (nextIndex >= prev.questions.length) {
         return prev; // Already at last question
       }
 
       return {
         ...prev,
-        currentIndex: prev.currentIndex + 1,
+        currentIndex: nextIndex,
         direction: 'forward',
       };
     });
@@ -171,13 +267,58 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
 
   const goBack = useCallback(() => {
     setState((prev) => {
-      if (prev.currentIndex <= 0) {
+      // Find previous visible question
+      let prevIndex = prev.currentIndex - 1;
+      while (prevIndex >= 0) {
+        const question = prev.questions[prevIndex];
+        const parentId = question.id.replace('_detail', '');
+        const parentAnswer = prev.answers[parentId];
+
+        // Check hide conditions
+        if (question.hideIfAnswerEquals) {
+          const hideValues = Array.isArray(question.hideIfAnswerEquals) 
+            ? question.hideIfAnswerEquals 
+            : [question.hideIfAnswerEquals];
+          if (hideValues.includes(parentAnswer as string)) {
+            prevIndex--;
+            continue;
+          }
+        }
+        if (question.hideIfAnswerContains) {
+          if (Array.isArray(parentAnswer) && parentAnswer.includes(question.hideIfAnswerContains)) {
+            prevIndex--;
+            continue;
+          }
+          if (typeof parentAnswer === 'string' && parentAnswer === question.hideIfAnswerContains) {
+            prevIndex--;
+            continue;
+          }
+        }
+
+        // Check show conditions (for going back, we show the question if it WAS shown when user was there)
+        if (question.showIfAnswerEquals) {
+          if (parentAnswer !== question.showIfAnswerEquals) {
+            prevIndex--;
+            continue;
+          }
+        }
+        if (question.showIfAnswerContains) {
+          if (!Array.isArray(parentAnswer) || !parentAnswer.includes(question.showIfAnswerContains)) {
+            prevIndex--;
+            continue;
+          }
+        }
+        // Question is visible, stop here
+        break;
+      }
+
+      if (prevIndex < 0) {
         return prev; // Already at first question
       }
 
       return {
         ...prev,
-        currentIndex: prev.currentIndex - 1,
+        currentIndex: prevIndex,
         direction: 'backward',
       };
     });
@@ -194,17 +335,20 @@ export function useQuestionnaire({ programId, questions }: UseQuestionnaireOptio
     });
   }, [programId, questions]);
 
+  // Calculate visible index for UI display
+  const visibleIndex = visibleQuestions.findIndex((q) => q.id === currentQuestion?.id);
+
   return {
     currentQuestion,
-    currentIndex: state.currentIndex,
-    totalQuestions: state.questions.length,
+    currentIndex: visibleIndex >= 0 ? visibleIndex : state.currentIndex,
+    totalQuestions: visibleQuestions.length,
     answers: state.answers,
     direction: state.direction,
     setAnswer,
     goNext,
     goBack,
     canGoBack: state.currentIndex > 0,
-    isComplete: state.currentIndex >= state.questions.length - 1,
+    isComplete: visibleIndex >= visibleQuestions.length - 1,
     hasValidAnswer: hasValidAnswer(),
     reset,
     wasRestored: wasRestored.current,

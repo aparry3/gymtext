@@ -88,9 +88,13 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
 
         // Fitness data (optional - only present for non-program signups)
         ...(answers.goals && { primaryGoals: answers.goals as string[] }),
+        ...(answers.goals_detail && { goalsElaboration: answers.goals_detail as string }),
         ...(answers.experience && { experienceLevel: answers.experience as string }),
+        ...(answers.experience_detail && { experienceElaboration: answers.experience_detail as string }),
         ...(answers.days && { desiredDaysPerWeek: answers.days as string }),
+        ...(answers.availability_detail && { availabilityElaboration: answers.availability_detail as string }),
         ...(answers.location && { trainingLocation: answers.location as string }),
+        ...(answers.equipment_location_detail && { locationElaboration: answers.equipment_location_detail as string }),
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,
 
