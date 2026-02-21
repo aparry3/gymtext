@@ -1,0 +1,513 @@
+[
+  {
+    "_comment": "1. Strength Training — Heavy compound lifts with sets × reps and weight cues",
+    "title": "Lower Strength",
+    "focus": "Quads & Posterior Chain",
+    "description": "Heavy lower body strength session focused on squat and hinge patterns with accessory work.",
+    "quote": { "text": "Strong legs, strong life.", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Prime hips, knees, and ankles",
+        "exercises": [
+          { "name": "World's Greatest Stretch", "type": "Mobility", "sets": "2", "reps": "5 each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Slow and controlled", "tags": [], "supersetId": "" },
+          { "name": "Goblet Squat", "type": "Strength", "sets": "2", "reps": "8", "rest": "60s", "intensity": { "type": "RPE", "value": "5", "description": "Light warmup" }, "tempo": "3-1-1", "notes": "Hold bottom for 2s on last rep", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Glute Bridge", "type": "Strength", "sets": "2", "reps": "12", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Squeeze glutes at top", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Main Lift",
+        "overview": "Heavy back squat — build to working sets",
+        "exercises": [
+          { "name": "Back Squat", "type": "Strength", "sets": "4", "reps": "5", "rest": "3 min", "intensity": { "type": "RPE", "value": "8", "description": "Heavy but 2 reps in reserve" }, "tempo": "3-0-1", "notes": "Brace hard, break at hips first", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Accessory Work",
+        "overview": "Posterior chain and single-leg strength",
+        "exercises": [
+          { "name": "Barbell Romanian Deadlift", "type": "Strength", "sets": "3", "reps": "8", "rest": "2 min", "intensity": { "type": "RPE", "value": "7", "description": "" }, "tempo": "3-1-1", "notes": "Feel the stretch in hamstrings", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Bulgarian Split Squat", "type": "Strength", "sets": "3", "reps": "10 each", "rest": "90s", "intensity": { "type": "RPE", "value": "7-8", "description": "" }, "tempo": "", "notes": "Dumbbells at sides", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Leg Extension", "type": "Strength", "sets": "3", "reps": "12-15", "rest": "60s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "2-1-1", "notes": "Squeeze at top", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Cooldown",
+        "overview": "Stretch quads and hips",
+        "exercises": [
+          { "name": "Couch Stretch", "type": "Mobility", "sets": "1", "reps": "60s each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Pigeon Pose", "type": "Mobility", "sets": "1", "reps": "60s each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 60,
+    "intensityLevel": "High",
+    "tags": {
+      "category": ["strength"],
+      "split": ["legs"],
+      "muscles": ["quads", "hamstrings", "glutes"],
+      "patterns": ["squat", "hinge", "lunge"],
+      "equipment": ["barbell", "dumbbell", "machine"]
+    }
+  },
+
+  {
+    "_comment": "2. Hypertrophy Training — Higher volume, moderate loads",
+    "title": "Push Hypertrophy",
+    "focus": "Chest, Shoulders & Triceps",
+    "description": "High-volume push session for muscle growth with varied rep ranges.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Activate chest and shoulders",
+        "exercises": [
+          { "name": "Band Lat Pulldown (Anchored)", "type": "Mobility", "sets": "2", "reps": "15", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Light band, get blood flowing", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Push-Up", "type": "Strength", "sets": "2", "reps": "10", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "Easy warmup" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Main Work",
+        "overview": "Compound pressing movements",
+        "exercises": [
+          { "name": "Barbell Bench Press", "type": "Strength", "sets": "4", "reps": "8-10", "rest": "2 min", "intensity": { "type": "RPE", "value": "7-8", "description": "" }, "tempo": "2-1-1", "notes": "Touch chest, drive through feet", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Incline Dumbbell Bench Press", "type": "Strength", "sets": "3", "reps": "10-12", "rest": "90s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "2-0-1", "notes": "30° incline", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Seated Dumbbell Shoulder Press", "type": "Strength", "sets": "3", "reps": "10-12", "rest": "90s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Isolation Work",
+        "overview": "Pump and fatigue target muscles",
+        "exercises": [
+          { "name": "Cable Chest Fly", "type": "Strength", "sets": "3", "reps": "12-15", "rest": "60s", "intensity": { "type": "RIR", "value": "1", "description": "" }, "tempo": "2-1-2", "notes": "Squeeze at peak contraction", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Cable Lateral Raise", "type": "Strength", "sets": "3", "reps": "15-20", "rest": "45s", "intensity": { "type": "RIR", "value": "1", "description": "" }, "tempo": "2-1-1", "notes": "Single arm, lean slightly away from cable", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Cable Triceps Pushdown", "type": "Strength", "sets": "3", "reps": "12-15", "rest": "60s", "intensity": { "type": "RIR", "value": "1", "description": "" }, "tempo": "", "notes": "Lock elbows at sides", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Overhead Triceps Extension (Cable Rope)", "type": "Strength", "sets": "3", "reps": "12-15", "rest": "60s", "intensity": { "type": "RIR", "value": "1", "description": "" }, "tempo": "", "notes": "Stretch at bottom", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 65,
+    "intensityLevel": "Moderate",
+    "tags": {
+      "category": ["hypertrophy"],
+      "split": ["push", "chest", "shoulders", "arms"],
+      "muscles": ["chest", "front_delts", "side_delts", "triceps"],
+      "patterns": ["press"],
+      "equipment": ["barbell", "dumbbell", "cable"]
+    }
+  },
+
+  {
+    "_comment": "3. Strength with Supersets — Paired exercises to save time",
+    "title": "Upper Strength",
+    "focus": "Push & Pull",
+    "description": "Antagonist superset upper body session for strength and efficiency.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Upper body activation",
+        "exercises": [
+          { "name": "Cat-Cow Stretch", "type": "Mobility", "sets": "1", "reps": "10", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Face Pull", "type": "Strength", "sets": "2", "reps": "15", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "Light" }, "tempo": "", "notes": "External rotate at top", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Superset A — Press / Row",
+        "overview": "Horizontal push-pull pairing",
+        "exercises": [
+          { "name": "Barbell Bench Press", "type": "Strength", "sets": "4", "reps": "5", "rest": "60s", "intensity": { "type": "RPE", "value": "8", "description": "Heavy" }, "tempo": "2-1-1", "notes": "Go directly to A2", "tags": [], "supersetId": "A", "duration": "", "distance": "" },
+          { "name": "Bent-Over Barbell Row", "type": "Strength", "sets": "4", "reps": "5", "rest": "2 min", "intensity": { "type": "RPE", "value": "8", "description": "Match bench intensity" }, "tempo": "1-1-1", "notes": "Rest 2 min then back to A1", "tags": [], "supersetId": "A", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Superset B — Vertical Push / Pull",
+        "overview": "Overhead and vertical pulling",
+        "exercises": [
+          { "name": "Standing Barbell Overhead Press", "type": "Strength", "sets": "3", "reps": "6-8", "rest": "60s", "intensity": { "type": "RPE", "value": "7-8", "description": "" }, "tempo": "", "notes": "Go directly to B2", "tags": [], "supersetId": "B", "duration": "", "distance": "" },
+          { "name": "Pull-Up", "type": "Strength", "sets": "3", "reps": "6-8", "rest": "90s", "intensity": { "type": "RPE", "value": "7-8", "description": "" }, "tempo": "", "notes": "Add weight if bodyweight is easy. Rest 90s then back to B1", "tags": [], "supersetId": "B", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Superset C — Arms",
+        "overview": "Biceps and triceps finisher",
+        "exercises": [
+          { "name": "EZ-Bar Curl", "type": "Strength", "sets": "3", "reps": "10-12", "rest": "30s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "C", "duration": "", "distance": "" },
+          { "name": "Skull Crushers (EZ-Bar Lying Triceps Extension)", "type": "Strength", "sets": "3", "reps": "10-12", "rest": "60s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "C", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 55,
+    "intensityLevel": "High",
+    "tags": {
+      "category": ["strength"],
+      "split": ["upper", "push", "pull"],
+      "muscles": ["chest", "lats", "front_delts", "biceps", "triceps"],
+      "patterns": ["press", "row", "pullup"],
+      "equipment": ["barbell"]
+    }
+  },
+
+  {
+    "_comment": "4. Strength with Circuits — 3 or more exercises in a row",
+    "title": "Full Body Circuit",
+    "focus": "Total Body",
+    "description": "Full body conditioning circuit with strength movements. Complete all exercises in order, rest, repeat.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Get heart rate up",
+        "exercises": [
+          { "name": "Mountain Climber", "type": "Cardio", "sets": "2", "reps": "20", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "World's Greatest Stretch", "type": "Mobility", "sets": "1", "reps": "5 each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Circuit — 4 Rounds",
+        "overview": "Perform all 5 exercises back-to-back, then rest 2 min between rounds",
+        "exercises": [
+          { "name": "Goblet Squat", "type": "Strength", "sets": "4", "reps": "12", "rest": "0s", "intensity": { "type": "RPE", "value": "7", "description": "" }, "tempo": "", "notes": "Go to next exercise", "tags": [], "supersetId": "circuit1", "duration": "", "distance": "" },
+          { "name": "Push-Up", "type": "Strength", "sets": "4", "reps": "15", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Go to next exercise", "tags": [], "supersetId": "circuit1", "duration": "", "distance": "" },
+          { "name": "Kettlebell Swing", "type": "Strength", "sets": "4", "reps": "15", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Go to next exercise", "tags": [], "supersetId": "circuit1", "duration": "", "distance": "" },
+          { "name": "Inverted Row", "type": "Strength", "sets": "4", "reps": "10", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Go to next exercise", "tags": [], "supersetId": "circuit1", "duration": "", "distance": "" },
+          { "name": "Front Plank", "type": "Strength", "sets": "4", "reps": "", "rest": "2 min", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Hold for 30s. Rest 2 min then repeat circuit.", "tags": [], "supersetId": "circuit1", "duration": "30s", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 35,
+    "intensityLevel": "High",
+    "tags": {
+      "category": ["conditioning", "strength"],
+      "split": ["full_body"],
+      "muscles": ["quads", "glutes", "chest", "lats", "abs"],
+      "patterns": ["squat", "press", "hinge", "row"],
+      "equipment": ["kettlebell", "bodyweight", "pullup_bar"]
+    }
+  },
+
+  {
+    "_comment": "5. Cardio — Steady State with time and distance",
+    "title": "Zone 2 Run",
+    "focus": "Aerobic Base",
+    "description": "Easy steady-state run to build aerobic capacity. Keep heart rate in Zone 2 throughout.",
+    "quote": { "text": "Slow is smooth, smooth is fast.", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Dynamic mobility before running",
+        "exercises": [
+          { "name": "High Knees (Running Drill)", "type": "Cardio", "sets": "2", "reps": "", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "30s", "distance": "20m" },
+          { "name": "Butt Kicks (Running Drill)", "type": "Cardio", "sets": "2", "reps": "", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "30s", "distance": "20m" }
+        ]
+      },
+      {
+        "title": "Main Run",
+        "overview": "Steady Zone 2 effort",
+        "exercises": [
+          { "name": "Steady-State Run", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "2", "description": "Conversational pace, 130-150 bpm" }, "tempo": "", "notes": "Should be able to hold a conversation. If breathing hard, slow down.", "tags": [], "supersetId": "", "duration": "45 min", "distance": "5-6 km" }
+        ]
+      },
+      {
+        "title": "Cooldown",
+        "overview": "Walk and stretch",
+        "exercises": [
+          { "name": "Standing Calf Stretch (Wall)", "type": "Mobility", "sets": "1", "reps": "30s each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Standing Quad Stretch", "type": "Mobility", "sets": "1", "reps": "30s each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 55,
+    "intensityLevel": "Low",
+    "tags": {
+      "category": ["cardio"],
+      "split": ["full_body"],
+      "muscles": ["quads", "hamstrings", "calves", "glutes"],
+      "patterns": ["gait"],
+      "equipment": ["no_equipment"]
+    }
+  },
+
+  {
+    "_comment": "6. Cardio Intervals / HIIT",
+    "title": "HIIT Bike",
+    "focus": "Anaerobic Capacity",
+    "description": "High intensity interval training on the assault bike. Short all-out efforts with rest.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Progressive bike warmup",
+        "exercises": [
+          { "name": "Assault Bike (Steady Ride)", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1-2", "description": "Easy spin" }, "tempo": "", "notes": "Gradually increase intensity", "tags": [], "supersetId": "", "duration": "5 min", "distance": "" }
+        ]
+      },
+      {
+        "title": "Intervals — 8 Rounds",
+        "overview": "30s all-out / 90s easy recovery",
+        "exercises": [
+          { "name": "Air Bike Sprint Intervals", "type": "Cardio", "sets": "8", "reps": "", "rest": "90s", "intensity": { "type": "RPE", "value": "9-10", "description": "Max effort sprints" }, "tempo": "", "notes": "30s max effort, 90s easy spin recovery", "tags": [], "supersetId": "", "duration": "30s", "distance": "" }
+        ]
+      },
+      {
+        "title": "Cooldown",
+        "overview": "Easy spin to recover",
+        "exercises": [
+          { "name": "Assault Bike (Steady Ride)", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1", "description": "Very easy" }, "tempo": "", "notes": "Bring heart rate below 120", "tags": [], "supersetId": "", "duration": "5 min", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 30,
+    "intensityLevel": "Severe",
+    "tags": {
+      "category": ["hiit", "cardio", "conditioning"],
+      "split": ["full_body"],
+      "muscles": ["quads", "hamstrings", "glutes"],
+      "patterns": ["gait"],
+      "equipment": ["machine"]
+    }
+  },
+
+  {
+    "_comment": "7. Active Recovery — Low intensity movement day",
+    "title": "Active Recovery",
+    "focus": "Recovery & Mobility",
+    "description": "Light movement to promote blood flow and recovery. Nothing should feel hard.",
+    "quote": { "text": "Recovery is where growth happens.", "author": "" },
+    "sections": [
+      {
+        "title": "Light Cardio",
+        "overview": "Easy movement to get warm",
+        "exercises": [
+          { "name": "Treadmill Incline Walk", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1", "description": "Easy walk" }, "tempo": "", "notes": "3-4% incline, conversational pace", "tags": [], "supersetId": "", "duration": "15 min", "distance": "" }
+        ]
+      },
+      {
+        "title": "Mobility Flow",
+        "overview": "Full body mobility work",
+        "exercises": [
+          { "name": "Cat-Cow Stretch", "type": "Mobility", "sets": "1", "reps": "10", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Slow, breathe into each position", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "World's Greatest Stretch", "type": "Mobility", "sets": "1", "reps": "5 each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Deep Squat Hold (Prying Squat)", "type": "Mobility", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Gently pry knees open with elbows", "tags": [], "supersetId": "", "duration": "60s", "distance": "" },
+          { "name": "Thoracic Extension on Foam Roller", "type": "Mobility", "sets": "1", "reps": "10", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Pigeon Pose", "type": "Mobility", "sets": "1", "reps": "60s each side", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Seated Hamstring Stretch", "type": "Mobility", "sets": "1", "reps": "60s", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 35,
+    "intensityLevel": "Low",
+    "tags": {
+      "category": ["active_recovery", "mobility", "flexibility"],
+      "split": ["full_body"],
+      "muscles": ["hip_flexors", "hamstrings", "glutes", "erectors"],
+      "patterns": ["gait"],
+      "equipment": ["no_equipment", "machine"]
+    }
+  },
+
+  {
+    "_comment": "8. Rest Day — Minimal structure, just guidance",
+    "title": "Rest Day",
+    "focus": "Recovery",
+    "description": "Full rest day. Focus on sleep, nutrition, and hydration. Light walking is fine if desired.",
+    "quote": { "text": "Rest is not the absence of training — it's part of it.", "author": "" },
+    "sections": [
+      {
+        "title": "Optional Light Activity",
+        "overview": "Only if you feel like it — nothing mandatory",
+        "exercises": [
+          { "name": "Easy Run (Recovery Run)", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1", "description": "Very easy walk or stroll" }, "tempo": "", "notes": "10-15 min casual walk if desired. Skip entirely if fatigued.", "tags": [], "supersetId": "", "duration": "10-15 min", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 0,
+    "intensityLevel": "Low",
+    "tags": {
+      "category": ["rest"],
+      "split": [],
+      "muscles": [],
+      "patterns": [],
+      "equipment": ["no_equipment"]
+    }
+  },
+
+  {
+    "_comment": "9. Hybrid — Strength + Cardio in one session",
+    "title": "Hybrid Push + Cardio",
+    "focus": "Upper Body & Conditioning",
+    "description": "Strength work followed by cardio finisher. Best of both worlds.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Prime upper body",
+        "exercises": [
+          { "name": "Wall Slides", "type": "Mobility", "sets": "2", "reps": "10", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Push-Up", "type": "Strength", "sets": "2", "reps": "8", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Easy warmup", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Strength Block",
+        "overview": "Moderate volume push work",
+        "exercises": [
+          { "name": "Incline Barbell Bench Press", "type": "Strength", "sets": "4", "reps": "8", "rest": "2 min", "intensity": { "type": "RPE", "value": "7", "description": "" }, "tempo": "2-0-1", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Dumbbell Lateral Raise", "type": "Strength", "sets": "3", "reps": "12-15", "rest": "60s", "intensity": { "type": "RIR", "value": "2", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Dips (Chest Lean)", "type": "Strength", "sets": "3", "reps": "8-10", "rest": "90s", "intensity": { "type": "RPE", "value": "7", "description": "" }, "tempo": "", "notes": "Lean forward for chest emphasis", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Cardio Finisher",
+        "overview": "Rowing intervals for conditioning",
+        "exercises": [
+          { "name": "Rowing Machine Steady-State", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "2-3", "description": "Moderate effort" }, "tempo": "", "notes": "Maintain 2:00-2:10/500m split", "tags": [], "supersetId": "", "duration": "15 min", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 55,
+    "intensityLevel": "Moderate",
+    "tags": {
+      "category": ["strength", "cardio"],
+      "split": ["push", "chest", "shoulders"],
+      "muscles": ["chest", "front_delts", "side_delts", "triceps"],
+      "patterns": ["press"],
+      "equipment": ["barbell", "dumbbell", "machine"]
+    }
+  },
+
+  {
+    "_comment": "10. Bodyweight / Travel Workout — No equipment needed",
+    "title": "Travel Bodyweight",
+    "focus": "Full Body",
+    "description": "No equipment needed. Can be done in a hotel room or park.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Dynamic warmup",
+        "exercises": [
+          { "name": "High Knees (Running Drill)", "type": "Cardio", "sets": "2", "reps": "20", "rest": "15s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Mountain Climber", "type": "Cardio", "sets": "2", "reps": "20", "rest": "15s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Circuit A — 3 Rounds",
+        "overview": "Lower body focus",
+        "exercises": [
+          { "name": "Pistol Squat (Assisted)", "type": "Strength", "sets": "3", "reps": "6 each", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "3-1-1", "notes": "Hold chair/door for balance if needed", "tags": [], "supersetId": "A", "duration": "", "distance": "" },
+          { "name": "Reverse Lunge", "type": "Strength", "sets": "3", "reps": "10 each", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "A", "duration": "", "distance": "" },
+          { "name": "Glute Bridge", "type": "Strength", "sets": "3", "reps": "15", "rest": "60s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "2-2-1", "notes": "Single leg if too easy. Rest 60s then repeat.", "tags": [], "supersetId": "A", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Circuit B — 3 Rounds",
+        "overview": "Upper body and core",
+        "exercises": [
+          { "name": "Push-Up (Diamond)", "type": "Strength", "sets": "3", "reps": "12", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "B", "duration": "", "distance": "" },
+          { "name": "Pike Push-Up", "type": "Strength", "sets": "3", "reps": "8", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Feet elevated on chair for more difficulty", "tags": [], "supersetId": "B", "duration": "", "distance": "" },
+          { "name": "Dead Bug", "type": "Strength", "sets": "3", "reps": "10 each side", "rest": "0s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "B", "duration": "", "distance": "" },
+          { "name": "Hollow Body Hold", "type": "Strength", "sets": "3", "reps": "", "rest": "60s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Rest 60s then repeat", "tags": [], "supersetId": "B", "duration": "30s", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 35,
+    "intensityLevel": "Moderate",
+    "tags": {
+      "category": ["strength", "conditioning"],
+      "split": ["full_body"],
+      "muscles": ["quads", "glutes", "chest", "front_delts", "triceps", "abs"],
+      "patterns": ["squat", "lunge", "press", "anti_extension"],
+      "equipment": ["bodyweight", "no_equipment"]
+    }
+  },
+
+  {
+    "_comment": "11. Sport-Specific Conditioning — Basketball example",
+    "title": "Basketball Conditioning",
+    "focus": "Speed & Agility",
+    "description": "Sport-specific agility and power work for basketball performance.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Dynamic Warm Up",
+        "overview": "Movement prep for cutting and jumping",
+        "exercises": [
+          { "name": "A-Skip", "type": "Plyometric", "sets": "2", "reps": "", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "20m" },
+          { "name": "Carioca (Grapevine)", "type": "Plyometric", "sets": "2", "reps": "", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "20m" },
+          { "name": "Lateral Skater Jumps", "type": "Plyometric", "sets": "2", "reps": "10", "rest": "30s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "Stick each landing", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Power",
+        "overview": "Explosive jumping",
+        "exercises": [
+          { "name": "Basketball Broad Jump (Standing Long Jump)", "type": "Plyometric", "sets": "4", "reps": "5", "rest": "90s", "intensity": { "type": "RPE", "value": "9", "description": "Max effort" }, "tempo": "", "notes": "Full reset between reps, focus on extension", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Basketball Depth Jump (Box Drop Jump)", "type": "Plyometric", "sets": "3", "reps": "5", "rest": "2 min", "intensity": { "type": "RPE", "value": "9", "description": "Reactive — minimize ground contact" }, "tempo": "", "notes": "20\" box, land and immediately jump max height", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      },
+      {
+        "title": "Agility Drills",
+        "overview": "Change of direction and defensive movement",
+        "exercises": [
+          { "name": "Basketball Lane Agility Drill", "type": "Cardio", "sets": "4", "reps": "1", "rest": "90s", "intensity": { "type": "RPE", "value": "9", "description": "Game speed" }, "tempo": "", "notes": "Sprint forward, slide right, backpedal, slide left", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Basketball Defensive Slide Drill", "type": "Cardio", "sets": "4", "reps": "", "rest": "60s", "intensity": { "type": "RPE", "value": "8", "description": "" }, "tempo": "", "notes": "Stay low, don't cross feet", "tags": [], "supersetId": "", "duration": "30s", "distance": "" },
+          { "name": "Basketball Suicide (Line Drill)", "type": "Cardio", "sets": "3", "reps": "1", "rest": "2 min", "intensity": { "type": "RPE", "value": "10", "description": "All-out" }, "tempo": "", "notes": "Touch each line, full court", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 45,
+    "intensityLevel": "Severe",
+    "tags": {
+      "category": ["sport", "conditioning", "power"],
+      "split": ["full_body", "legs"],
+      "muscles": ["quads", "glutes", "hamstrings", "calves"],
+      "patterns": ["jump", "sprint"],
+      "equipment": ["no_equipment"]
+    }
+  },
+
+  {
+    "_comment": "12. Running Intervals — Track workout",
+    "title": "Track 800s",
+    "focus": "VO2max",
+    "description": "800m repeat intervals at goal race pace to build speed endurance.",
+    "quote": { "text": "", "author": "" },
+    "sections": [
+      {
+        "title": "Warm Up",
+        "overview": "Easy jog + drills + strides",
+        "exercises": [
+          { "name": "Easy Run (Recovery Run)", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1-2", "description": "Easy jog" }, "tempo": "", "notes": "10 min easy jog", "tags": [], "supersetId": "", "duration": "10 min", "distance": "1.5 km" },
+          { "name": "A-Skip", "type": "Plyometric", "sets": "2", "reps": "", "rest": "15s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "30m" },
+          { "name": "B-Skip", "type": "Plyometric", "sets": "2", "reps": "", "rest": "15s", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "30m" },
+          { "name": "Strides (100 m)", "type": "Cardio", "sets": "4", "reps": "1", "rest": "60s", "intensity": { "type": "Pace", "value": "5K pace", "description": "Smooth acceleration" }, "tempo": "", "notes": "Build to 5K pace over 100m, decelerate", "tags": [], "supersetId": "", "duration": "", "distance": "100m" }
+        ]
+      },
+      {
+        "title": "Main Set — 5 × 800m",
+        "overview": "800m repeats at goal 5K pace",
+        "exercises": [
+          { "name": "Interval Run (400 m Repeats)", "type": "Cardio", "sets": "5", "reps": "1", "rest": "2 min", "intensity": { "type": "Pace", "value": "3:20-3:30/km", "description": "Goal 5K pace — should be hard but sustainable" }, "tempo": "", "notes": "2 min easy jog recovery between reps. Aim for consistent splits.", "tags": [], "supersetId": "", "duration": "", "distance": "800m" }
+        ]
+      },
+      {
+        "title": "Cooldown",
+        "overview": "Easy jog + stretching",
+        "exercises": [
+          { "name": "Easy Run (Recovery Run)", "type": "Cardio", "sets": "1", "reps": "", "rest": "", "intensity": { "type": "Zone", "value": "1", "description": "Easy" }, "tempo": "", "notes": "10 min easy jog cooldown", "tags": [], "supersetId": "", "duration": "10 min", "distance": "1.5 km" },
+          { "name": "Standing Calf Stretch (Wall)", "type": "Mobility", "sets": "1", "reps": "30s each", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" },
+          { "name": "Seated Hamstring Stretch", "type": "Mobility", "sets": "1", "reps": "30s each", "rest": "", "intensity": { "type": "Other", "value": "", "description": "" }, "tempo": "", "notes": "", "tags": [], "supersetId": "", "duration": "", "distance": "" }
+        ]
+      }
+    ],
+    "estimatedDurationMin": 50,
+    "intensityLevel": "High",
+    "tags": {
+      "category": ["cardio", "conditioning"],
+      "split": ["full_body"],
+      "muscles": ["quads", "hamstrings", "calves", "glutes"],
+      "patterns": ["gait", "sprint"],
+      "equipment": ["no_equipment"]
+    }
+  }
+]
