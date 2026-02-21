@@ -1,13 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getAdminContext } from '@/lib/context';
 
+type DbAgent = {
+  agentId: string
+  description: string | null
+  isActive: boolean
+  systemPrompt: string | null
+  userPromptTemplate: string | null
+  examples: unknown | null
+  model: string
+  temperature: unknown
+  maxTokens: number
+  maxIterations: number
+  toolIds: string[] | null
+  createdAt: Date
+  versionId: number
+}
+
+function parseTemperature(value: unknown): number {
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return Number((value as { value: number | string }).value)
+  }
+
+  return Number(value)
+}
+
 /**
  * Transform database agent to API response format
  */
-function transformAgent(agent: any) {
-  const temp = agent.temperature;
-  const tempValue = typeof temp === 'object' && temp !== null ? Number(temp.value) : Number(temp);
-  
+function transformAgent(agent: DbAgent) {
   return {
     agent_id: agent.agentId,
     description: agent.description,
@@ -16,7 +37,7 @@ function transformAgent(agent: any) {
     user_prompt_template: agent.userPromptTemplate,
     examples: agent.examples,
     model: agent.model,
-    temperature: tempValue,
+    temperature: parseTemperature(agent.temperature),
     max_tokens: agent.maxTokens,
     max_iterations: agent.maxIterations,
     max_retries: 3,
@@ -28,6 +49,15 @@ function transformAgent(agent: any) {
     created_at: agent.createdAt,
     version_id: agent.versionId,
   };
+}
+
+async function getLatestVersion(db: Awaited<ReturnType<typeof getAdminContext>>['db'], agentId: string) {
+  return db
+    .selectFrom('agentDefinitions')
+    .selectAll()
+    .where('agentId', '=', agentId)
+    .orderBy('versionId', 'desc')
+    .executeTakeFirst()
 }
 
 /**
@@ -51,14 +81,9 @@ export async function GET(
 
     const { db } = await getAdminContext();
 
-    const agent = await db
-      .selectFrom('agentDefinitions')
-      .selectAll()
-      .where('agentId', '=', agentId)
-      .where('isActive', '=', true)
-      .executeTakeFirst();
+    const agent = await getLatestVersion(db, agentId)
 
-    if (!agent) {
+    if (!agent || !agent.isActive) {
       return NextResponse.json(
         { success: false, message: `Agent with ID '${agentId}' not found` },
         { status: 404 }
@@ -67,7 +92,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: transformAgent(agent)
+      data: transformAgent(agent as DbAgent)
     });
 
   } catch (error) {
@@ -119,47 +144,39 @@ export async function PUT(
 
     const { db } = await getAdminContext();
 
-    // Check if agent exists
-    const existing = await db
-      .selectFrom('agentDefinitions')
-      .selectAll()
-      .where('agentId', '=', agentId)
-      .where('isActive', '=', true)
-      .executeTakeFirst();
+    // Get latest active version for append-only update
+    const existing = await getLatestVersion(db, agentId)
 
-    if (!existing) {
+    if (!existing || !existing.isActive) {
       return NextResponse.json(
         { success: false, message: `Agent with ID '${agentId}' not found` },
         { status: 404 }
       );
     }
 
-    // Build update values (only provided fields)
-    const updateValues: Record<string, unknown> = {};
-    
-    if (system_prompt !== undefined) updateValues.systemPrompt = system_prompt;
-    if (model !== undefined) updateValues.model = model;
-    if (max_tokens !== undefined) updateValues.maxTokens = max_tokens;
-    if (temperature !== undefined) updateValues.temperature = temperature;
-    if (max_iterations !== undefined) updateValues.maxIterations = max_iterations;
-    if (description !== undefined) updateValues.description = description;
-    if (user_prompt_template !== undefined) updateValues.userPromptTemplate = user_prompt_template;
-    if (tool_ids !== undefined) updateValues.toolIds = tool_ids;
-    if (examples !== undefined) updateValues.examples = examples;
-    if (eval_rubric !== undefined) updateValues.evalRubric = eval_rubric;
-
-    // Update the agent
+    // Append a new version (never mutate historical rows)
     const result = await db
-      .updateTable('agentDefinitions')
-      .set(updateValues)
-      .where('agentId', '=', agentId)
-      .where('isActive', '=', true)
+      .insertInto('agentDefinitions')
+      .values({
+        agentId: agentId,
+        systemPrompt: system_prompt !== undefined ? system_prompt : existing.systemPrompt,
+        model: model !== undefined ? model : existing.model,
+        maxTokens: max_tokens !== undefined ? max_tokens : existing.maxTokens,
+        temperature: temperature !== undefined ? temperature : existing.temperature,
+        maxIterations: max_iterations !== undefined ? max_iterations : existing.maxIterations,
+        description: description !== undefined ? description : existing.description,
+        userPromptTemplate: user_prompt_template !== undefined ? user_prompt_template : existing.userPromptTemplate,
+        toolIds: tool_ids !== undefined ? tool_ids : existing.toolIds,
+        examples: examples !== undefined ? examples : existing.examples,
+        evalRubric: eval_rubric !== undefined ? eval_rubric : existing.evalRubric,
+        isActive: existing.isActive,
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
 
     return NextResponse.json({
       success: true,
-      data: transformAgent(result)
+      data: transformAgent(result as DbAgent)
     });
 
   } catch (error) {
@@ -196,27 +213,34 @@ export async function DELETE(
 
     const { db } = await getAdminContext();
 
-    // Check if agent exists
-    const existing = await db
-      .selectFrom('agentDefinitions')
-      .selectAll()
-      .where('agentId', '=', agentId)
-      .where('isActive', '=', true)
-      .executeTakeFirst();
+    // Get latest active version for append-only deactivate
+    const existing = await getLatestVersion(db, agentId)
 
-    if (!existing) {
+    if (!existing || !existing.isActive) {
       return NextResponse.json(
         { success: false, message: `Agent with ID '${agentId}' not found` },
         { status: 404 }
       );
     }
 
-    // Mark as inactive (soft delete)
+    // Append new inactive version (soft delete)
     await db
-      .updateTable('agentDefinitions')
-      .set({ isActive: false })
-      .where('agentId', '=', agentId)
-      .execute();
+      .insertInto('agentDefinitions')
+      .values({
+        agentId: agentId,
+        systemPrompt: existing.systemPrompt,
+        model: existing.model,
+        maxTokens: existing.maxTokens,
+        temperature: existing.temperature,
+        maxIterations: existing.maxIterations,
+        description: existing.description,
+        userPromptTemplate: existing.userPromptTemplate,
+        toolIds: existing.toolIds,
+        examples: existing.examples,
+        evalRubric: existing.evalRubric,
+        isActive: false,
+      })
+      .executeTakeFirstOrThrow();
 
     return NextResponse.json({
       success: true,
