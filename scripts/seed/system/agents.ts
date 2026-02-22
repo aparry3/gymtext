@@ -148,17 +148,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     description: 'Generates a structured workout with sets, reps, weight, RPE, and tempo for each exercise',
     is_active: true,
     tool_ids: ['get_user_profile', 'get_current_program', 'get_exercises', 'save_workout'],
-    user_prompt_template: `{{weekDossier}}
-
-## Day
-{{day}}
-
-{{#if profile}}
-## User Profile
-- Name: {{profile.name}}
-- Gym: {{profile.gym}}
-- Equipment: {{profile.equipment}}
-{{/if}}`,
+    user_prompt_template: 'Generate the structured workout representation for {day}. Use the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
   },
@@ -207,10 +197,7 @@ Return the modified week in markdown format with:
     description: 'Modifies an existing week in the training program based on user feedback',
     is_active: true,
     tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
-    user_prompt_template: `{{> weekOverview}}
-
-## User Request
-{{modificationRequest}}`,
+    user_prompt_template: 'Modify the week training based on the following change request: {modificationRequest}. Use the week overview provided in context to understand the current week structure and apply the requested changes while maintaining workout integrity.',
     examples: null,
     eval_rubric: null,
   },
@@ -274,13 +261,7 @@ Provide the modified plan in markdown format. Include:
     description: 'Modifies the training program based on user feedback or changes in circumstances',
     is_active: true,
     tool_ids: ['get_user_profile', 'get_current_program', 'get_programs', 'save_program'],
-    user_prompt_template: `{{> userProfile}}
-
-## Current Program
-{{planDossier}}
-
-## User Request
-{{changeRequest}}`,
+    user_prompt_template: 'Modify the fitness plan based on the following change request: {changeRequest}. Use the current plan provided in context to understand the mesocycle structure and apply the requested changes while maintaining periodization integrity.',
     examples: null,
     eval_rubric: null,
   },
