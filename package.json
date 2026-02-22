@@ -30,6 +30,7 @@
     "db:reset-migrations": "tsx scripts/db/reset-migration-history.ts",
     "db:anonymize": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts",
     "db:anonymize:dry": "source .env.local && tsx scripts/db/anonymize-prod-to-dev.ts --dry-run",
+    "db:reset-from-main": "source .env.local && tsx scripts/db/reset-from-main.ts",
     "sms:test": "source .env.local && tsx scripts/sms-test.ts",
     "local:sms": "node tools/local-sms-cli/dist/index.js",
     "local:sms:build": "cd tools/local-sms-cli && pnpm exec tsc",
