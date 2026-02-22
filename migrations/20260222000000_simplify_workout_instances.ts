@@ -9,7 +9,7 @@
  * IMPORTANT: This migration now migrates existing data instead of dropping the table.
  */
 import { sql } from 'kysely';
-import { postgresDb } from '@/server/connections/postgres/postgres';
+import { postgresDb } from '../packages/shared/src/server/connections/postgres/postgres';
 
 const db = postgresDb;
 
