@@ -78,7 +78,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .selectFrom('workoutInstances')
       .selectAll()
       .where('userId', '=', userId)
-      .where('date', '=', date)
+      .where('date', '=', new Date(date))
       .executeTakeFirst();
 
     if (!result) return null;
