@@ -14,6 +14,24 @@
 
 import { execSync } from 'child_process';
 import { exit } from 'process';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Load .env.local file
+const envPath = join(process.cwd(), '.env.local');
+try {
+  const envFile = readFileSync(envPath, 'utf-8');
+  envFile.split('\n').forEach(line => {
+    const match = line.match(/^([^=:#]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim().replace(/^["']|["']$/g, '');
+      process.env[key] = value;
+    }
+  });
+} catch (error) {
+  console.error('⚠️  Could not load .env.local file');
+}
 
 const DB_NAME = process.env.DATABASE_URL?.split('/').pop()?.split('?')[0] || 'gymtext_local';
 
@@ -25,7 +43,11 @@ function run(command: string, description: string) {
   console.log(`> ${command}\n`);
   
   try {
-    execSync(command, { stdio: 'inherit', cwd: process.cwd() });
+    execSync(command, { 
+      stdio: 'inherit', 
+      cwd: process.cwd(),
+      env: process.env
+    });
   } catch (error) {
     console.error(`\n❌ Failed: ${description}`);
     exit(1);
