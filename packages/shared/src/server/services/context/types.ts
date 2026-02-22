@@ -1,5 +1,5 @@
 /**
- * Context types that can be requested from the ContextRegistry
+ * Context types for agent input (legacy - now uses markdown dossiers)
  */
 export enum ContextType {
   USER = 'user',
