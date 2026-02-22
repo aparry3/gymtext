@@ -12,7 +12,7 @@ import type { DB } from '@/server/models/_types';
 export interface WorkoutInstanceRow {
   id: string;
   userId: string;
-  date: string;
+  date: Date;
   message: string | null;
   structure: Record<string, unknown> | null;
   createdAt: Date;
