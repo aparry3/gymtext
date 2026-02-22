@@ -49,6 +49,7 @@ import { createProfileService, type ProfileServiceInstance } from './agents/prof
 import { ToolRegistry, registerAllTools } from '@/server/agents/tools';
 import { createSimpleAgentRunner, type SimpleAgentRunnerInstance } from '@/server/agents/runner';
 import { createWorkoutInstanceRepository, type WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import { createWorkoutInstanceService, type WorkoutInstanceServiceInstance } from './domain/training/workoutInstanceService';
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
@@ -66,6 +67,7 @@ export interface ServiceContainer {
   message: MessageServiceInstance;
   queue: QueueServiceInstance;
   fitnessPlan: FitnessPlanServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
 
   microcycle: MicrocycleServiceInstance;
   progress: ProgressServiceInstance;
@@ -129,6 +131,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   const exerciseMetrics = createExerciseMetricsService(repos);
   const blog = createBlogService(repos);
   const organization = createOrganizationService(repos);
+  const workoutInstance = createWorkoutInstanceService(repos.workoutInstance);
 
   // Phase 2: Services with service deps
   const message = createMessageService(repos, { user });
@@ -232,7 +235,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     user,
     markdown,
     agentRunner,
-    workoutInstanceRepository: repos.workoutInstance,
+    workoutInstance,
   });
 
   const programAgent = createProgramAgentService(agentRunner);
@@ -256,8 +259,8 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     messagingAgent,
   });
 
-  const onboardingCoordinator = createOnboardingCoordinator(repos, {
-    onboardingData, user, onboarding,
+  const onboardingCoordinator = createOnboardingCoordinator({
+    onboardingData, user, onboarding, subscription,
   });
 
   // Phase 5: Modification, profile, and remaining services
@@ -286,6 +289,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
 
   return {
     user, fitnessProfile, onboardingData, message, queue, fitnessPlan,
+    workoutInstance,
     microcycle, progress, subscription, dayConfig, shortLink,
     get referral() { return getReferral(); },
     get adminAuth() { return getAdminAuth(); },
@@ -309,6 +313,7 @@ export function createServicesFromDb(db: Kysely<DB>, clients?: ExternalClients):
 export type {
   UserServiceInstance, FitnessProfileServiceInstance, OnboardingDataServiceInstance,
   MessageServiceInstance, QueueServiceInstance, FitnessPlanServiceInstance,
+  WorkoutInstanceServiceInstance,
   MicrocycleServiceInstance, ProgressServiceInstance,
   SubscriptionServiceInstance, DayConfigServiceInstance, ShortLinkServiceInstance,
   ReferralServiceInstance, AdminAuthServiceInstance, UserAuthServiceInstance,

@@ -16,7 +16,7 @@ import type { Microcycle } from '@/server/models/microcycle';
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
-import type { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 
 
 // Agent services
@@ -50,7 +50,7 @@ export interface TrainingServiceDeps {
   user: UserServiceInstance;
   markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
-  workoutInstanceRepository: WorkoutInstanceRepository;
+  workoutInstance: WorkoutInstanceServiceInstance;
 }
 
 // =============================================================================
@@ -62,7 +62,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     user: userService,
     markdown: markdownService,
     agentRunner: simpleAgentRunner,
-    workoutInstanceRepository: workoutInstanceRepo,
+    workoutInstance: workoutInstanceService,
   } = deps;
 
   return {
@@ -225,7 +225,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
         // Save workout message to database (upsert by user_id + date)
-        await workoutInstanceRepo.upsert({
+        await workoutInstanceService.upsert({
           userId: user.id,
           date: targetDate.toISODate()!,
           message: workoutMessage,
@@ -306,7 +306,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const regeneratedMessage = result.response;
 
       // Save workout message to database (upsert by user_id + date)
-      await workoutInstanceRepo.upsert({
+      await workoutInstanceService.upsert({
         userId: user.id,
         date: DateTime.fromJSDate(workoutDate).toISODate()!,
         message: regeneratedMessage,
