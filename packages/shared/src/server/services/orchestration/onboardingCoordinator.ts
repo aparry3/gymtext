@@ -1,7 +1,7 @@
-import type { RepositoryContainer } from '../../repositories/factory';
 import type { OnboardingDataServiceInstance } from '../domain/user/onboardingDataService';
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { OnboardingServiceInstance } from './onboardingService';
+import type { SubscriptionServiceInstance } from '../domain/subscription/subscriptionService';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -18,16 +18,16 @@ export interface OnboardingCoordinatorDeps {
   onboardingData: OnboardingDataServiceInstance;
   user: UserServiceInstance;
   onboarding: OnboardingServiceInstance;
+  subscription: SubscriptionServiceInstance;
 }
 
 /**
  * Create an OnboardingCoordinator instance with injected dependencies
  */
 export function createOnboardingCoordinator(
-  repos: RepositoryContainer,
   deps: OnboardingCoordinatorDeps
 ): OnboardingCoordinatorInstance {
-  const { onboardingData: onboardingDataService, user: userService, onboarding: onboardingService } = deps;
+  const { onboardingData: onboardingDataService, user: userService, onboarding: onboardingService, subscription: subscriptionService } = deps;
 
   return {
     async sendOnboardingMessages(userId: string): Promise<boolean> {
@@ -46,7 +46,7 @@ export function createOnboardingCoordinator(
           return false;
         }
 
-        const hasActiveSub = await repos.subscription.hasActiveSubscription(userId);
+        const hasActiveSub = await subscriptionService.hasActiveSubscription(userId);
         if (!hasActiveSub) {
           console.log(`[OnboardingCoordinator] No active subscription for user ${userId}, waiting`);
           return false;
