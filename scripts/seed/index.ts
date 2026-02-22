@@ -8,21 +8,15 @@
  *   pnpm seed          # Run all system seeders
  *   pnpm seed:agents   # Run only agent seeder
  *   pnpm seed:exercises # Run only exercise seeder
- *   pnpm seed:templates # Run only template seeder
- *   pnpm seed:prompts  # Run only prompt seeder
  */
 
 import 'dotenv/config';
 import { seedAgents } from './system/agents';
 import { seedExercises } from './system/exercises';
-import { seedTemplates } from './system/templates';
-import { seedPrompts } from './system/prompts';
 
 const SEEDERS = [
   { name: 'agents', fn: seedAgents },
   { name: 'exercises', fn: seedExercises },
-  { name: 'templates', fn: seedTemplates },
-  { name: 'prompts', fn: seedPrompts },
 ];
 
 async function main() {
