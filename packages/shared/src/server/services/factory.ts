@@ -48,6 +48,7 @@ import { createProgramAgentService, type ProgramAgentServiceInstance } from './a
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
 import { ToolRegistry, registerAllTools } from '@/server/agents/tools';
 import { createSimpleAgentRunner, type SimpleAgentRunnerInstance } from '@/server/agents/runner';
+import { createWorkoutInstanceRepository, type WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 import { createProgramOwnerService, type ProgramOwnerServiceInstance } from './domain/program/programOwnerService';
 import { createProgramService, type ProgramServiceInstance } from './domain/program/programService';
 import { createEnrollmentService, type EnrollmentServiceInstance } from './domain/program/enrollmentService';
@@ -231,6 +232,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     user,
     markdown,
     agentRunner,
+    workoutInstanceRepository: repos.workoutInstance,
   });
 
   const programAgent = createProgramAgentService(agentRunner);
