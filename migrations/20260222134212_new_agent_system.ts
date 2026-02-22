@@ -14,7 +14,7 @@ import { Migration, sql } from 'kysely';
  * - Simplifies microcycles (dossier-based)
  * - Simplifies profiles (drops structured column)
  * - Simplifies agent_logs (drops eval columns)
- * - Creates simplified workout_instances table
+ * - Migrates workout_instances in-place (renames client_id→user_id, keeps details)
  * - Drops unused tables (prompts, context_templates, agent_extensions)
  */
 
@@ -174,34 +174,35 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE agent_logs DROP COLUMN IF EXISTS eval_score`.execute(db);
 
   // =============================================================================
-  // 7. Create simplified workout_instances table
+  // 7. Migrate workout_instances table in-place
   // =============================================================================
-  console.log('Creating workout_instances table...');
-  
-  // Drop old table if it exists (clean slate)
-  await sql`DROP TABLE IF EXISTS workout_instances CASCADE`.execute(db);
+  console.log('Migrating workout_instances table...');
 
-  // Create simplified table
-  await sql`
-    CREATE TABLE workout_instances (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      date DATE NOT NULL,
-      message TEXT,
-      structure JSONB,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE (user_id, date)
-    )
-  `.execute(db);
+  // Rename client_id → user_id
+  await sql`ALTER TABLE workout_instances RENAME COLUMN client_id TO user_id`.execute(db);
 
-  await sql`
-    CREATE INDEX idx_workout_instances_user_id ON workout_instances (user_id)
-  `.execute(db);
+  // Merge structured data into details where details is null
+  await sql`UPDATE workout_instances SET details = structured WHERE details IS NULL AND structured IS NOT NULL`.execute(db);
 
-  await sql`
-    CREATE INDEX idx_workout_instances_user_date ON workout_instances (user_id, date DESC)
-  `.execute(db);
+  // Drop unused columns
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS microcycle_id`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS session_type`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS goal`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS description`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS reasoning`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS structured`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS completed_at`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS tags`.execute(db);
+
+  // Make details nullable (old schema had NOT NULL)
+  await sql`ALTER TABLE workout_instances ALTER COLUMN details DROP NOT NULL`.execute(db);
+
+  // Add unique constraint on (user_id, date)
+  await sql`ALTER TABLE workout_instances ADD CONSTRAINT workout_instances_user_id_date_unique UNIQUE (user_id, date)`.execute(db);
+
+  // Create indexes
+  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_user_id ON workout_instances (user_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_user_date ON workout_instances (user_id, date DESC)`.execute(db);
 
   // =============================================================================
   // 8. Drop unused tables
@@ -249,8 +250,20 @@ export const down: Migration = async (db) => {
   await sql`ALTER TABLE agent_logs ADD COLUMN IF NOT EXISTS eval_result JSONB`.execute(db);
   await sql`ALTER TABLE agent_logs ADD COLUMN IF NOT EXISTS eval_score NUMERIC(5,2)`.execute(db);
 
-  // Drop workout_instances (rollback can't restore old schema)
-  await sql`DROP TABLE IF EXISTS workout_instances CASCADE`.execute(db);
+  // Restore workout_instances columns
+  await sql`DROP INDEX IF EXISTS idx_workout_instances_user_id`.execute(db);
+  await sql`DROP INDEX IF EXISTS idx_workout_instances_user_date`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP CONSTRAINT IF EXISTS workout_instances_user_id_date_unique`.execute(db);
+  await sql`ALTER TABLE workout_instances ALTER COLUMN details SET NOT NULL`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS structured JSONB`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS reasoning TEXT`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS description TEXT`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS goal TEXT`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS session_type VARCHAR(50)`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS microcycle_id UUID REFERENCES microcycles(id) ON DELETE SET NULL`.execute(db);
+  await sql`ALTER TABLE workout_instances RENAME COLUMN user_id TO client_id`.execute(db);
 
   console.log('Rollback complete!');
 };
