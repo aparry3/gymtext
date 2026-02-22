@@ -32,8 +32,6 @@ interface Exercise {
   short_description: string;
   instructions: string;
   cues: string[];
-  parent_exercise_slug: string;
-  variation_label: string;
   aliases: string[];
   popularity: number;
 }
@@ -55,8 +53,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Classic chest exercise using a barbell on a flat bench',
     instructions: '1. Lie on flat bench with feet on floor\n2. Grip bar slightly wider than shoulder width\n3. Lower bar to mid-chest\n4. Press bar back up to start\n5. Keep shoulder blades retracted',
     cues: ['Keep elbows at 45 degrees', 'Drive through your chest', 'Maintain arch in lower back'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['bench_press', 'bb_bench', 'bench press'],
     popularity: 100,
   },
@@ -76,8 +72,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Standing or seated press for shoulder development',
     instructions: '1. Stand with bar at shoulder height\n2. Grip slightly wider than shoulders\n3. Press bar overhead\n4. Lock out arms at top\n5. Lower with control',
     cues: ['Keep core tight', 'Don\'t arch lower back', 'Move head back as bar passes'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['ohp', 'military_press', 'overhead press'],
     popularity: 95,
   },
@@ -97,8 +91,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Bent-over row for back thickness',
     instructions: '1. Hinge at hips, keep back flat\n2. Grip bar shoulder width\n3. Pull bar to lower chest\n4. Squeeze shoulder blades\n5. Lower with control',
     cues: ['Keep torso parallel to floor', 'Pull to your chest, not stomach', 'Lead with elbows'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['bb_row', 'bent_over_row', 'barbell row'],
     popularity: 98,
   },
@@ -118,8 +110,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Classic bodyweight vertical pull for back and biceps',
     instructions: '1. Hang from bar with overhand grip\n2. Pull body up until chin over bar\n3. Lower with control\n4. Full range of motion',
     cues: ['Engage lats first', 'Keep elbows close to body', 'Avoid swinging'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['chin_up', 'pullup', 'pull up'],
     popularity: 99,
   },
@@ -139,8 +129,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'King of leg exercises - barbell back squat',
     instructions: '1. Position bar on upper back\n2. Feet shoulder width apart\n3. Brace core\n4. Descend until thighs parallel\n5. Drive up through heels',
     cues: ['Keep chest up', 'Knees track over toes', 'Push knees out'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['squat', 'bb_squat', 'back squat'],
     popularity: 100,
   },
@@ -160,8 +148,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Fundamental hip hinge movement for posterior chain',
     instructions: '1. Stand with feet hip width\n2. Grip bar outside knees\n3. Keep back flat, chest up\n4. Drive through heels\n5. Stand tall, squeeze glutes',
     cues: ['Keep bar close to body', 'Engage lats', 'Lead with hips not shoulders'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['dl', 'conventional_deadlift', 'deadlift'],
     popularity: 100,
   },
@@ -181,8 +167,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Classic bicep builder',
     instructions: '1. Stand with barbell, arms extended\n2. Curl bar up\n3. Squeeze at top\n4. Lower with control',
     cues: ['Keep elbows at sides', 'Don\'t swing', 'Full range of motion'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['bb_curl', 'bicep_curl', 'curl'],
     popularity: 85,
   },
@@ -202,8 +186,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Cable exercise for tricep development',
     instructions: '1. Face cable machine\n2. Grip rope or bar\n3. Push down until arms straight\n4. Control the return',
     cues: ['Keep elbows at sides', 'Squeeze at bottom', 'Don\'t lean forward'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['pushdown', 'tricep_pushdown', 'tricep pushdown'],
     popularity: 80,
   },
@@ -223,8 +205,6 @@ const DEFAULT_EXERCISES: Exercise[] = [
     short_description: 'Isometric core stabilization exercise',
     instructions: '1. Forearms on ground\n2. Body in straight line\n3. Engage core\n4. Hold position',
     cues: ['Don\'t let hips sag', 'Squeeze glutes', 'Breathe normally'],
-    parent_exercise_slug: '',
-    variation_label: 'standard',
     aliases: ['front_plank', 'hover', 'plank hold'],
     popularity: 90,
   },
@@ -257,9 +237,8 @@ export async function seedExercises(): Promise<void> {
           training_groups, movement_patterns,
           primary_muscles, secondary_muscles, equipment,
           modality, intensity, short_description,
-          instructions, cues, parent_exercise_slug,
-          variation_label, aliases, popularity
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+          instructions, cues, aliases, popularity
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         ON CONFLICT (slug) DO UPDATE SET
           name = EXCLUDED.name, status = EXCLUDED.status, type = EXCLUDED.type,
           mechanics = EXCLUDED.mechanics, training_groups = EXCLUDED.training_groups,
@@ -267,8 +246,7 @@ export async function seedExercises(): Promise<void> {
           secondary_muscles = EXCLUDED.secondary_muscles, equipment = EXCLUDED.equipment,
           modality = EXCLUDED.modality, intensity = EXCLUDED.intensity,
           short_description = EXCLUDED.short_description, instructions = EXCLUDED.instructions,
-          cues = EXCLUDED.cues, parent_exercise_slug = EXCLUDED.parent_exercise_slug,
-          variation_label = EXCLUDED.variation_label, aliases = EXCLUDED.aliases,
+          cues = EXCLUDED.cues, aliases = EXCLUDED.aliases,
           popularity = EXCLUDED.popularity, updated_at = NOW()
         `,
         [
@@ -276,7 +254,7 @@ export async function seedExercises(): Promise<void> {
           exercise.training_groups, exercise.movement_patterns, exercise.primary_muscles,
           exercise.secondary_muscles, exercise.equipment, exercise.modality, exercise.intensity,
           exercise.short_description, exercise.instructions, exercise.cues,
-          exercise.parent_exercise_slug, exercise.variation_label, exercise.aliases, exercise.popularity
+          exercise.aliases, exercise.popularity
         ]
       );
       console.log(`  ✓ ${exercise.name}`);
