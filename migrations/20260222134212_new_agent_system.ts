@@ -25,8 +25,12 @@ export const up: Migration = async (db) => {
   // 1. Create agent_definitions table
   // =============================================================================
   console.log('Creating agent_definitions table...');
+  
+  // Drop existing table if it exists (main branch has incompatible schema)
+  await sql`DROP TABLE IF EXISTS agent_definitions CASCADE`.execute(db);
+  
   await sql`
-    CREATE TABLE IF NOT EXISTS agent_definitions (
+    CREATE TABLE agent_definitions (
       version_id SERIAL PRIMARY KEY,
       agent_id TEXT NOT NULL UNIQUE,
       system_prompt TEXT NOT NULL,
