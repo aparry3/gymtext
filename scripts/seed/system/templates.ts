@@ -107,7 +107,7 @@ Sunday: {{microcycle.days.6}}`,
   },
   {
     contextType: 'trainingContext',
-    template: '{{#if isFirstSession}}This is the user's first session with this program.{{/if}}',
+    template: '{{#if isFirstSession}}This is the user\'s first session with this program.{{/if}}',
   },
 ];
 
