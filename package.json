@@ -20,9 +20,8 @@
     "db:migrate:down": "tsx scripts/migrations/run.ts down",
     "db:migrate:create": "tsx scripts/migrations/create.ts",
     "migrate:create": "tsx scripts/migrations/create.ts",
-    "seed:exercises": "source .env.local && npx tsx scripts/seed-exercises.ts",
-    "seed:exercise-db": " npx tsx scripts/seed-exercise-db.ts",
-    "seed:embeddings": "tsx scripts/seed-exercise-embeddings.ts",
+    "seed": "tsx scripts/seed/index.ts",
+    "seed:help": "tsx scripts/seed/index.ts --help",
     "migrate:up": "tsx scripts/migrations/run.ts up",
     "migrate:latest": "tsx scripts/migrations/run.ts latest",
     "migrate:down": "tsx scripts/migrations/run.ts down",
@@ -44,8 +43,7 @@
     "agent:list": "source .env.local && tsx scripts/agent-definition.ts list",
     "agent:update-prompts": "source .env.local && tsx scripts/update-agent-prompts.ts",
     "agent:update-user-prompts": "source .env.local && tsx scripts/update-user-prompts.ts",
-    "agent:update-user-prompts:dry": "source .env.local && tsx scripts/update-user-prompts.ts --dry-run",
-    "seed:templates": "source .env.local && npx tsx scripts/seed-context-templates.ts"
+    "agent:update-user-prompts:dry": "source .env.local && tsx scripts/update-user-prompts.ts --dry-run"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.1",
