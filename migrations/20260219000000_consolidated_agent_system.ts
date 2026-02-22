@@ -64,6 +64,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     ON agent_definitions (is_active) WHERE is_active = true
   `.execute(db);
 
+  // Add unique constraint on agent_id for upsert operations (use DROP + ADD for idempotency)
+  await sql`ALTER TABLE agent_definitions DROP CONSTRAINT IF EXISTS uq_agent_definitions_agent_id`.execute(db);
+  await sql`ALTER TABLE agent_definitions ADD CONSTRAINT uq_agent_definitions_agent_id UNIQUE (agent_id)`.execute(db);
+
   // =============================================================================
   // 2. Seed agent definitions (only if table is empty)
   // =============================================================================
@@ -267,8 +271,17 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Add content column if not exists
   await sql`ALTER TABLE fitness_plans ADD COLUMN IF NOT EXISTS content TEXT`.execute(db);
 
-  // Migrate existing description to content if content is null
-  await sql`UPDATE fitness_plans SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
+  // Migrate existing description to content if content is null (only if description column exists)
+  const fitnessPlansDescExists = await sql<{ exists: boolean }>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns 
+      WHERE table_name = 'fitness_plans' AND column_name = 'description'
+    ) as exists
+  `.execute(db);
+  
+  if (fitnessPlansDescExists.rows[0]?.exists) {
+    await sql`UPDATE fitness_plans SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
+  }
 
   // Drop unused columns (may not exist on older databases)
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS current_state`.execute(db);
@@ -293,8 +306,17 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS content TEXT`.execute(db);
   await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS plan_id UUID REFERENCES fitness_plans(id)`.execute(db);
 
-  // Migrate existing description to content
-  await sql`UPDATE microcycles SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
+  // Migrate existing description to content (only if description column exists)
+  const microcyclesDescExists = await sql<{ exists: boolean }>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns 
+      WHERE table_name = 'microcycles' AND column_name = 'description'
+    ) as exists
+  `.execute(db);
+  
+  if (microcyclesDescExists.rows[0]?.exists) {
+    await sql`UPDATE microcycles SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
+  }
 
   // Drop unused columns
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS absolute_week`.execute(db);
@@ -321,6 +343,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Drop eval columns if they exist
   await sql`ALTER TABLE agent_logs DROP COLUMN IF EXISTS eval_result`.execute(db);
   await sql`ALTER TABLE agent_logs DROP COLUMN IF EXISTS eval_score`.execute(db);
+
+  // =============================================================================
+  // 8. Drop unused tables (prompts and context_templates)
+  // =============================================================================
+  console.log('Dropping unused tables (prompts, context_templates)...');
+  await sql`DROP TABLE IF EXISTS prompts`.execute(db);
+  await sql`DROP TABLE IF EXISTS context_templates`.execute(db);
+  // NOTE: workout_instances table is kept for backward compatibility
 
   console.log('Consolidated agent system migration complete!');
 }
