@@ -344,6 +344,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`ALTER TABLE agent_logs DROP COLUMN IF EXISTS eval_result`.execute(db);
   await sql`ALTER TABLE agent_logs DROP COLUMN IF EXISTS eval_score`.execute(db);
 
+  // =============================================================================
+  // 8. Drop unused tables (prompts and context_templates)
+  // =============================================================================
+  console.log('Dropping unused tables (prompts, context_templates)...');
+  await sql`DROP TABLE IF EXISTS prompts`.execute(db);
+  await sql`DROP TABLE IF EXISTS context_templates`.execute(db);
+  // NOTE: workout_instances table is kept for backward compatibility
+
   console.log('Consolidated agent system migration complete!');
 }
 
