@@ -197,6 +197,20 @@ export const up: Migration = async (db) => {
   // Make details nullable (old schema had NOT NULL)
   await sql`ALTER TABLE workout_instances ALTER COLUMN details DROP NOT NULL`.execute(db);
 
+  // Deduplicate: keep the most recent workout per (user_id, date), delete older duplicates
+  await sql`
+    DELETE FROM workout_instances w
+    USING (
+      SELECT user_id, date, MAX(updated_at) as max_updated
+      FROM workout_instances
+      GROUP BY user_id, date
+      HAVING COUNT(*) > 1
+    ) dupes
+    WHERE w.user_id = dupes.user_id
+      AND w.date = dupes.date
+      AND w.updated_at < dupes.max_updated
+  `.execute(db);
+
   // Add unique constraint on (user_id, date)
   await sql`ALTER TABLE workout_instances ADD CONSTRAINT workout_instances_user_id_date_unique UNIQUE (user_id, date)`.execute(db);
 

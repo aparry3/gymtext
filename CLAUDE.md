@@ -357,6 +357,12 @@ SANDBOX_STRIPE_WEBHOOK_SECRET=...
 
 If sandbox variables are not set, sandbox mode falls back to production credentials.
 
+### Migration Testing (Optional)
+```bash
+# Read-only connection to production (used by pnpm test:migration)
+READONLY_PROD_DB_URL=postgresql://...
+```
+
 ## Chat Architecture
 
 The chat system is orchestrated by `ChatService` which calls agents via `agentRunner.invoke()`:
