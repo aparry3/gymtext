@@ -8,15 +8,12 @@
  *
  * IMPORTANT: This migration now migrates existing data instead of dropping the table.
  */
-import { sql } from 'kysely';
-import { postgresDb } from '@/server/connections/postgres/postgres';
-
-const db = postgresDb;
+import { Migration, sql } from 'kysely';
 
 /**
  * Simplify workout_instances table by migrating data to new schema
  */
-export async function up(): Promise<void> {
+export const up: Migration = async (db) => {
   console.log('Simplifying workout_instances table (with data migration)...');
 
   // Step 1: Add new columns that don't exist in the old schema
@@ -81,7 +78,7 @@ export async function up(): Promise<void> {
 /**
  * Restore original workout_instances table (rollback)
  */
-export async function down(): Promise<void> {
+export const down: Migration = async (db) => {
   console.log('Reverting workout_instances table...');
 
   // Step 1: Add back old columns
