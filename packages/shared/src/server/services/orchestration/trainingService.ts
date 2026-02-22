@@ -16,6 +16,7 @@ import type { Microcycle } from '@/server/models/microcycle';
 // Domain services
 import type { UserServiceInstance } from '../domain/user/userService';
 import type { MarkdownServiceInstance } from '../domain/markdown/markdownService';
+import type { WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
 
 
 // Agent services
@@ -49,6 +50,7 @@ export interface TrainingServiceDeps {
   user: UserServiceInstance;
   markdown: MarkdownServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
+  workoutInstanceRepository: WorkoutInstanceRepository;
 }
 
 // =============================================================================
@@ -60,6 +62,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     user: userService,
     markdown: markdownService,
     agentRunner: simpleAgentRunner,
+    workoutInstanceRepository: workoutInstanceRepo,
   } = deps;
 
   return {
@@ -221,6 +224,13 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const workoutMessage = normalizeWhitespace(result.response);
         const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
+        // Save workout message to database (upsert by user_id + date)
+        await workoutInstanceRepo.upsert({
+          userId: user.id,
+          date: targetDate.toISODate()!,
+          message: workoutMessage,
+        });
+
         console.log(`[TrainingService] Generated workout for user ${user.id} on ${targetDate.toISODate()}`);
 
         return {
@@ -293,7 +303,16 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         params: { user, date: new Date(workout.date) },
       });
 
-      return result.response;
+      const regeneratedMessage = result.response;
+
+      // Save workout message to database (upsert by user_id + date)
+      await workoutInstanceRepo.upsert({
+        userId: user.id,
+        date: DateTime.fromJSDate(workoutDate).toISODate()!,
+        message: regeneratedMessage,
+      });
+
+      return regeneratedMessage;
     },
   };
 }
