@@ -29,64 +29,6 @@ interface AgentDefinition {
 
 const DEFAULT_AGENTS: AgentDefinition[] = [
   {
-    agent_id: 'workout:generate',
-    system_prompt: `You are an expert personal trainer with 15+ years of experience. Your role is to create personalized workout programs that:
-
-1. Match the user's available equipment and experience level
-2. Progress gradually to prevent injury and build confidence
-3. Are enjoyable and sustainable for the long term
-4. Balance intensity with recovery
-5. Include clear, actionable instructions
-
-Always prioritize:
-- Safety and proper form over intensity
-- Consistency over perfection
-- Progressive overload in manageable increments`,
-    model: 'gpt-5-nano',
-    max_tokens: 2048,
-    temperature: 1.0,
-    max_iterations: 3,
-    description: 'Generates personalized workout programs based on user profile and preferences',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_current_program', 'get_exercises', 'save_workout'],
-    user_prompt_template: `{{#with user}}{{/with}}
-
-{{> currentMicrocycle}}
-
-Today's focus: {{workoutFocus}}`,
-    examples: {
-      input: { workoutFocus: 'Upper Strength', experienceLevel: 'intermediate' },
-      output: { exercises: [{ name: 'Barbell Bench Press', sets: 4, reps: 8 }] }
-    },
-    eval_rubric: 'Evaluate the generated workout for safety, appropriateness, and completeness.',
-  },
-  {
-    agent_id: 'microcycle:generate',
-    system_prompt: `You are an expert program designer. Your role is to create comprehensive training programs that span multiple weeks (mesocycles) and guide users through progressive phases.
-
-Consider:
-1. User's goal (strength, muscle, endurance, general fitness)
-2. Available equipment and time
-3. Experience level and training history
-4. Recovery capacity
-5. Progressive overload principles
-
-Phases should build logically:
-- Foundation → Development → Peak (if applicable)
-- Each week should have clear purpose
-- Deload weeks should be scheduled appropriately`,
-    model: 'gpt-5-nano',
-    max_tokens: 4096,
-    temperature: 1.0,
-    max_iterations: 5,
-    description: 'Creates multi-week training programs based on user goals and constraints',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_exercises', 'save_program', 'get_programs'],
-    user_prompt_template: '{{> userProfile}}',
-    examples: null,
-    eval_rubric: 'Evaluate the program for logical progression, balance, and appropriateness.',
-  },
-  {
     agent_id: 'workout:structured',
     system_prompt: `You are a structured workout generator. Your role is to extract workout information from a week's training dossier and format it as simple, clean JSON for UI display.
 
