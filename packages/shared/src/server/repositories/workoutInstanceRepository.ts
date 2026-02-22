@@ -12,9 +12,9 @@ import type { DB } from '@/server/models/_types';
 export interface WorkoutInstanceRow {
   id: string;
   userId: string;
-  date: string;
+  date: Date;
   message: string | null;
-  structure: Record<string, unknown> | null;
+  details: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,12 +23,12 @@ export interface CreateWorkoutInstanceInput {
   userId: string;
   date: string; // YYYY-MM-DD format
   message?: string;
-  structure?: Record<string, unknown>;
+  details?: Record<string, unknown>;
 }
 
 export interface UpdateWorkoutInstanceInput {
   message?: string;
-  structure?: Record<string, unknown>;
+  details?: Record<string, unknown>;
 }
 
 export class WorkoutInstanceRepository extends BaseRepository {
@@ -40,7 +40,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
    * Upsert a workout instance by user_id + date
    */
   async upsert(input: CreateWorkoutInstanceInput & UpdateWorkoutInstanceInput): Promise<WorkoutInstanceRow> {
-    const { userId, date, message, structure } = input;
+    const { userId, date, message, details } = input;
 
     // Use upsert with ON CONFLICT DO UPDATE
     const result = await this.db
@@ -49,11 +49,11 @@ export class WorkoutInstanceRepository extends BaseRepository {
         userId,
         date,
         message: message ?? null,
-        structure: structure ? JSON.stringify(structure) : null,
+        details: details ? JSON.stringify(details) : null,
       })
       .onConflict((oc) => oc.columns(['userId', 'date']).doUpdateSet({
         message: message ?? null,
-        structure: structure ? JSON.stringify(structure) : null,
+        details: details ? JSON.stringify(details) : null,
         updatedAt: sql`CURRENT_TIMESTAMP`,
       }))
       .returningAll()
@@ -64,7 +64,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       userId: result.userId,
       date: result.date,
       message: result.message,
-      structure: result.structure as Record<string, unknown> | null,
+      details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
     };
@@ -78,7 +78,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .selectFrom('workoutInstances')
       .selectAll()
       .where('userId', '=', userId)
-      .where('date', '=', date)
+      .where('date', '=', new Date(date))
       .executeTakeFirst();
 
     if (!result) return null;
@@ -88,7 +88,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       userId: result.userId,
       date: result.date,
       message: result.message,
-      structure: result.structure as Record<string, unknown> | null,
+      details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
     };
@@ -118,7 +118,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       userId: r.userId,
       date: r.date,
       message: r.message,
-      structure: r.structure as Record<string, unknown> | null,
+      details: r.details as Record<string, unknown> | null,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     }));
