@@ -62,6 +62,9 @@ async function main() {
   // Step 4: Seed database
   run('pnpm seed --all', 'Seed database with agents and exercises');
 
+  // Step 5: Regenerate TypeScript types from new schema
+  run('pnpm db:codegen', 'Regenerate TypeScript types from schema');
+
   console.log('\n✅ Database reset complete!');
   console.log(`\nDatabase: ${DB_NAME}`);
   console.log(`Branch: ${currentBranch}`);
