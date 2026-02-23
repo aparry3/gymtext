@@ -1,5 +1,3 @@
-# Week Modify Agent User Prompt
-
 Modify the existing microcycle based on:
 
 {{input}}

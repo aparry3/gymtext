@@ -1,5 +1,3 @@
-# Workout Message Agent User Prompt
-
 Convert this workout into a daily text message:
 
 {{input}}
