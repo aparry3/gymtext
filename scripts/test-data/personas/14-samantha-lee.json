@@ -1,0 +1,27 @@
+{
+  "id": "samantha-lee",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Samantha Lee",
+    "phone": "+13392220014",
+    "age": 33,
+    "gender": "female",
+    "timezone": "America/New_York"
+  },
+  "signupData": {
+    "experienceLevel": "beginner",
+    "desiredDaysPerWeek": "3",
+    "primaryGoals": ["strength"],
+    "goalsElaboration": "Postpartum (6 months), rebuild core strength and pelvic floor function. General fitness, regain pre-pregnancy strength. Gradual progression, no rush.",
+    "trainingLocation": "home",
+    "locationElaboration": "Home - resistance bands, 10/15/20 lb dumbbells, exercise ball, yoga mat",
+    "equipment": ["dumbbells", "bands", "exercise_ball"],
+    "injuries": "Postpartum diastasis recti, pelvic floor weakness. Working with pelvic PT. Avoids high-impact movements, exercises that cause leaking or coning.",
+    "experienceElaboration": "4 months back to exercise, cleared by doctor. Previously moderately active before pregnancy. Trains Mon/Wed/Fri at 10 AM during baby naps, 30-45 min."
+  },
+  "onboardingMessages": [
+    "I'm 6 months postpartum and trying to rebuild my core strength and pelvic floor. My doctor cleared me for exercise.",
+    "I work out at home during baby naps - I have resistance bands, light dumbbells up to 20 lb, an exercise ball, and a yoga mat.",
+    "I have diastasis recti and pelvic floor weakness - I'm working with a pelvic PT. I need to avoid anything that causes coning or leaking. Gentle progression please."
+  ]
+}

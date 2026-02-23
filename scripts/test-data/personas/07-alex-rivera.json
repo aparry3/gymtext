@@ -1,0 +1,26 @@
+{
+  "id": "alex-rivera",
+  "detailLevel": "sparse",
+  "userData": {
+    "name": "Alex Rivera",
+    "phone": "+13392220007",
+    "age": 24,
+    "gender": "non-binary",
+    "timezone": "America/Chicago"
+  },
+  "signupData": {
+    "experienceLevel": "beginner",
+    "desiredDaysPerWeek": "4",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "Recovering from ACL surgery (9 months post-op). Want to get back to playing soccer and rebuild leg strength.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "University rec center - standard gym equipment",
+    "equipment": ["barbells", "dumbbells", "machines"],
+    "injuries": "ACL reconstruction (right knee), 9 months post-op. Still doing PT. Nervous about re-injury."
+  },
+  "onboardingMessages": [
+    "I had ACL surgery about 9 months ago and I'm trying to get back to playing soccer",
+    "I go to the university rec center, they have standard gym stuff",
+    "I'm still doing physical therapy and I'm pretty nervous about pushing too hard on my knee"
+  ]
+}

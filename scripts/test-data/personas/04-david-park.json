@@ -1,0 +1,29 @@
+{
+  "id": "david-park",
+  "detailLevel": "detailed",
+  "userData": {
+    "name": "David Park",
+    "phone": "+13392220004",
+    "age": 35,
+    "gender": "male",
+    "timezone": "America/Los_Angeles"
+  },
+  "signupData": {
+    "experienceLevel": "advanced",
+    "desiredDaysPerWeek": "5",
+    "primaryGoals": ["muscle_building"],
+    "goalsElaboration": "Competitive bodybuilder (NPC men's physique), 20 weeks out from Western Regional (July 19, 2025). Stage weight target 175 lb (currently 185). Need to bring up rear delts, lateral delts, triceps long head. Self-coached prep this time.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "LA Fitness - full dumbbell rack 5-120 lb, 8 cable stations, Hammer Strength machines, leg press, hack squat, Smith machine, full cardio",
+    "equipment": ["dumbbells", "cables", "machines", "barbells"],
+    "injuries": "Left knee ACL reconstruction (2019, 6 years post-op). Avoids heavy barbell back squats >225 lb and deep lunges. Uses knee sleeves on leg days. Safe: leg press, hack squat, Bulgarian split squats (controlled), Smith machine.",
+    "experienceElaboration": "7 years consistent training. 5 NPC shows over 3 years (2022-2024), best placing 2nd at regional. Currently in caloric deficit (2200 cal). Prefers controlled tempo, mind-muscle connection, high volume 15-20 sets/muscle/week. PPL-UL hybrid split."
+  },
+  "onboardingMessages": [
+    "I'm a competitive men's physique bodybuilder, 20 weeks out from NPC Western Regional. Currently 185 lb targeting 175 on stage at 6-7% body fat.",
+    "I train at LA Fitness 5x/week - Mon/Tue/Thu/Fri/Sat. Push/Pull/Legs/Upper/Lower split. 75-90 min sessions plus cardio. I prefer cables and machines for mind-muscle connection.",
+    "I had ACL reconstruction on my left knee in 2019 - no heavy barbell squats or deep lunges. Leg press, hack squat, and controlled Bulgarians are fine with knee sleeves.",
+    "I'm in a deficit at 2200 calories. I want high volume with controlled tempos, drop sets and supersets in later prep. Weak points are rear delts, lateral delts, and triceps long head.",
+    "I track everything - daily photos, scale, measurements, RPE, biofeedback. I want data-driven programming that adjusts as the prep gets harder."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "emily-rodriguez",
+  "detailLevel": "detailed",
+  "userData": {
+    "name": "Emily Rodriguez",
+    "phone": "+13392220003",
+    "age": 42,
+    "gender": "female",
+    "timezone": "America/Chicago"
+  },
+  "signupData": {
+    "experienceLevel": "advanced",
+    "desiredDaysPerWeek": "3",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "Marathon runner (PR 3:25:17) using strength training for injury prevention and performance. Targeting sub-3:15 BQ at June 14 race. IT band syndrome history. Strength is supplementary to running, not primary.",
+    "trainingLocation": "home_gym",
+    "locationElaboration": "Home gym (converted garage) - Rogue squat rack with pull-up bar, Olympic barbell, plates up to 225 lb total, dumbbells 10-40 lb pairs, kettlebells 16/24/32 kg, resistance bands, adjustable bench",
+    "equipment": ["barbells", "dumbbells", "kettlebells", "bands", "bench"],
+    "injuries": "IT band syndrome (right leg, 2022-2023, mostly resolved with PT + strength). Still prone to flare-ups if leg volume too high. Tight hip flexors. Previous plantar fasciitis (2021, fully healed).",
+    "experienceElaboration": "5 years serious running, 2 years strength training. 8 marathons completed. Solid lifting mechanics but doesn't prioritize strength PRs. Strength days Tue/Thu/Sat synchronized with run schedule. 45-60 min sessions max.",
+    "availabilityElaboration": "Tue/Thu at 6:30 PM after easy runs, Sat at 8 AM after long run. Cannot be sore for Mon/Wed/Fri/Sun key run workouts. Currently 55 mpw building to 65-70."
+  },
+  "onboardingMessages": [
+    "I'm a marathon runner targeting a Boston Qualifier - need sub-3:15 at my June race. My PR is 3:25. I use strength training to support my running and prevent injuries.",
+    "I train at home - squat rack, barbell, dumbbells up to 40 lb, kettlebells. Max 225 lb on the bar. I can do strength Tue/Thu/Sat, 45-60 min max.",
+    "I have IT band issues on my right leg that flare up with too much leg volume. I can't do heavy eccentrics before my long runs. Running is always priority #1.",
+    "I want efficient workouts - supersets, posterior chain focus, single-leg strength for imbalances, hip stability. Minimum effective dose philosophy."
+  ]
+}

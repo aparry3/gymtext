@@ -1,0 +1,28 @@
+{
+  "id": "marcus-johnson",
+  "detailLevel": "detailed",
+  "userData": {
+    "name": "Marcus Johnson",
+    "phone": "+13392220002",
+    "age": 32,
+    "gender": "male",
+    "timezone": "America/Phoenix"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "4",
+    "primaryGoals": ["strength"],
+    "goalsElaboration": "Competitive powerlifter, 12 weeks out from meet. Current total 1350 lb, targeting 1450 lb. Squat 455→485, Bench 315→340, Deadlift 580→625. Fix bench sticking point 2-3 inches off chest, improve squat depth consistency.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "Iron Haven Powerlifting Gym (Tempe, AZ) - competition-spec power racks, specialty bars (SSB, Swiss, Texas DL), chains, bands, mono-lifts, full dumbbell rack to 150 lb, GHD, reverse hyper",
+    "equipment": ["barbells", "dumbbells", "specialty_bars", "bands", "chains"],
+    "injuries": "Chronic right shoulder impingement - manages with daily band work, aggravated by overhead work or wide-grip bench. Cannot do strict overhead press, uses landmine variations. Sees sports PT monthly.",
+    "experienceElaboration": "2.5 years focused powerlifting, 4 years total. Competed USAPL local meet Nov 2024 (8/9, 3rd in 220 lb class). Prefers percentage-based programming, DUP, familiar with RPE. Trains Mon/Tue/Thu/Fri at 5:30 AM."
+  },
+  "onboardingMessages": [
+    "I'm a competitive powerlifter, 12 weeks out from my Spring Regional meet on May 17. Current total is 1350 - squat 455, bench 315, deadlift 580. I want to hit 1450.",
+    "I train at a powerlifting gym with all the specialty bars, comp racks, mono-lifts, the works. I prefer percentage-based programming with daily undulating periodization.",
+    "I have a chronic right shoulder impingement - can't do overhead press, use landmine variations instead. I see a sports PT monthly and do rotator cuff prehab 6x/week.",
+    "I train Mon/Tue/Thu/Fri at 5:30 AM, 90-120 min sessions. Wed is date night, weekends are family time. I can handle 20-25 working sets per session."
+  ]
+}

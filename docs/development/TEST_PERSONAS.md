@@ -964,3 +964,61 @@ These personas should enable testing of:
 10. **Communication style** - education level, confidence, preferences
 
 Each persona is realistic enough to generate authentic training conversations and programming challenges.
+
+---
+
+## Usage
+
+### Create a single test user
+
+```bash
+pnpm test:create-user sarah-chen
+```
+
+### Create all test users
+
+```bash
+pnpm test:create-user --all
+```
+
+### List available personas
+
+```bash
+pnpm test:create-user --list
+```
+
+### Clean up test users
+
+```bash
+pnpm test:cleanup-users
+```
+
+### Dry run cleanup (see what would be deleted)
+
+```bash
+pnpm test:cleanup-users --dry-run
+```
+
+### JSON Data Files
+
+Persona data is stored as individual JSON files in `scripts/test-data/personas/`. Each file contains:
+- `id` — Persona identifier (used as CLI argument)
+- `detailLevel` — sparse, moderate, or detailed
+- `userData` — Name, phone, age, gender, timezone
+- `signupData` — Experience, goals, equipment, injuries (maps to signup form fields)
+- `onboardingMessages` — Simulated user messages for onboarding conversation
+
+### What the scripts do
+
+**`create-test-user`:**
+1. Loads persona JSON file
+2. Deletes existing user with same phone number (idempotent)
+3. Creates user record in database
+4. Creates test Stripe subscription directly in DB (bypasses Stripe)
+5. Creates onboarding data record
+6. Stores onboarding messages
+
+**`cleanup-test-users`:**
+1. Finds all users with phone numbers in range +13392220001 through +13392220015
+2. Deletes all related data (workouts, profiles, messages, subscriptions, etc.)
+3. Deletes user records

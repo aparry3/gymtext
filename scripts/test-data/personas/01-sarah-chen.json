@@ -1,0 +1,26 @@
+{
+  "id": "sarah-chen",
+  "detailLevel": "sparse",
+  "userData": {
+    "name": "Sarah Chen",
+    "phone": "+13392220001",
+    "age": 28,
+    "gender": "female",
+    "timezone": "America/New_York"
+  },
+  "signupData": {
+    "experienceLevel": "beginner",
+    "desiredDaysPerWeek": "3",
+    "primaryGoals": ["strength", "weight_loss"],
+    "goalsElaboration": "Get stronger and lose some weight",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "Commercial gym with barbells, dumbbells, and machines",
+    "equipment": ["barbells", "dumbbells", "machines"],
+    "injuries": null
+  },
+  "onboardingMessages": [
+    "I want to get stronger and maybe lose some weight",
+    "I go to a regular gym with barbells, dumbbells, and machines",
+    "I can work out Monday, Wednesday, and Friday, about 45 minutes each"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "tom-anderson",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Tom Anderson",
+    "phone": "+13392220006",
+    "age": 51,
+    "gender": "male",
+    "timezone": "America/Denver"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "3",
+    "primaryGoals": ["strength"],
+    "goalsElaboration": "Maintain strength and muscle mass for healthy aging. Joint health, mobility, stay athletic. Long-term health focus, no specific timeline.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "YMCA - standard commercial gym equipment",
+    "equipment": ["barbells", "dumbbells", "machines", "cables"],
+    "injuries": "Arthritis in right shoulder, previous meniscus surgery (left knee). Needs longer warm-up. Avoids heavy overhead pressing and max effort lifts.",
+    "experienceElaboration": "Former college basketball player. Lifted on/off for 20 years, consistent last 3 years. Focused on healthy aging and sustainable training."
+  },
+  "onboardingMessages": [
+    "I'm 51 and want to maintain my strength and muscle mass as I age. Joint health and mobility are big priorities for me.",
+    "I go to the YMCA 3 days a week - Mon/Wed/Fri at 6 AM, about 60 minutes. Standard gym equipment.",
+    "I have arthritis in my right shoulder and had meniscus surgery on my left knee. I need longer warm-ups and avoid heavy overhead pressing and max effort work."
+  ]
+}
