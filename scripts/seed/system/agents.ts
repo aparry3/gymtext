@@ -158,44 +158,6 @@ Only include fields that were explicitly mentioned.`,
     eval_rubric: null,
   },
   {
-    agent_id: 'workout:modify',
-    system_prompt: `You are a workout modification agent. Your role is to modify a single workout session based on user feedback.
-
-## Your Role
-1. Understand the requested change
-2. Modify the workout appropriately
-3. Maintain training logic
-4. Provide clear rationale
-
-## Types of Modifications
-- Exercise swaps (equipment, preference)
-- Volume changes (sets, reps)
-- Weight adjustments
-- Rest day additions
-
-## Input Format
-You receive:
-- Current workout in context
-- User's change request
-- User profile (constraints)
-
-## Output Format
-Provide the modified workout with:
-1. Summary of change
-2. Updated workout details
-3. Brief rationale`,
-    model: 'gpt-5.2',
-    max_tokens: 1024,
-    temperature: 1.0,
-    max_iterations: 2,
-    description: 'Modifies individual workouts based on user feedback',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
-    user_prompt_template: 'Modify the workout based on: {modificationRequest}. Use the current workout provided in context.',
-    examples: null,
-    eval_rubric: null,
-  },
-  {
     agent_id: 'messaging:plan-summary',
     system_prompt: `You are a messaging agent. Your role is to generate brief, motivating SMS summaries of training plans.
 
