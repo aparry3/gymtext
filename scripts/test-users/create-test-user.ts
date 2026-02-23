@@ -1,31 +1,33 @@
 /**
- * Create test users from persona JSON files
+ * Create test users using the actual signup API flow
  *
  * Usage:
- *   pnpm test:create-user <persona-id>       # Create single user
- *   pnpm test:create-user sarah-chen          # Example
- *   pnpm test:create-user --all               # Create all test users
- *   pnpm test:create-user --list              # List available personas
+ *   pnpm signup --persona sarah-chen       # Create single user
+ *   pnpm signup --persona marcus-johnson    # Example
+ *   pnpm signup --all                       # Create all test users
+ *   pnpm signup --list                      # List available personas
  *
- * Features:
- *   - Loads persona from JSON file
- *   - Deletes existing user with same phone (idempotent)
- *   - Creates user in database
- *   - Creates test Stripe subscription directly in DB
- *   - Creates onboarding record with signup data
- *   - Outputs: user ID, subscription status
+ * Flow:
+ *   1. Load persona JSON
+ *   2. Clean up existing user (DB cleanup for idempotency)
+ *   3. POST to /api/users/signup (same endpoint the UI hits)
+ *   4. Create test subscription directly in DB (bypasses Stripe checkout)
+ *   5. Output: user ID, subscription status, ready to watch messages
  *
  * Environment:
  *   Requires DATABASE_URL in .env.local
+ *   Requires local dev server running (pnpm dev)
+ *   Set BASE_URL to override (default: http://localhost:3000)
  */
 
 import 'dotenv/config';
 import { Pool } from 'pg';
 import { randomUUID } from 'crypto';
 import { readFileSync, readdirSync } from 'fs';
-import { resolve, basename } from 'path';
+import { resolve } from 'path';
 
 const PERSONAS_DIR = resolve(__dirname, '../test-data/personas');
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 interface Persona {
   id: string;
@@ -80,8 +82,16 @@ function listPersonas(): void {
   console.log(`\n  Total: ${personas.length} personas\n`);
 }
 
+async function checkServerRunning(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/health`, { signal: AbortSignal.timeout(3000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 async function deleteExistingUser(pool: Pool, phone: string): Promise<string | null> {
-  // Find existing user
   const result = await pool.query('SELECT id FROM users WHERE phone_number = $1', [phone]);
   if (result.rows.length === 0) return null;
 
@@ -114,37 +124,14 @@ async function deleteExistingUser(pool: Pool, phone: string): Promise<string | n
   return userId;
 }
 
-async function createUser(pool: Pool, persona: Persona): Promise<string> {
-  const userId = randomUUID();
+/**
+ * Create a test subscription directly in DB (bypasses Stripe checkout).
+ * This is the one part we can't hit via API without a real card.
+ */
+async function createTestSubscription(pool: Pool, userId: string, personaId: string): Promise<void> {
   const now = new Date().toISOString();
-
-  console.log(`\n🔧 Creating user: ${persona.userData.name} (${persona.id})`);
-
-  // Step 1: Delete existing user with same phone
-  const existingId = await deleteExistingUser(pool, persona.userData.phone);
-  if (existingId) {
-    console.log(`  ✅ Cleaned up existing user`);
-  }
-
-  // Step 2: Create user
-  await pool.query(
-    `INSERT INTO users (id, name, phone_number, age, gender, timezone, preferred_send_hour, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`,
-    [
-      userId,
-      persona.userData.name,
-      persona.userData.phone,
-      persona.userData.age || null,
-      persona.userData.gender || null,
-      persona.userData.timezone,
-      8, // default preferred send hour
-      now,
-    ]
-  );
-  console.log(`  ✅ User created: ${userId}`);
-
-  // Step 3: Create test subscription (bypass Stripe)
   const subId = randomUUID();
+
   try {
     await pool.query(
       `INSERT INTO subscriptions (id, user_id, stripe_subscription_id, stripe_customer_id, status, current_period_start, current_period_end, created_at, updated_at)
@@ -152,18 +139,17 @@ async function createUser(pool: Pool, persona: Persona): Promise<string> {
       [
         subId,
         userId,
-        `sub_test_${persona.id}`,
-        `cus_test_${persona.id}`,
+        `sub_test_${personaId}`,
+        `cus_test_${personaId}`,
         'active',
         now,
-        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         now,
       ]
     );
     console.log(`  ✅ Test subscription created (active)`);
   } catch (err: any) {
-    // If subscriptions table has different columns, try minimal insert
-    console.log(`  ⚠️  Subscription insert failed: ${err.message}. Trying alternative...`);
+    // Try minimal insert if columns differ
     try {
       await pool.query(
         `INSERT INTO subscriptions (id, user_id, status, created_at, updated_at)
@@ -172,47 +158,103 @@ async function createUser(pool: Pool, persona: Persona): Promise<string> {
       );
       console.log(`  ✅ Test subscription created (minimal)`);
     } catch {
-      console.log(`  ⚠️  Could not create subscription - may need manual setup`);
+      console.log(`  ⚠️  Could not create subscription: ${err.message}`);
     }
   }
+}
 
-  // Step 4: Create onboarding record
-  try {
-    await pool.query(
-      `INSERT INTO onboarding_data (id, user_id, signup_data, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $5)`,
-      [
-        randomUUID(),
-        userId,
-        JSON.stringify(persona.signupData),
-        'completed',
-        now,
-      ]
+/**
+ * Build the signup request body matching what the UI sends
+ */
+function buildSignupPayload(persona: Persona): Record<string, unknown> {
+  return {
+    // User data
+    name: persona.userData.name,
+    phoneNumber: persona.userData.phone,
+    age: persona.userData.age?.toString(),
+    gender: persona.userData.gender,
+    timezone: persona.userData.timezone,
+    preferredSendHour: 8,
+
+    // Signup/fitness data
+    ...persona.signupData,
+
+    // Consent flags
+    smsConsent: true,
+    smsConsentedAt: new Date().toISOString(),
+    acceptedRisks: true,
+  };
+}
+
+async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
+  console.log(`\n🔧 Creating user: ${persona.userData.name} (${persona.id})`);
+
+  // Step 1: Clean up existing user
+  const existingId = await deleteExistingUser(pool, persona.userData.phone);
+  if (existingId) {
+    console.log(`  ✅ Cleaned up existing user`);
+  }
+
+  // Step 2: Hit the actual signup endpoint
+  console.log(`  📡 POST ${BASE_URL}/api/users/signup`);
+  const payload = buildSignupPayload(persona);
+
+  const response = await fetch(`${BASE_URL}/api/users/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || !body.success) {
+    throw new Error(
+      `Signup API failed (${response.status}): ${body.message || JSON.stringify(body)}`
     );
-    console.log(`  ✅ Onboarding record created`);
-  } catch (err: any) {
-    console.log(`  ⚠️  Onboarding insert failed: ${err.message}`);
   }
 
-  // Step 5: Store onboarding messages as message records
-  for (let i = 0; i < persona.onboardingMessages.length; i++) {
-    try {
-      await pool.query(
-        `INSERT INTO messages (id, user_id, role, content, created_at)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [
-          randomUUID(),
-          userId,
-          'user',
-          persona.onboardingMessages[i],
-          new Date(Date.now() - (persona.onboardingMessages.length - i) * 60000).toISOString(),
-        ]
-      );
-    } catch {
-      // Messages table might have different schema
-    }
+  console.log(`  ✅ Signup API responded successfully`);
+
+  if (body.checkoutUrl) {
+    console.log(`  📎 Checkout URL: ${body.checkoutUrl} (skipping — creating test subscription)`);
   }
-  console.log(`  ✅ ${persona.onboardingMessages.length} onboarding messages stored`);
+  if (body.redirectUrl) {
+    console.log(`  📎 Redirect URL: ${body.redirectUrl} (existing subscribed user)`);
+  }
+
+  // Step 3: Look up the created user ID
+  const userResult = await pool.query(
+    'SELECT id FROM users WHERE phone_number = $1',
+    [persona.userData.phone]
+  );
+
+  if (userResult.rows.length === 0) {
+    throw new Error(`User not found in DB after signup API call for ${persona.userData.phone}`);
+  }
+
+  const userId = userResult.rows[0].id;
+  console.log(`  ✅ User created: ${userId}`);
+
+  // Step 4: Create test subscription (bypass Stripe checkout)
+  // Only if the user doesn't already have one (re-onboard case)
+  const subResult = await pool.query(
+    "SELECT id FROM subscriptions WHERE user_id = $1 AND status = 'active'",
+    [userId]
+  );
+
+  if (subResult.rows.length === 0) {
+    await createTestSubscription(pool, userId, persona.id);
+
+    // Step 5: Try to trigger onboarding message send now that subscription exists
+    // The signup API already triggered the Inngest onboarding job,
+    // but messages won't send until subscription is active.
+    // We can hit the checkout/session-like flow or just let Inngest handle it.
+    console.log(`  ⏳ Onboarding job triggered — messages will send once plan is generated`);
+  } else {
+    console.log(`  ✅ Active subscription already exists`);
+  }
 
   return userId;
 }
@@ -222,17 +264,21 @@ async function main() {
 
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
     console.log(`
-🧪 GymText Test User Creator
+🧪 GymText Test User Creator (API Flow)
 
 Usage:
-  pnpm test:create-user <persona-id>    Create a single test user
-  pnpm test:create-user --all           Create all test users
-  pnpm test:create-user --list          List available personas
+  pnpm signup --persona <persona-id>    Create a single test user via signup API
+  pnpm signup --all                     Create all test users
+  pnpm signup --list                    List available personas
 
 Examples:
-  pnpm test:create-user sarah-chen
-  pnpm test:create-user marcus-johnson
-  pnpm test:create-user --all
+  pnpm signup --persona sarah-chen
+  pnpm signup --persona marcus-johnson
+  pnpm signup --all
+
+Requires:
+  - Local dev server running (pnpm dev)
+  - DATABASE_URL in .env.local
 `);
     process.exit(0);
   }
@@ -242,23 +288,42 @@ Examples:
     process.exit(0);
   }
 
+  // Parse --persona flag
+  const personaIdx = args.indexOf('--persona');
+  const personaId = personaIdx >= 0 ? args[personaIdx + 1] : (!args.includes('--all') ? args[0] : null);
+
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
     console.error('❌ DATABASE_URL not set. Check .env.local');
     process.exit(1);
   }
 
+  // Check if dev server is running
+  console.log(`\n🔍 Checking dev server at ${BASE_URL}...`);
+  const serverUp = await checkServerRunning();
+  if (!serverUp) {
+    console.error(`❌ Dev server not reachable at ${BASE_URL}`);
+    console.error(`   Start it with: pnpm dev`);
+    console.error(`   Or set BASE_URL to point to your running server`);
+    process.exit(1);
+  }
+  console.log(`✅ Dev server is running\n`);
+
   const pool = new Pool({ connectionString: dbUrl });
 
   try {
     if (args.includes('--all')) {
       const personas = loadAllPersonas();
-      console.log(`\n🚀 Creating ${personas.length} test users...\n`);
+      console.log(`🚀 Creating ${personas.length} test users via signup API...\n`);
       const results: Array<{ id: string; name: string; userId: string }> = [];
 
       for (const persona of personas) {
-        const userId = await createUser(pool, persona);
-        results.push({ id: persona.id, name: persona.userData.name, userId });
+        try {
+          const userId = await createUserViaAPI(pool, persona);
+          results.push({ id: persona.id, name: persona.userData.name, userId });
+        } catch (err: any) {
+          console.error(`  ❌ Failed for ${persona.id}: ${err.message}`);
+        }
       }
 
       console.log('\n' + '='.repeat(60));
@@ -267,11 +332,16 @@ Examples:
         console.log(`  ✅ ${r.name.padEnd(22)} ${r.id.padEnd(20)} ${r.userId}`);
       }
       console.log(`\n  Total: ${results.length} users created`);
+      console.log(`\n  Watch messages: pnpm local:sms`);
     } else {
-      const personaId = args[0];
+      if (!personaId) {
+        console.error('❌ Specify a persona: pnpm signup --persona <id>');
+        process.exit(1);
+      }
       const persona = loadPersona(personaId);
-      const userId = await createUser(pool, persona);
+      const userId = await createUserViaAPI(pool, persona);
       console.log(`\n✅ Done! User ID: ${userId}`);
+      console.log(`\n  Watch messages: pnpm local:sms`);
     }
   } catch (err) {
     console.error('\n❌ Error:', err);

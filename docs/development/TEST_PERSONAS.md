@@ -967,33 +967,52 @@ Each persona is realistic enough to generate authentic training conversations an
 
 ---
 
-## Usage
+## Testing the Full Flow
 
-### Create a single test user
-
-```bash
-pnpm test:create-user sarah-chen
-```
-
-### Create all test users
+**Create a test user through the actual signup API:**
 
 ```bash
-pnpm test:create-user --all
+pnpm signup --persona sarah-chen
 ```
 
-### List available personas
+This will:
+1. Hit the same signup endpoints as the UI (`POST /api/users/signup`)
+2. Create a test subscription in the DB (bypasses Stripe checkout)
+3. Trigger the onboarding flow via Inngest
+4. Send messages (visible via `pnpm local:sms`)
+
+**Requires the dev server running:**
 
 ```bash
-pnpm test:create-user --list
+pnpm dev          # In one terminal
+pnpm signup --persona sarah-chen   # In another
 ```
 
-### Clean up test users
+**Watch messages in real-time:**
+
+```bash
+pnpm local:sms
+```
+
+**Create all test users:**
+
+```bash
+pnpm signup --all
+```
+
+**List available personas:**
+
+```bash
+pnpm signup --list
+```
+
+**Clean up test users:**
 
 ```bash
 pnpm test:cleanup-users
 ```
 
-### Dry run cleanup (see what would be deleted)
+**Dry run cleanup (see what would be deleted):**
 
 ```bash
 pnpm test:cleanup-users --dry-run
@@ -1010,15 +1029,16 @@ Persona data is stored as individual JSON files in `scripts/test-data/personas/`
 
 ### What the scripts do
 
-**`create-test-user`:**
-1. Loads persona JSON file
-2. Deletes existing user with same phone number (idempotent)
-3. Creates user record in database
-4. Creates test Stripe subscription directly in DB (bypasses Stripe)
-5. Creates onboarding data record
-6. Stores onboarding messages
+**`pnpm signup` (recommended):**
+1. Checks that local dev server is running
+2. Cleans up any existing user with the same phone number
+3. Sends `POST /api/users/signup` — the same endpoint the UI uses
+4. Creates a test Stripe subscription directly in DB (only part that bypasses Stripe)
+5. Inngest onboarding job runs automatically, generating fitness plan and sending messages
 
-**`cleanup-test-users`:**
+This tests the real signup flow including validation, Stripe customer creation, onboarding data persistence, and Inngest job triggering.
+
+**`pnpm test:cleanup-users`:**
 1. Finds all users with phone numbers in range +13392220001 through +13392220015
 2. Deletes all related data (workouts, profiles, messages, subscriptions, etc.)
 3. Deletes user records

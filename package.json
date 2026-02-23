@@ -21,6 +21,7 @@
     "db:migrate:create": "tsx scripts/migrations/create.ts",
     "migrate:create": "tsx scripts/migrations/create.ts",
     "seed": "tsx scripts/seed/index.ts",
+    "signup": "tsx scripts/test-users/create-test-user.ts",
     "test:create-user": "tsx scripts/test-users/create-test-user.ts",
     "test:cleanup-users": "tsx scripts/test-users/cleanup-test-users.ts",
     "seed:help": "tsx scripts/seed/index.ts --help",
