@@ -30,15 +30,30 @@ pnpm db:codegen         # Generate TypeScript types from PostgreSQL schema
 pnpm migrate:create     # Create new migration (interactive)
 pnpm migrate:up         # Apply pending migrations
 pnpm migrate:down       # Rollback last migration
+pnpm test:migration     # Full migration test (reset → main migrations → branch migrations → seed → codegen)
+pnpm db:anonymize       # Anonymize production data for safe dev backups
+
+# Seeding
+pnpm seed               # Run ALL seeders (agents, exercises, templates, prompts)
+pnpm seed:agents        # Agent definitions only
+pnpm seed:prompts       # Prompt configurations only
 
 # Testing
 pnpm test               # Run Vitest tests
 pnpm test:ui            # Run tests with Vitest UI
 pnpm sms:test           # Test SMS functionality (requires Twilio config)
 
+# Test Users & Personas
+pnpm signup --list              # List available test personas
+pnpm signup --persona sarah-chen  # Create single test user
+pnpm signup --all               # Create all 15 test users
+pnpm test:cleanup-users         # Delete all test users
+
 # Local SMS Testing (no Twilio required)
 pnpm local:sms          # Monitor local SMS messages in real-time via SSE
 ```
+
+> See `DEVELOPMENT.md` for the full command reference, workflows, and development rules.
 
 ## Architecture Overview
 
@@ -88,7 +103,8 @@ gymtext/
 │           │   └── utils/       # Server utilities
 │           └── shared/          # Shared utilities and configs
 │
-├── scripts/                      # Build, test, migration scripts
+├── prompts/                      # Agent prompts (*.md) — single source of truth
+├── scripts/                      # Build, test, seed, migration scripts
 ├── migrations/                   # Database migrations
 ├── turbo.json                    # Turborepo configuration
 └── pnpm-workspace.yaml          # Workspace configuration
@@ -234,7 +250,7 @@ Core tables include:
 
 ## AI Agent System
 
-Agents are **defined in the database** (`agent_definitions` table) and **executed via code-side registries**. See `_claude_docs/AGENT_ARCHITECTURE.md` for the full reference.
+Agents are **defined in the database** (`agent_definitions` table) and **executed via code-side registries**. Prompts live in `/prompts/*.md` files and are seeded into the DB — they are the single source of truth. See `_claude_docs/AGENT_ARCHITECTURE.md` for the full reference.
 
 ### Database-Driven Agent Definitions
 
@@ -242,16 +258,18 @@ Each agent is a row in `agent_definitions` with append-only versioning (latest `
 
 | Column | Purpose |
 |--------|---------|
-| `agent_id` | Unique identifier (e.g., `'chat:generate'`, `'workout:generate'`) |
-| `system_prompt` | System prompt instructions |
-| `user_prompt_template` | Template with `{{variable}}` substitution |
-| `model` | Model identifier (e.g., `'gpt-5.1'`, `'gpt-5-nano'`) |
-| `tool_ids` | Tool names available to agent (e.g., `['update_profile', 'get_workout']`) |
+| `agent_id` | Unique identifier (e.g., `'chat:generate'`, `'plan:generate'`) |
+| `system_prompt` | System prompt (seeded from `/prompts/*.md` files) |
+| `user_prompt_template` | Template with `{{variable}}` substitution (seeded from `/prompts/*.md`) |
+| `model` | Model identifier (e.g., `'gpt-5.2'`) |
+| `tool_ids` | Tool names available to agent (e.g., `['get_user_profile', 'get_exercises']`) |
 | `context_types` | Context to resolve at runtime (e.g., `['dateContext', 'currentWorkout']`) |
 | `sub_agents` | Sub-agent configurations (batches, parallel/sequential) |
 | `schema_json` | JSON Schema for structured output |
 | `validation_rules` | Declarative validation rules with auto-retry |
 | `temperature`, `max_tokens`, `max_iterations`, `max_retries` | Model configuration |
+
+**Prompt Management**: Prompts are authored in `/prompts/*.md` files (single source of truth), then seeded into the DB via `pnpm seed:agents`. The seed script uses `loadPrompt()` to read markdown files at seed time. Never edit prompts directly in the database — edit the `.md` files and re-seed.
 
 Agent IDs are defined as constants in `packages/shared/src/server/agents/constants.ts`.
 
@@ -408,10 +426,20 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 
 ## Development Guidelines
 
+> See `DEVELOPMENT.md` for comprehensive development rules, workflows, and branch strategy.
+
+### Key Rules
+- **Branch off `new-agent-system`** (not `main` or `staging`) for feature branches
+- **Max 1 migration per feature branch** — consolidate before PR (keeps rebases clean)
+- **Prompts in `/prompts/*.md` are source of truth** — no inlining prompts in code; seed to DB via `pnpm seed:agents`
+- **Never commit production data** — PII protection is non-negotiable; use `pnpm db:anonymize` for safe backups
+- **Service layering**: Orchestration → Domain Services → Repositories (no layer skipping)
+
 ### Working with the Database
 - Always run `pnpm db:codegen` after schema changes to update TypeScript types
 - Use repositories for all database operations
 - Migrations are in the `migrations/` directory
+- Use `pnpm test:migration` to verify migrations work from scratch
 
 ### Working with the Monorepo
 - Shared server code goes in `packages/shared/src/server/`
@@ -423,7 +451,7 @@ The admin panel uses phone-based SMS verification with a whitelist system:
 - Follow the existing service/repository/agent pattern
 - Place business logic in services, not in API routes
 - Use `agentRunner.invoke(agentId, params)` for all LLM tasks - never instantiate LLMs directly
-- New agents: add a row to `agent_definitions` (via migration), add agent ID to `agents/constants.ts`
+- New agents: create prompt in `/prompts/*.md`, add agent ID to `agents/constants.ts`, seed via `pnpm seed:agents`
 - New tools: add definition in `agents/tools/definitions/`, register in `registerAllTools()`
 - New context providers: add in `agents/context/`, register in `registerAllContextProviders()`
 - Add proper TypeScript types for all new code
