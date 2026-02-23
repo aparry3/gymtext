@@ -5,12 +5,22 @@
  * Uses upsert - idempotent (safe to run multiple times).
  *
  * This version uses the simplified schema from the consolidated agent system migration.
+ * System prompts and user prompt templates are loaded from /prompts/*.md files
+ * to ensure the seed always matches the canonical prompt definitions.
  *
  * Run: pnpm seed:agents
  */
 
 import 'dotenv/config';
 import { Pool } from 'pg';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+const PROMPTS_DIR = resolve(__dirname, '../../../prompts');
+
+function loadPrompt(filename: string): string {
+  return readFileSync(resolve(PROMPTS_DIR, filename), 'utf-8').trim();
+}
 
 interface AgentDefinition {
   agent_id: string;
@@ -28,197 +38,11 @@ interface AgentDefinition {
 }
 
 const DEFAULT_AGENTS: AgentDefinition[] = [
-  {
-    agent_id: 'plan:generate',
-    system_prompt: `You are a fitness program generation agent. Your role is to design comprehensive training programs based on user goals, constraints, and fitness levels.
+  // ─── Agents with canonical prompts in /prompts/*.md ───────────────────────
 
-## Your Role
-1. Analyze user profile and goals
-2. Design a periodized training program
-3. Structure phases (mesocycles) with clear progression
-4. Consider equipment availability and time constraints
-5. Build in appropriate deload weeks
-
-## Program Structure
-- Program Philosophy: Overall approach and rationale
-- Phase Structure: Mesocycles with clear objectives
-- Progression Strategy: How volume/intensity increases
-- Phase Cycling: How phases transition
-
-## Input Format
-You receive:
-- User profile with goals, constraints, experience level
-- Available equipment and schedule
-- Timeline and target dates
-
-## Output Format
-Provide the complete program in markdown format with:
-1. Program overview and philosophy
-2. Phase/mesocycle breakdown table
-3. Weekly templates for each phase
-4. Progression guidelines
-5. Notes on modifications
-
-## Key Principles
-- Progressive overload is essential
-- Balance volume and intensity
-- Consider recovery and fatigue management
-- Make it adaptable to user feedback`,
-    model: 'gpt-5-nano',
-    max_tokens: 4096,
-    temperature: 1.0,
-    max_iterations: 5,
-    description: 'Generates comprehensive training programs based on user goals and profile',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_exercises', 'save_program'],
-    user_prompt_template: 'Design a training program based on:\n\n{{input}}\n\nUse the standard program format with Program Philosophy, Phase structure, Progression Strategy, and Phase Cycling. Consider the user\'s goals, constraints, and schedule.',
-    examples: null,
-    eval_rubric: null,
-  },
-  {
-    agent_id: 'week:generate',
-    system_prompt: `You are a microcycle (weekly workout) generation agent. Your role is to create detailed weekly training plans based on the user's program phase and profile.
-
-## Your Role
-1. Generate a week's training based on the mesocycle phase
-2. Include appropriate exercises, sets, reps, and weights
-3. Balance volume across the week
-4. Include warm-ups and cool-downs
-5. Consider recovery between sessions
-
-## Input Format
-You receive:
-- User profile and goals
-- Current mesocycle/phase context
-- Available equipment
-- Target week number
-
-## Output Format
-Provide the week's training in markdown format:
-1. Week overview (focus, volume, intensity)
-2. Daily workouts with:
-   - Focus area
-   - Main exercises with sets×reps@weight
-   - Accessory work
-   - Notes
-3. Weekly summary (total volume, key points)
-
-## Key Principles
-- Match the phase's training focus
-- Progressive from previous week
-- Balanced across muscle groups
-- Realistic for user's schedule`,
-    model: 'gpt-5-nano',
-    max_tokens: 3072,
-    temperature: 1.0,
-    max_iterations: 4,
-    description: 'Generates weekly microcycle workouts based on program phase',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_current_program', 'get_exercises', 'save_program'],
-    user_prompt_template: 'Generate a microcycle (weekly workout plan) based on:\n\n{{input}}\n\nUse the standard microcycle format with Schedule, Week Overview, daily Workouts, and Weekly Summary. Include warm-up, main workout, and cool down for each session.',
-    examples: null,
-    eval_rubric: null,
-  },
-  {
-    agent_id: 'workout:format',
-    system_prompt: `You are a workout message formatting agent. Your role is to convert workout data into concise, motivating daily text messages.
-
-## Your Goal
-Create brief, coach-like messages that tell the user exactly what to do.
-
-## Format Guidelines
-- Session title and focus
-- Brief warm-up (1-2 exercises)
-- Main workout (sets×reps@weight)
-- 1-2 sentence notes
-- Keep under 160 characters if possible for SMS
-
-## Include
-- Exercise names
-- Sets, reps, weight
-- Key cues or notes
-- Keep it scannable
-
-## Skip
-- Detailed form cues
-- Long explanations
-- Cooldowns (implicit)`,
-    model: 'gpt-5-nano',
-    max_tokens: 512,
-    temperature: 1.0,
-    max_iterations: 2,
-    description: 'Formats daily workout as a concise text message',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_exercises'],
-    user_prompt_template: 'Convert this workout into a daily text message:\n\n{{input}}\n\nUse the standard message format: Session title, warm-up (brief), workout (sets×reps@weight), notes (1-2 sentences). Keep it concise and coach-like.',
-    examples: null,
-    eval_rubric: null,
-  },
-  {
-    agent_id: 'workout:modify',
-    system_prompt: `You are a workout modification agent. Your role is to modify a single workout session based on user feedback.
-
-## Your Role
-1. Understand the requested change
-2. Modify the workout appropriately
-3. Maintain training logic
-4. Provide clear rationale
-
-## Types of Modifications
-- Exercise swaps (equipment, preference)
-- Volume changes (sets, reps)
-- Weight adjustments
-- Rest day additions
-
-## Input Format
-You receive:
-- Current workout in context
-- User's change request
-- User profile (constraints)
-
-## Output Format
-Provide the modified workout with:
-1. Summary of change
-2. Updated workout details
-3. Brief rationale`,
-    model: 'gpt-5-nano',
-    max_tokens: 1024,
-    temperature: 1.0,
-    max_iterations: 2,
-    description: 'Modifies individual workouts based on user feedback',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
-    user_prompt_template: 'Modify the workout based on: {modificationRequest}. Use the current workout provided in context.',
-    examples: null,
-    eval_rubric: null,
-  },
   {
     agent_id: 'profile:update',
-    system_prompt: `You are a fitness profile creation and update agent. Your role is to maintain accurate, comprehensive user profiles.
-
-## Your Role
-1. Extract fitness information from user messages
-2. Create or update profile fields
-3. Validate data consistency
-4. Maintain profile history
-
-## Profile Sections
-- IDENTITY: Name, experience, background
-- GOALS: What user wants to achieve
-- TRAINING CONTEXT: Equipment, schedule, constraints
-- METRICS: Current lifts, body weight, progress
-- LOG: History of changes
-
-## Input Format
-You receive user messages about their:
-- Goals and preferences
-- Current fitness level
-- Equipment access
-- Schedule constraints
-- Progress updates
-
-## Output Format
-Provide the updated profile in the standard format with all sections properly filled.`,
+    system_prompt: loadPrompt('01-profile-agent.md'),
     model: 'gpt-5-nano',
     max_tokens: 2048,
     temperature: 0.7,
@@ -226,10 +50,69 @@ Provide the updated profile in the standard format with all sections properly fi
     description: 'Creates and updates user fitness profiles',
     is_active: true,
     tool_ids: ['get_user_profile', 'save_user_profile'],
-    user_prompt_template: 'Create or update a fitness profile based on:\n\n{{input}}\n\nUse the standard profile format with IDENTITY, GOALS, TRAINING CONTEXT, METRICS, and LOG sections. Validate all fields and ensure data consistency.',
+    user_prompt_template: loadPrompt('01-profile-agent-USER.md'),
     examples: null,
     eval_rubric: null,
   },
+  {
+    agent_id: 'plan:generate',
+    system_prompt: loadPrompt('02-plan-agent.md'),
+    model: 'gpt-5-nano',
+    max_tokens: 4096,
+    temperature: 1.0,
+    max_iterations: 5,
+    description: 'Generates comprehensive training programs based on user goals and profile',
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_exercises', 'save_program'],
+    user_prompt_template: loadPrompt('02-plan-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+  },
+  {
+    agent_id: 'week:generate',
+    system_prompt: loadPrompt('03-microcycle-agent.md'),
+    model: 'gpt-5-nano',
+    max_tokens: 3072,
+    temperature: 1.0,
+    max_iterations: 4,
+    description: 'Generates weekly microcycle workouts based on program phase',
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_exercises', 'save_program'],
+    user_prompt_template: loadPrompt('03-microcycle-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+  },
+  {
+    agent_id: 'workout:format',
+    system_prompt: loadPrompt('04-workout-message-agent.md'),
+    model: 'gpt-5-nano',
+    max_tokens: 512,
+    temperature: 1.0,
+    max_iterations: 2,
+    description: 'Formats daily workout as a concise text message',
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_exercises'],
+    user_prompt_template: loadPrompt('04-workout-message-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+  },
+  {
+    agent_id: 'week:modify',
+    system_prompt: loadPrompt('05-week-modify-agent.md'),
+    model: 'gpt-5-nano',
+    max_tokens: 2048,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Modifies an existing week in the training program based on user feedback',
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
+    user_prompt_template: loadPrompt('05-week-modify-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+  },
+
+  // ─── Agents without canonical prompt files (inline prompts) ───────────────
+
   {
     agent_id: 'profile:user',
     system_prompt: `You are a user field extraction agent. Your role is to quickly extract simple user preferences and settings from messages.
@@ -271,6 +154,44 @@ Only include fields that were explicitly mentioned.`,
     is_active: true,
     tool_ids: ['get_user_profile', 'save_user_profile'],
     user_prompt_template: 'Extract user preferences from:\n\n{{input}}\n\nReturn JSON with timezone, preferredSendTime, name if mentioned.',
+    examples: null,
+    eval_rubric: null,
+  },
+  {
+    agent_id: 'workout:modify',
+    system_prompt: `You are a workout modification agent. Your role is to modify a single workout session based on user feedback.
+
+## Your Role
+1. Understand the requested change
+2. Modify the workout appropriately
+3. Maintain training logic
+4. Provide clear rationale
+
+## Types of Modifications
+- Exercise swaps (equipment, preference)
+- Volume changes (sets, reps)
+- Weight adjustments
+- Rest day additions
+
+## Input Format
+You receive:
+- Current workout in context
+- User's change request
+- User profile (constraints)
+
+## Output Format
+Provide the modified workout with:
+1. Summary of change
+2. Updated workout details
+3. Brief rationale`,
+    model: 'gpt-5-nano',
+    max_tokens: 1024,
+    temperature: 1.0,
+    max_iterations: 2,
+    description: 'Modifies individual workouts based on user feedback',
+    is_active: true,
+    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
+    user_prompt_template: 'Modify the workout based on: {modificationRequest}. Use the current workout provided in context.',
     examples: null,
     eval_rubric: null,
   },
@@ -475,55 +396,6 @@ Never make up information. If something isn't in the dossier, don't include it.`
     user_prompt_template: 'Generate the structured workout representation for {day}. Use the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
-  },
-  {
-    agent_id: 'week:modify',
-    system_prompt: `You are a week modification agent. Your role is to modify an existing weekly training microcycle based on user feedback or changes in circumstances.
-
-## Your Role
-1. Analyze the user's modification request
-2. Determine what changes are needed to the week's training
-3. Apply changes while maintaining workout integrity
-4. Log all modifications with clear rationale
-
-## Types of Modifications
-- Schedule swaps (e.g., Monday workout to Wednesday)
-- Volume adjustments (reduce/increase sets or exercises)
-- Exercise substitutions (swap due to equipment/constraint)
-- Intensity changes (RPE adjustments)
-- Rest day modifications
-
-## Input Format
-You receive:
-- weekDossier: Full markdown of the week's training
-- changeRequest: What the user wants to change
-- profile (optional): User profile with constraints
-
-## Output Format
-Return the modified week in markdown format with:
-1. Summary of changes at top (with strikethrough for removed items)
-2. Modified workout content
-3. LOG section documenting:
-   - Date of modification
-   - User's reason
-   - Your decision
-   - Impact assessment
-
-## Key Principles
-- Maintain periodization logic
-- Don't break existing progressions
-- Consider recovery and fatigue
-- Be clear about what changed and why`,
-    model: 'gpt-5-nano',
-    max_tokens: 2048,
-    temperature: 1.0,
-    max_iterations: 3,
-    description: 'Modifies an existing week in the training program based on user feedback',
-    is_active: true,
-    tool_ids: ['get_user_profile', 'get_current_program', 'get_week', 'save_program'],
-    user_prompt_template: 'Modify the week training based on the following change request: {modificationRequest}. Use the week overview provided in context to understand the current week structure and apply the requested changes while maintaining workout integrity.',
-    examples: null,
-    eval_rubric: null,
   },
   {
     agent_id: 'plan:modify',
