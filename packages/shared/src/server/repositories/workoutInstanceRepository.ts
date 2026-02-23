@@ -2,7 +2,7 @@
  * Workout Instance Repository
  *
  * Handles CRUD operations for workout_instances table.
- * Used to store outputs from workout:format and workout:structured agents.
+ * Used to store outputs from workout:format and workout:details agents.
  */
 import { Kysely, sql } from 'kysely';
 import { BaseRepository, type DatabaseInstance } from '@/server/repositories/baseRepository';

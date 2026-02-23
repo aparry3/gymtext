@@ -35,6 +35,7 @@ interface AgentDefinition {
   user_prompt_template: string;
   examples: Record<string, unknown> | null;
   eval_rubric: string | null;
+  schema_json: Record<string, unknown> | null;
 }
 
 const DEFAULT_AGENTS: AgentDefinition[] = [
@@ -53,6 +54,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     user_prompt_template: loadPrompt('01-profile-agent-USER.md'),
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'plan:generate',
@@ -67,6 +69,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     user_prompt_template: loadPrompt('02-plan-agent-USER.md'),
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'week:generate',
@@ -81,6 +84,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     user_prompt_template: loadPrompt('03-microcycle-agent-USER.md'),
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'workout:format',
@@ -95,6 +99,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     user_prompt_template: loadPrompt('04-workout-message-agent-USER.md'),
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'week:modify',
@@ -109,6 +114,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     user_prompt_template: loadPrompt('05-week-modify-agent-USER.md'),
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
 
   // ─── Agents without canonical prompt files (inline prompts) ───────────────
@@ -156,6 +162,7 @@ Only include fields that were explicitly mentioned.`,
     user_prompt_template: 'Extract user preferences from:\n\n{{input}}\n\nReturn JSON with timezone, preferredSendTime, name if mentioned.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'messaging:plan-summary',
@@ -185,6 +192,7 @@ Create short, scannable messages that give users a clear view of their upcoming 
     user_prompt_template: 'Generate a brief training plan summary:\n\n{{input}}\n\nKeep it under 160 characters, motivating, and focused on the week ahead.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'messaging:plan-ready',
@@ -213,6 +221,7 @@ Create exciting, motivating messages that get users pumped for their new trainin
     user_prompt_template: 'Generate a "plan ready" notification:\n\n{{input}}\n\nKeep it under 160 characters, enthusiastic, and motivating.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'program:parse',
@@ -250,6 +259,7 @@ Be flexible with input formats but output consistently.`,
     user_prompt_template: 'Parse this training program from raw text:\n\n{{input}}\n\nExtract structured workout data and format as a standard program.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'blog:metadata',
@@ -292,9 +302,10 @@ Provide metadata as JSON:
     user_prompt_template: 'Extract metadata from this blog content:\n\n{{input}}\n\nReturn JSON with title, summary, category, tags, readingTime, keyTopics.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
-    agent_id: 'workout:structured',
+    agent_id: 'workout:details',
     system_prompt: `You are a structured workout generator. Your role is to extract workout information from a week's training dossier and format it as simple, clean JSON for UI display.
 
 ## Your Goal
@@ -358,6 +369,55 @@ Never make up information. If something isn't in the dossier, don't include it.`
     user_prompt_template: 'Generate the structured workout representation for {day}. Use the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
+    schema_json: {
+      type: 'object',
+      required: ['date', 'dayOfWeek', 'focus', 'title', 'exercises'],
+      properties: {
+        date: { type: 'string', description: 'ISO date (YYYY-MM-DD)' },
+        dayOfWeek: { type: 'string', description: 'Day of the week' },
+        focus: { type: 'string', description: 'Session focus (e.g., Upper Strength)' },
+        title: { type: 'string', description: 'Session title' },
+        description: { type: 'string', description: 'Brief session description with week context' },
+        estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
+        location: { type: 'string', description: 'Workout location' },
+        exercises: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['name', 'type'],
+            properties: {
+              name: { type: 'string', description: 'Exercise name' },
+              description: { type: 'string', description: 'Brief description of the exercise' },
+              type: {
+                type: 'string',
+                enum: ['warmup', 'strength', 'accessory', 'cardio', 'mobility', 'finisher'],
+                description: 'Exercise category',
+              },
+              sets: { type: 'string', description: 'Number of sets' },
+              reps: { type: 'string', description: 'Rep scheme (e.g., "8-12", "5", "AMRAP")' },
+              weight: { type: 'string', description: 'Weight with unit (e.g., "155 lb")' },
+              notes: { type: 'string', description: 'Coaching cues or notes' },
+              rest: { type: 'string', description: 'Rest period (e.g., "3 minutes")' },
+            },
+          },
+        },
+        conditioning: {
+          type: 'array',
+          description: 'Optional conditioning/cardio finishers',
+          items: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: { type: 'string', description: 'Conditioning activity name' },
+              duration: { type: 'string', description: 'Duration (e.g., "5-10 min")' },
+              intensity: { type: 'string', description: 'Intensity level (e.g., "easy", "moderate")' },
+              notes: { type: 'string', description: 'Additional notes' },
+            },
+          },
+        },
+      },
+      additionalProperties: false,
+    },
   },
   {
     agent_id: 'plan:modify',
@@ -422,6 +482,7 @@ Provide the modified plan in markdown format. Include:
     user_prompt_template: 'Modify the fitness plan based on the following change request: {changeRequest}. Use the current plan provided in context to understand the mesocycle structure and apply the requested changes while maintaining periodization integrity.',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'week:format',
@@ -463,6 +524,7 @@ Focus: {{day.focus}}
 {{/each}}`,
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
   {
     agent_id: 'chat:generate',
@@ -489,6 +551,7 @@ Always prioritize:
     user_prompt_template: '{{message}}',
     examples: null,
     eval_rubric: null,
+    schema_json: null,
   },
 ];
 
@@ -516,9 +579,9 @@ export async function seedAgents(): Promise<void> {
         INSERT INTO agent_definitions (
           agent_id, system_prompt, model, max_tokens, temperature,
           max_iterations, description, is_active, tool_ids,
-          user_prompt_template, examples, eval_rubric
+          user_prompt_template, examples, eval_rubric, schema_json
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
         )
         `,
         [
@@ -534,6 +597,7 @@ export async function seedAgents(): Promise<void> {
           agent.user_prompt_template,
           agent.examples ? JSON.stringify(agent.examples) : null,
           agent.eval_rubric,
+          agent.schema_json ? JSON.stringify(agent.schema_json) : null,
         ]
       );
       console.log(`  ✓ ${agent.description} (${agent.agent_id})`);

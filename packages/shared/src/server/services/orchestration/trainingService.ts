@@ -214,48 +214,37 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         }
 
         const dayName = getDayOfWeekName(todayDate, timezone);
-
-        // Format workout via AI agent
-        const result = await simpleAgentRunner.invoke('workout:format', {
-          input: `${dayName} (${targetDate.toISODate()})`,
-          context,
-          params: { user, date: todayDate },
-        });
-
-        const rawMessage = stripCodeFences(normalizeWhitespace(result.response));
         const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
-        // Generate short link for workout details
-        let shortLinkSuffix = '';
-        try {
-          const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutId);
-          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-          shortLinkSuffix = `\n\nMore details: ${fullUrl}`;
-          console.log(`[TrainingService] Created short link for workout: ${fullUrl}`);
-        } catch (error) {
-          console.error(`[TrainingService] Failed to create short link:`, error);
-          // Continue without link - not critical
-        }
+        // Run format and details agents in parallel
+        const agentInput = `${dayName} (${targetDate.toISODate()})`;
+        const agentOpts = { context, params: { user, date: todayDate } };
 
-        // Compose final message: day of week header + content + short link
-        const workoutMessage = `${rawMessage}${shortLinkSuffix}`;
+        const [formatResult, detailsResult, shortLinkResult] = await Promise.all([
+          simpleAgentRunner.invoke('workout:format', { input: agentInput, ...agentOpts }),
+          simpleAgentRunner.invoke('workout:details', { input: agentInput, ...agentOpts })
+            .then((r) => {
+              const jsonStr = stripCodeFences(r.response);
+              return JSON.parse(jsonStr) as Record<string, unknown>;
+            })
+            .catch((error) => {
+              console.error(`[TrainingService] Failed to generate structured workout:`, error);
+              return undefined;
+            }),
+          shortLinkService.createWorkoutLink(user.id, workoutId)
+            .then((link) => shortLinkService.getFullUrl(link.code))
+            .catch((error) => {
+              console.error(`[TrainingService] Failed to create short link:`, error);
+              return undefined;
+            }),
+        ]);
 
-        // Run structured generation in parallel (non-blocking for message delivery)
-        let structuredDetails: Record<string, unknown> | undefined;
-        try {
-          const structuredResult = await simpleAgentRunner.invoke('workout:structured', {
-            input: `${dayName} (${targetDate.toISODate()})`,
-            context,
-            params: { user, date: todayDate },
-          });
+        const rawMessage = stripCodeFences(normalizeWhitespace(formatResult.response));
+        const structuredDetails = detailsResult;
 
-          const jsonStr = stripCodeFences(structuredResult.response);
-          structuredDetails = JSON.parse(jsonStr);
-          console.log(`[TrainingService] Generated structured workout for user ${user.id} on ${targetDate.toISODate()}`);
-        } catch (error) {
-          console.error(`[TrainingService] Failed to generate structured workout:`, error);
-          // Continue without structured data - not critical
-        }
+        // Compose final message: day name + content + short link
+        const shortLinkSuffix = shortLinkResult ? `\n\n(More details: ${shortLinkResult})` : '';
+        const workoutMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
 
         // Save workout message and structured details to database (upsert by client_id + date)
         await workoutInstanceService.upsert({
@@ -345,12 +334,12 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const workoutId = `workout-${user.id}-${DateTime.fromJSDate(workoutDate).toISODate()}`;
         const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutId);
         const fullUrl = shortLinkService.getFullUrl(shortLink.code);
-        shortLinkSuffix = `\n\nMore details: ${fullUrl}`;
+        shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
       } catch (error) {
         console.error(`[TrainingService] Failed to create short link for regenerated workout:`, error);
       }
 
-      const regeneratedMessage = `${rawMessage}${shortLinkSuffix}`;
+      const regeneratedMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
 
       // Save workout message to database (upsert by client_id + date)
       await workoutInstanceService.upsert({
