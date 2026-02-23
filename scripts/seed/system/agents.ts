@@ -43,7 +43,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'profile:update',
     system_prompt: loadPrompt('01-profile-agent.md'),
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 2048,
     temperature: 0.7,
     max_iterations: 3,
@@ -57,7 +57,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'plan:generate',
     system_prompt: loadPrompt('02-plan-agent.md'),
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 4096,
     temperature: 1.0,
     max_iterations: 5,
@@ -71,7 +71,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'week:generate',
     system_prompt: loadPrompt('03-microcycle-agent.md'),
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 3072,
     temperature: 1.0,
     max_iterations: 4,
@@ -85,7 +85,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'workout:format',
     system_prompt: loadPrompt('04-workout-message-agent.md'),
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 512,
     temperature: 1.0,
     max_iterations: 2,
@@ -99,7 +99,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'week:modify',
     system_prompt: loadPrompt('05-week-modify-agent.md'),
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 2048,
     temperature: 1.0,
     max_iterations: 3,
@@ -146,7 +146,7 @@ Return a JSON object with the extracted fields:
 }
 
 Only include fields that were explicitly mentioned.`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 512,
     temperature: 0.3,
     max_iterations: 1,
@@ -184,7 +184,7 @@ Provide the modified workout with:
 1. Summary of change
 2. Updated workout details
 3. Brief rationale`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 1024,
     temperature: 1.0,
     max_iterations: 2,
@@ -213,7 +213,7 @@ Create short, scannable messages that give users a clear view of their upcoming 
 - Number of workouts
 - Key highlights
 - Motivational tone`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 320,
     temperature: 1.0,
     max_iterations: 2,
@@ -241,7 +241,7 @@ Create exciting, motivating messages that get users pumped for their new trainin
 - What phase/week is ready
 - Brief highlight
 - Encouragement`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 320,
     temperature: 1.0,
     max_iterations: 2,
@@ -278,7 +278,7 @@ Provide the program in standard markdown format with:
 4. Exercise details
 
 Be flexible with input formats but output consistently.`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 4096,
     temperature: 0.5,
     max_iterations: 3,
@@ -320,7 +320,7 @@ Provide metadata as JSON:
   "readingTime": 5,
   "keyTopics": ["...", "..."]
 }`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 1024,
     temperature: 0.5,
     max_iterations: 2,
@@ -386,7 +386,7 @@ For each exercise: name, description, type, sets, reps, weight (optional), notes
 - Empty or placeholder values
 
 Never make up information. If something isn't in the dossier, don't include it.`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 2048,
     temperature: 1.0,
     max_iterations: 3,
@@ -450,7 +450,7 @@ Provide the modified plan in markdown format. Include:
 - Don't break existing progressions
 - Consider the big picture (don't just say yes to everything)
 - Log decisions clearly for future reference`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 4096,
     temperature: 1.0,
     max_iterations: 5,
@@ -484,7 +484,7 @@ Create a well-structured markdown document that clearly shows:
 - Key exercises with sets/reps/weight
 - Volume totals where relevant
 - Any special notes or considerations`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 2048,
     temperature: 1.0,
     max_iterations: 3,
@@ -517,7 +517,7 @@ Always prioritize:
 - User's individual goals and constraints
 - Evidence-based information
 - Clear, actionable advice`,
-    model: 'gpt-5-nano',
+    model: 'gpt-5.2',
     max_tokens: 1024,
     temperature: 0.8,
     max_iterations: 1,
