@@ -224,8 +224,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           simpleAgentRunner.invoke('workout:format', { input: agentInput, ...agentOpts }),
           simpleAgentRunner.invoke('workout:details', { input: agentInput, ...agentOpts })
             .then((r) => {
-              const jsonStr = stripCodeFences(r.response);
-              return JSON.parse(jsonStr) as Record<string, unknown>;
+              return JSON.parse(r.response) as Record<string, unknown>;
             })
             .catch((error) => {
               console.error(`[TrainingService] Failed to generate structured workout:`, error);

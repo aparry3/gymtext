@@ -36,4 +36,6 @@ export interface DbAgentConfig {
   examples: unknown | null;
   /** Eval rubric for quality assessment */
   evalRubric: string | null;
+  /** JSON Schema for structured output */
+  schemaJson: unknown | null;
 }
