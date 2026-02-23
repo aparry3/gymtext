@@ -2,9 +2,19 @@
 
 This document defines test user personas for gymtext development and testing. Each persona represents a realistic user profile with specific goals, constraints, and preferences to stress-test all aspects of the agent system.
 
+## Detail Level Distribution
+
+Personas are intentionally varied in detail to simulate real onboarding scenarios:
+- **Sparse (4):** Minimal information, vague goals, basic metrics
+- **Moderate (7):** Standard detail level
+- **Detailed (4):** Extensive background, metrics, and preferences
+
+This tests how agents handle incomplete vs. comprehensive user data.
+
 ---
 
 ## Persona: Sarah Chen
+**Detail Level:** Sparse
 
 **Demographics:**
 - Age: 28
@@ -12,33 +22,22 @@ This document defines test user personas for gymtext development and testing. Ea
 - Phone: +13392220001
 
 **Experience:**
-- Level: Novice (<1 year)
-- Background: Started working out 6 months ago after desk job led to back pain. No prior athletic background.
+- Level: Novice
+- Background: Started a few months ago. Desk job.
 
 **Goals:**
-- Primary: General fitness and fat loss
-- Secondary: Build confidence, improve posture, feel stronger
-- Timeline: No specific deadline, sustainable lifestyle change
+- Get stronger and lose some weight
 
 **Schedule:**
-- Days available: Mon/Wed/Fri (consistent)
+- Days available: Mon/Wed/Fri
 - Session duration: 45 min
-- Preferred time: 6:00-6:45 PM (after work)
 
 **Equipment:**
-- Location: Commercial gym (24 Hour Fitness)
-- Available: Full commercial gym equipment (barbells, dumbbells, machines, cables)
-
-**Constraints:**
-- Injuries/limitations: Mild lower back sensitivity (previous sedentary lifestyle)
-- Dislikes: Intimidated by heavy barbell work, prefers machines initially
-- Preferences: Clear instructions, progressive difficulty, wants to understand "why"
+- Location: Commercial gym
+- Available: Barbells, dumbbells, machines
 
 **Metrics (starting):**
-- Bodyweight squat: 3x8 with good form
-- Push-ups: 3x5 on knees
-- Body composition: 32% body fat (self-reported goal to improve)
-- Never tracked lifts before
+- Bodyweight: ~145 lb
 
 **Notes:**
 Classic beginner who needs hand-holding and encouragement. Great for testing onboarding, educational content, and progressive overload from basics. Should test agent's ability to build confidence while introducing fundamental movements safely.
@@ -46,6 +45,7 @@ Classic beginner who needs hand-holding and encouragement. Great for testing onb
 ---
 
 ## Persona: Marcus Johnson
+**Detail Level:** Detailed
 
 **Demographics:**
 - Age: 32
@@ -53,40 +53,85 @@ Classic beginner who needs hand-holding and encouragement. Great for testing onb
 - Phone: +13392220002
 
 **Experience:**
-- Level: Intermediate (2.5 years)
-- Background: Focused powerlifter, competed in one local meet last year (went 8/9). Training seriously for next meet in 12 weeks.
+- Level: Intermediate (2.5 years focused powerlifting, 4 years total lifting)
+- Background: Started with general strength training in 2020, switched to powerlifting-specific training in 2022. Competed in USAPL local meet (Nov 2024, went 8/9, placed 3rd in 220 lb class). Currently 12 weeks out from Spring Regional meet (May 17, 2025). Works with coach for technique but wants programming support.
 
 **Goals:**
-- Primary: Increase competition total (1350 lb → 1450 lb target)
-- Secondary: Stay healthy, improve technique on bench
-- Timeline: Meet prep - 12 weeks out
+- Primary: Increase competition total from 1350 lb → 1450 lb (100 lb increase)
+  - Squat: 455 → 485 lb (+30 lb)
+  - Bench: 315 → 340 lb (+25 lb)
+  - Deadlift: 580 → 625 lb (+45 lb)
+- Secondary: Fix bench press sticking point (2-3" off chest), improve squat depth consistency, stay healthy through meet prep
+- Timeline: Peak for meet on May 17, 2025 (12 weeks out), then off-season hypertrophy block
 
 **Schedule:**
-- Days available: Mon/Tue/Thu/Fri (4x per week)
-- Session duration: 90-120 min
-- Preferred time: 5:30 AM (before work)
+- Days available: Mon/Tue/Thu/Fri (4x per week, strictly consistent)
+- Blocked: Wed (date night), Sat/Sun (family time, light recovery only)
+- Session duration: 90-120 min (has time, not rushed)
+- Preferred time: 5:30 AM (before work as software engineer, gym is empty, best energy)
+- Cannot train evenings (too tired after work)
 
 **Equipment:**
-- Location: Powerlifting-focused gym
-- Available: Multiple power racks, specialty bars (SSB, deadlift bar), chains, bands, platforms
+- Location: Iron Haven Powerlifting Gym (Tempe, AZ)
+- Available equipment:
+  - 6 competition-spec power racks (Rogue) with full calibrated plates
+  - Specialty bars: Safety Squat Bar, Swiss Bar, Football Bar, Texas Deadlift Bar, Kadillac Bar
+  - Strongman equipment: Log, yoke, farmers handles
+  - Chains (various weights), resistance bands (mini to monster)
+  - 3 competition benches, 2 mono-lifts
+  - Full dumbbell rack (5-150 lb), cable stations, GHD, reverse hyper
+  - Cardio: Assault bike, SkiErg, rower (for conditioning)
 
 **Constraints:**
-- Injuries/limitations: Chronic right shoulder impingement (manages with prehab)
-- Dislikes: High-rep bodybuilding work, prefers strength focus
-- Preferences: Percentage-based programming, wants data tracking, prefers compound movements
+- Injuries/limitations:
+  - Chronic right shoulder impingement (started 2023, manages with daily band work)
+  - Aggravated by high-volume overhead work or wide-grip bench
+  - Sees sports PT monthly, doing rotator cuff prehab 6x/week
+  - Cannot do strict overhead press, uses landmine variations
+  - History: Lower back tweak (2022, fully resolved), left hip flexor strain (2023, resolved)
+- Dislikes: 
+  - High-rep bodybuilding work (>12 reps feels pointless)
+  - Machines (prefers free weights)
+  - Cardio (only does minimum for work capacity)
+- Preferences:
+  - Percentage-based programming (familiar with RPE and % of 1RM)
+  - Loves data tracking (uses Strong app, HRV tracking, sleep tracking)
+  - Prefers competition-style lifts with limited variations
+  - Responds well to higher frequency (benching 3x/week works better than 2x)
+  - Prefers daily undulating periodization over linear
+  - Likes to know "why" behind programming choices
 
-**Metrics (starting):**
-- Squat: 455 lb (1RM)
-- Bench: 315 lb (1RM)
-- Deadlift: 580 lb (1RM)
-- Bodyweight: 220 lb
+**Metrics (starting - tested 2 weeks ago):**
+- Competition Lifts:
+  - Squat: 455 lb (1RM), 425 x 2, 405 x 4, e1RM ~465 lb
+  - Bench: 315 lb (1RM), 295 x 3, 275 x 6, e1RM ~320 lb
+  - Deadlift: 580 lb (1RM), 545 x 2, 515 x 4, e1RM ~590 lb
+  - Total: 1350 lb
+- Variations:
+  - Safety Squat Bar: 385 x 5
+  - Close-grip bench: 275 x 5
+  - Deficit deadlift (2"): 495 x 3
+  - Paused squat: 405 x 2
+  - Paused bench: 285 x 3
+- Bodyweight: 220 lb (walks around at 218-223, competes at 220 class)
+- Body comp: ~15% BF (not a focus, just stays in weight class)
+- Recent progress: Added 75 lb to total in last 12 months (1275 → 1350)
+- Work capacity: Can handle 20-25 working sets per session
+
+**Training history:**
+- 2020-2022: General strength training (bro splits, then Starting Strength)
+- 2022: Switched to powerlifting after hitting 315/225/405
+- Nov 2023: First meet (1275 total, 9/9)
+- Nov 2024: Second meet (1350 total, 8/9 - missed third deadlift attempt at 605)
+- Currently: Most successful training block was 6-week DUP cycle (fall 2024)
 
 **Notes:**
-Intermediate powerlifter with specific meet prep needs. Tests periodization, percentage-based programming, deload management, and tapering. Should validate agent's ability to handle sport-specific programming and work around injuries.
+Serious intermediate powerlifter with specific meet prep needs. Extremely detail-oriented (tracks everything). Tests periodization, percentage-based programming, deload management, tapering, and peak-week strategies. Should validate agent's ability to handle sport-specific programming, injury management, and working around existing PT protocols. Great for testing data-heavy conversations and technical programming discussions.
 
 ---
 
 ## Persona: Emily Rodriguez
+**Detail Level:** Detailed
 
 **Demographics:**
 - Age: 42
@@ -94,40 +139,108 @@ Intermediate powerlifter with specific meet prep needs. Tests periodization, per
 - Phone: +13392220003
 
 **Experience:**
-- Level: Advanced (5 years running, 2 years strength)
-- Background: Marathon runner (3:25 PR) training for Boston qualifier. Added strength work 2 years ago to prevent injuries.
+- Level: Advanced (5 years serious running, 2 years strength training)
+- Background: Started running at 37 after kids got older. Completed 8 marathons (PR: 3:25:17 at Chicago 2024). Added strength training in 2023 after recurring IT band syndrome derailed Boston training. Works with running coach (online) but handles own strength programming. Has solid understanding of lifting mechanics but doesn't prioritize strength PRs.
 
 **Goals:**
-- Primary: Marathon performance (sub-3:15 goal)
-- Secondary: Maintain strength, injury prevention, leg power
-- Timeline: Race in 16 weeks
+- Primary: Marathon performance - Boston Qualifier attempt (need sub-3:15 for age group, shooting for 3:12 cushion)
+- Secondary goals:
+  - Injury prevention (specifically IT band, hip stability)
+  - Maintain leg power for hills and late-race surges
+  - Upper body strength for running posture/economy
+  - Core stability for marathon endurance
+- Timeline: Goal race on June 14, 2025 (16 weeks out), currently in base-building phase
+- Long-term: If BQ achieved, run Boston 2026 for time (sub-3:10 goal)
 
 **Schedule:**
-- Days available: Tue/Thu/Sat (strength days around run schedule)
-- Session duration: 45-60 min
-- Preferred time: Variable (Tue/Thu evenings, Sat mornings)
+- Strength days: Tue/Thu/Sat (3x per week, synchronized with run schedule)
+- Blocked: Mon/Wed/Fri/Sun (key run workouts - cannot be sore for these)
+- Session duration: 45-60 min (efficient, no time to waste)
+- Preferred times:
+  - Tuesday: 6:30 PM (after easy recovery run + dinner)
+  - Thursday: 6:30 PM (after easy run)
+  - Saturday: 8:00 AM (after morning long run - timing critical)
+- Running schedule for context:
+  - Monday: Intervals/tempo (key workout - needs fresh legs)
+  - Wednesday: Medium-long run or hills (key workout)
+  - Friday: Easy recovery
+  - Sunday: Long run (16-20 miles currently, building to 22)
+  - Current volume: 55 mpw, building to 65-70 mpw peak
 
 **Equipment:**
-- Location: Home gym
-- Available: Squat rack, barbell, plates up to 225 lb, pull-up bar, resistance bands
+- Location: Home gym (converted garage)
+- Available:
+  - Rogue squat rack with pull-up bar
+  - Barbell (standard 45 lb Olympic bar)
+  - Plates: 2x45, 2x25, 4x10, 4x5, 4x2.5 (total 225 lb)
+  - Dumbbells: 10, 15, 20, 25, 30, 35, 40 lb pairs
+  - Kettlebells: 16, 24, 32 kg
+  - Resistance bands (mini, light, medium, heavy loop bands)
+  - Adjustable bench (flat/incline)
+  - Foam roller, lacrosse balls, massage gun
+  - Yoga mat, slant board
+- Does not have: Heavy plates (maxes out at 225 lb), specialty bars, cable machine, leg press
 
 **Constraints:**
-- Injuries/limitations: History of IT band issues, can't overload legs during peak run weeks
-- Dislikes: Long gym sessions, excessive volume that interferes with running
-- Preferences: Efficient workouts, emphasis on single-leg work and posterior chain
+- Injuries/limitations:
+  - IT band syndrome (right leg, 2022-2023, mostly resolved with PT + strength)
+  - Still prone to flare-ups if leg volume too high or glute med weak
+  - Tight hip flexors (common runner issue)
+  - Previous: Left plantar fasciitis (2021, fully healed)
+- Training interference:
+  - Cannot tolerate heavy leg volume on Sat before Sunday long run
+  - Eccentric leg work causes excessive soreness (avoid Nordics, heavy split squats)
+  - Peak weeks (18-20 mpw): Need to reduce strength volume significantly
+  - Taper phase (3 weeks pre-race): Minimal strength, maintenance only
+- Dislikes:
+  - Long gym sessions (45 min max or she skips)
+  - Excessive leg volume (prefers quality over quantity)
+  - Bodybuilding-style training (not the goal)
+  - Complex exercise rotations (keeps things simple/consistent)
+- Preferences:
+  - Efficient workouts (supersets, circuits work well)
+  - Emphasis on single-leg strength (addresses imbalances)
+  - Posterior chain focus (glutes, hamstrings for running power)
+  - Hip stability work (glute med, hip external rotation)
+  - Understands that strength is supplementary, not primary
 
-**Metrics (starting):**
-- Front squat: 135 lb x 5
-- Romanian deadlift: 185 lb x 8
-- Pull-ups: 8 strict
-- Running: 50-60 mpw current volume
+**Metrics (starting - tested 3 weeks ago):**
+- Strength lifts:
+  - Front squat: 135 lb x 5 (doesn't back squat - quad-dominant fatigues running)
+  - Romanian deadlift: 185 lb x 8
+  - Single-leg RDL: 30 lb DB x 10/leg
+  - Bulgarian split squat: 20 lb DBs x 8/leg (prefers goblet: 35 lb KB x 10)
+  - Pull-ups: 8 strict, 12 with band assist
+  - Overhead press: 65 lb x 8
+  - Trap bar deadlift: 205 lb x 5 (occasional substitute)
+- Bodyweight: 128 lb (race weight: 125-126 lb)
+- Running metrics:
+  - Marathon PR: 3:25:17 (Chicago 2024)
+  - Half marathon: 1:36:42 (Oct 2024)
+  - 5K: 21:18 (Aug 2024)
+  - Current easy pace: 8:30-9:00 min/mile
+  - Tempo pace: 7:20-7:30 min/mile
+  - Interval pace: 6:50-7:10 min/mile (depending on workout)
+  - Long run pace: 8:45-9:15 min/mile
+  - Goal marathon pace: 7:26 min/mile (3:15 pace)
+  - VO2max: 49 ml/kg/min (estimated from Garmin)
+- Recent progress: Added 6 minutes to marathon PR in 18 months (3:31 → 3:25)
+
+**Training philosophy:**
+- Running is priority #1, strength supports running
+- Strength training reduced IT band issues dramatically (PT attribution)
+- Prefers "minimum effective dose" for strength
+- Values posterior chain (glutes/hamstrings) and hip stability most
+- Will sacrifice upper body work before lower body injury prevention work
+- Understands periodization: build strength in base phase, maintain during peak/taper
 
 **Notes:**
-Advanced endurance athlete using strength as supplementary training. Tests agent's ability to program around primary sport, manage fatigue from external training load, and adjust volume based on run schedule. Should validate periodization that complements non-lifting goals.
+Advanced endurance athlete using strength as supplementary training. Extremely detail-oriented about how strength impacts running (tracks soreness, fatigue, run performance). Tests agent's ability to program around primary sport, manage fatigue from high external training load, adjust volume week-to-week based on run schedule, and periodize strength to complement marathon training phases. Should validate intelligent interference management, injury prevention focus, and minimal effective dose philosophy.
 
 ---
 
 ## Persona: David Park
+**Detail Level:** Detailed
 
 **Demographics:**
 - Age: 35
@@ -135,41 +248,141 @@ Advanced endurance athlete using strength as supplementary training. Tests agent
 - Phone: +13392220004
 
 **Experience:**
-- Level: Advanced (7 years)
-- Background: Bodybuilder (men's physique focus), prepping for show in 20 weeks. Experienced with hypertrophy training and nutrition.
+- Level: Advanced (7 years consistent training)
+- Background: Competitive bodybuilder (men's physique division, NPC). Competed in 5 shows over 3 years (2022-2024), best placing: 2nd in regional show (June 2024, light heavyweight class). Currently 8 weeks into contest prep for NPC Western Regional (July 19, 2025 - 20 weeks out). Works from home as UX designer, flexible schedule allows optimal training/meal timing. Has worked with coach previously but doing self-coached prep this time.
 
 **Goals:**
-- Primary: Hypertrophy and symmetry for show prep
-- Secondary: Bring up lagging arms and shoulders
-- Timeline: Competition in 20 weeks (currently 12 weeks out from prep start)
+- Primary: Win or place top 3 at NPC Western Regional (men's physique light heavyweight)
+  - Stage weight target: 175 lb (currently 185 lb, need to lose 10 lb while maintaining muscle)
+  - Body composition: 6-7% body fat on stage (currently ~12%)
+  - Bring up weak points: rear delts, lateral delts, arms (specifically triceps long head)
+- Secondary goals:
+  - Improve symmetry (left side slightly smaller)
+  - Better conditioning than previous shows (tighter glutes/hamstrings)
+  - Improve stage presence and posing
+- Timeline:
+  - Week 1-8 (current): Building phase, slight deficit
+  - Week 9-16: Progressive deficit, high volume maintained
+  - Week 17-19: Final push, peak week protocol
+  - Week 20: Show day (July 19, 2025)
+- Post-show: Reverse diet, off-season mass phase (focus on arms/shoulders)
 
 **Schedule:**
-- Days available: Mon/Tue/Thu/Fri/Sat (5x per week)
-- Session duration: 75-90 min
-- Preferred time: 11:00 AM (works from home)
+- Days available: Mon/Tue/Thu/Fri/Sat (5x per week, non-negotiable)
+- Blocked: Wed/Sun (rest days - active recovery, posing practice)
+- Session duration: 75-90 min (not including cardio)
+- Preferred time: 11:00 AM (works from home, trains mid-morning after 2nd meal)
+- Current split: Push/Pull/Legs/Upper/Lower (PPL-UL hybrid)
+- Cardio: 4x per week (20-30 min post-workout), will increase in later prep
+- Weekly structure:
+  - Monday: Push (chest/front delts/triceps emphasis)
+  - Tuesday: Pull (back width, rear delts)
+  - Thursday: Legs (quad focus, glute/ham accessories)
+  - Friday: Upper (shoulders/arms specialization)
+  - Saturday: Legs (glute/ham focus, quad accessories)
 
 **Equipment:**
-- Location: Commercial gym (LA Fitness)
-- Available: Full equipment - cables, machines, dumbbells to 120 lb, barbells
+- Location: LA Fitness (commercial gym, 24-hour access)
+- Available equipment:
+  - Full dumbbell rack (5-120 lb)
+  - 8 cable stations (single/double adjustable pulleys)
+  - Machine selection: Hammer Strength (chest press, rows, shoulder press), leg press, hack squat, Smith machine, leg curl/extension, pec deck, lat pulldown varieties
+  - 4 squat racks (rarely uses for squats due to knee)
+  - Barbells (uses for RDLs, hip thrusts, some pressing)
+  - Preacher curl bench, adjustable benches (flat/incline/decline)
+  - Cardio: Stairmaster (preferred), treadmill, elliptical, bike
+- Prefers: Cables and machines for most work (better mind-muscle connection, safer on knee)
 
 **Constraints:**
-- Injuries/limitations: Old left knee injury (ACL repair 4 years ago) - avoids heavy barbell squats
-- Dislikes: Heavy powerlifting-style training, prefers controlled tempo and mind-muscle connection
-- Preferences: High volume, multiple angles per muscle group, isolation work
+- Injuries/limitations:
+  - Left knee: ACL reconstruction (2019, 6 years post-op, fully healed but chronic instability)
+  - Avoids: Heavy barbell back squats (>225 lb), deep lunges, anything with knee instability risk
+  - Safe movements: Leg press, hack squat, Bulgarian split squats (controlled), smith machine, leg extensions/curls
+  - Requires: Knee sleeves for leg days, thorough warmup (10 min minimum)
+- Energy management:
+  - Currently in caloric deficit (2200 cal, down from 2800 maintenance)
+  - Energy lower in PM (prefers AM training)
+  - Deep deficit fatigue expected weeks 14-18 (will need volume adjustments)
+- Previous issues:
+  - 2023 prep: Overtrained shoulders, had to deload week 14
+  - 2024 prep: Lost too much muscle (deficit too aggressive)
+- Dislikes:
+  - Heavy powerlifting-style training (3-5 rep max work)
+  - Barbell squats (knee concern + doesn't prioritize quad separation anyway)
+  - Cardio (tolerates it, but hates it)
+- Preferences:
+  - Controlled tempo (3-1-1-1 or 4-0-2-0), emphasizes eccentric
+  - Mind-muscle connection over weight moved
+  - High volume (15-20 sets per muscle group per week)
+  - Multiple angles per muscle (3-4 exercises per major group)
+  - Isolation work (loves cables, machines, single-joint movements)
+  - Drop sets, supersets, rest-pause in later prep
 
-**Metrics (starting):**
-- Bodyweight: 185 lb (stage weight target: 175 lb)
-- Incline DB press: 90 lb x 10
-- Weighted pull-ups: +45 lb x 8
-- Leg press: 450 lb x 15 (avoids back squats)
-- Body fat: ~12% (goal: 6-7% stage)
+**Metrics (starting - current week 8 of prep):**
+- Bodyweight: 185 lb (morning, fasted)
+  - Stage target: 175 lb
+  - Previous show weight: 178 lb (too heavy, placed 4th)
+- Body composition:
+  - Current: ~12% body fat (visual estimate, abs visible but not shredded)
+  - Goal: 6-7% stage conditioning
+  - Weekly tracking: Photos (daily), scale (daily AM), measurements (weekly)
+- Strength (current, in caloric deficit):
+  - Incline DB press: 90 lb x 10 reps
+  - Flat DB press: 100 lb x 8
+  - Weighted pull-ups: +45 lb x 8
+  - Cable rows: 180 lb x 12
+  - DB shoulder press: 70 lb x 10
+  - Lateral raises: 30 lb x 15
+  - Leg press: 450 lb x 15 (controlled, full ROM)
+  - Romanian deadlift: 225 lb x 12
+  - Leg extension: 180 lb x 15
+  - Barbell hip thrust: 315 lb x 15
+  - Preacher curl: 70 lb barbell x 12
+  - Overhead tricep extension: 60 lb DB x 12
+- Measurements (current):
+  - Chest: 42"
+  - Waist: 32" (goal: 29-30" on stage)
+  - Arms: 15.5" (goal: maintain or grow to 16")
+  - Shoulders: 50"
+  - Quads: 24.5"
+  - Calves: 15" (genetic weak point, not emphasized in men's physique)
+- Progress tracking:
+  - Weekly photos: Front/back/side (same lighting/time/day)
+  - Daily weigh-ins: Track 7-day average
+  - Strength: Log all workouts in spreadsheet (volume, reps, RPE)
+  - Biofeedback: Sleep (7-8hr target), energy (1-10 scale), hunger (1-10 scale)
+
+**Nutrition (context for training):**
+- Current macros: 220P / 180C / 55F = ~2200 cal (deficit)
+- Meal timing: 5 meals per day (every 3 hours)
+- Protein: 1.2g/lb bodyweight (high to preserve muscle)
+- Carbs: Cycling (higher on leg days)
+- Cardio: Fasted AM (4x week, 20-30 min Stairmaster)
+- Refeed: Saturday (300g carbs, maintenance calories)
+
+**Training philosophy:**
+- Volume and frequency over intensity
+- Progressive overload through reps/sets (not weight, especially in deficit)
+- Symmetry and proportion over absolute size
+- Mind-muscle connection is king (tempo, control, squeeze)
+- Strategic deloads (every 6 weeks or as needed)
+- Injury prevention (ego checked at door, knee health priority)
+- Data-driven adjustments (weekly check-ins with self, adjust based on biofeedback)
+
+**Previous contest history:**
+- Nov 2022: First show (NPC local, 5th place, 188 lb - too heavy, underconditioned)
+- June 2023: 3rd place (regional, 182 lb - better conditioning, still too heavy)
+- Nov 2023: 4th place (overreached in prep, lost muscle)
+- June 2024: 2nd place (178 lb - best conditioning, but still slightly off)
+- Goal: July 2025: 1st place (175 lb, 6-7% BF, peak conditioning)
 
 **Notes:**
-Advanced bodybuilder with hypertrophy focus. Tests agent's ability to program volume-based training, exercise variety, weak point specialization, and integration with prep phases. Should validate machine/isolation exercise programming and body part splits.
+Advanced bodybuilder with meticulous contest prep approach. Extremely detail-oriented (tracks everything: weight, macros, workouts, photos, measurements, biofeedback). Tests agent's ability to program volume-based hypertrophy training, exercise variety, weak point specialization, progressive deficit management, deload timing, and peak week protocols. Should validate machine/cable/isolation exercise programming, body part split optimization, training adaptations during caloric deficit, and integration with nutrition phases. Great for testing data-heavy conversations, progress tracking, and contest prep periodization.
 
 ---
 
 ## Persona: Jessica Kim
+**Detail Level:** Detailed
 
 **Demographics:**
 - Age: 29
@@ -177,41 +390,118 @@ Advanced bodybuilder with hypertrophy focus. Tests agent's ability to program vo
 - Phone: +13392220005
 
 **Experience:**
-- Level: Intermediate (2 years)
-- Background: CrossFit athlete at local affiliate, competes in scaled division at local throwdowns. Solid all-around fitness.
+- Level: Intermediate (2 years CrossFit, 3 years general fitness before that)
+- Background: Started CrossFit in Jan 2023 at local affiliate (CrossFit Riverdale). Competed in scaled division at 3 local throwdowns (2023-2024), placed top 10 twice. Currently transitioning from scaled to Rx. Works full-time as marketing manager, trains 5x/week religiously. Solid all-around fitness with emphasis on improving Olympic lifting technique and gymnastics skills.
 
 **Goals:**
-- Primary: Improve CrossFit performance (rx WODs consistently)
-- Secondary: Increase strength on Olympic lifts, build engine
-- Timeline: Open in 8 weeks
+- Primary: Compete Rx in 2025 CrossFit Open (Feb 2025, 8 weeks away)
+  - Successfully complete all Rx workouts (even if slow)
+  - Specifically: string together bar muscle-ups, hit heavier barbell cycling weights
+- Secondary goals:
+  - Increase Olympic lift maxes (C&J: 155→175 lb, Snatch: 115→135 lb)
+  - Improve gymnastics: 5+ unbroken bar muscle-ups, 10+ unbroken HSPU
+  - Build engine for longer chippers (often gasses out after 12-15 min)
+  - Better pacing strategy in metcons
+- Timeline: Open starts Feb 24, 2025 (8 weeks), then continue improving for summer competitions
+- Long-term: Qualify for Quarterfinals in 2026 (top 25% in region)
 
 **Schedule:**
-- Days available: Mon/Tue/Wed/Fri/Sat (5x per week)
-- Session duration: 60 min
-- Preferred time: 5:30 PM (evening class)
+- Days available: Mon/Tue/Wed/Fri/Sat (5x per week, extremely consistent)
+- Blocked: Thu (rest/active recovery), Sun (social/life balance)
+- Session duration: 60-75 min (includes warmup, skill, WOD, cooldown)
+- Preferred time: 5:30 PM class (directly after work, non-negotiable schedule)
+- Current pattern:
+  - Mon: Heavy strength + short metcon
+  - Tue: Skill work (Oly or gymnastics) + medium metcon
+  - Wed: Benchmark WOD or longer chipper
+  - Fri: Oly lifting focus + accessory
+  - Sat: 9:00 AM partner WOD or team competition prep
+- Occasionally does open gym (Sat afternoon) for specific weaknesses
 
 **Equipment:**
-- Location: CrossFit gym
-- Available: Barbells, bumper plates, rower, assault bike, rings, rope, boxes, kettlebells, dumbbells
+- Location: CrossFit Riverdale (affiliate gym)
+- Available equipment (full CrossFit setup):
+  - 12 barbells (men's/women's Olympic bars), full bumper plate sets
+  - 6 rowers (Concept2), 4 Assault bikes, 2 SkiErgs
+  - Gymnastics: 8 pull-up rigs, 4 sets of rings, climbing rope, parallettes
+  - Plyo boxes (20/24/30"), GHD, reverse hyper
+  - Kettlebells: 8-70 lb
+  - Dumbbells: 10-100 lb (pairs)
+  - Sleds, sandbags, medicine balls (14-20 lb), wall ball targets
+  - Heavy battle ropes, TRX, resistance bands
+  - Turf area for sled pushes/pulls
+- Does not have: Specialized powerlifting equipment (monolift, chains), machines
 
 **Constraints:**
-- Injuries/limitations: None currently, history of wrist strain from high-rep snatches
-- Dislikes: Boring steady-state cardio, prefers varied training
-- Preferences: Functional movements, enjoys competition and benchmark WODs
+- Injuries/limitations:
+  - History of right wrist strain (spring 2024) from high-rep overhead work (snatches, HSPU)
+  - Managed with wrist mobility, taping for heavy days, avoiding excessive volume
+  - Tends to flare up with >30 reps of snatches or >50 HSPU in single session
+  - No other major injuries (lucky so far)
+- Volume management:
+  - Cannot handle high-volume Olympic lifting + heavy metcon in same session
+  - Needs at least 1 full rest day per week or accumulates fatigue
+  - Sleep quality drops if overreaching (tracks with Whoop)
+- Dislikes:
+  - Boring steady-state cardio (would rather do intervals/varied work)
+  - Pure powerlifting-style training (likes variety)
+  - Long strength sessions with minimal metcon (wants both)
+- Preferences:
+  - Functional movements over isolation exercises
+  - Enjoys competition (even in training - likes leaderboard)
+  - Loves benchmark WODs (Fran, Grace, Isabel, etc.) for progress tracking
+  - Prefers EMOM/AMRAP formats over long steady work
+  - Wants clear progress markers and measurable goals
 
-**Metrics (starting):**
-- Clean & jerk: 155 lb
-- Snatch: 115 lb
-- Back squat: 205 lb
-- Fran: 6:45
-- Bodyweight: 145 lb
+**Metrics (starting - tested Jan 2025):**
+- Olympic lifts (1RM):
+  - Clean & jerk: 155 lb (clean PR: 165 lb, jerk is limiting factor)
+  - Snatch: 115 lb
+  - Power clean: 145 lb
+  - Power snatch: 95 lb
+  - Clean pulls: 185 lb x 3
+  - Overhead squat: 105 lb
+- Strength lifts:
+  - Back squat: 205 lb x 1, 185 x 3
+  - Front squat: 165 lb x 1
+  - Deadlift: 255 lb x 1
+  - Strict press: 85 lb x 1
+  - Push press: 115 lb x 1
+- Gymnastics:
+  - Pull-ups: 15 strict, 30+ kipping unbroken
+  - Chest-to-bar: 20 unbroken
+  - Bar muscle-ups: 2-3 singles (cannot string yet)
+  - Ring muscle-ups: 1-2 (very inconsistent)
+  - HSPU: 12 unbroken (strict: 3)
+  - Handstand walk: 50 feet unbroken
+  - Toes-to-bar: 25+ unbroken
+- Benchmark WODs:
+  - Fran (21-15-9 thrusters 95lb/pull-ups): 6:45
+  - Grace (30 C&J for time, 135 lb): 4:32
+  - Cindy (20min AMRAP: 5 PU, 10 pushup, 15 squat): 22 rounds
+  - Murph (with vest): 52:18
+  - 500m row: 1:48
+  - 5K run: 26:30 (not a strong runner)
+- Bodyweight: 145 lb (maintains year-round)
+- Body composition: ~20% BF (not a focus, just stays fit)
+- Engine: Can hold 85% effort for ~8-10 min before significant drop-off
+
+**Training history:**
+- 2020-2022: General gym (OrangeTheory, some lifting)
+- Jan 2023: Joined CrossFit, fell in love with it
+- Summer 2023: First local throwdown (scaled, 8th place)
+- Fall 2023: Consistent 5x/week training, saw big strength gains
+- Spring 2024: Wrist injury, took 3 weeks easy, learned to manage volume
+- Fall 2024: Started transitioning scaled→Rx, got first bar muscle-up
+- Current: Focused on Open prep, most consistent training block yet
 
 **Notes:**
-CrossFit athlete needing varied training across multiple modalities. Tests agent's ability to program Olympic lifts, gymnastics movements, metabolic conditioning, and balance strength/skill/conditioning. Should validate complex movement coaching and WOD-style workouts.
+Competitive CrossFit athlete with varied training needs across strength, skill, and conditioning. Very detail-oriented (tracks all benchmark times, maxes, uses Whoop for recovery). Tests agent's ability to program Olympic lifts, gymnastics progressions, metabolic conditioning, and balance all three modalities without overtraining. Should validate complex movement coaching, WOD-style programming, and periodization for CrossFit competitions. Great for testing multi-modal programming and skill progression tracking.
 
 ---
 
 ## Persona: Tom Anderson
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 51
@@ -253,6 +543,7 @@ Older athlete focused on longevity and healthy aging. Tests agent's ability to p
 ---
 
 ## Persona: Alex Rivera
+**Detail Level:** Sparse
 
 **Demographics:**
 - Age: 24
@@ -260,33 +551,28 @@ Older athlete focused on longevity and healthy aging. Tests agent's ability to p
 - Phone: +13392220007
 
 **Experience:**
-- Level: Novice (8 months)
-- Background: Returning from ACL reconstruction (9 months post-op, cleared for full activity). Previously played rec soccer, now rehabbing and rebuilding.
+- Level: Novice
+- Background: Recovering from ACL surgery (9 months post-op). Used to play soccer.
 
 **Goals:**
-- Primary: Full recovery and return to soccer
-- Secondary: Rebuild leg strength, improve knee stability
-- Timeline: Return to rec league in 4 months
+- Get back to playing soccer
+- Rebuild leg strength
 
 **Schedule:**
-- Days available: Mon/Wed/Fri/Sat (4x per week)
-- Session duration: 45-60 min
-- Preferred time: Variable (student schedule)
+- Days available: Mon/Wed/Fri/Sat
+- Session duration: ~45 min
 
 **Equipment:**
 - Location: University rec center
-- Available: Standard commercial gym, turf area for agility work
+- Available: Standard gym equipment
 
 **Constraints:**
-- Injuries/limitations: Recovering from ACL reconstruction, some movements still restricted by PT
-- Dislikes: Anything that feels risky for knee, nervous about cutting/jumping
-- Preferences: Progressive return to activity, wants scientific approach, values PT guidance integration
+- Injuries/limitations: ACL reconstruction (right knee), still doing PT
+- Preferences: Careful progression, nervous about re-injury
 
 **Metrics (starting):**
 - Single-leg squat: Bodyweight x 5 (surgical leg)
-- Leg press: 180 lb x 10
-- Nordic curls: Assisted (band)
-- Knee feels: 90% on good days
+- Knee feels: ~90% most days
 
 **Notes:**
 Rehab/recovery focused client returning from major injury. Tests agent's ability to handle injury return protocols, build progressions carefully, integrate with PT, and manage psychological aspects of recovery. Should validate conservative programming and readiness progressions.
@@ -294,6 +580,7 @@ Rehab/recovery focused client returning from major injury. Tests agent's ability
 ---
 
 ## Persona: Rachel Green
+**Detail Level:** Sparse
 
 **Demographics:**
 - Age: 26
@@ -301,33 +588,23 @@ Rehab/recovery focused client returning from major injury. Tests agent's ability
 - Phone: +13392220008
 
 **Experience:**
-- Level: Novice (6 months)
-- Background: Busy tech worker, minimal equipment at home, trying to build sustainable fitness habit without gym membership.
+- Level: Novice
+- Background: Busy tech worker, trying to build fitness habit at home.
 
 **Goals:**
-- Primary: Build strength and muscle with minimal equipment
-- Secondary: Fat loss, feel energized, reduce stress
-- Timeline: No specific deadline
+- Build some muscle and lose weight
+- Feel less stressed
 
 **Schedule:**
-- Days available: Mon/Tue/Thu/Fri (4x per week but variable)
-- Session duration: 30-40 min (busy schedule)
-- Preferred time: 7:00 AM (before work) or lunchtime
+- Days available: Mon/Tue/Thu/Fri (variable)
+- Session duration: 30 min (max)
 
 **Equipment:**
-- Location: Home gym (apartment)
-- Available: Adjustable dumbbells (5-50 lb), resistance bands, pull-up bar (doorframe), yoga mat
-
-**Constraints:**
-- Injuries/limitations: None
-- Dislikes: Long workouts, complicated setups
-- Preferences: Time-efficient, minimal equipment changes, wants visible progress
+- Location: Home (apartment)
+- Available: Dumbbells, resistance bands, pull-up bar
 
 **Metrics (starting):**
-- DB goblet squat: 30 lb x 12
-- DB floor press: 20 lb x 10
-- Assisted pull-ups (band): 5 reps
-- Push-ups: 15 strict
+- Push-ups: 15
 
 **Notes:**
 Busy professional with minimal home equipment. Tests agent's ability to program effective workouts with limited gear, time-efficient sessions, and creative exercise variations. Should validate home gym programming and sustainable habit building for busy people.
@@ -335,6 +612,7 @@ Busy professional with minimal home equipment. Tests agent's ability to program 
 ---
 
 ## Persona: Brandon Taylor
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 22
@@ -377,6 +655,7 @@ In-season athlete needing sport-specific training that doesn't interfere with pr
 ---
 
 ## Persona: Linda Martinez
+**Detail Level:** Sparse
 
 **Demographics:**
 - Age: 38
@@ -384,33 +663,26 @@ In-season athlete needing sport-specific training that doesn't interfere with pr
 - Phone: +13392220010
 
 **Experience:**
-- Level: Novice (3 months)
-- Background: Single parent, very limited time, working around young kids' schedules. Previously inactive, motivated to be healthy for family.
+- Level: Novice
+- Background: Single parent, very busy. Just started working out.
 
 **Goals:**
-- Primary: General health and fitness, weight loss
-- Secondary: Have energy for kids, set good example
-- Timeline: Long-term lifestyle change
+- Lose weight and have more energy for kids
 
 **Schedule:**
-- Days available: Variable (grabs workouts when possible, 3x per week goal)
-- Session duration: 20-30 min (max)
-- Preferred time: Early morning (5:30 AM) or late evening (9 PM)
+- Days available: Whenever possible (3x per week goal)
+- Session duration: 20-30 min max
 
 **Equipment:**
 - Location: Home (garage)
-- Available: Kettlebells (15, 25, 35 lb), resistance bands, jump rope
+- Available: Kettlebells, bands
 
 **Constraints:**
-- Injuries/limitations: Diastasis recti (postpartum), some core movements need modification
-- Dislikes: Complicated workouts, can't commit to rigid schedules
-- Preferences: Simple, flexible, efficient, doesn't want to think too hard
+- Very limited time, schedule is unpredictable
+- Postpartum issues (needs some core modifications)
 
 **Metrics (starting):**
-- Bodyweight squat: 15 reps
-- Kettlebell deadlift: 35 lb x 10
-- Modified plank: 30 seconds
-- Bodyweight: 168 lb (goal: lose 25 lb)
+- Bodyweight: 168 lb (wants to lose ~25 lb)
 
 **Notes:**
 Time-starved parent with minimal equipment and unpredictable schedule. Tests agent's ability to provide flexible programming, very short workouts, simple exercises, and accommodate schedule variability. Should validate adaptation to chaotic life schedules and postpartum modifications.
@@ -418,6 +690,7 @@ Time-starved parent with minimal equipment and unpredictable schedule. Tests age
 ---
 
 ## Persona: Chris Bennett
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 45
@@ -459,6 +732,7 @@ Endurance athlete (cycling) using strength as supplementary training with minima
 ---
 
 ## Persona: Mia Thompson
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 30
@@ -501,6 +775,7 @@ Sport-specific athlete (skiing) with seasonal periodization needs. Tests agent's
 ---
 
 ## Persona: Jordan Phillips
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 27
@@ -543,6 +818,7 @@ Classic hardgainer focused on hypertrophy and strength. Tests agent's ability to
 ---
 
 ## Persona: Samantha Lee
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 33
@@ -585,6 +861,7 @@ Postpartum client with specific core/pelvic floor considerations. Tests agent's 
 ---
 
 ## Persona: Kevin O'Brien
+**Detail Level:** Moderate
 
 **Demographics:**
 - Age: 36
