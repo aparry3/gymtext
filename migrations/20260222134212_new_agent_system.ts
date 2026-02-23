@@ -14,7 +14,7 @@ import { Migration, sql } from 'kysely';
  * - Simplifies microcycles (dossier-based)
  * - Simplifies profiles (drops structured column)
  * - Simplifies agent_logs (drops eval columns)
- * - Migrates workout_instances in-place (renames client_id→user_id, keeps details)
+ * - Migrates workout_instances in-place (keeps client_id, simplifies columns)
  * - Drops unused tables (prompts, context_templates, agent_extensions)
  */
 
@@ -178,8 +178,7 @@ export const up: Migration = async (db) => {
   // =============================================================================
   console.log('Migrating workout_instances table...');
 
-  // Rename client_id → user_id
-  await sql`ALTER TABLE workout_instances RENAME COLUMN client_id TO user_id`.execute(db);
+  // Keep client_id (project convention — all user FKs are client_id)
 
   // Merge structured data into details where details is null
   await sql`UPDATE workout_instances SET details = structured WHERE details IS NULL AND structured IS NOT NULL`.execute(db);
@@ -197,26 +196,26 @@ export const up: Migration = async (db) => {
   // Make details nullable (old schema had NOT NULL)
   await sql`ALTER TABLE workout_instances ALTER COLUMN details DROP NOT NULL`.execute(db);
 
-  // Deduplicate: keep the most recent workout per (user_id, date), delete older duplicates
+  // Deduplicate: keep the most recent workout per (client_id, date), delete older duplicates
   await sql`
     DELETE FROM workout_instances w
     USING (
-      SELECT user_id, date, MAX(updated_at) as max_updated
+      SELECT client_id, date, MAX(updated_at) as max_updated
       FROM workout_instances
-      GROUP BY user_id, date
+      GROUP BY client_id, date
       HAVING COUNT(*) > 1
     ) dupes
-    WHERE w.user_id = dupes.user_id
+    WHERE w.client_id = dupes.client_id
       AND w.date = dupes.date
       AND w.updated_at < dupes.max_updated
   `.execute(db);
 
-  // Add unique constraint on (user_id, date)
-  await sql`ALTER TABLE workout_instances ADD CONSTRAINT workout_instances_user_id_date_unique UNIQUE (user_id, date)`.execute(db);
+  // Add unique constraint on (client_id, date)
+  await sql`ALTER TABLE workout_instances ADD CONSTRAINT workout_instances_client_id_date_unique UNIQUE (client_id, date)`.execute(db);
 
   // Create indexes
-  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_user_id ON workout_instances (user_id)`.execute(db);
-  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_user_date ON workout_instances (user_id, date DESC)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_client_id ON workout_instances (client_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_workout_instances_client_date ON workout_instances (client_id, date DESC)`.execute(db);
 
   // =============================================================================
   // 8. Drop unused tables
@@ -265,9 +264,9 @@ export const down: Migration = async (db) => {
   await sql`ALTER TABLE agent_logs ADD COLUMN IF NOT EXISTS eval_score NUMERIC(5,2)`.execute(db);
 
   // Restore workout_instances columns
-  await sql`DROP INDEX IF EXISTS idx_workout_instances_user_id`.execute(db);
-  await sql`DROP INDEX IF EXISTS idx_workout_instances_user_date`.execute(db);
-  await sql`ALTER TABLE workout_instances DROP CONSTRAINT IF EXISTS workout_instances_user_id_date_unique`.execute(db);
+  await sql`DROP INDEX IF EXISTS idx_workout_instances_client_id`.execute(db);
+  await sql`DROP INDEX IF EXISTS idx_workout_instances_client_date`.execute(db);
+  await sql`ALTER TABLE workout_instances DROP CONSTRAINT IF EXISTS workout_instances_client_id_date_unique`.execute(db);
   await sql`ALTER TABLE workout_instances ALTER COLUMN details SET NOT NULL`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`.execute(db);
@@ -277,7 +276,6 @@ export const down: Migration = async (db) => {
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS goal TEXT`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS session_type VARCHAR(50)`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS microcycle_id UUID REFERENCES microcycles(id) ON DELETE SET NULL`.execute(db);
-  await sql`ALTER TABLE workout_instances RENAME COLUMN user_id TO client_id`.execute(db);
 
   console.log('Rollback complete!');
 };

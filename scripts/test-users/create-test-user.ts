@@ -112,7 +112,7 @@ async function deleteExistingUser(pool: Pool, phone: string): Promise<string | n
   ];
 
   for (const table of tables) {
-    const col = table === 'users' ? 'id' : 'user_id';
+    const col = table === 'users' ? 'id' : 'client_id';
     try {
       await pool.query(`DELETE FROM ${table} WHERE ${col} = $1`, [userId]);
     } catch {
@@ -244,7 +244,7 @@ async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
   // Step 4: Create test subscription via webhook endpoint
   // Only if the user doesn't already have one (re-onboard case)
   const subResult = await pool.query(
-    "SELECT id FROM subscriptions WHERE user_id = $1 AND status = 'active'",
+    "SELECT id FROM subscriptions WHERE client_id = $1 AND status = 'active'",
     [userId]
   );
 
