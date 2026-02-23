@@ -10,9 +10,8 @@
  * Flow:
  *   1. Load persona JSON
  *   2. Clean up existing user (DB cleanup for idempotency)
- *   3. POST to /api/users/signup (same endpoint the UI hits)
- *   4. POST to /api/stripe/webhook (mocks Stripe checkout completion in test mode)
- *   5. Output: user ID, subscription status, ready to watch messages
+ *   3. POST to /api/users/signup (in dev mode, creates subscription + triggers onboarding directly)
+ *   4. Output: user ID, subscription status, ready to watch messages
  *
  * Environment:
  *   Requires DATABASE_URL in .env.local (for cleanup only)
@@ -124,50 +123,6 @@ async function deleteExistingUser(pool: Pool, phone: string): Promise<string | n
 }
 
 /**
- * Create a test subscription by calling the Stripe webhook endpoint in test mode.
- * This exercises the real webhook handler without needing a real Stripe checkout.
- */
-async function createTestSubscriptionViaWebhook(userId: string, personaId: string): Promise<void> {
-  const webhookPayload = {
-    id: `evt_test_${Date.now()}`,
-    type: 'checkout.session.completed',
-    data: {
-      object: {
-        id: `cs_test_${Date.now()}`,
-        customer: `cus_test_${personaId}`,
-        subscription: `sub_test_${personaId}_${Date.now()}`,
-        mode: 'subscription',
-        metadata: {
-          userId,
-        },
-        client_reference_id: userId,
-      },
-    },
-  };
-
-  console.log(`  📡 POST ${BASE_URL}/api/stripe/webhook (test mode)`);
-
-  const response = await fetch(`${BASE_URL}/api/stripe/webhook`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-test-mode': 'true',
-    },
-    body: JSON.stringify(webhookPayload),
-  });
-
-  const body = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      `Webhook call failed (${response.status}): ${body.error || JSON.stringify(body)}`
-    );
-  }
-
-  console.log(`  ✅ Webhook processed — subscription created via API`);
-}
-
-/**
  * Build the signup request body matching what the UI sends
  */
 function buildSignupPayload(persona: Persona): Record<string, unknown> {
@@ -222,10 +177,10 @@ async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
   console.log(`  ✅ Signup API responded successfully`);
 
   if (body.checkoutUrl) {
-    console.log(`  📎 Checkout URL: ${body.checkoutUrl} (skipping — creating test subscription)`);
+    console.log(`  📎 Checkout URL: ${body.checkoutUrl}`);
   }
   if (body.redirectUrl) {
-    console.log(`  📎 Redirect URL: ${body.redirectUrl} (existing subscribed user)`);
+    console.log(`  📎 Redirect URL: ${body.redirectUrl}`);
   }
 
   // Step 3: Look up the created user ID
@@ -240,20 +195,7 @@ async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
 
   const userId = userResult.rows[0].id;
   console.log(`  ✅ User created: ${userId}`);
-
-  // Step 4: Create test subscription via webhook endpoint
-  // Only if the user doesn't already have one (re-onboard case)
-  const subResult = await pool.query(
-    "SELECT id FROM subscriptions WHERE client_id = $1 AND status = 'active'",
-    [userId]
-  );
-
-  if (subResult.rows.length === 0) {
-    await createTestSubscriptionViaWebhook(userId, persona.id);
-    console.log(`  ⏳ Onboarding job triggered — messages will send once plan is generated`);
-  } else {
-    console.log(`  ✅ Active subscription already exists`);
-  }
+  console.log(`  ⏳ Onboarding job triggered — messages will send once plan is generated`);
 
   return userId;
 }

@@ -9,7 +9,7 @@
  */
 import { DateTime } from 'luxon';
 import { getDayOfWeekName } from '@/shared/utils/date';
-import { normalizeWhitespace } from '@/server/utils/formatters';
+import { normalizeWhitespace, stripCodeFences } from '@/server/utils/formatters';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
 import type { Microcycle } from '@/server/models/microcycle';
@@ -221,7 +221,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           params: { user, date: todayDate },
         });
 
-        const workoutMessage = normalizeWhitespace(result.response);
+        const workoutMessage = stripCodeFences(normalizeWhitespace(result.response));
         const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
         // Save workout message to database (upsert by client_id + date)

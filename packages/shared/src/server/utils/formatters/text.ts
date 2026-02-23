@@ -21,3 +21,14 @@ export function normalizeWhitespace(text: string): string {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
+/**
+ * Strips leading/trailing code fences (``` or ```text) from text.
+ * Defensive measure for LLM output that may include markdown code blocks.
+ */
+export function stripCodeFences(text: string): string {
+  return text
+    .replace(/^```\w*\n?/, '')
+    .replace(/\n?```\s*$/, '')
+    .trim();
+}

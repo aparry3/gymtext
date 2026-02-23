@@ -7,4 +7,4 @@
 
 export { formatMicrocycleDay } from './microcycle';
 export { formatFitnessProfile } from './fitnessProfile';
-export { normalizeWhitespace } from './text';
+export { normalizeWhitespace, stripCodeFences } from './text';

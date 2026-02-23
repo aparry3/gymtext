@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getServices, type ServiceContainer } from '@/lib/context';
+import { getServices, getRepositories, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
 import { getStripeSecrets } from '@/server/config';
@@ -11,6 +11,10 @@ const { secretKey } = getStripeSecrets();
 const stripe = new Stripe(secretKey, {
   apiVersion: '2023-10-16',
 });
+
+function isLocalDev(): boolean {
+  return process.env.NODE_ENV === 'development';
+}
 
 /**
  * POST /api/users/signup
@@ -81,6 +85,11 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
 
   console.log(`[Signup] User created: ${user.id}`);
 
+  // In dev mode, skip Stripe entirely
+  if (isLocalDev()) {
+    return await handleDevModeSignup(services, user.id, formData);
+  }
+
   // Step 2: Create Stripe customer
   console.log('[Signup] Creating Stripe customer');
   const customer = await stripe.customers.create({
@@ -120,6 +129,11 @@ async function handleUnsubscribedUserSignup(
     timezone: formData.timezone as string,
     preferredSendHour: formData.preferredSendHour as number,
   });
+
+  // In dev mode, skip Stripe entirely
+  if (isLocalDev()) {
+    return await handleDevModeSignup(services, existingUser.id, formData);
+  }
 
   // Handle Stripe customer - reuse if exists, create if not
   let customerId = existingUser.stripeCustomerId;
@@ -200,6 +214,76 @@ async function handleSubscribedUserReOnboard(
   });
 
   console.log('[Signup] Subscribed user re-onboarding started, redirecting to /me');
+  return response;
+}
+
+/**
+ * Handle signup in dev mode — skip Stripe, create test subscription directly
+ */
+async function handleDevModeSignup(
+  services: ServiceContainer,
+  userId: string,
+  formData: Record<string, unknown>
+) {
+  console.log('[Signup] Dev mode — skipping Stripe, creating test subscription');
+
+  // Create onboarding record
+  try {
+    await services.onboardingData.delete(userId);
+  } catch {
+    // Ignore if no existing record
+  }
+  await services.onboardingData.createOnboardingRecord(userId, extractSignupData(formData));
+
+  // Create test subscription directly via repository
+  const repos = getRepositories();
+  const now = new Date();
+  const periodEnd = new Date(now);
+  periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+  await repos.subscription.create({
+    clientId: userId,
+    stripeSubscriptionId: `sub_test_${Date.now()}`,
+    status: 'active',
+    planType: 'monthly',
+    currentPeriodStart: now,
+    currentPeriodEnd: periodEnd,
+  });
+
+  console.log('[Signup] Test subscription created');
+
+  // Send welcome message if user consented to SMS
+  if (formData.smsConsent) {
+    const userWithProfile = await services.user.getUser(userId);
+    if (userWithProfile) {
+      await services.onboarding.sendWelcomeMessage(userWithProfile);
+    }
+  }
+
+  // Trigger async onboarding job
+  console.log('[Signup] Triggering async onboarding job');
+  await inngest.send({
+    name: 'user/onboarding.requested',
+    data: { userId, forceCreate: false },
+  });
+
+  // Set session cookie and return redirect URL
+  const sessionToken = services.userAuth.createSessionToken(userId);
+
+  const response = NextResponse.json({
+    success: true,
+    redirectUrl: '/me',
+  });
+
+  response.cookies.set('gt_user_session', sessionToken, {
+    httpOnly: true,
+    secure: false, // Dev mode
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60,
+    path: '/',
+  });
+
+  console.log('[Signup] Dev mode signup complete, redirecting to /me');
   return response;
 }
 
