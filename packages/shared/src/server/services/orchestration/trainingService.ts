@@ -8,7 +8,7 @@
  * All AI generation goes through SimpleAgentRunner.
  */
 import { DateTime } from 'luxon';
-import { getDayOfWeekName } from '@/shared/utils/date';
+import { getDayOfWeekName, now, parseDate, toISODate } from '@/shared/utils/date';
 import { normalizeWhitespace, stripCodeFences } from '@/server/utils/formatters';
 import type { UserWithProfile } from '@/server/models/user';
 import type { FitnessPlan } from '@/server/models/fitnessPlan';
@@ -89,7 +89,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       console.log('[TrainingService] Generated plan:', planContent.substring(0, 200));
 
       // Save to database via dossier service
-      const savedPlan = await markdownService.createPlan(user.id, planContent, new Date());
+      const savedPlan = await markdownService.createPlan(user.id, planContent, now().toJSDate());
       console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
 
       return savedPlan;
@@ -214,13 +214,13 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         }
 
         const dayName = getDayOfWeekName(todayDate, timezone);
-        const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
+        const dateStr = targetDate.toISODate()!;
 
         // Run format and details agents in parallel
-        const agentInput = `${dayName} (${targetDate.toISODate()})`;
+        const agentInput = `${dayName} (${dateStr})`;
         const agentOpts = { context, params: { user, date: todayDate } };
 
-        const [formatResult, detailsResult, shortLinkResult] = await Promise.all([
+        const [formatResult, detailsResult] = await Promise.all([
           simpleAgentRunner.invoke('workout:format', { input: agentInput, ...agentOpts }),
           simpleAgentRunner.invoke('workout:details', { input: agentInput, ...agentOpts })
             .then((r) => {
@@ -231,33 +231,44 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
               console.error(`[TrainingService] Failed to generate structured workout:`, error);
               return undefined;
             }),
-          shortLinkService.createWorkoutLink(user.id, workoutId)
-            .then((link) => shortLinkService.getFullUrl(link.code))
-            .catch((error) => {
-              console.error(`[TrainingService] Failed to create short link:`, error);
-              return undefined;
-            }),
         ]);
 
         const rawMessage = stripCodeFences(normalizeWhitespace(formatResult.response));
-        const structuredDetails = detailsResult;
 
-        // Compose final message: day name + content + short link
-        const shortLinkSuffix = shortLinkResult ? `\n\n(More details: ${shortLinkResult})` : '';
-        const workoutMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
-
-        // Save workout message and structured details to database (upsert by client_id + date)
-        await workoutInstanceService.upsert({
+        // Save workout instance first to get a real ID for the short link
+        const workoutInstance = await workoutInstanceService.upsert({
           clientId: user.id,
-          date: targetDate.toISODate()!,
-          message: workoutMessage,
-          details: structuredDetails,
+          date: dateStr,
+          message: rawMessage,
+          details: detailsResult,
         });
 
-        console.log(`[TrainingService] Generated workout for user ${user.id} on ${targetDate.toISODate()}`);
+        // Create short link using the actual workout instance ID
+        let shortLinkSuffix = '';
+        try {
+          const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutInstance.id);
+          const fullUrl = shortLinkService.getFullUrl(shortLink.code);
+          shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
+        } catch (error) {
+          console.error(`[TrainingService] Failed to create short link:`, error);
+        }
+
+        // Compose final message: day name + content + short link
+        const workoutMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
+
+        // Update with final message including the short link
+        if (shortLinkSuffix) {
+          await workoutInstanceService.upsert({
+            clientId: user.id,
+            date: dateStr,
+            message: workoutMessage,
+          });
+        }
+
+        console.log(`[TrainingService] Generated workout for user ${user.id} on ${dateStr}`);
 
         return {
-          id: workoutId,
+          id: workoutInstance.id,
           message: workoutMessage,
           date: todayDate,
         };
@@ -290,7 +301,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     ): Promise<string> {
       // Fetch context
       const timezone = user.timezone || 'America/New_York';
-      const workoutDate = new Date(workout.date);
+      const workoutDate = parseDate(workout.date)!;
       const [profileDossier, plan, weekDossier] = await Promise.all([
         markdownService.getProfile(user.id),
         markdownService.getPlan(user.id),
@@ -319,20 +330,27 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         context.push(`<Week>${weekDossier.content}</Week>`);
       }
 
-      const dayName = getDayOfWeekName(new Date(workout.date), timezone);
+      const dayName = getDayOfWeekName(workoutDate, timezone);
+      const workoutISODate = toISODate(workoutDate, timezone);
       const result = await simpleAgentRunner.invoke('workout:format', {
-        input: `${dayName} (${DateTime.fromJSDate(new Date(workout.date)).toISODate()})`,
+        input: `${dayName} (${workoutISODate})`,
         context,
-        params: { user, date: new Date(workout.date) },
+        params: { user, date: workoutDate },
       });
 
       const rawMessage = stripCodeFences(normalizeWhitespace(result.response));
 
-      // Generate short link
+      // Save workout instance first to get a real ID for the short link
+      const workoutInstance = await workoutInstanceService.upsert({
+        clientId: user.id,
+        date: workoutISODate,
+        message: rawMessage,
+      });
+
+      // Generate short link using the actual workout instance ID
       let shortLinkSuffix = '';
       try {
-        const workoutId = `workout-${user.id}-${DateTime.fromJSDate(workoutDate).toISODate()}`;
-        const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutId);
+        const shortLink = await shortLinkService.createWorkoutLink(user.id, workoutInstance.id);
         const fullUrl = shortLinkService.getFullUrl(shortLink.code);
         shortLinkSuffix = `\n\n(More details: ${fullUrl})`;
       } catch (error) {
@@ -341,12 +359,14 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const regeneratedMessage = `${dayName}\n\n${rawMessage}${shortLinkSuffix}`;
 
-      // Save workout message to database (upsert by client_id + date)
-      await workoutInstanceService.upsert({
-        clientId: user.id,
-        date: DateTime.fromJSDate(workoutDate).toISODate()!,
-        message: regeneratedMessage,
-      });
+      // Update with final message including the short link
+      if (shortLinkSuffix) {
+        await workoutInstanceService.upsert({
+          clientId: user.id,
+          date: workoutISODate,
+          message: regeneratedMessage,
+        });
+      }
 
       return regeneratedMessage;
     },
