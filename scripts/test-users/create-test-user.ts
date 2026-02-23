@@ -11,18 +11,17 @@
  *   1. Load persona JSON
  *   2. Clean up existing user (DB cleanup for idempotency)
  *   3. POST to /api/users/signup (same endpoint the UI hits)
- *   4. Create test subscription directly in DB (bypasses Stripe checkout)
+ *   4. POST to /api/stripe/webhook (mocks Stripe checkout completion in test mode)
  *   5. Output: user ID, subscription status, ready to watch messages
  *
  * Environment:
- *   Requires DATABASE_URL in .env.local
+ *   Requires DATABASE_URL in .env.local (for cleanup only)
  *   Requires local dev server running (pnpm dev)
  *   Set BASE_URL to override (default: http://localhost:3000)
  */
 
 import 'dotenv/config';
 import { Pool } from 'pg';
-import { randomUUID } from 'crypto';
 import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 
@@ -125,42 +124,47 @@ async function deleteExistingUser(pool: Pool, phone: string): Promise<string | n
 }
 
 /**
- * Create a test subscription directly in DB (bypasses Stripe checkout).
- * This is the one part we can't hit via API without a real card.
+ * Create a test subscription by calling the Stripe webhook endpoint in test mode.
+ * This exercises the real webhook handler without needing a real Stripe checkout.
  */
-async function createTestSubscription(pool: Pool, userId: string, personaId: string): Promise<void> {
-  const now = new Date().toISOString();
-  const subId = randomUUID();
+async function createTestSubscriptionViaWebhook(userId: string, personaId: string): Promise<void> {
+  const webhookPayload = {
+    id: `evt_test_${Date.now()}`,
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: `cs_test_${Date.now()}`,
+        customer: `cus_test_${personaId}`,
+        subscription: `sub_test_${personaId}_${Date.now()}`,
+        mode: 'subscription',
+        metadata: {
+          userId,
+        },
+        client_reference_id: userId,
+      },
+    },
+  };
 
-  try {
-    await pool.query(
-      `INSERT INTO subscriptions (id, user_id, stripe_subscription_id, stripe_customer_id, status, current_period_start, current_period_end, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`,
-      [
-        subId,
-        userId,
-        `sub_test_${personaId}`,
-        `cus_test_${personaId}`,
-        'active',
-        now,
-        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        now,
-      ]
+  console.log(`  📡 POST ${BASE_URL}/api/stripe/webhook (test mode)`);
+
+  const response = await fetch(`${BASE_URL}/api/stripe/webhook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-test-mode': 'true',
+    },
+    body: JSON.stringify(webhookPayload),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      `Webhook call failed (${response.status}): ${body.error || JSON.stringify(body)}`
     );
-    console.log(`  ✅ Test subscription created (active)`);
-  } catch (err: any) {
-    // Try minimal insert if columns differ
-    try {
-      await pool.query(
-        `INSERT INTO subscriptions (id, user_id, status, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $4)`,
-        [subId, userId, 'active', now]
-      );
-      console.log(`  ✅ Test subscription created (minimal)`);
-    } catch {
-      console.log(`  ⚠️  Could not create subscription: ${err.message}`);
-    }
   }
+
+  console.log(`  ✅ Webhook processed — subscription created via API`);
 }
 
 /**
@@ -237,7 +241,7 @@ async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
   const userId = userResult.rows[0].id;
   console.log(`  ✅ User created: ${userId}`);
 
-  // Step 4: Create test subscription (bypass Stripe checkout)
+  // Step 4: Create test subscription via webhook endpoint
   // Only if the user doesn't already have one (re-onboard case)
   const subResult = await pool.query(
     "SELECT id FROM subscriptions WHERE user_id = $1 AND status = 'active'",
@@ -245,12 +249,7 @@ async function createUserViaAPI(pool: Pool, persona: Persona): Promise<string> {
   );
 
   if (subResult.rows.length === 0) {
-    await createTestSubscription(pool, userId, persona.id);
-
-    // Step 5: Try to trigger onboarding message send now that subscription exists
-    // The signup API already triggered the Inngest onboarding job,
-    // but messages won't send until subscription is active.
-    // We can hit the checkout/session-like flow or just let Inngest handle it.
+    await createTestSubscriptionViaWebhook(userId, persona.id);
     console.log(`  ⏳ Onboarding job triggered — messages will send once plan is generated`);
   } else {
     console.log(`  ✅ Active subscription already exists`);

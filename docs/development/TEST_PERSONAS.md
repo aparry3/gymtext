@@ -1032,11 +1032,14 @@ Persona data is stored as individual JSON files in `scripts/test-data/personas/`
 **`pnpm signup` (recommended):**
 1. Checks that local dev server is running
 2. Cleans up any existing user with the same phone number
-3. Sends `POST /api/users/signup` — the same endpoint the UI uses
-4. Creates a test Stripe subscription directly in DB (only part that bypasses Stripe)
-5. Inngest onboarding job runs automatically, generating fitness plan and sending messages
+3. **POST /api/users/signup** — the same endpoint the UI uses
+4. **POST /api/stripe/webhook** — mocks Stripe checkout completion (test mode)
+5. Webhook handler creates subscription in DB
+6. Inngest onboarding job runs automatically, generating fitness plan and sending messages
 
-This tests the real signup flow including validation, Stripe customer creation, onboarding data persistence, and Inngest job triggering.
+**No direct DB manipulation for subscriptions** — everything goes through API endpoints.
+This tests the real production flow including validation, Stripe customer creation,
+webhook-driven subscription creation, onboarding data persistence, and Inngest job triggering.
 
 **`pnpm test:cleanup-users`:**
 1. Finds all users with phone numbers in range +13392220001 through +13392220015
