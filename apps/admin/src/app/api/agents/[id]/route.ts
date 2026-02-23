@@ -138,9 +138,12 @@ export async function PUT(
       description,
       user_prompt_template,
       tool_ids,
-      examples,
+      examples: rawExamples,
       eval_rubric,
     } = body;
+
+    // Coerce empty strings to null for JSONB columns
+    const examples = rawExamples === '' ? null : rawExamples;
 
     const { db } = await getAdminContext();
 

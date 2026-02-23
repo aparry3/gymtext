@@ -667,6 +667,16 @@ export async function seedAgents(): Promise<void> {
     console.log('Seeding agent definitions...');
 
     for (const agent of DEFAULT_AGENTS) {
+      // Skip if this agent already has a version — seed only provides initial data
+      const existing = await pool.query(
+        `SELECT 1 FROM agent_definitions WHERE agent_id = $1 LIMIT 1`,
+        [agent.agent_id]
+      );
+      if (existing.rows.length > 0) {
+        console.log(`  ⏭ ${agent.description} (${agent.agent_id}) — already exists`);
+        continue;
+      }
+
       await pool.query(
         `
         INSERT INTO agent_definitions (
@@ -676,19 +686,6 @@ export async function seedAgents(): Promise<void> {
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
         )
-        ON CONFLICT (agent_id) DO UPDATE SET
-          system_prompt = EXCLUDED.system_prompt,
-          model = EXCLUDED.model,
-          max_tokens = EXCLUDED.max_tokens,
-          temperature = EXCLUDED.temperature,
-          max_iterations = EXCLUDED.max_iterations,
-          description = EXCLUDED.description,
-          is_active = EXCLUDED.is_active,
-          tool_ids = EXCLUDED.tool_ids,
-          user_prompt_template = EXCLUDED.user_prompt_template,
-          examples = EXCLUDED.examples,
-          eval_rubric = EXCLUDED.eval_rubric,
-          created_at = CURRENT_TIMESTAMP
         `,
         [
           agent.agent_id,

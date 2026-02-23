@@ -32,7 +32,7 @@ export const up: Migration = async (db) => {
   await sql`
     CREATE TABLE agent_definitions (
       version_id SERIAL PRIMARY KEY,
-      agent_id TEXT NOT NULL UNIQUE,
+      agent_id TEXT NOT NULL,
       system_prompt TEXT NOT NULL,
       model TEXT NOT NULL DEFAULT 'gpt-5-nano',
       max_tokens INTEGER DEFAULT 16000,

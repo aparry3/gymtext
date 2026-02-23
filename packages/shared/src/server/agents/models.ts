@@ -119,7 +119,7 @@ export const initializeModel = <T = string>(outputSchema?: unknown, config?: { m
     } else {
       const llm = new ChatOpenAI({
         model: model,
-        temperature: model !== 'gpt-5-nano' ? temperature : 1,
+        temperature: 1,
         maxCompletionTokens: maxTokens,
         reasoningEffort: 'low',
       })

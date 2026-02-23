@@ -114,12 +114,16 @@ function groupAgentsByCategory(agents: Agent[]): CategoryGroup[] {
 }
 
 const MODELS = [
+  // GPT-5 family
   { value: 'gpt-5-nano', label: 'GPT-5 Nano' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-  { value: 'gpt-4o', label: 'GPT-4o' },
-  { value: 'o1', label: 'O1' },
-  { value: 'o1-mini', label: 'O1 Mini' },
-  { value: 'o3-mini', label: 'O3 Mini' },
+  { value: 'gpt-5-mini', label: 'GPT-5 Mini' },
+  { value: 'gpt-5', label: 'GPT-5' },
+  { value: 'gpt-5.1', label: 'GPT-5.1' },
+  { value: 'gpt-5.2', label: 'GPT-5.2' },
+  // Gemini 3 family
+  { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash' },
+  { value: 'gemini-3-pro-preview', label: 'Gemini 3 Pro' },
+  { value: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
 ]
 
 interface AutoGrowTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value'> {
