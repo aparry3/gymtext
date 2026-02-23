@@ -98,6 +98,58 @@ pnpm check-env
 pnpm check-env:ci
 ```
 
+## Migration Testing
+
+```bash
+# Full migration test: reset DB → main migrations → feature migrations → seed → codegen
+pnpm test:migration
+```
+
+This automates the complete DB reset workflow. Use it to verify migrations work cleanly from scratch.
+
+## Data Anonymization
+
+```bash
+# Anonymize production data for local development
+pnpm db:anonymize
+
+# Dry run (preview what would change)
+pnpm db:anonymize:dry
+```
+
+## Test Users & Personas
+
+```bash
+# Create test user from persona (requires dev server running)
+pnpm signup --persona sarah-chen
+
+# Create all 15 test personas
+pnpm signup --all
+
+# List available personas
+pnpm signup --list
+
+# Clean up test users
+pnpm test:cleanup-users
+pnpm test:cleanup-users --dry-run
+
+# Monitor local SMS in real-time
+pnpm local:sms
+```
+
+See `docs/development/TEST_PERSONAS.md` for persona details.
+
 ## Testing
 
-See project documentation for testing commands.
+```bash
+# Run all tests
+pnpm test
+
+# Vitest UI
+pnpm test:ui
+
+# SMS testing
+pnpm sms:test
+```
+
+See `DEVELOPMENT.md` for full development guide, rules, and workflows.
