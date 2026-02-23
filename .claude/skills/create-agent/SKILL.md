@@ -32,7 +32,7 @@ Before creating an agent, determine:
 - **`toolIds`**: Array of tool names the agent can use. Available tools: `update_profile`, `make_modification`, `get_workout`.
 - **`contextTypes`**: Array of context providers resolved at runtime. Available: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `currentMicrocycle`, `experienceLevel`, `dayFormat`, `programVersion`, `availableExercises`.
 - **`subAgents`**: Sub-agent configurations (batches, parallel/sequential execution).
-- **`schemaJson`**: JSON Schema for structured output validation.
+- **`outputSchema`**: JSON Schema for structured output validation.
 - **`validationRules`**: Declarative validation rules (`equals`, `truthy`, `nonEmpty`, `length`) with auto-retry.
 - **`examples`**: Few-shot examples for the agent.
 
@@ -64,7 +64,7 @@ Write a JSON file with the agent definition. Use camelCase keys matching the dat
   "userPromptTemplate": "Given the following context:\n{{context}}\n\nRespond to: {{input}}",
   "toolIds": ["update_profile"],
   "contextTypes": ["user", "userProfile"],
-  "schemaJson": null,
+  "outputSchema": null,
   "subAgents": null,
   "validationRules": null
 }
@@ -133,6 +133,6 @@ const result = await agentRunner.invoke('domain:action', {
 - The agent definition cache has a **5-minute TTL** - changes take effect within 5 minutes, or immediately if `invalidateCache()` is called
 - Services must always use `agentRunner.invoke(agentId, params)` - never instantiate LLMs directly
 - The `systemPrompt` and `model` are the only truly required fields for a minimal agent
-- For structured output agents, provide `schemaJson` with a valid JSON Schema
+- For structured output agents, provide `outputSchema` with a valid JSON Schema
 - For tool-using agents, list tool names in `toolIds` that are registered in the Tool Registry
 - Sub-agents are defined as JSON with batch configurations for sequential/parallel execution

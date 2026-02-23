@@ -77,8 +77,8 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       let accumulatedMessages: string[] | undefined;
 
       if (tools && tools.length > 0) {
-        if (config.schemaJson) {
-          console.warn(`[SimpleAgentRunner] Agent ${agentId} has both tools and schemaJson; tools take precedence, schemaJson ignored`);
+        if (config.outputSchema) {
+          console.warn(`[SimpleAgentRunner] Agent ${agentId} has both tools and outputSchema; tools take precedence, outputSchema ignored`);
         }
         const model = initializeModel(undefined, {
           model: config.model,
@@ -96,8 +96,8 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
 
         response = result.response;
         accumulatedMessages = result.messages.length > 0 ? result.messages : undefined;
-      } else if (config.schemaJson) {
-        const model = initializeModel<unknown>(config.schemaJson, {
+      } else if (config.outputSchema) {
+        const model = initializeModel<unknown>(config.outputSchema, {
           model: config.model,
           temperature: config.temperature,
           maxTokens: config.maxTokens,

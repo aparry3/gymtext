@@ -40,7 +40,7 @@ const COLUMN_MAP: Record<string, string> = {
   toolIds: 'tool_ids',
   contextTypes: 'context_types',
   subAgents: 'sub_agents',
-  schemaJson: 'schema_json',
+  outputSchema: 'output_schema',
   validationRules: 'validation_rules',
   userPromptTemplate: 'user_prompt_template',
   versionId: 'version_id',
@@ -71,7 +71,7 @@ function toCamelCase(obj: Record<string, unknown>): Record<string, unknown> {
 
 // text[] columns need array syntax; jsonb columns need ::jsonb cast
 const TEXT_ARRAY_COLS = new Set(['tool_ids', 'context_types']);
-const JSONB_COLS = new Set(['sub_agents', 'schema_json', 'validation_rules', 'examples']);
+const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);
 
 function castValue(col: string, v: unknown) {
   if (v === null || v === undefined) return sql`${null}`;

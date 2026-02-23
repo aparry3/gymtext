@@ -44,7 +44,7 @@ function transformAgent(agent: DbAgent) {
     tool_ids: agent.toolIds || [],
     context_types: null,
     sub_agents: null,
-    schema_json: null,
+    output_schema: null,
     validation_rules: null,
     created_at: agent.createdAt,
     version_id: agent.versionId,

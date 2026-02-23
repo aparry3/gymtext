@@ -54,7 +54,7 @@ Use the standard microcycle format. Show changes with strikethrough for original
 Append a LOG section documenting this modification (date, context, changes, rationale).`,
 };
 
-const JSONB_COLS = new Set(['sub_agents', 'schema_json', 'validation_rules', 'examples']);
+const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);
 
 function castValue(col: string, v: unknown) {
   if (v === null || v === undefined) return sql`${null}`;

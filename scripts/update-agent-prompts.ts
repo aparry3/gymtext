@@ -52,7 +52,7 @@ const AGENT_MAPPINGS = [
 ];
 
 const TEXT_ARRAY_COLS = new Set(['tool_ids', 'context_types']);
-const JSONB_COLS = new Set(['sub_agents', 'schema_json', 'validation_rules', 'examples']);
+const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);
 
 function castValue(col: string, v: unknown) {
   if (v === null || v === undefined) return sql`${null}`;

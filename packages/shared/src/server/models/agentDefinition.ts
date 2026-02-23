@@ -37,5 +37,5 @@ export interface DbAgentConfig {
   /** Eval rubric for quality assessment */
   evalRubric: string | null;
   /** JSON Schema for structured output */
-  schemaJson: unknown | null;
+  outputSchema: unknown | null;
 }

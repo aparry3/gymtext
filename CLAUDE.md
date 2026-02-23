@@ -265,7 +265,7 @@ Each agent is a row in `agent_definitions` with append-only versioning (latest `
 | `tool_ids` | Tool names available to agent (e.g., `['get_user_profile', 'get_exercises']`) |
 | `context_types` | Context to resolve at runtime (e.g., `['dateContext', 'currentWorkout']`) |
 | `sub_agents` | Sub-agent configurations (batches, parallel/sequential) |
-| `schema_json` | JSON Schema for structured output |
+| `output_schema` | JSON Schema for structured output |
 | `validation_rules` | Declarative validation rules with auto-retry |
 | `temperature`, `max_tokens`, `max_iterations`, `max_retries` | Model configuration |
 
