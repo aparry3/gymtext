@@ -7,10 +7,12 @@ This guide covers typical development tasks in GymText.
 ### 1. Create Feature Branch
 
 ```bash
-git checkout main
-git pull origin main
+git checkout new-agent-system
+git pull origin new-agent-system
 git checkout -b feature/my-new-feature
 ```
+
+> **Note:** Always branch from `new-agent-system`, not `main` or `staging`. See `DEVELOPMENT.md` for full rules.
 
 ### 2. Make Changes
 
