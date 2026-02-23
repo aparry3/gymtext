@@ -1,0 +1,26 @@
+{
+  "id": "rachel-green",
+  "detailLevel": "sparse",
+  "userData": {
+    "name": "Rachel Green",
+    "phone": "+13392220008",
+    "age": 26,
+    "gender": "female",
+    "timezone": "America/Los_Angeles"
+  },
+  "signupData": {
+    "experienceLevel": "beginner",
+    "desiredDaysPerWeek": "4",
+    "primaryGoals": ["muscle_building", "weight_loss"],
+    "goalsElaboration": "Build some muscle and lose weight. Feel less stressed.",
+    "trainingLocation": "home",
+    "locationElaboration": "Apartment - dumbbells, resistance bands, pull-up bar",
+    "equipment": ["dumbbells", "bands", "pull_up_bar"],
+    "injuries": null
+  },
+  "onboardingMessages": [
+    "I want to build some muscle and lose weight. Also just feel less stressed.",
+    "I work out at home in my apartment - I have dumbbells, resistance bands, and a pull-up bar",
+    "I can do maybe 30 minutes max, 4 days a week but it varies"
+  ]
+}

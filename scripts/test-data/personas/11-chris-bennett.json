@@ -1,0 +1,27 @@
+{
+  "id": "chris-bennett",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Chris Bennett",
+    "phone": "+13392220011",
+    "age": 45,
+    "gender": "male",
+    "timezone": "America/Denver"
+  },
+  "signupData": {
+    "experienceLevel": "advanced",
+    "desiredDaysPerWeek": "2",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "Competitive cyclist (Cat 3 road racer), strength training purely for cycling performance and injury prevention. Peak racing season in 10 weeks. Minimal effective dose approach.",
+    "trainingLocation": "home_gym",
+    "locationElaboration": "Basement home gym - barbell, plates up to 300 lb, squat rack, bench",
+    "equipment": ["barbells", "bench", "squat_rack"],
+    "injuries": "Tight hip flexors, previous lower back strain from poor bike fit (resolved). Avoids leg volume that makes legs heavy for cycling.",
+    "experienceElaboration": "12 years competitive cycling, 4 years strength training. FTP 315 watts. Doesn't care about strength PRs, only cycling performance. Trains Tue/Fri at 6 PM after recovery rides, 40-50 min."
+  },
+  "onboardingMessages": [
+    "I'm a competitive road cyclist, Cat 3. I use strength training purely to support my cycling and prevent injuries. Racing season starts in 10 weeks.",
+    "I have a home gym in my basement with a barbell, squat rack, bench, and plates up to 300 lb. I train Tuesday and Friday, 40-50 minutes.",
+    "I need minimal effective dose - can't have heavy legs for my rides. I don't care about strength PRs, just cycling performance and durability."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "jessica-kim",
+  "detailLevel": "detailed",
+  "userData": {
+    "name": "Jessica Kim",
+    "phone": "+13392220005",
+    "age": 29,
+    "gender": "female",
+    "timezone": "America/New_York"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "5",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "CrossFit athlete transitioning from Scaled to Rx. Preparing for 2025 CrossFit Open (8 weeks away). Need to string bar muscle-ups, increase Olympic lifts (C&J 155→175, Snatch 115→135), improve engine for longer chippers.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "CrossFit Riverdale affiliate - full CrossFit setup: barbells, bumper plates, rowers, Assault bikes, pull-up rigs, rings, rope, plyo boxes, GHD, kettlebells 8-70 lb, dumbbells 10-100 lb",
+    "equipment": ["barbells", "kettlebells", "dumbbells", "rowers", "rings", "pull_up_bars"],
+    "injuries": "Right wrist strain history (spring 2024) from high-rep overhead work. Manages with mobility and taping. Flares up with >30 snatches or >50 HSPU in single session.",
+    "experienceElaboration": "2 years CrossFit, 3 years general fitness before. Competed scaled at 3 local throwdowns, placed top 10 twice. Got first bar muscle-up fall 2024. Trains Mon/Tue/Wed/Fri/Sat at 5:30 PM class."
+  },
+  "onboardingMessages": [
+    "I do CrossFit and I'm trying to go from Scaled to Rx for the upcoming Open. I need to get my bar muscle-ups strung together and hit heavier barbell weights.",
+    "I train at my CrossFit affiliate 5 days a week - they have everything. Full rig, barbells, rowers, bikes, kettlebells, the works.",
+    "My Olympic lifts need work - clean and jerk is 155 lb and snatch is 115. I also gas out in longer workouts after about 12-15 minutes.",
+    "I have a wrist issue from last year that flares up with too many snatches or HSPU. I tape it for heavy days and manage the volume."
+  ]
+}

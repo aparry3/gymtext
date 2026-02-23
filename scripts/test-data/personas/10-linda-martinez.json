@@ -1,0 +1,26 @@
+{
+  "id": "linda-martinez",
+  "detailLevel": "sparse",
+  "userData": {
+    "name": "Linda Martinez",
+    "phone": "+13392220010",
+    "age": 38,
+    "gender": "female",
+    "timezone": "America/Chicago"
+  },
+  "signupData": {
+    "experienceLevel": "beginner",
+    "desiredDaysPerWeek": "3",
+    "primaryGoals": ["weight_loss"],
+    "goalsElaboration": "Lose weight and have more energy for kids. Single parent, very busy.",
+    "trainingLocation": "home",
+    "locationElaboration": "Garage - kettlebells and bands",
+    "equipment": ["kettlebells", "bands"],
+    "injuries": "Postpartum core issues, needs some core modifications. Very limited and unpredictable schedule."
+  },
+  "onboardingMessages": [
+    "I'm a single mom and I just want to lose some weight and have more energy to keep up with my kids",
+    "I have kettlebells and bands in my garage. That's about it.",
+    "I can maybe do 20-30 minutes when I get a chance, 3 times a week if I'm lucky"
+  ]
+}

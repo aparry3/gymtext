@@ -1,0 +1,27 @@
+{
+  "id": "brandon-taylor",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Brandon Taylor",
+    "phone": "+13392220009",
+    "age": 22,
+    "gender": "male",
+    "timezone": "America/New_York"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "2",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "D3 college basketball player, in-season (12 weeks remaining). Need strength training that complements basketball - explosiveness, durability, injury prevention. Can't be too sore for games.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "University athletic facility - full athletic performance center with platforms, racks, sleds, plyo boxes",
+    "equipment": ["barbells", "dumbbells", "platforms", "sleds", "plyo_boxes"],
+    "injuries": "Chronic ankle instability (tapes for games). Can't be too sore for basketball performance.",
+    "experienceElaboration": "3 years lifting experience. College basketball player (D3), currently in-season. Trains Mon/Thu at 2 PM, 45 min sessions between classes and practice."
+  },
+  "onboardingMessages": [
+    "I play D3 basketball and I'm in-season with 12 weeks left. I need strength training that won't hurt my game performance.",
+    "I can only lift Monday and Thursday, 45 minutes between classes and practice. I have access to a full athletic performance center.",
+    "I want explosive movements - jump higher, move faster. I tape my ankles for games due to chronic instability."
+  ]
+}

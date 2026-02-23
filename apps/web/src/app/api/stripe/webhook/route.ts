@@ -9,6 +9,17 @@ const stripe = new Stripe(secretKey, {
 });
 
 /**
+ * Check if this is a test mode request (development only).
+ * Test mode skips Stripe signature verification and subscription retrieval.
+ */
+function isTestMode(request: NextRequest): boolean {
+  return (
+    process.env.NODE_ENV === 'development' &&
+    request.headers.get('x-test-mode') === 'true'
+  );
+}
+
+/**
  * POST /api/stripe/webhook
  *
  * Handles Stripe webhook events for subscription management
@@ -17,30 +28,43 @@ const stripe = new Stripe(secretKey, {
  * - checkout.session.completed: Create subscription, trigger final onboarding messages
  * - customer.subscription.updated: Update subscription status
  * - customer.subscription.deleted: Mark subscription as canceled
+ *
+ * Test mode (development only):
+ *   Send `x-test-mode: true` header to bypass signature verification
+ *   and Stripe API calls. Used by test persona scripts.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const signature = request.headers.get('stripe-signature');
+    const testMode = isTestMode(request);
 
-    if (!signature) {
-      console.error('[Stripe Webhook] Missing stripe-signature header');
-      return NextResponse.json(
-        { error: 'Missing stripe-signature header' },
-        { status: 400 }
-      );
-    }
-
-    // Verify webhook signature
     let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      console.error('[Stripe Webhook] Signature verification failed:', err);
-      return NextResponse.json(
-        { error: `Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}` },
-        { status: 400 }
-      );
+
+    if (testMode) {
+      // In test mode, parse the body directly as a Stripe-like event
+      console.log('[Stripe Webhook] ⚠️  TEST MODE — skipping signature verification');
+      event = JSON.parse(body) as Stripe.Event;
+    } else {
+      const signature = request.headers.get('stripe-signature');
+
+      if (!signature) {
+        console.error('[Stripe Webhook] Missing stripe-signature header');
+        return NextResponse.json(
+          { error: 'Missing stripe-signature header' },
+          { status: 400 }
+        );
+      }
+
+      // Verify webhook signature
+      try {
+        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      } catch (err) {
+        console.error('[Stripe Webhook] Signature verification failed:', err);
+        return NextResponse.json(
+          { error: `Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}` },
+          { status: 400 }
+        );
+      }
     }
 
     console.log(`[Stripe Webhook] Received event: ${event.type}`);
@@ -61,24 +85,43 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'No userId in metadata' }, { status: 400 });
         }
 
-        // Get subscription from Stripe
-        if (!session.subscription) {
-          console.error('[Stripe Webhook] No subscription in session');
-          return NextResponse.json({ error: 'No subscription in session' }, { status: 400 });
-        }
+        // Get subscription data — either from Stripe or from mock payload
+        let subscriptionId: string;
+        let subscriptionStatus: string;
+        let periodStart: Date;
+        let periodEnd: Date;
 
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string
-        );
+        if (testMode && typeof session.subscription === 'string' && session.subscription.startsWith('sub_test_')) {
+          // Test mode: use mock subscription data from the payload
+          console.log(`[Stripe Webhook] TEST MODE — using mock subscription data`);
+          subscriptionId = session.subscription;
+          subscriptionStatus = 'active';
+          periodStart = new Date();
+          periodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        } else {
+          // Production: retrieve real subscription from Stripe
+          if (!session.subscription) {
+            console.error('[Stripe Webhook] No subscription in session');
+            return NextResponse.json({ error: 'No subscription in session' }, { status: 400 });
+          }
+
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
+          subscriptionId = subscription.id;
+          subscriptionStatus = subscription.status;
+          periodStart = new Date(subscription.current_period_start * 1000);
+          periodEnd = new Date(subscription.current_period_end * 1000);
+        }
 
         // Create subscription record
         await repos.subscription.create({
           clientId: userId,
-          stripeSubscriptionId: subscription.id,
-          status: subscription.status,
+          stripeSubscriptionId: subscriptionId,
+          status: subscriptionStatus,
           planType: 'monthly', // TODO: Get from subscription price
-          currentPeriodStart: new Date(subscription.current_period_start * 1000),
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodStart: periodStart,
+          currentPeriodEnd: periodEnd,
         });
 
         console.log(`[Stripe Webhook] Subscription created for user ${userId}`);

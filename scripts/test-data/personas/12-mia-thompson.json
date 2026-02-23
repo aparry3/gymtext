@@ -1,0 +1,27 @@
+{
+  "id": "mia-thompson",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Mia Thompson",
+    "phone": "+13392220012",
+    "age": 30,
+    "gender": "female",
+    "timezone": "America/Denver"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "4",
+    "primaryGoals": ["performance"],
+    "goalsElaboration": "Alpine ski racer (amateur/masters level). Off-season focus on leg power, stability, injury prevention, core strength, explosive power, single-leg strength. 8 months until ski season.",
+    "trainingLocation": "hybrid",
+    "locationElaboration": "Full commercial gym access plus some home equipment for quick sessions",
+    "equipment": ["barbells", "dumbbells", "machines", "plyo_boxes"],
+    "injuries": "Previous MCL sprain (right knee), manages with prehab and stability work.",
+    "experienceElaboration": "2 years serious training. Alpine ski racer training year-round. Off-season strength focus, in-season maintenance. Prefers explosive movements, plyometrics, heavy single-leg work. Mon/Tue/Thu/Sat mornings, 60-75 min."
+  },
+  "onboardingMessages": [
+    "I'm an alpine ski racer and it's my off-season. I want to build leg power, stability, and explosiveness for next season - 8 months away.",
+    "I go to a commercial gym and also have some stuff at home. Mon/Tue/Thu/Sat mornings, 60-75 min sessions.",
+    "I had an MCL sprain on my right knee before so I do prehab and stability work. I love plyometrics and heavy single-leg exercises."
+  ]
+}

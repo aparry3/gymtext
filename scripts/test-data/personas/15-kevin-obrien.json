@@ -1,0 +1,27 @@
+{
+  "id": "kevin-obrien",
+  "detailLevel": "moderate",
+  "userData": {
+    "name": "Kevin O'Brien",
+    "phone": "+13392220015",
+    "age": 36,
+    "gender": "male",
+    "timezone": "America/New_York"
+  },
+  "signupData": {
+    "experienceLevel": "intermediate",
+    "desiredDaysPerWeek": "4",
+    "primaryGoals": ["strength"],
+    "goalsElaboration": "General strength and fitness - jack of all trades. Be ready for anything: hiking, sports, challenges. No specific timeline, ongoing development. Likes variety.",
+    "trainingLocation": "commercial_gym",
+    "locationElaboration": "Crunch Fitness - full commercial gym equipment",
+    "equipment": ["barbells", "dumbbells", "machines", "cables"],
+    "injuries": null,
+    "experienceElaboration": "3 years consistent training. General fitness enthusiast, no specific sport. Squat 245x5, bench 205x5, deadlift 315x5, 5K in 25 min. Enjoys mix of strength, conditioning, and skills. Mon/Wed/Fri/Sat at noon, 60 min."
+  },
+  "onboardingMessages": [
+    "I just want to be strong and capable for whatever life throws at me - hiking, pickup sports, random physical challenges. Jack of all trades.",
+    "I go to Crunch Fitness 4 days a week at lunch, about 60 minutes. They have everything.",
+    "I get bored with monotonous programming - I like mixing strength, conditioning, and skill work like handstands. Keep it interesting."
+  ]
+}
