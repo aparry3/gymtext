@@ -74,7 +74,7 @@ async function main() {
     for (const table of tables) {
       try {
         const del = await pool.query(
-          `DELETE FROM ${table} WHERE user_id = ANY($1::uuid[])`,
+          `DELETE FROM ${table} WHERE client_id = ANY($1::uuid[])`,
           [userIds]
         );
         if (del.rowCount && del.rowCount > 0) {

@@ -11,7 +11,7 @@ import type { DB } from '@/server/models/_types';
 
 export interface WorkoutInstanceRow {
   id: string;
-  userId: string;
+  clientId: string;
   date: Date;
   message: string | null;
   details: Record<string, unknown> | null;
@@ -20,7 +20,7 @@ export interface WorkoutInstanceRow {
 }
 
 export interface CreateWorkoutInstanceInput {
-  userId: string;
+  clientId: string;
   date: string; // YYYY-MM-DD format
   message?: string;
   details?: Record<string, unknown>;
@@ -37,21 +37,21 @@ export class WorkoutInstanceRepository extends BaseRepository {
   }
 
   /**
-   * Upsert a workout instance by user_id + date
+   * Upsert a workout instance by client_id + date
    */
   async upsert(input: CreateWorkoutInstanceInput & UpdateWorkoutInstanceInput): Promise<WorkoutInstanceRow> {
-    const { userId, date, message, details } = input;
+    const { clientId, date, message, details } = input;
 
     // Use upsert with ON CONFLICT DO UPDATE
     const result = await this.db
       .insertInto('workoutInstances')
       .values({
-        userId,
+        clientId,
         date,
         message: message ?? null,
         details: details ? JSON.stringify(details) : null,
       })
-      .onConflict((oc) => oc.columns(['userId', 'date']).doUpdateSet({
+      .onConflict((oc) => oc.columns(['clientId', 'date']).doUpdateSet({
         message: message ?? null,
         details: details ? JSON.stringify(details) : null,
         updatedAt: sql`CURRENT_TIMESTAMP`,
@@ -61,7 +61,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
 
     return {
       id: result.id,
-      userId: result.userId,
+      clientId: result.clientId,
       date: result.date,
       message: result.message,
       details: result.details as Record<string, unknown> | null,
@@ -71,13 +71,13 @@ export class WorkoutInstanceRepository extends BaseRepository {
   }
 
   /**
-   * Get workout instance by user_id and date
+   * Get workout instance by client_id and date
    */
-  async getByUserAndDate(userId: string, date: string): Promise<WorkoutInstanceRow | null> {
+  async getByUserAndDate(clientId: string, date: string): Promise<WorkoutInstanceRow | null> {
     const result = await this.db
       .selectFrom('workoutInstances')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .where('date', '=', new Date(date))
       .executeTakeFirst();
 
@@ -85,7 +85,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
 
     return {
       id: result.id,
-      userId: result.userId,
+      clientId: result.clientId,
       date: result.date,
       message: result.message,
       details: result.details as Record<string, unknown> | null,
@@ -97,11 +97,11 @@ export class WorkoutInstanceRepository extends BaseRepository {
   /**
    * Get all workout instances for a user
    */
-  async getByUserId(userId: string, options?: { limit?: number; offset?: number }): Promise<WorkoutInstanceRow[]> {
+  async getByUserId(clientId: string, options?: { limit?: number; offset?: number }): Promise<WorkoutInstanceRow[]> {
     let query = this.db
       .selectFrom('workoutInstances')
       .selectAll()
-      .where('userId', '=', userId)
+      .where('clientId', '=', clientId)
       .orderBy('date', 'desc');
 
     if (options?.limit) {
@@ -115,7 +115,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
 
     return results.map((r) => ({
       id: r.id,
-      userId: r.userId,
+      clientId: r.clientId,
       date: r.date,
       message: r.message,
       details: r.details as Record<string, unknown> | null,

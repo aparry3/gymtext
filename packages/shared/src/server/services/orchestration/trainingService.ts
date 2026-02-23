@@ -224,9 +224,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         const workoutMessage = normalizeWhitespace(result.response);
         const workoutId = `workout-${user.id}-${targetDate.toISODate()}`;
 
-        // Save workout message to database (upsert by user_id + date)
+        // Save workout message to database (upsert by client_id + date)
         await workoutInstanceService.upsert({
-          userId: user.id,
+          clientId: user.id,
           date: targetDate.toISODate()!,
           message: workoutMessage,
         });
@@ -305,9 +305,9 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const regeneratedMessage = result.response;
 
-      // Save workout message to database (upsert by user_id + date)
+      // Save workout message to database (upsert by client_id + date)
       await workoutInstanceService.upsert({
-        userId: user.id,
+        clientId: user.id,
         date: DateTime.fromJSDate(workoutDate).toISODate()!,
         message: regeneratedMessage,
       });
