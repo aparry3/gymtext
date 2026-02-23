@@ -148,13 +148,11 @@ export function createDailyMessageService(
         }
 
         let workoutMessage: string;
-        if ('message' in workout && workout.message) {
+        if (workout.message) {
           workoutMessage = workout.message;
-        } else if ('description' in workout && workout.description) {
-          // Use trainingService to regenerate message with proper day format context
-          workoutMessage = await trainingService.regenerateWorkoutMessage(user, workout);
         } else {
-          throw new Error('Workout missing required fields for message generation');
+          // No message available - regenerate it
+          workoutMessage = await trainingService.regenerateWorkoutMessage(user, workout);
         }
 
         const customImageUrl = await dayConfigService.getImageUrlForDate(targetDate.toJSDate());

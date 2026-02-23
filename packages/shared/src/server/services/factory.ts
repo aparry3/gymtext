@@ -216,7 +216,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
         if (!u) return { toolType: 'query' as const, response: 'User not found.' };
         const generatedWorkout = await training.prepareWorkoutForDate(u, todayDt);
         if (!generatedWorkout) return { toolType: 'query' as const, response: 'No workout scheduled for today.' };
-        return { toolType: 'query' as const, response: generatedWorkout.message || generatedWorkout.description || 'Workout generated.', messages: generatedWorkout.message ? [generatedWorkout.message] : undefined };
+        return { toolType: 'query' as const, response: generatedWorkout.message || 'Workout generated.', messages: generatedWorkout.message ? [generatedWorkout.message] : undefined };
       },
     },
     queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
@@ -236,6 +236,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     markdown,
     agentRunner,
     workoutInstance,
+    shortLink,
   });
 
   const programAgent = createProgramAgentService(agentRunner);
