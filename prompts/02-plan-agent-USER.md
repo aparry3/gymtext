@@ -1,5 +1,3 @@
-# Plan Agent User Prompt
-
 Design a training program based on:
 
 {{input}}

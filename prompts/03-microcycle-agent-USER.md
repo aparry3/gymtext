@@ -1,5 +1,3 @@
-# Microcycle Agent User Prompt
-
 Generate a microcycle (weekly workout plan) based on:
 
 {{input}}

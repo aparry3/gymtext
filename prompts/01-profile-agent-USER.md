@@ -1,5 +1,3 @@
-# Profile Agent User Prompt
-
 Create or update a fitness profile based on:
 
 {{input}}
