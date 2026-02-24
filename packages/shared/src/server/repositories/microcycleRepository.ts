@@ -46,7 +46,7 @@ export class MicrocycleRepository {
   /**
    * Create a new microcycle
    */
-  async create(clientId: string, planId: string, content: string, startDate: Date): Promise<Microcycle> {
+  async create(clientId: string, planId: string, content: string, startDate: Date, options?: { message?: string; details?: Record<string, unknown> }): Promise<Microcycle> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertValues: any = {
       id: uuidv4(),
@@ -54,6 +54,8 @@ export class MicrocycleRepository {
       planId,
       content,
       startDate,
+      ...(options?.message && { message: options.message }),
+      ...(options?.details && { details: JSON.stringify(options.details) }),
     };
 
     const result = await this.db
@@ -101,6 +103,8 @@ export class MicrocycleRepository {
       clientId: row.clientId as string,
       planId: row.planId ?? null,
       content: row.content ?? null,
+      message: row.message ?? null,
+      details: row.details ? (typeof row.details === 'string' ? JSON.parse(row.details) : row.details) : null,
       startDate: new Date(row.startDate),
       createdAt: new Date(row.createdAt),
     };

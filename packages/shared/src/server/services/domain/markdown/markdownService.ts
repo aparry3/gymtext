@@ -10,7 +10,7 @@ export interface MarkdownServiceInstance {
   createPlan(userId: string, content: string, startDate: Date): Promise<FitnessPlan>;
   getWeek(userId: string): Promise<Microcycle | null>;
   getWeekForDate(userId: string, date: Date): Promise<Microcycle | null>;
-  createWeek(userId: string, planId: string, content: string, startDate: Date): Promise<Microcycle>;
+  createWeek(userId: string, planId: string, content: string, startDate: Date, options?: { message?: string; details?: Record<string, unknown> }): Promise<Microcycle>;
 }
 
 export function createMarkdownService(repos: RepositoryContainer): MarkdownServiceInstance {
@@ -39,8 +39,8 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
       return repos.microcycle.getByDate(userId, date);
     },
 
-    async createWeek(userId: string, planId: string, content: string, startDate: Date): Promise<Microcycle> {
-      return repos.microcycle.create(userId, planId, content, startDate);
+    async createWeek(userId: string, planId: string, content: string, startDate: Date, options?: { message?: string; details?: Record<string, unknown> }): Promise<Microcycle> {
+      return repos.microcycle.create(userId, planId, content, startDate, options);
     },
   };
 }

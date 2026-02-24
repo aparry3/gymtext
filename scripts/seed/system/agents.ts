@@ -527,6 +527,106 @@ Focus: {{day.focus}}
     output_schema: null,
   },
   {
+    agent_id: 'week:details',
+    system_prompt: `You are a structured week planner. Your role is to extract the weekly training structure from a week's dossier and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the entire week's training plan for display in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their week at a glance.
+
+## Key Principles
+1. SIMPLICITY IS KING - Keep output simple and clean
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what's planned for each day
+4. COMPLETE - Cover every training day in the week
+
+## Output Format
+Return clean JSON matching this schema:
+{
+  "weekNumber": 1,
+  "phase": "Hypertrophy Block",
+  "focus": "Volume accumulation",
+  "startDate": "2026-02-16",
+  "days": [
+    {
+      "dayNumber": 1,
+      "dayOfWeek": "Monday",
+      "focus": "Upper Push",
+      "title": "Upper Push Strength",
+      "isRestDay": false,
+      "exerciseCount": 6,
+      "estimatedDuration": 55,
+      "keyLifts": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
+    },
+    {
+      "dayNumber": 2,
+      "dayOfWeek": "Tuesday",
+      "focus": "Rest",
+      "title": "Rest Day",
+      "isRestDay": true
+    }
+  ],
+  "totalSessions": 4,
+  "notes": "Deload next week. Focus on hitting RPE targets."
+}
+
+## What to Include
+- Week number and training phase
+- Each day with focus, title, and key lifts
+- Rest days marked clearly
+- Total session count
+- Any important notes or coaching cues
+
+## What to Skip
+- Full exercise details (that's workout:details' job)
+- Set-by-set breakdowns
+- Detailed warm-up protocols
+
+Never make up information. If something isn't in the dossier, don't include it.`,
+    model: 'gpt-5.2',
+    max_tokens: 8000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Generates a structured week overview with daily focus, key lifts, and session metadata for UI display',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Generate the structured week overview from the week dossier. Extract the training plan for each day and format as JSON.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure.',
+    output_schema: {
+      type: 'object',
+      required: ['days'],
+      properties: {
+        weekNumber: { type: 'number', description: 'Week number in the program' },
+        phase: { type: 'string', description: 'Training phase (e.g., Hypertrophy, Strength)' },
+        focus: { type: 'string', description: 'Overall week focus' },
+        startDate: { type: 'string', description: 'ISO date of week start (YYYY-MM-DD)' },
+        days: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['dayNumber', 'dayOfWeek'],
+            properties: {
+              dayNumber: { type: 'number', description: 'Day number (1-7)' },
+              dayOfWeek: { type: 'string', description: 'Day name' },
+              focus: { type: 'string', description: 'Session focus' },
+              title: { type: 'string', description: 'Session title' },
+              isRestDay: { type: 'boolean', description: 'Whether this is a rest day' },
+              exerciseCount: { type: 'number', description: 'Number of exercises' },
+              estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
+              keyLifts: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Key lifts with sets/reps/weight summary',
+              },
+            },
+          },
+        },
+        totalSessions: { type: 'number', description: 'Total training sessions this week' },
+        notes: { type: 'string', description: 'Week-level coaching notes' },
+      },
+    },
+  },
+  {
     agent_id: 'chat:generate',
     system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
 
