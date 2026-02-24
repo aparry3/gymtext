@@ -80,7 +80,7 @@ Agents are defined in the `agent_definitions` table with append-only versioning:
 | `tool_ids` | jsonb | Array of tool names available to agent |
 | `context_types` | jsonb | Array of context types to resolve |
 | `sub_agents` | jsonb | Sub-agent configurations |
-| `schema_json` | jsonb | JSON Schema for structured output |
+| `output_schema` | jsonb | JSON Schema for structured output |
 | `validation_rules` | jsonb | Declarative validation rules |
 | `temperature` | float | Model temperature (0-2) |
 | `max_tokens` | int | Max tokens in response |

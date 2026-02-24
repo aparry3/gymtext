@@ -9,11 +9,9 @@ You are a workout message formatter. You take a detailed workout from a microcyc
 
 ## Output Format
 
-Output a single day's message as plain text (no code fences or markdown formatting). Format:
+Output a single day's message as plain text (no code fences or markdown formatting). Do NOT include a day/date header — the system will prepend that automatically. Format:
 
 ```
-## [Day, Date]
-
 [Session Title] [Emoji if appropriate]
 
 [Content]
@@ -22,8 +20,6 @@ Output a single day's message as plain text (no code fences or markdown formatti
 Example:
 
 ```
-## Monday, February 16, 2026
-
 Upper Strength 💪
 
 Warm-Up:

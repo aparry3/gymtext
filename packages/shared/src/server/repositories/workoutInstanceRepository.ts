@@ -2,11 +2,12 @@
  * Workout Instance Repository
  *
  * Handles CRUD operations for workout_instances table.
- * Used to store outputs from workout:format and workout:structured agents.
+ * Used to store outputs from workout:format and workout:details agents.
  */
 import { Kysely, sql } from 'kysely';
 import { BaseRepository, type DatabaseInstance } from '@/server/repositories/baseRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
+import { parseDate } from '@/shared/utils/date';
 import type { DB } from '@/server/models/_types';
 
 export interface WorkoutInstanceRow {
@@ -78,7 +79,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .selectFrom('workoutInstances')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('date', '=', new Date(date))
+      .where('date', '=', parseDate(date)!)
       .executeTakeFirst();
 
     if (!result) return null;

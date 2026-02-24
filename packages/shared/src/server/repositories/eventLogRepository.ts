@@ -49,7 +49,7 @@ export interface EventLogQueryFilters {
  * await eventLogRepo.log({
  *   eventName: 'validation_failed',
  *   userId: user.id,
- *   entityId: 'workout:structured',
+ *   entityId: 'workout:details',
  *   chainId: correlationId,
  *   data: { attempt: 1, errors: ['Missing warmup'], durationMs: 1523 }
  * });
@@ -132,7 +132,7 @@ export class EventLogRepository extends BaseRepository {
   }
 
   /**
-   * Get recent events by entity ID (e.g., 'workout:structured')
+   * Get recent events by entity ID (e.g., 'workout:details')
    */
   async getRecentByEntityId(entityId: string, limit: number = 100): Promise<EventLog[]> {
     const results = await this.db

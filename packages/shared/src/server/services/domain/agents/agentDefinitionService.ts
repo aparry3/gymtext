@@ -70,6 +70,7 @@ export function createAgentDefinitionService(
     toolIds: (row.toolIds as string[] | null) ?? null,
     examples: (row.examples as unknown) ?? null,
     evalRubric: row.evalRubric ?? null,
+    outputSchema: (row.outputSchema as unknown) ?? null,
   });
 
   /**

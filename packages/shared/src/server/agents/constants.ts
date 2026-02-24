@@ -12,6 +12,7 @@ export const AGENTS = {
   PLAN_GENERATE: 'plan:generate',
   WEEK_GENERATE: 'week:generate',
   WORKOUT_FORMAT: 'workout:format',
+  WORKOUT_DETAILS: 'workout:details',
   WORKOUT_MODIFY: 'workout:modify',
   WEEK_MODIFY: 'week:modify',
   PLAN_MODIFY: 'plan:modify',

@@ -46,7 +46,8 @@ export const up: Migration = async (db) => {
       hooks JSONB,
       user_prompt_template TEXT,
       examples JSONB,
-      eval_rubric TEXT
+      eval_rubric TEXT,
+      output_schema JSONB
     )
   `.execute(db);
 
