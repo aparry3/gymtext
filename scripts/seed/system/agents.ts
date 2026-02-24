@@ -315,21 +315,25 @@ Generate JSON that can be directly displayed in a mobile app or web UI. This is 
 1. SIMPLICITY IS KING - Use simple format by default, detailed only when needed
 2. UI-FOCUSED - For human display, not LLM consumption
 3. ACCURATE - Extract exactly what the user is supposed to do
-4. SECTION-BASED - Each section = one discrete unit of work
+4. ORDERED EXERCISEGROUPS - exerciseGroups is an ordered array - each item represents one discrete unit of work to be performed in sequence
 
 ## Core Concepts
 
-### Sections
-Organize workouts into logical sections. Each section represents ONE discrete block of work:
+### ExerciseGroups (Ordered Array)
+The \`exerciseGroups\` array is the core structure - it's **ordered** and represents the sequence users should follow:
+- **Order matters:** warmup groups first, then main work, then conditioning, then cooldown
+- Each exerciseGroup = one discrete block of work
+- A typical workout has MULTIPLE \`main\` exerciseGroups — one per exercise or circuit
+
+### Block Types
+Each exerciseGroup has a \`block\` property indicating which phase of the workout:
 - \`warmup\` - Prepare body for work (optional but recommended)
 - \`main\` - Primary training work (required, can have multiple)
 - \`conditioning\` - Metabolic/cardio finisher (optional)
 - \`cooldown\` - Recovery and mobility (optional)
 
-A typical workout has MULTIPLE \`main\` sections — one per exercise or circuit.
-
-### Structure Types (how movements are organized within a section)
-- \`straight-sets\` — ONE movement per section. For 3 straight-set exercises, create 3 separate sections.
+### Structure Types (how movements are organized within an exerciseGroup)
+- \`straight-sets\` — ONE movement per exerciseGroup. For 3 straight-set exercises, create 3 separate exerciseGroups.
 - \`circuit\` — MULTIPLE movements performed back-to-back. Covers supersets (2), tri-sets (3), giant-sets (4+).
 - \`emom\` — Every minute on the minute. One or more movements.
 - \`amrap\` — As many rounds as possible in a time cap.
@@ -356,6 +360,42 @@ One schema for all movements — fill in relevant fields, leave others empty:
 
 When \`setDetails\` is present, it takes precedence over simple \`weight\` field.
 
+## Output Structure
+
+### Root Object
+\`\`\`json
+{
+  "date": "2026-02-16",
+  "dayOfWeek": "Monday",
+  "focus": "Upper Strength",
+  "title": "Horizontal Push",
+  "description": "Week 3 — push compounds to top of RPE range.",
+  "estimatedDuration": 60,
+  "location": "Home gym",
+  "exerciseGroups": [...]
+}
+\`\`\`
+
+### ExerciseGroup Object
+\`\`\`json
+{
+  "block": "main",
+  "title": "Back Squat",
+  "structure": "straight-sets",
+  "notes": "Focus on depth and bar speed",
+  "movements": [...],
+  "rounds": 3,
+  "duration": 10,
+  "rest": "90 seconds"
+}
+\`\`\`
+
+## Important: Ordered Array
+The \`exerciseGroups\` array defines the workout sequence. Items should be arranged in workout order:
+- warmup → warmup → main → main → main → main → conditioning → cooldown → cooldown
+
+For a workout with 3 straight-set exercises (Squat, Bench, Deadlift), create 3 separate exerciseGroups in order.
+
 ## What to Skip
 - Empty or placeholder values
 - LLM-specific metadata
@@ -367,7 +407,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     max_tokens: 16000,
     temperature: 1.0,
     max_iterations: 3,
-    description: 'Generates a structured workout with sets, reps, weight, RPE, and tempo for each exercise',
+    description: 'Generates a structured workout with exerciseGroups for UI display',
     is_active: true,
     tool_ids: [],
     user_prompt_template: 'Generate the structured workout representation for this day:\n\n{{input}}\n\nUse the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
@@ -375,7 +415,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
     output_schema: {
       type: 'object',
-      required: ['date', 'dayOfWeek', 'focus', 'title', 'sections'],
+      required: ['date', 'dayOfWeek', 'focus', 'title', 'exerciseGroups'],
       properties: {
         date: { type: 'string', description: 'ISO date (YYYY-MM-DD)' },
         dayOfWeek: { type: 'string', description: 'Day of the week' },
@@ -384,31 +424,31 @@ Never make up information. If something isn't in the dossier, don't include it.`
         description: { type: 'string', description: 'Brief session description with week context' },
         estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
         location: { type: 'string', description: 'Workout location (e.g., Home gym, Track)' },
-        sections: {
+        exerciseGroups: {
           type: 'array',
-          description: 'Workout sections — each section is one discrete unit of work',
+          description: 'Ordered array of exercise groups — each is one discrete unit of work, arranged in workout sequence',
           items: {
             type: 'object',
-            required: ['type', 'structure', 'movements'],
+            required: ['block', 'structure', 'movements'],
             properties: {
-              type: {
+              block: {
                 type: 'string',
                 enum: ['warmup', 'main', 'conditioning', 'cooldown'],
-                description: 'Section type',
+                description: 'Block type: warmup, main, conditioning, or cooldown',
               },
-              title: { type: 'string', description: 'Section title (e.g., Back Squat, Superset Block)' },
+              title: { type: 'string', description: 'ExerciseGroup title (e.g., Back Squat, Superset Block)' },
               structure: {
                 type: 'string',
                 enum: ['straight-sets', 'circuit', 'emom', 'amrap', 'for-time', 'intervals'],
                 description: 'How movements are organized. straight-sets = 1 movement, circuit = 2+ movements',
               },
-              notes: { type: 'string', description: 'Section-level coaching notes' },
+              notes: { type: 'string', description: 'Group-level coaching notes' },
               rounds: { type: 'number', description: 'Number of rounds (for circuit, intervals)' },
               duration: { type: 'number', description: 'Duration in minutes (for emom, amrap)' },
               rest: { type: 'string', description: 'Rest between rounds (e.g., 90 seconds)' },
               movements: {
                 type: 'array',
-                description: 'Movements in this section. straight-sets: exactly 1. circuit: 2+.',
+                description: 'Movements in this exerciseGroup. straight-sets: exactly 1. circuit: 2+.',
                 items: {
                   type: 'object',
                   required: ['name'],

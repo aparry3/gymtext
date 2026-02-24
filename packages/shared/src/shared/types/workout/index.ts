@@ -116,7 +116,7 @@ export {
   type WorkoutDetailsSection,
   type WorkoutDetailsMovement,
   type WorkoutSetDetail,
-  type WorkoutSectionType,
+  type WorkoutBlockType,
   type WorkoutSectionStructure,
   type WorkoutSetType,
 } from './workoutDetails';
