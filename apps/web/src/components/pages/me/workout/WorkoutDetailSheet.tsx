@@ -112,11 +112,20 @@ interface SavedMobilityMetric {
 
 type SavedMetricData = SavedStrengthMetric | SavedCardioMetric | SavedMobilityMetric;
 
-// Determine if a section should be collapsed by default based on title
-const shouldCollapseByDefault = (title: string): boolean => {
-  const lower = title.toLowerCase();
-  return lower.includes('warm') || lower.includes('cool');
+const BLOCK_ORDER = ['warmup', 'main', 'conditioning', 'cooldown'] as const;
+const BLOCK_LABELS: Record<string, string> = {
+  warmup: 'Warm Up',
+  main: 'Main',
+  conditioning: 'Conditioning',
+  cooldown: 'Cooldown',
 };
+
+interface BlockGroup {
+  block: string;
+  label: string;
+  groups: Array<{ group: ExerciseGroup; originalGroupIdx: number }>;
+  totalMovements: number;
+}
 
 // Map activity type
 const getActivityType = (block?: string): ActivityType => {
@@ -141,7 +150,7 @@ export function WorkoutDetailSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [workout, setWorkout] = useState<WorkoutData | null>(null);
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [trackingState, setTrackingState] = useState<WorkoutTrackingState>({});
   const [savedMetrics, setSavedMetrics] = useState<Record<string, SavedMetricData>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -183,17 +192,18 @@ export function WorkoutDetailSheet({
   // Initialize expanded sections and tracking state when workout data loads (V2 only)
   useEffect(() => {
     if (workout?.details?.exerciseGroups && workout.details.exerciseGroups.length > 0) {
-      const initialExpanded = new Set<number>();
+      const initialExpanded = new Set<string>();
       const initialTracking: WorkoutTrackingState = {};
 
-      workout.details.exerciseGroups.forEach((group, groupIdx) => {
-        if (!shouldCollapseByDefault(group.title || group.block)) {
-          initialExpanded.add(groupIdx);
-        }
+      // Expand main and conditioning by default, collapse warmup/cooldown
+      const blocksPresent = new Set(workout.details.exerciseGroups.map(g => g.block));
+      if (blocksPresent.has('main')) initialExpanded.add('main');
+      if (blocksPresent.has('conditioning')) initialExpanded.add('conditioning');
 
+      workout.details.exerciseGroups.forEach((group, groupIdx) => {
         group.movements.forEach((movement, movementIdx) => {
           const exerciseKey = `${group.block}-${groupIdx}-${movementIdx}`;
-          const activityType = group.block === 'conditioning' ? 'cardio' : 
+          const activityType = group.block === 'conditioning' ? 'cardio' :
                               group.block === 'cooldown' ? 'mobility' : 'strength';
 
           // Create tracking state for V2 format
@@ -322,18 +332,49 @@ export function WorkoutDetailSheet({
 
   const exerciseGroups = workout?.details?.exerciseGroups || [];
 
+  // Group exerciseGroups by block for hierarchical rendering
+  const blockGroups = useMemo(() => {
+    const blockMap = new Map<string, BlockGroup>();
+
+    exerciseGroups.forEach((group, groupIdx) => {
+      if (group.movements.length === 0) return;
+      const block = group.block || 'main';
+      if (!blockMap.has(block)) {
+        blockMap.set(block, {
+          block,
+          label: BLOCK_LABELS[block] || block.charAt(0).toUpperCase() + block.slice(1),
+          groups: [],
+          totalMovements: 0,
+        });
+      }
+      const entry = blockMap.get(block)!;
+      entry.groups.push({ group, originalGroupIdx: groupIdx });
+      entry.totalMovements += group.movements.length;
+    });
+
+    // Sort by BLOCK_ORDER
+    return BLOCK_ORDER
+      .filter((b) => blockMap.has(b))
+      .map((b) => blockMap.get(b)!)
+      .concat(
+        [...blockMap.entries()]
+          .filter(([key]) => !(BLOCK_ORDER as readonly string[]).includes(key))
+          .map(([, v]) => v)
+      );
+  }, [exerciseGroups]);
+
   // Check if there are any exercises across all groups
   const hasExercises = useMemo(() => {
     return exerciseGroups.some((group) => group.movements.length > 0);
   }, [exerciseGroups]);
 
-  const toggleSection = (sectionIdx: number) => {
+  const toggleSection = (blockName: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(sectionIdx)) {
-        next.delete(sectionIdx);
+      if (next.has(blockName)) {
+        next.delete(blockName);
       } else {
-        next.add(sectionIdx);
+        next.add(blockName);
       }
       return next;
     });
@@ -433,6 +474,69 @@ export function WorkoutDetailSheet({
     [trackingState]
   );
 
+  // Render a single movement as an ExerciseAccordionCard
+  const renderMovement = (
+    movement: ExerciseGroupMovement,
+    group: ExerciseGroup,
+    originalGroupIdx: number,
+    movementIdx: number,
+    displayNumber: number,
+  ) => {
+    const exerciseKey = `${group.block}-${originalGroupIdx}-${movementIdx}`;
+    const completion = getExerciseCompletion(exerciseKey);
+    const exerciseTracking = trackingState[exerciseKey];
+
+    return (
+      <ExerciseAccordionCard
+        key={exerciseKey}
+        number={displayNumber}
+        name={movement.name}
+        setsReps={
+          movement.sets && movement.reps
+            ? `${movement.sets} × ${movement.reps}`
+            : movement.duration || movement.distance || ''
+        }
+        tags={[]}
+        isOpen={expandedExercise === exerciseKey}
+        onToggle={() =>
+          setExpandedExercise(expandedExercise === exerciseKey ? null : exerciseKey)
+        }
+        completedSets={completion.completed}
+        totalSets={completion.total}
+        isFullyComplete={completion.isFullyComplete}
+      >
+        <ExerciseExpandedView
+          sets={movement.sets}
+          reps={movement.reps}
+          rest={movement.rest}
+          intensity={movement.intensity}
+          notes={movement.notes}
+          rpe={movement.rpe}
+          tempo={movement.tempo}
+          setDetails={movement.setDetails}
+          activityType={
+            exerciseTracking?.activityType ||
+            getActivityType(group.block)
+          }
+          trackingData={exerciseTracking?.sets || []}
+          cardioData={exerciseTracking?.cardio}
+          mobilityData={exerciseTracking?.mobility}
+          onUpdateSet={(setId, field, value) =>
+            updateSetData(exerciseKey, setId, field, value)
+          }
+          onUpdateCardio={(field, value) =>
+            updateCardioData(exerciseKey, field, value)
+          }
+          onUpdateMobility={(field, value) =>
+            updateMobilityData(exerciseKey, field, value)
+          }
+          onBlur={() => handleSaveOnBlur(exerciseKey)}
+          units={units}
+        />
+      </ExerciseAccordionCard>
+    );
+  };
+
   // Handle finish workout
   const handleFinishWorkout = () => {
     onClose();
@@ -504,72 +608,84 @@ export function WorkoutDetailSheet({
             </div>
           ) : (
             <div>
-              {exerciseGroups.map((group, groupIdx) => {
-                if (group.movements.length === 0) return null;
-
-                // Get block label for V2 format
-                const blockLabel = group.block 
-                  ? `[${group.block.charAt(0).toUpperCase() + group.block.slice(1)}] `
-                  : '';
-                const groupTitle = blockLabel + (group.title || group.block);
+              {blockGroups.map((blockGroup) => {
+                let movementCounter = 0;
 
                 return (
-                  <div key={groupIdx} className="mb-2">
+                  <div key={blockGroup.block} className="mb-2">
                     <SectionAccordion
-                      title={groupTitle}
-                      exerciseCount={group.movements.length}
-                      isOpen={expandedSections.has(groupIdx)}
-                      onToggle={() => toggleSection(groupIdx)}
+                      title={blockGroup.label}
+                      exerciseCount={blockGroup.totalMovements}
+                      isOpen={expandedSections.has(blockGroup.block)}
+                      onToggle={() => toggleSection(blockGroup.block)}
+                      sectionType={blockGroup.block}
                     >
-                      {group.movements.map((movement, movementIdx) => {
-                        const exerciseKey = `${group.block}-${groupIdx}-${movementIdx}`;
-                        const completion = getExerciseCompletion(exerciseKey);
-                        const exerciseTracking = trackingState[exerciseKey];
+                      {blockGroup.groups.map(({ group, originalGroupIdx }) => {
+                        const isGrouped = group.structure !== 'straight-sets';
 
-                        return (
-                          <ExerciseAccordionCard
-                            key={exerciseKey}
-                            number={movementIdx + 1}
-                            name={movement.name}
-                            setsReps={movement.sets && movement.reps ? `${movement.sets} × ${movement.reps}` : movement.duration || movement.distance || ''}
-                            tags={[]}
-                            isOpen={expandedExercise === exerciseKey}
-                            onToggle={() =>
-                              setExpandedExercise(
-                                expandedExercise === exerciseKey ? null : exerciseKey
-                              )
-                            }
-                            completedSets={completion.completed}
-                            totalSets={completion.total}
-                            isFullyComplete={completion.isFullyComplete}
-                          >
-                            <ExerciseExpandedView
-                              sets={movement.sets}
-                              reps={movement.reps}
-                              rest={movement.rest}
-                              intensity={movement.intensity}
-                              notes={movement.notes}
-                              rpe={movement.rpe}
-                              tempo={movement.tempo}
-                              setDetails={movement.setDetails}
-                              activityType={exerciseTracking?.activityType || (group.block === 'conditioning' ? 'cardio' : group.block === 'cooldown' ? 'mobility' : 'strength')}
-                              trackingData={exerciseTracking?.sets || []}
-                              cardioData={exerciseTracking?.cardio}
-                              mobilityData={exerciseTracking?.mobility}
-                              onUpdateSet={(setId, field, value) =>
-                                updateSetData(exerciseKey, setId, field, value)
-                              }
-                              onUpdateCardio={(field, value) =>
-                                updateCardioData(exerciseKey, field, value)
-                              }
-                              onUpdateMobility={(field, value) =>
-                                updateMobilityData(exerciseKey, field, value)
-                              }
-                              onBlur={() => handleSaveOnBlur(exerciseKey)}
-                              units={units}
-                            />
-                          </ExerciseAccordionCard>
-                        );
+                        if (isGrouped) {
+                          const structureLabel =
+                            group.structure.charAt(0).toUpperCase() +
+                            group.structure.slice(1).replace('-', ' ');
+                          const meta: string[] = [];
+                          if (group.rounds && group.rounds > 1) meta.push(`${group.rounds} rounds`);
+                          if (group.duration) meta.push(`${group.duration} min`);
+                          if (group.rest) meta.push(`Rest: ${group.rest}`);
+
+                          return (
+                            <div
+                              key={`group-${originalGroupIdx}`}
+                              className="mx-3 mb-3 rounded-lg border border-slate-700/60 bg-slate-800/40 overflow-hidden"
+                            >
+                              {/* Group header */}
+                              <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/40">
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">
+                                  {structureLabel}
+                                </span>
+                                {group.title && (
+                                  <span className="text-xs font-medium text-slate-300">
+                                    {group.title}
+                                  </span>
+                                )}
+                                {meta.length > 0 && (
+                                  <span className="text-[10px] text-slate-500 ml-auto">
+                                    {meta.join(' · ')}
+                                  </span>
+                                )}
+                              </div>
+                              {group.notes && (
+                                <p className="px-3 py-1.5 text-xs text-slate-500 italic border-b border-slate-700/30">
+                                  {group.notes}
+                                </p>
+                              )}
+                              {/* Movements inside group */}
+                              <div className="py-1">
+                                {group.movements.map((movement, movementIdx) => {
+                                  movementCounter++;
+                                  return renderMovement(
+                                    movement,
+                                    group,
+                                    originalGroupIdx,
+                                    movementIdx,
+                                    movementCounter,
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Straight-sets: render movements directly
+                        return group.movements.map((movement, movementIdx) => {
+                          movementCounter++;
+                          return renderMovement(
+                            movement,
+                            group,
+                            originalGroupIdx,
+                            movementIdx,
+                            movementCounter,
+                          );
+                        });
                       })}
                     </SectionAccordion>
                   </div>
