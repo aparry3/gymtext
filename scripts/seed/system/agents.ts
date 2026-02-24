@@ -410,7 +410,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     description: 'Generates a structured workout with exerciseGroups for UI display',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Generate the structured workout representation for {day}. Use the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
+    user_prompt_template: 'Generate the structured workout representation for this day:\n\n{{input}}\n\nUse the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
     output_schema: {
@@ -589,14 +589,7 @@ Create a well-structured markdown document that clearly shows:
     description: 'Formats a week of training as clean, readable markdown for the user dossier',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: `Week: {{weekNumber}}
-Focus: {{weekFocus}}
-Phase: {{phase}}
-
-{{#each days as day}}
-## {{day.name}}
-Focus: {{day.focus}}
-{{/each}}`,
+    user_prompt_template: `Format the following week dossier into a clean, readable summary:\n\n{{input}}`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
