@@ -10,7 +10,7 @@
 // Enums
 // ============================================================================
 
-export type WorkoutSectionType = 'warmup' | 'main' | 'conditioning' | 'cooldown';
+export type WorkoutBlockType = 'warmup' | 'main' | 'conditioning' | 'cooldown';
 
 export type WorkoutSectionStructure =
   | 'straight-sets'
@@ -61,9 +61,11 @@ export interface WorkoutDetailsMovement {
 /**
  * A section of a workout (warmup, main, conditioning, cooldown).
  * Each section is one discrete unit of work.
+ * 
+ * V2 Schema: Uses `block` instead of `type`, part of `exerciseGroups` array.
  */
 export interface WorkoutDetailsSection {
-  type: WorkoutSectionType;
+  block: WorkoutBlockType;
   title?: string;
   structure: WorkoutSectionStructure;
   notes?: string;
@@ -76,6 +78,8 @@ export interface WorkoutDetailsSection {
 /**
  * Top-level workout details structure.
  * Stored in `workout_instances.details` JSON column.
+ * 
+ * V2 Schema: Uses `exerciseGroups` (ordered array) instead of `sections`.
  */
 export interface WorkoutDetails {
   date: string;
@@ -85,5 +89,5 @@ export interface WorkoutDetails {
   description?: string;
   estimatedDuration?: number;
   location?: string;
-  sections: WorkoutDetailsSection[];
+  exerciseGroups: WorkoutDetailsSection[];
 }
