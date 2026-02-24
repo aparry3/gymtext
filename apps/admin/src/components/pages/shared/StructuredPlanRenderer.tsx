@@ -6,7 +6,7 @@ import {
   AdjustmentCard,
   WeeklyRhythmCard,
   ConditioningCard,
-} from '@/components/pages/me/plan';
+} from '@/components/pages/shared/plan';
 import type { PlanStructure } from '@/server/models/fitnessPlan';
 
 interface StructuredPlanRendererProps {

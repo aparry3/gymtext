@@ -18,53 +18,67 @@ import type { SignupData } from '@/server/repositories/onboardingRepository';
  * Takes structured form data and converts it into natural language
  * descriptions suitable for fitness profile extraction.
  */
-export function formatSignupDataForLLM(data: SignupData): {
-  fitnessGoals: string;
-  currentExercise: string; // Keeping key name for compatibility, but content is changed
-  environment: string;
-  injuries?: string;
-} {
-  // 1. Fitness Goals
-  const goalsList = `My goals are: ${(data.primaryGoals || [])
-    .map(getGoalDescription)
-    .join(', ')}`;
-  const fitnessGoals = data.goalsElaboration?.trim()
-    ? `${goalsList}. Additional details: ${data.goalsElaboration.trim()}`
-    : goalsList;
+export function formatSignupDataForLLM(data: SignupData): string {
+  const sections: string[] = [];
 
-  // 2. Desired Availability & Experience
-  const desiredFrequency = data.desiredDaysPerWeek
-    ? getDaysPerWeekDescription(data.desiredDaysPerWeek)
-    : '';
-  const experienceLevel = data.experienceLevel
-    ? `Experience level: ${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}`
-    : '';
+  // GOALS
+  const goals = (data.primaryGoals || []).map(getGoalDescription);
+  if (goals.length > 0) {
+    const goalLines = goals.map(g => `- ${g}`).join('\n');
+    const elaboration = data.goalsElaboration?.trim()
+      ? `\nAdditional details: ${data.goalsElaboration.trim()}`
+      : '';
+    sections.push(`## GOALS\n${goalLines}${elaboration}`);
+  }
 
-  // Frame as desired availability - what the user WANTS, not what they currently do
-  const availabilityText = `***Desired Availability***:
-  ${experienceLevel}. ${desiredFrequency}.
-  Additional Details: ${data.availabilityElaboration?.trim() || 'None provided.'}`;
+  // TRAINING CONTEXT
+  const trainingSubsections: string[] = [];
 
-  const currentExercise = availabilityText; 
+  // Schedule & Availability
+  if (data.desiredDaysPerWeek) {
+    const freq = `- Desired training frequency: ${getDaysPerWeekDescription(data.desiredDaysPerWeek)}`;
+    const elaboration = data.availabilityElaboration?.trim()
+      ? `\n- Additional details: ${data.availabilityElaboration.trim()}`
+      : '';
+    trainingSubsections.push(`### Schedule & Availability\n${freq}${elaboration}`);
+  }
 
-  // 3. Environment
-  const locationText = data.trainingLocation
-    ? `Training location: ${getLocationDescription(data.trainingLocation)}`
-    : '';
-  const equipmentText =
-    data.equipment && data.equipment.length > 0
-      ? `Available equipment: ${data.equipment.map(e => getEquipmentDescription(e)).join(', ')}`
-      : 'No specific equipment';
-  
-  const environment = `***Environment & Constraints***:
-  ${locationText}. ${equipmentText}`;
+  // Experience
+  if (data.experienceLevel || data.experienceElaboration?.trim()) {
+    const level = data.experienceLevel
+      ? `- Level: ${data.experienceLevel.charAt(0).toUpperCase() + data.experienceLevel.slice(1)}`
+      : '';
+    const details = data.experienceElaboration?.trim()
+      ? `${level ? '\n' : ''}- Details: ${data.experienceElaboration.trim()}`
+      : '';
+    trainingSubsections.push(`### Experience\n${level}${details}`);
+  }
 
-  return {
-    fitnessGoals,
-    currentExercise,
-    environment,
-    injuries: data.injuries,
-  };
+  // Equipment & Environment
+  const envParts: string[] = [];
+  if (data.trainingLocation) {
+    envParts.push(`- Training location: ${getLocationDescription(data.trainingLocation)}`);
+  }
+  if (data.locationElaboration?.trim()) {
+    envParts.push(`- Setup details: ${data.locationElaboration.trim()}`);
+  }
+  if (data.equipment && data.equipment.length > 0) {
+    envParts.push(`- Available equipment: ${data.equipment.map(getEquipmentDescription).join(', ')}`);
+  }
+  if (envParts.length > 0) {
+    trainingSubsections.push(`### Equipment & Environment\n${envParts.join('\n')}`);
+  }
+
+  // Constraints
+  if (data.injuries?.trim()) {
+    trainingSubsections.push(`### Constraints\n- ${data.injuries.trim()}`);
+  }
+
+  if (trainingSubsections.length > 0) {
+    sections.push(`## TRAINING CONTEXT\n\n${trainingSubsections.join('\n\n')}`);
+  }
+
+  return sections.join('\n\n');
 }
 // Helper functions for converting enum values to descriptions
 
@@ -80,10 +94,10 @@ function getGoalDescription(goal: string): string {
 
 function getDaysPerWeekDescription(daysPerWeek: string): string {
   const daysMap: Record<string, string> = {
-    '3_per_week': 'Wants to train 3 days per week',
-    '4_per_week': 'Wants to train 4 days per week',
-    '5_per_week': 'Wants to train 5 days per week',
-    '6_per_week': 'Wants to train 6 days per week',
+    '3_per_week': '3 days per week',
+    '4_per_week': '4 days per week',
+    '5_per_week': '5 days per week',
+    '6_per_week': '6 days per week',
   };
   return daysMap[daysPerWeek] || daysPerWeek;
 }

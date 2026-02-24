@@ -21,6 +21,9 @@ export function createEmptyProfile(user?: Partial<User>): string {
   if (user?.age) {
     identityLines.push(`**Age:** ${user.age}`);
   }
+  if (user?.gender && user.gender !== 'prefer_not_to_say') {
+    identityLines.push(`**Gender:** ${user.gender}`);
+  }
   sections.push(identityLines.join('\n'));
 
   return sections.join('\n\n');

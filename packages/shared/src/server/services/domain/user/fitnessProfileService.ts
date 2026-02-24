@@ -81,27 +81,7 @@ export function createFitnessProfileService(
           }
           const agentRunner = getAgentRunner();
 
-          const formattedData = formatSignupDataForLLM(signupData);
-
-          const messageParts: string[] = [];
-
-          if (formattedData.fitnessGoals?.trim()) {
-            messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
-          }
-
-          if (formattedData.currentExercise?.trim()) {
-            messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
-          }
-
-          if (formattedData.environment?.trim()) {
-            messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
-          }
-
-          if (formattedData.injuries?.trim()) {
-            messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
-          }
-
-          const message = messageParts.join('\n\n');
+          const message = formatSignupDataForLLM(signupData);
           const currentProfile = createEmptyProfile(user);
           const currentDate = formatForAI(new Date(), user.timezone);
 

@@ -153,28 +153,7 @@ async function generateProfileFromSignupData(
   signupData: SignupData
 ): Promise<string> {
   // Format signup data for agent processing
-  const formattedData = formatSignupDataForLLM(signupData);
-
-  // Build message from signup data
-  const messageParts: string[] = [];
-
-  if (formattedData.fitnessGoals?.trim()) {
-    messageParts.push(`***Goals***:\n${formattedData.fitnessGoals.trim()}`);
-  }
-
-  if (formattedData.currentExercise?.trim()) {
-    messageParts.push(`***Current Activity***:\n${formattedData.currentExercise.trim()}`);
-  }
-
-  if (formattedData.environment?.trim()) {
-    messageParts.push(`***Training Environment***:\n${formattedData.environment.trim()}`);
-  }
-
-  if (formattedData.injuries?.trim()) {
-    messageParts.push(`***Injuries or Limitations***:\n${formattedData.injuries.trim()}`);
-  }
-
-  const message = messageParts.join('\n\n');
+  const message = formatSignupDataForLLM(signupData);
 
   // ARCHIVED: This function used the old createAgent() pattern.
   // To restore, update to use simpleAgentRunner.invoke(AGENTS.PROFILE_UPDATE, ...).

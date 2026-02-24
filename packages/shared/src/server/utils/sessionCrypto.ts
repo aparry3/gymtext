@@ -97,3 +97,91 @@ export function decryptUserId(encryptedData: string): string | null {
 export function generateEncryptionKey(): string {
   return crypto.randomBytes(KEY_LENGTH).toString('hex');
 }
+
+// =============================================================================
+// Impersonation Tokens
+// =============================================================================
+
+interface ImpersonationPayload {
+  userId: string;
+  exp: number;
+  nonce: string;
+  adminBackUrl?: string;
+}
+
+interface CreateImpersonationTokenOptions {
+  /** Token TTL in seconds (default: 300 = 5 minutes) */
+  ttlSeconds?: number;
+  /** URL to return to in admin app */
+  adminBackUrl?: string;
+}
+
+/**
+ * Create a time-limited encrypted impersonation token.
+ * Uses base64url encoding for URL safety.
+ */
+export function createImpersonationToken(
+  userId: string,
+  options: CreateImpersonationTokenOptions = {}
+): string {
+  const { ttlSeconds = 300, adminBackUrl } = options;
+
+  const payload: ImpersonationPayload = {
+    userId,
+    exp: Date.now() + ttlSeconds * 1000,
+    nonce: crypto.randomBytes(16).toString('hex'),
+    ...(adminBackUrl && { adminBackUrl }),
+  };
+
+  const plaintext = JSON.stringify(payload);
+  const key = getEncryptionKey();
+  const iv = crypto.randomBytes(IV_LENGTH);
+
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+
+  const combined = Buffer.concat([
+    iv,
+    authTag,
+    Buffer.from(encrypted, 'hex'),
+  ]);
+
+  // Use base64url encoding for URL safety
+  return combined.toString('base64url');
+}
+
+/**
+ * Validate and decrypt an impersonation token.
+ * Returns the payload if valid and not expired, or null otherwise.
+ */
+export function validateImpersonationToken(
+  token: string
+): ImpersonationPayload | null {
+  try {
+    const key = getEncryptionKey();
+    const combined = Buffer.from(token, 'base64url');
+
+    const iv = combined.subarray(0, IV_LENGTH);
+    const authTag = combined.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
+    const encrypted = combined.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
+
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(encrypted.toString('hex'), 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    const payload: ImpersonationPayload = JSON.parse(decrypted);
+
+    // Check expiry
+    if (Date.now() > payload.exp) {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}

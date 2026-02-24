@@ -52,11 +52,12 @@ export class WorkoutInstanceRepository extends BaseRepository {
         message: message ?? null,
         details: details ? JSON.stringify(details) : null,
       })
-      .onConflict((oc) => oc.columns(['clientId', 'date']).doUpdateSet({
-        message: message ?? null,
-        details: details ? JSON.stringify(details) : null,
-        updatedAt: sql`CURRENT_TIMESTAMP`,
-      }))
+      .onConflict((oc) => {
+        const updateSet: Record<string, unknown> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+        if (message !== undefined) updateSet.message = message ?? null;
+        if (details !== undefined) updateSet.details = JSON.stringify(details);
+        return oc.columns(['clientId', 'date']).doUpdateSet(updateSet);
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
 

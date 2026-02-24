@@ -166,7 +166,7 @@ function SidebarContent({
           </div>
         </div>
         {isAdminView && adminBackUrl ? (
-          <Link href={adminBackUrl}>
+          <a href={adminBackUrl}>
             <Button
               variant="ghost"
               size="sm"
@@ -175,7 +175,7 @@ function SidebarContent({
               <ArrowLeft className="h-4 w-4" />
               Back to Admin
             </Button>
-          </Link>
+          </a>
         ) : (
           <Button
             variant="ghost"

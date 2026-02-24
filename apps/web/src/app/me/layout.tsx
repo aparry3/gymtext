@@ -23,6 +23,11 @@ export default async function MeLayout({ children }: MeLayoutProps) {
     redirect('/me/login');
   }
 
+  // Check for impersonation
+  const impersonationCookie = cookieStore.get('gt_impersonation');
+  const isAdminView = !!impersonationCookie;
+  const adminBackUrl = impersonationCookie?.value;
+
   // Fetch user data for sidebar
   let userName = 'User';
   let programType: string | undefined;
@@ -47,6 +52,8 @@ export default async function MeLayout({ children }: MeLayoutProps) {
           name: userName,
           programType,
         }}
+        isAdminView={isAdminView}
+        adminBackUrl={adminBackUrl}
       />
 
       {/* Main content area */}

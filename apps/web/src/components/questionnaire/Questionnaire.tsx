@@ -87,13 +87,23 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(answers.age && { age: parseInt(answers.age as string, 10) }),
 
         // Fitness data (optional - only present for non-program signups)
-        ...(answers.goals && { primaryGoals: answers.goals as string[] }),
+        // Filter out "tell_me_more" sentinel values — these indicate the user chose
+        // to elaborate via a follow-up text input rather than selecting a concrete option
+        ...(answers.goals && {
+          primaryGoals: (answers.goals as string[]).filter(g => g !== 'tell_me_more'),
+        }),
         ...(answers.goals_detail && { goalsElaboration: answers.goals_detail as string }),
-        ...(answers.experience && { experienceLevel: answers.experience as string }),
+        ...(answers.experience && answers.experience !== 'tell_me_more' && {
+          experienceLevel: answers.experience as string,
+        }),
         ...(answers.experience_detail && { experienceElaboration: answers.experience_detail as string }),
-        ...(answers.days && { desiredDaysPerWeek: answers.days as string }),
+        ...(answers.days && answers.days !== 'tell_me_more' && {
+          desiredDaysPerWeek: answers.days as string,
+        }),
         ...(answers.availability_detail && { availabilityElaboration: answers.availability_detail as string }),
-        ...(answers.location && { trainingLocation: answers.location as string }),
+        ...(answers.location && answers.location !== 'tell_me_more' && {
+          trainingLocation: answers.location as string,
+        }),
         ...(answers.equipment_location_detail && { locationElaboration: answers.equipment_location_detail as string }),
         ...(answers.equipment && { equipment: answers.equipment as string[] }),
         acceptedRisks: true,

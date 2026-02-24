@@ -316,7 +316,17 @@ export default function AdminUserDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/users/${user.id}/me`)}
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/users/${user.id}/impersonate`, { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success && data.redirectUrl) {
+                      window.open(data.redirectUrl, '_blank');
+                    }
+                  } catch (err) {
+                    console.error('Failed to impersonate user:', err);
+                  }
+                }}
                 className="gap-2"
               >
                 <EyeIcon className="h-4 w-4" />
