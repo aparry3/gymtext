@@ -16,6 +16,7 @@ import { SectionAccordion } from './SectionAccordion';
 import type {
   WorkoutDetails,
   WorkoutDetailsMovement,
+  WorkoutDetailsSection,
   WorkoutSectionType,
 } from '@gymtext/shared';
 import type {
@@ -177,6 +178,43 @@ const generateMovementTrackingState = (
   };
 };
 
+// Group consecutive sections with the same type into a single group
+interface GroupedSection {
+  type: WorkoutSectionType;
+  title: string;
+  entries: Array<{ originalSectionIdx: number; section: WorkoutDetailsSection }>;
+  totalMovements: number;
+}
+
+function groupConsecutiveSections(sections: WorkoutDetailsSection[]): GroupedSection[] {
+  const groups: GroupedSection[] = [];
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
+    const lastGroup = groups[groups.length - 1];
+
+    if (lastGroup && lastGroup.type === section.type) {
+      lastGroup.entries.push({ originalSectionIdx: i, section });
+      lastGroup.totalMovements += section.movements.length;
+    } else {
+      const typeLabels: Record<WorkoutSectionType, string> = {
+        warmup: 'Warm-Up',
+        main: 'Main',
+        conditioning: 'Conditioning',
+        cooldown: 'Cool Down',
+      };
+      groups.push({
+        type: section.type,
+        title: section.title || typeLabels[section.type] || section.type,
+        entries: [{ originalSectionIdx: i, section }],
+        totalMovements: section.movements.length,
+      });
+    }
+  }
+
+  return groups;
+}
+
 // Format sets x reps for display
 const formatSetsReps = (movement: WorkoutDetailsMovement): string => {
   if (movement.sets && movement.reps) {
@@ -249,13 +287,17 @@ export function WorkoutDetailSheet({
     if (workout?.details?.sections) {
       const initialExpanded = new Set<number>();
       const initialTracking: WorkoutTrackingState = {};
+      const groups = groupConsecutiveSections(workout.details.sections);
 
-      workout.details.sections.forEach((section, sectionIdx) => {
-        // Collapse warmup and cooldown by default
-        if (section.type !== 'warmup' && section.type !== 'cooldown') {
-          initialExpanded.add(sectionIdx);
+      // Expand/collapse based on group indices (which is what the UI iterates)
+      groups.forEach((group, groupIdx) => {
+        if (group.type !== 'warmup' && group.type !== 'cooldown') {
+          initialExpanded.add(groupIdx);
         }
+      });
 
+      // Tracking state still uses originalSectionIdx for backward-compatible keys
+      workout.details.sections.forEach((section, sectionIdx) => {
         section.movements.forEach((movement, movementIdx) => {
           const exerciseKey = `${sectionIdx}-${movementIdx}`;
           initialTracking[exerciseKey] = generateMovementTrackingState(
@@ -369,6 +411,8 @@ export function WorkoutDetailSheet({
   );
 
   const sections = workout?.details?.sections || [];
+
+  const groupedSections = useMemo(() => groupConsecutiveSections(sections), [sections]);
 
   // Check if there are any movements across all sections
   const hasMovements = useMemo(() => {
@@ -571,70 +615,159 @@ export function WorkoutDetailSheet({
             </div>
           ) : (
             <div>
-              {sections.map((section, sectionIdx) => {
-                if (section.movements.length === 0) return null;
+              {groupedSections.map((group, groupIdx) => {
+                if (group.totalMovements === 0) return null;
 
+                const isSingleEntry = group.entries.length === 1;
+                const firstEntry = group.entries[0];
+
+                // Single-entry group: render exactly like before
+                if (isSingleEntry) {
+                  const { originalSectionIdx, section } = firstEntry;
+                  return (
+                    <div key={groupIdx} className="mb-2">
+                      <SectionAccordion
+                        title={section.title || section.type}
+                        exerciseCount={section.movements.length}
+                        isOpen={expandedSections.has(groupIdx)}
+                        onToggle={() => toggleSection(groupIdx)}
+                        sectionType={section.type}
+                        structure={section.structure}
+                        rounds={section.rounds}
+                        sectionNotes={section.notes}
+                      >
+                        {section.movements.map((movement, movementIdx) => {
+                          const exerciseKey = `${originalSectionIdx}-${movementIdx}`;
+                          const completion = getExerciseCompletion(exerciseKey);
+                          const exerciseTracking = trackingState[exerciseKey];
+
+                          return (
+                            <ExerciseAccordionCard
+                              key={exerciseKey}
+                              number={movementIdx + 1}
+                              name={movement.name}
+                              setsReps={formatSetsReps(movement)}
+                              isOpen={expandedExercise === exerciseKey}
+                              onToggle={() =>
+                                setExpandedExercise(
+                                  expandedExercise === exerciseKey ? null : exerciseKey
+                                )
+                              }
+                              completedSets={completion.completed}
+                              totalSets={completion.total}
+                              isFullyComplete={completion.isFullyComplete}
+                            >
+                              <ExerciseExpandedView
+                                sets={movement.sets}
+                                reps={movement.reps}
+                                rest={movement.rest}
+                                intensity={movement.intensity}
+                                rpe={movement.rpe}
+                                tempo={movement.tempo}
+                                notes={movement.notes}
+                                setDetails={movement.setDetails}
+                                activityType={exerciseTracking?.activityType || 'strength'}
+                                trackingData={exerciseTracking?.sets || []}
+                                cardioData={exerciseTracking?.cardio}
+                                mobilityData={exerciseTracking?.mobility}
+                                onUpdateSet={(setId, field, value) =>
+                                  updateSetData(exerciseKey, setId, field, value)
+                                }
+                                onUpdateCardio={(field, value) =>
+                                  updateCardioData(exerciseKey, field, value)
+                                }
+                                onUpdateMobility={(field, value) =>
+                                  updateMobilityData(exerciseKey, field, value)
+                                }
+                                onBlur={() => handleSaveOnBlur(exerciseKey)}
+                                units={units}
+                              />
+                            </ExerciseAccordionCard>
+                          );
+                        })}
+                      </SectionAccordion>
+                    </div>
+                  );
+                }
+
+                // Multi-entry group: merge all entries under one collapsible
+                let runningNumber = 0;
                 return (
-                  <div key={sectionIdx} className="mb-2">
+                  <div key={groupIdx} className="mb-2">
                     <SectionAccordion
-                      title={section.title || section.type}
-                      exerciseCount={section.movements.length}
-                      isOpen={expandedSections.has(sectionIdx)}
-                      onToggle={() => toggleSection(sectionIdx)}
-                      sectionType={section.type}
-                      structure={section.structure}
-                      rounds={section.rounds}
-                      sectionNotes={section.notes}
+                      title={group.title}
+                      exerciseCount={group.totalMovements}
+                      isOpen={expandedSections.has(groupIdx)}
+                      onToggle={() => toggleSection(groupIdx)}
+                      sectionType={group.type}
                     >
-                      {section.movements.map((movement, movementIdx) => {
-                        const exerciseKey = `${sectionIdx}-${movementIdx}`;
-                        const completion = getExerciseCompletion(exerciseKey);
-                        const exerciseTracking = trackingState[exerciseKey];
+                      {group.entries.map(({ originalSectionIdx, section }) => (
+                        section.movements.map((movement, movementIdx) => {
+                          runningNumber++;
+                          const exerciseKey = `${originalSectionIdx}-${movementIdx}`;
+                          const completion = getExerciseCompletion(exerciseKey);
+                          const exerciseTracking = trackingState[exerciseKey];
+                          const showStructureBadge =
+                            section.structure && section.structure !== 'straight-sets';
 
-                        return (
-                          <ExerciseAccordionCard
-                            key={exerciseKey}
-                            number={movementIdx + 1}
-                            name={movement.name}
-                            setsReps={formatSetsReps(movement)}
-                            isOpen={expandedExercise === exerciseKey}
-                            onToggle={() =>
-                              setExpandedExercise(
-                                expandedExercise === exerciseKey ? null : exerciseKey
-                              )
-                            }
-                            completedSets={completion.completed}
-                            totalSets={completion.total}
-                            isFullyComplete={completion.isFullyComplete}
-                          >
-                            <ExerciseExpandedView
-                              sets={movement.sets}
-                              reps={movement.reps}
-                              rest={movement.rest}
-                              intensity={movement.intensity}
-                              rpe={movement.rpe}
-                              tempo={movement.tempo}
-                              notes={movement.notes}
-                              setDetails={movement.setDetails}
-                              activityType={exerciseTracking?.activityType || 'strength'}
-                              trackingData={exerciseTracking?.sets || []}
-                              cardioData={exerciseTracking?.cardio}
-                              mobilityData={exerciseTracking?.mobility}
-                              onUpdateSet={(setId, field, value) =>
-                                updateSetData(exerciseKey, setId, field, value)
-                              }
-                              onUpdateCardio={(field, value) =>
-                                updateCardioData(exerciseKey, field, value)
-                              }
-                              onUpdateMobility={(field, value) =>
-                                updateMobilityData(exerciseKey, field, value)
-                              }
-                              onBlur={() => handleSaveOnBlur(exerciseKey)}
-                              units={units}
-                            />
-                          </ExerciseAccordionCard>
-                        );
-                      })}
+                          return (
+                            <div key={exerciseKey}>
+                              {section.notes && movementIdx === 0 && (
+                                <p className="px-4 py-1 text-xs text-slate-500 italic">
+                                  {section.notes}
+                                </p>
+                              )}
+                              {showStructureBadge && movementIdx === 0 && (
+                                <div className="px-4 py-1">
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
+                                    {section.structure}{section.rounds && section.rounds > 1 ? ` · ${section.rounds} rounds` : ''}
+                                  </span>
+                                </div>
+                              )}
+                              <ExerciseAccordionCard
+                                number={runningNumber}
+                                name={movement.name}
+                                setsReps={formatSetsReps(movement)}
+                                isOpen={expandedExercise === exerciseKey}
+                                onToggle={() =>
+                                  setExpandedExercise(
+                                    expandedExercise === exerciseKey ? null : exerciseKey
+                                  )
+                                }
+                                completedSets={completion.completed}
+                                totalSets={completion.total}
+                                isFullyComplete={completion.isFullyComplete}
+                              >
+                                <ExerciseExpandedView
+                                  sets={movement.sets}
+                                  reps={movement.reps}
+                                  rest={movement.rest || section.rest}
+                                  intensity={movement.intensity}
+                                  rpe={movement.rpe}
+                                  tempo={movement.tempo}
+                                  notes={movement.notes}
+                                  setDetails={movement.setDetails}
+                                  activityType={exerciseTracking?.activityType || 'strength'}
+                                  trackingData={exerciseTracking?.sets || []}
+                                  cardioData={exerciseTracking?.cardio}
+                                  mobilityData={exerciseTracking?.mobility}
+                                  onUpdateSet={(setId, field, value) =>
+                                    updateSetData(exerciseKey, setId, field, value)
+                                  }
+                                  onUpdateCardio={(field, value) =>
+                                    updateCardioData(exerciseKey, field, value)
+                                  }
+                                  onUpdateMobility={(field, value) =>
+                                    updateMobilityData(exerciseKey, field, value)
+                                  }
+                                  onBlur={() => handleSaveOnBlur(exerciseKey)}
+                                  units={units}
+                                />
+                              </ExerciseAccordionCard>
+                            </div>
+                          );
+                        })
+                      ))}
                     </SectionAccordion>
                   </div>
                 );
