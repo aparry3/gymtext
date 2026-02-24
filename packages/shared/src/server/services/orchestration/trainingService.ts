@@ -158,12 +158,37 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
       const weekContent = result.response;
 
+      // Run week:format and week:details in parallel (mirrors workout pattern)
+      const weekContext = [...context];
+      weekContext.push(`<Week>${weekContent}</Week>`);
+
+      const [formatResult, detailsResult] = await Promise.all([
+        simpleAgentRunner.invoke('week:format', {
+          input: weekContent,
+          context: weekContext,
+          params: { user },
+        }),
+        simpleAgentRunner.invoke('week:details', {
+          input: weekContent,
+          context: weekContext,
+          params: { user },
+        })
+          .then((r) => JSON.parse(r.response) as Record<string, unknown>)
+          .catch((error) => {
+            console.error(`[TrainingService] Failed to generate structured week:`, error);
+            return undefined;
+          }),
+      ]);
+
+      const weekMessage = formatResult.response;
+
       // Save to database via dossier service
       const microcycle = await markdownService.createWeek(
         userId,
         plan.id!,
         weekContent,
-        weekStart.toJSDate()
+        weekStart.toJSDate(),
+        { message: weekMessage, details: detailsResult }
       );
 
       console.log(

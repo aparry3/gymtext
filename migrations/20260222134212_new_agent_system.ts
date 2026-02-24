@@ -139,6 +139,8 @@ export const up: Migration = async (db) => {
   // Add new columns
   await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS content TEXT`.execute(db);
   await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS plan_id UUID REFERENCES fitness_plans(id)`.execute(db);
+  await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS details JSONB`.execute(db);
+  await sql`ALTER TABLE microcycles ADD COLUMN IF NOT EXISTS message TEXT`.execute(db);
 
   // Migrate description to content if it exists
   const microcyclesDescExists = await sql<{ exists: boolean }>`
@@ -156,7 +158,6 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS absolute_week`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS days`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS description`.execute(db);
-  await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS message`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS structured`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS is_active`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS updated_at`.execute(db);
@@ -259,6 +260,8 @@ export const down: Migration = async (db) => {
   await sql`UPDATE microcycles SET description = content WHERE content IS NOT NULL`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS content`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS plan_id`.execute(db);
+  await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS details`.execute(db);
+  await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS message`.execute(db);
 
   // Restore agent_logs
   await sql`ALTER TABLE agent_logs ADD COLUMN IF NOT EXISTS eval_result JSONB`.execute(db);

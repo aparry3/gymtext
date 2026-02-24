@@ -306,57 +306,61 @@ Provide metadata as JSON:
   },
   {
     agent_id: 'workout:details',
-    system_prompt: `You are a structured workout generator. Your role is to extract workout information from a week's training dossier and format it as simple, clean JSON for UI display.
+    system_prompt: `You are a structured workout generator. Your role is to extract workout information from a week's training dossier and format it as structured JSON for UI display.
 
 ## Your Goal
 Generate JSON that can be directly displayed in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their workout.
 
 ## Key Principles
-1. SIMPLICITY IS KING - Complexity degrades LLM accuracy. Keep output simple and clean.
-2. UI-FOCUSED - Not for LLM consumption, for human display
-3. CONCISE - Names, descriptions, key metrics only
-4. ACCURATE - Extract exactly what the user is supposed to do
+1. SIMPLICITY IS KING - Use simple format by default, detailed only when needed
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what the user is supposed to do
+4. SECTION-BASED - Each section = one discrete unit of work
 
-## Output Format
-Return clean JSON matching this schema:
-{
-  "date": "2026-02-16",
-  "dayOfWeek": "Monday",
-  "focus": "Upper Strength",
-  "title": "Upper Strength",
-  "description": "Week 3 — push compounds to top of RPE range, add reps to accessories.",
-  "estimatedDuration": 55,
-  "location": "Home gym",
-  "exercises": [
-    {
-      "name": "Barbell Bench Press",
-      "description": "Main compound lift - chest, shoulders, triceps",
-      "type": "strength",
-      "sets": "4",
-      "reps": "5",
-      "weight": "155 lb",
-      "notes": "Up 5 lb from last week. Last set ground to a 4.",
-      "rest": "3 minutes"
-    }
-  ]
-}
+## Core Concepts
 
-## Exercise Types
-- warmup - Warm-up movements
-- strength - Main compound lifts
-- accessory - Accessory exercises
-- cardio - Cardio movements
-- mobility - Mobility work
-- finisher - Finisher movements
+### Sections
+Organize workouts into logical sections. Each section represents ONE discrete block of work:
+- \`warmup\` - Prepare body for work (optional but recommended)
+- \`main\` - Primary training work (required, can have multiple)
+- \`conditioning\` - Metabolic/cardio finisher (optional)
+- \`cooldown\` - Recovery and mobility (optional)
 
-## What to Include
-For each exercise: name, description, type, sets, reps, weight (optional), notes (optional), rest (optional)
+A typical workout has MULTIPLE \`main\` sections — one per exercise or circuit.
+
+### Structure Types (how movements are organized within a section)
+- \`straight-sets\` — ONE movement per section. For 3 straight-set exercises, create 3 separate sections.
+- \`circuit\` — MULTIPLE movements performed back-to-back. Covers supersets (2), tri-sets (3), giant-sets (4+).
+- \`emom\` — Every minute on the minute. One or more movements.
+- \`amrap\` — As many rounds as possible in a time cap.
+- \`for-time\` — Complete prescribed work as fast as possible (e.g., 21-15-9).
+- \`intervals\` — Work/rest intervals (running, rowing, biking).
+
+### Movement Model (Unified)
+One schema for all movements — fill in relevant fields, leave others empty:
+- **Lifting:** sets, reps, weight, tempo, rpe, rest
+- **Running:** distance, pace, duration, intensity
+- **Bodyweight:** reps, sets
+- **Timed work:** duration, maybe weight
+- **Skills/drills:** reps, distance
+
+### Simple vs Detailed Format
+**Use simple format by default** (sets, reps, weight fields).
+**Use setDetails array ONLY when** per-set variation is explicitly prescribed:
+- Warmup progression (build to working weight)
+- Ladders (varying reps: 1-2-3-4-5)
+- Wave loading (varying weight: heavy-light-heavier)
+- Pyramids (ascending/descending weight)
+- Drop sets (reducing weight each set)
+- Top set + backoff sets
+
+When \`setDetails\` is present, it takes precedence over simple \`weight\` field.
 
 ## What to Skip
-- Detailed set-by-set logs (too much detail for UI)
-- Warm-up sets with just weights
-- Cooldown sections
 - Empty or placeholder values
+- LLM-specific metadata
+- User IDs or preferences
+- Video/image URLs
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
@@ -371,47 +375,78 @@ Never make up information. If something isn't in the dossier, don't include it.`
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
     output_schema: {
       type: 'object',
-      required: ['date', 'dayOfWeek', 'focus', 'title', 'exercises'],
+      required: ['date', 'dayOfWeek', 'focus', 'title', 'sections'],
       properties: {
         date: { type: 'string', description: 'ISO date (YYYY-MM-DD)' },
         dayOfWeek: { type: 'string', description: 'Day of the week' },
-        focus: { type: 'string', description: 'Session focus (e.g., Upper Strength)' },
+        focus: { type: 'string', description: 'Session focus (e.g., Upper Strength, Interval Run)' },
         title: { type: 'string', description: 'Session title' },
         description: { type: 'string', description: 'Brief session description with week context' },
         estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
-        location: { type: 'string', description: 'Workout location' },
-        exercises: {
+        location: { type: 'string', description: 'Workout location (e.g., Home gym, Track)' },
+        sections: {
           type: 'array',
+          description: 'Workout sections — each section is one discrete unit of work',
           items: {
             type: 'object',
-            required: ['name', 'type'],
+            required: ['type', 'structure', 'movements'],
             properties: {
-              name: { type: 'string', description: 'Exercise name' },
-              description: { type: 'string', description: 'Brief description of the exercise' },
               type: {
                 type: 'string',
-                enum: ['warmup', 'strength', 'accessory', 'cardio', 'mobility', 'finisher'],
-                description: 'Exercise category',
+                enum: ['warmup', 'main', 'conditioning', 'cooldown'],
+                description: 'Section type',
               },
-              sets: { type: 'string', description: 'Number of sets' },
-              reps: { type: 'string', description: 'Rep scheme (e.g., "8-12", "5", "AMRAP")' },
-              weight: { type: 'string', description: 'Weight with unit (e.g., "155 lb")' },
-              notes: { type: 'string', description: 'Coaching cues or notes' },
-              rest: { type: 'string', description: 'Rest period (e.g., "3 minutes")' },
-            },
-          },
-        },
-        conditioning: {
-          type: 'array',
-          description: 'Optional conditioning/cardio finishers',
-          items: {
-            type: 'object',
-            required: ['name'],
-            properties: {
-              name: { type: 'string', description: 'Conditioning activity name' },
-              duration: { type: 'string', description: 'Duration (e.g., "5-10 min")' },
-              intensity: { type: 'string', description: 'Intensity level (e.g., "easy", "moderate")' },
-              notes: { type: 'string', description: 'Additional notes' },
+              title: { type: 'string', description: 'Section title (e.g., Back Squat, Superset Block)' },
+              structure: {
+                type: 'string',
+                enum: ['straight-sets', 'circuit', 'emom', 'amrap', 'for-time', 'intervals'],
+                description: 'How movements are organized. straight-sets = 1 movement, circuit = 2+ movements',
+              },
+              notes: { type: 'string', description: 'Section-level coaching notes' },
+              rounds: { type: 'number', description: 'Number of rounds (for circuit, intervals)' },
+              duration: { type: 'number', description: 'Duration in minutes (for emom, amrap)' },
+              rest: { type: 'string', description: 'Rest between rounds (e.g., 90 seconds)' },
+              movements: {
+                type: 'array',
+                description: 'Movements in this section. straight-sets: exactly 1. circuit: 2+.',
+                items: {
+                  type: 'object',
+                  required: ['name'],
+                  properties: {
+                    name: { type: 'string', description: 'Movement name' },
+                    sets: { type: 'string', description: 'Number of sets' },
+                    reps: { type: 'string', description: 'Rep scheme (e.g., 8-12, 5, AMRAP, 21-15-9)' },
+                    weight: { type: 'string', description: 'Load with unit (e.g., 185 lb, 80 kg, bodyweight)' },
+                    distance: { type: 'string', description: 'Distance (e.g., 400m, 1 mile)' },
+                    pace: { type: 'string', description: 'Target pace (e.g., 7:00/mi)' },
+                    duration: { type: 'string', description: 'Time duration (e.g., 30 seconds, 5 minutes)' },
+                    intensity: { type: 'string', description: 'Intensity target (e.g., Zone 2, 85% max HR)' },
+                    tempo: { type: 'string', description: 'Movement tempo (e.g., 3-0-1-0)' },
+                    rpe: { type: 'string', description: 'Rate of Perceived Exertion (1-10)' },
+                    rest: { type: 'string', description: 'Rest period (e.g., 3 minutes)' },
+                    notes: { type: 'string', description: 'Coaching cues, form notes, progression info' },
+                    setDetails: {
+                      type: 'array',
+                      description: 'Per-set detail — use only when sets vary in weight/reps (warmup progression, ladders, wave loading, pyramids, drop sets)',
+                      items: {
+                        type: 'object',
+                        required: ['reps'],
+                        properties: {
+                          reps: { type: 'string', description: 'Reps for this set' },
+                          weight: { type: 'string', description: 'Load for this set' },
+                          rpe: { type: 'string', description: 'RPE for this set' },
+                          type: {
+                            type: 'string',
+                            enum: ['warmup', 'working', 'backoff', 'drop'],
+                            description: 'Set type',
+                          },
+                          notes: { type: 'string', description: 'Set-specific notes' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -525,6 +560,170 @@ Focus: {{day.focus}}
     examples: null,
     eval_rubric: null,
     output_schema: null,
+  },
+  {
+    agent_id: 'week:details',
+    system_prompt: `You are a structured week planner. Your role is to extract the weekly training structure from a week's dossier and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the entire week's training plan for display in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their week at a glance.
+
+## Key Principles
+1. SIMPLICITY IS KING - Keep output simple and clean
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what's planned for each day
+4. COMPLETE - Cover every training day in the week
+
+## Activity Types
+The \`activityType\` field describes the general nature of each day:
+- \`training\`: Normal training day (default)
+- \`rest\`: Complete rest, no activity
+- \`activeRecovery\`: Light activity: walking, yoga, mobility, foam rolling
+
+**Important:** Deload weeks are represented as \`training\` days with reduced volume/intensity reflected in the actual set/rep prescriptions and workout notes, NOT as a separate activity type.
+
+## Session Types
+The \`sessionType\` field describes the training modality:
+- \`strength\`: Heavy compound focus
+- \`hypertrophy\`: Volume-focused bodybuilding
+- \`cardio\`: Steady-state cardio
+- \`endurance\`: Long duration/low intensity
+- \`hiit\`: High-intensity intervals
+- \`hybrid\`: Combined strength + cardio
+- \`sport\`: Sport-specific training
+- \`mobility\`: Flexibility and mobility work
+
+## Main Movements Format
+The \`mainMovements\` field is flexible and adapts to the \`sessionType\`:
+
+**Strength/Hypertrophy:**
+- "Bench Press 4x5 @ 155lb"
+- "Squat 3x8-10 @ 185lb"
+
+**Cardio/Endurance:**
+- "5K easy run @ 7:30/mi"
+- "Zone 2 cycling 90min"
+
+**HIIT:**
+- "8x400m @ 5K pace, 90s rest"
+- "10x1min burpees, 30s rest"
+
+**Hybrid:**
+- "Squat 3x8 + 15min HIIT"
+
+**Mobility/Active Recovery:**
+- "Full body mobility flow 20min"
+- "Foam rolling 10min"
+
+## Output Format
+Return clean JSON matching this schema:
+{
+  "weekNumber": 1,
+  "phase": "Hypertrophy Block",
+  "focus": "Volume accumulation",
+  "startDate": "2026-02-16",
+  "days": [
+    {
+      "dayNumber": 1,
+      "dayOfWeek": "Monday",
+      "focus": "Upper Push",
+      "title": "Horizontal Push Strength",
+      "activityType": "training",
+      "sessionType": "strength",
+      "exerciseCount": 6,
+      "estimatedDuration": 55,
+      "mainMovements": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
+    },
+    {
+      "dayNumber": 2,
+      "dayOfWeek": "Tuesday",
+      "focus": "Active Recovery",
+      "title": "Mobility & Light Movement",
+      "activityType": "activeRecovery",
+      "sessionType": "mobility",
+      "estimatedDuration": 30,
+      "mainMovements": ["Full body mobility flow 20min", "Foam rolling 10min"]
+    },
+    {
+      "dayNumber": 3,
+      "dayOfWeek": "Wednesday",
+      "focus": "Rest",
+      "title": "Rest Day",
+      "activityType": "rest"
+    }
+  ],
+  "totalSessions": 4,
+  "notes": "Deload next week. Focus on hitting RPE targets."
+}
+
+## What to Include
+- Week number and training phase
+- Each day with activityType, sessionType, focus, title
+- \`mainMovements\` for training days (format varies by sessionType)
+- \`exerciseCount\` is optional - most relevant for strength/hypertrophy sessions
+- Rest days and active recovery days clearly marked
+- Total session count
+- Any important notes or coaching cues
+
+## What to Skip
+- Full exercise details (that's workout:details' job)
+- Set-by-set breakdowns
+- Detailed warm-up protocols
+- Deload as an activity type (reflect in notes instead)
+
+Never make up information. If something isn't in the dossier, don't include it.`,
+    model: 'gpt-5.2',
+    max_tokens: 8000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Generates a structured week overview with daily focus, activity type, session type, and main movements for UI display',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Generate the structured week overview from the week dossier. Extract the training plan for each day and format as JSON.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure.',
+    output_schema: {
+      type: 'object',
+      required: ['days'],
+      properties: {
+        weekNumber: { type: 'number', description: 'Week number in the program' },
+        phase: { type: 'string', description: 'Training phase (e.g., Hypertrophy, Strength)' },
+        focus: { type: 'string', description: 'Overall week focus' },
+        startDate: { type: 'string', description: 'ISO date of week start (YYYY-MM-DD)' },
+        days: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['dayNumber', 'dayOfWeek'],
+            properties: {
+              dayNumber: { type: 'number', description: 'Day number (1-7)' },
+              dayOfWeek: { type: 'string', description: 'Day name' },
+              focus: { type: 'string', description: 'Session focus' },
+              title: { type: 'string', description: 'Session title' },
+              activityType: { 
+                type: 'string', 
+                enum: ['training', 'rest', 'activeRecovery'],
+                description: 'Type of day: training, rest, or activeRecovery' 
+              },
+              sessionType: { 
+                type: 'string', 
+                enum: ['strength', 'hypertrophy', 'cardio', 'endurance', 'hiit', 'hybrid', 'sport', 'mobility'],
+                description: 'Session modality type' 
+              },
+              exerciseCount: { type: 'number', description: 'Number of exercises (most relevant for strength/hypertrophy)' },
+              estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
+              mainMovements: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Key movement summaries - format varies by sessionType',
+              },
+            },
+          },
+        },
+        totalSessions: { type: 'number', description: 'Total training sessions this week' },
+        notes: { type: 'string', description: 'Week-level coaching notes' },
+      },
+    },
   },
   {
     agent_id: 'chat:generate',
