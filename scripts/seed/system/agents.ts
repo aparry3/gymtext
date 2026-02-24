@@ -574,6 +574,47 @@ Generate JSON that summarizes the entire week's training plan for display in a m
 3. ACCURATE - Extract exactly what's planned for each day
 4. COMPLETE - Cover every training day in the week
 
+## Activity Types
+The \`activityType\` field describes the general nature of each day:
+- \`training\`: Normal training day (default)
+- \`rest\`: Complete rest, no activity
+- \`activeRecovery\`: Light activity: walking, yoga, mobility, foam rolling
+
+**Important:** Deload weeks are represented as \`training\` days with reduced volume/intensity reflected in the actual set/rep prescriptions and workout notes, NOT as a separate activity type.
+
+## Session Types
+The \`sessionType\` field describes the training modality:
+- \`strength\`: Heavy compound focus
+- \`hypertrophy\`: Volume-focused bodybuilding
+- \`cardio\`: Steady-state cardio
+- \`endurance\`: Long duration/low intensity
+- \`hiit\`: High-intensity intervals
+- \`hybrid\`: Combined strength + cardio
+- \`sport\`: Sport-specific training
+- \`mobility\`: Flexibility and mobility work
+
+## Main Movements Format
+The \`mainMovements\` field is flexible and adapts to the \`sessionType\`:
+
+**Strength/Hypertrophy:**
+- "Bench Press 4x5 @ 155lb"
+- "Squat 3x8-10 @ 185lb"
+
+**Cardio/Endurance:**
+- "5K easy run @ 7:30/mi"
+- "Zone 2 cycling 90min"
+
+**HIIT:**
+- "8x400m @ 5K pace, 90s rest"
+- "10x1min burpees, 30s rest"
+
+**Hybrid:**
+- "Squat 3x8 + 15min HIIT"
+
+**Mobility/Active Recovery:**
+- "Full body mobility flow 20min"
+- "Foam rolling 10min"
+
 ## Output Format
 Return clean JSON matching this schema:
 {
@@ -586,18 +627,29 @@ Return clean JSON matching this schema:
       "dayNumber": 1,
       "dayOfWeek": "Monday",
       "focus": "Upper Push",
-      "title": "Upper Push Strength",
-      "isRestDay": false,
+      "title": "Horizontal Push Strength",
+      "activityType": "training",
+      "sessionType": "strength",
       "exerciseCount": 6,
       "estimatedDuration": 55,
-      "keyLifts": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
+      "mainMovements": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
     },
     {
       "dayNumber": 2,
       "dayOfWeek": "Tuesday",
+      "focus": "Active Recovery",
+      "title": "Mobility & Light Movement",
+      "activityType": "activeRecovery",
+      "sessionType": "mobility",
+      "estimatedDuration": 30,
+      "mainMovements": ["Full body mobility flow 20min", "Foam rolling 10min"]
+    },
+    {
+      "dayNumber": 3,
+      "dayOfWeek": "Wednesday",
       "focus": "Rest",
       "title": "Rest Day",
-      "isRestDay": true
+      "activityType": "rest"
     }
   ],
   "totalSessions": 4,
@@ -606,8 +658,10 @@ Return clean JSON matching this schema:
 
 ## What to Include
 - Week number and training phase
-- Each day with focus, title, and key lifts
-- Rest days marked clearly
+- Each day with activityType, sessionType, focus, title
+- \`mainMovements\` for training days (format varies by sessionType)
+- \`exerciseCount\` is optional - most relevant for strength/hypertrophy sessions
+- Rest days and active recovery days clearly marked
 - Total session count
 - Any important notes or coaching cues
 
@@ -615,13 +669,14 @@ Return clean JSON matching this schema:
 - Full exercise details (that's workout:details' job)
 - Set-by-set breakdowns
 - Detailed warm-up protocols
+- Deload as an activity type (reflect in notes instead)
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
     max_tokens: 8000,
     temperature: 1.0,
     max_iterations: 3,
-    description: 'Generates a structured week overview with daily focus, key lifts, and session metadata for UI display',
+    description: 'Generates a structured week overview with daily focus, activity type, session type, and main movements for UI display',
     is_active: true,
     tool_ids: [],
     user_prompt_template: 'Generate the structured week overview from the week dossier. Extract the training plan for each day and format as JSON.',
@@ -645,13 +700,22 @@ Never make up information. If something isn't in the dossier, don't include it.`
               dayOfWeek: { type: 'string', description: 'Day name' },
               focus: { type: 'string', description: 'Session focus' },
               title: { type: 'string', description: 'Session title' },
-              isRestDay: { type: 'boolean', description: 'Whether this is a rest day' },
-              exerciseCount: { type: 'number', description: 'Number of exercises' },
+              activityType: { 
+                type: 'string', 
+                enum: ['training', 'rest', 'activeRecovery'],
+                description: 'Type of day: training, rest, or activeRecovery' 
+              },
+              sessionType: { 
+                type: 'string', 
+                enum: ['strength', 'hypertrophy', 'cardio', 'endurance', 'hiit', 'hybrid', 'sport', 'mobility'],
+                description: 'Session modality type' 
+              },
+              exerciseCount: { type: 'number', description: 'Number of exercises (most relevant for strength/hypertrophy)' },
               estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
-              keyLifts: {
+              mainMovements: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Key lifts with sets/reps/weight summary',
+                description: 'Key movement summaries - format varies by sessionType',
               },
             },
           },
