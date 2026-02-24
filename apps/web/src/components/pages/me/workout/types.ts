@@ -10,6 +10,8 @@ export interface SetTrackingData {
   id: string;
   setNumber: number;
   targetReps: string;
+  targetWeight?: string;
+  setType?: string;
   prevWeight?: number;
   prevReps?: number;
   weight: string;

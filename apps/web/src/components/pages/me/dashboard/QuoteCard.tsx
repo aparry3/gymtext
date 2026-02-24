@@ -1,13 +1,11 @@
 'use client';
 
 interface QuoteCardProps {
-  text?: string;
-  author?: string;
   isLoading?: boolean;
 }
 
-// Default quotes to use when no quote is provided
-const DEFAULT_QUOTES = [
+// Pool of static motivational fitness quotes
+const QUOTES = [
   {
     text: "Discipline is doing what needs to be done, even if you don't want to do it.",
     author: 'Unknown',
@@ -20,9 +18,48 @@ const DEFAULT_QUOTES = [
     text: 'Strength does not come from physical capacity. It comes from an indomitable will.',
     author: 'Mahatma Gandhi',
   },
+  {
+    text: 'The body achieves what the mind believes.',
+    author: 'Napoleon Hill',
+  },
+  {
+    text: 'Success usually comes to those who are too busy to be looking for it.',
+    author: 'Henry David Thoreau',
+  },
+  {
+    text: 'Take care of your body. It\'s the only place you have to live.',
+    author: 'Jim Rohn',
+  },
+  {
+    text: 'The hard days are what make you stronger.',
+    author: 'Aly Raisman',
+  },
+  {
+    text: 'You don\'t have to be extreme, just consistent.',
+    author: 'Unknown',
+  },
+  {
+    text: 'What seems impossible today will one day become your warm-up.',
+    author: 'Unknown',
+  },
+  {
+    text: 'The pain you feel today will be the strength you feel tomorrow.',
+    author: 'Arnold Schwarzenegger',
+  },
 ];
 
-export function QuoteCard({ text, author, isLoading = false }: QuoteCardProps) {
+// Select a quote deterministically based on the current day
+function getDailyQuote(): { text: string; author: string } {
+  const now = new Date();
+  // Use year + dayOfYear as seed so it stays stable within a day
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const seed = now.getFullYear() * 1000 + dayOfYear;
+  return QUOTES[seed % QUOTES.length];
+}
+
+export function QuoteCard({ isLoading = false }: QuoteCardProps) {
   if (isLoading) {
     return (
       <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 animate-pulse">
@@ -35,10 +72,7 @@ export function QuoteCard({ text, author, isLoading = false }: QuoteCardProps) {
     );
   }
 
-  // Use provided quote or select a random default
-  const quote = text
-    ? { text, author: author || 'Unknown' }
-    : DEFAULT_QUOTES[Math.floor(Math.random() * DEFAULT_QUOTES.length)];
+  const quote = getDailyQuote();
 
   return (
     <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-center">

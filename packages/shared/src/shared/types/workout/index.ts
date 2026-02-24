@@ -109,6 +109,19 @@ export {
 } from './sessionTypes';
 
 // ============================================================================
+// Workout Details Exports (new agent schema types)
+// ============================================================================
+export {
+  type WorkoutDetails,
+  type WorkoutDetailsSection,
+  type WorkoutDetailsMovement,
+  type WorkoutSetDetail,
+  type WorkoutSectionType,
+  type WorkoutSectionStructure,
+  type WorkoutSetType,
+} from './workoutDetails';
+
+// ============================================================================
 // Schema Selection Utilities
 // ============================================================================
 

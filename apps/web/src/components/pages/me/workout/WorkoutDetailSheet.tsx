@@ -9,11 +9,15 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dumbbell, MoreVertical, X } from 'lucide-react';
+import { Dumbbell, MoreVertical, X, Clock } from 'lucide-react';
 import { ExerciseAccordionCard } from './ExerciseAccordionCard';
 import { ExerciseExpandedView } from './ExerciseExpandedView';
 import { SectionAccordion } from './SectionAccordion';
-import type { WorkoutStructure, WorkoutActivity } from '@/server/models/workout';
+import type {
+  WorkoutDetails,
+  WorkoutDetailsMovement,
+  WorkoutSectionType,
+} from '@gymtext/shared';
 import type {
   SetTrackingData,
   WorkoutTrackingState,
@@ -35,10 +39,8 @@ interface WorkoutDetailSheetProps {
 interface WorkoutData {
   id: string;
   date: string;
-  sessionType: string;
-  goal: string | null;
-  description: string | null;
-  structured?: WorkoutStructure;
+  message: string | null;
+  details: WorkoutDetails | null;
 }
 
 // Types for saved metrics from API
@@ -69,34 +71,35 @@ interface SavedMobilityMetric {
 
 type SavedMetricData = SavedStrengthMetric | SavedCardioMetric | SavedMobilityMetric;
 
-// Determine if a section should be collapsed by default based on title
-const shouldCollapseByDefault = (title: string): boolean => {
-  const lower = title.toLowerCase();
-  return lower.includes('warm') || lower.includes('cool');
-};
-
-// Map workout activity type to tracking activity type
-const getActivityType = (exerciseType: string | undefined): ActivityType => {
-  switch (exerciseType) {
-    case 'Cardio':
-      return 'cardio';
-    case 'Mobility':
-      return 'mobility';
-    case 'Strength':
-    case 'Plyometric':
-    default:
-      return 'strength';
+// Infer activity type from section context and movement fields
+const inferActivityType = (
+  sectionType: WorkoutSectionType,
+  movement: WorkoutDetailsMovement
+): ActivityType => {
+  // Cardio indicators: has pace or distance without sets
+  if ((movement.pace || movement.distance) && !movement.sets) {
+    return 'cardio';
   }
+  // Conditioning sections with duration-only movements → cardio
+  if (sectionType === 'conditioning' && movement.duration && !movement.sets) {
+    return 'cardio';
+  }
+  // Warmup/cooldown with only duration → mobility
+  if ((sectionType === 'warmup' || sectionType === 'cooldown') && movement.duration && !movement.sets && !movement.reps) {
+    return 'mobility';
+  }
+  // Default → strength
+  return 'strength';
 };
 
-// Generate tracking state for an exercise
-const generateExerciseTrackingState = (
+// Generate tracking state for a movement
+const generateMovementTrackingState = (
   exerciseKey: string,
-  exercise: WorkoutActivity,
+  sectionType: WorkoutSectionType,
+  movement: WorkoutDetailsMovement,
   savedMetric?: SavedMetricData
 ): ExerciseTrackingState => {
-  const activityType = getActivityType(exercise.type);
-  const resolvedExerciseId = exercise.exerciseId || undefined;
+  const activityType = inferActivityType(sectionType, movement);
 
   if (activityType === 'cardio') {
     const savedCardio = savedMetric?.type === 'cardio' ? savedMetric : undefined;
@@ -105,7 +108,6 @@ const generateExerciseTrackingState = (
 
     return {
       exerciseId: exerciseKey,
-      resolvedExerciseId,
       activityType,
       sets: [],
       cardio: {
@@ -124,7 +126,6 @@ const generateExerciseTrackingState = (
 
     return {
       exerciseId: exerciseKey,
-      resolvedExerciseId,
       activityType,
       sets: [],
       mobility: {
@@ -135,28 +136,62 @@ const generateExerciseTrackingState = (
     };
   }
 
-  // Strength exercises
-  const setsCount = parseInt(exercise.sets || '3', 10) || 3;
+  // Strength: use setDetails if present, otherwise simple sets/reps
   const savedStrength = savedMetric?.type === 'strength' ? savedMetric : undefined;
 
-  const sets: SetTrackingData[] = Array.from({ length: setsCount }, (_, i) => {
-    const savedSet = savedStrength?.sets?.find((s) => s.setNumber === i + 1);
-    return {
-      id: `${exerciseKey}-set-${i + 1}`,
-      setNumber: i + 1,
-      targetReps: exercise.reps || '10',
-      weight: savedSet?.weight?.toString() || '',
-      reps: savedSet?.reps?.toString() || '',
-      completed: savedSet?.completed ?? false,
-    };
-  });
+  let sets: SetTrackingData[];
+
+  if (movement.setDetails && movement.setDetails.length > 0) {
+    sets = movement.setDetails.map((sd, i) => {
+      const savedSet = savedStrength?.sets?.find((s) => s.setNumber === i + 1);
+      return {
+        id: `${exerciseKey}-set-${i + 1}`,
+        setNumber: i + 1,
+        targetReps: sd.reps || movement.reps || '10',
+        targetWeight: sd.weight,
+        setType: sd.type,
+        weight: savedSet?.weight?.toString() || '',
+        reps: savedSet?.reps?.toString() || '',
+        completed: savedSet?.completed ?? false,
+      };
+    });
+  } else {
+    const setsCount = parseInt(movement.sets || '3', 10) || 3;
+    sets = Array.from({ length: setsCount }, (_, i) => {
+      const savedSet = savedStrength?.sets?.find((s) => s.setNumber === i + 1);
+      return {
+        id: `${exerciseKey}-set-${i + 1}`,
+        setNumber: i + 1,
+        targetReps: movement.reps || '10',
+        weight: savedSet?.weight?.toString() || '',
+        reps: savedSet?.reps?.toString() || '',
+        completed: savedSet?.completed ?? false,
+      };
+    });
+  }
 
   return {
     exerciseId: exerciseKey,
-    resolvedExerciseId,
     activityType,
     sets,
   };
+};
+
+// Format sets x reps for display
+const formatSetsReps = (movement: WorkoutDetailsMovement): string => {
+  if (movement.sets && movement.reps) {
+    return `${movement.sets} \u00D7 ${movement.reps}`;
+  }
+  if (movement.duration) {
+    return movement.duration;
+  }
+  if (movement.distance) {
+    return movement.distance;
+  }
+  if (movement.reps) {
+    return movement.reps;
+  }
+  return '';
 };
 
 export function WorkoutDetailSheet({
@@ -211,25 +246,23 @@ export function WorkoutDetailSheet({
 
   // Initialize expanded sections and tracking state when workout data loads
   useEffect(() => {
-    if (workout?.structured?.sections) {
+    if (workout?.details?.sections) {
       const initialExpanded = new Set<number>();
       const initialTracking: WorkoutTrackingState = {};
 
-      workout.structured.sections.forEach((section, sectionIdx) => {
-        if (!shouldCollapseByDefault(section.title)) {
+      workout.details.sections.forEach((section, sectionIdx) => {
+        // Collapse warmup and cooldown by default
+        if (section.type !== 'warmup' && section.type !== 'cooldown') {
           initialExpanded.add(sectionIdx);
         }
 
-        section.exercises.forEach((exercise, exerciseIdx) => {
-          const exerciseKey = exercise.id || `${sectionIdx}-${exerciseIdx}`;
-          // Use resolved exerciseId to look up saved metrics
-          const resolvedId = exercise.exerciseId;
-          const savedMetric = resolvedId ? savedMetrics[resolvedId] : undefined;
-
-          initialTracking[exerciseKey] = generateExerciseTrackingState(
+        section.movements.forEach((movement, movementIdx) => {
+          const exerciseKey = `${sectionIdx}-${movementIdx}`;
+          initialTracking[exerciseKey] = generateMovementTrackingState(
             exerciseKey,
-            exercise,
-            savedMetric
+            section.type,
+            movement,
+            undefined // savedMetrics lookup would need movement-level IDs
           );
         });
       });
@@ -245,7 +278,6 @@ export function WorkoutDetailSheet({
       setExpandedExercise(null);
       setTrackingState({});
       setSavedMetrics({});
-      // Clear any pending saves
       Object.values(saveTimeoutRef.current).forEach(clearTimeout);
       saveTimeoutRef.current = {};
     }
@@ -255,7 +287,6 @@ export function WorkoutDetailSheet({
   const saveExerciseMetrics = useCallback(
     async (exerciseKey: string, exerciseState: ExerciseTrackingState) => {
       if (!workoutId || !exerciseState.resolvedExerciseId) {
-        // Can't save without a resolved exercise ID
         return;
       }
 
@@ -290,7 +321,6 @@ export function WorkoutDetailSheet({
             completed,
           };
         } else {
-          // Strength
           data = {
             type: 'strength',
             sets: exerciseState.sets.map((set) => ({
@@ -326,12 +356,10 @@ export function WorkoutDetailSheet({
       const exerciseState = trackingState[exerciseKey];
       if (!exerciseState) return;
 
-      // Clear existing timeout for this exercise
       if (saveTimeoutRef.current[exerciseKey]) {
         clearTimeout(saveTimeoutRef.current[exerciseKey]);
       }
 
-      // Set a short delay to batch rapid changes
       saveTimeoutRef.current[exerciseKey] = setTimeout(() => {
         saveExerciseMetrics(exerciseKey, exerciseState);
         delete saveTimeoutRef.current[exerciseKey];
@@ -340,26 +368,12 @@ export function WorkoutDetailSheet({
     [trackingState, saveExerciseMetrics]
   );
 
-  const sections = workout?.structured?.sections || [];
+  const sections = workout?.details?.sections || [];
 
-  // Check if there are any exercises across all sections
-  const hasExercises = useMemo(() => {
-    return sections.some((section) => section.exercises.length > 0);
+  // Check if there are any movements across all sections
+  const hasMovements = useMemo(() => {
+    return sections.some((section) => section.movements.length > 0);
   }, [sections]);
-
-  // Format sets x reps for display
-  const formatSetsReps = (exercise: WorkoutActivity): string => {
-    if (exercise.sets && exercise.reps) {
-      return `${exercise.sets} × ${exercise.reps}`;
-    }
-    if (exercise.duration) {
-      return exercise.duration;
-    }
-    if (exercise.distance) {
-      return exercise.distance;
-    }
-    return '';
-  };
 
   const toggleSection = (sectionIdx: number) => {
     setExpandedSections((prev) => {
@@ -371,11 +385,6 @@ export function WorkoutDetailSheet({
       }
       return next;
     });
-  };
-
-  // Create a unique key for exercises that combines section and exercise index
-  const getExerciseKey = (sectionIdx: number, exerciseIdx: number, exercise: WorkoutActivity) => {
-    return exercise.id || `${sectionIdx}-${exerciseIdx}`;
   };
 
   // Update set tracking data
@@ -501,13 +510,23 @@ export function WorkoutDetailSheet({
                 {isLoading ? (
                   <Skeleton className="h-7 w-48 bg-slate-800" />
                 ) : (
-                  workout?.structured?.title || workout?.goal || 'Workout'
+                  workout?.details?.title || 'Workout'
                 )}
               </SheetTitle>
-              {!isLoading && workout?.structured?.focus && (
-                <p className="text-sm text-slate-400 mt-1">
-                  {workout.structured.focus}
-                </p>
+              {!isLoading && (
+                <div className="flex items-center gap-3 mt-1">
+                  {workout?.details?.focus && (
+                    <p className="text-sm text-slate-400">
+                      {workout.details.focus}
+                    </p>
+                  )}
+                  {workout?.details?.estimatedDuration && (
+                    <span className="flex items-center gap-1 text-xs text-slate-500">
+                      <Clock className="h-3 w-3" />
+                      ~{workout.details.estimatedDuration} min
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -537,35 +556,47 @@ export function WorkoutDetailSheet({
                 />
               ))}
             </div>
-          ) : !hasExercises ? (
-            <div className="text-center py-12 text-slate-400">
-              <p>No structured breakdown available.</p>
+          ) : !hasMovements ? (
+            // Fallback: show message text if no structured details
+            <div className="p-6">
+              {workout?.message ? (
+                <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-slate-300">
+                  {workout.message}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <p>No workout details available.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div>
               {sections.map((section, sectionIdx) => {
-                if (section.exercises.length === 0) return null;
+                if (section.movements.length === 0) return null;
 
                 return (
                   <div key={sectionIdx} className="mb-2">
                     <SectionAccordion
-                      title={section.title}
-                      exerciseCount={section.exercises.length}
+                      title={section.title || section.type}
+                      exerciseCount={section.movements.length}
                       isOpen={expandedSections.has(sectionIdx)}
                       onToggle={() => toggleSection(sectionIdx)}
+                      sectionType={section.type}
+                      structure={section.structure}
+                      rounds={section.rounds}
+                      sectionNotes={section.notes}
                     >
-                      {section.exercises.map((exercise, exerciseIdx) => {
-                        const exerciseKey = getExerciseKey(sectionIdx, exerciseIdx, exercise);
+                      {section.movements.map((movement, movementIdx) => {
+                        const exerciseKey = `${sectionIdx}-${movementIdx}`;
                         const completion = getExerciseCompletion(exerciseKey);
                         const exerciseTracking = trackingState[exerciseKey];
 
                         return (
                           <ExerciseAccordionCard
                             key={exerciseKey}
-                            number={exerciseIdx + 1}
-                            name={exercise.name}
-                            setsReps={formatSetsReps(exercise)}
-                            tags={exercise.tags}
+                            number={movementIdx + 1}
+                            name={movement.name}
+                            setsReps={formatSetsReps(movement)}
                             isOpen={expandedExercise === exerciseKey}
                             onToggle={() =>
                               setExpandedExercise(
@@ -577,12 +608,14 @@ export function WorkoutDetailSheet({
                             isFullyComplete={completion.isFullyComplete}
                           >
                             <ExerciseExpandedView
-                              tags={exercise.tags}
-                              sets={exercise.sets}
-                              reps={exercise.reps}
-                              rest={exercise.rest}
-                              intensity={exercise.intensity}
-                              notes={exercise.notes}
+                              sets={movement.sets}
+                              reps={movement.reps}
+                              rest={movement.rest}
+                              intensity={movement.intensity}
+                              rpe={movement.rpe}
+                              tempo={movement.tempo}
+                              notes={movement.notes}
+                              setDetails={movement.setDetails}
                               activityType={exerciseTracking?.activityType || 'strength'}
                               trackingData={exerciseTracking?.sets || []}
                               cardioData={exerciseTracking?.cardio}

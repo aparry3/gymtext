@@ -72,6 +72,29 @@ export class WorkoutInstanceRepository extends BaseRepository {
   }
 
   /**
+   * Get workout instance by ID
+   */
+  async getById(id: string): Promise<WorkoutInstanceRow | null> {
+    const result = await this.db
+      .selectFrom('workoutInstances')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    if (!result) return null;
+
+    return {
+      id: result.id,
+      clientId: result.clientId,
+      date: result.date,
+      message: result.message,
+      details: result.details as Record<string, unknown> | null,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
+  }
+
+  /**
    * Get workout instance by client_id and date
    */
   async getByUserAndDate(clientId: string, date: string): Promise<WorkoutInstanceRow | null> {

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAuthorization } from '@/server/utils/authMiddleware';
+import { getServices } from '@/lib/context';
 
 /**
  * GET /api/users/[id]/workouts
  *
- * Get user's workouts
- *
- * Note: WorkoutInstance storage has been removed. Workouts are now generated on-demand.
+ * Get user's recent workout instances.
  */
 export async function GET(
   request: NextRequest,
@@ -35,9 +34,19 @@ export async function GET(
       );
     }
 
+    const services = getServices();
+    const rows = await services.workoutInstance.getByUserId(requestedUserId, { limit: 14 });
+
+    const data = rows.map((r) => ({
+      id: r.id,
+      date: r.date,
+      message: r.message,
+      details: r.details,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: [],
+      data,
     });
   } catch (error) {
     console.error('Error fetching workouts:', error);

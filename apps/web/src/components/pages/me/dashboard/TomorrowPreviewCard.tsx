@@ -1,22 +1,24 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Moon } from 'lucide-react';
+import { Calendar, Moon, Clock } from 'lucide-react';
 
 interface TomorrowPreviewCardProps {
   title?: string;
   focus?: string;
-  description?: string;
   isRestDay?: boolean;
   isLoading?: boolean;
+  estimatedDuration?: number;
+  mainMovements?: string[];
 }
 
 export function TomorrowPreviewCard({
   title,
   focus,
-  description,
   isRestDay = false,
   isLoading = false,
+  estimatedDuration,
+  mainMovements,
 }: TomorrowPreviewCardProps) {
   if (isLoading) {
     return (
@@ -47,6 +49,9 @@ export function TomorrowPreviewCard({
     );
   }
 
+  // Show up to 2 main movements as compact preview
+  const movementPreview = mainMovements?.slice(0, 2);
+
   return (
     <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors">
       <div className="flex items-center gap-2 text-slate-400 mb-3">
@@ -58,18 +63,26 @@ export function TomorrowPreviewCard({
         {title || 'Workout'}
       </h3>
 
-      {focus && (
-        <Badge
-          variant="outline"
-          className="text-blue-400 border-blue-400/50 mb-2"
-        >
-          {focus}
-        </Badge>
-      )}
+      <div className="flex items-center gap-2 mb-2">
+        {focus && (
+          <Badge
+            variant="outline"
+            className="text-blue-400 border-blue-400/50"
+          >
+            {focus}
+          </Badge>
+        )}
+        {estimatedDuration && (
+          <span className="flex items-center gap-1 text-xs text-slate-500">
+            <Clock className="h-3 w-3" />
+            ~{estimatedDuration} min
+          </span>
+        )}
+      </div>
 
-      {description && (
+      {movementPreview && movementPreview.length > 0 && (
         <p className="text-sm text-slate-400 line-clamp-2">
-          {description}
+          {movementPreview.join(' \u00B7 ')}
         </p>
       )}
     </div>

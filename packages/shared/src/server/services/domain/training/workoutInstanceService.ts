@@ -13,6 +13,7 @@ export { type WorkoutInstanceRow, type CreateWorkoutInstanceInput, type UpdateWo
  */
 export interface WorkoutInstanceServiceInstance {
   upsert(input: CreateWorkoutInstanceInput & UpdateWorkoutInstanceInput): Promise<WorkoutInstanceRow>;
+  getById(id: string): Promise<WorkoutInstanceRow | null>;
   getByUserAndDate(userId: string, date: string): Promise<WorkoutInstanceRow | null>;
   getByUserId(userId: string, options?: { limit?: number; offset?: number }): Promise<WorkoutInstanceRow[]>;
   delete(id: string): Promise<void>;
@@ -25,6 +26,10 @@ export function createWorkoutInstanceService(workoutInstanceRepository: WorkoutI
   return {
     async upsert(input: CreateWorkoutInstanceInput & UpdateWorkoutInstanceInput): Promise<WorkoutInstanceRow> {
       return workoutInstanceRepository.upsert(input);
+    },
+
+    async getById(id: string): Promise<WorkoutInstanceRow | null> {
+      return workoutInstanceRepository.getById(id);
     },
 
     async getByUserAndDate(userId: string, date: string): Promise<WorkoutInstanceRow | null> {

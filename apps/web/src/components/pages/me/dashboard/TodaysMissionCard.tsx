@@ -1,6 +1,6 @@
 'use client';
 
-import { Dumbbell, Moon, ArrowRight } from 'lucide-react';
+import { Dumbbell, Moon, ArrowRight, Clock } from 'lucide-react';
 
 interface TodaysMissionCardProps {
   dayLabel: string;
@@ -9,6 +9,8 @@ interface TodaysMissionCardProps {
   isRestDay?: boolean;
   isLoading?: boolean;
   onStartWorkout?: () => void;
+  estimatedDuration?: number;
+  mainMovements?: string[];
 }
 
 export function TodaysMissionCard({
@@ -18,6 +20,8 @@ export function TodaysMissionCard({
   isRestDay = false,
   isLoading = false,
   onStartWorkout,
+  estimatedDuration,
+  mainMovements,
 }: TodaysMissionCardProps) {
   if (isLoading) {
     return (
@@ -53,6 +57,9 @@ export function TodaysMissionCard({
     );
   }
 
+  // Show up to 3 main movements as preview
+  const movementPreview = mainMovements?.slice(0, 3);
+
   return (
     <div
       onClick={onStartWorkout}
@@ -67,19 +74,33 @@ export function TodaysMissionCard({
       </div>
 
       <div className="relative z-10">
-        <span className="text-xs font-semibold tracking-wider opacity-80 uppercase">
-          {dayLabel}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold tracking-wider opacity-80 uppercase">
+            {dayLabel}
+          </span>
+          {estimatedDuration && (
+            <span className="flex items-center gap-1 text-xs font-medium bg-white/15 px-2 py-0.5 rounded-full">
+              <Clock className="h-3 w-3" />
+              ~{estimatedDuration} min
+            </span>
+          )}
+        </div>
 
         <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-2">
           {workoutTitle || 'Workout'}
         </h2>
 
         {workoutFocus && (
-          <p className="text-sm opacity-80 mb-4">{workoutFocus}</p>
+          <p className="text-sm opacity-80 mb-2">{workoutFocus}</p>
         )}
 
-        <div className="flex items-center gap-2 mt-6 text-sm font-semibold">
+        {movementPreview && movementPreview.length > 0 && (
+          <p className="text-sm opacity-60 mb-4 line-clamp-1">
+            {movementPreview.join(' \u00B7 ')}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 mt-4 text-sm font-semibold">
           <span>Start Workout</span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </div>
