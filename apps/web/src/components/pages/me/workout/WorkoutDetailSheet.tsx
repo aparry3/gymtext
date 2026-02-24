@@ -544,12 +544,14 @@ export function WorkoutDetailSheet({
                             isFullyComplete={completion.isFullyComplete}
                           >
                             <ExerciseExpandedView
-                              tags={[]}
                               sets={movement.sets}
                               reps={movement.reps}
                               rest={movement.rest}
-                              intensity={movement.intensity ? { type: 'Other' as const, value: movement.intensity, description: '' } : undefined}
+                              intensity={movement.intensity}
                               notes={movement.notes}
+                              rpe={movement.rpe}
+                              tempo={movement.tempo}
+                              setDetails={movement.setDetails}
                               activityType={exerciseTracking?.activityType || (group.block === 'conditioning' ? 'cardio' : group.block === 'cooldown' ? 'mobility' : 'strength')}
                               trackingData={exerciseTracking?.sets || []}
                               cardioData={exerciseTracking?.cardio}
