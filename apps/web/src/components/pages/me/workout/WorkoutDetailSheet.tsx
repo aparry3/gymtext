@@ -193,16 +193,19 @@ function groupConsecutiveSections(sections: WorkoutDetailsSection[]): GroupedSec
     const section = sections[i];
     const lastGroup = groups[groups.length - 1];
 
+    const typeLabels: Record<WorkoutSectionType, string> = {
+      warmup: 'Warm-Up',
+      main: 'Main',
+      conditioning: 'Conditioning',
+      cooldown: 'Cool Down',
+    };
+
     if (lastGroup && lastGroup.type === section.type) {
       lastGroup.entries.push({ originalSectionIdx: i, section });
       lastGroup.totalMovements += section.movements.length;
+      // When merging multiple sections, use the type label (e.g. "Main")
+      lastGroup.title = typeLabels[section.type] || section.type;
     } else {
-      const typeLabels: Record<WorkoutSectionType, string> = {
-        warmup: 'Warm-Up',
-        main: 'Main',
-        conditioning: 'Conditioning',
-        cooldown: 'Cool Down',
-      };
       groups.push({
         type: section.type,
         title: section.title || typeLabels[section.type] || section.type,
@@ -710,13 +713,13 @@ export function WorkoutDetailSheet({
                           const showStructureBadge =
                             section.structure && section.structure !== 'straight-sets';
 
+                          // Merge section-level notes into movement notes
+                          const combinedNotes = section.notes && movementIdx === 0
+                            ? (movement.notes ? `${section.notes}\n${movement.notes}` : section.notes)
+                            : movement.notes;
+
                           return (
                             <div key={exerciseKey}>
-                              {section.notes && movementIdx === 0 && (
-                                <p className="px-4 py-1 text-xs text-slate-500 italic">
-                                  {section.notes}
-                                </p>
-                              )}
                               {showStructureBadge && movementIdx === 0 && (
                                 <div className="px-4 py-1">
                                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
@@ -745,7 +748,7 @@ export function WorkoutDetailSheet({
                                   intensity={movement.intensity}
                                   rpe={movement.rpe}
                                   tempo={movement.tempo}
-                                  notes={movement.notes}
+                                  notes={combinedNotes}
                                   setDetails={movement.setDetails}
                                   activityType={exerciseTracking?.activityType || 'strength'}
                                   trackingData={exerciseTracking?.sets || []}
