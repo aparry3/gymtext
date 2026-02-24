@@ -602,6 +602,170 @@ Focus: {{day.focus}}
     output_schema: null,
   },
   {
+    agent_id: 'week:details',
+    system_prompt: `You are a structured week planner. Your role is to extract the weekly training structure from a week's dossier and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the entire week's training plan for display in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their week at a glance.
+
+## Key Principles
+1. SIMPLICITY IS KING - Keep output simple and clean
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what's planned for each day
+4. COMPLETE - Cover every training day in the week
+
+## Activity Types
+The \`activityType\` field describes the general nature of each day:
+- \`training\`: Normal training day (default)
+- \`rest\`: Complete rest, no activity
+- \`activeRecovery\`: Light activity: walking, yoga, mobility, foam rolling
+
+**Important:** Deload weeks are represented as \`training\` days with reduced volume/intensity reflected in the actual set/rep prescriptions and workout notes, NOT as a separate activity type.
+
+## Session Types
+The \`sessionType\` field describes the training modality:
+- \`strength\`: Heavy compound focus
+- \`hypertrophy\`: Volume-focused bodybuilding
+- \`cardio\`: Steady-state cardio
+- \`endurance\`: Long duration/low intensity
+- \`hiit\`: High-intensity intervals
+- \`hybrid\`: Combined strength + cardio
+- \`sport\`: Sport-specific training
+- \`mobility\`: Flexibility and mobility work
+
+## Main Movements Format
+The \`mainMovements\` field is flexible and adapts to the \`sessionType\`:
+
+**Strength/Hypertrophy:**
+- "Bench Press 4x5 @ 155lb"
+- "Squat 3x8-10 @ 185lb"
+
+**Cardio/Endurance:**
+- "5K easy run @ 7:30/mi"
+- "Zone 2 cycling 90min"
+
+**HIIT:**
+- "8x400m @ 5K pace, 90s rest"
+- "10x1min burpees, 30s rest"
+
+**Hybrid:**
+- "Squat 3x8 + 15min HIIT"
+
+**Mobility/Active Recovery:**
+- "Full body mobility flow 20min"
+- "Foam rolling 10min"
+
+## Output Format
+Return clean JSON matching this schema:
+{
+  "weekNumber": 1,
+  "phase": "Hypertrophy Block",
+  "focus": "Volume accumulation",
+  "startDate": "2026-02-16",
+  "days": [
+    {
+      "dayNumber": 1,
+      "dayOfWeek": "Monday",
+      "focus": "Upper Push",
+      "title": "Horizontal Push Strength",
+      "activityType": "training",
+      "sessionType": "strength",
+      "exerciseCount": 6,
+      "estimatedDuration": 55,
+      "mainMovements": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
+    },
+    {
+      "dayNumber": 2,
+      "dayOfWeek": "Tuesday",
+      "focus": "Active Recovery",
+      "title": "Mobility & Light Movement",
+      "activityType": "activeRecovery",
+      "sessionType": "mobility",
+      "estimatedDuration": 30,
+      "mainMovements": ["Full body mobility flow 20min", "Foam rolling 10min"]
+    },
+    {
+      "dayNumber": 3,
+      "dayOfWeek": "Wednesday",
+      "focus": "Rest",
+      "title": "Rest Day",
+      "activityType": "rest"
+    }
+  ],
+  "totalSessions": 4,
+  "notes": "Deload next week. Focus on hitting RPE targets."
+}
+
+## What to Include
+- Week number and training phase
+- Each day with activityType, sessionType, focus, title
+- \`mainMovements\` for training days (format varies by sessionType)
+- \`exerciseCount\` is optional - most relevant for strength/hypertrophy sessions
+- Rest days and active recovery days clearly marked
+- Total session count
+- Any important notes or coaching cues
+
+## What to Skip
+- Full exercise details (that's workout:details' job)
+- Set-by-set breakdowns
+- Detailed warm-up protocols
+- Deload as an activity type (reflect in notes instead)
+
+Never make up information. If something isn't in the dossier, don't include it.`,
+    model: 'gpt-5.2',
+    max_tokens: 8000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Generates a structured week overview with daily focus, activity type, session type, and main movements for UI display',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Generate the structured week overview from the week dossier. Extract the training plan for each day and format as JSON.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure.',
+    output_schema: {
+      type: 'object',
+      required: ['days'],
+      properties: {
+        weekNumber: { type: 'number', description: 'Week number in the program' },
+        phase: { type: 'string', description: 'Training phase (e.g., Hypertrophy, Strength)' },
+        focus: { type: 'string', description: 'Overall week focus' },
+        startDate: { type: 'string', description: 'ISO date of week start (YYYY-MM-DD)' },
+        days: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['dayNumber', 'dayOfWeek'],
+            properties: {
+              dayNumber: { type: 'number', description: 'Day number (1-7)' },
+              dayOfWeek: { type: 'string', description: 'Day name' },
+              focus: { type: 'string', description: 'Session focus' },
+              title: { type: 'string', description: 'Session title' },
+              activityType: { 
+                type: 'string', 
+                enum: ['training', 'rest', 'activeRecovery'],
+                description: 'Type of day: training, rest, or activeRecovery' 
+              },
+              sessionType: { 
+                type: 'string', 
+                enum: ['strength', 'hypertrophy', 'cardio', 'endurance', 'hiit', 'hybrid', 'sport', 'mobility'],
+                description: 'Session modality type' 
+              },
+              exerciseCount: { type: 'number', description: 'Number of exercises (most relevant for strength/hypertrophy)' },
+              estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
+              mainMovements: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Key movement summaries - format varies by sessionType',
+              },
+            },
+          },
+        },
+        totalSessions: { type: 'number', description: 'Total training sessions this week' },
+        notes: { type: 'string', description: 'Week-level coaching notes' },
+      },
+    },
+  },
+  {
     agent_id: 'chat:generate',
     system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
 
