@@ -366,7 +366,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     description: 'Generates a structured workout with sets, reps, weight, RPE, and tempo for each exercise',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Generate the structured workout representation for {day}. Use the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
+    user_prompt_template: 'Generate the structured workout representation for this day:\n\n{{input}}\n\nUse the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
     output_schema: {
