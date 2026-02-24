@@ -549,14 +549,7 @@ Create a well-structured markdown document that clearly shows:
     description: 'Formats a week of training as clean, readable markdown for the user dossier',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: `Week: {{weekNumber}}
-Focus: {{weekFocus}}
-Phase: {{phase}}
-
-{{#each days as day}}
-## {{day.name}}
-Focus: {{day.focus}}
-{{/each}}`,
+    user_prompt_template: `Format the following week dossier into a clean, readable summary:\n\n{{input}}`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
@@ -679,7 +672,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     description: 'Generates a structured week overview with daily focus, activity type, session type, and main movements for UI display',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Generate the structured week overview from the week dossier. Extract the training plan for each day and format as JSON.',
+    user_prompt_template: 'Generate the structured week overview from this week dossier:\n\n{{input}}\n\nExtract the training plan for each day and format as JSON.',
     examples: null,
     eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure.',
     output_schema: {

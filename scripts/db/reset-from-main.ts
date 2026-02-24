@@ -629,15 +629,23 @@ async function anonymizeLocalDb(db: Kysely<any>) {
   }
   console.log('  program_owners: PII scrubbed');
 
-  // Short links: randomize codes
+  // Short links: randomize codes (ensure uniqueness)
   const shortLinks = await db
     .selectFrom('short_links')
     .select('id')
     .execute();
+
+  const usedCodes = new Set<string>();
   for (const link of shortLinks) {
+    let code: string;
+    do {
+      code = faker.string.alphanumeric(5).toLowerCase();
+    } while (usedCodes.has(code));
+    usedCodes.add(code);
+
     await db
       .updateTable('short_links')
-      .set({ code: faker.string.alphanumeric(5).toLowerCase() })
+      .set({ code })
       .where('id', '=', link.id)
       .execute();
   }
