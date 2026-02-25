@@ -219,6 +219,7 @@ export function WorkoutDetailSheet({
               id: `${exerciseKey}-set-${i + 1}`,
               setNumber: i + 1,
               targetReps: workingSetDetails?.[i]?.reps || movement.reps || '10',
+              targetWeight: workingSetDetails?.[i]?.weight || movement.weight || undefined,
               weight: '',
               reps: '',
               completed: false,
