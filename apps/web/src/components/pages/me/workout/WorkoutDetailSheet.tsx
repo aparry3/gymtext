@@ -206,8 +206,11 @@ export function WorkoutDetailSheet({
           const activityType = group.block === 'conditioning' ? 'cardio' :
                               group.block === 'cooldown' ? 'mobility' : 'strength';
 
-          // Create tracking state for V2 format
-          const setsCount = parseInt(movement.sets || '3', 10) || 3;
+          // Filter to working sets only (type === 'working' or undefined/missing type)
+          const workingSetDetails = movement.setDetails?.filter(d => !d.type || d.type === 'working');
+          const setsCount = workingSetDetails && workingSetDetails.length > 0
+            ? workingSetDetails.length
+            : parseInt(movement.sets || '3', 10) || 3;
           initialTracking[exerciseKey] = {
             exerciseId: exerciseKey,
             resolvedExerciseId: undefined,
@@ -215,7 +218,7 @@ export function WorkoutDetailSheet({
             sets: Array.from({ length: setsCount }, (_, i) => ({
               id: `${exerciseKey}-set-${i + 1}`,
               setNumber: i + 1,
-              targetReps: movement.reps || '10',
+              targetReps: workingSetDetails?.[i]?.reps || movement.reps || '10',
               weight: '',
               reps: '',
               completed: false,
@@ -485,6 +488,7 @@ export function WorkoutDetailSheet({
     const exerciseKey = `${group.block}-${originalGroupIdx}-${movementIdx}`;
     const completion = getExerciseCompletion(exerciseKey);
     const exerciseTracking = trackingState[exerciseKey];
+    const workingSetDetails = movement.setDetails?.filter(d => !d.type || d.type === 'working');
 
     return (
       <ExerciseAccordionCard
@@ -513,7 +517,7 @@ export function WorkoutDetailSheet({
           notes={movement.notes}
           rpe={movement.rpe}
           tempo={movement.tempo}
-          setDetails={movement.setDetails}
+          setDetails={workingSetDetails}
           activityType={
             exerciseTracking?.activityType ||
             getActivityType(group.block)
