@@ -17,6 +17,7 @@ export interface SetTrackingData {
   weight: string;
   reps: string;
   completed: boolean;
+  weightOptional?: boolean;
 }
 
 /**

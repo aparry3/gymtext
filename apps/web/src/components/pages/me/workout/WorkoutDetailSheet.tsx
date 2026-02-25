@@ -203,35 +203,79 @@ export function WorkoutDetailSheet({
       workout.details.exerciseGroups.forEach((group, groupIdx) => {
         group.movements.forEach((movement, movementIdx) => {
           const exerciseKey = `${group.block}-${groupIdx}-${movementIdx}`;
-          const activityType = group.block === 'conditioning' ? 'cardio' :
-                              group.block === 'cooldown' ? 'mobility' : 'strength';
 
-          // Filter to working sets only (type === 'working' or undefined/missing type)
-          const workingSetDetails = movement.setDetails?.filter(d => !d.type || d.type === 'working');
-          const setsCount = workingSetDetails && workingSetDetails.length > 0
-            ? workingSetDetails.length
-            : parseInt(movement.sets || '3', 10) || 3;
-          initialTracking[exerciseKey] = {
-            exerciseId: exerciseKey,
-            resolvedExerciseId: undefined,
-            activityType,
-            sets: Array.from({ length: setsCount }, (_, i) => ({
-              id: `${exerciseKey}-set-${i + 1}`,
-              setNumber: i + 1,
-              targetReps: workingSetDetails?.[i]?.reps || movement.reps || '10',
-              targetWeight: workingSetDetails?.[i]?.weight || movement.weight || undefined,
-              weight: '',
-              reps: '',
-              completed: false,
-            })),
-          };
+          // Infer activity type from movement data, not just block
+          // A movement with duration/pace/distance but no reps/weight/sets is cardio
+          const blockType = getActivityType(group.block);
+          const isCardioMovement = blockType === 'cardio' || (
+            !movement.reps && !movement.weight && !movement.sets && !movement.setDetails?.length &&
+            (!!movement.duration || !!movement.pace || !!movement.distance)
+          );
+          const activityType: ActivityType = isCardioMovement ? 'cardio' : blockType;
+
+          if (activityType === 'cardio') {
+            // Cardio movement (conditioning block or duration/pace-based): initialize cardio tracking
+            initialTracking[exerciseKey] = {
+              exerciseId: exerciseKey,
+              resolvedExerciseId: undefined,
+              activityType,
+              sets: [],
+              cardio: {
+                durationMinutes: '',
+                durationSeconds: '',
+                distance: '',
+                distanceUnit: units === 'imperial' ? 'mi' : 'km',
+                completed: false,
+              },
+            };
+          } else if (activityType === 'mobility') {
+            // Cooldown block: initialize mobility tracking
+            initialTracking[exerciseKey] = {
+              exerciseId: exerciseKey,
+              resolvedExerciseId: undefined,
+              activityType,
+              sets: [],
+              mobility: {
+                durationMinutes: '',
+                durationSeconds: '',
+                completed: false,
+              },
+            };
+          } else {
+            // Strength (warmup/main): initialize sets tracking
+            const workingSetDetails = movement.setDetails?.filter(d => !d.type || d.type === 'working');
+            const setsCount = workingSetDetails && workingSetDetails.length > 0
+              ? workingSetDetails.length
+              : parseInt(movement.sets || '3', 10) || 3;
+
+            // Detect bodyweight: no weight prescribed on movement or any set detail
+            const hasMovementWeight = !!movement.weight;
+            const hasSetWeight = workingSetDetails?.some(d => !!d.weight) ?? false;
+            const isWeightOptional = !hasMovementWeight && !hasSetWeight;
+
+            initialTracking[exerciseKey] = {
+              exerciseId: exerciseKey,
+              resolvedExerciseId: undefined,
+              activityType,
+              sets: Array.from({ length: setsCount }, (_, i) => ({
+                id: `${exerciseKey}-set-${i + 1}`,
+                setNumber: i + 1,
+                targetReps: workingSetDetails?.[i]?.reps || movement.reps || '10',
+                targetWeight: workingSetDetails?.[i]?.weight || movement.weight || undefined,
+                weight: '',
+                reps: '',
+                completed: false,
+                weightOptional: isWeightOptional,
+              })),
+            };
+          }
         });
       });
 
       setExpandedSections(initialExpanded);
       setTrackingState(initialTracking);
     }
-  }, [workout, savedMetrics]);
+  }, [workout, savedMetrics, units]);
 
   // Reset state when sheet closes
   useEffect(() => {
@@ -497,7 +541,13 @@ export function WorkoutDetailSheet({
         number={displayNumber}
         name={movement.name}
         setsReps={
-          movement.sets && movement.reps
+          group.structure === 'amrap'
+            ? `AMRAP${movement.reps ? ` × ${movement.reps}` : movement.duration ? ` ${movement.duration}` : ''}`
+            : group.structure === 'emom'
+            ? `EMOM${movement.reps ? ` × ${movement.reps}` : ''}`
+            : group.structure === 'for-time'
+            ? movement.reps || movement.distance || 'For time'
+            : movement.sets && movement.reps
             ? `${movement.sets} × ${movement.reps}`
             : movement.duration || movement.distance || ''
         }

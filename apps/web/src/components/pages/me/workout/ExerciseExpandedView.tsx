@@ -79,12 +79,21 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
   // Handle reps input change with auto-complete logic
   const handleRepsChange = (set: SetTrackingData, newReps: string) => {
     onUpdateSet(set.id, 'reps', newReps);
-    const hasWeight = set.weight !== '';
     const hasReps = newReps !== '';
-    if (hasWeight && hasReps && !set.completed) {
-      onUpdateSet(set.id, 'completed', true);
-    } else if ((!hasWeight || !hasReps) && set.completed) {
-      onUpdateSet(set.id, 'completed', false);
+    if (set.weightOptional) {
+      // Bodyweight: complete when reps are entered
+      if (hasReps && !set.completed) {
+        onUpdateSet(set.id, 'completed', true);
+      } else if (!hasReps && set.completed) {
+        onUpdateSet(set.id, 'completed', false);
+      }
+    } else {
+      const hasWeight = set.weight !== '';
+      if (hasWeight && hasReps && !set.completed) {
+        onUpdateSet(set.id, 'completed', true);
+      } else if ((!hasWeight || !hasReps) && set.completed) {
+        onUpdateSet(set.id, 'completed', false);
+      }
     }
   };
 
@@ -272,76 +281,84 @@ export function ExerciseExpandedView(props: ExerciseExpandedViewProps) {
       )}
 
       {/* Strength Tracking Table */}
-      {activityType === 'strength' && trackingData.length > 0 && (
-        <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50">
-          {/* Table Header */}
-          <div className="grid grid-cols-[40px_1fr_1fr] gap-2 p-2 bg-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider text-center items-center">
-            <span>Set</span>
-            <span>{units === 'imperial' ? 'LBS' : 'KG'}</span>
-            <span>Reps</span>
+      {activityType === 'strength' && trackingData.length > 0 && (() => {
+        const isWeightOptional = trackingData.every(s => s.weightOptional);
+        const gridCols = isWeightOptional ? 'grid-cols-[40px_1fr]' : 'grid-cols-[40px_1fr_1fr]';
+
+        return (
+          <div className="w-full overflow-hidden rounded-lg border border-slate-700 bg-slate-900/50">
+            {/* Table Header */}
+            <div className={cn('grid gap-2 p-2 bg-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider text-center items-center', gridCols)}>
+              <span>Set</span>
+              {!isWeightOptional && <span>{units === 'imperial' ? 'LBS' : 'KG'}</span>}
+              <span>Reps</span>
+            </div>
+
+            {/* Table Rows */}
+            <div className="divide-y divide-slate-700/50">
+              {trackingData.map((set, index) => {
+                const setDetail = setDetails?.[index];
+                const typeStyle = getSetTypeStyle(set.setType || setDetail?.type);
+
+                return (
+                  <div
+                    key={set.id}
+                    className={cn(
+                      'grid gap-2 p-3 items-center transition-colors',
+                      gridCols,
+                      set.completed && 'bg-green-900/10',
+                      set.setType === 'warmup' && 'opacity-75'
+                    )}
+                  >
+                    {/* Set Number / Type */}
+                    <div className="flex items-center justify-center">
+                      <span className={cn('font-mono text-sm', typeStyle.className)}>
+                        {typeStyle.label || (index + 1)}
+                      </span>
+                    </div>
+
+                    {/* Weight Input (hidden for bodyweight) */}
+                    {!isWeightOptional && (
+                      <div>
+                        <input
+                          type="number"
+                          placeholder={set.targetWeight || set.prevWeight?.toString() || '-'}
+                          value={set.weight}
+                          onChange={(e) => handleWeightChange(set, e.target.value)}
+                          onBlur={onBlur}
+                          className={cn(
+                            'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
+                            set.completed
+                              ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
+                              : 'border-slate-700 text-white'
+                          )}
+                        />
+                      </div>
+                    )}
+
+                    {/* Reps Input */}
+                    <div>
+                      <input
+                        type="number"
+                        placeholder={set.targetReps}
+                        value={set.reps}
+                        onChange={(e) => handleRepsChange(set, e.target.value)}
+                        onBlur={onBlur}
+                        className={cn(
+                          'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
+                          set.completed
+                            ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
+                            : 'border-slate-700 text-white'
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-
-          {/* Table Rows */}
-          <div className="divide-y divide-slate-700/50">
-            {trackingData.map((set, index) => {
-              const setDetail = setDetails?.[index];
-              const typeStyle = getSetTypeStyle(set.setType || setDetail?.type);
-
-              return (
-                <div
-                  key={set.id}
-                  className={cn(
-                    'grid grid-cols-[40px_1fr_1fr] gap-2 p-3 items-center transition-colors',
-                    set.completed && 'bg-green-900/10',
-                    set.setType === 'warmup' && 'opacity-75'
-                  )}
-                >
-                  {/* Set Number / Type */}
-                  <div className="flex items-center justify-center">
-                    <span className={cn('font-mono text-sm', typeStyle.className)}>
-                      {typeStyle.label || (index + 1)}
-                    </span>
-                  </div>
-
-                  {/* Weight Input */}
-                  <div>
-                    <input
-                      type="number"
-                      placeholder={set.targetWeight || set.prevWeight?.toString() || '-'}
-                      value={set.weight}
-                      onChange={(e) => handleWeightChange(set, e.target.value)}
-                      onBlur={onBlur}
-                      className={cn(
-                        'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
-                        set.completed
-                          ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
-                          : 'border-slate-700 text-white'
-                      )}
-                    />
-                  </div>
-
-                  {/* Reps Input */}
-                  <div>
-                    <input
-                      type="number"
-                      placeholder={set.targetReps}
-                      value={set.reps}
-                      onChange={(e) => handleRepsChange(set, e.target.value)}
-                      onBlur={onBlur}
-                      className={cn(
-                        'w-full bg-slate-800 border rounded px-2 py-2 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all',
-                        set.completed
-                          ? 'border-green-600 text-green-400 shadow-[0_0_10px_rgba(22,163,74,0.15)]'
-                          : 'border-slate-700 text-white'
-                      )}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
