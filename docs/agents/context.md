@@ -22,7 +22,7 @@ The template engine is simple string substitution — no conditionals or loops. 
 
 ## Context Strings
 
-The `context` field in `SimpleAgentInvokeParams` accepts an array of pre-resolved context strings. These are injected as user-role messages with section: "context" in the message array, appearing between the system prompt and conversation history.
+The `context` field in `SimpleAgentInvokeParams` accepts an array of pre-resolved context strings. These are injected as user-role messages with section: "context" in the message array, appearing between few-shot examples and conversation history.
 
 Services prepare context before calling `agentRunner.invoke()`:
 
@@ -60,8 +60,8 @@ Current date and user's timezone — critical for "today's workout" resolution. 
 2. Service calls domain services/repositories to fetch relevant data
 3. Service formats data into context strings using formatters
 4. Service passes context strings to `agentRunner.invoke()` via `context` param
-5. AgentRunner injects context strings as user-role messages after system prompt
-6. LLM sees: system prompt → context → examples → history → user prompt
+5. AgentRunner injects context strings as user-role messages after examples
+6. LLM sees: system prompt → examples → context → history → user prompt
 
 ## Message Assembly with Context
 
@@ -69,11 +69,11 @@ Current date and user's timezone — critical for "today's workout" resolution. 
 ┌─────────────────────────┐
 │ System Prompt            │  ← From agent_definitions.system_prompt
 ├─────────────────────────┤
-│ Context Message 1        │  ← context[0] (e.g., fitness profile)
-│ Context Message 2        │  ← context[1] (e.g., current week)
-├─────────────────────────┤
 │ Example User Message     │  ← From agent_definitions.examples
 │ Example Assistant Reply  │
+├─────────────────────────┤
+│ Context Message 1        │  ← context[0] (e.g., fitness profile)
+│ Context Message 2        │  ← context[1] (e.g., current week)
 ├─────────────────────────┤
 │ Previous User Message    │  ← Conversation history
 │ Previous Assistant Reply │

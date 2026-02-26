@@ -45,10 +45,10 @@ function buildExampleMessages(examples: AgentExample[]): Message[] {
 
 /**
  * Build the message array for LLM invocation
- * Order: [SYSTEM, ...CONTEXT, ...EXAMPLES, ...PREVIOUS, USER]
+ * Order: [SYSTEM, ...EXAMPLES, ...CONTEXT, ...PREVIOUS, USER]
  *
- * Context messages are added as user role messages between system and conversation history.
- * Examples are injected as user/assistant pairs between context and previous messages.
+ * Examples are injected as user/assistant pairs between system and context messages.
+ * Context messages are added as user role messages between examples and previous messages.
  *
  * @param config - Message building configuration
  * @returns Array of messages ready for LLM invocation
@@ -72,8 +72,8 @@ export function buildMessages(config: BuildMessagesConfig): Message[] {
 
   return [
     { role: 'system', content: systemPrompt, section: 'system' as const },
-    ...contextMessages,
     ...exampleMessages,
+    ...contextMessages,
     ...previousMessages.map(m => ({ ...m, section: m.section ?? 'previous' as const })),
     { role: 'user', content: userPrompt, section: 'user' as const },
   ];

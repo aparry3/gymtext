@@ -164,11 +164,11 @@ Messages are assembled in this precise order (from `agents/utils.ts`):
 1. **System Prompt** (role: `system`)
    - Defines agent behavior, constraints, and instructions
 
-2. **Context Strings** (role: `user`, section: `context`)
-   - Additional context injected by caller
-
-3. **Few-Shot Examples** (user/assistant pairs, section: `example`)
+2. **Few-Shot Examples** (user/assistant pairs, section: `example`)
    - Examples from `examples` field in agent definition
+
+3. **Context Strings** (role: `user`, section: `context`)
+   - Additional context injected by caller
 
 4. **Previous Messages** (section: `previous`)
    - Conversation history for continuity
