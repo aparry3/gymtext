@@ -73,6 +73,114 @@ function formatJson(value: unknown): string {
   }
 }
 
+// --- JSON Tree View ---
+
+function tryParseJson(value: string): unknown | null {
+  try {
+    const parsed = JSON.parse(value);
+    if (typeof parsed === 'object' && parsed !== null) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function JsonValue({ value }: { value: unknown }) {
+  if (value === null) return <span className="text-gray-400">null</span>;
+  if (value === undefined) return <span className="text-gray-400">undefined</span>;
+  if (typeof value === 'boolean') return <span className="text-purple-600">{String(value)}</span>;
+  if (typeof value === 'number') return <span className="text-blue-600">{String(value)}</span>;
+  if (typeof value === 'string') {
+    if (value.length > 300) {
+      return <span className="text-green-700">&quot;{value.slice(0, 300)}...&quot;</span>;
+    }
+    return <span className="text-green-700">&quot;{value}&quot;</span>;
+  }
+  return <span>{String(value)}</span>;
+}
+
+function JsonTreeNode({ label, value, defaultOpen }: { label: string; value: unknown; defaultOpen: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  if (value === null || value === undefined || typeof value !== 'object') {
+    return (
+      <div className="flex gap-1 items-baseline py-0.5">
+        <span className="text-sm font-medium text-muted-foreground">{label}:</span>
+        <span className="text-sm"><JsonValue value={value} /></span>
+      </div>
+    );
+  }
+
+  const isArray = Array.isArray(value);
+  const entries = isArray
+    ? (value as unknown[]).map((v, i) => [String(i), v] as const)
+    : Object.entries(value as Record<string, unknown>);
+  const bracketOpen = isArray ? '[' : '{';
+  const bracketClose = isArray ? ']' : '}';
+
+  if (entries.length === 0) {
+    return (
+      <div className="flex gap-1 items-baseline py-0.5">
+        <span className="text-sm font-medium text-muted-foreground">{label}:</span>
+        <span className="text-sm text-gray-400">{bracketOpen}{bracketClose}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-0.5">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 hover:bg-muted/50 rounded px-1 -ml-1 text-sm"
+      >
+        <span className="text-xs text-muted-foreground w-3">{open ? '\u25BE' : '\u25B8'}</span>
+        <span className="font-medium text-muted-foreground">{label}:</span>
+        {!open && <span className="text-gray-400">{bracketOpen} {entries.length} {isArray ? 'items' : 'keys'} {bracketClose}</span>}
+      </button>
+      {open && (
+        <div className="ml-4 border-l border-muted pl-3">
+          {entries.map(([key, val]) => (
+            <JsonTreeNode key={key} label={key} value={val} defaultOpen={false} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function JsonTree({ data }: { data: unknown }) {
+  if (data === null || data === undefined || typeof data !== 'object') {
+    return <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">{String(data)}</pre>;
+  }
+
+  const isArray = Array.isArray(data);
+  const entries = isArray
+    ? (data as unknown[]).map((v, i) => [String(i), v] as const)
+    : Object.entries(data as Record<string, unknown>);
+
+  return (
+    <div className="bg-muted p-4 rounded-lg font-mono text-xs">
+      {entries.map(([key, val]) => (
+        <JsonTreeNode key={key} label={key} value={val} defaultOpen={true} />
+      ))}
+    </div>
+  );
+}
+
+function SmartContent({ value }: { value: unknown }) {
+  if (typeof value === 'string') {
+    const parsed = tryParseJson(value);
+    if (parsed) return <JsonTree data={parsed} />;
+    return <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">{value}</pre>;
+  }
+  if (typeof value === 'object' && value !== null) {
+    return <JsonTree data={value} />;
+  }
+  return <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">{formatJson(value)}</pre>;
+}
+
+// --- End JSON Tree View ---
+
 interface MessageBlock {
   role: string;
   content: string;
@@ -132,11 +240,7 @@ function MetadataPanel({ metadata }: { metadata: unknown }) {
   const parsed = parseMetadata(metadata);
 
   if (!parsed) {
-    return (
-      <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-        {formatJson(metadata)}
-      </pre>
-    );
+    return <SmartContent value={metadata} />;
   }
 
   const hasUsage = parsed.usage && (parsed.usage.inputTokens || parsed.usage.outputTokens || parsed.usage.totalTokens);
@@ -145,15 +249,11 @@ function MetadataPanel({ metadata }: { metadata: unknown }) {
 
   // If no structured data, fall back to raw JSON
   if (!hasUsage && !hasToolCalls && !hasFlags) {
-    return (
-      <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-        {formatJson(metadata)}
-      </pre>
-    );
+    return <SmartContent value={metadata} />;
   }
 
   return (
-    <div className="space-y-4 max-h-[60vh] overflow-auto pr-1">
+    <div className="space-y-4 pr-1">
       {/* Flags */}
       {hasFlags && (
         <div className="flex gap-2 flex-wrap">
@@ -210,6 +310,18 @@ function MetadataPanel({ metadata }: { metadata: unknown }) {
   );
 }
 
+function MessageContent({ content }: { content: string }) {
+  const parsed = tryParseJson(content);
+  if (parsed) {
+    return (
+      <div className="p-3 bg-muted/50">
+        <JsonTree data={parsed} />
+      </div>
+    );
+  }
+  return <pre className="text-sm whitespace-pre-wrap p-3 bg-muted/50">{content}</pre>;
+}
+
 function LogDetailDialog({
   log,
   open,
@@ -225,7 +337,7 @@ function LogDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Badge variant="outline">{log.agentId}</Badge>
@@ -243,7 +355,7 @@ function LogDetailDialog({
           </p>
         </DialogHeader>
 
-        <Tabs defaultValue="messages" className="flex-1 overflow-hidden flex flex-col">
+        <Tabs defaultValue="messages">
           <TabsList>
             <TabsTrigger value="input">Input</TabsTrigger>
             <TabsTrigger value="messages">Messages ({messages.length})</TabsTrigger>
@@ -252,14 +364,14 @@ function LogDetailDialog({
             {log.evalResult != null ? <TabsTrigger value="eval">Eval</TabsTrigger> : null}
           </TabsList>
 
-          <TabsContent value="input" className="flex-1 overflow-auto">
-            <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
+          <TabsContent value="input">
+            <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">
               {log.input || '(no input)'}
             </pre>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 overflow-auto">
-            <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
+          <TabsContent value="messages">
+            <div className="space-y-3 pr-1">
               {messages.length === 0 ? (
                 <p className="text-sm text-muted-foreground p-4">(no messages)</p>
               ) : (
@@ -277,30 +389,26 @@ function LogDetailDialog({
                         </span>
                       )}
                     </div>
-                    <pre className="text-sm whitespace-pre-wrap p-3 bg-muted/50 overflow-auto max-h-80">
-                      {msg.content}
-                    </pre>
+                    <MessageContent content={msg.content} />
                   </div>
                 ))
               )}
             </div>
           </TabsContent>
 
-          <TabsContent value="response" className="flex-1 overflow-auto">
-            <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-              {formatJson(log.response)}
-            </pre>
+          <TabsContent value="response">
+            <SmartContent value={log.response} />
           </TabsContent>
 
           {log.metadata != null ? (
-            <TabsContent value="metadata" className="flex-1 overflow-auto">
+            <TabsContent value="metadata">
               <MetadataPanel metadata={log.metadata} />
             </TabsContent>
           ) : null}
 
           {log.evalResult != null ? (
-            <TabsContent value="eval" className="flex-1 overflow-auto">
-              <div className="space-y-3 max-h-[60vh] overflow-auto pr-1">
+            <TabsContent value="eval">
+              <div className="space-y-3 pr-1">
                 {log.evalScore != null && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">Score:</span>
@@ -318,9 +426,7 @@ function LogDetailDialog({
                     </Badge>
                   </div>
                 )}
-                <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg overflow-auto max-h-[60vh]">
-                  {formatJson(log.evalResult)}
-                </pre>
+                <SmartContent value={log.evalResult} />
               </div>
             </TabsContent>
           ) : null}

@@ -350,21 +350,48 @@ The \`items\` array contains all exercises/movements. Each item:
 - References a block via \`blockId\` (must match a block.id)
 - Is ordered within its block (array order = display order)
 
+## Decomposition Rules
+
+Each distinct activity in the dossier becomes its own item. Follow these rules:
+
+1. **One exercise = one item** (e.g., "Easy bike: 4 min" → single item)
+2. **Multiple exercises grouped together = one parent item with nested \`items\`** (e.g., a circuit of 3 movements → parent item with 3 nested items)
+3. **Never list exercises inside \`details\`** — details are for prescription metadata (rest, intensity, tempo, rounds)
+4. **The \`instruction\` detail type is for HOW to perform, not WHAT to perform** — use it for things like "Ramp to working weight" or "Alternate sides each set", never for listing exercises
+
+## UI Layout (Mental Model)
+
+Single exercise:
+|Name                    short_detail|
+|detail (context/note/warning)...    |
+|feedbackRow: [field] [field]        |
+|feedbackRow: [field] [field]        |
+
+Superset/Circuit:
+|Name                    short_detail|
+|detail (context/note/warning)...    |
+|  Exercise 1 name    ex1 short_det  |
+|  Exercise 2 name    ex2 short_det  |
+|feedbackRow: [field] [field]        |
+
+This is a mobile-first UI — every character counts. Keep names and short_details minimal.
+
 ## Detail Types (Semantic)
 
-Use the \`details\` array with semantic types for UI styling:
+Use the \`details\` array for overall prescription info about the item — intensity, rest, tempo, warmup info, round counts, time caps.
+
+**CRITICAL: \`details\` must NEVER list individual exercises — those go in nested \`items\`.**
 
 ### Types:
-- \`instruction\` — What to do (e.g., "3 sets of 5 reps")
+- \`instruction\` — HOW to perform (e.g., "Ramp to working weight over 3 warmup sets", "Alternate arms each set"). Never use to list exercises — those go in nested \`items\`.
 - \`note\` — Guidance/tips (e.g., "Focus on explosive lockout")
-- \`context\` — Metrics info (e.g., "RPE: 8", "Rest: 3-4 min")
+- \`context\` — Prescription info (e.g., "RPE: 8", "Rest: 3-4 min", "Tempo: 3-1-1")
 - \`warning\` — Safety cautions (e.g., "Stop if shoulder pain")
 
 ### Example:
 \`\`\`json
 "details": [
-  { "text": "RPE: 8", "type": "context" },
-  { "text": "RIR: 2", "type": "context" },
+  { "text": "RPE: 8 | RIR: 2", "type": "context" },
   { "text": "Rest: 3-4 min", "type": "context" },
   { "text": "Focus on explosive lockout", "type": "note" },
   { "text": "Stop if elbow pain", "type": "warning" }
@@ -373,62 +400,122 @@ Use the \`details\` array with semantic types for UI styling:
 
 ## Short Detail Format
 
-Use \`short_detail\` for concise info shown in collapsed views:
-- Lifting: "5x5 | 225 lbs" (sets x reps | weight)
-- Bodyweight: "3x12" or "15 Min"
-- Cardio: "30 Min" or "5 Mi"
-- Skill work: "100" (single count)
-- Use | separator
+Use \`short_detail\` for minimal info shown in collapsed mobile views:
+- Lifting: "5x5" or "3x8-10" (sets x reps only — weight goes in feedbackRows)
+- Bodyweight: "3x12" or "3xAMRAP"
+- Cardio: "30 min" or "5 mi"
+- Circuits: "4 rounds" or "12 min"
+- Use | separator sparingly — only if essential
+
+## Name Format
+
+Keep \`name\` concise — it's the exercise name only:
+- GOOD: "Barbell Bench Press", "Superset A", "Cooldown"
+- BAD: "Barbell Bench Press — 5x5 @ RPE 8", "Band Pull-Aparts + Band ER"
+- For supersets/circuits: use a short label like "Superset A", "Circuit 1"
+- For individual exercises within supersets: just the exercise name
 
 ## Notes vs Details
 
-- \`details\` — Exercise-specific prescription (RPE, rest, tempo, form cues)
-- \`notes\` — Longer coaching context (progress updates, motivation, reminders)
+- \`details\` — Overall prescription for the item (intensity, rest, tempo, warmup info, rounds)
+- \`notes\` — Per-exercise coaching context (progress updates, motivation, reminders)
 
 ## Feedback Fields (Tracking)
 
-For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`:
+For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`.
+
+**CRITICAL RULE: feedbackFields must ONLY contain quantifiable metrics that the user fills in numerically.**
+- ALLOWED: weight, reps, rounds, time, distance
+- NEVER INCLUDE: RPE, intensity, effort, notes, difficulty, feel — these are qualitative and do NOT belong in feedbackRows
+- Per-exercise notes or qualitative feedback go in the item-level \`notes\` field instead
 
 ### Field Types:
 \`\`\`json
 "feedbackFields": [
   { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
-  { "key": "reps", "label": "Reps", "type": "number", "required": true },
-  { "key": "rpe", "label": "RPE", "type": "select", "options": ["6", "7", "8", "9", "10"], "required": false },
-  { "key": "notes", "label": "Notes", "type": "text", "required": false }
+  { "key": "reps", "label": "Reps", "type": "number", "required": true }
 ]
 \`\`\`
 
 ### Feedback Rows:
 - Each row is an array of [key, value] tuples (all values are strings)
 - Pre-fill with prescribed values (weight, reps from the workout)
-- Leave user-input fields as empty string "" (notes, actual reps performed, RPE)
+- Leave fields the user should fill as empty string ""
 - Every row MUST contain ALL fields from feedbackFields
 
 \`\`\`json
 "feedbackRows": [
-  [["weight", "135"], ["reps", "5"], ["rpe", ""], ["notes", ""]],
-  [["weight", "185"], ["reps", "5"], ["rpe", "6"], ["notes", ""]],
-  [["weight", "225"], ["reps", "5"], ["rpe", "8"], ["notes", ""]]
+  [["weight", "135"], ["reps", "5"]],
+  [["weight", "185"], ["reps", "5"]],
+  [["weight", "225"], ["reps", "5"]]
 ]
 \`\`\`
 
-## Nested Items (Circuits/Supersets)
+## Nested Items (Circuits/Supersets/Warmup Groups)
 
-For circuits or supersets, use nested \`items\` array (one level only):
+**CRITICAL: If an item contains multiple distinct exercises/movements, it MUST use nested \`items\` array — never list exercises in \`details\`.**
+
+For any group of exercises (warmups, circuits, supersets), use nested \`items\` array (one level only).
+
+### Warmup circuit example
+
+Input:
+  Shoulder prep (2 rounds, all pain-free):
+    - Band external rotation: ×20/side
+    - Band pull-apart: ×20
+    - Serratus wall slide: ×10
+
+Output:
+\`\`\`json
+{
+  "blockId": "warmup",
+  "name": "Shoulder Prep",
+  "short_detail": "2 rounds",
+  "details": [{ "text": "All shoulder work pain-free only", "type": "warning" }],
+  "items": [
+    { "name": "Band External Rotation", "short_detail": "20/side" },
+    { "name": "Band Pull-Apart", "short_detail": "20" },
+    { "name": "Serratus Wall Slide", "short_detail": "10" }
+  ]
+}
+\`\`\`
+
+### Warmup pair example
+
+\`\`\`json
+{
+  "blockId": "warmup",
+  "name": "Bench Warmup",
+  "short_detail": "2 exercises",
+  "items": [
+    { "name": "Scap Push-Ups", "short_detail": "10" },
+    { "name": "Empty Bar Bench", "short_detail": "10", "details": [{ "text": "2-count pause", "type": "context" }] }
+  ]
+}
+\`\`\`
+
+### Main lift superset example
 
 \`\`\`json
 {
   "blockId": "main",
-  "name": "Superset A: Bench + Rows",
+  "name": "Superset A",
   "short_detail": "4 rounds",
-  "details": [{ "text": "Rest 2 min between rounds", "type": "context" }],
-  "items": [
-    { "name": "Bench Press", "short_detail": "4x10 | 135 lb", "details": [...] },
-    { "name": "Dumbbell Rows", "short_detail": "4x12 | 40 lb", "details": [...] }
+  "details": [
+    { "text": "Rest 2 min between rounds", "type": "context" }
   ],
-  "feedbackFields": [...],
-  "feedbackRows": [...]
+  "items": [
+    { "name": "Bench Press", "short_detail": "10 reps", "details": [{ "text": "135 lb", "type": "context" }] },
+    { "name": "Dumbbell Rows", "short_detail": "12 reps", "details": [{ "text": "40 lb", "type": "context" }] }
+  ],
+  "feedbackFields": [
+    { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
+    { "key": "reps", "label": "Reps", "type": "number", "required": true }
+  ],
+  "feedbackRows": [
+    [["weight", "135"], ["reps", "10"]],
+    [["weight", "40"], ["reps", "12"]]
+  ]
 }
 \`\`\`
 
@@ -475,6 +562,7 @@ For circuits or supersets, use nested \`items\` array (one level only):
 4. ORDERED - Items within blocks are ordered for sequence
 5. SEMANTIC DETAILS - Use detail types for UI styling
 6. COMPLETE FEEDBACK - Every feedbackRow must have tuples for all feedbackFields keys
+7. ONE EXERCISE PER ITEM - Each exercise is its own item; grouped exercises use nested \`items\`
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
@@ -518,11 +606,11 @@ Never make up information. If something isn't in the dossier, don't include it.`
             required: ['blockId', 'name'],
             properties: {
               blockId: { type: 'string', description: 'References block.id - defines which block this item belongs to' },
-              name: { type: 'string', description: 'Exercise or circuit name' },
-              short_detail: { type: 'string', description: 'Concise summary: "5x5 | 225 lbs", "3x12", "15 Min"' },
+              name: { type: 'string', description: 'Short exercise or group name — keep concise for mobile display' },
+              short_detail: { type: 'string', description: 'Minimal summary for collapsed view: "5x5", "3x12", "4 rounds", "15 min"' },
               details: {
                 type: 'array',
-                description: 'Exercise-specific details with semantic types',
+                description: 'Overall prescription details — intensity, rest, tempo, warmup info, round counts. NOT individual exercises.',
                 items: {
                   type: 'object',
                   properties: {
@@ -534,7 +622,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
               notes: { type: 'string', description: 'Longer coaching context, progress updates, motivation' },
               items: {
                 type: 'array',
-                description: 'Nested items for circuits/supersets (one level only)',
+                description: 'Nested exercises for supersets/circuits — use this when an item contains multiple distinct movements',
                 items: {
                   type: 'object',
                   required: ['name'],
@@ -556,7 +644,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
               },
               feedbackFields: {
                 type: 'array',
-                description: 'Field definitions for tracking - defines columns in the feedback table',
+                description: 'Field definitions for user tracking — ONLY quantifiable metrics (weight, reps, rounds, time, distance). Never qualitative (RPE, intensity, effort, notes).',
                 items: {
                   type: 'object',
                   required: ['key', 'label', 'type'],
@@ -572,7 +660,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
               },
               feedbackRows: {
                 type: 'array',
-                description: 'Data rows — each row is an array of [key, value] tuples. Keys must match feedbackFields keys. Values are strings (cast later) or empty string if unfilled.',
+                description: 'Data rows for user input — pre-fill prescribed quantifiable values, leave empty string for user to fill. One row per set/round.',
                 items: {
                   type: 'array',
                   description: 'One row per set/round — array of [key, value] tuples',
