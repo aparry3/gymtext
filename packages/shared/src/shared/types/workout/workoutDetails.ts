@@ -23,6 +23,30 @@ export type WorkoutSectionStructure =
 export type WorkoutSetType = 'warmup' | 'working' | 'backoff' | 'drop';
 
 // ============================================================================
+// Display & Tracking Types
+// ============================================================================
+
+export interface WorkoutDisplayField {
+  key: string;
+  label: string;
+  value: string;
+  emphasis: 'primary' | 'secondary';
+  meta?: string;
+}
+
+export interface WorkoutTrackingField {
+  key: string;
+  label: string;
+  type: 'number' | 'text' | 'boolean';
+  unit?: string;
+  required?: boolean;
+  defaultValue?: number | string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+}
+
+// ============================================================================
 // Core Types
 // ============================================================================
 
@@ -56,6 +80,8 @@ export interface WorkoutDetailsMovement {
   rest?: string;
   notes?: string;
   setDetails?: WorkoutSetDetail[];
+  display?: WorkoutDisplayField[];
+  tracking?: WorkoutTrackingField[];
 }
 
 /**
@@ -73,6 +99,8 @@ export interface WorkoutDetailsSection {
   duration?: number;
   rest?: string;
   movements: WorkoutDetailsMovement[];
+  groupDisplay?: WorkoutDisplayField[];
+  groupTracking?: WorkoutTrackingField[];
 }
 
 /**

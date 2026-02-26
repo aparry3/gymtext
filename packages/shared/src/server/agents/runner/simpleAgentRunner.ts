@@ -75,6 +75,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       // 5. Execute
       let response: string;
       let accumulatedMessages: string[] | undefined;
+      let logMetadata: Record<string, unknown> = {};
 
       if (tools && tools.length > 0) {
         if (config.outputSchema) {
@@ -96,6 +97,12 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
 
         response = result.response;
         accumulatedMessages = result.messages.length > 0 ? result.messages : undefined;
+        logMetadata = {
+          usage: result.usage,
+          toolCalls: result.toolCalls.map(tc => ({ name: tc.name, durationMs: tc.durationMs })),
+          toolIterations: result.iterations,
+          isToolAgent: true,
+        };
       } else if (config.outputSchema) {
         const model = initializeModel<unknown>(config.outputSchema, {
           model: config.model,
@@ -105,6 +112,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
 
         const parsed = await model.invoke(messages);
         response = JSON.stringify(parsed);
+        logMetadata = { usage: model.lastUsage };
       } else {
         const model = initializeModel<string>(undefined, {
           model: config.model,
@@ -113,6 +121,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         });
 
         response = await model.invoke(messages);
+        logMetadata = { usage: model.lastUsage };
       }
 
       // 6. Log (fire-and-forget)
@@ -125,7 +134,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
           input: params.input || '',
           response: response as unknown as JsonValue,
           durationMs,
-          metadata: {} as JsonValue,
+          metadata: logMetadata as JsonValue,
         }).catch((err) => {
           console.error(`[SimpleAgentRunner] Log failed for ${agentId}:`, err);
         });
