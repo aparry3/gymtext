@@ -400,15 +400,16 @@ For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`
 \`\`\`
 
 ### Feedback Rows:
+- Each row is an array of [key, value] tuples (all values are strings)
 - Pre-fill with prescribed values (weight, reps from the workout)
-- Leave user-input fields as null (notes, actual reps performed, RPE)
-- Every row MUST contain ALL fields from feedbackFields (use null for unfilled)
+- Leave user-input fields as empty string "" (notes, actual reps performed, RPE)
+- Every row MUST contain ALL fields from feedbackFields
 
 \`\`\`json
 "feedbackRows": [
-  { "weight": 135, "reps": 5, "rpe": null, "notes": null },
-  { "weight": 185, "reps": 5, "rpe": "6", "notes": null },
-  { "weight": 225, "reps": 5, "rpe": "8", "notes": null }
+  [["weight", "135"], ["reps", "5"], ["rpe", ""], ["notes", ""]],
+  [["weight", "185"], ["reps", "5"], ["rpe", "6"], ["notes", ""]],
+  [["weight", "225"], ["reps", "5"], ["rpe", "8"], ["notes", ""]]
 ]
 \`\`\`
 
@@ -473,7 +474,7 @@ For circuits or supersets, use nested \`items\` array (one level only):
 3. ACCURATE - Extract exactly what the user is supposed to do
 4. ORDERED - Items within blocks are ordered for sequence
 5. SEMANTIC DETAILS - Use detail types for UI styling
-6. COMPLETE FEEDBACK - Every feedbackRow must have all fields
+6. COMPLETE FEEDBACK - Every feedbackRow must have tuples for all feedbackFields keys
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
@@ -564,17 +565,22 @@ Never make up information. If something isn't in the dossier, don't include it.`
                     label: { type: 'string', description: 'Human-readable label' },
                     type: { type: 'string', enum: ['number', 'text', 'select', 'boolean'], description: 'Field type' },
                     options: { type: 'array', items: { type: 'string' }, description: 'Options for select type' },
-                    default: { type: 'any', description: 'Default value' },
+                    default: { anyOf: [{ type: 'number' }, { type: 'string' }, { type: 'boolean' }], description: 'Default value' },
                     required: { type: 'boolean', description: 'Whether field is required' },
                   },
                 },
               },
               feedbackRows: {
                 type: 'array',
-                description: 'Data rows - each row is an object with all field keys present',
+                description: 'Data rows — each row is an array of [key, value] tuples. Keys must match feedbackFields keys. Values are strings (cast later) or empty string if unfilled.',
                 items: {
-                  type: 'object',
-                  description: 'One row per set/round - all feedbackField keys must be present (use null for unfilled)',
+                  type: 'array',
+                  description: 'One row per set/round — array of [key, value] tuples',
+                  items: {
+                    type: 'array',
+                    description: 'Tuple: [fieldKey, value]',
+                    items: { type: 'string' },
+                  },
                 },
               },
             },

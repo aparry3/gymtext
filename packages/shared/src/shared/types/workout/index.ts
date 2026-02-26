@@ -119,6 +119,8 @@ export {
   type WorkoutBlockType,
   type WorkoutSectionStructure,
   type WorkoutSetType,
+  type WorkoutDisplayField,
+  type WorkoutTrackingField,
 } from './workoutDetails';
 
 // ============================================================================
