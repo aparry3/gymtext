@@ -441,6 +441,20 @@ For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`
 ]
 \`\`\`
 
+### Common Feedback Patterns
+
+| Format | feedbackFields | Notes |
+|--------|---------------|-------|
+| Straight sets (weighted) | weight + reps | Pre-fill prescribed values |
+| Straight sets (bodyweight) | reps only | No weight field needed |
+| Supersets / Circuits | none | Omit feedbackFields entirely |
+| AMRAP | rounds | Single field for completed rounds |
+| EMOM | none | Omit feedbackFields entirely |
+| Steady-state cardio | distance + time | e.g., "Distance (mi)" + "Time (min)" |
+| Intervals | distance + time | Same as cardio |
+
+These are common defaults — adjust if the dossier prescribes something different.
+
 ### Feedback Rows:
 - Each row is an array of [key, value] tuples (all values are strings)
 - Pre-fill with prescribed values (weight, reps from the workout)
