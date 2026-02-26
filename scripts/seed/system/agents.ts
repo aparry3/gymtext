@@ -311,58 +311,144 @@ Provide metadata as JSON:
 ## Your Goal
 Generate JSON that can be directly displayed in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their workout.
 
-## Key Principles
-1. SIMPLICITY IS KING - Use simple format by default, detailed only when needed
-2. UI-FOCUSED - For human display, not LLM consumption
-3. ACCURATE - Extract exactly what the user is supposed to do
-4. ORDERED EXERCISEGROUPS - exerciseGroups is an ordered array - each item represents one discrete unit of work to be performed in sequence
+## Core Schema: Blocks and Items
 
-## Core Concepts
+The workout schema uses a flat structure with explicit block definitions:
 
-### ExerciseGroups (Ordered Array)
-The \`exerciseGroups\` array is the core structure - it's **ordered** and represents the sequence users should follow:
-- **Order matters:** warmup groups first, then main work, then conditioning, then cooldown
-- Each exerciseGroup = one discrete block of work
-- A typical workout has MULTIPLE \`main\` exerciseGroups — one per exercise or circuit
+### Root Object
+\`\`\`json
+{
+  "blocks": [
+    { "id": "warmup", "label": "Warmup" },
+    { "id": "main", "label": "Main Lifts" },
+    { "id": "cooldown", "label": "Cooldown" }
+  ],
+  "items": [
+    {
+      "blockId": "main",
+      "name": "Barbell Bench Press",
+      "short_detail": "5x5 | 225 lbs",
+      "details": [...],
+      "notes": "Last week: 5x5 @ 220 lbs",
+      "feedbackFields": [...],
+      "feedbackRows": [...]
+    }
+  ]
+}
+\`\`\`
 
-### Block Types
-Each exerciseGroup has a \`block\` property indicating which phase of the workout:
-- \`warmup\` - Prepare body for work (optional but recommended)
-- \`main\` - Primary training work (required, can have multiple)
-- \`conditioning\` - Metabolic/cardio finisher (optional)
-- \`cooldown\` - Recovery and mobility (optional)
+### Blocks Array (Required)
+The \`blocks\` array defines all block types used in the workout:
+- \`id\` — unique identifier (used by items to reference)
+- \`label\` — human-readable display name
 
-### Structure Types (how movements are organized within an exerciseGroup)
-- \`straight-sets\` — ONE movement per exerciseGroup. For 3 straight-set exercises, create 3 separate exerciseGroups.
-- \`circuit\` — MULTIPLE movements performed back-to-back. Covers supersets (2), tri-sets (3), giant-sets (4+).
-- \`emom\` — Every minute on the minute. One or more movements.
-- \`amrap\` — As many rounds as possible in a time cap.
-- \`for-time\` — Complete prescribed work as fast as possible (e.g., 21-15-9).
-- \`intervals\` — Work/rest intervals (running, rowing, biking).
+Typical blocks: warmup, main, conditioning, cooldown
+Custom blocks allowed: supersets, skill work, drills, scrimmage, etc.
 
-### Movement Model (Unified)
-One schema for all movements — fill in relevant fields, leave others empty:
-- **Lifting:** sets, reps, weight, tempo, rpe, rest
-- **Running:** distance, pace, duration, intensity
-- **Bodyweight:** reps, sets
-- **Timed work:** duration, maybe weight
-- **Skills/drills:** reps, distance
+### Items Array (Required)
+The \`items\` array contains all exercises/movements. Each item:
+- References a block via \`blockId\` (must match a block.id)
+- Is ordered within its block (array order = display order)
 
-### Simple vs Detailed Format
-**Use simple format by default** (sets, reps, weight fields).
-**Use setDetails array ONLY when** per-set variation is explicitly prescribed:
-- Warmup progression (build to working weight)
-- Ladders (varying reps: 1-2-3-4-5)
-- Wave loading (varying weight: heavy-light-heavier)
-- Pyramids (ascending/descending weight)
-- Drop sets (reducing weight each set)
-- Top set + backoff sets
+## Detail Types (Semantic)
 
-When \`setDetails\` is present, it takes precedence over simple \`weight\` field.
+Use the \`details\` array with semantic types for UI styling:
+
+### Types:
+- \`instruction\` — What to do (e.g., "3 sets of 5 reps")
+- \`note\` — Guidance/tips (e.g., "Focus on explosive lockout")
+- \`context\` — Metrics info (e.g., "RPE: 8", "Rest: 3-4 min")
+- \`warning\` — Safety cautions (e.g., "Stop if shoulder pain")
+
+### Example:
+\`\`\`json
+"details": [
+  { "text": "RPE: 8", "type": "context" },
+  { "text": "RIR: 2", "type": "context" },
+  { "text": "Rest: 3-4 min", "type": "context" },
+  { "text": "Focus on explosive lockout", "type": "note" },
+  { "text": "Stop if elbow pain", "type": "warning" }
+]
+\`\`\`
+
+## Short Detail Format
+
+Use \`short_detail\` for concise info shown in collapsed views:
+- Lifting: "5x5 | 225 lbs" (sets x reps | weight)
+- Bodyweight: "3x12" or "15 Min"
+- Cardio: "30 Min" or "5 Mi"
+- Skill work: "100" (single count)
+- Use | separator
+
+## Notes vs Details
+
+- \`details\` — Exercise-specific prescription (RPE, rest, tempo, form cues)
+- \`notes\` — Longer coaching context (progress updates, motivation, reminders)
+
+## Feedback Fields (Tracking)
+
+For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`:
+
+### Field Types:
+\`\`\`json
+"feedbackFields": [
+  { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
+  { "key": "reps", "label": "Reps", "type": "number", "required": true },
+  { "key": "rpe", "label": "RPE", "type": "select", "options": ["6", "7", "8", "9", "10"], "required": false },
+  { "key": "notes", "label": "Notes", "type": "text", "required": false }
+]
+\`\`\`
+
+### Feedback Rows:
+- Pre-fill with prescribed values (weight, reps from the workout)
+- Leave user-input fields as null (notes, actual reps performed, RPE)
+- Every row MUST contain ALL fields from feedbackFields (use null for unfilled)
+
+\`\`\`json
+"feedbackRows": [
+  { "weight": 135, "reps": 5, "rpe": null, "notes": null },
+  { "weight": 185, "reps": 5, "rpe": "6", "notes": null },
+  { "weight": 225, "reps": 5, "rpe": "8", "notes": null }
+]
+\`\`\`
+
+## Nested Items (Circuits/Supersets)
+
+For circuits or supersets, use nested \`items\` array (one level only):
+
+\`\`\`json
+{
+  "blockId": "main",
+  "name": "Superset A: Bench + Rows",
+  "short_detail": "4 rounds",
+  "details": [{ "text": "Rest 2 min between rounds", "type": "context" }],
+  "items": [
+    { "name": "Bench Press", "short_detail": "4x10 | 135 lb", "details": [...] },
+    { "name": "Dumbbell Rows", "short_detail": "4x12 | 40 lb", "details": [...] }
+  ],
+  "feedbackFields": [...],
+  "feedbackRows": [...]
+}
+\`\`\`
+
+## Structure Types
+
+- \`straight-sets\` — One movement (use block structure to separate exercises)
+- \`circuit\` — Multiple movements back-to-back (use nested items)
+- \`emom\` — Every minute on the minute
+- \`amrap\` — As many rounds as possible
+- \`for-time\` — Complete prescribed work as fast as possible
+- \`intervals\` — Work/rest intervals
+
+## Block Types
+
+- \`warmup\` — Prepare body for work
+- \`main\` — Primary training (can have multiple)
+- \`conditioning\` — Metabolic/cardio finisher
+- \`cooldown\` — Recovery and mobility
 
 ## Output Structure
 
-### Root Object
 \`\`\`json
 {
   "date": "2026-02-16",
@@ -372,42 +458,29 @@ When \`setDetails\` is present, it takes precedence over simple \`weight\` field
   "description": "Week 3 — push compounds to top of RPE range.",
   "estimatedDuration": 60,
   "location": "Home gym",
-  "exerciseGroups": [...]
+  "blocks": [
+    { "id": "warmup", "label": "Warmup" },
+    { "id": "main", "label": "Main Lifts" },
+    { "id": "cooldown", "label": "Cooldown" }
+  ],
+  "items": [...]
 }
 \`\`\`
 
-### ExerciseGroup Object
-\`\`\`json
-{
-  "block": "main",
-  "title": "Back Squat",
-  "structure": "straight-sets",
-  "notes": "Focus on depth and bar speed",
-  "movements": [...],
-  "rounds": 3,
-  "duration": 10,
-  "rest": "90 seconds"
-}
-\`\`\`
-
-## Important: Ordered Array
-The \`exerciseGroups\` array defines the workout sequence. Items should be arranged in workout order:
-- warmup → warmup → main → main → main → main → conditioning → cooldown → cooldown
-
-For a workout with 3 straight-set exercises (Squat, Bench, Deadlift), create 3 separate exerciseGroups in order.
-
-## What to Skip
-- Empty or placeholder values
-- LLM-specific metadata
-- User IDs or preferences
-- Video/image URLs
+## Key Principles
+1. SIMPLICITY IS KING - Use simple format by default
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what the user is supposed to do
+4. ORDERED - Items within blocks are ordered for sequence
+5. SEMANTIC DETAILS - Use detail types for UI styling
+6. COMPLETE FEEDBACK - Every feedbackRow must have all fields
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
     max_tokens: 16000,
     temperature: 1.0,
     max_iterations: 3,
-    description: 'Generates a structured workout with exerciseGroups for UI display',
+    description: 'Generates a structured workout with blocks and items for UI display',
     is_active: true,
     tool_ids: [],
     user_prompt_template: 'Generate the structured workout representation for this day:\n\n{{input}}\n\nUse the week dossier provided in context to extract the workout details for this specific day and convert it to the JSON schema format.',
@@ -415,7 +488,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     eval_rubric: 'Evaluate the JSON output for completeness and correctness.',
     output_schema: {
       type: 'object',
-      required: ['date', 'dayOfWeek', 'focus', 'title', 'exerciseGroups'],
+      required: ['date', 'dayOfWeek', 'focus', 'title', 'blocks', 'items'],
       properties: {
         date: { type: 'string', description: 'ISO date (YYYY-MM-DD)' },
         dayOfWeek: { type: 'string', description: 'Day of the week' },
@@ -424,67 +497,84 @@ Never make up information. If something isn't in the dossier, don't include it.`
         description: { type: 'string', description: 'Brief session description with week context' },
         estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
         location: { type: 'string', description: 'Workout location (e.g., Home gym, Track)' },
-        exerciseGroups: {
+        blocks: {
           type: 'array',
-          description: 'Ordered array of exercise groups — each is one discrete unit of work, arranged in workout sequence',
+          description: 'Explicit block definitions - each block has an id and label',
           items: {
             type: 'object',
-            required: ['block', 'structure', 'movements'],
+            required: ['id', 'label'],
             properties: {
-              block: {
-                type: 'string',
-                enum: ['warmup', 'main', 'conditioning', 'cooldown'],
-                description: 'Block type: warmup, main, conditioning, or cooldown',
-              },
-              title: { type: 'string', description: 'ExerciseGroup title (e.g., Back Squat, Superset Block)' },
-              structure: {
-                type: 'string',
-                enum: ['straight-sets', 'circuit', 'emom', 'amrap', 'for-time', 'intervals'],
-                description: 'How movements are organized. straight-sets = 1 movement, circuit = 2+ movements',
-              },
-              notes: { type: 'string', description: 'Group-level coaching notes' },
-              rounds: { type: 'number', description: 'Number of rounds (for circuit, intervals)' },
-              duration: { type: 'number', description: 'Duration in minutes (for emom, amrap)' },
-              rest: { type: 'string', description: 'Rest between rounds (e.g., 90 seconds)' },
-              movements: {
+              id: { type: 'string', description: 'Unique block identifier (referenced by items)' },
+              label: { type: 'string', description: 'Human-readable block label' },
+            },
+          },
+        },
+        items: {
+          type: 'array',
+          description: 'Ordered array of items - exercises, circuits, or supersets',
+          items: {
+            type: 'object',
+            required: ['blockId', 'name'],
+            properties: {
+              blockId: { type: 'string', description: 'References block.id - defines which block this item belongs to' },
+              name: { type: 'string', description: 'Exercise or circuit name' },
+              short_detail: { type: 'string', description: 'Concise summary: "5x5 | 225 lbs", "3x12", "15 Min"' },
+              details: {
                 type: 'array',
-                description: 'Movements in this exerciseGroup. straight-sets: exactly 1. circuit: 2+.',
+                description: 'Exercise-specific details with semantic types',
+                items: {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string', description: 'Detail text' },
+                    type: { type: 'string', enum: ['instruction', 'note', 'context', 'warning'], description: 'Semantic type for UI styling' },
+                  },
+                },
+              },
+              notes: { type: 'string', description: 'Longer coaching context, progress updates, motivation' },
+              items: {
+                type: 'array',
+                description: 'Nested items for circuits/supersets (one level only)',
                 items: {
                   type: 'object',
                   required: ['name'],
                   properties: {
                     name: { type: 'string', description: 'Movement name' },
-                    sets: { type: 'string', description: 'Number of sets' },
-                    reps: { type: 'string', description: 'Rep scheme (e.g., 8-12, 5, AMRAP, 21-15-9)' },
-                    weight: { type: 'string', description: 'Load with unit (e.g., 185 lb, 80 kg, bodyweight)' },
-                    distance: { type: 'string', description: 'Distance (e.g., 400m, 1 mile)' },
-                    pace: { type: 'string', description: 'Target pace (e.g., 7:00/mi)' },
-                    duration: { type: 'string', description: 'Time duration (e.g., 30 seconds, 5 minutes)' },
-                    intensity: { type: 'string', description: 'Intensity target (e.g., Zone 2, 85% max HR)' },
-                    tempo: { type: 'string', description: 'Movement tempo (e.g., 3-0-1-0)' },
-                    rpe: { type: 'string', description: 'Rate of Perceived Exertion (1-10)' },
-                    rest: { type: 'string', description: 'Rest period (e.g., 3 minutes)' },
-                    notes: { type: 'string', description: 'Coaching cues, form notes, progression info' },
-                    setDetails: {
+                    short_detail: { type: 'string', description: 'Concise summary' },
+                    details: {
                       type: 'array',
-                      description: 'Per-set detail — use only when sets vary in weight/reps (warmup progression, ladders, wave loading, pyramids, drop sets)',
                       items: {
                         type: 'object',
-                        required: ['reps'],
                         properties: {
-                          reps: { type: 'string', description: 'Reps for this set' },
-                          weight: { type: 'string', description: 'Load for this set' },
-                          rpe: { type: 'string', description: 'RPE for this set' },
-                          type: {
-                            type: 'string',
-                            enum: ['warmup', 'working', 'backoff', 'drop'],
-                            description: 'Set type',
-                          },
-                          notes: { type: 'string', description: 'Set-specific notes' },
+                          text: { type: 'string' },
+                          type: { type: 'string', enum: ['instruction', 'note', 'context', 'warning'] },
                         },
                       },
                     },
                   },
+                },
+              },
+              feedbackFields: {
+                type: 'array',
+                description: 'Field definitions for tracking - defines columns in the feedback table',
+                items: {
+                  type: 'object',
+                  required: ['key', 'label', 'type'],
+                  properties: {
+                    key: { type: 'string', description: 'Field identifier (used in feedbackRows)' },
+                    label: { type: 'string', description: 'Human-readable label' },
+                    type: { type: 'string', enum: ['number', 'text', 'select', 'boolean'], description: 'Field type' },
+                    options: { type: 'array', items: { type: 'string' }, description: 'Options for select type' },
+                    default: { type: 'any', description: 'Default value' },
+                    required: { type: 'boolean', description: 'Whether field is required' },
+                  },
+                },
+              },
+              feedbackRows: {
+                type: 'array',
+                description: 'Data rows - each row is an object with all field keys present',
+                items: {
+                  type: 'object',
+                  description: 'One row per set/round - all feedbackField keys must be present (use null for unfilled)',
                 },
               },
             },
