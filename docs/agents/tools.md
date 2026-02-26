@@ -1,195 +1,143 @@
-# Agent Tools
+# Tool Registry
 
-Agent tools allow AI agents to interact with the system - updating profiles, fetching workouts, and making modifications.
+## Overview
 
-## Tool Registry
+The Tool Registry (`packages/shared/src/server/agents/tools/toolRegistry.ts`) maps tool name strings from DB `tool_ids` to LangChain `StructuredToolInterface` instances at runtime.
 
-Tools are registered in the Tool Registry which maps string IDs to LangChain tool implementations:
+Key methods:
+- `register(def: ToolDefinition)` — Register a tool at startup
+- `get(name: string)` — Retrieve tool by name
+- `list()` — Return metadata of all tools
+- `resolve(toolIds: string[], ctx: ToolExecutionContext)` — Resolve tools with context injection, sorted by priority
 
-```typescript
-// packages/shared/src/server/agents/tools/toolRegistry.ts
-export const toolRegistry = {
-  update_profile: updateProfileTool,
-  get_workout: getWorkoutTool,
-  make_modification: makeModificationTool,
-  modify_workout: modifyWorkoutTool,
-  modify_week: modifyWeekTool,
-  modify_plan: modifyPlanTool,
-};
-```
-
-## Available Tools
-
-### update_profile
-
-Extracts and persists profile changes from user messages.
+Tools are registered once at startup in `agents/tools/definitions/index.ts`:
 
 ```typescript
-{
-  name: 'update_profile',
-  description: 'Update the user fitness profile based on conversation. Use when user mentions goals, experience, equipment, injuries, or preferences.',
-  parameters: {
-    type: 'object',
-    properties: {
-      goal: { type: 'string', description: 'Primary fitness goal' },
-      experience_level: { type: 'string', description: 'Training experience' },
-      available_equipment: { type: 'string', description: 'Available gym equipment' },
-      limitations: { type: 'string', description: 'Injuries or limitations' },
-      preferences: { type: 'string', description: 'Workout preferences' },
-    },
-  },
+export function registerAllTools(registry: ToolRegistry): void {
+  registry.register(updateProfileTool);
+  registry.register(modifyWorkoutTool);
+  registry.register(modifyWeekTool);
+  registry.register(modifyPlanTool);
+  registry.register(getWorkoutTool);
 }
 ```
 
-**Example call:**
-```json
-{
-  "name": "update_profile",
-  "arguments": {
-    "goal": "build muscle",
-    "experience_level": "intermediate",
-    "available_equipment": "full gym",
-    "limitations": "none"
-  }
-}
-```
+## Tool Definitions
 
-### get_workout
+All 5 tools are defined in `agents/tools/definitions/chatTools.ts` and used exclusively by `chat:generate`.
 
-Fetches or generates today's workout.
+### `update_profile` (Priority 1)
 
-```typescript
-{
-  name: 'get_workout',
-  description: 'Get the workout for today or a specific date. Generates a new workout if none exists.',
-  parameters: {
-    type: 'object',
-    properties: {
-      date: { type: 'string', description: 'Date in YYYY-MM-DD format (optional)' },
-    },
-  },
-}
-```
+- **Purpose**: Record permanent user preferences (training days, goals, equipment, etc.)
+- **Schema**: `{}` (empty — no arguments)
+- **Returns**: Profile update confirmation
+- **Delegates to**: `ProfileService.updateProfile()`
+- **Tool type**: `action`
 
-**Example call:**
-```json
-{
-  "name": "get_workout",
-  "arguments": {
-    "date": "2024-01-15"
-  }
-}
-```
+### `get_workout` (Priority 2)
 
-### make_modification
+- **Purpose**: Fetch or generate today's workout for the user
+- **Schema**: `{}` (empty — no arguments)
+- **Returns**: Formatted workout text
+- **Delegates to**: `TrainingService.getOrGenerateWorkout()`
+- **Tool type**: `query`
 
-Routes modification requests to appropriate handlers.
+### `modify_workout` (Priority 3)
 
-```typescript
-{
-  name: 'make_modification',
-  description: 'Make modifications to the user workout or program. Routes to appropriate sub-agent based on modification type.',
-  parameters: {
-    type: 'object',
-    properties: {
-      modification_type: { 
-        type: 'string', 
-        enum: ['workout', 'week', 'plan'],
-        description: 'Type of modification' 
-      },
-      request: { type: 'string', description: 'What user wants to change' },
-    },
-  },
-}
-```
+- **Purpose**: Modify a single day's workout based on user request
+- **Schema**: `{ message: string }` — the modification request
+- **Returns**: Modification confirmation with details
+- **Delegates to**: `WorkoutModificationService.modifyWorkout()`
+- **Tool type**: `action`
+- **Side effect**: Sends immediate acknowledgment SMS via `queueMessage()`
 
-### modify_workout
+### `modify_week` (Priority 3)
 
-Makes changes to a specific workout.
+- **Purpose**: Restructure weekly training schedule
+- **Schema**: `{ message: string, targetDay: string, targetWeek?: string }` — request + targeting
+- **Returns**: Week modification confirmation
+- **Delegates to**: `WorkoutModificationService.modifyWeek()`
+- **Tool type**: `action`
+- **Side effect**: Sends immediate acknowledgment SMS via `queueMessage()`
 
-```typescript
-{
-  name: 'modify_workout',
-  description: 'Modify a specific workout - change exercises, sets, reps, or swap movements.',
-  parameters: {
-    type: 'object',
-    properties: {
-      workout_id: { type: 'string', description: 'ID of workout to modify' },
-      changes: { type: 'string', description: 'Description of changes needed' },
-    },
-  },
-}
-```
+### `modify_plan` (Priority 3)
 
-### modify_week
+- **Purpose**: Program-level changes (mesocycle adjustments, phase changes)
+- **Schema**: `{ message: string }` — the modification request
+- **Returns**: Plan modification confirmation
+- **Delegates to**: `PlanModificationService.modifyPlan()`
+- **Tool type**: `action`
+- **Side effect**: Sends immediate acknowledgment SMS via `queueMessage()`
 
-Makes changes to a weekly microcycle.
+## Priority System
 
-```typescript
-{
-  name: 'modify_week',
-  description: 'Modify the weekly training pattern (microcycle).',
-  parameters: {
-    type: 'object',
-    properties: {
-      microcycle_id: { type: 'string', description: 'ID of microcycle' },
-      changes: { type: 'string', description: 'Description of changes' },
-    },
-  },
-}
-```
+Tools are sorted by priority (lower number = higher priority) before being passed to the LLM. This influences the order tools appear in the tool list, which can affect LLM tool selection behavior:
 
-### modify_plan
+- **Priority 1**: Profile updates (most common, lightweight)
+- **Priority 2**: Queries (fetch data)
+- **Priority 3**: Modifications (heavier operations)
 
-Makes changes to the overall fitness plan.
+## ToolExecutionContext
 
-```typescript
-{
-  name: 'modify_plan',
-  description: 'Modify the overall fitness plan structure.',
-  parameters: {
-    type: 'object',
-    properties: {
-      plan_id: { type: 'string', description: 'ID of fitness plan' },
-      changes: { type: 'string', description: 'Description of changes' },
-    },
-  },
-}
-```
-
-## Tool Execution Context
-
-Tools receive a `ToolExecutionContext` with:
+Every tool receives a context object when invoked:
 
 ```typescript
 interface ToolExecutionContext {
-  user: User;
-  message: string;
-  services: ServiceContainer;
-  // ... other context
+  user: UserWithProfile;           // Current user with profile
+  message: string;                 // User's original message
+  previousMessages?: AgentMessage[];  // Conversation history
+  services: ToolServiceContainer;  // Service access (lazy injection)
+  extras?: Record<string, unknown>;  // Extra data (workoutDate, etc.)
 }
 ```
 
-This allows tools to access database and services:
+## ToolServiceContainer
+
+Tools access services through a constrained interface (not the full ServiceContainer):
 
 ```typescript
-async function updateProfileTool(args: ProfileArgs, ctx: ToolExecutionContext) {
-  const { user, services } = ctx;
-  
-  await services.profileService.update(user.id, args);
-  
-  return { success: true, message: 'Profile updated' };
+interface ToolServiceContainer {
+  profile: { updateProfile(userId, message, previousMessages?) };
+  workoutModification: { modifyWorkout(params), modifyWeek(params) };
+  planModification: { modifyPlan(params) };
+  training: { getOrGenerateWorkout(userId, timezone) };
+  queueMessage(user, content, queueName);
 }
 ```
+
+This is built via `buildToolServices()` lambda in the service factory (Phase 3), which captures mutable variables assigned in Phase 5 — resolving the circular dependency between tools and services.
+
+## ToolResult
+
+All tools return a standardized result:
+
+```typescript
+interface ToolResult {
+  toolType: 'query' | 'action';  // Determines continuation prompt
+  response: string;               // Summary for agent to reference
+  messages?: string[];            // SMS messages to send to user
+}
+```
+
+The `toolType` drives the AgentRunner's continuation logic:
+
+- `query` → Agent introduces the fetched data naturally
+- `action` → Agent confirms what was changed
 
 ## Adding New Tools
 
-1. **Create tool definition** in `agents/tools/definitions/`
-2. **Register in Tool Registry** in `agents/tools/toolRegistry.ts`
-3. **Add tool ID to agent definition** in database
+1. Create definition in `agents/tools/definitions/` (follow chatTools.ts pattern)
+2. Export the tool definition with: name, description, schema (Zod), priority, execute function
+3. Register in `registerAllTools()` in `agents/tools/definitions/index.ts`
+4. Add tool name to the agent's `tool_ids` array in the seed script
+5. If the tool needs new services, extend `ToolServiceContainer` and update `buildToolServices()`
+6. Run `pnpm seed --agents` to update DB
 
-## Related Documentation
+## Key Files
 
-- [Agent System](./index.md) - Agent system overview
-- [Agent Runner](./agent-runner.md) - Execution flow
-- [Context Providers](./context.md) - Context resolution
+| File | Purpose |
+|------|---------|
+| `agents/tools/toolRegistry.ts` | Registry: register, resolve, list tools |
+| `agents/tools/definitions/chatTools.ts` | All 5 tool definitions |
+| `agents/tools/definitions/index.ts` | `registerAllTools()` function |
+| `agents/tools/types.ts` | ToolExecutionContext, ToolResult, ToolServiceContainer |

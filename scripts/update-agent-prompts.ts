@@ -51,7 +51,7 @@ const AGENT_MAPPINGS = [
   },
 ];
 
-const TEXT_ARRAY_COLS = new Set(['tool_ids', 'context_types']);
+const TEXT_ARRAY_COLS = new Set(['tool_ids']);
 const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);
 
 function castValue(col: string, v: unknown) {

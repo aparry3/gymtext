@@ -263,7 +263,6 @@ Each agent is a row in `agent_definitions` with append-only versioning (latest `
 | `user_prompt_template` | Template with `{{variable}}` substitution (seeded from `/prompts/*.md`) |
 | `model` | Model identifier (e.g., `'gpt-5.2'`) |
 | `tool_ids` | Tool names available to agent (e.g., `['get_user_profile', 'get_exercises']`) |
-| `context_types` | Context to resolve at runtime (e.g., `['dateContext', 'currentWorkout']`) |
 | `sub_agents` | Sub-agent configurations (batches, parallel/sequential) |
 | `output_schema` | JSON Schema for structured output |
 | `validation_rules` | Declarative validation rules with auto-retry |
@@ -280,11 +279,6 @@ Agent IDs are defined as constants in `packages/shared/src/server/agents/constan
 - Tools registered in `agents/tools/definitions/` (e.g., `chatTools.ts`, `modificationTools.ts`)
 - Tools receive a `ToolExecutionContext` with user, message, and service access
 - Key tools: `update_profile`, `get_workout`, `make_modification`, `modify_workout`, `modify_week`, `modify_plan`
-
-**Context Registry** (`agents/context/contextRegistry.ts`):
-- Maps context type strings (from DB `context_types`) to context provider functions
-- Resolves multiple context types in parallel
-- Key contexts: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `currentMicrocycle`, `experienceLevel`
 
 ### AgentRunner
 

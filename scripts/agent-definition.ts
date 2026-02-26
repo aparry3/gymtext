@@ -38,7 +38,6 @@ const COLUMN_MAP: Record<string, string> = {
   maxRetries: 'max_retries',
   isActive: 'is_active',
   toolIds: 'tool_ids',
-  contextTypes: 'context_types',
   subAgents: 'sub_agents',
   outputSchema: 'output_schema',
   validationRules: 'validation_rules',
@@ -70,7 +69,7 @@ function toCamelCase(obj: Record<string, unknown>): Record<string, unknown> {
 }
 
 // text[] columns need array syntax; jsonb columns need ::jsonb cast
-const TEXT_ARRAY_COLS = new Set(['tool_ids', 'context_types']);
+const TEXT_ARRAY_COLS = new Set(['tool_ids']);
 const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);
 
 function castValue(col: string, v: unknown) {

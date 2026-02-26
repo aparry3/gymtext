@@ -42,7 +42,6 @@ function transformAgent(agent: DbAgent) {
     max_iterations: agent.maxIterations,
     max_retries: 3,
     tool_ids: agent.toolIds || [],
-    context_types: null,
     sub_agents: null,
     output_schema: null,
     validation_rules: null,

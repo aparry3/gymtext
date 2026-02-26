@@ -30,7 +30,6 @@ Before creating an agent, determine:
 - **`maxIterations`**: Max tool-use loop iterations. Default: 10.
 - **`maxRetries`**: Max retry attempts on validation failure. Default: 3.
 - **`toolIds`**: Array of tool names the agent can use. Available tools: `update_profile`, `make_modification`, `get_workout`.
-- **`contextTypes`**: Array of context providers resolved at runtime. Available: `user`, `userProfile`, `fitnessPlan`, `dayOverview`, `currentWorkout`, `dateContext`, `currentMicrocycle`, `experienceLevel`, `dayFormat`, `programVersion`, `availableExercises`.
 - **`subAgents`**: Sub-agent configurations (batches, parallel/sequential execution).
 - **`outputSchema`**: JSON Schema for structured output validation.
 - **`validationRules`**: Declarative validation rules (`equals`, `truthy`, `nonEmpty`, `length`) with auto-retry.
@@ -63,7 +62,6 @@ Write a JSON file with the agent definition. Use camelCase keys matching the dat
   "maxTokens": 4096,
   "userPromptTemplate": "Given the following context:\n{{context}}\n\nRespond to: {{input}}",
   "toolIds": ["update_profile"],
-  "contextTypes": ["user", "userProfile"],
   "outputSchema": null,
   "subAgents": null,
   "validationRules": null

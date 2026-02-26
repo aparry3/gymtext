@@ -1,53 +1,35 @@
 # GymText Documentation
 
-Welcome to the GymText documentation. This comprehensive guide covers everything you need to understand, develop, and maintain the GymText platform.
+GymText is a personalized fitness coaching monorepo delivering workout plans via SMS. Three Next.js apps (web, admin, programs) share a `@gymtext/shared` package containing all server logic: services, repositories, agents, and connections.
 
-## Quick Links
+These docs are the canonical codebase reference — designed for both human developers and AI context consumption.
 
-- **[Architecture Overview](./architecture/overview.md)** - System architecture and design
-- **[Agent System](./agents/index.md)** - Database-driven AI agent system
-- **[Apps](./apps/web.md)** - Web, Admin, and Programs applications
-- **[Development](./development/getting-started.md)** - Getting started guide
-- **[API Reference](./architecture/api-structure.md)** - API routes and structure
-- **[Database Models](./models/index.md)** - Database schema and models
+## Sections
 
-## What is GymText?
+### [Agents](./agents/index.md)
+Database-driven AI agent system: AgentRunner, 16 agent definitions, tool registry, context resolution, and prompt management.
 
-GymText is a personalized fitness coaching application that delivers workout plans via SMS. Users interact with an AI-powered coach through text messages, receiving customized fitness plans, daily workouts, and intelligent coaching conversations.
+- [System Overview](./agents/index.md) — How agents work, invocation flow, prompt management
+- [Agent Catalog](./agents/catalog.md) — All 16 agents with details
+- [Tool Registry](./agents/tools.md) — 5 chat tools with schemas and execution flow
+- [Context System](./agents/context.md) — Context resolution and template engine
 
-The platform uses AI agents to:
-- Generate personalized fitness plans based on user profiles
-- Create daily workouts tailored to individual goals
-- Have natural coaching conversations via SMS
-- Handle program modifications and adjustments
+### [Architecture](./architecture/index.md)
+System architecture: layered services, bootstrap phases, environment switching, and app structure.
 
-## Documentation Structure
+- [Overview](./architecture/index.md) — High-level architecture with layer diagram
+- [Layer Separation](./architecture/layers.md) — Routes → Orchestration → Domain → Agents → Repos → Connections
+- [Service Factory](./architecture/service-factory.md) — 5-phase bootstrap, lazy injection, ServiceContainer
+- [Environment Context](./architecture/environment-context.md) — Cookie-based env switching
+- [App Structure](./architecture/apps.md) — Web app, admin app, programs portal, shared package
+- [Utilities](./architecture/utilities.md) — Date, timezone, circuit breaker, formatters
+- [Libraries](./architecture/libraries.md) — Key dependencies and versions
 
-### For New Developers
+### [Scripts](./scripts/index.md)
+All CLI commands: development, database management, seeding, agent management, testing.
 
-1. Start with **[Getting Started](./development/getting-started.md)**
-2. Understand the **[Architecture](./architecture/overview.md)**
-3. Learn about the **[Agent System](./agents/index.md)**
-4. Explore the **[Database Models](./models/index.md)**
+- [Scripts Reference](./scripts/index.md) — Complete command reference
 
-### For Reference
+---
 
-- **[Environment Variables](./reference/environment-variables.md)** - All required env vars
-- **[Scripts Reference](./development/SCRIPTS.md)** - Complete script documentation
-- **[Tools](./tools/index.md)** - Development tools
-- **[Troubleshooting](./reference/troubleshooting.md)** - Common issues and solutions
-
-## Project Overview
-
-GymText is a monorepo with two Next.js applications:
-
-| App | Purpose | URL |
-|-----|---------|-----|
-| **web** | Consumer-facing app | gymtext.com |
-| **admin** | Admin portal | admin.gymtext.com |
-| **programs** | Program owners portal | programs.gymtext.com |
-
-The monorepo also includes:
-- **packages/shared** - Shared server logic, agents, models
-- **scripts** - Database migrations, seeding, and utility scripts
-- **migrations** - Database migration files
+*12 files • Last updated: 2026-02-26*

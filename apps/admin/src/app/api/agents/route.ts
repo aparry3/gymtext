@@ -90,7 +90,6 @@ export async function GET(request: Request) {
         max_iterations: agent.maxIterations,
         max_retries: 3,
         tool_ids: agent.toolIds || [],
-        context_types: null,
         sub_agents: null,
         output_schema: null,
         validation_rules: null,
@@ -122,7 +121,7 @@ export async function GET(request: Request) {
 
 /**
  * POST /api/agents
- * 
+ *
  * Create a new agent definition.
  */
 export async function POST(request: Request) {
@@ -202,7 +201,6 @@ export async function POST(request: Request) {
       max_iterations: result.maxIterations,
       max_retries: 3,
       tool_ids: result.toolIds || [],
-      context_types: null,
       sub_agents: null,
       output_schema: null,
       validation_rules: null,

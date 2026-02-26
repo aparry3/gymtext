@@ -39,7 +39,6 @@ interface Agent {
   max_iterations: number
   max_retries: number
   tool_ids: string[]
-  context_types: string | null
   created_at?: string
   version_id?: number
 }
