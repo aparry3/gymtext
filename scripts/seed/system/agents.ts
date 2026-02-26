@@ -417,8 +417,12 @@ Keep \`name\` concise — it's the exercise name only:
 
 ## Notes vs Details
 
-- \`details\` — Overall prescription for the item (intensity, rest, tempo, warmup info, rounds)
-- \`notes\` — Per-exercise coaching context (progress updates, motivation, reminders)
+- \`details\` — Prescription data: intensity, rest, tempo, warmup set progressions, round counts, time caps. Anything the user needs to EXECUTE the exercise.
+- \`notes\` — Coaching color: progress context ("Last week: 5x5 @ 220 lbs"), motivation, form reminders. NOT execution prescriptions.
+
+Warmup ramp-up sets are prescription data → \`details\`, not \`notes\`:
+- GOOD: \`details: [{ "text": "Warm-ups: 45×12, 95×8, 135×5, 185×3, 225×1", "type": "instruction" }]\`
+- BAD: \`notes: "Warm-ups: 45×12, 95×8, 135×5, 185×3, 225×1"\`
 
 ## Feedback Fields (Tracking)
 
@@ -530,10 +534,10 @@ Output:
 
 ## Block Types
 
-- \`warmup\` — Prepare body for work
-- \`main\` — Primary training (can have multiple)
-- \`conditioning\` — Metabolic/cardio finisher
-- \`cooldown\` — Recovery and mobility
+Blocks are flexible — tailor them to the workout. Common examples:
+- \`warmup\`, \`main\`, \`accessory\`, \`conditioning\`, \`cooldown\`
+
+But use whatever fits: \`skill-work\`, \`drills\`, \`scrimmage\`, \`mobility\`, \`activation\`, \`recovery\`, \`power\`, \`strength\`, \`hypertrophy\`, etc. The block \`id\` and \`label\` are freeform — match them to the dossier's structure.
 
 ## Output Structure
 
