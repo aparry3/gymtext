@@ -62,11 +62,11 @@ function getDailyQuote(): { text: string; author: string } {
 export function QuoteCard({ isLoading = false }: QuoteCardProps) {
   if (isLoading) {
     return (
-      <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 animate-pulse">
+      <div className="p-5 rounded-xl bg-white border border-stone-200 animate-pulse">
         <div className="space-y-3">
-          <div className="h-4 w-full bg-slate-800 rounded" />
-          <div className="h-4 w-3/4 bg-slate-800 rounded" />
-          <div className="h-3 w-24 bg-slate-800 rounded mt-2" />
+          <div className="h-4 w-full bg-stone-200 rounded" />
+          <div className="h-4 w-3/4 bg-stone-200 rounded" />
+          <div className="h-3 w-24 bg-stone-200 rounded mt-2" />
         </div>
       </div>
     );
@@ -75,11 +75,11 @@ export function QuoteCard({ isLoading = false }: QuoteCardProps) {
   const quote = getDailyQuote();
 
   return (
-    <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-center">
-      <p className="text-sm italic text-slate-300 leading-relaxed mb-2">
+    <div className="p-5 rounded-xl bg-white border border-stone-200 flex flex-col justify-center">
+      <p className="text-sm italic text-stone-700 leading-relaxed mb-2">
         &ldquo;{quote.text}&rdquo;
       </p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-stone-400">
         &mdash; {quote.author}
       </p>
     </div>

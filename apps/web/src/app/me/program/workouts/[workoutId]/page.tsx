@@ -7,6 +7,6 @@ export default async function ClientWorkoutDetailPage({
 }) {
   const { workoutId } = await params
 
-  // Redirect old workout URLs to the new dashboard with workout sheet
-  redirect(`/me?workout=${workoutId}`)
+  // Redirect old workout URLs to the new workout detail page
+  redirect(`/me/workouts/${workoutId}`)
 }
