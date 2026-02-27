@@ -355,21 +355,69 @@ function ProgressRing({ completed, total }: { completed: number; total: number }
   );
 }
 
+// ─── Feedback Row Normalizer ──────────────────────────────────────────────
+
+function normalizeFeedbackRows(rows: unknown[]): Record<string, string | number>[] {
+  if (!rows || rows.length === 0) return [];
+  const first = rows[0];
+  // Already record format
+  if (first && typeof first === 'object' && !Array.isArray(first)) {
+    return rows as Record<string, string | number>[];
+  }
+  // Tuple format: [["key","val"], ...] per row
+  if (Array.isArray(first)) {
+    return rows.map((row) => {
+      const entries = row as [string, string | number][];
+      return Object.fromEntries(entries);
+    });
+  }
+  return rows as Record<string, string | number>[];
+}
+
+function normalizeWorkoutData(workout: Workout): Workout {
+  return {
+    ...workout,
+    items: workout.items.map((item) => ({
+      ...item,
+      feedbackRows: item.feedbackRows ? normalizeFeedbackRows(item.feedbackRows) : undefined,
+      items: item.items?.map((nested) => ({
+        ...nested,
+        feedbackRows: nested.feedbackRows ? normalizeFeedbackRows(nested.feedbackRows) : undefined,
+      })),
+    })),
+  };
+}
+
 // ─── Main View ────────────────────────────────────────────────────────────
 
-const workouts = {
+const mockWorkouts = {
   strength: { data: strengthWorkout, label: 'Strength', title: 'Upper/Lower Strength', sessionType: 'Strength', duration: 75 },
   supersets: { data: supersetWorkout, label: 'Supersets', title: 'Chest & Triceps', sessionType: 'Hypertrophy', duration: 60 },
   amrap: { data: amrapWorkout, label: 'AMRAP', title: 'MetCon Day', sessionType: 'HIIT', duration: 35 },
 };
 
-type WorkoutKey = keyof typeof workouts;
+type MockWorkoutKey = keyof typeof mockWorkouts;
 
-export function AntWorkoutView({ mode = 'dark' }: { mode?: 'light' | 'dark' }) {
+interface AntWorkoutViewProps {
+  mode?: 'light' | 'dark';
+  workout?: Workout;
+  title?: string;
+  sessionType?: string;
+  duration?: number;
+}
+
+export function AntWorkoutView({ mode = 'dark', workout: workoutProp, title, sessionType, duration }: AntWorkoutViewProps) {
   const theme = mode === 'dark' ? darkTheme : lightTheme;
-  const [activeKey, setActiveKey] = useState<WorkoutKey>('strength');
-  const active = workouts[activeKey];
-  const workout = active.data;
+  const isRealData = !!workoutProp;
+
+  // Mock mode state (only used when no real data)
+  const [activeKey, setActiveKey] = useState<MockWorkoutKey>('strength');
+  const mockActive = mockWorkouts[activeKey];
+
+  const workout = isRealData ? normalizeWorkoutData(workoutProp) : mockActive.data;
+  const displayTitle = isRealData ? (title || 'Workout') : mockActive.title;
+  const displaySessionType = isRealData ? (sessionType || 'Training') : mockActive.sessionType;
+  const displayDuration = isRealData ? duration : mockActive.duration;
 
   const blockItems = workout.blocks.map((block) => ({
     block,
@@ -393,31 +441,35 @@ export function AntWorkoutView({ mode = 'dark' }: { mode?: 'light' | 'dark' }) {
             <div className="flex items-start justify-between">
               <div>
                 <p className={`text-[11px] uppercase tracking-widest ${theme.textMuted} font-medium`}>Today&apos;s Workout</p>
-                <h1 className={`text-xl font-bold ${theme.textPrimary} mt-1`}>{active.title}</h1>
+                <h1 className={`text-xl font-bold ${theme.textPrimary} mt-1`}>{displayTitle}</h1>
                 <div className="flex items-center gap-3 mt-1.5">
                   <span className={`text-[11px] px-2 py-0.5 rounded-full ${theme.pillBg} ${theme.pillText} border ${theme.pillBorder} font-medium`}>
-                    {active.sessionType}
+                    {displaySessionType}
                   </span>
-                  <span className={`text-[12px] ${theme.textSecondary}`}>~{active.duration} min</span>
+                  {displayDuration && (
+                    <span className={`text-[12px] ${theme.textSecondary}`}>~{displayDuration} min</span>
+                  )}
                 </div>
               </div>
               <ProgressRing completed={0} total={totalTracked} />
             </div>
 
-            {/* Workout selector */}
-            <div className="flex gap-2">
-              {(Object.keys(workouts) as WorkoutKey[]).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveKey(key)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    key === activeKey ? theme.tabActive : theme.tabInactive
-                  }`}
-                >
-                  {workouts[key].label}
-                </button>
-              ))}
-            </div>
+            {/* Workout selector — only in mock/demo mode */}
+            {!isRealData && (
+              <div className="flex gap-2">
+                {(Object.keys(mockWorkouts) as MockWorkoutKey[]).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveKey(key)}
+                    className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                      key === activeKey ? theme.tabActive : theme.tabInactive
+                    }`}
+                  >
+                    {mockWorkouts[key].label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Blocks */}
