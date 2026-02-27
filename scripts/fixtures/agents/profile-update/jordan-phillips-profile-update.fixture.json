@@ -1,0 +1,28 @@
+{
+  "id": "jordan-phillips-profile-update",
+  "agentId": "profile:update",
+  "persona": "jordan-phillips",
+  "description": "Captured from jordan-phillips run",
+  "tags": [
+    "jordan-phillips",
+    "captured"
+  ],
+  "input": "## GOALS\n- muscle_building\nAdditional details: Hypertrophy focused - want to gain 15 more lbs of muscle. Former skinny guy, dedicated to getting bigger and stronger. Increase main lifts, look more athletic. Long-term 6-8 month timeline.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 5\n\n### Experience\n- Level: Intermediate\n- Details: 18 months of consistent training. Started at 145 lb, now 165 lb. Eating in surplus. Enjoys tracking progressive overload and hitting PRs. Mon/Tue/Thu/Fri/Sat at 6 PM, 75 min sessions.\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: Commercial gym - full equipment\n- Available equipment: barbells, Dumbbells, machines, cables",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Jordan Phillips\n**Age:** 27\n**Gender:** male</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "708d1a7e-1fe7-4991-a4b7-4b37d0b99f6c",
+      "name": "Jordan Phillips",
+      "timezone": "America/New_York"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Jordan Phillips  \n- **Age:** 27  \n- **Gender:** Male  \n- **Experience level:** **Intermediate** — 18 months consistent training (as of 2026-02-27); started ~145 lb and now ~165 lb while eating in a surplus; enjoys tracking progressive overload and PRs.\n\n---\n\n### GOALS\n- **Primary goal(s):** Hypertrophy-focused muscle building — **gain +15 lb lean muscle** and look more athletic while increasing main lifts (timeline **6–8 months**, as of 2026-02-27).\n- **Secondary goals:**\n  - Get “bigger and stronger” (strength increases as a support outcome to hypertrophy)\n  - Maintain consistency with progressive overload and PR-driven training\n- **Target events/deadlines:** None specified (time horizon: 6–8 months)\n\n---\n\n### TRAINING CONTEXT\n\n#### Schedule & Availability\n- **Available training days:** **Mon / Tue / Thu / Fri / Sat**\n- **Desired training frequency:** **5x/week** (matches available days)\n- **Session duration:** **~75 minutes**\n- **Time window:** **6:00 PM** start time (evenings)\n- **Blocked days:** **Wed/Sun** (reason not specified)\n\n#### Equipment & Environment\n- **Location:** Commercial gym\n- **Equipment available:** Barbells, dumbbells, machines, cables (full commercial setup)\n\n#### Constraints\n- **[ACTIVE]** None reported (as of 2026-02-27)\n- **[RESOLVED]** None reported\n\n#### Preferences\n- Likes/training style: Progressive overload, tracking lifts, hitting PRs\n- Focus areas: Hypertrophy + “main lift” strength carryover; overall athletic look\n\n---\n\n### METRICS\n*(No performance numbers provided yet beyond bodyweight history; capturing what is currently known.)*\n\n**Strength**\n- Main lifts: **Not provided** (as of 2026-02-27)\n\n**Endurance**\n- Not provided / not prioritized (as of 2026-02-27)\n\n**Movement Quality**\n- Not provided (as of 2026-02-27)\n\n**Body Composition**\n- **Current weight:** **165 lb** (as of 2026-02-27)\n- **Starting reference:** **145 lb** at training start (~18 months prior; exact date not provided)\n- **Goal change:** +15 lb muscle (target end-state not fully defined, but implies larger scale weight with lean gain)\n\n---\n\n### LOG\n## 2026-02-27 — Profile created/updated (hypertrophy focus)\n- Set primary goal: hypertrophy-focused muscle building; aim to add **~15 lb muscle** over **6–8 months**.\n- Confirmed training experience: **18 months consistent**, weight increased **145 → 165 lb**, currently eating in a surplus.\n- Confirmed schedule: **5x/week** (Mon/Tue/Thu/Fri/Sat), **6 PM**, **~75 min** sessions.\n- Confirmed environment: commercial gym with barbells/dumbbells/machines/cables.\n- Constraints: none reported.\n\n**Needed to complete metrics (next update):** current working sets or recent bests for squat/bench/deadlift/OHP, pull-ups/rows, and any body measurements (waist, chest, arms) or estimated body fat %.",
+    "capturedAt": "2026-02-27T19:27:09.683Z",
+    "model": "gpt-5.2",
+    "agentLogId": "d1a9635b-8b63-4557-a366-d28093449e32"
+  }
+}

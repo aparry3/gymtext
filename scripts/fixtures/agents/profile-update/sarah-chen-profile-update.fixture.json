@@ -1,0 +1,28 @@
+{
+  "id": "sarah-chen-profile-update",
+  "agentId": "profile:update",
+  "persona": "sarah-chen",
+  "description": "Captured from sarah-chen run",
+  "tags": [
+    "sarah-chen",
+    "captured"
+  ],
+  "input": "## GOALS\n- Build strength and muscle\n- Lose weight and improve body composition\nAdditional details: Get stronger and lose some weight\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 3\n\n### Experience\n- Level: Beginner\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: Commercial gym with barbells, dumbbells, and machines\n- Available equipment: barbells, Dumbbells, machines",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Sarah Chen\n**Age:** 28\n**Gender:** female</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "8e831d44-63f2-4ef4-bf3c-7073fe1c95dc",
+      "name": "Sarah Chen",
+      "timezone": "America/New_York"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Sarah Chen  \n- **Age:** 28  \n- **Gender:** Female  \n- **Experience level:** **Novice (Beginner)** — as reported; consistent training history not provided (assume <1 year consistent training)\n\n---\n\n### GOALS\n- **Primary goal(s):**\n  - **Build strength and muscle** (general hypertrophy + foundational strength)\n  - **Lose weight / improve body composition** (fat loss while maintaining/gaining lean mass)\n- **Secondary goals:**\n  - Establish consistent training habit at **3 sessions/week**\n- **Target events/deadlines:** None provided\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Available training days:** Not specified (needs preferred days)\n- **Desired training frequency:** **3 days/week**\n- **Session duration preferences/constraints:** Not specified\n- **Time windows:** Not specified\n- **Blocked days:** Not specified\n\n### Equipment & Environment\n- **Location:** Commercial gym\n- **Available equipment (confirmed):**\n  - Barbells\n  - Dumbbells\n  - Machines\n- **Other equipment (not specified):** benches, racks, cables, cardio machines, etc. (likely available but not confirmed)\n\n### Constraints\n- **[ACTIVE]** None reported (as of **2026-02-27**)\n- **[RESOLVED]** None recorded\n\n### Preferences\n- Likes/dislikes: Not provided  \n- Training style preference (machines vs free weights, etc.): Not provided  \n- Focus areas (glutes, upper body, etc.): Not provided  \n- Communication style preferences: Not provided  \n\n---\n\n## METRICS\n*(No baseline performance or body comp metrics provided yet — required for tracking progress.)*\n\n### Strength (as of 2026-02-27)\n- No current lift numbers recorded (e.g., squat/bench/deadlift or machine loads, rep maxes)\n\n### Body Composition (as of 2026-02-27)\n- **Current weight:** Not provided  \n- **Height:** Not provided  \n- **Body fat % / waist measurement / photos:** Not provided  \n\n### Endurance (as of 2026-02-27)\n- Not provided\n\n### Movement Quality (as of 2026-02-27)\n- Not provided (no mobility limitations or pain reported)\n\n---\n\n## LOG\n## 2026-02-27 — Profile created/updated (intake)\n- Created profile for **Sarah Chen (28F)**.\n- Goals recorded: **strength + muscle gain**, **weight loss/body recomposition**.\n- Training context recorded: **beginner**, **commercial gym**, targeting **3 sessions/week**.\n- No constraints/injuries reported.\n- Metrics missing: current body weight/measurements and baseline strength numbers.\n\n--- \n\n### Validation / Consistency Notes (action items)\n- Training frequency (**3x/week**) aligns with beginner status and goals.\n- To make the profile fully actionable, provide:\n  1) **Current weight** (and height if available)  \n  2) Any **baseline lifts** (even machine weights or estimated working sets)  \n  3) **Preferred training days/time window** and typical **session length**  \n  4) Any **injuries/pain**, and movement dislikes (e.g., barbells vs machines)",
+    "capturedAt": "2026-02-27T19:27:08.204Z",
+    "model": "gpt-5.2",
+    "agentLogId": "260e3ad5-9c2f-4669-8ce7-c79851ee423e"
+  }
+}

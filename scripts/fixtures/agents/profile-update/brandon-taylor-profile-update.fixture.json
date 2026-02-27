@@ -1,0 +1,28 @@
+{
+  "id": "brandon-taylor-profile-update",
+  "agentId": "profile:update",
+  "persona": "brandon-taylor",
+  "description": "Captured from brandon-taylor run",
+  "tags": [
+    "brandon-taylor",
+    "captured"
+  ],
+  "input": "## GOALS\n- performance\nAdditional details: D3 college basketball player, in-season (12 weeks remaining). Need strength training that complements basketball - explosiveness, durability, injury prevention. Can't be too sore for games.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 2\n\n### Experience\n- Level: Intermediate\n- Details: 3 years lifting experience. College basketball player (D3), currently in-season. Trains Mon/Thu at 2 PM, 45 min sessions between classes and practice.\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: University athletic facility - full athletic performance center with platforms, racks, sleds, plyo boxes\n- Available equipment: barbells, Dumbbells, platforms, sleds, plyo_boxes\n\n### Constraints\n- Chronic ankle instability (tapes for games). Can't be too sore for basketball performance.",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Brandon Taylor\n**Age:** 22\n**Gender:** male</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "decd9e52-ae2a-4c05-81e8-770de78482ed",
+      "name": "Brandon Taylor",
+      "timezone": "America/New_York"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Brandon Taylor  \n- **Age:** 22  \n- **Gender:** Male  \n- **Experience level:** **Intermediate** — ~3 years consistent lifting; D3 college basketball athlete, currently in-season (as of **2026-02-27**)\n\n---\n\n### GOALS\n- **Primary goal(s):** **In-season performance support** (as of **2026-02-27**)  \n  - Maintain/build **strength & power** without excessive soreness  \n  - Improve/maintain **explosiveness** (jump/first-step)  \n  - Enhance **durability** and **injury prevention** during remaining season\n- **Secondary goals:**\n  - Manage **ankle stability** and reduce risk of lower-limb injuries\n- **Target events/deadlines:**\n  - **In-season window:** ~**12 weeks remaining** (from **2026-02-27**)\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Available training days:** **Mon + Thu**\n- **Desired training frequency:** **2 sessions/week**\n- **Session duration:** **45 minutes**\n- **Time windows:** **2:00 PM** (between classes and practice)\n- **Key scheduling constraint:** Programming must minimize DOMS/fatigue that interferes with practices/games\n\n### Equipment & Environment\n- **Location:** Commercial gym / **university athletic performance center**\n- **Available equipment (confirmed):**\n  - Barbells, dumbbells\n  - Racks, platforms\n  - Sled\n  - Plyo boxes\n\n### Constraints\n- **[ACTIVE]** Chronic ankle instability — tapes for games; prioritize ankle/foot strength, landing mechanics, and controlled unilateral work (since **2026-02-27**). Monitor symptoms and any “giving way.”\n- **[ACTIVE]** In-season fatigue/soreness tolerance — training cannot create excessive soreness that impacts basketball performance (since **2026-02-27**).\n\n### Preferences\n- **Training emphasis:** Explosiveness + durability + injury prevention (lifting complements basketball; not maximal hypertrophy blocks)\n- **Programming tolerance:** Moderate volume, high quality reps; avoid high-soreness eccentric overload and excessive novelty during season\n- **Session style constraint:** Must fit **45 min** including warm-up\n\n---\n\n## METRICS\n> **Data not provided yet** (as of **2026-02-27**). Add baseline testing/training numbers when available.\n\n### Strength (basketball-supportive)\n- Not yet recorded: key lifts (e.g., trap bar deadlift, front squat, bench, chin-ups), rep ranges, and dates\n\n### Endurance (sport context)\n- Not yet recorded: conditioning tests (if tracked), minutes load, or HR data\n\n### Movement Quality (priority given ankle constraint)\n- Not yet recorded: single-leg balance, ankle ROM (dorsiflexion), hop/landing tolerance, pain ratings\n\n### Body Composition\n- Not yet recorded: bodyweight (as of date), height, body fat % (optional)\n\n---\n\n## LOG\n## 2026-02-27 — Profile created / in-season context captured\n- Set primary goal to **in-season performance support** with **12 weeks remaining**.\n- Confirmed training availability: **Mon/Thu, 2:00 PM, 45 min, 2x/week**.\n- Equipment confirmed: university performance center with **platforms, racks, barbells/dumbbells, sled, plyo boxes**.\n- Added constraints: **chronic ankle instability** (taped for games) + **must minimize soreness/fatigue** to protect on-court performance.\n- Metrics section pending: requested future capture of baseline lift numbers, bodyweight, and ankle/movement assessments.",
+    "capturedAt": "2026-02-27T19:27:10.561Z",
+    "model": "gpt-5.2",
+    "agentLogId": "caa4e3a3-985f-46f8-8047-cb93aa4054a1"
+  }
+}

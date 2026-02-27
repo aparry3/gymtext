@@ -1,0 +1,28 @@
+{
+  "id": "rachel-green-profile-update",
+  "agentId": "profile:update",
+  "persona": "rachel-green",
+  "description": "Captured from rachel-green run",
+  "tags": [
+    "rachel-green",
+    "captured"
+  ],
+  "input": "## GOALS\n- muscle_building\n- Lose weight and improve body composition\nAdditional details: Build some muscle and lose weight. Feel less stressed.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 4\n\n### Experience\n- Level: Beginner\n\n### Equipment & Environment\n- Training location: Home gym\n- Setup details: Apartment - dumbbells, resistance bands, pull-up bar\n- Available equipment: Dumbbells, bands, Pull-up bar",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Rachel Green\n**Age:** 26\n**Gender:** female</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "c004788e-31dd-4657-8dec-0e935a526cff",
+      "name": "Rachel Green",
+      "timezone": "America/Los_Angeles"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Rachel Green  \n- **Age:** 26  \n- **Gender:** Female  \n- **Experience level:** **Novice/Beginner** (as reported; consistent training history not provided)\n\n---\n\n### GOALS\n- **Primary goal(s):**\n  - **Build muscle (hypertrophy focus)** while training at home with dumbbells/bands/pull-up bar\n  - **Lose weight & improve body composition** (fat loss while maintaining/building lean mass)\n- **Secondary goals:**\n  - **Reduce stress / feel less stressed** (supportive training structure, recovery habits)\n- **Target events/deadlines:** None provided\n\n---\n\n### TRAINING CONTEXT\n\n#### Schedule & Availability\n- **Desired training frequency:** **4 days/week**\n- **Session duration preferences/constraints:** Not provided\n- **Time windows:** Not provided\n- **Blocked days:** Not provided\n\n#### Equipment & Environment\n- **Location:** Home gym (apartment)\n- **Available equipment:**\n  - **Dumbbells** (weight range not specified)\n  - **Resistance bands**\n  - **Pull-up bar**\n- **Notes:** No barbell, machines, or cardio equipment mentioned\n\n#### Constraints\n- **[ACTIVE]** None reported (as of 2026-02-27)\n- **[RESOLVED]** None reported\n\n#### Preferences\n- Likes/dislikes (movements/training styles): Not provided  \n- Communication style preferences: Not provided  \n- Focus areas: Muscle building + body comp + stress reduction (as stated)\n\n---\n\n### METRICS\n*(No baseline metrics provided yet; needed to measure progress. Ordered for a general fitness / body composition focus.)*\n\n**Body Composition**\n- **Weight:** Not provided (as of 2026-02-27)\n- **Body fat % / measurements (waist/hips):** Not provided (as of 2026-02-27)\n- **Progress photos:** Not provided\n\n**Strength**\n- Dumbbell lift numbers (e.g., squat/hinge/press/row): Not provided (as of 2026-02-27)\n- Pull-up bar metrics (e.g., dead hang time, assisted pull-ups, unbroken reps): Not provided (as of 2026-02-27)\n\n**Endurance**\n- Cardio frequency/pace/steps: Not provided (as of 2026-02-27)\n\n**Movement Quality**\n- Pain status, mobility limitations, exercise tolerance: Not provided (as of 2026-02-27)\n\n---\n\n### LOG\n## 2026-02-27 — Profile created/updated (intake)\n- Set **primary goals**: build muscle + lose weight/improve body composition; **secondary**: reduce stress.\n- Training context captured: **Beginner**, **4 days/week**, **home gym** (dumbbells, bands, pull-up bar).\n- Constraints/injuries: none reported.\n- Baseline metrics not yet provided (weight, measurements, strength benchmarks, and movement limitations all pending).",
+    "capturedAt": "2026-02-27T19:27:06.517Z",
+    "model": "gpt-5.2",
+    "agentLogId": "9d99c134-4320-48dc-ab81-9ea00850f5f8"
+  }
+}

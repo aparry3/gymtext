@@ -1,0 +1,28 @@
+{
+  "id": "linda-martinez-profile-update",
+  "agentId": "profile:update",
+  "persona": "linda-martinez",
+  "description": "Captured from linda-martinez run",
+  "tags": [
+    "linda-martinez",
+    "captured"
+  ],
+  "input": "## GOALS\n- Lose weight and improve body composition\nAdditional details: Lose weight and have more energy for kids. Single parent, very busy.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 3\n\n### Experience\n- Level: Beginner\n\n### Equipment & Environment\n- Training location: Home gym\n- Setup details: Garage - kettlebells and bands\n- Available equipment: kettlebells, bands\n\n### Constraints\n- Postpartum core issues, needs some core modifications. Very limited and unpredictable schedule.",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Linda Martinez\n**Age:** 38\n**Gender:** female</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "1d648056-ee06-4150-9ca5-d9d23b93495b",
+      "name": "Linda Martinez",
+      "timezone": "America/Chicago"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Linda Martinez\n- **Age:** 38\n- **Gender:** Female\n- **Experience level:** **Novice (Beginner)** — new to consistent training (as reported)\n\n---\n\n### GOALS\n- **Primary goal(s):**\n  - **Lose weight and improve body composition** (fat loss + improved muscle tone)\n- **Secondary goals:**\n  - **Increase daily energy** and fitness capacity to keep up with kids\n  - Build a consistent, sustainable training habit despite a busy schedule\n- **Target events/deadlines:** None provided\n\n---\n\n### TRAINING CONTEXT\n\n#### Schedule & Availability\n- **Available training days:** Not specified (schedule described as unpredictable)\n- **Desired training frequency:** **3 sessions/week**\n- **Session duration preferences/constraints:** Not specified\n- **Time windows:** Not specified\n- **Blocked days:** Not specified\n- **Notes:** Single parent; **very busy** with **limited + unpredictable schedule** → plan should support short, flexible sessions and “minimum effective dose” options.\n\n#### Equipment & Environment\n- **Primary location:** Home gym (garage)\n- **Available equipment:**\n  - **Kettlebells** (exact weights not provided)\n  - **Resistance bands** (types/resistances not provided)\n- **Environment constraints:** Not specified (space, flooring, noise, etc. unknown)\n\n#### Constraints\n- **[ACTIVE] (since 2026-02-27)** Postpartum core issues — needs **core modifications**. Avoid high-pressure abdominal work until tolerance is confirmed; prioritize breath, deep core, and gradual progressions.\n- **[ACTIVE] (since 2026-02-27)** Very limited/unpredictable schedule — requires flexible programming, short sessions, and backup workouts.\n\n#### Preferences\n- Likes/dislikes: Not provided\n- Training style preference: Not provided (will assume efficient full-body sessions unless updated)\n- Communication style: Not provided\n- Focus areas: Fat loss/body composition + energy\n\n---\n\n### METRICS\n*(No baseline performance or body composition data provided yet; placeholders added for consistency.)*\n\n**Body Composition** (priority aligned with goal)\n- **Current weight:** Not provided (as of 2026-02-27)\n- **Waist/hip measurements:** Not provided (as of 2026-02-27)\n- **Body fat %:** Not provided (as of 2026-02-27)\n- **Progress photos:** Not provided (as of 2026-02-27)\n\n**Strength**\n- No current lift/baseline metrics provided (as of 2026-02-27)\n\n**Endurance**\n- No baseline cardio metrics provided (as of 2026-02-27)\n\n**Movement Quality**\n- Postpartum core status noted, but no functional baseline recorded yet (as of 2026-02-27)\n\n---\n\n### LOG\n## 2026-02-27 — Profile created/updated (intake)\n- Added goals: weight loss + improved body composition; increase energy for kids.\n- Training context captured: **3x/week desired**, **home garage gym**, equipment = kettlebells + bands.\n- Constraints recorded as **ACTIVE**: postpartum core issues (needs modifications); unpredictable schedule/single parent.\n- Metrics not provided yet; body composition + performance baselines pending.",
+    "capturedAt": "2026-02-27T19:27:08.466Z",
+    "model": "gpt-5.2",
+    "agentLogId": "27b4fa28-35a2-4e00-89e9-118b7e0b4d09"
+  }
+}

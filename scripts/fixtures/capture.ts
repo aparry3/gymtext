@@ -1,4 +1,16 @@
 #!/usr/bin/env tsx
+/**
+ * Fixture Capture CLI
+ *
+ * Captures agent test fixtures from agent_logs for the most recent run
+ * of each persona.
+ *
+ * Usage:
+ *   pnpm fixture:capture --user sarah-chen
+ *   pnpm fixture:capture --all
+ *   pnpm fixture:capture --all --overwrite
+ *   pnpm fixture:capture --log-id abc-123
+ */
 import { Command } from 'commander';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
@@ -15,12 +27,10 @@ interface Persona {
 
 const program = new Command()
   .name('fixture:capture')
-  .description('Capture agent test fixtures from agent_logs')
+  .description('Capture agent test fixtures from agent_logs (most recent run)')
   .option('--user <persona>', 'Persona ID (e.g., sarah-chen)')
   .option('--all', 'Capture fixtures for all personas')
-  .option('--since <time>', 'Time window (e.g., "5 minutes ago")', '10 minutes ago')
   .option('--log-id <id>', 'Specific agent log ID')
-  .option('--user-id <id>', 'Filter by user ID in logs')
   .option('--overwrite', 'Overwrite existing fixtures', false)
   .parse();
 
@@ -40,11 +50,7 @@ async function lookupUserId(db: Kysely<any>, phone: string): Promise<string | nu
   return row?.id ?? null;
 }
 
-async function captureForPersona(
-  db: Kysely<any>,
-  persona: Persona,
-  since: Date | undefined,
-): Promise<string[]> {
+async function captureForPersona(db: Kysely<any>, persona: Persona): Promise<string[]> {
   const userId = await lookupUserId(db, persona.userData.phone);
   if (!userId) {
     console.log(`  Skipping ${persona.id} (no user found for ${persona.userData.phone})`);
@@ -54,7 +60,6 @@ async function captureForPersona(
   return captureFixtures({
     db,
     persona: persona.id,
-    since,
     userId,
     overwrite: opts.overwrite,
   });
@@ -79,79 +84,49 @@ async function main() {
   });
 
   try {
-    const since = opts.since ? parseSince(opts.since) : undefined;
     let allWritten: string[] = [];
 
     if (opts.all) {
       const personas = loadPersonas();
-      console.log(`Capturing fixtures for all ${personas.length} personas`);
-      if (since) console.log(`  Since: ${since.toISOString()}`);
+      console.log(`Capturing fixtures for all ${personas.length} personas\n`);
 
       for (const persona of personas) {
-        console.log(`\n${persona.id}:`);
-        const written = await captureForPersona(db, persona, since);
+        console.log(`${persona.id}:`);
+        const written = await captureForPersona(db, persona);
+        if (written.length > 0) {
+          for (const f of written) {
+            console.log(`  ${path.basename(f)}`);
+          }
+        }
         allWritten.push(...written);
       }
     } else if (opts.user) {
-      console.log(`Capturing fixtures for persona: ${opts.user}`);
-      if (since) console.log(`  Since: ${since.toISOString()}`);
+      console.log(`Capturing fixtures for persona: ${opts.user}\n`);
 
-      // Try to find persona file for phone lookup
       const personas = loadPersonas();
       const persona = personas.find(p => p.id === opts.user);
 
-      if (persona) {
-        allWritten = await captureForPersona(db, persona, since);
-      } else {
-        // No persona file — use --user-id if provided, or capture without userId filter
-        allWritten = await captureFixtures({
-          db,
-          persona: opts.user,
-          since,
-          userId: opts.userId,
-          overwrite: opts.overwrite,
-        });
+      if (!persona) {
+        console.error(`Error: persona '${opts.user}' not found in ${PERSONAS_DIR}`);
+        process.exit(1);
       }
+
+      allWritten = await captureForPersona(db, persona);
     } else if (opts.logId) {
-      console.log(`Capturing fixture from log: ${opts.logId}`);
+      console.log(`Capturing fixture from log: ${opts.logId}\n`);
       allWritten = await captureFixtures({
         db,
-        persona: opts.user || 'unknown',
+        persona: 'manual',
+        userId: '', // not used when logIds provided
         logIds: [opts.logId],
         overwrite: opts.overwrite,
       });
     }
 
-    console.log(`\nCaptured ${allWritten.length} fixture(s):`);
-    for (const f of allWritten) {
-      console.log(`  ${f}`);
-    }
+    console.log(`\nCaptured ${allWritten.length} fixture(s) total`);
   } finally {
     await db.destroy();
   }
-}
-
-function parseSince(sinceStr: string): Date {
-  // Parse "N minutes ago", "N hours ago" etc.
-  const match = sinceStr.match(/^(\d+)\s+(minute|hour|day|second)s?\s+ago$/i);
-  if (match) {
-    const amount = parseInt(match[1], 10);
-    const unit = match[2].toLowerCase();
-    const now = Date.now();
-    const msMap: Record<string, number> = {
-      second: 1000,
-      minute: 60_000,
-      hour: 3_600_000,
-      day: 86_400_000,
-    };
-    return new Date(now - amount * (msMap[unit] || 60_000));
-  }
-  // Try ISO date
-  const d = new Date(sinceStr);
-  if (isNaN(d.getTime())) {
-    throw new Error(`Cannot parse time: ${sinceStr}`);
-  }
-  return d;
 }
 
 main().catch(err => {

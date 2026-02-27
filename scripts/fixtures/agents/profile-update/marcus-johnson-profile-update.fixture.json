@@ -1,0 +1,28 @@
+{
+  "id": "marcus-johnson-profile-update",
+  "agentId": "profile:update",
+  "persona": "marcus-johnson",
+  "description": "Captured from marcus-johnson run",
+  "tags": [
+    "marcus-johnson",
+    "captured"
+  ],
+  "input": "## GOALS\n- Build strength and muscle\nAdditional details: Competitive powerlifter, 12 weeks out from meet. Current total 1350 lb, targeting 1450 lb. Squat 455→485, Bench 315→340, Deadlift 580→625. Fix bench sticking point 2-3 inches off chest, improve squat depth consistency.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 4\n\n### Experience\n- Level: Intermediate\n- Details: 2.5 years focused powerlifting, 4 years total. Competed USAPL local meet Nov 2024 (8/9, 3rd in 220 lb class). Prefers percentage-based programming, DUP, familiar with RPE. Trains Mon/Tue/Thu/Fri at 5:30 AM.\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: Iron Haven Powerlifting Gym (Tempe, AZ) - competition-spec power racks, specialty bars (SSB, Swiss, Texas DL), chains, bands, mono-lifts, full dumbbell rack to 150 lb, GHD, reverse hyper\n- Available equipment: barbells, Dumbbells, specialty_bars, bands, chains\n\n### Constraints\n- Chronic right shoulder impingement - manages with daily band work, aggravated by overhead work or wide-grip bench. Cannot do strict overhead press, uses landmine variations. Sees sports PT monthly.",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Marcus Johnson\n**Age:** 32\n**Gender:** male</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "f761e90f-e946-4017-a8e9-71af5b25fc32",
+      "name": "Marcus Johnson",
+      "timezone": "America/Phoenix"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Marcus Johnson  \n- **Age:** 32  \n- **Gender:** male  \n- **Experience level:** **Intermediate** — ~4 years total lifting, ~2.5 years focused powerlifting; competed in USAPL local meet (Nov 2024), went 8/9, placed 3rd in **220 lb class**.\n\n---\n\n### GOALS\n- **Primary goal(s):** Peak for upcoming powerlifting meet (currently **12 weeks out as of 2026-02-27**)  \n  - Increase total **1350 lb → 1450 lb**\n  - **Squat:** 455 → 485  \n  - **Bench:** 315 → 340  \n  - **Deadlift:** 580 → 625\n- **Secondary goals:**\n  - Fix bench sticking point **~2–3 inches off chest**\n  - Improve **squat depth consistency** (meet-standard depth, repeatable)\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Training frequency:** 4x/week\n- **Training days:** **Mon / Tue / Thu / Fri**\n- **Time window:** **5:30 AM** sessions\n- **Session duration:** not specified\n\n### Equipment & Environment\n- **Location:** Commercial gym — **Iron Haven Powerlifting Gym (Tempe, AZ)**\n- **Equipment available (specific):**\n  - Competition-spec power racks, monolifts\n  - Specialty bars: **SSB, Swiss bar, Texas deadlift bar**\n  - **Bands, chains**\n  - Full dumbbell rack to **150 lb**\n  - **GHD, reverse hyper**\n  - Standard barbells/plates\n\n### Constraints\n- **[ACTIVE]** Chronic right shoulder impingement — aggravated by overhead work or wide-grip bench; cannot do strict overhead press; uses **landmine variations**; manages with daily band work; sees sports PT monthly (**since 2026-02-27**). Monitor symptoms and bench grip selection closely during peak.\n\n### Preferences\n- Prefers **percentage-based programming** and **DUP**\n- Familiar with **RPE** and able to autoregulate\n- Powerlifting-specific environment; goal-driven meet prep focus\n- Exercise selection accommodations: avoid strict overhead pressing; avoid wide-grip bench when shoulder is irritated\n\n---\n\n## METRICS\n*(Ordered for powerlifting priority. All “current” values recorded **as of 2026-02-27** unless otherwise noted.)*\n\n### Strength (Powerlifting)\n- **Total:** **1350 lb** (as of 2026-02-27)\n- **Squat:** **455 lb** (current best as of 2026-02-27)\n- **Bench Press:** **315 lb** (current best as of 2026-02-27)\n- **Deadlift:** **580 lb** (current best as of 2026-02-27)\n\n**Technical/Performance Notes**\n- Bench: sticking point **2–3 inches off chest** (as of 2026-02-27)\n- Squat: depth consistency needs improvement (as of 2026-02-27)\n\n### Body Composition\n- **Weight:** not provided (note: previously competed in **220 lb class**, Nov 2024)\n\n---\n\n## LOG\n## 2026-02-27 — Profile created/updated (meet prep baseline)\n- Set primary goal: increase powerlifting total **1350 → 1450** within **~12 weeks** (meet date not specified).\n- Captured lift targets: SQ **455→485**, BP **315→340**, DL **580→625**.\n- Noted key limiters: bench sticking point **2–3\" off chest**; squat **depth consistency**.\n- Training schedule confirmed: **4x/week (Mon/Tue/Thu/Fri), 5:30 AM**, at Iron Haven Powerlifting Gym (Tempe, AZ).\n- Constraint added: **[ACTIVE] chronic right shoulder impingement**; overhead pressing avoided; landmine variations used; monthly sports PT; wide-grip bench aggravates symptoms.\n\nIf you share your current bodyweight, meet date/federation, and most recent *rep-based* top sets (e.g., 1@8, 3@8) for S/B/D, I can tighten the baseline metrics and make the “12 weeks out” timeline fully consistent.",
+    "capturedAt": "2026-02-27T19:27:17.472Z",
+    "model": "gpt-5.2",
+    "agentLogId": "8265145c-3e28-49df-841b-2e4f88cae19a"
+  }
+}

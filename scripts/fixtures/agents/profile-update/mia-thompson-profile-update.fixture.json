@@ -1,0 +1,28 @@
+{
+  "id": "mia-thompson-profile-update",
+  "agentId": "profile:update",
+  "persona": "mia-thompson",
+  "description": "Captured from mia-thompson run",
+  "tags": [
+    "mia-thompson",
+    "captured"
+  ],
+  "input": "## GOALS\n- performance\nAdditional details: Alpine ski racer (amateur/masters level). Off-season focus on leg power, stability, injury prevention, core strength, explosive power, single-leg strength. 8 months until ski season.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 4\n\n### Experience\n- Level: Intermediate\n- Details: 2 years serious training. Alpine ski racer training year-round. Off-season strength focus, in-season maintenance. Prefers explosive movements, plyometrics, heavy single-leg work. Mon/Tue/Thu/Sat mornings, 60-75 min.\n\n### Equipment & Environment\n- Training location: hybrid\n- Setup details: Full commercial gym access plus some home equipment for quick sessions\n- Available equipment: barbells, Dumbbells, machines, plyo_boxes\n\n### Constraints\n- Previous MCL sprain (right knee), manages with prehab and stability work.",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Mia Thompson\n**Age:** 30\n**Gender:** female</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "89d88f41-a4bc-485d-80ba-ef440dbc57dc",
+      "name": "Mia Thompson",
+      "timezone": "America/Denver"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Mia Thompson  \n- **Age:** 30  \n- **Gender:** Female  \n- **Experience level:** **Intermediate** — 2 years of serious, consistent training; alpine ski racer training year-round (off-season strength/power emphasis, in-season maintenance).\n\n---\n\n### GOALS\n- **Primary goal(s):** **Performance (alpine ski racing, amateur/masters)** — off-season emphasis on:\n  - Leg power & explosive output (jump/plyo capacity, rate of force development)\n  - Single-leg strength (force production + deceleration control)\n  - Knee/hip stability & injury prevention (especially right knee)\n  - Core strength (anti-rotation/anti-extension; trunk stiffness under load)\n- **Secondary goals:**\n  - Maintain athleticism and robustness into in-season (reduce injury risk; tolerate volume)\n- **Target events/deadlines:**\n  - **Ski season in ~8 months (as of 2026-02-27)** — off-season build phase leading into pre-season specificity.\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Available training days:** **Mon / Tue / Thu / Sat**\n- **Desired training frequency:** **4 sessions/week**\n- **Session duration:** **60–75 min**\n- **Time windows:** **Mornings** (all training days)\n\n### Equipment & Environment\n- **Training location:** **Hybrid**\n  - **Commercial gym:** barbells, dumbbells, machines, plyo boxes (full access)\n  - **Home (quick sessions):** some equipment available (details/loads not specified yet)\n\n### Constraints\n- **[ACTIVE]** Previous **right knee MCL sprain** — currently managed with prehab/stability work; monitor knee valgus/rotation stress and cutting/plyo volume tolerance (**noted 2026-02-27**).\n\n### Preferences\n- Prefers **explosive movements, plyometrics, heavy single-leg work**\n- Training style emphasis: power + stability + injury-prep (ski-specific robustness)\n\n---\n\n## METRICS\n*(No quantitative performance metrics provided yet — baseline testing needed.)*\n\n### Strength (ski supplemental / primary off-season driver)\n- **Not yet recorded (as of 2026-02-27):** key lifts and single-leg strength benchmarks (e.g., back/front squat, trap bar deadlift, split squat/Bulgarian, RDL, step-ups; rep maxes or estimated 1RMs)\n\n### Endurance (supportive)\n- **Not yet recorded (as of 2026-02-27):** weekly conditioning volume, modality, HR zones, or interval benchmarks\n\n### Movement Quality (priority for injury prevention)\n- **Not yet recorded (as of 2026-02-27):** knee stability/tolerance markers (single-leg squat quality, hop/landing mechanics, pain ratings, ROM symmetry)\n\n### Body Composition (optional/secondary unless specified)\n- **Not provided (as of 2026-02-27)**\n\n---\n\n## LOG\n## 2026-02-27 — Profile created/updated (intake)\n- Confirmed athlete context: **amateur/masters alpine ski racer**, off-season performance focus.\n- Availability set to **4x/week (Mon/Tue/Thu/Sat mornings), 60–75 min**.\n- Equipment confirmed: **commercial gym + some home equipment** (home inventory pending).\n- Constraint added: **[ACTIVE] prior right MCL sprain** managed with prehab/stability.\n- Metrics section left blank pending baseline testing (strength, movement quality, conditioning).\n\n**Field consistency check (as of 2026-02-27):**\n- Schedule supports desired frequency (4 days listed = 4 sessions/week).\n- Experience label aligns with history (2 years serious training = Intermediate).\n- Deadline captured (8 months until season; anchored to current date).",
+    "capturedAt": "2026-02-27T19:27:17.050Z",
+    "model": "gpt-5.2",
+    "agentLogId": "f11df342-1666-49e4-a25b-207bc898a6fa"
+  }
+}
