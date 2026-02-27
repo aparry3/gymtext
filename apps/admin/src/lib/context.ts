@@ -20,7 +20,7 @@ import { createDatabase } from '@gymtext/shared/server';
 import { createRepositories, type RepositoryContainer } from '@gymtext/shared/server';
 import { createServices, type ServiceContainer } from '@gymtext/shared/server';
 import type { Kysely } from 'kysely';
-import type { DB } from '@gymtext/shared/server';
+import type { DB } from '@gymtext/shared/server/models/_types';
 import {
   getSecretsForMode,
   getProductionSecrets,

@@ -437,16 +437,28 @@ For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`
 ### Field Types:
 \`\`\`json
 "feedbackFields": [
-  { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
-  { "key": "reps", "label": "Reps", "type": "number", "required": true }
+  { "key": "set", "label": "Set", "type": "number", "editable": false },
+  { "key": "reps", "label": "Reps", "type": "number", "required": true },
+  { "key": "weight", "label": "Weight", "type": "number", "required": true },
+  { "key": "units", "label": "Units", "type": "select", "options": ["lb", "kg"], "required": true }
 ]
 \`\`\`
+
+### Field Ordering (Best Practice)
+Always define feedbackFields in this order for strength exercises:
+1. **set** (uneditable) — always first for multi-set exercises
+2. **reps**
+3. **weight** (no unit in label — unit is a separate field)
+4. **units** (select: ["lb", "kg"]) — pre-fill from the user's profile preference
+5. Any additional fields (distance, time, etc.)
+
+feedbackRows tuples must follow the same key order as feedbackFields.
 
 ### Common Feedback Patterns
 
 | Format | feedbackFields | Notes |
 |--------|---------------|-------|
-| Straight sets (weighted) | weight + reps | Pre-fill prescribed values |
+| Straight sets (weighted) | set + reps + weight + units | set is uneditable; units is select [lb, kg] pre-filled from profile |
 | Straight sets (bodyweight) | reps only | No weight field needed |
 | Supersets / Circuits | per nested item: weight + reps | Parent has NONE. Each nested item has its own feedback. |
 | AMRAP | rounds (on parent) | Single aggregate metric. Nested items get NO feedback. |
@@ -478,9 +490,9 @@ Fields can be marked \`editable: false\` to render as static labels instead of i
 
 \`\`\`json
 "feedbackRows": [
-  [["weight", "135"], ["reps", "5"]],
-  [["weight", "185"], ["reps", "5"]],
-  [["weight", "225"], ["reps", "5"]]
+  [["set", "1"], ["reps", "5"], ["weight", "135"], ["units", "lb"]],
+  [["set", "2"], ["reps", "5"], ["weight", "185"], ["units", "lb"]],
+  [["set", "3"], ["reps", "5"], ["weight", "225"], ["units", "lb"]]
 ]
 \`\`\`
 
@@ -543,28 +555,30 @@ Feedback on each nested item (NOT parent):
       "name": "Bench Press", "short_detail": "4x10 | 135 lb",
       "feedbackFields": [
         { "key": "set", "label": "Set", "type": "number", "editable": false },
-        { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
-        { "key": "reps", "label": "Reps", "type": "number", "required": true }
+        { "key": "reps", "label": "Reps", "type": "number", "required": true },
+        { "key": "weight", "label": "Weight", "type": "number", "required": true },
+        { "key": "units", "label": "Units", "type": "select", "options": ["lb", "kg"], "required": true }
       ],
       "feedbackRows": [
-        [["set", "1"], ["weight", "135"], ["reps", "10"]],
-        [["set", "2"], ["weight", "135"], ["reps", "10"]],
-        [["set", "3"], ["weight", "135"], ["reps", "10"]],
-        [["set", "4"], ["weight", "135"], ["reps", "10"]]
+        [["set", "1"], ["reps", "10"], ["weight", "135"], ["units", "lb"]],
+        [["set", "2"], ["reps", "10"], ["weight", "135"], ["units", "lb"]],
+        [["set", "3"], ["reps", "10"], ["weight", "135"], ["units", "lb"]],
+        [["set", "4"], ["reps", "10"], ["weight", "135"], ["units", "lb"]]
       ]
     },
     {
       "name": "Dumbbell Rows", "short_detail": "4x12 | 40 lb",
       "feedbackFields": [
         { "key": "set", "label": "Set", "type": "number", "editable": false },
-        { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
-        { "key": "reps", "label": "Reps", "type": "number", "required": true }
+        { "key": "reps", "label": "Reps", "type": "number", "required": true },
+        { "key": "weight", "label": "Weight", "type": "number", "required": true },
+        { "key": "units", "label": "Units", "type": "select", "options": ["lb", "kg"], "required": true }
       ],
       "feedbackRows": [
-        [["set", "1"], ["weight", "40"], ["reps", "12"]],
-        [["set", "2"], ["weight", "40"], ["reps", "12"]],
-        [["set", "3"], ["weight", "40"], ["reps", "12"]],
-        [["set", "4"], ["weight", "40"], ["reps", "12"]]
+        [["set", "1"], ["reps", "12"], ["weight", "40"], ["units", "lb"]],
+        [["set", "2"], ["reps", "12"], ["weight", "40"], ["units", "lb"]],
+        [["set", "3"], ["reps", "12"], ["weight", "40"], ["units", "lb"]],
+        [["set", "4"], ["reps", "12"], ["weight", "40"], ["units", "lb"]]
       ]
     }
   ]
