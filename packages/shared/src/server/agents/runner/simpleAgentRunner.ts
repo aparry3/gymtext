@@ -124,6 +124,12 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         logMetadata = { usage: model.lastUsage };
       }
 
+      logMetadata.invokeParams = {
+        input: params.input,
+        context: params.context,
+        params: sanitizeParams(params.params),
+      };
+
       // 6. Log (fire-and-forget)
       if (agentLogRepository) {
         const durationMs = Date.now() - startTime;
@@ -149,4 +155,18 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       };
     },
   };
+}
+
+function sanitizeParams(params?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!params) return undefined;
+  const sanitized = { ...params };
+  if (sanitized.user && typeof sanitized.user === 'object') {
+    const user = sanitized.user as Record<string, unknown>;
+    sanitized.user = {
+      id: user.id,
+      name: user.name,
+      timezone: user.timezone,
+    };
+  }
+  return sanitized;
 }

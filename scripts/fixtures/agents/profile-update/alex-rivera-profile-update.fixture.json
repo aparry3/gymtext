@@ -1,0 +1,28 @@
+{
+  "id": "alex-rivera-profile-update",
+  "agentId": "profile:update",
+  "persona": "alex-rivera",
+  "description": "Captured from alex-rivera run",
+  "tags": [
+    "alex-rivera",
+    "captured"
+  ],
+  "input": "## GOALS\n- performance\nAdditional details: Recovering from ACL surgery (9 months post-op). Want to get back to playing soccer and rebuild leg strength.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 4\n\n### Experience\n- Level: Beginner\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: University rec center - standard gym equipment\n- Available equipment: barbells, Dumbbells, machines\n\n### Constraints\n- ACL reconstruction (right knee), 9 months post-op. Still doing PT. Nervous about re-injury.",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Alex Rivera\n**Age:** 24\n**Gender:** non-binary</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "ab55b692-6e5e-4d3f-88f4-7ed6d3c0af6d",
+      "name": "Alex Rivera",
+      "timezone": "America/Chicago"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Alex Rivera  \n- **Age:** 24  \n- **Gender:** non-binary  \n- **Experience level:** **Novice (Beginner)** — currently rebuilding capacity post-ACL reconstruction; training age and recent consistency not provided.\n\n---\n\n### GOALS\n- **Primary goal(s):**  \n  - **Return-to-sport performance (soccer)** — safely resume soccer participation after **right ACL reconstruction**, currently **~9 months post-op** (as of **2026-02-27**)  \n  - **Rebuild leg strength** (with emphasis on right/left symmetry, knee stability, and confidence)\n- **Secondary goals:**  \n  - Reduce re-injury risk and improve movement quality for cutting/landing mechanics  \n  - Maintain consistency with gym training alongside PT\n- **Target events/deadlines:** Not specified (e.g., target return-to-play date, first match, tryouts)\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Available training days:** Not specified  \n- **Desired training frequency:** **4 sessions/week**  \n- **Session duration preferences/constraints:** Not specified  \n- **Time windows:** Not specified  \n- **Blocked days:** Not specified\n\n### Equipment & Environment\n- **Primary location:** Commercial gym — **University recreation center**  \n- **Available equipment:**  \n  - Barbells (exact plates/limits not specified)  \n  - Dumbbells (range not specified)  \n  - Standard strength machines (types not specified)\n\n### Constraints\n- **[ACTIVE]** Right knee **ACL reconstruction — ~9 months post-op**, still attending PT; increased fear/avoidance around re-injury (since **2026-02-27**). *Training should follow PT guidance/clearances; monitor swelling, pain, instability, and next-day response.*\n- **[ACTIVE]** Return-to-sport risk considerations: cutting/pivoting/landing tolerance and knee confidence not yet established (since **2026-02-27**).\n\n### Preferences\n- **Likes/dislikes:** Not specified  \n- **Communication style preferences:** Not specified  \n- **Focus areas:** Soccer return-to-play readiness, unilateral leg strength, stability, and confidence building\n\n---\n\n## METRICS\n*(No baseline performance metrics provided yet. Establishing starting measures is recommended for safe progression and symmetry tracking.)*\n\n### Movement Quality (priority: ACL return-to-sport readiness)\n- **Post-op status:** Right ACL reconstruction, **~9 months post-op** (as of **2026-02-27**)  \n- **Pain/swelling/instability status:** Not provided  \n- **Functional milestones (not yet recorded):**  \n  - Single-leg squat quality (R/L)  \n  - Hop tests (single/triple/crossover) symmetry  \n  - Landing mechanics (video/coach/PT assessment)  \n  - Knee ROM and quad strength symmetry (often tracked in PT)\n\n### Strength\n- No current lifts provided (as of **2026-02-27**)\n\n### Endurance\n- No soccer conditioning or running metrics provided (as of **2026-02-27**)\n\n### Body Composition\n- Weight/body comp not provided (as of **2026-02-27**)\n\n---\n\n## LOG\n\n## 2026-02-27 — Profile created/updated (ACL return-to-sport focus)\n- Captured goals: return to soccer performance; rebuild leg strength; reduce re-injury risk.\n- Training context added: **4x/week** desired frequency; commercial gym (university rec center) with barbells/dumbbells/machines.\n- Constraints recorded: **Right ACL reconstruction (~9 months post-op)**, still in PT; nervous about re-injury.\n- Metrics section initialized: no baseline measures provided yet; movement-quality/return-to-sport metrics to be added when available.\n\n--- \n\nIf you share any of the following, I can update the METRICS and constraints more precisely: current PT restrictions/clearances (running, jumping, cutting), pain/swelling levels, ROM status, and any current strength numbers (e.g., leg press, split squat, RDL, hamstring curl) plus which days/times you prefer to train.",
+    "capturedAt": "2026-02-27T19:27:13.233Z",
+    "model": "gpt-5.2",
+    "agentLogId": "f940565c-190c-4f15-be52-7a8186c59b1e"
+  }
+}

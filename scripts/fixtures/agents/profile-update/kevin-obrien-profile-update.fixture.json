@@ -1,0 +1,28 @@
+{
+  "id": "kevin-obrien-profile-update",
+  "agentId": "profile:update",
+  "persona": "kevin-obrien",
+  "description": "Captured from kevin-obrien run",
+  "tags": [
+    "kevin-obrien",
+    "captured"
+  ],
+  "input": "## GOALS\n- Build strength and muscle\nAdditional details: General strength and fitness - jack of all trades. Be ready for anything: hiking, sports, challenges. No specific timeline, ongoing development. Likes variety.\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- Desired training frequency: 4\n\n### Experience\n- Level: Intermediate\n- Details: 3 years consistent training. General fitness enthusiast, no specific sport. Squat 245x5, bench 205x5, deadlift 315x5, 5K in 25 min. Enjoys mix of strength, conditioning, and skills. Mon/Wed/Fri/Sat at noon, 60 min.\n\n### Equipment & Environment\n- Training location: Commercial gym\n- Setup details: Crunch Fitness - full commercial gym equipment\n- Available equipment: barbells, Dumbbells, machines, cables",
+  "context": [
+    "<Profile># IDENTITY\n**Name:** Kevin O'Brien\n**Age:** 36\n**Gender:** male</Profile>"
+  ],
+  "params": {
+    "user": {
+      "id": "15df25b8-e8e3-4559-8734-da23cf8efa07",
+      "name": "Kevin O'Brien",
+      "timezone": "America/New_York"
+    },
+    "currentDate": "Friday, February 27, 2026"
+  },
+  "reference": {
+    "response": "### IDENTITY\n- **Name:** Kevin O’Brien\n- **Age:** 36\n- **Gender:** Male\n- **Experience level:** **Intermediate** — 3 years consistent training; general fitness focus (strength + conditioning + skills), no single sport specialization.\n\n---\n\n### GOALS\n- **Primary goal(s):**\n  - **Build strength and muscle** (ongoing, no fixed deadline)\n  - Develop **well-rounded “ready for anything” fitness** (hiking, recreational sports, physical challenges)\n- **Secondary goals:**\n  - Maintain/improve general conditioning (supports versatility)\n  - Keep training engaging via variety\n- **Target events/deadlines:** None (ongoing development)\n\n---\n\n## TRAINING CONTEXT\n\n### Schedule & Availability\n- **Available training days:** **Mon / Wed / Fri / Sat**\n- **Desired training frequency:** **4 sessions/week** (matches available days)\n- **Time windows:** **Noon** (all listed days)\n- **Session duration:** **~60 minutes**\n- **Blocked days:** Tue/Thu/Sun (not specified—assumed unavailable)\n\n### Equipment & Environment\n- **Primary location:** Commercial gym — **Crunch Fitness**\n- **Available equipment:** Full commercial setup including **barbells, dumbbells, machines, cables** (and typical gym accessories implied)\n\n### Constraints\n- **[ACTIVE]** None reported (as of **2026-02-27**)\n- **[RESOLVED]** None logged\n\n### Preferences\n- **Training style:** Likes **variety**; enjoys a **mix of strength, conditioning, and skills**\n- **Focus areas:** General athleticism / “jack of all trades” capability (carryover to hiking/sports/challenges)\n\n---\n\n## METRICS\n*(As of **2026-02-27** unless otherwise noted; dates not provided for individual performances—captured with today’s date for consistency.)*\n\n### Strength\n- **Back Squat:** 245 lb × 5 (as of **2026-02-27**)\n- **Bench Press:** 205 lb × 5 (as of **2026-02-27**)\n- **Deadlift:** 315 lb × 5 (as of **2026-02-27**)\n\n### Endurance\n- **5K:** 25:00 (as of **2026-02-27**)\n\n### Movement Quality\n- No assessments reported yet.\n\n### Body Composition\n- No bodyweight/body fat data reported yet.\n\n---\n\n## LOG\n\n## 2026-02-27 — Profile created/updated (intake)\n- Set primary goal: build strength and muscle with well-rounded “ready for anything” fitness (ongoing).\n- Confirmed schedule: **Mon/Wed/Fri/Sat**, **noon**, **60 min**, **4x/week** target.\n- Equipment confirmed: Crunch Fitness commercial gym (barbells/dumbbells/machines/cables).\n- Logged current performance metrics:\n  - Squat 245×5, Bench 205×5, Deadlift 315×5\n  - 5K 25:00\n- Constraints: none reported.\n\nIf you share **bodyweight**, **height**, and any recurring aches (even minor), I’ll add them to METRICS/CONSTRAINTS for a more complete baseline.",
+    "capturedAt": "2026-02-27T19:27:09.016Z",
+    "model": "gpt-5.2",
+    "agentLogId": "c43a55f0-44df-4794-9693-b66fcd8f1087"
+  }
+}
