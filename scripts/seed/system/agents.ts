@@ -370,9 +370,10 @@ Single exercise:
 Superset/Circuit:
 |Name                    short_detail|
 |detail (context/note/warning)...    |
-|  Exercise 1 name    ex1 short_det  |
-|  Exercise 2 name    ex2 short_det  |
-|feedbackRow: [field] [field]        |
+|  ▸ Exercise 1 name  ex1 short_det  |
+|    [expanded: set | weight | reps] |
+|  ▸ Exercise 2 name  ex2 short_det  |
+|    [expanded: set | weight | reps] |
 
 This is a mobile-first UI — every character counts. Keep names and short_details minimal.
 
@@ -447,13 +448,27 @@ For exercises that need tracking, define \`feedbackFields\` and \`feedbackRows\`
 |--------|---------------|-------|
 | Straight sets (weighted) | weight + reps | Pre-fill prescribed values |
 | Straight sets (bodyweight) | reps only | No weight field needed |
-| Supersets / Circuits | none | Omit feedbackFields entirely |
-| AMRAP | rounds | Single field for completed rounds |
+| Supersets / Circuits | per nested item: weight + reps | Parent has NONE. Each nested item has its own feedback. |
+| AMRAP | rounds (on parent) | Single aggregate metric. Nested items get NO feedback. |
 | EMOM | none | Omit feedbackFields entirely |
 | Steady-state cardio | distance + time | e.g., "Distance (mi)" + "Time (min)" |
 | Intervals | distance + time | Same as cardio |
 
 These are common defaults — adjust if the dossier prescribes something different.
+
+### Editable Flag
+Fields can be marked \`editable: false\` to render as static labels instead of input cells. Use this for set numbers:
+\`\`\`json
+{ "key": "set", "label": "Set", "type": "number", "editable": false }
+\`\`\`
+- Defaults to \`true\` — only set \`false\` explicitly for row labels
+- Common use: \`set\` field with values 1, 2, 3… so the user sees "Set 1", "Set 2" as labels next to editable weight/reps
+- Skip the set field for single-row items (AMRAP rounds, single-set exercises)
+
+### Feedback Placement Rules
+- **Supersets/Circuits**: Feedback goes on each NESTED item individually, NOT on the parent. Each exercise tracks its own sets.
+- **Exception — AMRAP/For-Time with aggregate metric**: When the entire circuit produces one aggregate metric (e.g., rounds), feedback stays on the parent. Nested items get no individual feedback.
+- **Single exercises**: Feedback on the item itself (as usual).
 
 ### Feedback Rows:
 - Each row is an array of [key, value] tuples (all values are strings)
@@ -514,6 +529,7 @@ Output:
 
 ### Main lift superset example
 
+Feedback on each nested item (NOT parent):
 \`\`\`json
 {
   "blockId": "main",
@@ -523,16 +539,34 @@ Output:
     { "text": "Rest 2 min between rounds", "type": "context" }
   ],
   "items": [
-    { "name": "Bench Press", "short_detail": "10 reps", "details": [{ "text": "135 lb", "type": "context" }] },
-    { "name": "Dumbbell Rows", "short_detail": "12 reps", "details": [{ "text": "40 lb", "type": "context" }] }
-  ],
-  "feedbackFields": [
-    { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
-    { "key": "reps", "label": "Reps", "type": "number", "required": true }
-  ],
-  "feedbackRows": [
-    [["weight", "135"], ["reps", "10"]],
-    [["weight", "40"], ["reps", "12"]]
+    {
+      "name": "Bench Press", "short_detail": "4x10 | 135 lb",
+      "feedbackFields": [
+        { "key": "set", "label": "Set", "type": "number", "editable": false },
+        { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
+        { "key": "reps", "label": "Reps", "type": "number", "required": true }
+      ],
+      "feedbackRows": [
+        [["set", "1"], ["weight", "135"], ["reps", "10"]],
+        [["set", "2"], ["weight", "135"], ["reps", "10"]],
+        [["set", "3"], ["weight", "135"], ["reps", "10"]],
+        [["set", "4"], ["weight", "135"], ["reps", "10"]]
+      ]
+    },
+    {
+      "name": "Dumbbell Rows", "short_detail": "4x12 | 40 lb",
+      "feedbackFields": [
+        { "key": "set", "label": "Set", "type": "number", "editable": false },
+        { "key": "weight", "label": "Weight (lb)", "type": "number", "required": true },
+        { "key": "reps", "label": "Reps", "type": "number", "required": true }
+      ],
+      "feedbackRows": [
+        [["set", "1"], ["weight", "40"], ["reps", "12"]],
+        [["set", "2"], ["weight", "40"], ["reps", "12"]],
+        [["set", "3"], ["weight", "40"], ["reps", "12"]],
+        [["set", "4"], ["weight", "40"], ["reps", "12"]]
+      ]
+    }
   ]
 }
 \`\`\`
@@ -657,6 +691,34 @@ Never make up information. If something isn't in the dossier, don't include it.`
                         },
                       },
                     },
+                    feedbackFields: {
+                      type: 'array',
+                      description: 'Per-exercise tracking fields for supersets/circuits. Same schema as parent-level feedbackFields.',
+                      items: {
+                        type: 'object',
+                        required: ['key', 'label', 'type'],
+                        properties: {
+                          key: { type: 'string', description: 'Field identifier (used in feedbackRows)' },
+                          label: { type: 'string', description: 'Human-readable label' },
+                          type: { type: 'string', enum: ['number', 'text', 'select', 'boolean'], description: 'Field type' },
+                          options: { type: 'array', items: { type: 'string' }, description: 'Options for select type' },
+                          required: { type: 'boolean', description: 'Whether field is required' },
+                          editable: { type: 'boolean', description: 'If false, renders as a static label. Defaults to true.' },
+                        },
+                      },
+                    },
+                    feedbackRows: {
+                      type: 'array',
+                      description: 'Per-exercise data rows — same schema as parent-level feedbackRows.',
+                      items: {
+                        type: 'array',
+                        description: 'One row per set — array of [key, value] tuples',
+                        items: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -673,6 +735,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
                     options: { type: 'array', items: { type: 'string' }, description: 'Options for select type' },
                     default: { anyOf: [{ type: 'number' }, { type: 'string' }, { type: 'boolean' }], description: 'Default value' },
                     required: { type: 'boolean', description: 'Whether field is required' },
+                    editable: { type: 'boolean', description: 'If false, renders as a static label (e.g., set numbers). Defaults to true.' },
                   },
                 },
               },

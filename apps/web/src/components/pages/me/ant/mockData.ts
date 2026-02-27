@@ -15,6 +15,7 @@ export interface FeedbackField {
   type: 'number' | 'text' | 'select' | 'boolean';
   options?: string[];
   required?: boolean;
+  editable?: boolean; // defaults to true; set false for row labels like set numbers
 }
 
 export interface WorkoutItem {
@@ -25,13 +26,15 @@ export interface WorkoutItem {
   notes?: string;
   items?: NestedItem[];
   feedbackFields?: FeedbackField[];
-  feedbackRows?: Record<string, any>[];
+  feedbackRows?: Record<string, string | number>[];
 }
 
 export interface NestedItem {
   name: string;
   short_detail: string;
   details?: Detail[];
+  feedbackFields?: FeedbackField[];
+  feedbackRows?: Record<string, string | number>[];
 }
 
 export interface Workout {
@@ -78,15 +81,16 @@ export const strengthWorkout: Workout = {
       ],
       notes: 'Last session: 5×5 @ 215 lbs. Add 10 lbs this week.',
       feedbackFields: [
+        { key: 'set', label: 'Set', type: 'number', editable: false },
         { key: 'weight', label: 'Weight', type: 'number', required: true },
         { key: 'reps', label: 'Reps', type: 'number', required: true },
       ],
       feedbackRows: [
-        { weight: 135, reps: 5 },
-        { weight: 185, reps: 5 },
-        { weight: 205, reps: 5 },
-        { weight: 225, reps: 5 },
-        { weight: 225, reps: 5 },
+        { set: 1, weight: 135, reps: 5 },
+        { set: 2, weight: 185, reps: 5 },
+        { set: 3, weight: 205, reps: 5 },
+        { set: 4, weight: 225, reps: 5 },
+        { set: 5, weight: 225, reps: 5 },
       ],
     },
     {
@@ -99,15 +103,16 @@ export const strengthWorkout: Workout = {
       ],
       notes: 'Last session: 5×5 @ 180 lbs. Focus on control.',
       feedbackFields: [
+        { key: 'set', label: 'Set', type: 'number', editable: false },
         { key: 'weight', label: 'Weight', type: 'number', required: true },
         { key: 'reps', label: 'Reps', type: 'number', required: true },
       ],
       feedbackRows: [
-        { weight: 95, reps: 10 },
-        { weight: 135, reps: 5 },
-        { weight: 165, reps: 5 },
-        { weight: 185, reps: 5 },
-        { weight: 185, reps: 4 },
+        { set: 1, weight: 95, reps: 10 },
+        { set: 2, weight: 135, reps: 5 },
+        { set: 3, weight: 165, reps: 5 },
+        { set: 4, weight: 185, reps: 5 },
+        { set: 5, weight: 185, reps: 4 },
       ],
     },
     {
@@ -116,13 +121,14 @@ export const strengthWorkout: Workout = {
       short_detail: '3×10 @ 135 lbs',
       details: [{ text: 'Hinge at hips, bar close to legs', type: 'note' }],
       feedbackFields: [
+        { key: 'set', label: 'Set', type: 'number', editable: false },
         { key: 'weight', label: 'Weight', type: 'number', required: true },
         { key: 'reps', label: 'Reps', type: 'number', required: true },
       ],
       feedbackRows: [
-        { weight: 135, reps: 10 },
-        { weight: 135, reps: 10 },
-        { weight: 135, reps: 9 },
+        { set: 1, weight: 135, reps: 10 },
+        { set: 2, weight: 135, reps: 10 },
+        { set: 3, weight: 135, reps: 9 },
       ],
     },
     {
@@ -131,13 +137,14 @@ export const strengthWorkout: Workout = {
       short_detail: '3×12 @ 40 lbs',
       details: [{ text: 'Pull to hip, squeeze at top', type: 'note' }],
       feedbackFields: [
+        { key: 'set', label: 'Set', type: 'number', editable: false },
         { key: 'weight', label: 'Weight', type: 'number', required: true },
         { key: 'reps', label: 'Reps', type: 'number', required: true },
       ],
       feedbackRows: [
-        { weight: 40, reps: 12 },
-        { weight: 40, reps: 12 },
-        { weight: 40, reps: 11 },
+        { set: 1, weight: 40, reps: 12 },
+        { set: 2, weight: 40, reps: 12 },
+        { set: 3, weight: 40, reps: 11 },
       ],
     },
     {
@@ -187,24 +194,34 @@ export const supersetWorkout: Workout = {
           name: 'Barbell Bench Press',
           short_detail: '4×10 @ 135 lbs',
           details: [{ text: 'Lower to mid-chest', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 135, reps: 10 },
+            { set: 2, weight: 135, reps: 10 },
+            { set: 3, weight: 135, reps: 10 },
+            { set: 4, weight: 135, reps: 9 },
+          ],
         },
         {
           name: 'Close-Grip Bench Press',
           short_detail: '4×12 @ 95 lbs',
           details: [{ text: 'Shoulder-width, focus on triceps', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 95, reps: 12 },
+            { set: 2, weight: 95, reps: 12 },
+            { set: 3, weight: 95, reps: 11 },
+            { set: 4, weight: 95, reps: 10 },
+          ],
         },
-      ],
-      feedbackFields: [
-        { key: 'bench_weight', label: 'Bench', type: 'number', required: true },
-        { key: 'bench_reps', label: 'Reps', type: 'number', required: true },
-        { key: 'cg_weight', label: 'CGBP', type: 'number', required: true },
-        { key: 'cg_reps', label: 'Reps', type: 'number', required: true },
-      ],
-      feedbackRows: [
-        { bench_weight: 135, bench_reps: 10, cg_weight: 95, cg_reps: 12 },
-        { bench_weight: 135, bench_reps: 10, cg_weight: 95, cg_reps: 12 },
-        { bench_weight: 135, bench_reps: 10, cg_weight: 95, cg_reps: 11 },
-        { bench_weight: 135, bench_reps: 9, cg_weight: 95, cg_reps: 10 },
       ],
     },
     {
@@ -219,24 +236,34 @@ export const supersetWorkout: Workout = {
           name: 'Incline Dumbbell Press',
           short_detail: '4×12 @ 40 lbs',
           details: [{ text: 'Bench 30-45°', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 40, reps: 12 },
+            { set: 2, weight: 40, reps: 12 },
+            { set: 3, weight: 40, reps: 11 },
+            { set: 4, weight: 40, reps: 10 },
+          ],
         },
         {
           name: 'Tricep Pushdowns',
           short_detail: '4×15 @ 50 lbs',
           details: [{ text: 'Elbows pinned to sides', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 50, reps: 15 },
+            { set: 2, weight: 50, reps: 15 },
+            { set: 3, weight: 50, reps: 14 },
+            { set: 4, weight: 50, reps: 12 },
+          ],
         },
-      ],
-      feedbackFields: [
-        { key: 'incline_weight', label: 'Incline', type: 'number', required: true },
-        { key: 'incline_reps', label: 'Reps', type: 'number', required: true },
-        { key: 'push_weight', label: 'Pushdown', type: 'number', required: true },
-        { key: 'push_reps', label: 'Reps', type: 'number', required: true },
-      ],
-      feedbackRows: [
-        { incline_weight: 40, incline_reps: 12, push_weight: 50, push_reps: 15 },
-        { incline_weight: 40, incline_reps: 12, push_weight: 50, push_reps: 15 },
-        { incline_weight: 40, incline_reps: 11, push_weight: 50, push_reps: 14 },
-        { incline_weight: 40, incline_reps: 10, push_weight: 50, push_reps: 12 },
       ],
     },
     {
@@ -248,23 +275,32 @@ export const supersetWorkout: Workout = {
           name: 'Cable Flyes',
           short_detail: '3×15 @ 25 lbs',
           details: [{ text: 'Squeeze at peak contraction', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 25, reps: 15 },
+            { set: 2, weight: 25, reps: 15 },
+            { set: 3, weight: 25, reps: 14 },
+          ],
         },
         {
           name: 'Overhead Tricep Extension',
           short_detail: '3×12 @ 30 lbs',
           details: [{ text: 'Elbows close to head', type: 'note' }],
+          feedbackFields: [
+            { key: 'set', label: 'Set', type: 'number', editable: false },
+            { key: 'weight', label: 'Weight', type: 'number', required: true },
+            { key: 'reps', label: 'Reps', type: 'number', required: true },
+          ],
+          feedbackRows: [
+            { set: 1, weight: 30, reps: 12 },
+            { set: 2, weight: 30, reps: 12 },
+            { set: 3, weight: 30, reps: 11 },
+          ],
         },
-      ],
-      feedbackFields: [
-        { key: 'fly_weight', label: 'Fly', type: 'number', required: true },
-        { key: 'fly_reps', label: 'Reps', type: 'number', required: true },
-        { key: 'ext_weight', label: 'Extension', type: 'number', required: true },
-        { key: 'ext_reps', label: 'Reps', type: 'number', required: true },
-      ],
-      feedbackRows: [
-        { fly_weight: 25, fly_reps: 15, ext_weight: 30, ext_reps: 12 },
-        { fly_weight: 25, fly_reps: 15, ext_weight: 30, ext_reps: 12 },
-        { fly_weight: 25, fly_reps: 14, ext_weight: 30, ext_reps: 11 },
       ],
     },
     {

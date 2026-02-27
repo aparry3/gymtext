@@ -9,6 +9,7 @@ import {
   type WorkoutItem,
   type Detail,
   type NestedItem,
+  type FeedbackField,
   type Block,
 } from './mockData';
 
@@ -168,38 +169,63 @@ function DetailPill({ detail }: { detail: Detail }) {
 
 function NestedItemRow({ item }: { item: NestedItem }) {
   const t = useTheme();
+  const hasFeedback = item.feedbackFields && item.feedbackRows && item.feedbackRows.length > 0;
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className={`flex items-baseline justify-between py-1.5 pl-3 border-l-2 ${t.nestedBorder}`}>
-      <span className={`text-[13px] ${t.nestedText}`}>{item.name}</span>
-      <span className={`text-[12px] ${t.textMuted} font-mono ml-2 shrink-0`}>{item.short_detail}</span>
+    <div className={`pl-3 border-l-2 ${t.nestedBorder}`}>
+      <div
+        className={`flex items-baseline justify-between py-1.5 ${hasFeedback ? 'cursor-pointer' : ''}`}
+        onClick={() => hasFeedback && setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-1">
+          {hasFeedback && (
+            <ChevronDown className={`w-3 h-3 ${t.textMuted} transition-transform shrink-0 relative -top-px ${expanded ? 'rotate-180' : ''}`} />
+          )}
+          <span className={`text-[13px] ${t.nestedText}`}>{item.name}</span>
+        </div>
+        <span className={`text-[12px] ${t.textMuted} font-mono ml-2 shrink-0`}>{item.short_detail}</span>
+      </div>
+      {expanded && hasFeedback && (
+        <div className="pb-2">
+          <FeedbackTable feedbackFields={item.feedbackFields} feedbackRows={item.feedbackRows} />
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Feedback Table ───────────────────────────────────────────────────────
 
-function FeedbackTable({ item }: { item: WorkoutItem }) {
+function FeedbackTable({ feedbackFields, feedbackRows }: { feedbackFields?: FeedbackField[]; feedbackRows?: Record<string, string | number>[] }) {
   const t = useTheme();
-  if (!item.feedbackFields || !item.feedbackRows || item.feedbackRows.length === 0) return null;
+  if (!feedbackFields || !feedbackRows || feedbackRows.length === 0) return null;
 
   return (
     <div className="mt-3">
       <div className="flex items-center gap-1 px-1 pb-1.5">
-        <span className={`w-8 text-[10px] ${t.textMuted} font-medium uppercase tracking-wider text-center`}>Set</span>
-        {item.feedbackFields.map((f) => (
-          <span key={f.key} className={`flex-1 text-[10px] ${t.textMuted} font-medium uppercase tracking-wider text-center`}>
+        {feedbackFields.map((f) => (
+          <span key={f.key} className={`${f.editable === false ? 'w-8' : 'flex-1'} text-[10px] ${t.textMuted} font-medium uppercase tracking-wider text-center`}>
             {f.label}
           </span>
         ))}
         <span className="w-8" />
       </div>
       <div className="space-y-1">
-        {item.feedbackRows.map((row, i) => (
+        {feedbackRows.map((row, i) => (
           <div key={i} className="flex items-center gap-1 group">
-            <span className={`w-8 text-[11px] ${t.textMuted} text-center font-mono`}>{i + 1}</span>
-            {item.feedbackFields!.map((f) => {
+            {feedbackFields.map((f) => {
               const val = row[f.key];
               const isEmpty = val === '' || val === null || val === undefined;
+
+              if (f.editable === false) {
+                return (
+                  <span key={f.key} className={`w-8 text-[11px] ${t.textMuted} text-center font-mono`}>
+                    {isEmpty ? '' : String(val)}
+                  </span>
+                );
+              }
+
               return (
                 <div key={f.key} className="flex-1">
                   <div className={`h-8 rounded-md flex items-center justify-center text-[13px] font-mono transition-colors ${
@@ -261,7 +287,7 @@ function ExerciseCard({ item, isLast }: { item: WorkoutItem; isLast: boolean }) 
               {item.items.map((sub, i) => <NestedItemRow key={i} item={sub} />)}
             </div>
           )}
-          <FeedbackTable item={item} />
+          <FeedbackTable feedbackFields={item.feedbackFields} feedbackRows={item.feedbackRows} />
         </div>
       )}
     </div>
@@ -350,7 +376,13 @@ export function AntWorkoutView({ mode = 'dark' }: { mode?: 'light' | 'dark' }) {
     items: workout.items.filter((item) => item.blockId === block.id),
   }));
 
-  const totalTracked = workout.items.filter((i) => i.feedbackRows?.length).length;
+  const totalTracked = workout.items.reduce((count, item) => {
+    if (item.feedbackRows?.length) count++;
+    item.items?.forEach((nested) => {
+      if (nested.feedbackRows?.length) count++;
+    });
+    return count;
+  }, 0);
 
   return (
     <ThemeCtx.Provider value={theme}>
