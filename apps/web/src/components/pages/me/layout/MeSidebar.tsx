@@ -207,10 +207,12 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
     }
   };
 
+  const isFullscreen = pathname.startsWith('/me/workouts/');
+
   return (
     <>
-      {/* Mobile hamburger button - fixed at top */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex items-center gap-3 p-4 bg-[hsl(var(--sidebar-bg))] md:hidden">
+      {/* Mobile hamburger button - fixed at top (hidden on fullscreen routes) */}
+      {!isFullscreen && <div className="fixed top-0 left-0 right-0 z-40 flex items-center gap-3 p-4 bg-[hsl(var(--sidebar-bg))] md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button
@@ -245,7 +247,7 @@ export function MeSidebar({ user, basePath = '/me', isAdminView = false, adminBa
           height={24}
           className="h-5 w-auto"
         />
-      </div>
+      </div>}
 
       {/* Desktop sidebar - fixed */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-[hsl(var(--sidebar-bg))]">

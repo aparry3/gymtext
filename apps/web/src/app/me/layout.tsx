@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decryptUserId } from '@/server/utils/sessionCrypto';
 import { MeSidebar } from '@/components/pages/me/layout/MeSidebar';
+import { MeContentWrapper } from '@/components/pages/me/layout/MeContentWrapper';
 import { getServices } from '@/lib/context';
 
 interface MeLayoutProps {
@@ -57,15 +58,7 @@ export default async function MeLayout({ children }: MeLayoutProps) {
       />
 
       {/* Main content area */}
-      <div className="md:pl-64">
-        {/* Mobile header spacing */}
-        <div className="h-16 md:h-0" />
-
-        {/* Page content */}
-        <main className="min-h-screen">
-          {children}
-        </main>
-      </div>
+      <MeContentWrapper>{children}</MeContentWrapper>
     </div>
   );
 }
