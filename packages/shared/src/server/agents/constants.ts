@@ -23,6 +23,7 @@ export const AGENTS = {
   WEEK_DETAILS: 'week:details',
   PLAN_DETAILS: 'plan:details',
   BLOG_METADATA: 'blog:metadata',
+  PROFILE_DETAILS: 'profile:details',
 } as const;
 
 export type AgentId = (typeof AGENTS)[keyof typeof AGENTS];
