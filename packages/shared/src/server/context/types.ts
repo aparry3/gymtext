@@ -45,7 +45,7 @@ export interface StripeSecrets {
 export interface AISecrets {
   openaiApiKey: string;
   googleApiKey: string;
-  xaiApiKey?: string;
+  openrouterApiKey?: string;
 }
 
 /**

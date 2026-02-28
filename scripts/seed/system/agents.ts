@@ -44,9 +44,9 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'profile:update',
     system_prompt: loadPrompt('01-profile-agent.md'),
-    model: 'gpt-5.2',
-    max_tokens: 16000,
-    temperature: 0.7,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
     max_iterations: 3,
     description: 'Creates and updates user fitness profiles',
     is_active: true,
@@ -59,8 +59,8 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
   {
     agent_id: 'plan:generate',
     system_prompt: loadPrompt('02-plan-agent.md'),
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 5,
     description: 'Generates comprehensive training programs based on user goals and profile',
@@ -123,8 +123,8 @@ Return clean JSON matching this schema:
 - nextWorkout — computed from plan structure + user progress
 
 Never make up information. If something isn't in the dossier, don't include it.`,
-    model: 'gpt-5.2',
-    max_tokens: 8000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Generates a structured plan overview for UI display — plan structure only, no user metrics',
@@ -155,8 +155,8 @@ Never make up information. If something isn't in the dossier, don't include it.`
   {
     agent_id: 'week:generate',
     system_prompt: loadPrompt('03-microcycle-agent.md'),
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 4,
     description: 'Generates weekly microcycle workouts based on program phase',
@@ -170,8 +170,8 @@ Never make up information. If something isn't in the dossier, don't include it.`
   {
     agent_id: 'workout:format',
     system_prompt: loadPrompt('04-workout-message-agent.md'),
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 2,
     description: 'Formats daily workout as a concise text message',
@@ -185,8 +185,8 @@ Never make up information. If something isn't in the dossier, don't include it.`
   {
     agent_id: 'week:modify',
     system_prompt: loadPrompt('05-week-modify-agent.md'),
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Modifies an existing week in the training program based on user feedback',
@@ -233,9 +233,9 @@ Return a JSON object with the extracted fields:
 }
 
 Only include fields that were explicitly mentioned.`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
-    temperature: 0.3,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
     max_iterations: 1,
     description: 'Extracts simple user preferences and settings from messages',
     is_active: true,
@@ -263,8 +263,8 @@ Create short, scannable messages that give users a clear view of their upcoming 
 - Number of workouts
 - Key highlights
 - Motivational tone`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 2,
     description: 'Generates SMS summaries of training plans',
@@ -292,8 +292,8 @@ Create exciting, motivating messages that get users pumped for their new trainin
 - What phase/week is ready
 - Brief highlight
 - Encouragement`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 2,
     description: 'Generates "plan ready" notification messages',
@@ -330,9 +330,9 @@ Provide the program in standard markdown format with:
 4. Exercise details
 
 Be flexible with input formats but output consistently.`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
-    temperature: 0.5,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
     max_iterations: 3,
     description: 'Parses raw text into structured training programs',
     is_active: true,
@@ -373,9 +373,9 @@ Provide metadata as JSON:
   "readingTime": 5,
   "keyTopics": ["...", "..."]
 }`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
-    temperature: 0.5,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
     max_iterations: 2,
     description: 'Extracts metadata from blog content',
     is_active: true,
@@ -712,8 +712,8 @@ But use whatever fits: \`skill-work\`, \`drills\`, \`scrimmage\`, \`mobility\`, 
 7. ONE EXERCISE PER ITEM - Each exercise is its own item; grouped exercises use nested \`items\`
 
 Never make up information. If something isn't in the dossier, don't include it.`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Generates a structured workout with blocks and items for UI display',
@@ -907,8 +907,8 @@ Provide the modified plan in markdown format. Include:
 - Don't break existing progressions
 - Consider the big picture (don't just say yes to everything)
 - Log decisions clearly for future reference`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 5,
     description: 'Modifies the training program based on user feedback or changes in circumstances',
@@ -942,8 +942,8 @@ Create a well-structured markdown document that clearly shows:
 - Key exercises with sets/reps/weight
 - Volume totals where relevant
 - Any special notes or considerations`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Formats a week of training as clean, readable markdown for the user dossier',
@@ -1018,8 +1018,8 @@ Return clean JSON matching this schema:
 - Week status (completed, current, upcoming)
 
 Never make up information. If something isn't in the dossier, don't include it.`,
-    model: 'gpt-5.2',
-    max_tokens: 8000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Generates a structured week overview with daily focus and activity type for UI display',
@@ -1086,8 +1086,8 @@ User progress (streaks, adherence, completion status, current week, etc.) comes 
 - \`weekLabels\`: Phase labels per week for fixed-length plans (e.g., ["Foundation", "Foundation", "Hypertrophy I", ...])
 
 Never make up information. If something isn't in the plan dossier, use reasonable defaults or omit optional fields.`,
-    model: 'gpt-5.2',
-    max_tokens: 4000,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
     temperature: 1.0,
     max_iterations: 3,
     description: 'Extracts structured plan metadata (title, goal, frequency, schedule) from plan markdown for UI display',
@@ -1138,9 +1138,9 @@ Always prioritize:
 - User's individual goals and constraints
 - Evidence-based information
 - Clear, actionable advice`,
-    model: 'gpt-5.2',
-    max_tokens: 16000,
-    temperature: 0.8,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
     max_iterations: 1,
     description: 'Main chat agent for conversational responses',
     is_active: true,
@@ -1152,22 +1152,59 @@ Always prioritize:
   },
 ];
 
-export async function seedAgents(): Promise<void> {
+export interface SeedAgentsOptions {
+  overwrite?: boolean;
+}
+
+export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
+  const { overwrite = false } = options || {};
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL || process.env.SANDBOX_DATABASE_URL,
   });
 
   try {
-    console.log('Seeding agent definitions...');
+    console.log(`Seeding agent definitions${overwrite ? ' (overwrite mode)' : ''}...`);
 
     for (const agent of DEFAULT_AGENTS) {
-      // Skip if this agent already has a version — seed only provides initial data
       const existing = await pool.query(
         `SELECT 1 FROM agent_definitions WHERE agent_id = $1 LIMIT 1`,
         [agent.agent_id]
       );
-      if (existing.rows.length > 0) {
+
+      if (existing.rows.length > 0 && !overwrite) {
         console.log(`  ⏭ ${agent.description} (${agent.agent_id}) — already exists`);
+        continue;
+      }
+
+      if (existing.rows.length > 0 && overwrite) {
+        // Insert a new version (append-only table)
+        await pool.query(
+          `
+          INSERT INTO agent_definitions (
+            agent_id, system_prompt, model, max_tokens, temperature,
+            max_iterations, description, is_active, tool_ids,
+            user_prompt_template, examples, eval_rubric, output_schema
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+          )
+          `,
+          [
+            agent.agent_id,
+            agent.system_prompt,
+            agent.model,
+            agent.max_tokens,
+            agent.temperature,
+            agent.max_iterations,
+            agent.description,
+            agent.is_active,
+            agent.tool_ids,
+            agent.user_prompt_template,
+            agent.examples ? JSON.stringify(agent.examples) : null,
+            agent.eval_rubric,
+            agent.output_schema ? JSON.stringify(agent.output_schema) : null,
+          ]
+        );
+        console.log(`  ↻ ${agent.description} (${agent.agent_id}) — new version inserted`);
         continue;
       }
 

@@ -16,7 +16,13 @@ import 'dotenv/config';
 import { seedAgents } from './system/agents';
 import { seedExercises } from './system/exercises';
 
-const SEEDERS = [
+interface SeederEntry {
+  name: string;
+  flag: string;
+  fn: (options?: { overwrite?: boolean }) => Promise<void>;
+}
+
+const SEEDERS: SeederEntry[] = [
   { name: 'agents', flag: '--agents', fn: seedAgents },
   { name: 'exercises', flag: '--exercises', fn: seedExercises },
 ];
@@ -32,10 +38,14 @@ Usage:
   pnpm seed --agents     # Run only agent seeder
   pnpm seed --exercises  # Run only exercise seeder
 
+Options:
+  --overwrite  Overwrite existing entries (inserts new versions for agents)
+
 Examples:
-  pnpm seed --all        # Seed all system data
-  pnpm seed --agents    # Seed agent definitions only
-  pnpm seed --exercises # Seed exercises only
+  pnpm seed --all                  # Seed all system data
+  pnpm seed --agents               # Seed agent definitions only
+  pnpm seed --agents --overwrite   # Re-seed all agents with new versions
+  pnpm seed --exercises            # Seed exercises only
 
 Available seeders:
   --agents     Seed agent definitions
@@ -55,14 +65,16 @@ async function main() {
 
   // Parse flags
   const flags = new Set(args);
+  const overwrite = flags.has('--overwrite');
+  const seedOptions = { overwrite };
 
   // Check for --all flag
   if (flags.has('--all')) {
-    console.log('🌱 Starting system data seed (all)...\n');
+    console.log(`🌱 Starting system data seed (all${overwrite ? ', overwrite' : ''})...\n`);
     for (const seeder of SEEDERS) {
       console.log(`Running ${seeder.name} seeder...`);
       try {
-        await seeder.fn();
+        await seeder.fn(seedOptions);
         console.log(`✅ ${seeder.name} seeder complete\n`);
       } catch (error) {
         console.error(`❌ ${seeder.name} seeder failed:`, error);
@@ -82,12 +94,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`🌱 Starting system data seed (${targetSeeders.map(s => s.name).join(', ')})...\n`);
+  console.log(`🌱 Starting system data seed (${targetSeeders.map(s => s.name).join(', ')}${overwrite ? ', overwrite' : ''})...\n`);
 
   for (const seeder of targetSeeders) {
     console.log(`Running ${seeder.name} seeder...`);
     try {
-      await seeder.fn();
+      await seeder.fn(seedOptions);
       console.log(`✅ ${seeder.name} seeder complete\n`);
     } catch (error) {
       console.error(`❌ ${seeder.name} seeder failed:`, error);

@@ -55,7 +55,7 @@ export function getAiSecrets() {
   return {
     openaiApiKey: env.OPENAI_API_KEY,
     googleApiKey: env.GOOGLE_API_KEY,
-    xaiApiKey: env.XAI_API_KEY,
+    openrouterApiKey: env.OPENROUTER_API_KEY,
   };
 }
 

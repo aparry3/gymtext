@@ -15,8 +15,8 @@ export type { AgentId } from './constants';
 // ============================================
 // Model Initialization
 // ============================================
-export { initializeModel, initializeImageModel } from './models';
-export type { ModelOptions, ImageModelConfig, ImageGenerationResult, InvokableModel } from './models';
+export { initializeModel, initializeImageModel, MODEL_CATALOG } from './models';
+export type { ModelOptions, ImageModelConfig, ImageGenerationResult, InvokableModel, ModelUsageMetadata, CatalogModel, ProviderGroup } from './models';
 
 // ============================================
 // Types

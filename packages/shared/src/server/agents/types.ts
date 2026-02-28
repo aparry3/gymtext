@@ -3,10 +3,29 @@
 // ============================================
 
 /**
+ * Supported model identifiers.
+ * Known values get autocomplete; any string is accepted for forward compatibility.
+ */
+export type ModelId =
+  // OpenAI (direct)
+  | 'gpt-5.2' | 'gpt-5.1' | 'gpt-5-mini' | 'gpt-5-nano'
+  | 'gpt-4o' | 'gpt-4o-mini'
+  // Google Gemini (direct)
+  | 'gemini-3.1-pro' | 'gemini-3.1-flash'
+  | 'gemini-2.5-pro' | 'gemini-2.5-flash' | 'gemini-2.5-flash-lite'
+  // OpenRouter models (provider/model format)
+  | 'x-ai/grok-4-1-fast-reasoning' | 'x-ai/grok-4-1-fast-non-reasoning'
+  | 'x-ai/grok-3' | 'x-ai/grok-3-mini'
+  | 'deepseek/deepseek-chat' | 'deepseek/deepseek-reasoner'
+  | 'minimax/MiniMax-M2.5' | 'minimax/MiniMax-M2.5-highspeed' | 'minimax/MiniMax-M2.1' | 'minimax/MiniMax-M1'
+  | 'moonshotai/kimi-k2.5' | 'moonshotai/moonshot-v1-128k' | 'moonshotai/moonshot-v1-32k'
+  | (string & {});
+
+/**
  * Configuration for agents
  */
 export interface AgentConfig {
-  model?: 'gpt-5-nano' | 'gpt-5-mini' | 'gemini-2.5-flash' | 'gpt-4o' | 'gemini-2.5-flash-lite' | 'gpt-5.1';
+  model?: ModelId;
   temperature?: number;
   maxTokens?: number;
   verbose?: boolean;
@@ -52,17 +71,6 @@ export interface ToolResult {
 // ============================================
 // Configurable Agent Types
 // ============================================
-
-/**
- * Supported model identifiers
- */
-export type ModelId =
-  | 'gpt-5-nano'
-  | 'gpt-5-mini'
-  | 'gpt-5.1'
-  | 'gpt-4o'
-  | 'gemini-2.5-flash'
-  | 'gemini-2.5-flash-lite';
 
 /**
  * Message structure for LLM invocation

@@ -35,7 +35,7 @@ const ServerEnvSchema = z.object({
   // -------------------------------------------------------------------------
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   GOOGLE_API_KEY: z.string().min(1, 'GOOGLE_API_KEY is required'),
-  XAI_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
 
   // -------------------------------------------------------------------------
   // Pinecone
