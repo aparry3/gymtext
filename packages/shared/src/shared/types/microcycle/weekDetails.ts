@@ -49,26 +49,3 @@ export interface WeekDetails {
   /** Always 7 items, Mon–Sun */
   days: WeekDay[];
 }
-
-// ============================================================================
-// Legacy type aliases (for migration compatibility)
-// ============================================================================
-
-/**
- * @deprecated Use WeekDay instead.
- * Extended with optional legacy fields for backward compatibility during migration.
- */
-export interface WeekDetailsDay extends WeekDay {
-  /** @deprecated No longer part of the schema */
-  dayNumber?: number;
-  /** @deprecated No longer part of the schema — use focus instead */
-  title?: string;
-  /** @deprecated No longer part of the schema — use activityType (free string) instead */
-  sessionType?: string;
-  /** @deprecated No longer part of the schema */
-  exerciseCount?: number;
-  /** @deprecated No longer part of the schema */
-  estimatedDuration?: number;
-  /** @deprecated No longer part of the schema */
-  mainMovements?: string[];
-}
