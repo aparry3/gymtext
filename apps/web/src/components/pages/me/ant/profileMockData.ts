@@ -14,9 +14,6 @@ export interface Goal {
   type: 'primary' | 'secondary';
   label: string;
   description: string;
-  target?: string;
-  deadline?: string;
-  progress?: number; // 0-100
 }
 
 export interface ScheduleDay {
@@ -105,25 +102,20 @@ export const MOCK_PROFILE: UserProfile = {
     {
       id: '1',
       type: 'primary',
-      label: 'Build Muscle & Strength',
-      description: 'Increase overall muscle mass and compound lift numbers',
-      progress: 65,
+      label: 'Build Muscle',
+      description: 'Get stronger and put on more muscle mass',
     },
     {
       id: '2',
       type: 'primary',
-      label: 'Lose Body Fat',
-      description: 'Lose 10 lbs of body fat while maintaining muscle',
-      target: '170 lbs',
-      progress: 40,
+      label: 'Lose Weight',
+      description: 'Lean out and reduce body fat',
     },
     {
       id: '3',
       type: 'secondary',
-      label: '5K Under 25:00',
-      description: 'Complete a 5K race in under 25 minutes',
-      deadline: 'March 2026',
-      progress: 15,
+      label: 'Improve Cardio',
+      description: 'Better endurance and cardiovascular health',
     },
   ],
   schedule: {

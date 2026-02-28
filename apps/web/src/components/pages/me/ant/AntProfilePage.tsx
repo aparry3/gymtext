@@ -48,8 +48,6 @@ interface ProfileTheme {
   goalSecondaryBg: string;
   goalSecondaryBorder: string;
   goalSecondaryAccent: string;
-  goalProgressTrack: string;
-  goalProgressFill: string;
   // Schedule
   dayActiveBg: string;
   dayActiveText: string;
@@ -91,9 +89,6 @@ interface ProfileTheme {
   // Log
   logDotBg: string;
   logLineBg: string;
-  // Progress ring
-  progressTrack: string;
-  progressStroke: string;
 }
 
 const darkTheme: ProfileTheme = {
@@ -111,8 +106,6 @@ const darkTheme: ProfileTheme = {
   goalSecondaryBg: 'bg-white/[0.03]',
   goalSecondaryBorder: 'border-white/[0.06]',
   goalSecondaryAccent: 'text-blue-400',
-  goalProgressTrack: 'bg-white/[0.06]',
-  goalProgressFill: 'bg-amber-400',
   dayActiveBg: 'bg-emerald-500/15',
   dayActiveText: 'text-emerald-400',
   dayActiveBorder: 'border-emerald-500/30',
@@ -146,8 +139,6 @@ const darkTheme: ProfileTheme = {
   badgeText: 'text-white/60',
   logDotBg: 'bg-white/20',
   logLineBg: 'bg-white/[0.06]',
-  progressTrack: 'rgba(255,255,255,0.06)',
-  progressStroke: 'rgba(251,191,36,0.8)',
 };
 
 const lightTheme: ProfileTheme = {
@@ -165,8 +156,6 @@ const lightTheme: ProfileTheme = {
   goalSecondaryBg: 'bg-white',
   goalSecondaryBorder: 'border-stone-200',
   goalSecondaryAccent: 'text-blue-600',
-  goalProgressTrack: 'bg-stone-100',
-  goalProgressFill: 'bg-amber-500',
   dayActiveBg: 'bg-emerald-50',
   dayActiveText: 'text-emerald-600',
   dayActiveBorder: 'border-emerald-200',
@@ -200,46 +189,10 @@ const lightTheme: ProfileTheme = {
   badgeText: 'text-stone-600',
   logDotBg: 'bg-stone-300',
   logLineBg: 'bg-stone-200',
-  progressTrack: 'rgba(0,0,0,0.06)',
-  progressStroke: 'rgba(245,158,11,0.9)',
 };
 
 const ThemeContext = createContext<ProfileTheme>(darkTheme);
 const useTheme = () => useContext(ThemeContext);
-
-// ─── Progress Ring ───────────────────────────────────────────────────
-
-function ProgressRing({ progress, size = 48, strokeWidth = 3, children }: {
-  progress: number;
-  size?: number;
-  strokeWidth?: number;
-  children?: React.ReactNode;
-}) {
-  const t = useTheme();
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-
-  return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={t.progressTrack} strokeWidth={strokeWidth} />
-        <circle
-          cx={size / 2} cy={size / 2} r={radius} fill="none"
-          stroke={t.progressStroke} strokeWidth={strokeWidth}
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-700"
-        />
-      </svg>
-      {children && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── Section Header ──────────────────────────────────────────────────
 
@@ -313,43 +266,18 @@ function GoalCard({ goal }: { goal: Goal }) {
       isPrimary ? t.goalPrimaryBg : t.goalSecondaryBg,
       isPrimary ? t.goalPrimaryBorder : t.goalSecondaryBorder,
     )}>
-      <div className="flex items-start gap-3">
-        {goal.progress !== undefined && (
-          <ProgressRing progress={goal.progress} size={44} strokeWidth={3}>
-            <span className={cn('text-[10px] font-bold', t.textPrimary)}>
-              {goal.progress}%
-            </span>
-          </ProgressRing>
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          'text-sm font-semibold',
+          isPrimary ? t.goalPrimaryAccent : t.goalSecondaryAccent,
+        )}>
+          {goal.label}
+        </span>
+        {isPrimary && (
+          <span className={cn('text-[10px] uppercase tracking-wider font-medium', t.textMuted)}>Primary</span>
         )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              'text-sm font-semibold',
-              isPrimary ? t.goalPrimaryAccent : t.goalSecondaryAccent,
-            )}>
-              {goal.label}
-            </span>
-            {isPrimary && (
-              <span className={cn('text-[10px] uppercase tracking-wider font-medium', t.textMuted)}>Primary</span>
-            )}
-          </div>
-          <p className={cn('text-xs mt-1', t.textSecondary)}>{goal.description}</p>
-          {(goal.target || goal.deadline) && (
-            <div className="flex gap-3 mt-2">
-              {goal.target && (
-                <span className={cn('text-[11px]', t.textMuted)}>
-                  Target: {goal.target}
-                </span>
-              )}
-              {goal.deadline && (
-                <span className={cn('text-[11px]', t.textMuted)}>
-                  ⏰ {goal.deadline}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
       </div>
+      <p className={cn('text-xs mt-1', t.textSecondary)}>{goal.description}</p>
     </div>
   );
 }
