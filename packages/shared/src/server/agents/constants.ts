@@ -21,6 +21,7 @@ export const AGENTS = {
   PROGRAM_PARSE: 'program:parse',
   WEEK_FORMAT: 'week:format',
   WEEK_DETAILS: 'week:details',
+  PLAN_DETAILS: 'plan:details',
   BLOG_METADATA: 'blog:metadata',
 } as const;
 

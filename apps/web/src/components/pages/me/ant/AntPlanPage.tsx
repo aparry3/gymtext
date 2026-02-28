@@ -460,14 +460,16 @@ function TodaysWorkout({ plan }: { plan: ActivePlan }) {
         <h3 className={cn('text-base sm:text-lg font-bold mb-0.5', t.textPrimary)}>{nextWorkout.label}</h3>
         <p className={cn('text-xs mb-3 sm:mb-4', t.textSecondary)}>{nextWorkout.focus}</p>
 
-        <div className="space-y-1 sm:space-y-1.5">
-          {nextWorkout.exercises.map((ex, i) => (
-            <div key={i} className={cn('flex items-center gap-2 text-xs sm:text-sm', t.textSecondary)}>
-              <span className={cn('text-[10px] sm:text-xs w-4 text-right shrink-0', t.textFaint)}>{i + 1}</span>
-              <span className="truncate">{ex}</span>
-            </div>
-          ))}
-        </div>
+        {nextWorkout.exercises.length > 0 && (
+          <div className="space-y-1 sm:space-y-1.5">
+            {nextWorkout.exercises.map((ex, i) => (
+              <div key={i} className={cn('flex items-center gap-2 text-xs sm:text-sm', t.textSecondary)}>
+                <span className={cn('text-[10px] sm:text-xs w-4 text-right shrink-0', t.textFaint)}>{i + 1}</span>
+                <span className="truncate">{ex}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -535,7 +537,7 @@ function WorkoutHistory({ weeks }: { weeks: (typeof ACTIVE_PLAN)['weeks'] }) {
 
 // ─── Fixed-Length Progress Section ────────────────────────────────────
 
-function FixedProgressSection({ plan, selectedWeek, onSelectWeek }: { plan: ActivePlan; selectedWeek: number; onSelectWeek: (w: number) => void }) {
+function FixedProgressSection({ plan, selectedWeek, onSelectWeek, hideTracking = false }: { plan: ActivePlan; selectedWeek: number; onSelectWeek: (w: number) => void; hideTracking?: boolean }) {
   const t = useTheme();
   const overallProgress = Math.round((plan.currentWeek / plan.totalWeeks!) * 100);
   const weeksRemaining = plan.totalWeeks! - plan.currentWeek;
@@ -544,7 +546,7 @@ function FixedProgressSection({ plan, selectedWeek, onSelectWeek }: { plan: Acti
   return (
     <div className={cn('rounded-2xl p-4 sm:p-5 border', t.cardBg, t.cardBorder)}>
       <div className="flex items-center gap-4 sm:gap-5">
-        <ProgressRing percent={overallProgress} size={72} />
+        {!hideTracking && <ProgressRing percent={overallProgress} size={72} />}
         <div className="flex-1 min-w-0 space-y-2 sm:space-y-3">
           <div>
             <div className={cn('text-sm font-semibold', t.textPrimary)}>Week {plan.currentWeek} of {plan.totalWeeks}</div>
@@ -564,7 +566,7 @@ function FixedProgressSection({ plan, selectedWeek, onSelectWeek }: { plan: Acti
 
 // ─── Open-Ended Progress Section ─────────────────────────────────────
 
-function OpenEndedProgressSection({ plan }: { plan: ActivePlan }) {
+function OpenEndedProgressSection({ plan, hideTracking = false }: { plan: ActivePlan; hideTracking?: boolean }) {
   const t = useTheme();
 
   return (
@@ -576,16 +578,18 @@ function OpenEndedProgressSection({ plan }: { plan: ActivePlan }) {
         <div className="flex-1 min-w-0">
           <div className={cn('text-sm font-semibold', t.textPrimary)}>Week {plan.currentWeek}</div>
           <div className={cn('text-xs', t.textMuted)}>Started {plan.startDate}</div>
-          <div className={cn('flex items-center gap-3 mt-2 text-xs flex-wrap', t.textSecondary)}>
-            <span className="flex items-center gap-1">
-              <CheckCircle2 size={12} className={cn(t.completedIcon, 'shrink-0')} />
-              {plan.completedWorkouts} workouts
-            </span>
-            <span className="flex items-center gap-1">
-              <Zap size={12} className="shrink-0" />
-              {plan.adherencePercent}% adherence
-            </span>
-          </div>
+          {!hideTracking && (
+            <div className={cn('flex items-center gap-3 mt-2 text-xs flex-wrap', t.textSecondary)}>
+              <span className="flex items-center gap-1">
+                <CheckCircle2 size={12} className={cn(t.completedIcon, 'shrink-0')} />
+                {plan.completedWorkouts} workouts
+              </span>
+              <span className="flex items-center gap-1">
+                <Zap size={12} className="shrink-0" />
+                {plan.adherencePercent}% adherence
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -596,12 +600,18 @@ function OpenEndedProgressSection({ plan }: { plan: ActivePlan }) {
 
 interface AntPlanPageProps {
   mode?: 'light' | 'dark';
+  /** When provided, uses real data instead of demo toggle */
+  plan?: ActivePlan;
+  /** Hide tracking sections (streaks, adherence, history) */
+  hideTracking?: boolean;
 }
 
-export function AntPlanPage({ mode = 'dark' }: AntPlanPageProps) {
+export function AntPlanPage({ mode = 'dark', plan: planProp, hideTracking = false }: AntPlanPageProps) {
   const theme = mode === 'dark' ? darkTheme : lightTheme;
+  const isDemo = !planProp;
   const [planType, setPlanType] = useState<'fixed' | 'open'>('fixed');
-  const plan = planType === 'fixed' ? ACTIVE_PLAN : OPEN_ENDED_PLAN;
+  const demoPlan = planType === 'fixed' ? ACTIVE_PLAN : OPEN_ENDED_PLAN;
+  const plan = planProp || demoPlan;
   const fixed = isFixedLength(plan);
   const [selectedWeek, setSelectedWeek] = useState(plan.currentWeek);
   const displayWeek = plan.weeks[Math.min(selectedWeek - 1, plan.weeks.length - 1)];
@@ -611,31 +621,33 @@ export function AntPlanPage({ mode = 'dark' }: AntPlanPageProps) {
       <div className={cn('min-h-screen', theme.bg)}>
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
-          {/* ── Demo Toggle (remove in production) ── */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => { setPlanType('fixed'); setSelectedWeek(ACTIVE_PLAN.currentWeek); }}
-              className={cn(
-                'text-[10px] px-2.5 py-1 rounded-full font-medium transition-colors',
-                planType === 'fixed'
-                  ? cn(theme.schedulePillBg, theme.schedulePillText)
-                  : cn(theme.textFaint),
-              )}
-            >
-              12-Week Program
-            </button>
-            <button
-              onClick={() => { setPlanType('open'); setSelectedWeek(OPEN_ENDED_PLAN.currentWeek); }}
-              className={cn(
-                'text-[10px] px-2.5 py-1 rounded-full font-medium transition-colors',
-                planType === 'open'
-                  ? cn(theme.schedulePillBg, theme.schedulePillText)
-                  : cn(theme.textFaint),
-              )}
-            >
-              Open-Ended
-            </button>
-          </div>
+          {/* ── Demo Toggle (only in demo mode) ── */}
+          {isDemo && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPlanType('fixed'); setSelectedWeek(ACTIVE_PLAN.currentWeek); }}
+                className={cn(
+                  'text-[10px] px-2.5 py-1 rounded-full font-medium transition-colors',
+                  planType === 'fixed'
+                    ? cn(theme.schedulePillBg, theme.schedulePillText)
+                    : cn(theme.textFaint),
+                )}
+              >
+                12-Week Program
+              </button>
+              <button
+                onClick={() => { setPlanType('open'); setSelectedWeek(OPEN_ENDED_PLAN.currentWeek); }}
+                className={cn(
+                  'text-[10px] px-2.5 py-1 rounded-full font-medium transition-colors',
+                  planType === 'open'
+                    ? cn(theme.schedulePillBg, theme.schedulePillText)
+                    : cn(theme.textFaint),
+                )}
+              >
+                Open-Ended
+              </button>
+            </div>
+          )}
 
           {/* ── Header ── */}
           <div className="flex items-start justify-between gap-2">
@@ -650,20 +662,22 @@ export function AntPlanPage({ mode = 'dark' }: AntPlanPageProps) {
 
           {/* ── Progress (conditional on plan type) ── */}
           {fixed ? (
-            <FixedProgressSection plan={plan} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+            <FixedProgressSection plan={plan} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} hideTracking={hideTracking} />
           ) : (
-            <OpenEndedProgressSection plan={plan} />
+            <OpenEndedProgressSection plan={plan} hideTracking={hideTracking} />
           )}
 
           {/* ── Streak Card ── */}
-          <StreakCard plan={plan} />
+          {!hideTracking && <StreakCard plan={plan} />}
 
           {/* ── Stats Grid ── */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            <StatCard icon={CheckCircle2} label="Done" value={plan.completedWorkouts} sub={plan.totalWorkouts ? `of ${plan.totalWorkouts}` : 'total'} />
-            <StatCard icon={Target} label="Adherence" value={`${plan.adherencePercent}%`} sub={`${plan.skippedWorkouts} skipped`} />
-            <StatCard icon={Flame} label="Streak" value={plan.currentStreak} sub={`Best: ${plan.longestStreak}`} />
-          </div>
+          {!hideTracking && (
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+              <StatCard icon={CheckCircle2} label="Done" value={plan.completedWorkouts} sub={plan.totalWorkouts ? `of ${plan.totalWorkouts}` : 'total'} />
+              <StatCard icon={Target} label="Adherence" value={`${plan.adherencePercent}%`} sub={`${plan.skippedWorkouts} skipped`} />
+              <StatCard icon={Flame} label="Streak" value={plan.currentStreak} sub={`Best: ${plan.longestStreak}`} />
+            </div>
+          )}
 
           {/* ── Today's Workout ── */}
           <TodaysWorkout plan={plan} />
@@ -721,13 +735,15 @@ export function AntPlanPage({ mode = 'dark' }: AntPlanPageProps) {
           </div>
 
           {/* ── Recent Workouts ── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={cn('text-xs font-semibold uppercase tracking-wider', theme.sectionHeaderText)}>Recent Workouts</h3>
-              <button className={cn('text-[11px] transition-colors', theme.textFaint, 'hover:opacity-70')}>View all</button>
+          {!hideTracking && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className={cn('text-xs font-semibold uppercase tracking-wider', theme.sectionHeaderText)}>Recent Workouts</h3>
+                <button className={cn('text-[11px] transition-colors', theme.textFaint, 'hover:opacity-70')}>View all</button>
+              </div>
+              <WorkoutHistory weeks={plan.weeks} />
             </div>
-            <WorkoutHistory weeks={plan.weeks} />
-          </div>
+          )}
 
         </div>
       </div>

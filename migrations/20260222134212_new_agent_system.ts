@@ -103,8 +103,9 @@ export const up: Migration = async (db) => {
   // =============================================================================
   console.log('Simplifying fitness_plans...');
 
-  // Add content column
+  // Add content and details columns
   await sql`ALTER TABLE fitness_plans ADD COLUMN IF NOT EXISTS content TEXT`.execute(db);
+  await sql`ALTER TABLE fitness_plans ADD COLUMN IF NOT EXISTS details JSONB`.execute(db);
 
   // Migrate description to content if it exists
   const fitnessPlansDescExists = await sql<{ exists: boolean }>`
@@ -253,6 +254,7 @@ export const down: Migration = async (db) => {
   await sql`DROP INDEX IF EXISTS idx_fitness_plans_user_latest`.execute(db);
   await sql`UPDATE fitness_plans SET description = content WHERE content IS NOT NULL`.execute(db);
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS content`.execute(db);
+  await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS details`.execute(db);
 
   // Restore microcycles
   await sql`DROP INDEX IF EXISTS idx_microcycles_user_latest`.execute(db);

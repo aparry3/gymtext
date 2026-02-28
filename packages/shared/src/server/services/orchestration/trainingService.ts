@@ -88,8 +88,20 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const planContent = result.response;
       console.log('[TrainingService] Generated plan:', planContent.substring(0, 200));
 
+      // Extract structured plan details via AI agent (mirrors week:details pattern)
+      const detailsResult = await simpleAgentRunner.invoke('plan:details', {
+        input: planContent,
+        context,
+        params: { user },
+      })
+        .then((r) => JSON.parse(r.response) as Record<string, unknown>)
+        .catch((error) => {
+          console.error('[TrainingService] Failed to generate plan details:', error);
+          return undefined;
+        });
+
       // Save to database via dossier service
-      const savedPlan = await markdownService.createPlan(user.id, planContent, now().toJSDate());
+      const savedPlan = await markdownService.createPlan(user.id, planContent, now().toJSDate(), { details: detailsResult });
       console.log(`[TrainingService] Saved fitness plan ${savedPlan.id} for user ${user.id}`);
 
       return savedPlan;
