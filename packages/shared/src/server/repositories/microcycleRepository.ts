@@ -37,6 +37,7 @@ export class MicrocycleRepository {
       .where('clientId', '=', clientId)
       .where('startDate', '<=', targetDate)
       .orderBy('startDate', 'desc')
+      .orderBy('createdAt', 'desc')
       .executeTakeFirst();
 
     if (!result) return null;

@@ -1401,27 +1401,15 @@ Timeline of notable events — progress checks, constraint updates, program chan
   },
   {
     agent_id: 'chat:generate',
-    system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
-
-1. Answer questions about fitness, training, nutrition, and recovery
-2. Provide motivation and accountability
-3. Help users understand their training programs
-4. Offer modifications and alternatives when needed
-5. Be encouraging and supportive
-
-Always prioritize:
-- Safety and proper form
-- User's individual goals and constraints
-- Evidence-based information
-- Clear, actionable advice`,
+    system_prompt: loadPrompt('08-chat-agent.md'),
     model: 'gpt-5-mini',
     max_tokens: 32000,
     temperature: 1,
-    max_iterations: 1,
+    max_iterations: 3,
     description: 'Main chat agent for conversational responses',
     is_active: true,
-    tool_ids: [],
-    user_prompt_template: '{{message}}',
+    tool_ids: ['update_profile', 'get_workout', 'modify_workout', 'modify_plan'],
+    user_prompt_template: '{{input}}',
     examples: null,
     eval_rubric: null,
     output_schema: null,

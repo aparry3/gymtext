@@ -151,7 +151,6 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       // 7. Return
       return {
         response,
-        messages: accumulatedMessages,
       };
     },
   };
