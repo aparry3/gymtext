@@ -1124,6 +1124,187 @@ Never make up information. If something isn't in the plan dossier, use reasonabl
     },
   },
   {
+    agent_id: 'profile:details',
+    system_prompt: `You are a structured profile summarizer. Your role is to extract key information from a user's fitness profile dossier (markdown) and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the user's fitness profile for display in a mobile app or web UI. This captures WHO the user is and WHERE they are in their fitness journey.
+
+## Key Principles
+1. UI-FOCUSED — For human display, not LLM consumption
+2. ACCURATE — Extract exactly what's in the profile dossier
+3. COMPLETE — Fill all required fields from available information
+4. STRING METRICS — Values like "145 lb × 5" or "~16%" — you format them, the UI displays as-is
+5. CHRONOLOGICAL — recentLog entries are newest-first
+
+## What to Extract
+
+### identity
+Basic user info: name, age, gender, experience level, years of experience, and member-since date.
+
+### goals
+Primary and secondary fitness goals. Each has a short label and one-line description.
+
+### schedule
+Training availability ONLY — how many days per week, session duration, and optional day-specific preferences. This is NOT the training plan (what exercises on which days).
+
+### environments
+Where the user trains and what equipment is available. Free-form strings for maximum flexibility.
+
+### constraints
+Injuries, limitations, or restrictions. Track status (active/resolved/monitoring), what it is, how it's managed, and when it started or was resolved.
+
+### preferences
+Three categories:
+- **likes** — exercises, styles, or approaches the user enjoys
+- **dislikes** — things the user wants to avoid
+- **style** — communication and coaching preferences
+
+### strengthMetrics
+Key lift numbers. Each has exercise name, formatted value string, date, optional trend indicator, and optional previous value for comparison.
+
+### bodyMetrics
+Body composition and other measurements. Flexible — can hold weight, body fat, height, weekly mileage, DOTS score, etc. Optional start values for delta display.
+
+### recentLog
+Timeline of notable events — progress checks, constraint updates, program changes. Each entry has a date, title, and bullet-point notes. Newest first.
+
+## Rules
+- Never make up information. If something isn't in the dossier, use reasonable defaults or omit optional fields.
+- Dates should be ISO format (YYYY-MM-DD)
+- Metric values are pre-formatted strings — include units, reps, and qualifiers naturally
+- Generate unique IDs for goals and constraints (simple incrementing strings like "1", "2", "3")
+- recentLog should include the 3-5 most recent notable events`,
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1,
+    max_iterations: 3,
+    description: 'Extracts structured profile details from a fitness profile dossier for UI display',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Extract the structured profile details from this fitness profile dossier:\n\n{{input}}\n\nReturn clean JSON matching the ProfileDetails schema with identity, goals, schedule, environments, constraints, preferences, strengthMetrics, bodyMetrics, and recentLog.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and accuracy. All required fields must be present. Metrics should be properly formatted strings. recentLog should be newest-first. Constraints should have correct status values.',
+    output_schema: {
+      type: 'object',
+      required: ['identity', 'goals', 'schedule', 'environments', 'constraints', 'preferences', 'strengthMetrics', 'bodyMetrics', 'recentLog'],
+      properties: {
+        identity: {
+          type: 'object',
+          required: ['name', 'age', 'gender', 'experience', 'experienceYears', 'memberSince'],
+          properties: {
+            name: { type: 'string' },
+            age: { type: 'integer' },
+            gender: { type: 'string' },
+            experience: { type: 'string' },
+            experienceYears: { type: 'number' },
+            memberSince: { type: 'string', format: 'date' },
+          },
+        },
+        goals: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['id', 'type', 'label', 'description'],
+            properties: {
+              id: { type: 'string' },
+              type: { type: 'string', enum: ['primary', 'secondary'] },
+              label: { type: 'string' },
+              description: { type: 'string' },
+            },
+          },
+        },
+        schedule: {
+          type: 'object',
+          required: ['daysPerWeek', 'sessionDuration'],
+          properties: {
+            daysPerWeek: { type: 'integer', minimum: 1, maximum: 7 },
+            sessionDuration: { type: 'string' },
+            dayPreferences: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        environments: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['environment', 'equipment'],
+            properties: {
+              environment: { type: 'string' },
+              equipment: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+        constraints: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['id', 'status', 'description'],
+            properties: {
+              id: { type: 'string' },
+              status: { type: 'string', enum: ['active', 'resolved', 'monitoring'] },
+              description: { type: 'string' },
+              management: { type: 'string' },
+              since: { type: 'string' },
+              resolvedDate: { type: 'string' },
+            },
+          },
+        },
+        preferences: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['category', 'items'],
+            properties: {
+              category: { type: 'string', enum: ['likes', 'dislikes', 'style'] },
+              items: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+        strengthMetrics: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['exercise', 'value', 'date'],
+            properties: {
+              exercise: { type: 'string' },
+              value: { type: 'string' },
+              date: { type: 'string', format: 'date' },
+              trend: { type: 'string', enum: ['up', 'down', 'stable'] },
+              previousValue: { type: 'string' },
+            },
+          },
+        },
+        bodyMetrics: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['label', 'value', 'date'],
+            properties: {
+              label: { type: 'string' },
+              value: { type: 'string' },
+              date: { type: 'string', format: 'date' },
+              startValue: { type: 'string' },
+              startDate: { type: 'string', format: 'date' },
+            },
+          },
+        },
+        recentLog: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['date', 'title', 'notes'],
+            properties: {
+              date: { type: 'string', format: 'date' },
+              title: { type: 'string' },
+              notes: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     agent_id: 'chat:generate',
     system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
 
