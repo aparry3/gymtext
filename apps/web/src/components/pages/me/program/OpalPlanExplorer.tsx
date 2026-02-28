@@ -1,228 +1,231 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ArrowRight, CalendarDays, Dumbbell, Gauge, HeartPulse, Timer } from 'lucide-react';
+import {
+  Activity,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Dumbbell,
+  Flame,
+  Target,
+  TrendingUp,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-type PlanCategory = 'All' | 'Strength' | 'Endurance' | 'Conditioning' | 'Hybrid';
-
-interface MockPlan {
-  id: string;
-  name: string;
-  category: Exclude<PlanCategory, 'All'>;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
-  duration: string;
-  frequency: string;
-  equipment: string;
-  vibe: string;
-  summary: string;
-  highlights: string[];
-}
-
-const PLAN_CATEGORIES: PlanCategory[] = ['All', 'Strength', 'Endurance', 'Conditioning', 'Hybrid'];
-
-const MOCK_PLANS: MockPlan[] = [
-  {
-    id: 'starter-strength',
-    name: 'Starter Strength Blueprint',
-    category: 'Strength',
-    level: 'Beginner',
-    duration: '8 weeks',
-    frequency: '3 days / week',
-    equipment: 'Barbell + dumbbells',
-    vibe: 'Learn form. Build confidence. Add consistent weight.',
-    summary: 'Perfect first lifting cycle with simple progressions and clear rest guidance.',
-    highlights: ['Full-body split', 'Technique checkpoints', 'Weekly progression targets'],
+const activePlan = {
+  name: 'Hybrid Strength & Conditioning',
+  coach: 'Coach Aaron',
+  goal: 'Build strength while improving conditioning and work capacity',
+  durationWeeks: 12,
+  currentWeek: 3,
+  currentDay: 2,
+  schedule: ['Mon · Lower Strength', 'Tue · Zone 2 Conditioning', 'Thu · Upper Strength', 'Sat · Intervals + Core'],
+  completionRate: 81,
+  adherenceRate: 87,
+  workoutsCompleted: 10,
+  totalWorkouts: 48,
+  nextWorkout: {
+    name: 'Upper Strength B',
+    day: 'Today · 6:00 PM',
+    focus: 'Bench volume + horizontal pull + shoulder accessories',
+    estimatedTime: '65 min',
   },
-  {
-    id: 'marathon-basecamp',
-    name: 'Marathon Basecamp',
-    category: 'Endurance',
-    level: 'Intermediate',
-    duration: '16 weeks',
-    frequency: '5 runs / week',
-    equipment: 'Road shoes + watch',
-    vibe: 'Sustainable mileage with recovery-first pacing.',
-    summary: 'Structured build from aerobic base to race-ready long runs.',
-    highlights: ['Long-run ladder', 'Tempo progression', 'Deload weeks built in'],
-  },
-  {
-    id: 'hiit-ignite',
-    name: 'HIIT Ignite',
-    category: 'Conditioning',
-    level: 'Intermediate',
-    duration: '6 weeks',
-    frequency: '4 sessions / week',
-    equipment: 'Bodyweight + optional bike',
-    vibe: 'Fast sessions, high output, measurable conditioning gains.',
-    summary: 'Short explosive sessions designed for busy schedules and fat-loss support.',
-    highlights: ['20-30 min sessions', 'Heart-rate zones', 'Low-equipment options'],
-  },
-  {
-    id: 'hybrid-athlete',
-    name: 'Hybrid Athlete Build',
-    category: 'Hybrid',
-    level: 'Advanced',
-    duration: '12 weeks',
-    frequency: '6 days / week',
-    equipment: 'Gym + run access',
-    vibe: 'Lift heavy while pushing aerobic performance.',
-    summary: 'Combines lifting blocks with run conditioning and strict fatigue management.',
-    highlights: ['Upper/lower strength', 'Threshold intervals', 'Recovery readiness score'],
-  },
-  {
-    id: 'strong-core-reset',
-    name: 'Core & Mobility Reset',
-    category: 'Strength',
-    level: 'Beginner',
-    duration: '4 weeks',
-    frequency: '4 sessions / week',
-    equipment: 'Bands + mat',
-    vibe: 'Move better, brace better, recover better.',
-    summary: 'Great transition plan for getting back into training after time off.',
-    highlights: ['Spine-friendly core work', 'Daily mobility flows', 'Posture + movement drills'],
-  },
-  {
-    id: 'trail-10k',
-    name: 'Trail 10K Builder',
-    category: 'Endurance',
-    level: 'Beginner',
-    duration: '10 weeks',
-    frequency: '4 runs / week',
-    equipment: 'Trail shoes',
-    vibe: 'Build engine and confidence for hilly terrain.',
-    summary: 'A beginner-friendly route to your first trail race with terrain-specific prep.',
-    highlights: ['Hill repeats', 'Downhill skill work', 'Optional cross-training day'],
-  },
-];
-
-const levelStyles: Record<MockPlan['level'], string> = {
-  Beginner: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Intermediate: 'bg-blue-50 text-blue-700 border-blue-200',
-  Advanced: 'bg-violet-50 text-violet-700 border-violet-200',
 };
 
+const recentWorkouts = [
+  { date: 'Wed, Feb 25', name: 'Zone 2 Ride', status: 'Completed', detail: '42 min · Avg HR 138' },
+  { date: 'Mon, Feb 23', name: 'Lower Strength A', status: 'Completed', detail: '5/5 lifts logged · +5 lb squat' },
+  { date: 'Sat, Feb 21', name: 'Intervals + Core', status: 'Completed', detail: '8 rounds · RPE 8.5' },
+  { date: 'Thu, Feb 19', name: 'Upper Strength A', status: 'Completed', detail: 'All sets completed' },
+  { date: 'Tue, Feb 17', name: 'Zone 2 Run', status: 'Missed', detail: 'Rescheduled due to travel' },
+];
+
+const weekCalendar = [
+  { day: 'Mon', label: 'Lower A', done: true },
+  { day: 'Tue', label: 'Zone 2', done: true },
+  { day: 'Wed', label: 'Recovery', done: true },
+  { day: 'Thu', label: 'Upper B', done: false, today: true },
+  { day: 'Fri', label: 'Mobility', done: false },
+  { day: 'Sat', label: 'Intervals', done: false },
+  { day: 'Sun', label: 'Rest', done: false },
+];
+
 export function OpalPlanExplorer() {
-  const [selectedCategory, setSelectedCategory] = useState<PlanCategory>('All');
-
-  const plans = useMemo(
-    () =>
-      selectedCategory === 'All'
-        ? MOCK_PLANS
-        : MOCK_PLANS.filter((plan) => plan.category === selectedCategory),
-    [selectedCategory]
-  );
-
-  const featuredPlan = plans[0] ?? MOCK_PLANS[0];
+  const progress = Math.round((activePlan.currentWeek / activePlan.durationWeeks) * 100);
 
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
       <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6 md:px-8">
         <Card className="overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white ring-0">
           <CardContent className="p-5 md:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">Program Lab · Opal</p>
-            <h1 className="mt-2 text-2xl font-bold md:text-3xl">Choose your next training plan</h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-200 md:text-base">
-              Browse plans by style, time commitment, and difficulty. This page is intentionally designed with mock
-              plan data so we can shape the ideal planning UX first.
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">My Plan · Active Program</p>
+                <h1 className="mt-2 text-2xl font-bold md:text-3xl">{activePlan.name}</h1>
+                <p className="mt-2 max-w-2xl text-sm text-slate-200 md:text-base">{activePlan.goal}</p>
+              </div>
+              <Badge className="border-blue-300 bg-blue-500/20 text-blue-100">Week {activePlan.currentWeek} of {activePlan.durationWeeks}</Badge>
+            </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {PLAN_CATEGORIES.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors md:text-sm ${
-                    selectedCategory === category
-                      ? 'border-blue-400 bg-blue-500/25 text-blue-100'
-                      : 'border-slate-600 bg-slate-800/70 text-slate-200 hover:bg-slate-700/80'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Kpi icon={<TrendingUp className="h-4 w-4" />} label="Plan Progress" value={`${progress}%`} />
+              <Kpi icon={<CheckCircle2 className="h-4 w-4" />} label="Completed" value={`${activePlan.workoutsCompleted}/${activePlan.totalWorkouts}`} />
+              <Kpi icon={<Flame className="h-4 w-4" />} label="Adherence" value={`${activePlan.adherenceRate}%`} />
+              <Kpi icon={<Activity className="h-4 w-4" />} label="Completion" value={`${activePlan.completionRate}%`} />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-blue-100 bg-blue-50/70 ring-0">
-          <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Featured in {selectedCategory}</p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-900">{featuredPlan.name}</h2>
-              <p className="mt-1 text-sm text-slate-700">{featuredPlan.vibe}</p>
-            </div>
-            <Button className="w-full md:w-auto">
-              Preview featured plan
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {plans.map((plan) => (
-            <Card key={plan.id} className="ring-1 ring-black/[0.04]">
-              <CardContent className="space-y-4 p-5">
-                <div className="flex flex-wrap items-start justify-between gap-2">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Current / Next Workout</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{plan.category}</p>
-                    <h3 className="text-xl font-semibold text-slate-900">{plan.name}</h3>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Up next</p>
+                    <h3 className="text-xl font-semibold text-slate-900">{activePlan.nextWorkout.name}</h3>
                   </div>
-                  <Badge className={`border ${levelStyles[plan.level]}`}>{plan.level}</Badge>
+                  <Badge className="border-blue-200 bg-white text-blue-700">Day {activePlan.currentDay} · Week {activePlan.currentWeek}</Badge>
                 </div>
-
-                <p className="text-sm text-slate-600">{plan.summary}</p>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 md:text-sm">
-                  <StatChip icon={<CalendarDays className="h-3.5 w-3.5" />} label={plan.duration} />
-                  <StatChip icon={<Timer className="h-3.5 w-3.5" />} label={plan.frequency} />
-                  <StatChip icon={<Dumbbell className="h-3.5 w-3.5" />} label={plan.equipment} />
-                  <StatChip icon={<Gauge className="h-3.5 w-3.5" />} label={plan.vibe} />
+                <p className="mt-2 text-sm text-slate-700">{activePlan.nextWorkout.focus}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600 md:text-sm">
+                  <InfoChip icon={<CalendarDays className="h-3.5 w-3.5" />} text={activePlan.nextWorkout.day} />
+                  <InfoChip icon={<Clock3 className="h-3.5 w-3.5" />} text={activePlan.nextWorkout.estimatedTime} />
+                  <InfoChip icon={<Dumbbell className="h-3.5 w-3.5" />} text="Auto-adjusted from last session" />
                 </div>
-
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Plan highlights</p>
-                  <ul className="mt-2 space-y-1">
-                    {plan.highlights.map((highlight) => (
-                      <li key={highlight} className="text-sm text-slate-700">• {highlight}</li>
-                    ))}
-                  </ul>
+                <div className="mt-4 flex gap-2">
+                  <Button className="flex-1">Start Workout</Button>
+                  <Button variant="outline" className="flex-1">View Full Session</Button>
                 </div>
+              </div>
 
-                <div className="flex gap-2">
-                  <Button className="flex-1">Select Plan</Button>
-                  <Button variant="outline" className="flex-1">View Details</Button>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Weekly cadence</p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {activePlan.schedule.map((item) => (
+                    <div key={item} className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700">
+                      {item}
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Plan Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-slate-700">
+              <OverviewRow icon={<Target className="h-4 w-4" />} label="Primary Goal" value="Strength + conditioning" />
+              <OverviewRow icon={<Calendar className="h-4 w-4" />} label="Program Length" value="12 weeks" />
+              <OverviewRow icon={<Dumbbell className="h-4 w-4" />} label="Training Split" value="4 sessions / week" />
+              <OverviewRow icon={<Activity className="h-4 w-4" />} label="Coach" value={activePlan.coach} />
+
+              <div className="pt-2">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Phase Progress</p>
+                <div className="h-2 rounded-full bg-slate-200">
+                  <div className="h-2 rounded-full bg-slate-900" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Foundation block · Week {activePlan.currentWeek} / {activePlan.durationWeeks}</p>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 text-slate-900">
-              <HeartPulse className="h-5 w-5 text-rose-500" />
-              <h4 className="text-lg font-semibold">How to choose the right plan</h4>
-            </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 md:grid-cols-3">
-              <p><span className="font-semibold text-slate-900">Time:</span> Pick a schedule you can repeat for 4+ weeks.</p>
-              <p><span className="font-semibold text-slate-900">Goal:</span> Prioritize one primary adaptation (strength, speed, endurance).</p>
-              <p><span className="font-semibold text-slate-900">Recovery:</span> Match plan intensity to sleep, stress, and lifestyle.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <Card className="lg:col-span-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Workout History (This Plan)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {recentWorkouts.map((workout) => (
+                  <div key={`${workout.date}-${workout.name}`} className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{workout.name}</p>
+                      <p className="text-xs text-slate-500">{workout.date}</p>
+                      <p className="mt-1 text-sm text-slate-600">{workout.detail}</p>
+                    </div>
+                    <Badge className={workout.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                      {workout.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">This Week Calendar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                {weekCalendar.map((entry) => (
+                  <div
+                    key={entry.day}
+                    className={`rounded-lg border p-2.5 ${
+                      entry.today
+                        ? 'border-blue-300 bg-blue-50'
+                        : entry.done
+                          ? 'border-emerald-200 bg-emerald-50'
+                          : 'border-slate-200 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900">{entry.day}</p>
+                      <p className="text-xs text-slate-500">{entry.label}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {entry.today ? 'Today' : entry.done ? 'Completed' : 'Upcoming'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );
 }
 
-function StatChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-2">
+    <div className="rounded-xl border border-slate-700/70 bg-slate-800/60 p-3">
+      <div className="flex items-center gap-1.5 text-slate-300">
+        {icon}
+        <p className="text-xs">{label}</p>
+      </div>
+      <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function InfoChip({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-lg border border-blue-100 bg-white px-2.5 py-1.5">
       <span className="text-slate-500">{icon}</span>
-      <span className="line-clamp-1">{label}</span>
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function OverviewRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-0.5 text-slate-500">{icon}</span>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="font-medium text-slate-900">{value}</p>
+      </div>
     </div>
   );
 }
