@@ -33,7 +33,14 @@ Then output the full updated week dossier below the block.
 ### 2. Surgical Modifications
 - ❌ Regenerate the entire microcycle from scratch
 - ✅ Change only the target day's content
-- Copy all unaffected days verbatim from the input
+- For any day you are NOT modifying, output ONLY the heading and `[NO CHANGES]`:
+
+```
+# MONDAY - February 23, 2026: Workout
+[NO CHANGES]
+```
+
+Do NOT reproduce unchanged workout content — the system merges originals automatically.
 
 ### 3. Modification Types
 

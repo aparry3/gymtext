@@ -936,9 +936,16 @@ After the Weekly Summary, add a horizontal rule and LOG section:
 ## Instructions
 
 ### 1. Preserve Unmodified Content
-- If a session is unaffected, copy it exactly as written
-- If only one drill/exercise in a session changes, preserve all others
-- If only the schedule changes, keep all session content identical
+- For any day you are NOT modifying, output ONLY the heading and \`[NO CHANGES]\`:
+
+\`\`\`
+# MONDAY - February 23, 2026: Workout
+[NO CHANGES]
+\`\`\`
+
+Do NOT reproduce unchanged workout content — the system merges originals automatically.
+- If only one drill/exercise in a session changes, include the full day with modifications
+- If only the schedule changes, keep all session content as \`[NO CHANGES]\` unless the schedule change affects session content
 - ❌ Regenerate the entire microcycle from scratch
 - ✅ Update only the affected sections
 
@@ -995,7 +1002,7 @@ The Weekly Summary should reflect the modified week, not the original plan.
 ## Quality Checklist
 - [ ] Strikethrough notation is used appropriately
 - [ ] All modified sections have explanatory notes
-- [ ] Unmodified sessions are preserved exactly
+- [ ] Unmodified sessions use \`[NO CHANGES]\` marker
 - [ ] Week Overview mentions the modification if significant
 - [ ] Weekly Summary reflects the modified week
 - [ ] LOG section is present with detailed entries

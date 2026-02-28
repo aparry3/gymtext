@@ -1,6 +1,6 @@
 import { now, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
-import { parseDossierResponse } from '@/server/agents/dossierParser';
+import { parseDossierResponse, mergeDossierWithOriginal } from '@/server/agents/dossierParser';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 
@@ -110,14 +110,19 @@ export function createWorkoutModificationService(
         // Parse dossier response with changes metadata
         const { changed, summary, dossierContent } = parseDossierResponse(result.response);
 
+        // Merge unchanged days back from original
+        const mergedContent = changed && dossierContent
+          ? mergeDossierWithOriginal(dossierContent, weekDossier.content)
+          : dossierContent;
+
         // Save if changed
-        if (changed && dossierContent) {
+        if (changed && mergedContent) {
           const plan = await markdownService.getPlan(userId);
           if (plan?.id) {
             await markdownService.createWeek(
               userId,
               plan.id,
-              dossierContent,
+              mergedContent,
               weekDossier.startDate
             );
           }
