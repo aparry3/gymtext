@@ -8,10 +8,25 @@ interface ProgramPageProps {
   userId: string;
 }
 
+interface PlanDetailsResponse {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  goal?: string;
+  frequency?: string;
+  schedule?: string[];
+  startDate?: string;
+  totalWeeks?: number;
+  expectedEndDate?: string;
+  totalWorkouts?: number;
+  weekLabels?: string[];
+}
+
 interface FitnessPlanResponse {
   id: string;
   description: string;
   content: string;
+  details?: PlanDetailsResponse | null;
   startDate: string;
   absoluteWeek: number;
 }
@@ -104,22 +119,25 @@ function mapToActivePlan(
       })
     : '';
 
+  const details = fitnessPlan.details;
+
   return {
     id: fitnessPlan.id,
-    title: fitnessPlan.description || 'My Training Plan',
+    title: details?.title || 'My Training Plan',
     subtitle: `Week ${currentWeek}`,
-    description: fitnessPlan.content || '',
-    goal: '',
+    description: details?.description || '',
+    goal: details?.goal || '',
     currentWeek,
     currentDay: today.getDay(),
-    frequency: `${scheduleDays.length}x/week`,
+    frequency: details?.frequency || `${scheduleDays.length}x/week`,
     startDate,
+    totalWeeks: details?.totalWeeks,
     completedWorkouts: 0,
     skippedWorkouts: 0,
     adherencePercent: 0,
     currentStreak: 0,
     longestStreak: 0,
-    schedule: scheduleDays,
+    schedule: details?.schedule || scheduleDays,
     nextWorkout: {
       label: todayDay?.label || 'Rest Day',
       dayOfWeek: todayDayName,

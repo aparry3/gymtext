@@ -1056,6 +1056,74 @@ Never make up information. If something isn't in the dossier, don't include it.`
     },
   },
   {
+    agent_id: 'plan:details',
+    system_prompt: `You are a structured plan metadata extractor. Your role is to extract key metadata from a fitness plan markdown dossier and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the plan's identity and schedule for display in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to see their program at a glance.
+
+## Design Principle: Separation of Concerns
+This schema defines PLAN IDENTITY ONLY — what the program IS and when it runs.
+User progress (streaks, adherence, completion status, current week, etc.) comes from a separate metrics system and is NOT part of this output.
+
+## Key Principles
+1. BREVITY - Title and description should be short and punchy
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what's in the plan
+4. COMPLETE - Fill in all fields you can determine from the content
+
+## Field Guidelines
+- \`title\`: Short program name (e.g., "Strength & Lean Build", "Full Body Power"). NOT the full markdown content.
+- \`subtitle\`: Phase summary or "Ongoing Program" for open-ended plans
+- \`description\`: 1-2 sentence summary of the program philosophy/approach
+- \`goal\`: The user's primary goal from the plan header
+- \`frequency\`: Training frequency (e.g., "4x/week", "5x/week")
+- \`schedule\`: Array of 3-letter day abbreviations when training occurs (e.g., ["Mon", "Wed", "Fri", "Sat"])
+- \`startDate\`: ISO date string (YYYY-MM-DD) — use today's date if not specified
+- \`totalWeeks\`: Only for fixed-length plans; omit for open-ended
+- \`expectedEndDate\`: Only for fixed-length plans; ISO date
+- \`totalWorkouts\`: Calculated from frequency × totalWeeks if fixed-length
+- \`weekLabels\`: Phase labels per week for fixed-length plans (e.g., ["Foundation", "Foundation", "Hypertrophy I", ...])
+
+Never make up information. If something isn't in the plan dossier, use reasonable defaults or omit optional fields.`,
+    model: 'gpt-5.2',
+    max_tokens: 4000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Extracts structured plan metadata (title, goal, frequency, schedule) from plan markdown for UI display',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Extract the structured plan metadata from this fitness plan dossier:\n\n{{input}}\n\nReturn clean JSON with title, subtitle, description, goal, frequency, schedule, startDate, and optional duration fields.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness. Title should be concise, schedule should be accurate, and all required fields should be present.',
+    output_schema: {
+      type: 'object',
+      required: ['title', 'subtitle', 'description', 'goal', 'frequency', 'schedule', 'startDate'],
+      properties: {
+        title: { type: 'string', description: 'Short program name for display' },
+        subtitle: { type: 'string', description: 'Phase summary or "Ongoing Program"' },
+        description: { type: 'string', description: '1-2 sentence program philosophy summary' },
+        goal: { type: 'string', description: 'Primary training goal' },
+        frequency: { type: 'string', description: 'Training frequency (e.g., "4x/week")' },
+        schedule: {
+          type: 'array',
+          items: { type: 'string', description: 'Day abbreviation: Mon, Tue, Wed, Thu, Fri, Sat, Sun' },
+          description: 'Training days of the week',
+        },
+        startDate: { type: 'string', format: 'date', description: 'ISO date of plan start (YYYY-MM-DD)' },
+        totalWeeks: { type: 'integer', minimum: 1, description: 'Total weeks for fixed-length plans' },
+        expectedEndDate: { type: 'string', format: 'date', description: 'ISO date of expected plan end' },
+        totalWorkouts: { type: 'integer', minimum: 1, description: 'Total planned workouts for fixed-length plans' },
+        weekLabels: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Phase labels per week (length === totalWeeks)',
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     agent_id: 'chat:generate',
     system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
 
