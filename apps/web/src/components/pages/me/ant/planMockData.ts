@@ -3,21 +3,20 @@
 export type WorkoutStatus = 'completed' | 'skipped' | 'upcoming' | 'today' | 'rest';
 
 export interface PlanWorkoutDay {
-  date: string; // ISO date
-  dayOfWeek: string; // Mon, Tue, etc.
-  label: string; // "Upper Body Strength", "Rest Day", etc.
+  date: string;
+  dayOfWeek: string;
+  label: string;
   type: 'strength' | 'cardio' | 'mobility' | 'rest' | 'hiit';
   status: WorkoutStatus;
-  duration?: number; // minutes
-  exercises?: number; // count
-  // For completed workouts
+  duration?: number;
+  exercises?: number;
   completedAt?: string;
-  adherenceScore?: number; // 0-100
+  adherenceScore?: number;
 }
 
 export interface PlanWeek {
   weekNumber: number;
-  label: string; // "Hypertrophy Focus", "Strength Block", etc.
+  label: string;
   startDate: string;
   endDate: string;
   status: 'completed' | 'current' | 'upcoming';
@@ -30,21 +29,24 @@ export interface ActivePlan {
   subtitle: string;
   description: string;
   goal: string;
-  totalWeeks: number;
+  /** undefined or 0 = open-ended plan */
+  totalWeeks?: number;
   currentWeek: number;
-  currentDay: number; // day within the week (1-7)
-  frequency: string; // "4x/week"
+  currentDay: number;
+  frequency: string;
   startDate: string;
-  expectedEndDate: string;
+  expectedEndDate?: string;
   // Stats
-  totalWorkouts: number;
+  totalWorkouts?: number;
   completedWorkouts: number;
   skippedWorkouts: number;
   adherencePercent: number;
-  currentStreak: number; // consecutive completed
+  currentStreak: number;
   longestStreak: number;
+  // Streak milestones hit
+  streakMilestones?: number[]; // e.g. [3, 5, 7, 10, 14, 21, 30]
   // Schedule
-  schedule: string[]; // e.g. ["Mon", "Tue", "Thu", "Fri"]
+  schedule: string[];
   // Current/next workout
   nextWorkout: {
     label: string;
@@ -55,13 +57,13 @@ export interface ActivePlan {
     estimatedDuration: number;
     exercises: string[];
   };
-  // Week data
+  // Week data (recent weeks for open-ended, all weeks for fixed)
   weeks: PlanWeek[];
 }
 
-// ─── Build mock data for a user in Week 3 of a 12-week program ──────
+// ─── Build mock weeks for fixed-length plan ──────
 
-function buildWeeks(): PlanWeek[] {
+function buildFixedWeeks(): PlanWeek[] {
   const weeks: PlanWeek[] = [];
   const weekLabels = [
     'Foundation', 'Foundation', 'Hypertrophy I', 'Hypertrophy I',
@@ -80,7 +82,7 @@ function buildWeeks(): PlanWeek[] {
   ];
 
   for (let w = 0; w < 12; w++) {
-    const weekStart = new Date(2026, 1, 2 + w * 7); // Feb 2, 2026 is a Monday
+    const weekStart = new Date(2026, 1, 2 + w * 7);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
@@ -95,10 +97,8 @@ function buildWeeks(): PlanWeek[] {
 
       let status: WorkoutStatus = 'upcoming';
       if (w < 2) {
-        // Past weeks - all done or skipped
         status = tmpl.type === 'rest' ? 'rest' : (Math.random() > 0.1 ? 'completed' : 'skipped');
       } else if (w === 2) {
-        // Current week (week 3) - today is Thursday (day index 3)
         if (di < 3) {
           status = tmpl.type === 'rest' ? 'rest' : 'completed';
         } else if (di === 3) {
@@ -138,24 +138,97 @@ function buildWeeks(): PlanWeek[] {
   return weeks;
 }
 
+// ─── Build mock weeks for open-ended plan ──────
+
+function buildOpenEndedWeeks(): PlanWeek[] {
+  const weeks: PlanWeek[] = [];
+  const dayTemplates = [
+    { dayOfWeek: 'Mon', label: 'Full Body A', type: 'strength' as const },
+    { dayOfWeek: 'Tue', label: 'Rest', type: 'rest' as const },
+    { dayOfWeek: 'Wed', label: 'Full Body B', type: 'strength' as const },
+    { dayOfWeek: 'Thu', label: 'Rest', type: 'rest' as const },
+    { dayOfWeek: 'Fri', label: 'Full Body C', type: 'strength' as const },
+    { dayOfWeek: 'Sat', label: 'Conditioning', type: 'cardio' as const },
+    { dayOfWeek: 'Sun', label: 'Rest', type: 'rest' as const },
+  ];
+
+  // Show last 4 weeks
+  for (let w = 0; w < 4; w++) {
+    const weekStart = new Date(2026, 1, 2 + w * 7);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    let weekStatus: PlanWeek['status'] = 'upcoming';
+    if (w < 3) weekStatus = 'completed';
+    else weekStatus = 'current';
+
+    const days: PlanWorkoutDay[] = dayTemplates.map((tmpl, di) => {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + di);
+      const iso = date.toISOString().split('T')[0];
+
+      let status: WorkoutStatus = 'upcoming';
+      if (w < 3) {
+        status = tmpl.type === 'rest' ? 'rest' : 'completed';
+      } else {
+        if (di < 3) {
+          status = tmpl.type === 'rest' ? 'rest' : 'completed';
+        } else if (di === 3) {
+          status = tmpl.type === 'rest' ? 'rest' : 'today';
+        } else {
+          status = tmpl.type === 'rest' ? 'rest' : 'upcoming';
+        }
+      }
+
+      return {
+        date: iso,
+        dayOfWeek: tmpl.dayOfWeek,
+        label: tmpl.label,
+        type: tmpl.type,
+        status,
+        duration: tmpl.type === 'rest' ? undefined : (tmpl.type === 'cardio' ? 30 : 50),
+        exercises: tmpl.type === 'rest' ? undefined : 5,
+        ...(status === 'completed' ? {
+          completedAt: iso,
+          adherenceScore: 85 + Math.floor(Math.random() * 15),
+        } : {}),
+      };
+    });
+
+    weeks.push({
+      weekNumber: w + 1,
+      label: `Week ${w + 1}`,
+      startDate: weekStart.toISOString().split('T')[0],
+      endDate: weekEnd.toISOString().split('T')[0],
+      status: weekStatus,
+      days,
+    });
+  }
+
+  return weeks;
+}
+
+// ─── Fixed-length plan (12-week program) ──────
+
 export const ACTIVE_PLAN: ActivePlan = {
   id: 'powerbuilding-12wk',
   title: 'Powerbuilding: Size & Strength',
   subtitle: '12-Week Progressive Program',
-  description: 'A hybrid program combining powerlifting progression with hypertrophy volume. Heavy compounds build strength while accessory work drives muscle growth. Includes strategic deload and peak phases.',
+  description: 'A hybrid program combining powerlifting progression with hypertrophy volume. Heavy compounds build strength while accessory work drives muscle growth.',
   goal: 'Build strength on main lifts while adding muscle mass',
   totalWeeks: 12,
   currentWeek: 3,
-  currentDay: 4, // Thursday
+  currentDay: 4,
   frequency: '5x/week',
   startDate: '2026-02-02',
   expectedEndDate: '2026-04-26',
-  totalWorkouts: 60, // 5 per week × 12 weeks
+  totalWorkouts: 60,
   completedWorkouts: 11,
   skippedWorkouts: 1,
   adherencePercent: 92,
   currentStreak: 5,
   longestStreak: 7,
+  streakMilestones: [3, 5],
   schedule: ['Mon', 'Tue', 'Thu', 'Fri', 'Sat'],
   nextWorkout: {
     label: 'Upper Pull',
@@ -173,5 +246,43 @@ export const ACTIVE_PLAN: ActivePlan = {
       'Hammer Curl — 2×12',
     ],
   },
-  weeks: buildWeeks(),
+  weeks: buildFixedWeeks(),
+};
+
+// ─── Open-ended plan (ongoing training) ──────
+
+export const OPEN_ENDED_PLAN: ActivePlan = {
+  id: 'general-strength',
+  title: 'General Strength Training',
+  subtitle: 'Ongoing Program',
+  description: 'A sustainable full-body strength program focused on progressive overload on compound movements. No fixed end date — just consistent progress.',
+  goal: 'Get stronger and build a consistent training habit',
+  // No totalWeeks — this is open-ended
+  currentWeek: 4,
+  currentDay: 4,
+  frequency: '4x/week',
+  startDate: '2026-02-02',
+  completedWorkouts: 14,
+  skippedWorkouts: 0,
+  adherencePercent: 100,
+  currentStreak: 14,
+  longestStreak: 14,
+  streakMilestones: [3, 5, 7, 10, 14],
+  schedule: ['Mon', 'Wed', 'Fri', 'Sat'],
+  nextWorkout: {
+    label: 'Full Body B',
+    dayOfWeek: 'Wednesday',
+    date: '2026-02-25',
+    type: 'strength',
+    focus: 'Squat & Press Focus',
+    estimatedDuration: 50,
+    exercises: [
+      'Back Squat — 3×5 @ RPE 8',
+      'Overhead Press — 3×8',
+      'Romanian Deadlift — 3×10',
+      'Dips — 3×8',
+      'Plank — 3×45s',
+    ],
+  },
+  weeks: buildOpenEndedWeeks(),
 };
