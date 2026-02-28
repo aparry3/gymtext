@@ -28,11 +28,7 @@ interface WorkoutData {
 
 interface DayFocus {
   focus?: string;
-  title?: string;
   activityType?: string;
-  sessionType?: string;
-  estimatedDuration?: number;
-  mainMovements?: string[];
 }
 
 interface DashboardData {
@@ -55,11 +51,7 @@ function getDayLabel(date: Date): string {
 function toDayFocus(day: WeekDay): DayFocus {
   return {
     focus: day.focus,
-    title: day.title,
     activityType: day.activityType,
-    sessionType: day.sessionType,
-    estimatedDuration: day.estimatedDuration,
-    mainMovements: day.mainMovements,
   };
 }
 
@@ -219,15 +211,13 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
 
   // Derive display values from workout details or microcycle focus
   const todayTitle = dashboardData?.todayWorkout?.details?.title
-    || dashboardData?.todayFocus?.title
     || dashboardData?.todayFocus?.focus
     || 'Workout';
 
   const todayFocusLabel = dashboardData?.todayWorkout?.details?.focus
     || dashboardData?.todayFocus?.focus;
 
-  const tomorrowTitle = dashboardData?.tomorrowFocus?.title
-    || dashboardData?.tomorrowFocus?.focus;
+  const tomorrowTitle = dashboardData?.tomorrowFocus?.focus;
 
   const tomorrowFocusLabel = dashboardData?.tomorrowFocus?.focus;
 
@@ -262,8 +252,7 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
           workoutFocus={todayFocusLabel}
           isRestDay={dashboardData?.isRestDayToday}
           onStartWorkout={handleStartWorkout}
-          estimatedDuration={dashboardData?.todayWorkout?.details?.estimatedDuration || dashboardData?.todayFocus?.estimatedDuration}
-          mainMovements={dashboardData?.todayFocus?.mainMovements}
+          estimatedDuration={dashboardData?.todayWorkout?.details?.estimatedDuration}
         />
 
         {/* Widget cards - 3 column grid */}
@@ -272,8 +261,6 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
             title={tomorrowTitle}
             focus={tomorrowFocusLabel}
             isRestDay={dashboardData?.isRestDayTomorrow}
-            estimatedDuration={dashboardData?.tomorrowFocus?.estimatedDuration}
-            mainMovements={dashboardData?.tomorrowFocus?.mainMovements}
           />
 
           <QuoteCard />
