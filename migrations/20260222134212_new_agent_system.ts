@@ -97,6 +97,7 @@ export const up: Migration = async (db) => {
   // =============================================================================
   console.log('Simplifying profiles...');
   await sql`ALTER TABLE profiles DROP COLUMN IF EXISTS structured`.execute(db);
+  await sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS details JSONB`.execute(db);
 
   // =============================================================================
   // 4. Simplify fitness_plans table (dossier-based)
@@ -248,6 +249,7 @@ export const down: Migration = async (db) => {
   await sql`ALTER TABLE users DROP COLUMN IF EXISTS messaging_opt_in_date`.execute(db);
 
   // Restore profiles
+  await sql`ALTER TABLE profiles DROP COLUMN IF EXISTS details`.execute(db);
   await sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS structured JSONB`.execute(db);
 
   // Restore fitness_plans

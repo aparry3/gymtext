@@ -102,7 +102,28 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
 
         // Persist profile update via dossier service
         if (profileWasUpdated) {
-          await markdownService.updateProfile(userId, updatedProfile);
+          // Run profile:details extraction in parallel with saving
+          const detailsPromise = simpleAgentRunner.invoke('profile:details', {
+            input: updatedProfile,
+            params: { user },
+          })
+            .then((r) => JSON.parse(r.response) as Record<string, unknown>)
+            .catch((error) => {
+              console.error('[PROFILE_SERVICE] Failed to generate profile details:', error);
+              return undefined;
+            });
+
+          const [, profileDetails] = await Promise.all([
+            markdownService.updateProfile(userId, updatedProfile),
+            detailsPromise,
+          ]);
+
+          // Update details on the saved profile if extraction succeeded
+          if (profileDetails) {
+            await markdownService.updateProfileDetails(userId, profileDetails);
+            console.log('[PROFILE_SERVICE] Profile details extracted and saved');
+          }
+
           console.log('[PROFILE_SERVICE] Profile dossier updated');
         } else {
           console.log('[PROFILE_SERVICE] No profile updates detected');

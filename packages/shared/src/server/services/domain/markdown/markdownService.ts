@@ -5,7 +5,8 @@ import type { Microcycle } from '@/server/models/microcycle';
 
 export interface MarkdownServiceInstance {
   getProfile(userId: string): Promise<string | null>;
-  updateProfile(userId: string, content: string): Promise<Profile>;
+  updateProfile(userId: string, content: string, options?: { details?: Record<string, unknown> }): Promise<Profile>;
+  updateProfileDetails(userId: string, details: Record<string, unknown>): Promise<void>;
   getPlan(userId: string): Promise<FitnessPlan | null>;
   createPlan(userId: string, content: string, startDate: Date, options?: { details?: Record<string, unknown> }): Promise<FitnessPlan>;
   getWeek(userId: string): Promise<Microcycle | null>;
@@ -19,8 +20,12 @@ export function createMarkdownService(repos: RepositoryContainer): MarkdownServi
       return repos.profile.getCurrentProfileText(userId);
     },
 
-    async updateProfile(userId: string, content: string): Promise<Profile> {
-      return repos.profile.createProfileForUser(userId, content);
+    async updateProfile(userId: string, content: string, options?: { details?: Record<string, unknown> }): Promise<Profile> {
+      return repos.profile.createProfileForUser(userId, content, options);
+    },
+
+    async updateProfileDetails(userId: string, details: Record<string, unknown>): Promise<void> {
+      return repos.profile.updateProfileDetails(userId, details);
     },
 
     async getPlan(userId: string): Promise<FitnessPlan | null> {
