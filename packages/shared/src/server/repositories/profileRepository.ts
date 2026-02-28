@@ -52,11 +52,28 @@ export class ProfileRepository extends BaseRepository {
   /**
    * Create a new profile entry with just clientId and profile text
    */
-  async createProfileForUser(clientId: string, profileMarkdown: string): Promise<Profile> {
+  async createProfileForUser(clientId: string, profileMarkdown: string, options?: { details?: Record<string, unknown> }): Promise<Profile> {
     return this.createProfile({
       clientId,
       profile: profileMarkdown,
-    });
+      ...(options?.details ? { details: JSON.stringify(options.details) } : {}),
+    } as NewProfile);
+  }
+
+  /**
+   * Update the details (structured JSON) on the most recent profile for a user
+   */
+  async updateProfileDetails(clientId: string, details: Record<string, unknown>): Promise<void> {
+    const current = await this.getCurrentProfile(clientId);
+    if (!current) {
+      console.warn('[ProfileRepository] No profile found to update details for:', clientId);
+      return;
+    }
+    await this.db
+      .updateTable('profiles')
+      .set({ details: JSON.stringify(details) } as never)
+      .where('id', '=', current.id)
+      .execute();
   }
 
   /**
