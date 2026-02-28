@@ -69,7 +69,7 @@ export function createPlanModificationService(
             context,
             params: { user },
           }),
-          workoutModificationService.modifyWeek({ userId, changeRequest }),
+          workoutModificationService.modifyWorkout({ userId, workoutDate: new Date(), changeRequest }),
         ]);
 
         // Parse dossier response with changes metadata

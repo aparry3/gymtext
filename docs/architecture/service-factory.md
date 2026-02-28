@@ -74,8 +74,7 @@ Creates the AI infrastructure that bridges services and tools.
    - `update_profile` — Updates user fitness profile
    - `get_workout` — Fetches or generates today's workout
    - `make_modification` — Routes modification requests to appropriate sub-agents
-   - `modify_workout` — Modifies individual workouts
-   - `modify_week` — Modifies weekly training patterns
+   - `modify_workout` — Modifies workouts and weekly schedules within a week dossier
    - `modify_plan` — Modifies entire fitness plans
 
 3. **Declare mutable variables** — Reserve slots for Phase 5 services:

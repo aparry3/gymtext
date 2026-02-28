@@ -135,7 +135,7 @@ Thin wrappers around `agentRunner.invoke()` that add domain-specific logic and c
 | Service | File | Agents Used | Purpose |
 |---------|------|-------------|---------|
 | `ProfileService` | `profile.ts` | `profile:update`, `profile:user` | Extract and update user fitness profiles from messages |
-| `WorkoutModificationService` | `workoutModification.ts` | `workout:modify`, `week:modify` | Handle user requests to modify workouts or weekly patterns |
+| `WorkoutModificationService` | `workoutModification.ts` | `workout:modify` | Handle user requests to modify workouts or weekly patterns |
 | `PlanModificationService` | `planModification.ts` | `plan:modify` | Handle plan-level modifications and program changes |
 | `MessagingAgentService` | `messagingAgent.ts` | `messaging:plan-summary`, `messaging:plan-ready` | Generate notification messages (supports SSE streaming) |
 | `ProgramAgentService` | `programAgent.ts` | `program:parse` | Parse programs from raw text input |

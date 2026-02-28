@@ -12,10 +12,9 @@
 | `week:generate` | Week | Generates weekly microcycle workouts |
 | `week:format` | Week | Formats week as markdown for dossier |
 | `week:details` | Week | Generates structured week overview JSON |
-| `week:modify` | Week | Modifies existing week based on feedback |
 | `workout:format` | Workout | Formats daily workout as text message |
 | `workout:details` | Workout | Generates structured workout JSON for UI |
-| `workout:modify` | Workout | Modifies single workout based on request |
+| `workout:modify` | Workout | Modifies workouts and weekly schedules within a week dossier |
 | `messaging:plan-summary` | Messaging | Generates plan SMS summaries |
 | `messaging:plan-ready` | Messaging | Generates "plan ready" notifications |
 | `program:parse` | Utility | Parses raw text into structured programs |
@@ -28,7 +27,7 @@
 #### `chat:generate`
 - **Purpose**: Main conversational agent with tool access for user interactions
 - **Model**: gpt-5.2
-- **Tools**: `update_profile`, `get_workout`, `modify_workout`, `modify_week`, `modify_plan`
+- **Tools**: `update_profile`, `get_workout`, `modify_workout`, `modify_plan`
 - **Output**: Plain text
 - **Prompt**: Inline
 - **Invoked by**: `ChatService.handleMessage()`
@@ -95,14 +94,6 @@
 - **Prompt**: Inline
 - **Invoked by**: `TrainingService`
 
-#### `week:modify`
-- **Purpose**: Modifies existing week based on user feedback
-- **Model**: gpt-5.2 | Temp: 1.0 | Max tokens: 16k | Max iterations: 3
-- **Tools**: None
-- **Output**: Plain text
-- **Prompt files**: `05-week-modify-agent.md` (system), `05-week-modify-agent-USER.md` (user template)
-- **Invoked by**: `modify_week` tool → `WorkoutModificationService`
-
 ### Workout
 
 #### `workout:format`
@@ -122,11 +113,11 @@
 - **Invoked by**: `TrainingService`
 
 #### `workout:modify`
-- **Purpose**: Modifies a single workout based on user request
-- **Model**: gpt-5.2
+- **Purpose**: Modifies workouts and weekly schedules within a week dossier
+- **Model**: gpt-5-mini | Temp: 1.0 | Max tokens: 32k | Max iterations: 3
 - **Tools**: None
 - **Output**: Plain text
-- **Prompt**: Inline (tool-invoked only)
+- **Prompt**: Inline
 - **Invoked by**: `modify_workout` tool → `WorkoutModificationService`
 
 ### Messaging
@@ -173,7 +164,6 @@ graph TD
     ChatGen -->|tool: update_profile| ProfileUpdate["profile:update"]
     ChatGen -->|tool: get_workout| TrainingService
     ChatGen -->|tool: modify_workout| WorkoutModify["workout:modify"]
-    ChatGen -->|tool: modify_week| WeekModify["week:modify"]
     ChatGen -->|tool: modify_plan| PlanModify["plan:modify"]
 
     ProfileService -->|invokes| ProfileUpdate
@@ -186,7 +176,6 @@ graph TD
     TrainingService -->|invokes| WeekDetails["week:details"]
 
     WorkoutModService["WorkoutModificationService"] -->|invokes| WorkoutModify
-    WorkoutModService -->|invokes| WeekModify
 
     PlanModService["PlanModificationService"] -->|invokes| PlanModify
 
@@ -207,7 +196,6 @@ graph TD
     style WeekGen fill:#fff3e0
     style WeekFormat fill:#fff3e0
     style WeekDetails fill:#fff3e0
-    style WeekModify fill:#fff3e0
     style WorkoutFormat fill:#fce4ec
     style WorkoutDetails fill:#fce4ec
     style WorkoutModify fill:#fce4ec
@@ -231,7 +219,6 @@ export const AGENTS = {
   WORKOUT_FORMAT: 'workout:format',
   WORKOUT_DETAILS: 'workout:details',
   WORKOUT_MODIFY: 'workout:modify',
-  WEEK_MODIFY: 'week:modify',
   PLAN_MODIFY: 'plan:modify',
   MESSAGING_PLAN_SUMMARY: 'messaging:plan-summary',
   MESSAGING_PLAN_READY: 'messaging:plan-ready',

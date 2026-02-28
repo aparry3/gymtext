@@ -41,7 +41,8 @@ export interface ToolCallRecord {
 const TOOL_PRIORITY: Record<string, number> = {
   'update_profile': 1,
   'get_workout': 2,
-  'make_modification': 3,
+  'modify_workout': 3,
+  'modify_plan': 3,
 };
 
 /**

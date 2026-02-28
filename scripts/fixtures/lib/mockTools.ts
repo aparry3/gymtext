@@ -21,8 +21,7 @@ interface ToolServiceContainer {
     updateProfile: (userId: string, message: string, previousMessages?: unknown[]) => Promise<ToolResult>;
   };
   workoutModification: {
-    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string }) => Promise<unknown>;
-    modifyWeek: (params: { userId: string; changeRequest: string; weekStartDate?: Date }) => Promise<unknown>;
+    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string; targetDay?: string; weekStartDate?: Date }) => Promise<unknown>;
   };
   planModification: {
     modifyPlan: (params: { userId: string; changeRequest: string }) => Promise<unknown>;
@@ -89,10 +88,6 @@ export function createMockToolServices(toolResponses?: MockToolResponses) {
       modifyWorkout: async (params) => {
         record('modify_workout', 'modifyWorkout', [params]);
         return getResponse('modify_workout');
-      },
-      modifyWeek: async (params) => {
-        record('modify_week', 'modifyWeek', [params]);
-        return getResponse('modify_week');
       },
     },
     planModification: {

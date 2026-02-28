@@ -605,7 +605,6 @@ export const AGENT_DOMAINS: AgentDomain[] = [
     label: 'Weeks',
     agents: [
       { id: 'week:generate', label: 'Generate' },
-      { id: 'week:modify', label: 'Modify' },
       { id: 'week:format', label: 'Format' },
     ],
   },

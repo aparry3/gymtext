@@ -11,9 +11,7 @@ export type {
   WorkoutModificationServiceInstance,
   WorkoutModificationServiceDeps,
   ModifyWorkoutResult,
-  ModifyWeekResult,
   ModifyWorkoutParams,
-  ModifyWeekParams,
 } from './workoutModificationService';
 
 // Plan modification service (agent helper)
