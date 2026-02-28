@@ -12,7 +12,7 @@ import {
 } from '@/components/pages/me/dashboard';
 import { WorkoutDetailSheet } from '@/components/pages/me/workout/WorkoutDetailSheet';
 import type { WorkoutDetails } from '@gymtext/shared';
-import type { WeekDetailsDay } from '@gymtext/shared';
+import type { WeekDay } from '@gymtext/shared';
 
 interface UserDashboardProps {
   userId: string;
@@ -51,8 +51,8 @@ function getDayLabel(date: Date): string {
   return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 }
 
-// Map a WeekDetailsDay to a DayFocus
-function toDayFocus(day: WeekDetailsDay): DayFocus {
+// Map a WeekDay to a DayFocus
+function toDayFocus(day: WeekDay): DayFocus {
   return {
     focus: day.focus,
     title: day.title,
@@ -122,7 +122,7 @@ export function UserDashboard({ userId, initialWorkoutId }: UserDashboardProps) 
         }
 
         // Try new details format first, fall back to structured
-        const days: WeekDetailsDay[] = microcycleData.data?.details?.days || [];
+        const days: WeekDay[] = microcycleData.data?.details?.days || [];
         if (days.length > 0) {
           const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
           const tomorrowDayName = tomorrow.toLocaleDateString('en-US', { weekday: 'long' });

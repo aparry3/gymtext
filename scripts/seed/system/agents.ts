@@ -72,6 +72,87 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     output_schema: null,
   },
   {
+    agent_id: 'plan:details',
+    system_prompt: `You are a structured plan summarizer. Your role is to extract the training plan structure from a plan dossier and format it as clean JSON for UI display.
+
+## Your Goal
+Generate JSON that summarizes the user's active training plan for display in a mobile app or web UI. This captures what the program IS, not how the user is doing on it.
+
+## Design Principle: Separation of Concerns
+This schema defines PLAN STRUCTURE ONLY.
+User progress (current week, completed workouts, streaks, adherence, etc.) comes from a separate metrics system and is NOT part of this output.
+
+## Key Principles
+1. STRUCTURE ONLY - What the program is, not user progress
+2. UI-FOCUSED - For human display, not LLM consumption
+3. ACCURATE - Extract exactly what's in the plan dossier
+4. SUPPORT BOTH - Fixed-length plans (with totalWeeks) and open-ended plans (without)
+
+## Fixed-Length vs Open-Ended Plans
+- **Fixed-length:** Has a defined end. Include \`totalWeeks\`, \`expectedEndDate\`, \`totalWorkouts\`, and optionally \`weekLabels\`.
+- **Open-ended:** No fixed end. Omit \`totalWeeks\`, \`expectedEndDate\`, \`totalWorkouts\`, and \`weekLabels\`.
+
+## Output Format
+Return clean JSON matching this schema:
+{
+  "title": "Powerbuilding: Size & Strength",
+  "subtitle": "12-Week Progressive Program",
+  "description": "A hybrid program combining...",
+  "goal": "Build strength on main lifts while adding muscle mass",
+  "frequency": "5x/week",
+  "schedule": ["Mon", "Tue", "Thu", "Fri", "Sat"],
+  "startDate": "2026-02-02",
+  "totalWeeks": 12,
+  "expectedEndDate": "2026-04-26",
+  "totalWorkouts": 60,
+  "weekLabels": ["Foundation", "Foundation", "Hypertrophy I", ...]
+}
+
+## Rules
+- Use 3-letter day abbreviations in \`schedule\`: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+- \`frequency\` should be human-readable like "5x/week" or "3x/week"
+- \`startDate\` and \`expectedEndDate\` are ISO dates (YYYY-MM-DD)
+- \`weekLabels\` length must equal \`totalWeeks\` when present
+- For open-ended plans, omit totalWeeks/expectedEndDate/totalWorkouts/weekLabels entirely
+
+## What's NOT here (comes from user metrics)
+- currentWeek / currentDay — derived from date + startDate
+- completedWorkouts / skippedWorkouts — user progress
+- adherencePercent — user progress
+- currentStreak / longestStreak — user progress
+- nextWorkout — computed from plan structure + user progress
+
+Never make up information. If something isn't in the dossier, don't include it.`,
+    model: 'gpt-5.2',
+    max_tokens: 8000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Generates a structured plan overview for UI display — plan structure only, no user metrics',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: 'Generate the structured plan overview from this plan dossier:\n\n{{input}}\n\nExtract the plan structure and format as JSON with title, subtitle, description, goal, frequency, schedule, startDate, and optional duration fields.',
+    examples: null,
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness. Must include all required fields. Fixed-length plans must have totalWeeks/expectedEndDate/totalWorkouts. Open-ended plans must omit them.',
+    output_schema: {
+      type: 'object',
+      required: ['title', 'subtitle', 'description', 'goal', 'frequency', 'schedule', 'startDate'],
+      properties: {
+        title: { type: 'string', description: 'Plan title' },
+        subtitle: { type: 'string', description: 'Plan subtitle (e.g., "12-Week Progressive Program")' },
+        description: { type: 'string', description: 'Plan description' },
+        goal: { type: 'string', description: 'Primary goal' },
+        frequency: { type: 'string', description: 'Training frequency (e.g., "5x/week")' },
+        schedule: { type: 'array', items: { type: 'string' }, description: 'Training days (e.g., ["Mon", "Tue", "Thu"])' },
+        startDate: { type: 'string', format: 'date', description: 'Plan start date (ISO)' },
+        totalWeeks: { type: 'integer', minimum: 1, description: 'Total weeks (fixed-length plans only)' },
+        expectedEndDate: { type: 'string', format: 'date', description: 'Expected end date (fixed-length plans only)' },
+        totalWorkouts: { type: 'integer', minimum: 1, description: 'Total planned workouts (fixed-length plans only)' },
+        weekLabels: { type: 'array', items: { type: 'string' }, description: 'Phase labels per week (fixed-length plans only)' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     agent_id: 'week:generate',
     system_prompt: loadPrompt('03-microcycle-agent.md'),
     model: 'gpt-5.2',
@@ -880,161 +961,98 @@ Create a well-structured markdown document that clearly shows:
 ## Your Goal
 Generate JSON that summarizes the entire week's training plan for display in a mobile app or web UI. This is NOT for LLM consumption—it's for end users to view their week at a glance.
 
+## Design Principle: Separation of Concerns
+This schema defines PLAN STRUCTURE ONLY — what each day's session IS.
+User progress (completion status, streaks, adherence, etc.) comes from a separate metrics system and is NOT part of this output.
+
 ## Key Principles
 1. SIMPLICITY IS KING - Keep output simple and clean
 2. UI-FOCUSED - For human display, not LLM consumption
 3. ACCURATE - Extract exactly what's planned for each day
-4. COMPLETE - Cover every training day in the week
+4. COMPLETE - Always output exactly 7 days (Mon–Sun)
+5. STRUCTURE ONLY - No user progress data (that's the metrics layer's job)
 
 ## Activity Types
-The \`activityType\` field describes the general nature of each day:
-- \`training\`: Normal training day (default)
-- \`rest\`: Complete rest, no activity
-- \`activeRecovery\`: Light activity: walking, yoga, mobility, foam rolling
+The \`activityType\` field is a FREE-FORM STRING describing the general nature of each day's activity. Common values:
+- "strength" — weight training, powerlifting
+- "cardio" — steady-state cardio, running, cycling
+- "hiit" — high-intensity interval training
+- "yoga" — yoga sessions
+- "swimming" — pool sessions
+- "rest" — complete rest day
+- "mobility" — flexibility, foam rolling, light movement
+- Any other string that describes the activity
 
-**Important:** Deload weeks are represented as \`training\` days with reduced volume/intensity reflected in the actual set/rep prescriptions and workout notes, NOT as a separate activity type.
-
-## Session Types
-The \`sessionType\` field describes the training modality:
-- \`strength\`: Heavy compound focus
-- \`hypertrophy\`: Volume-focused bodybuilding
-- \`cardio\`: Steady-state cardio
-- \`endurance\`: Long duration/low intensity
-- \`hiit\`: High-intensity intervals
-- \`hybrid\`: Combined strength + cardio
-- \`sport\`: Sport-specific training
-- \`mobility\`: Flexibility and mobility work
-
-## Main Movements Format
-The \`mainMovements\` field is flexible and adapts to the \`sessionType\`:
-
-**Strength/Hypertrophy:**
-- "Bench Press 4x5 @ 155lb"
-- "Squat 3x8-10 @ 185lb"
-
-**Cardio/Endurance:**
-- "5K easy run @ 7:30/mi"
-- "Zone 2 cycling 90min"
-
-**HIIT:**
-- "8x400m @ 5K pace, 90s rest"
-- "10x1min burpees, 30s rest"
-
-**Hybrid:**
-- "Squat 3x8 + 15min HIIT"
-
-**Mobility/Active Recovery:**
-- "Full body mobility flow 20min"
-- "Foam rolling 10min"
+This is NOT an enum — use whatever string best describes the session.
 
 ## Output Format
 Return clean JSON matching this schema:
 {
-  "weekNumber": 1,
-  "phase": "Hypertrophy Block",
-  "focus": "Volume accumulation",
+  "weekNumber": 3,
+  "label": "Hypertrophy I",
   "startDate": "2026-02-16",
+  "endDate": "2026-02-22",
   "days": [
-    {
-      "dayNumber": 1,
-      "dayOfWeek": "Monday",
-      "focus": "Upper Push",
-      "title": "Horizontal Push Strength",
-      "activityType": "training",
-      "sessionType": "strength",
-      "exerciseCount": 6,
-      "estimatedDuration": 55,
-      "mainMovements": ["Bench Press 4x5 @ 155lb", "OHP 3x8 @ 95lb"]
-    },
-    {
-      "dayNumber": 2,
-      "dayOfWeek": "Tuesday",
-      "focus": "Active Recovery",
-      "title": "Mobility & Light Movement",
-      "activityType": "activeRecovery",
-      "sessionType": "mobility",
-      "estimatedDuration": 30,
-      "mainMovements": ["Full body mobility flow 20min", "Foam rolling 10min"]
-    },
-    {
-      "dayNumber": 3,
-      "dayOfWeek": "Wednesday",
-      "focus": "Rest",
-      "title": "Rest Day",
-      "activityType": "rest"
-    }
-  ],
-  "totalSessions": 4,
-  "notes": "Deload next week. Focus on hitting RPE targets."
+    { "dayOfWeek": "Mon", "focus": "Upper Push",        "activityType": "strength" },
+    { "dayOfWeek": "Tue", "focus": "Lower Strength",    "activityType": "strength" },
+    { "dayOfWeek": "Wed", "focus": "Rest",              "activityType": "rest" },
+    { "dayOfWeek": "Thu", "focus": "Upper Pull",        "activityType": "strength" },
+    { "dayOfWeek": "Fri", "focus": "Lower Hypertrophy", "activityType": "strength" },
+    { "dayOfWeek": "Sat", "focus": "Conditioning",      "activityType": "cardio" },
+    { "dayOfWeek": "Sun", "focus": "Rest / Mobility",   "activityType": "rest" }
+  ]
 }
 
-## What to Include
-- Week number and training phase
-- Each day with activityType, sessionType, focus, title
-- \`mainMovements\` for training days (format varies by sessionType)
-- \`exerciseCount\` is optional - most relevant for strength/hypertrophy sessions
-- Rest days and active recovery days clearly marked
-- Total session count
-- Any important notes or coaching cues
+## Rules
+- Always output exactly 7 days (Mon through Sun)
+- Use 3-letter day abbreviations: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+- \`label\` should be a human-readable week label (phase name like "Hypertrophy I", or just "Week 4")
+- \`focus\` describes the session's training focus (e.g., "Upper Push", "Full Body A", "Rest")
+- \`activityType\` is a free-form string for the activity category
+- Calculate \`startDate\` and \`endDate\` from the dossier dates
 
-## What to Skip
-- Full exercise details (that's workout:details' job)
-- Set-by-set breakdowns
-- Detailed warm-up protocols
-- Deload as an activity type (reflect in notes instead)
+## What's NOT here (comes from user metrics)
+- Day completion status (completed, skipped, today, upcoming)
+- Adherence scores
+- Workout completion times
+- Week status (completed, current, upcoming)
 
 Never make up information. If something isn't in the dossier, don't include it.`,
     model: 'gpt-5.2',
     max_tokens: 8000,
     temperature: 1.0,
     max_iterations: 3,
-    description: 'Generates a structured week overview with daily focus, activity type, session type, and main movements for UI display',
+    description: 'Generates a structured week overview with daily focus and activity type for UI display',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Generate the structured week overview from this week dossier:\n\n{{input}}\n\nExtract the training plan for each day and format as JSON.',
+    user_prompt_template: 'Generate the structured week overview from this week dossier:\n\n{{input}}\n\nExtract the training plan for each day and format as JSON with weekNumber, label, startDate, endDate, and 7 days (Mon–Sun).',
     examples: null,
-    eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure.',
+    eval_rubric: 'Evaluate the JSON output for completeness and correctness of the weekly structure. Must have exactly 7 days, valid dates, and accurate activity types.',
     output_schema: {
       type: 'object',
-      required: ['days'],
+      required: ['weekNumber', 'label', 'startDate', 'endDate', 'days'],
       properties: {
-        weekNumber: { type: 'number', description: 'Week number in the program' },
-        phase: { type: 'string', description: 'Training phase (e.g., Hypertrophy, Strength)' },
-        focus: { type: 'string', description: 'Overall week focus' },
-        startDate: { type: 'string', description: 'ISO date of week start (YYYY-MM-DD)' },
+        weekNumber: { type: 'integer', minimum: 1, description: 'Week number in the program' },
+        label: { type: 'string', description: 'Human-readable week label (e.g., "Hypertrophy I", "Week 4")' },
+        startDate: { type: 'string', format: 'date', description: 'ISO date of week start (YYYY-MM-DD)' },
+        endDate: { type: 'string', format: 'date', description: 'ISO date of week end (YYYY-MM-DD)' },
         days: {
           type: 'array',
+          minItems: 7,
+          maxItems: 7,
           items: {
             type: 'object',
-            required: ['dayNumber', 'dayOfWeek'],
+            required: ['dayOfWeek', 'focus', 'activityType'],
             properties: {
-              dayNumber: { type: 'number', description: 'Day number (1-7)' },
-              dayOfWeek: { type: 'string', description: 'Day name' },
-              focus: { type: 'string', description: 'Session focus' },
-              title: { type: 'string', description: 'Session title' },
-              activityType: { 
-                type: 'string', 
-                enum: ['training', 'rest', 'activeRecovery'],
-                description: 'Type of day: training, rest, or activeRecovery' 
-              },
-              sessionType: { 
-                type: 'string', 
-                enum: ['strength', 'hypertrophy', 'cardio', 'endurance', 'hiit', 'hybrid', 'sport', 'mobility'],
-                description: 'Session modality type' 
-              },
-              exerciseCount: { type: 'number', description: 'Number of exercises (most relevant for strength/hypertrophy)' },
-              estimatedDuration: { type: 'number', description: 'Estimated duration in minutes' },
-              mainMovements: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Key movement summaries - format varies by sessionType',
-              },
+              dayOfWeek: { type: 'string', description: 'Day abbreviation: Mon, Tue, Wed, Thu, Fri, Sat, Sun' },
+              focus: { type: 'string', description: 'Session focus (e.g., "Upper Pull", "Rest", "Conditioning")' },
+              activityType: { type: 'string', description: 'Free-form activity type (e.g., "strength", "cardio", "rest")' },
             },
+            additionalProperties: false,
           },
         },
-        totalSessions: { type: 'number', description: 'Total training sessions this week' },
-        notes: { type: 'string', description: 'Week-level coaching notes' },
       },
+      additionalProperties: false,
     },
   },
   {
