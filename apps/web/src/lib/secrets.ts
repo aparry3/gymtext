@@ -31,7 +31,7 @@ const SecretsSchema = z.object({
   // AI Services
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   GOOGLE_API_KEY: z.string().min(1, 'GOOGLE_API_KEY is required'),
-  XAI_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
 
   // Pinecone
   PINECONE_API_KEY: z.string().min(1, 'PINECONE_API_KEY is required'),
@@ -69,7 +69,7 @@ export interface SecretsConfig {
   ai: {
     openaiApiKey: string;
     googleApiKey: string;
-    xaiApiKey?: string;
+    openrouterApiKey?: string;
   };
   pinecone: {
     apiKey: string;
@@ -123,7 +123,7 @@ function loadSecrets(): SecretsConfig {
     ai: {
       openaiApiKey: env.OPENAI_API_KEY,
       googleApiKey: env.GOOGLE_API_KEY,
-      xaiApiKey: env.XAI_API_KEY,
+      openrouterApiKey: env.OPENROUTER_API_KEY,
     },
     pinecone: {
       apiKey: env.PINECONE_API_KEY,

@@ -6,7 +6,7 @@
  */
 import './setup';
 
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
 import { createRepositories } from '../../../packages/shared/src/server/repositories/factory';
 import { createAgentDefinitionService } from '../../../packages/shared/src/server/services/domain/agents/agentDefinitionService';
@@ -45,6 +45,7 @@ function getDb(): Kysely<any> {
     dialect: new PostgresDialect({
       pool: new Pool({ connectionString }),
     }),
+    plugins: [new CamelCasePlugin()],
   });
   return db;
 }

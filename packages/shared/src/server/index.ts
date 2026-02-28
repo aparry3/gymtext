@@ -20,7 +20,7 @@ export * from './repositories';
 export * as agents from './agents';
 
 // Re-export commonly used agent items directly (with explicit names)
-export { AGENTS, initializeModel } from './agents';
+export { AGENTS, initializeModel, MODEL_CATALOG } from './agents';
 
 // Services (business logic)
 export * from './services';

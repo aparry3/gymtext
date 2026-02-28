@@ -65,6 +65,8 @@ program
       if (file) {
         const absPath = path.resolve(file);
         fixtures = [loadFixture(absPath)];
+      } else if (opts.agent && opts.persona) {
+        fixtures = loadFixturesByAgent(opts.agent).filter(f => f.persona === opts.persona);
       } else if (opts.agent) {
         fixtures = loadFixturesByAgent(opts.agent);
       } else if (opts.persona) {
