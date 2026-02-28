@@ -37,7 +37,7 @@ interface MeSidebarProps {
 
 const getNavItems = (basePath: string) => [
   { href: basePath, label: 'Dashboard', icon: Home },
-  { href: `${basePath}/plan`, label: 'My Plan', icon: BookOpen },
+  { href: `${basePath}/program/opal`, label: 'Program', icon: BookOpen },
   { href: `${basePath}/profile`, label: 'Profile', icon: User },
 ];
 
