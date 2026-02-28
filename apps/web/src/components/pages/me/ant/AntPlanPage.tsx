@@ -1,303 +1,343 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, Clock, Calendar, Users, Star, ChevronRight, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
 import {
-  MOCK_PLANS,
-  PLAN_CATEGORIES,
-  type Plan,
-  type PlanTag,
-  type WeekSnapshot,
-} from './planMockData';
+  Calendar,
+  ChevronRight,
+  Clock,
+  Dumbbell,
+  Flame,
+  Target,
+  TrendingUp,
+  CheckCircle2,
+  Circle,
+  XCircle,
+  ChevronLeft,
+  MoreHorizontal,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ACTIVE_PLAN, type PlanWorkoutDay, type PlanWeek, type WorkoutStatus } from './planMockData';
 
-// ─── Tag colors ──────────────────────────────────────────────────────
-const TAG_BG: Record<PlanTag['color'], string> = {
-  blue: 'bg-blue-500/15 text-blue-300',
-  green: 'bg-emerald-500/15 text-emerald-300',
-  orange: 'bg-orange-500/15 text-orange-300',
-  purple: 'bg-purple-500/15 text-purple-300',
-  red: 'bg-red-500/15 text-red-300',
-  teal: 'bg-teal-500/15 text-teal-300',
+// ─── Status helpers ──────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<WorkoutStatus, string> = {
+  completed: 'bg-emerald-500',
+  skipped: 'bg-red-400/60',
+  upcoming: 'bg-white/10',
+  today: 'bg-amber-400',
+  rest: 'bg-white/[0.04]',
 };
 
-const DAY_TYPE_COLOR: Record<WeekSnapshot['type'], string> = {
-  strength: 'bg-blue-400',
-  cardio: 'bg-emerald-400',
-  mobility: 'bg-teal-400',
-  hiit: 'bg-red-400',
-  rest: 'bg-white/10',
+const STATUS_RING: Record<WorkoutStatus, string> = {
+  completed: 'ring-emerald-500/30',
+  skipped: 'ring-red-400/20',
+  upcoming: 'ring-white/5',
+  today: 'ring-amber-400/40',
+  rest: 'ring-transparent',
 };
 
-// ─── Sub-components ──────────────────────────────────────────────────
+function StatusIcon({ status, size = 16 }: { status: WorkoutStatus; size?: number }) {
+  if (status === 'completed') return <CheckCircle2 size={size} className="text-emerald-400" />;
+  if (status === 'skipped') return <XCircle size={size} className="text-red-400/60" />;
+  if (status === 'today') return <Flame size={size} className="text-amber-400" />;
+  if (status === 'rest') return <span className="text-white/20 text-xs">—</span>;
+  return <Circle size={size} className="text-white/15" />;
+}
 
-function WeekBar({ days }: { days: WeekSnapshot[] }) {
+// ─── Progress Ring ───────────────────────────────────────────────────
+
+function ProgressRing({ percent, size = 80, strokeWidth = 6 }: { percent: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percent / 100) * circumference;
+
   return (
-    <div className="flex gap-1 items-end">
-      {days.map((d, i) => (
-        <div key={i} className="flex flex-col items-center gap-1 flex-1">
-          <div
-            className={cn(
-              'w-full rounded-sm transition-all',
-              DAY_TYPE_COLOR[d.type],
-              d.type === 'rest' ? 'h-1.5' : 'h-5'
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
+          stroke="url(#progress-gradient)" strokeWidth={strokeWidth}
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" className="transition-all duration-700"
+        />
+        <defs>
+          <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold text-white">{percent}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Stat Card ───────────────────────────────────────────────────────
+
+function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Flame; label: string; value: string | number; sub?: string }) {
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 flex flex-col gap-1">
+      <div className="flex items-center gap-1.5 text-white/40">
+        <Icon size={13} />
+        <span className="text-[11px] font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="text-xl font-bold text-white leading-tight">{value}</div>
+      {sub && <div className="text-[11px] text-white/30">{sub}</div>}
+    </div>
+  );
+}
+
+// ─── Week Calendar Row ───────────────────────────────────────────────
+
+function WeekCalendar({ week }: { week: PlanWeek }) {
+  return (
+    <div className="flex gap-1.5">
+      {week.days.map((day, i) => (
+        <div
+          key={i}
+          className={cn(
+            'flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all',
+            day.status === 'today' && 'bg-amber-400/10 ring-1 ring-amber-400/30',
+            day.status === 'completed' && 'bg-emerald-500/5',
+          )}
+        >
+          <span className={cn(
+            'text-[10px] font-medium',
+            day.status === 'today' ? 'text-amber-400' : 'text-white/30'
+          )}>
+            {day.dayOfWeek}
+          </span>
+          <div className={cn(
+            'w-7 h-7 rounded-full flex items-center justify-center ring-2',
+            STATUS_COLORS[day.status],
+            STATUS_RING[day.status],
+          )}>
+            {day.status === 'rest' ? (
+              <span className="text-[9px] text-white/20">R</span>
+            ) : (
+              <StatusIcon status={day.status} size={14} />
             )}
-            title={d.label ? `${d.day}: ${d.label}` : d.day}
-          />
-          <span className="text-[10px] text-white/40 leading-none">{d.day[0]}</span>
+          </div>
+          <span className={cn(
+            'text-[9px] text-center leading-tight line-clamp-1',
+            day.status === 'today' ? 'text-amber-300/80' : 'text-white/25'
+          )}>
+            {day.type === 'rest' ? '' : day.label}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-function StarRating({ rating }: { rating: number }) {
+// ─── Today's Workout Card ────────────────────────────────────────────
+
+function TodaysWorkout() {
+  const { nextWorkout } = ACTIVE_PLAN;
   return (
-    <div className="flex items-center gap-1">
-      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-      <span className="text-xs text-white/70 font-medium">{rating.toFixed(1)}</span>
-    </div>
-  );
-}
-
-function LevelBadge({ level }: { level: Plan['level'] }) {
-  const colors: Record<Plan['level'], string> = {
-    Beginner: 'bg-emerald-500/20 text-emerald-300',
-    Intermediate: 'bg-amber-500/20 text-amber-300',
-    Advanced: 'bg-red-500/20 text-red-300',
-    'All Levels': 'bg-white/10 text-white/70',
-  };
-  return (
-    <span className={cn('text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full', colors[level])}>
-      {level}
-    </span>
-  );
-}
-
-// ─── Featured Card (hero-style for featured plans) ───────────────────
-
-function FeaturedPlanCard({ plan }: { plan: Plan }) {
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl cursor-pointer group"
-      style={{
-        background: `linear-gradient(135deg, ${plan.coverGradient[0]}, ${plan.coverGradient[1]})`,
-      }}
-    >
-      {/* Featured badge */}
-      <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1">
-        <Sparkles className="h-3 w-3 text-amber-300" />
-        <span className="text-[10px] font-semibold text-white uppercase tracking-wider">Featured</span>
-      </div>
-
-      <div className="p-6 pt-12">
-        {/* Emoji + Title */}
-        <div className="flex items-start gap-4 mb-4">
-          <div className="text-4xl">{plan.coverEmoji}</div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-white leading-tight">{plan.title}</h3>
-            <p className="text-sm text-white/60 mt-0.5">{plan.subtitle}</p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-white/30 group-hover:text-white/60 transition-colors mt-1" />
-        </div>
-
-        {/* Description */}
-        <p className="text-sm text-white/50 leading-relaxed mb-4 line-clamp-2">
-          {plan.description}
-        </p>
-
-        {/* Week bar */}
-        <div className="mb-4">
-          <WeekBar days={plan.weekSnapshot} />
-        </div>
-
-        {/* Meta row */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-white/50">
-              <Clock className="h-3.5 w-3.5" />
-              <span className="text-xs">{plan.duration}</span>
-            </div>
-            <div className="flex items-center gap-1 text-white/50">
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="text-xs">{plan.frequency}</span>
-            </div>
-            <div className="flex items-center gap-1 text-white/50">
-              <Users className="h-3.5 w-3.5" />
-              <span className="text-xs">{plan.enrolledCount.toLocaleString()}</span>
-            </div>
-          </div>
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-transparent border border-white/[0.08]">
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <StarRating rating={plan.rating} />
-            <LevelBadge level={plan.level} />
+            <div className="w-8 h-8 rounded-lg bg-amber-400/15 flex items-center justify-center">
+              <Dumbbell size={16} className="text-amber-400" />
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">Today&apos;s Workout</div>
+              <div className="text-xs text-white/30">{nextWorkout.dayOfWeek} · ~{nextWorkout.estimatedDuration} min</div>
+            </div>
           </div>
+          <button className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-lg text-xs font-medium text-white transition-colors">
+            Start
+          </button>
+        </div>
+
+        <h3 className="text-lg font-bold text-white mb-0.5">{nextWorkout.label}</h3>
+        <p className="text-xs text-white/40 mb-4">{nextWorkout.focus}</p>
+
+        <div className="space-y-1.5">
+          {nextWorkout.exercises.map((ex, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm text-white/50">
+              <span className="text-white/15 text-xs w-4 text-right">{i + 1}</span>
+              <span>{ex}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Compact Plan Card ───────────────────────────────────────────────
+// ─── Week Timeline ───────────────────────────────────────────────────
 
-function PlanCard({ plan }: { plan: Plan }) {
+function WeekTimeline({ weeks, currentWeek, onSelectWeek }: { weeks: PlanWeek[]; currentWeek: number; onSelectWeek: (w: number) => void }) {
   return (
-    <div className="group bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] rounded-xl overflow-hidden cursor-pointer transition-all">
-      {/* Gradient header strip */}
-      <div
-        className="h-2 w-full"
-        style={{
-          background: `linear-gradient(90deg, ${plan.coverGradient[0]}, ${plan.coverGradient[1]})`,
-        }}
-      />
+    <div className="flex gap-0.5 items-center">
+      {weeks.map((week) => (
+        <button
+          key={week.weekNumber}
+          onClick={() => onSelectWeek(week.weekNumber)}
+          className={cn(
+            'flex-1 h-2 rounded-full transition-all',
+            week.status === 'completed' && 'bg-emerald-500/60',
+            week.status === 'current' && 'bg-amber-400 animate-pulse',
+            week.status === 'upcoming' && 'bg-white/8',
+            week.weekNumber === currentWeek && 'ring-1 ring-white/20',
+          )}
+          title={`Week ${week.weekNumber}: ${week.label}`}
+        />
+      ))}
+    </div>
+  );
+}
 
-      <div className="p-4">
-        {/* Title row */}
-        <div className="flex items-start gap-3 mb-2">
-          <span className="text-2xl leading-none">{plan.coverEmoji}</span>
+// ─── Workout History List ────────────────────────────────────────────
+
+function WorkoutHistory({ weeks }: { weeks: PlanWeek[] }) {
+  const completedDays = weeks
+    .flatMap((w) => w.days.map((d) => ({ ...d, week: w.weekNumber, weekLabel: w.label })))
+    .filter((d) => d.status === 'completed')
+    .reverse()
+    .slice(0, 8);
+
+  return (
+    <div className="space-y-1">
+      {completedDays.map((day, i) => (
+        <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-white/[0.03] transition-colors group cursor-pointer">
+          <CheckCircle2 size={14} className="text-emerald-400/60 shrink-0" />
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-white truncate">{plan.title}</h4>
-            <p className="text-xs text-white/40 truncate">{plan.subtitle}</p>
+            <div className="text-sm text-white/70 truncate">{day.label}</div>
+            <div className="text-[11px] text-white/25">Week {day.week} · {day.dayOfWeek} · {day.date}</div>
           </div>
-          <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors shrink-0 mt-0.5" />
-        </div>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1 mb-3">
-          {plan.tags.slice(0, 3).map((t) => (
-            <span key={t.label} className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded', TAG_BG[t.color])}>
-              {t.label}
+          {day.adherenceScore && (
+            <span className={cn(
+              'text-[11px] font-medium px-1.5 py-0.5 rounded',
+              day.adherenceScore >= 90 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+            )}>
+              {day.adherenceScore}%
             </span>
-          ))}
+          )}
+          <ChevronRight size={14} className="text-white/10 group-hover:text-white/30 transition-colors shrink-0" />
         </div>
-
-        {/* Week bar */}
-        <div className="mb-3">
-          <WeekBar days={plan.weekSnapshot} />
-        </div>
-
-        {/* Highlights */}
-        <ul className="space-y-1 mb-3">
-          {plan.highlights.slice(0, 2).map((h, i) => (
-            <li key={i} className="text-[11px] text-white/40 flex items-start gap-1.5">
-              <span className="text-white/20 mt-px">›</span>
-              {h}
-            </li>
-          ))}
-        </ul>
-
-        {/* Footer meta */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-          <div className="flex items-center gap-2 text-white/40">
-            <span className="text-[11px]">{plan.duration}</span>
-            <span className="text-white/15">·</span>
-            <span className="text-[11px]">{plan.frequency}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <StarRating rating={plan.rating} />
-            <LevelBadge level={plan.level} />
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
 
-// ─── Main Page Component ─────────────────────────────────────────────
+// ─── Main Page ───────────────────────────────────────────────────────
 
 export function AntPlanPage() {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredPlans = useMemo(() => {
-    return MOCK_PLANS.filter((p) => {
-      const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
-      const matchesSearch =
-        !searchQuery ||
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.tags.some((t) => t.label.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesCategory && matchesSearch;
-    });
-  }, [activeCategory, searchQuery]);
-
-  const featuredPlans = filteredPlans.filter((p) => p.featured);
-  const regularPlans = filteredPlans.filter((p) => !p.featured);
+  const plan = ACTIVE_PLAN;
+  const [selectedWeek, setSelectedWeek] = useState(plan.currentWeek);
+  const displayWeek = plan.weeks[selectedWeek - 1];
+  const weeksRemaining = plan.totalWeeks - plan.currentWeek;
+  const overallProgress = Math.round((plan.currentWeek / plan.totalWeeks) * 100);
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Plans</h1>
-          <p className="text-sm text-white/40 mt-1">
-            Browse programs designed for every goal and level
-          </p>
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-white">{plan.title}</h1>
+            <p className="text-sm text-white/35 mt-0.5">{plan.subtitle}</p>
+          </div>
+          <button className="p-2 rounded-lg hover:bg-white/5 text-white/30 transition-colors">
+            <MoreHorizontal size={18} />
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-          <input
-            type="text"
-            placeholder="Search plans..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
-          />
+        {/* ── Progress Overview ── */}
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+          <div className="flex items-center gap-5">
+            <ProgressRing percent={overallProgress} />
+            <div className="flex-1 space-y-3">
+              <div>
+                <div className="text-sm font-semibold text-white">Week {plan.currentWeek} of {plan.totalWeeks}</div>
+                <div className="text-xs text-white/30">{displayWeek.label} · {weeksRemaining} weeks remaining</div>
+              </div>
+              {/* Week timeline */}
+              <WeekTimeline weeks={plan.weeks} currentWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+              <div className="flex gap-3 text-[11px] text-white/25">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500/60" /> Done</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> Current</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/8" /> Upcoming</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Category pills */}
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-          {PLAN_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={cn(
-                'px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
-                activeCategory === cat
-                  ? 'bg-white text-black'
-                  : 'bg-white/[0.06] text-white/50 hover:bg-white/[0.1] hover:text-white/70'
-              )}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* ── Stats Grid ── */}
+        <div className="grid grid-cols-3 gap-2">
+          <StatCard icon={CheckCircle2} label="Completed" value={plan.completedWorkouts} sub={`of ${plan.totalWorkouts} total`} />
+          <StatCard icon={Target} label="Adherence" value={`${plan.adherencePercent}%`} sub={`${plan.skippedWorkouts} skipped`} />
+          <StatCard icon={Flame} label="Streak" value={plan.currentStreak} sub={`Best: ${plan.longestStreak}`} />
         </div>
 
-        {/* Featured section */}
-        {featuredPlans.length > 0 && (
-          <div className="space-y-3 mb-6">
-            {featuredPlans.map((plan) => (
-              <FeaturedPlanCard key={plan.id} plan={plan} />
+        {/* ── Today's Workout ── */}
+        <TodaysWorkout />
+
+        {/* ── Week Detail ── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedWeek(Math.max(1, selectedWeek - 1))}
+                className="p-1 rounded hover:bg-white/5 text-white/20 hover:text-white/50 transition-colors"
+                disabled={selectedWeek <= 1}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-sm font-semibold text-white">
+                Week {selectedWeek}
+                <span className="text-white/30 font-normal ml-1.5">{displayWeek.label}</span>
+              </span>
+              <button
+                onClick={() => setSelectedWeek(Math.min(plan.totalWeeks, selectedWeek + 1))}
+                className="p-1 rounded hover:bg-white/5 text-white/20 hover:text-white/50 transition-colors"
+                disabled={selectedWeek >= plan.totalWeeks}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            {selectedWeek !== plan.currentWeek && (
+              <button onClick={() => setSelectedWeek(plan.currentWeek)} className="text-[11px] text-white/30 hover:text-white/50 underline underline-offset-2">
+                Back to current
+              </button>
+            )}
+          </div>
+          <WeekCalendar week={displayWeek} />
+        </div>
+
+        {/* ── Plan Info ── */}
+        <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30">Plan Details</h3>
+          <p className="text-sm text-white/45 leading-relaxed">{plan.description}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/30">
+            <span className="flex items-center gap-1"><Target size={12} /> {plan.goal}</span>
+            <span className="flex items-center gap-1"><Calendar size={12} /> {plan.frequency}</span>
+            <span className="flex items-center gap-1"><Clock size={12} /> {plan.startDate} → {plan.expectedEndDate}</span>
+          </div>
+          <div className="flex gap-1.5 pt-1">
+            {plan.schedule.map((day) => (
+              <span key={day} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300/70">{day}</span>
             ))}
           </div>
-        )}
+        </div>
 
-        {/* Regular plans grid */}
-        {regularPlans.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {regularPlans.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
-            ))}
+        {/* ── Recent Workouts ── */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30">Recent Workouts</h3>
+            <button className="text-[11px] text-white/25 hover:text-white/50 transition-colors">View all</button>
           </div>
-        )}
+          <WorkoutHistory weeks={plan.weeks} />
+        </div>
 
-        {/* Empty state */}
-        {filteredPlans.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-4xl mb-3">🔍</div>
-            <p className="text-white/40 text-sm">No plans match your search</p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setActiveCategory('All');
-              }}
-              className="mt-2 text-xs text-white/50 underline underline-offset-2 hover:text-white/70"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
