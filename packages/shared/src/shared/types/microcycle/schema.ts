@@ -5,10 +5,15 @@ import { z } from "zod";
 // ============================================================================
 
 /**
- * Activity type enum for microcycle days
+ * Activity type for microcycle days — free-form string.
+ * Common values: "strength", "cardio", "rest", "yoga", "swimming", "hiit", "mobility"
+ * @deprecated Prefer the ActivityType from weekDetails.ts for new code.
  */
 export const ActivityTypeEnum = z.enum(["TRAINING", "ACTIVE_RECOVERY", "REST"]);
-export type ActivityType = z.infer<typeof ActivityTypeEnum>;
+/** @deprecated Use free-form ActivityType from weekDetails.ts instead */
+export type LegacyActivityType = z.infer<typeof ActivityTypeEnum>;
+/** @deprecated Use free-form ActivityType from weekDetails.ts instead */
+export type ActivityType = LegacyActivityType;
 
 /**
  * Individual day within a microcycle
