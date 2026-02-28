@@ -57,6 +57,9 @@ The acknowledgment message is sent to the user immediately. Your final response 
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
     ),
+    changeRequest: z.string().describe(
+      'Clear, specific description of what to change and why. Synthesize the conversation into clear instructions — do NOT pass the raw user message. Include WHAT to change, WHERE (which day), WHY (user\'s reason), and any constraints.'
+    ),
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
@@ -67,7 +70,7 @@ The acknowledgment message is sent to the user immediately. Your final response 
     const result = await ctx.services.workoutModification.modifyWorkout({
       userId: ctx.user.id,
       workoutDate: todayDate,
-      changeRequest: ctx.message,
+      changeRequest: (args.changeRequest as string) || ctx.message,
     });
     return {
       toolType: 'action',
@@ -96,6 +99,9 @@ The acknowledgment message is sent to the user immediately. Your final response 
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Sure, moving legs to Wednesday!"'
     ),
+    changeRequest: z.string().describe(
+      'Clear, specific description of what to change and why. Synthesize the conversation into clear instructions — do NOT pass the raw user message. Include WHAT to change, WHERE (which days), WHY (user\'s reason), and any constraints.'
+    ),
     targetDay: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']).describe(
       'The primary day being modified in the weekly schedule.'
     ),
@@ -118,7 +124,7 @@ The acknowledgment message is sent to the user immediately. Your final response 
 
     const result = await ctx.services.workoutModification.modifyWeek({
       userId: ctx.user.id,
-      changeRequest: ctx.message,
+      changeRequest: (args.changeRequest as string) || ctx.message,
       weekStartDate,
     });
     return {
@@ -146,13 +152,16 @@ The acknowledgment message is sent to the user immediately. Your final response 
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, updating your program!"'
     ),
+    changeRequest: z.string().describe(
+      'Clear, specific description of what to change and why. Synthesize the conversation into clear instructions — do NOT pass the raw user message. Include WHAT to change (frequency, split, goals), WHY, and any constraints.'
+    ),
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
     await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
     const result = await ctx.services.planModification.modifyPlan({
       userId: ctx.user.id,
-      changeRequest: ctx.message,
+      changeRequest: (args.changeRequest as string) || ctx.message,
     });
     return {
       toolType: 'action',

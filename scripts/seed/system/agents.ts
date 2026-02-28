@@ -856,57 +856,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
   },
   {
     agent_id: 'plan:modify',
-    system_prompt: `You are a fitness plan modification agent. Your role is to modify a fitness plan at the mesocycle level based on user feedback or changes in circumstances.
-
-## Your Role
-1. Analyze the user's change request
-2. Determine what modifications are needed
-3. Update the plan while maintaining periodization integrity
-4. Log all changes with clear rationale
-
-## Types of Modifications
-
-### Phase Extension
-- User is making great progress
-- Wants to extend current phase before moving to next
-- Consider: progress to date, recovery quality, user goals
-
-### Goal Change
-- User has new goals (e.g., competition, weight change)
-- Needs program restructure
-- Consider: timeline, current position in program, feasibility
-
-### Volume/Intensity Adjustment
-- User feeling fatigued or wanting more volume
-- Needs modification while maintaining progression
-- Consider: recovery, injury history, timeline
-
-### Constraint Change
-- User's circumstances changed (gym closure, schedule change)
-- Needs adaptation to constraints
-- Consider: available equipment, time, location
-
-## Input Format
-You receive:
-- planDossier: Current fitness plan in markdown
-- changeRequest: What the user wants to change
-
-## Output Format
-Provide the modified plan in markdown format. Include:
-1. Revision summary at top
-2. Mesocycle table showing updated timeline
-3. Changes clearly marked with rationale
-4. LOG section documenting:
-   - Date
-   - User's reason
-   - Your decision
-   - Impact on program
-
-## Key Principles
-- Maintain periodization logic (progressive overload)
-- Don't break existing progressions
-- Consider the big picture (don't just say yes to everything)
-- Log decisions clearly for future reference`,
+    system_prompt: loadPrompt('07-plan-modify-agent.md'),
     model: 'gpt-5-mini',
     max_tokens: 32000,
     temperature: 1.0,
@@ -914,7 +864,22 @@ Provide the modified plan in markdown format. Include:
     description: 'Modifies the training program based on user feedback or changes in circumstances',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Modify the fitness plan based on the following change request: {changeRequest}. Use the current plan provided in context to understand the mesocycle structure and apply the requested changes while maintaining periodization integrity.',
+    user_prompt_template: loadPrompt('07-plan-modify-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+    output_schema: null,
+  },
+  {
+    agent_id: 'workout:modify',
+    system_prompt: loadPrompt('06-workout-modify-agent.md'),
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Modifies a single day workout within a week dossier',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: loadPrompt('06-workout-modify-agent-USER.md'),
     examples: null,
     eval_rubric: null,
     output_schema: null,

@@ -107,6 +107,22 @@ Format: `## YYYY-MM-DD — Title` followed by bullet points
 
 **Non-Periodized Maintenance**: Goals emphasize habit consistency over progression (e.g., "Maintain 3x/week for 6 months"), metrics track adherence and feeling over performance PRs
 
+## Output Format: Changes Block
+
+Your response MUST begin with a changes metadata block:
+
+```changes
+{"changed": true, "summary": "Brief description of what you changed"}
+```
+
+If no changes are needed (the profile already reflects the information), return:
+
+```changes
+{"changed": false, "summary": "No changes needed — already captured"}
+```
+
+Then output the full updated profile dossier below the block.
+
 ## Update Protocol
 
 When updating an existing profile:

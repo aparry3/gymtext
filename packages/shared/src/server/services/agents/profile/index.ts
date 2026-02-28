@@ -1,5 +1,6 @@
 import { formatForAI, now } from '@/shared/utils/date';
 import { inngest } from '@/server/connections/inngest/client';
+import { parseDossierResponse } from '@/server/agents/dossierParser';
 import {
   buildUserFieldsUserMessage,
 } from '../prompts/profile';
@@ -78,9 +79,8 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           }),
         ]);
 
-        // Profile update: the agent returns updated markdown
-        const updatedProfile = profileAgentResult.response;
-        const profileWasUpdated = updatedProfile && updatedProfile !== currentProfile;
+        // Profile update: parse dossier response with changes metadata
+        const { changed: profileWasUpdated, summary: profileSummary, dossierContent: updatedProfile } = parseDossierResponse(profileAgentResult.response);
 
         // User fields result - parse JSON string from simple runner
         let userFieldsResponse: Record<string, unknown>;

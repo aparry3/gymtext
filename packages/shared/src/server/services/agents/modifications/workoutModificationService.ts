@@ -1,5 +1,6 @@
 import { now, getDayOfWeek } from '@/shared/utils/date';
 import { DateTime } from 'luxon';
+import { parseDossierResponse } from '@/server/agents/dossierParser';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 
@@ -27,6 +28,22 @@ export interface ModifyWeekParams {
 }
 
 export interface ModifyWeekResult {
+  success: boolean;
+  modifications?: string;
+  messages: string[];
+  error?: string;
+}
+
+// Unified modify params (internal)
+interface ModifyParams {
+  userId: string;
+  changeRequest: string;
+  scope: 'day' | 'week';
+  targetDate?: Date;
+  weekStartDate?: Date;
+}
+
+interface ModifyResult {
   success: boolean;
   modifications?: string;
   messages: string[];
@@ -61,154 +78,130 @@ export function createWorkoutModificationService(
     messagingOrchestrator,
   } = deps;
 
-  return {
-    async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
-      try {
-        const { userId, workoutDate, changeRequest } = params;
-        console.log('[MODIFY_WORKOUT] Starting workout modification', { userId, changeRequest });
+  /**
+   * Unified modification method — handles both day-scope and week-scope modifications.
+   * Picks the right agent based on scope, parses the dossier response for changes metadata,
+   * and conditionally saves + regenerates.
+   */
+  async function modify(params: ModifyParams): Promise<ModifyResult> {
+    const { userId, changeRequest, scope, targetDate, weekStartDate } = params;
+    const logPrefix = scope === 'day' ? '[MODIFY_WORKOUT]' : '[MODIFY_WEEK]';
 
-        const user = await userService.getUser(userId);
-        if (!user) return { success: false, messages: [], error: 'User not found' };
+    try {
+      console.log(`${logPrefix} Starting ${scope} modification`, { userId, changeRequest });
 
-        const timezone = user.timezone || 'America/New_York';
-        const today = now(timezone);
-        const workoutDateTime = DateTime.fromJSDate(workoutDate, { zone: timezone });
-        const isToday = workoutDateTime.hasSame(today, 'day');
+      const user = await userService.getUser(userId);
+      if (!user) return { success: false, messages: [], error: 'User not found' };
 
-        // Read week dossier
-        const weekDossier = await markdownService.getWeekForDate(userId, workoutDate);
+      const timezone = user.timezone || 'America/New_York';
+      const today = now(timezone);
+      const referenceDate = weekStartDate ?? targetDate ?? today.toJSDate();
+
+      // Read week dossier
+      let weekDossier = await markdownService.getWeekForDate(userId, referenceDate);
+      if (!weekDossier?.content) {
+        if (scope === 'week') {
+          // Try to generate one first
+          try {
+            await trainingService.prepareMicrocycleForDate(userId, referenceDate, timezone);
+            weekDossier = await markdownService.getWeekForDate(userId, referenceDate);
+          } catch {
+            // Fall through to error
+          }
+        }
         if (!weekDossier?.content) {
           return { success: false, messages: [], error: 'No week plan found. Please create a plan first.' };
         }
+      }
 
-        const targetDay = getDayOfWeek(workoutDate, timezone);
+      // Build context
+      const profileDossier = await markdownService.getProfile(userId);
+      const context: string[] = [];
+      if (profileDossier) {
+        context.push(`<Profile>${profileDossier}</Profile>`);
+      }
 
-        // Build context
-        const profileDossier = await markdownService.getProfile(userId);
-        const context: string[] = [];
-        if (profileDossier) {
-          context.push(`<Profile>${profileDossier}</Profile>`);
+      // Week-scope includes plan context for broader reasoning
+      if (scope === 'week') {
+        const planDossier = await markdownService.getPlan(userId);
+        if (planDossier?.content) {
+          context.push(`<Plan>${planDossier.content}</Plan>`);
         }
-        context.push(`<Week>${weekDossier.content}</Week>`);
+      }
+      context.push(`<Week>${weekDossier.content}</Week>`);
 
-        // Call workout:modify agent to get modified week dossier
-        const result = await simpleAgentRunner.invoke('workout:modify', {
-          input: `For ${targetDay}: ${changeRequest}`,
-          context,
-          params: { user, date: workoutDate },
-        });
+      // Pick agent and format input based on scope
+      const agentId = scope === 'day' ? 'workout:modify' : 'week:modify';
+      const input = scope === 'day'
+        ? `For ${getDayOfWeek(targetDate ?? today.toJSDate(), timezone)}: ${changeRequest}`
+        : changeRequest;
 
-        const modifiedWeekContent = result.response;
+      const result = await simpleAgentRunner.invoke(agentId, {
+        input,
+        context,
+        params: { user },
+      });
 
-        // Write new week version via dossier service
+      // Parse dossier response with changes metadata
+      const { changed, summary, dossierContent } = parseDossierResponse(result.response);
+
+      // Save if changed
+      if (changed && dossierContent) {
         const plan = await markdownService.getPlan(userId);
         if (plan?.id) {
           await markdownService.createWeek(
             userId,
             plan.id,
-            modifiedWeekContent,
+            dossierContent,
             weekDossier.startDate
           );
         }
-
-        // If today, regenerate immediately
-        if (isToday) {
-          const generatedWorkout = await trainingService.prepareWorkoutForDate(user, workoutDateTime);
-          if (generatedWorkout?.message && messagingOrchestrator) {
-            await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');
-          }
-        }
-
-        console.log('[MODIFY_WORKOUT] Workout modification complete');
-        return {
-          success: true,
-          modifications: `Workout for ${targetDay} modified: ${changeRequest}`,
-          messages: [],
-        };
-      } catch (error) {
-        console.error('[MODIFY_WORKOUT] Error modifying workout:', error);
-        return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
       }
-    },
 
-    async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
-      try {
-        const { userId, changeRequest, weekStartDate } = params;
-        console.log('[MODIFY_WEEK] Starting week modification', { userId, changeRequest, weekStartDate });
+      // If current week and changed, regenerate today's workout
+      const isCurrentWeek = !weekStartDate;
+      if (changed && isCurrentWeek) {
+        const isToday = scope === 'day'
+          ? DateTime.fromJSDate(targetDate ?? today.toJSDate(), { zone: timezone }).hasSame(today, 'day')
+          : true; // Week modifications always potentially affect today
 
-        const user = await userService.getUser(userId);
-        if (!user) return { success: false, messages: [], error: 'User not found' };
-
-        const timezone = user.timezone || 'America/New_York';
-        const today = now(timezone);
-        const referenceDate = weekStartDate ?? today.toJSDate();
-
-        // Read week dossier
-        const weekDossier = await markdownService.getWeekForDate(userId, referenceDate);
-        if (!weekDossier?.content) {
-          // Try to generate one first
-          try {
-            await trainingService.prepareMicrocycleForDate(userId, referenceDate, timezone);
-          } catch {
-            return { success: false, messages: [], error: 'No week plan found and could not generate one.' };
-          }
-        }
-
-        const currentWeek = weekDossier ?? await markdownService.getWeekForDate(userId, referenceDate);
-        if (!currentWeek?.content) {
-          return { success: false, messages: [], error: 'Could not find or create week plan.' };
-        }
-
-        // Build context
-        const profileDossier = await markdownService.getProfile(userId);
-        const planDossier = await markdownService.getPlan(userId);
-        const context: string[] = [];
-        if (profileDossier) {
-          context.push(`<Profile>${profileDossier}</Profile>`);
-        }
-        if (planDossier?.content) {
-          context.push(`<Plan>${planDossier.content}</Plan>`);
-        }
-        context.push(`<Week>${currentWeek.content}</Week>`);
-
-        // Call week:modify agent
-        const result = await simpleAgentRunner.invoke('week:modify', {
-          input: changeRequest,
-          context,
-          params: { user },
-        });
-
-        const modifiedWeekContent = result.response;
-
-        // Write new week version
-        if (planDossier?.id) {
-          await markdownService.createWeek(
-            userId,
-            planDossier.id,
-            modifiedWeekContent,
-            currentWeek.startDate
-          );
-        }
-
-        // If today is affected, regenerate immediately
-        const isFutureWeek = !!weekStartDate;
-        if (!isFutureWeek) {
+        if (isToday) {
           const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today);
           if (generatedWorkout?.message && messagingOrchestrator) {
             await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');
           }
         }
-
-        console.log('[MODIFY_WEEK] Week modification complete');
-        return {
-          success: true,
-          modifications: `Week schedule modified: ${changeRequest}`,
-          messages: [],
-        };
-      } catch (error) {
-        console.error('[MODIFY_WEEK] Error modifying week:', error);
-        return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
       }
+
+      console.log(`${logPrefix} Modification complete`, { changed, summary });
+      return {
+        success: true,
+        modifications: changed ? summary : 'No changes needed.',
+        messages: [],
+      };
+    } catch (error) {
+      console.error(`${logPrefix} Error:`, error);
+      return { success: false, messages: [], error: error instanceof Error ? error.message : 'Unknown error occurred' };
+    }
+  }
+
+  return {
+    async modifyWorkout(params: ModifyWorkoutParams): Promise<ModifyWorkoutResult> {
+      return modify({
+        userId: params.userId,
+        changeRequest: params.changeRequest,
+        scope: 'day',
+        targetDate: params.workoutDate,
+      });
+    },
+
+    async modifyWeek(params: ModifyWeekParams): Promise<ModifyWeekResult> {
+      return modify({
+        userId: params.userId,
+        changeRequest: params.changeRequest,
+        scope: 'week',
+        weekStartDate: params.weekStartDate,
+      });
     },
   };
 }
