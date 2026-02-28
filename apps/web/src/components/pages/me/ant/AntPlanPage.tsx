@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import {
   Calendar,
   ChevronRight,
@@ -8,7 +8,6 @@ import {
   Dumbbell,
   Flame,
   Target,
-  TrendingUp,
   CheckCircle2,
   Circle,
   XCircle,
@@ -16,37 +15,179 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ACTIVE_PLAN, type PlanWorkoutDay, type PlanWeek, type WorkoutStatus } from './planMockData';
+import { ACTIVE_PLAN, type WorkoutStatus } from './planMockData';
+
+// ─── Theme ───────────────────────────────────────────────────────────
+
+interface PlanTheme {
+  bg: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  textFaint: string;
+  cardBg: string;
+  cardBorder: string;
+  hoverBg: string;
+  buttonBg: string;
+  buttonHoverBg: string;
+  iconBg: string;
+  // Progress ring
+  ringTrack: string;
+  ringTextColor: string;
+  // Status colors (these stay the same in both themes)
+  statusCompleted: string;
+  statusSkipped: string;
+  statusUpcoming: string;
+  statusToday: string;
+  statusRest: string;
+  statusRingCompleted: string;
+  statusRingSkipped: string;
+  statusRingUpcoming: string;
+  statusRingToday: string;
+  // Today's workout card
+  todayCardBg: string;
+  todayCardBorder: string;
+  // Plan details
+  planDetailsBg: string;
+  planDetailsBorder: string;
+  // Schedule pill
+  schedulePillBg: string;
+  schedulePillText: string;
+  // Adherence badge
+  adherenceGoodBg: string;
+  adherenceGoodText: string;
+  adherenceOkBg: string;
+  adherenceOkText: string;
+  // Week timeline
+  weekCompletedBg: string;
+  weekCurrentBg: string;
+  weekUpcomingBg: string;
+  // Status icon colors
+  completedIcon: string;
+  skippedIcon: string;
+  todayIcon: string;
+  upcomingIcon: string;
+  restDash: string;
+  // Calendar day
+  todayDayBg: string;
+  todayDayRing: string;
+  completedDayBg: string;
+  // section header
+  sectionHeaderText: string;
+}
+
+const darkTheme: PlanTheme = {
+  bg: 'bg-[hsl(222,47%,5%)]',
+  textPrimary: 'text-white',
+  textSecondary: 'text-white/40',
+  textMuted: 'text-white/30',
+  textFaint: 'text-white/20',
+  cardBg: 'bg-white/[0.03]',
+  cardBorder: 'border-white/[0.06]',
+  hoverBg: 'hover:bg-white/[0.03]',
+  buttonBg: 'bg-white/10',
+  buttonHoverBg: 'hover:bg-white/15',
+  iconBg: 'bg-amber-400/15',
+  ringTrack: 'rgba(255,255,255,0.06)',
+  ringTextColor: 'text-white',
+  statusCompleted: 'bg-emerald-500',
+  statusSkipped: 'bg-red-400/60',
+  statusUpcoming: 'bg-white/10',
+  statusToday: 'bg-amber-400',
+  statusRest: 'bg-white/[0.04]',
+  statusRingCompleted: 'ring-emerald-500/30',
+  statusRingSkipped: 'ring-red-400/20',
+  statusRingUpcoming: 'ring-white/5',
+  statusRingToday: 'ring-amber-400/40',
+  todayCardBg: 'bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-transparent',
+  todayCardBorder: 'border-white/[0.08]',
+  planDetailsBg: 'bg-white/[0.02]',
+  planDetailsBorder: 'border-white/[0.05]',
+  schedulePillBg: 'bg-blue-500/10',
+  schedulePillText: 'text-blue-300/70',
+  adherenceGoodBg: 'bg-emerald-500/10',
+  adherenceGoodText: 'text-emerald-400',
+  adherenceOkBg: 'bg-amber-500/10',
+  adherenceOkText: 'text-amber-400',
+  weekCompletedBg: 'bg-emerald-500/60',
+  weekCurrentBg: 'bg-amber-400',
+  weekUpcomingBg: 'bg-white/8',
+  completedIcon: 'text-emerald-400',
+  skippedIcon: 'text-red-400/60',
+  todayIcon: 'text-amber-400',
+  upcomingIcon: 'text-white/15',
+  restDash: 'text-white/20',
+  todayDayBg: 'bg-amber-400/10',
+  todayDayRing: 'ring-1 ring-amber-400/30',
+  completedDayBg: 'bg-emerald-500/5',
+  sectionHeaderText: 'text-white/30',
+};
+
+const lightTheme: PlanTheme = {
+  bg: 'bg-[#F7F5F2]',
+  textPrimary: 'text-stone-900',
+  textSecondary: 'text-stone-500',
+  textMuted: 'text-stone-400',
+  textFaint: 'text-stone-300',
+  cardBg: 'bg-white',
+  cardBorder: 'border-stone-200',
+  hoverBg: 'hover:bg-stone-50',
+  buttonBg: 'bg-stone-100',
+  buttonHoverBg: 'hover:bg-stone-200',
+  iconBg: 'bg-amber-100',
+  ringTrack: 'rgba(0,0,0,0.06)',
+  ringTextColor: 'text-stone-900',
+  statusCompleted: 'bg-emerald-500',
+  statusSkipped: 'bg-red-400',
+  statusUpcoming: 'bg-stone-200',
+  statusToday: 'bg-amber-400',
+  statusRest: 'bg-stone-100',
+  statusRingCompleted: 'ring-emerald-500/30',
+  statusRingSkipped: 'ring-red-400/20',
+  statusRingUpcoming: 'ring-stone-200',
+  statusRingToday: 'ring-amber-400/40',
+  todayCardBg: 'bg-gradient-to-br from-blue-50 via-purple-50/50 to-white',
+  todayCardBorder: 'border-blue-200/60',
+  planDetailsBg: 'bg-white',
+  planDetailsBorder: 'border-stone-200',
+  schedulePillBg: 'bg-blue-50',
+  schedulePillText: 'text-blue-600',
+  adherenceGoodBg: 'bg-emerald-50',
+  adherenceGoodText: 'text-emerald-600',
+  adherenceOkBg: 'bg-amber-50',
+  adherenceOkText: 'text-amber-600',
+  weekCompletedBg: 'bg-emerald-500/60',
+  weekCurrentBg: 'bg-amber-400',
+  weekUpcomingBg: 'bg-stone-200',
+  completedIcon: 'text-emerald-500',
+  skippedIcon: 'text-red-400',
+  todayIcon: 'text-amber-500',
+  upcomingIcon: 'text-stone-300',
+  restDash: 'text-stone-300',
+  todayDayBg: 'bg-amber-50',
+  todayDayRing: 'ring-1 ring-amber-300',
+  completedDayBg: 'bg-emerald-50',
+  sectionHeaderText: 'text-stone-400',
+};
+
+const ThemeCtx = createContext<PlanTheme>(darkTheme);
+const useTheme = () => useContext(ThemeCtx);
 
 // ─── Status helpers ──────────────────────────────────────────────────
 
-const STATUS_COLORS: Record<WorkoutStatus, string> = {
-  completed: 'bg-emerald-500',
-  skipped: 'bg-red-400/60',
-  upcoming: 'bg-white/10',
-  today: 'bg-amber-400',
-  rest: 'bg-white/[0.04]',
-};
-
-const STATUS_RING: Record<WorkoutStatus, string> = {
-  completed: 'ring-emerald-500/30',
-  skipped: 'ring-red-400/20',
-  upcoming: 'ring-white/5',
-  today: 'ring-amber-400/40',
-  rest: 'ring-transparent',
-};
-
 function StatusIcon({ status, size = 16 }: { status: WorkoutStatus; size?: number }) {
-  if (status === 'completed') return <CheckCircle2 size={size} className="text-emerald-400" />;
-  if (status === 'skipped') return <XCircle size={size} className="text-red-400/60" />;
-  if (status === 'today') return <Flame size={size} className="text-amber-400" />;
-  if (status === 'rest') return <span className="text-white/20 text-xs">—</span>;
-  return <Circle size={size} className="text-white/15" />;
+  const t = useTheme();
+  if (status === 'completed') return <CheckCircle2 size={size} className={t.completedIcon} />;
+  if (status === 'skipped') return <XCircle size={size} className={t.skippedIcon} />;
+  if (status === 'today') return <Flame size={size} className={t.todayIcon} />;
+  if (status === 'rest') return <span className={cn('text-xs', t.restDash)}>—</span>;
+  return <Circle size={size} className={t.upcomingIcon} />;
 }
 
 // ─── Progress Ring ───────────────────────────────────────────────────
 
 function ProgressRing({ percent, size = 80, strokeWidth = 6 }: { percent: number; size?: number; strokeWidth?: number }) {
+  const t = useTheme();
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percent / 100) * circumference;
@@ -54,7 +195,7 @@ function ProgressRing({ percent, size = 80, strokeWidth = 6 }: { percent: number
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={t.ringTrack} strokeWidth={strokeWidth} />
         <circle
           cx={size / 2} cy={size / 2} r={radius} fill="none"
           stroke="url(#progress-gradient)" strokeWidth={strokeWidth}
@@ -69,7 +210,7 @@ function ProgressRing({ percent, size = 80, strokeWidth = 6 }: { percent: number
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-bold text-white">{percent}%</span>
+        <span className={cn('text-lg font-bold', t.ringTextColor)}>{percent}%</span>
       </div>
     </div>
   );
@@ -78,21 +219,40 @@ function ProgressRing({ percent, size = 80, strokeWidth = 6 }: { percent: number
 // ─── Stat Card ───────────────────────────────────────────────────────
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Flame; label: string; value: string | number; sub?: string }) {
+  const t = useTheme();
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 flex flex-col gap-1">
-      <div className="flex items-center gap-1.5 text-white/40">
+    <div className={cn('rounded-xl p-3 flex flex-col gap-1 border', t.cardBg, t.cardBorder)}>
+      <div className={cn('flex items-center gap-1.5', t.textSecondary)}>
         <Icon size={13} />
         <span className="text-[11px] font-medium uppercase tracking-wider">{label}</span>
       </div>
-      <div className="text-xl font-bold text-white leading-tight">{value}</div>
-      {sub && <div className="text-[11px] text-white/30">{sub}</div>}
+      <div className={cn('text-xl font-bold leading-tight', t.textPrimary)}>{value}</div>
+      {sub && <div className={cn('text-[11px]', t.textMuted)}>{sub}</div>}
     </div>
   );
 }
 
 // ─── Week Calendar Row ───────────────────────────────────────────────
 
-function WeekCalendar({ week }: { week: PlanWeek }) {
+function WeekCalendar({ week }: { week: (typeof ACTIVE_PLAN)['weeks'][0] }) {
+  const t = useTheme();
+
+  const statusColors: Record<WorkoutStatus, string> = {
+    completed: t.statusCompleted,
+    skipped: t.statusSkipped,
+    upcoming: t.statusUpcoming,
+    today: t.statusToday,
+    rest: t.statusRest,
+  };
+
+  const statusRings: Record<WorkoutStatus, string> = {
+    completed: t.statusRingCompleted,
+    skipped: t.statusRingSkipped,
+    upcoming: t.statusRingUpcoming,
+    today: t.statusRingToday,
+    rest: 'ring-transparent',
+  };
+
   return (
     <div className="flex gap-1.5">
       {week.days.map((day, i) => (
@@ -100,30 +260,30 @@ function WeekCalendar({ week }: { week: PlanWeek }) {
           key={i}
           className={cn(
             'flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all',
-            day.status === 'today' && 'bg-amber-400/10 ring-1 ring-amber-400/30',
-            day.status === 'completed' && 'bg-emerald-500/5',
+            day.status === 'today' && cn(t.todayDayBg, t.todayDayRing),
+            day.status === 'completed' && t.completedDayBg,
           )}
         >
           <span className={cn(
             'text-[10px] font-medium',
-            day.status === 'today' ? 'text-amber-400' : 'text-white/30'
+            day.status === 'today' ? t.todayIcon : t.textMuted
           )}>
             {day.dayOfWeek}
           </span>
           <div className={cn(
             'w-7 h-7 rounded-full flex items-center justify-center ring-2',
-            STATUS_COLORS[day.status],
-            STATUS_RING[day.status],
+            statusColors[day.status],
+            statusRings[day.status],
           )}>
             {day.status === 'rest' ? (
-              <span className="text-[9px] text-white/20">R</span>
+              <span className={cn('text-[9px]', t.restDash)}>R</span>
             ) : (
               <StatusIcon status={day.status} size={14} />
             )}
           </div>
           <span className={cn(
             'text-[9px] text-center leading-tight line-clamp-1',
-            day.status === 'today' ? 'text-amber-300/80' : 'text-white/25'
+            day.status === 'today' ? t.todayIcon : t.textFaint
           )}>
             {day.type === 'rest' ? '' : day.label}
           </span>
@@ -136,32 +296,33 @@ function WeekCalendar({ week }: { week: PlanWeek }) {
 // ─── Today's Workout Card ────────────────────────────────────────────
 
 function TodaysWorkout() {
+  const t = useTheme();
   const { nextWorkout } = ACTIVE_PLAN;
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-transparent border border-white/[0.08]">
+    <div className={cn('relative overflow-hidden rounded-2xl border', t.todayCardBg, t.todayCardBorder)}>
       <div className="p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-400/15 flex items-center justify-center">
-              <Dumbbell size={16} className="text-amber-400" />
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', t.iconBg)}>
+              <Dumbbell size={16} className={t.todayIcon} />
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">Today&apos;s Workout</div>
-              <div className="text-xs text-white/30">{nextWorkout.dayOfWeek} · ~{nextWorkout.estimatedDuration} min</div>
+              <div className={cn('text-[10px] font-semibold uppercase tracking-wider', t.todayIcon)} style={{ opacity: 0.8 }}>Today&apos;s Workout</div>
+              <div className={cn('text-xs', t.textMuted)}>{nextWorkout.dayOfWeek} · ~{nextWorkout.estimatedDuration} min</div>
             </div>
           </div>
-          <button className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-lg text-xs font-medium text-white transition-colors">
+          <button className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', t.buttonBg, t.buttonHoverBg, t.textPrimary)}>
             Start
           </button>
         </div>
 
-        <h3 className="text-lg font-bold text-white mb-0.5">{nextWorkout.label}</h3>
-        <p className="text-xs text-white/40 mb-4">{nextWorkout.focus}</p>
+        <h3 className={cn('text-lg font-bold mb-0.5', t.textPrimary)}>{nextWorkout.label}</h3>
+        <p className={cn('text-xs mb-4', t.textSecondary)}>{nextWorkout.focus}</p>
 
         <div className="space-y-1.5">
           {nextWorkout.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm text-white/50">
-              <span className="text-white/15 text-xs w-4 text-right">{i + 1}</span>
+            <div key={i} className={cn('flex items-center gap-2 text-sm', t.textSecondary)}>
+              <span className={cn('text-xs w-4 text-right', t.textFaint)}>{i + 1}</span>
               <span>{ex}</span>
             </div>
           ))}
@@ -173,7 +334,8 @@ function TodaysWorkout() {
 
 // ─── Week Timeline ───────────────────────────────────────────────────
 
-function WeekTimeline({ weeks, currentWeek, onSelectWeek }: { weeks: PlanWeek[]; currentWeek: number; onSelectWeek: (w: number) => void }) {
+function WeekTimeline({ weeks, currentWeek, onSelectWeek }: { weeks: (typeof ACTIVE_PLAN)['weeks']; currentWeek: number; onSelectWeek: (w: number) => void }) {
+  const t = useTheme();
   return (
     <div className="flex gap-0.5 items-center">
       {weeks.map((week) => (
@@ -182,10 +344,10 @@ function WeekTimeline({ weeks, currentWeek, onSelectWeek }: { weeks: PlanWeek[];
           onClick={() => onSelectWeek(week.weekNumber)}
           className={cn(
             'flex-1 h-2 rounded-full transition-all',
-            week.status === 'completed' && 'bg-emerald-500/60',
-            week.status === 'current' && 'bg-amber-400 animate-pulse',
-            week.status === 'upcoming' && 'bg-white/8',
-            week.weekNumber === currentWeek && 'ring-1 ring-white/20',
+            week.status === 'completed' && t.weekCompletedBg,
+            week.status === 'current' && cn(t.weekCurrentBg, 'animate-pulse'),
+            week.status === 'upcoming' && t.weekUpcomingBg,
+            week.weekNumber === currentWeek && 'ring-1 ring-offset-1 ring-stone-400/30',
           )}
           title={`Week ${week.weekNumber}: ${week.label}`}
         />
@@ -196,7 +358,8 @@ function WeekTimeline({ weeks, currentWeek, onSelectWeek }: { weeks: PlanWeek[];
 
 // ─── Workout History List ────────────────────────────────────────────
 
-function WorkoutHistory({ weeks }: { weeks: PlanWeek[] }) {
+function WorkoutHistory({ weeks }: { weeks: (typeof ACTIVE_PLAN)['weeks'] }) {
+  const t = useTheme();
   const completedDays = weeks
     .flatMap((w) => w.days.map((d) => ({ ...d, week: w.weekNumber, weekLabel: w.label })))
     .filter((d) => d.status === 'completed')
@@ -206,21 +369,23 @@ function WorkoutHistory({ weeks }: { weeks: PlanWeek[] }) {
   return (
     <div className="space-y-1">
       {completedDays.map((day, i) => (
-        <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-white/[0.03] transition-colors group cursor-pointer">
-          <CheckCircle2 size={14} className="text-emerald-400/60 shrink-0" />
+        <div key={i} className={cn('flex items-center gap-3 py-2 px-3 rounded-lg transition-colors group cursor-pointer', t.hoverBg)}>
+          <CheckCircle2 size={14} className={cn(t.completedIcon, 'opacity-60 shrink-0')} />
           <div className="flex-1 min-w-0">
-            <div className="text-sm text-white/70 truncate">{day.label}</div>
-            <div className="text-[11px] text-white/25">Week {day.week} · {day.dayOfWeek} · {day.date}</div>
+            <div className={cn('text-sm truncate', t.textSecondary)}>{day.label}</div>
+            <div className={cn('text-[11px]', t.textFaint)}>Week {day.week} · {day.dayOfWeek} · {day.date}</div>
           </div>
           {day.adherenceScore && (
             <span className={cn(
               'text-[11px] font-medium px-1.5 py-0.5 rounded',
-              day.adherenceScore >= 90 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+              day.adherenceScore >= 90
+                ? cn(t.adherenceGoodBg, t.adherenceGoodText)
+                : cn(t.adherenceOkBg, t.adherenceOkText)
             )}>
               {day.adherenceScore}%
             </span>
           )}
-          <ChevronRight size={14} className="text-white/10 group-hover:text-white/30 transition-colors shrink-0" />
+          <ChevronRight size={14} className={cn(t.textFaint, 'group-hover:opacity-70 transition-colors shrink-0')} />
         </div>
       ))}
     </div>
@@ -229,7 +394,12 @@ function WorkoutHistory({ weeks }: { weeks: PlanWeek[] }) {
 
 // ─── Main Page ───────────────────────────────────────────────────────
 
-export function AntPlanPage() {
+interface AntPlanPageProps {
+  mode?: 'light' | 'dark';
+}
+
+export function AntPlanPage({ mode = 'dark' }: AntPlanPageProps) {
+  const theme = mode === 'dark' ? darkTheme : lightTheme;
   const plan = ACTIVE_PLAN;
   const [selectedWeek, setSelectedWeek] = useState(plan.currentWeek);
   const displayWeek = plan.weeks[selectedWeek - 1];
@@ -237,108 +407,110 @@ export function AntPlanPage() {
   const overallProgress = Math.round((plan.currentWeek / plan.totalWeeks) * 100);
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+    <ThemeCtx.Provider value={theme}>
+      <div className={cn('min-h-screen', theme.bg)}>
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
 
-        {/* ── Header ── */}
-        <div className="flex items-start justify-between">
+          {/* ── Header ── */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className={cn('text-xl font-bold', theme.textPrimary)}>{plan.title}</h1>
+              <p className={cn('text-sm mt-0.5', theme.textMuted)}>{plan.subtitle}</p>
+            </div>
+            <button className={cn('p-2 rounded-lg transition-colors', theme.hoverBg, theme.textMuted)}>
+              <MoreHorizontal size={18} />
+            </button>
+          </div>
+
+          {/* ── Progress Overview ── */}
+          <div className={cn('rounded-2xl p-5 border', theme.cardBg, theme.cardBorder)}>
+            <div className="flex items-center gap-5">
+              <ProgressRing percent={overallProgress} />
+              <div className="flex-1 space-y-3">
+                <div>
+                  <div className={cn('text-sm font-semibold', theme.textPrimary)}>Week {plan.currentWeek} of {plan.totalWeeks}</div>
+                  <div className={cn('text-xs', theme.textMuted)}>{displayWeek.label} · {weeksRemaining} weeks remaining</div>
+                </div>
+                {/* Week timeline */}
+                <WeekTimeline weeks={plan.weeks} currentWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+                <div className={cn('flex gap-3 text-[11px]', theme.textFaint)}>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500/60" /> Done</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> Current</span>
+                  <span className={cn('flex items-center gap-1')}><span className={cn('w-2 h-2 rounded-full', theme.weekUpcomingBg)} /> Upcoming</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Stats Grid ── */}
+          <div className="grid grid-cols-3 gap-2">
+            <StatCard icon={CheckCircle2} label="Completed" value={plan.completedWorkouts} sub={`of ${plan.totalWorkouts} total`} />
+            <StatCard icon={Target} label="Adherence" value={`${plan.adherencePercent}%`} sub={`${plan.skippedWorkouts} skipped`} />
+            <StatCard icon={Flame} label="Streak" value={plan.currentStreak} sub={`Best: ${plan.longestStreak}`} />
+          </div>
+
+          {/* ── Today's Workout ── */}
+          <TodaysWorkout />
+
+          {/* ── Week Detail ── */}
           <div>
-            <h1 className="text-xl font-bold text-white">{plan.title}</h1>
-            <p className="text-sm text-white/35 mt-0.5">{plan.subtitle}</p>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedWeek(Math.max(1, selectedWeek - 1))}
+                  className={cn('p-1 rounded transition-colors', theme.hoverBg, theme.textFaint)}
+                  disabled={selectedWeek <= 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className={cn('text-sm font-semibold', theme.textPrimary)}>
+                  Week {selectedWeek}
+                  <span className={cn('font-normal ml-1.5', theme.textMuted)}>{displayWeek.label}</span>
+                </span>
+                <button
+                  onClick={() => setSelectedWeek(Math.min(plan.totalWeeks, selectedWeek + 1))}
+                  className={cn('p-1 rounded transition-colors', theme.hoverBg, theme.textFaint)}
+                  disabled={selectedWeek >= plan.totalWeeks}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              {selectedWeek !== plan.currentWeek && (
+                <button onClick={() => setSelectedWeek(plan.currentWeek)} className={cn('text-[11px] underline underline-offset-2', theme.textMuted, 'hover:opacity-70')}>
+                  Back to current
+                </button>
+              )}
+            </div>
+            <WeekCalendar week={displayWeek} />
           </div>
-          <button className="p-2 rounded-lg hover:bg-white/5 text-white/30 transition-colors">
-            <MoreHorizontal size={18} />
-          </button>
-        </div>
 
-        {/* ── Progress Overview ── */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
-          <div className="flex items-center gap-5">
-            <ProgressRing percent={overallProgress} />
-            <div className="flex-1 space-y-3">
-              <div>
-                <div className="text-sm font-semibold text-white">Week {plan.currentWeek} of {plan.totalWeeks}</div>
-                <div className="text-xs text-white/30">{displayWeek.label} · {weeksRemaining} weeks remaining</div>
-              </div>
-              {/* Week timeline */}
-              <WeekTimeline weeks={plan.weeks} currentWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
-              <div className="flex gap-3 text-[11px] text-white/25">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500/60" /> Done</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> Current</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/8" /> Upcoming</span>
-              </div>
+          {/* ── Plan Info ── */}
+          <div className={cn('rounded-xl p-4 space-y-3 border', theme.planDetailsBg, theme.planDetailsBorder)}>
+            <h3 className={cn('text-xs font-semibold uppercase tracking-wider', theme.sectionHeaderText)}>Plan Details</h3>
+            <p className={cn('text-sm leading-relaxed', theme.textSecondary)}>{plan.description}</p>
+            <div className={cn('flex flex-wrap gap-x-4 gap-y-1 text-xs', theme.textMuted)}>
+              <span className="flex items-center gap-1"><Target size={12} /> {plan.goal}</span>
+              <span className="flex items-center gap-1"><Calendar size={12} /> {plan.frequency}</span>
+              <span className="flex items-center gap-1"><Clock size={12} /> {plan.startDate} → {plan.expectedEndDate}</span>
+            </div>
+            <div className="flex gap-1.5 pt-1">
+              {plan.schedule.map((day) => (
+                <span key={day} className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full', theme.schedulePillBg, theme.schedulePillText)}>{day}</span>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-3 gap-2">
-          <StatCard icon={CheckCircle2} label="Completed" value={plan.completedWorkouts} sub={`of ${plan.totalWorkouts} total`} />
-          <StatCard icon={Target} label="Adherence" value={`${plan.adherencePercent}%`} sub={`${plan.skippedWorkouts} skipped`} />
-          <StatCard icon={Flame} label="Streak" value={plan.currentStreak} sub={`Best: ${plan.longestStreak}`} />
-        </div>
-
-        {/* ── Today's Workout ── */}
-        <TodaysWorkout />
-
-        {/* ── Week Detail ── */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSelectedWeek(Math.max(1, selectedWeek - 1))}
-                className="p-1 rounded hover:bg-white/5 text-white/20 hover:text-white/50 transition-colors"
-                disabled={selectedWeek <= 1}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="text-sm font-semibold text-white">
-                Week {selectedWeek}
-                <span className="text-white/30 font-normal ml-1.5">{displayWeek.label}</span>
-              </span>
-              <button
-                onClick={() => setSelectedWeek(Math.min(plan.totalWeeks, selectedWeek + 1))}
-                className="p-1 rounded hover:bg-white/5 text-white/20 hover:text-white/50 transition-colors"
-                disabled={selectedWeek >= plan.totalWeeks}
-              >
-                <ChevronRight size={16} />
-              </button>
+          {/* ── Recent Workouts ── */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className={cn('text-xs font-semibold uppercase tracking-wider', theme.sectionHeaderText)}>Recent Workouts</h3>
+              <button className={cn('text-[11px] transition-colors', theme.textFaint, 'hover:opacity-70')}>View all</button>
             </div>
-            {selectedWeek !== plan.currentWeek && (
-              <button onClick={() => setSelectedWeek(plan.currentWeek)} className="text-[11px] text-white/30 hover:text-white/50 underline underline-offset-2">
-                Back to current
-              </button>
-            )}
+            <WorkoutHistory weeks={plan.weeks} />
           </div>
-          <WeekCalendar week={displayWeek} />
-        </div>
 
-        {/* ── Plan Info ── */}
-        <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-4 space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30">Plan Details</h3>
-          <p className="text-sm text-white/45 leading-relaxed">{plan.description}</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/30">
-            <span className="flex items-center gap-1"><Target size={12} /> {plan.goal}</span>
-            <span className="flex items-center gap-1"><Calendar size={12} /> {plan.frequency}</span>
-            <span className="flex items-center gap-1"><Clock size={12} /> {plan.startDate} → {plan.expectedEndDate}</span>
-          </div>
-          <div className="flex gap-1.5 pt-1">
-            {plan.schedule.map((day) => (
-              <span key={day} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300/70">{day}</span>
-            ))}
-          </div>
         </div>
-
-        {/* ── Recent Workouts ── */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30">Recent Workouts</h3>
-            <button className="text-[11px] text-white/25 hover:text-white/50 transition-colors">View all</button>
-          </div>
-          <WorkoutHistory weeks={plan.weeks} />
-        </div>
-
       </div>
-    </div>
+    </ThemeCtx.Provider>
   );
 }
