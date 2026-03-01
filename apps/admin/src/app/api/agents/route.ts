@@ -13,6 +13,7 @@ type DbAgent = {
   maxTokens: number
   maxIterations: number
   toolIds: string[] | null
+  formatterIds: string[] | null
   createdAt: Date
   versionId: number
 }
@@ -90,6 +91,7 @@ export async function GET(request: Request) {
         max_iterations: agent.maxIterations,
         max_retries: 3,
         tool_ids: agent.toolIds || [],
+        formatter_ids: agent.formatterIds || [],
         sub_agents: null,
         output_schema: null,
         validation_rules: null,
@@ -138,6 +140,7 @@ export async function POST(request: Request) {
       description = null,
       user_prompt_template = null,
       tool_ids = [],
+      formatter_ids = [],
       examples = null,
       eval_rubric = null,
     } = body;
@@ -180,6 +183,7 @@ export async function POST(request: Request) {
         description,
         userPromptTemplate: user_prompt_template,
         toolIds: tool_ids,
+        formatterIds: formatter_ids,
         examples,
         evalRubric: eval_rubric,
         isActive: true,
@@ -201,6 +205,7 @@ export async function POST(request: Request) {
       max_iterations: result.maxIterations,
       max_retries: 3,
       tool_ids: result.toolIds || [],
+      formatter_ids: result.formatterIds || [],
       sub_agents: null,
       output_schema: null,
       validation_rules: null,
