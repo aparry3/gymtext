@@ -11,6 +11,8 @@ import type { ToolResult } from '@/server/services/agents/types/shared';
 
 export const updateProfileTool: ToolDefinition = {
   name: 'update_profile',
+  title: 'Update Profile',
+  shortDescription: 'Record user preferences and profile info',
   description: `Record permanent user preferences and profile information.
 
 Use this tool when the user shares PERMANENT information:
@@ -40,6 +42,8 @@ All context is automatically provided - no parameters needed.`,
 
 export const modifyWorkoutTool: ToolDefinition = {
   name: 'modify_workout',
+  title: 'Modify Workout',
+  shortDescription: 'Change workouts or weekly schedule',
   description: `Modify workouts or restructure the weekly schedule within the current week dossier.
 
 Use this tool for ANY workout or schedule change within a week:
@@ -102,6 +106,8 @@ The acknowledgment message is sent to the user immediately. Your final response 
 
 export const modifyPlanTool: ToolDefinition = {
   name: 'modify_plan',
+  title: 'Modify Plan',
+  shortDescription: 'Program-level changes (frequency, split, goals)',
   description: `Make program-level changes - frequency, training split, overall goals.
 
 Use this tool for changes that affect the ENTIRE TRAINING PROGRAM:
@@ -139,6 +145,8 @@ The acknowledgment message is sent to the user immediately. Your final response 
 
 export const getWorkoutTool: ToolDefinition = {
   name: 'get_workout',
+  title: 'Get Workout',
+  shortDescription: "Fetch today's workout for the user",
   description: `Get the user's workout for today.
 
 Use this tool when the user asks about their workout for today, such as:

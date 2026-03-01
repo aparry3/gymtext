@@ -6,6 +6,8 @@ import type { ToolDefinition, ToolExecutionContext } from './types';
 export interface ToolMetadata {
   name: string;
   description: string;
+  title?: string;
+  shortDescription?: string;
   priority?: number;
 }
 
@@ -40,6 +42,8 @@ export class ToolRegistry {
     return [...this.tools.values()].map((def) => ({
       name: def.name,
       description: def.description,
+      title: def.title,
+      shortDescription: def.shortDescription,
       priority: def.priority,
     }));
   }

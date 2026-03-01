@@ -15,11 +15,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover'
+import {
   Bot,
   Check,
   ChevronDown,
   ChevronRight,
+  Eye,
   FileText,
+  Pencil,
   Plus,
   RefreshCw,
   Save,
@@ -142,7 +149,7 @@ interface AutoGrowTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextArea
   minHeight?: number
 }
 
-type PromptEditorMode = 'edit' | 'split' | 'preview'
+type PromptEditorMode = 'edit' | 'preview'
 
 function AutoGrowTextarea({ value, className, onChange, minHeight = 220, ...props }: AutoGrowTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -182,7 +189,7 @@ interface MarkdownPromptEditorProps {
   onChange: (value: string) => void
   placeholder: string
   minHeight: number
-  defaultMode?: PromptEditorMode
+  mode: PromptEditorMode
 }
 
 function MarkdownPromptEditor({
@@ -191,56 +198,97 @@ function MarkdownPromptEditor({
   onChange,
   placeholder,
   minHeight,
-  defaultMode = 'split',
+  mode,
 }: MarkdownPromptEditorProps) {
-  const [mode, setMode] = useState<PromptEditorMode>(defaultMode)
+  return (
+    <div>
+      {label && <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>}
+
+      {mode === 'edit' && (
+        <AutoGrowTextarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          minHeight={minHeight}
+          placeholder={placeholder}
+        />
+      )}
+
+      {mode === 'preview' && (
+        <div
+          className="w-full px-3 py-3 text-sm border border-slate-300 rounded-lg bg-white overflow-auto"
+          style={{ minHeight }}
+        >
+          {value.trim() ? (
+            <div className="space-y-3 text-slate-800 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_pre]:bg-slate-100 [&_pre]:p-3 [&_pre]:rounded-md [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_p]:leading-relaxed">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-slate-400 italic">Nothing to preview yet.</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface MultiSelectCheckboxProps {
+  label: string
+  options: { value: string; title?: string; description?: string }[]
+  selected: string[]
+  onChange: (selected: string[]) => void
+}
+
+function MultiSelectCheckbox({ label, options, selected, onChange }: MultiSelectCheckboxProps) {
+  const toggle = (value: string) => {
+    onChange(
+      selected.includes(value)
+        ? selected.filter((v) => v !== value)
+        : [...selected, value]
+    )
+  }
+
+  const selectedNames = selected
+    .map((v) => {
+      const opt = options.find((o) => o.value === v)
+      return opt?.title || v
+    })
+    .join(', ')
 
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <label className="block text-sm font-medium text-slate-700">{label}</label>
-        <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-          {(['edit', 'split', 'preview'] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setMode(option)}
-              className={cn(
-                'px-2.5 py-1 text-xs capitalize rounded transition-colors',
-                mode === option ? 'bg-sky-100 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
-              )}
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <Popover>
+        <PopoverTrigger className="w-full flex items-center justify-between px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors">
+          <span className={cn('truncate', selected.length === 0 && 'text-slate-400')}>
+            {selected.length > 0 ? selectedNames : 'None'}
+          </span>
+          <ChevronDown className="w-4 h-4 text-slate-400 ml-2 shrink-0" />
+        </PopoverTrigger>
+        <PopoverContent align="start" className="max-h-64 overflow-y-auto p-2" style={{ minWidth: 300 }}>
+          {options.length === 0 && (
+            <p className="text-xs text-slate-400 px-2 py-1">No options available</p>
+          )}
+          {options.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-start gap-2.5 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer"
             >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className={cn('grid gap-3', mode === 'split' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1')}>
-        {(mode === 'edit' || mode === 'split') && (
-          <AutoGrowTextarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            minHeight={minHeight}
-            placeholder={placeholder}
-          />
-        )}
-
-        {(mode === 'preview' || mode === 'split') && (
-          <div
-            className="w-full px-3 py-3 text-sm border border-slate-300 rounded-lg bg-white overflow-auto"
-            style={{ minHeight }}
-          >
-            {value.trim() ? (
-              <div className="space-y-3 text-slate-800 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_pre]:bg-slate-100 [&_pre]:p-3 [&_pre]:rounded-md [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_p]:leading-relaxed">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+              <input
+                type="checkbox"
+                checked={selected.includes(opt.value)}
+                onChange={() => toggle(opt.value)}
+                className="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              <div className="min-w-0">
+                <div className="text-sm text-slate-800 font-medium">{opt.title || opt.value}</div>
+                {opt.description && (
+                  <div className="text-xs text-slate-500 leading-snug">{opt.description}</div>
+                )}
               </div>
-            ) : (
-              <p className="text-slate-400 italic">Nothing to preview yet.</p>
-            )}
-          </div>
-        )}
-      </div>
+            </label>
+          ))}
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
@@ -256,6 +304,12 @@ export default function AgentsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [formData, setFormData] = useState<Partial<Agent>>({})
 
+  // Tool options state
+  const [availableTools, setAvailableTools] = useState<{ value: string; title?: string; description?: string }[]>([])
+
+  // Panel-level prompt edit/preview mode
+  const [promptMode, setPromptMode] = useState<PromptEditorMode>('edit')
+
   // Formatter state
   const [formatters, setFormatters] = useState<FormatterData[]>([])
   const [formattersExpanded, setFormattersExpanded] = useState(false)
@@ -265,6 +319,9 @@ export default function AgentsPage() {
   const [formatterSaveSuccess, setFormatterSaveSuccess] = useState(false)
   const [isCreatingFormatter, setIsCreatingFormatter] = useState(false)
   const [newFormatterId, setNewFormatterId] = useState('')
+
+  // Inline formatter edits (keyed by formatter_id)
+  const [formatterEdits, setFormatterEdits] = useState<Record<string, string>>({})
 
   const fetchAgents = useCallback(async () => {
     setIsLoading(true)
@@ -313,10 +370,29 @@ export default function AgentsPage() {
     }
   }, [])
 
+  const fetchTools = useCallback(async () => {
+    try {
+      const response = await fetch('/api/tools')
+      const result = await response.json()
+      if (response.ok && result.success) {
+        setAvailableTools(
+          result.data.tools.map((t: { name: string; title?: string; shortDescription?: string }) => ({
+            value: t.name,
+            title: t.title,
+            description: t.shortDescription,
+          }))
+        )
+      }
+    } catch {
+      // silently fail — tools are supplementary
+    }
+  }, [])
+
   useEffect(() => {
     fetchAgents()
     fetchFormatters()
-  }, [fetchAgents, fetchFormatters])
+    fetchTools()
+  }, [fetchAgents, fetchFormatters, fetchTools])
 
   useEffect(() => {
     const agent = agents.find((entry) => entry.agent_id === selectedAgentId)
@@ -346,6 +422,28 @@ export default function AgentsPage() {
       description: formatter.description || '',
     })
   }, [selectedFormatterId, formatters])
+
+  // Sync inline formatter edits when agent, formatter_ids, or formatters change
+  useEffect(() => {
+    const ids = formData.formatter_ids || []
+    if (ids.length === 0) {
+      setFormatterEdits({})
+      return
+    }
+    setFormatterEdits((prev) => {
+      const next: Record<string, string> = {}
+      for (const id of ids) {
+        if (prev[id] !== undefined) {
+          // Keep existing edit
+          next[id] = prev[id]
+        } else {
+          const f = formatters.find((x) => x.formatter_id === id)
+          next[id] = f?.content || ''
+        }
+      }
+      return next
+    })
+  }, [selectedAgentId, formData.formatter_ids, formatters])
 
   const categoryGroups = useMemo(() => groupAgentsByCategory(agents), [agents])
 
@@ -403,6 +501,27 @@ export default function AgentsPage() {
             : entry
         )
       )
+
+      // Save dirty inline formatter edits
+      const formatterSavePromises: Promise<void>[] = []
+      for (const [id, editedContent] of Object.entries(formatterEdits)) {
+        const original = formatters.find((f) => f.formatter_id === id)
+        if (original && editedContent !== original.content) {
+          formatterSavePromises.push(
+            fetch(`/api/formatters/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content: editedContent, description: original.description }),
+            }).then((res) => res.json()).then((r) => {
+              if (!r.success) throw new Error(r.message || `Failed to save formatter ${id}`)
+            })
+          )
+        }
+      }
+      if (formatterSavePromises.length > 0) {
+        await Promise.all(formatterSavePromises)
+        await fetchFormatters()
+      }
 
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
@@ -514,7 +633,7 @@ export default function AgentsPage() {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" onClick={() => { fetchAgents(); fetchFormatters() }} disabled={isLoading}>
+          <Button variant="outline" size="sm" onClick={() => { fetchAgents(); fetchFormatters(); fetchTools() }} disabled={isLoading}>
             <RefreshCw className={cn('w-4 h-4 mr-2', isLoading && 'animate-spin')} />
             Refresh
           </Button>
@@ -725,7 +844,7 @@ export default function AgentsPage() {
                     onChange={(value) => setFormatterFormData((prev) => ({ ...prev, content: value }))}
                     minHeight={400}
                     placeholder="Formatter content (markdown)..."
-                    defaultMode="split"
+                    mode="edit"
                   />
                 </div>
               </div>
@@ -775,9 +894,35 @@ export default function AgentsPage() {
                 <div className="flex-1 min-h-0 p-3 md:p-4">
                   <div className="h-full min-h-0 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
                     <section className="min-h-0 rounded-xl border border-slate-200 bg-white flex flex-col">
-                      <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-sky-600" />
-                        <h3 className="text-sm font-semibold text-slate-800">Prompt Editors</h3>
+                      <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Bot className="w-4 h-4 text-sky-600" />
+                          <h3 className="text-sm font-semibold text-slate-800">Prompt Editors</h3>
+                        </div>
+                        <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setPromptMode('edit')}
+                            className={cn(
+                              'flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-colors',
+                              promptMode === 'edit' ? 'bg-sky-100 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+                            )}
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPromptMode('preview')}
+                            className={cn(
+                              'flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-colors',
+                              promptMode === 'preview' ? 'bg-sky-100 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+                            )}
+                          >
+                            <Eye className="w-3 h-3" />
+                            Preview
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-5">
@@ -787,7 +932,49 @@ export default function AgentsPage() {
                           onChange={(value) => handleInputChange('system_prompt', value)}
                           minHeight={280}
                           placeholder="Enter system prompt..."
+                          mode={promptMode}
                         />
+
+                        {/* Inline formatter editors — both edit and preview modes */}
+                        {(formData.formatter_ids?.length ?? 0) > 0 && (() => {
+                          const agentFormatters = formatters.filter((f) =>
+                            formData.formatter_ids?.includes(f.formatter_id)
+                          )
+                          if (agentFormatters.length === 0) return null
+                          return (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-amber-600" />
+                                <span className="text-sm font-semibold text-amber-800">Formatters</span>
+                                <span className="text-xs text-amber-600">({agentFormatters.length} attached)</span>
+                              </div>
+                              {agentFormatters.map((f) => {
+                                const editedContent = formatterEdits[f.formatter_id] ?? f.content
+                                const isDirty = editedContent !== f.content
+                                return (
+                                  <div key={f.formatter_id}>
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                      <label className="block text-xs font-medium text-amber-700">{f.formatter_id}</label>
+                                      {isDirty && (
+                                        <span className="w-2 h-2 rounded-full bg-amber-500" title="Unsaved changes" />
+                                      )}
+                                    </div>
+                                    <MarkdownPromptEditor
+                                      label=""
+                                      value={editedContent}
+                                      onChange={(value) =>
+                                        setFormatterEdits((prev) => ({ ...prev, [f.formatter_id]: value }))
+                                      }
+                                      minHeight={180}
+                                      placeholder="Formatter content (markdown)..."
+                                      mode={promptMode}
+                                    />
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )
+                        })()}
 
                         <MarkdownPromptEditor
                           label="Examples"
@@ -795,7 +982,7 @@ export default function AgentsPage() {
                           onChange={(value) => handleInputChange('examples', value)}
                           minHeight={220}
                           placeholder="Enter examples (JSON or text)..."
-                          defaultMode="edit"
+                          mode={promptMode}
                         />
 
                         <MarkdownPromptEditor
@@ -804,6 +991,7 @@ export default function AgentsPage() {
                           onChange={(value) => handleInputChange('user_prompt_template', value)}
                           minHeight={260}
                           placeholder="Enter user prompt template..."
+                          mode={promptMode}
                         />
                       </div>
                     </section>
@@ -888,43 +1076,22 @@ export default function AgentsPage() {
                           />
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">Tool IDs</label>
-                          <Input
-                            value={(formData.tool_ids || []).join(', ')}
-                            onChange={(e) =>
-                              handleInputChange(
-                                'tool_ids',
-                                e.target.value
-                                  .split(',')
-                                  .map((tool) => tool.trim())
-                                  .filter(Boolean)
-                              )
-                            }
-                            placeholder="tool1, tool2, tool3"
-                            className="bg-white"
-                          />
-                          <p className="text-xs text-slate-500 mt-1">Comma-separated list of tools enabled for this agent</p>
-                        </div>
+                        <MultiSelectCheckbox
+                          label="Tool IDs"
+                          options={availableTools}
+                          selected={formData.tool_ids || []}
+                          onChange={(value) => handleInputChange('tool_ids', value)}
+                        />
 
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">Formatter IDs</label>
-                          <Input
-                            value={(formData.formatter_ids || []).join(', ')}
-                            onChange={(e) =>
-                              handleInputChange(
-                                'formatter_ids',
-                                e.target.value
-                                  .split(',')
-                                  .map((id) => id.trim())
-                                  .filter(Boolean)
-                              )
-                            }
-                            placeholder="formatter1, formatter2"
-                            className="bg-white"
-                          />
-                          <p className="text-xs text-slate-500 mt-1">Comma-separated formatter IDs appended to system prompt</p>
-                        </div>
+                        <MultiSelectCheckbox
+                          label="Formatter IDs"
+                          options={formatters.map((f) => ({
+                            value: f.formatter_id,
+                            description: f.description || undefined,
+                          }))}
+                          selected={formData.formatter_ids || []}
+                          onChange={(value) => handleInputChange('formatter_ids', value)}
+                        />
 
                         <div className="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-1">
                           <p>Version: {selectedAgent.version_id ?? 'N/A'}</p>

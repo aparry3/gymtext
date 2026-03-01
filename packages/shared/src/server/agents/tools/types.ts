@@ -14,6 +14,10 @@ export interface ToolDefinition {
   name: string;
   /** Description shown to the LLM */
   description: string;
+  /** Human-readable title for admin UI (e.g., "Update Profile") */
+  title?: string;
+  /** One-line summary for admin UI */
+  shortDescription?: string;
   /** Zod schema for tool arguments */
   schema: ZodSchema;
   /** Execution priority (lower = runs first). Default: 99 */
