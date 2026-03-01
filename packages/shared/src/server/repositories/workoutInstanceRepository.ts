@@ -7,7 +7,6 @@
 import { Kysely, sql } from 'kysely';
 import { BaseRepository, type DatabaseInstance } from '@/server/repositories/baseRepository';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { toISODate } from '@/shared/utils/date';
 import type { DB } from '@/server/models/_types';
 
 export interface WorkoutInstanceRow {
@@ -103,7 +102,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
       .selectFrom('workoutInstances')
       .selectAll()
       .where('clientId', '=', clientId)
-      .where('date', '=', sql<Date>`${toISODate(date)}::date`)
+      .where('date', '=', sql<Date>`${date}::date`)
       .executeTakeFirst();
 
     if (!result) return null;

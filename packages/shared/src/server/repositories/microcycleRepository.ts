@@ -2,6 +2,7 @@ import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 import { DB } from '@/server/models/_types';
 import { Microcycle } from '@/server/models/microcycle';
+import { parseDate } from '@/shared/utils/date';
 
 /**
  * Repository for microcycle database operations
@@ -106,8 +107,8 @@ export class MicrocycleRepository {
       content: row.content ?? null,
       message: row.message ?? null,
       details: row.details ? (typeof row.details === 'string' ? JSON.parse(row.details) : row.details) : null,
-      startDate: new Date(row.startDate),
-      createdAt: new Date(row.createdAt),
+      startDate: parseDate(row.startDate) ?? new Date(row.startDate),
+      createdAt: parseDate(row.createdAt) ?? new Date(row.createdAt),
     };
   }
 }
