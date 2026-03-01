@@ -1323,14 +1323,20 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
     // Seed formatters first (agents may reference them)
     console.log('Seeding formatters...');
     for (const formatter of DEFAULT_FORMATTERS) {
+      const existing = await pool.query(
+        `SELECT 1 FROM formatters WHERE formatter_id = $1 LIMIT 1`,
+        [formatter.formatter_id]
+      );
+
+      if (existing.rows.length > 0 && !overwrite) {
+        console.log(`  ⏭ ${formatter.formatter_id} — already exists`);
+        continue;
+      }
+
+      // Insert new version (append-only)
       await pool.query(
-        `
-        INSERT INTO formatters (formatter_id, content, description)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (formatter_id) DO UPDATE SET
-          content = EXCLUDED.content,
-          description = EXCLUDED.description
-        `,
+        `INSERT INTO formatters (formatter_id, content, description)
+         VALUES ($1, $2, $3)`,
         [formatter.formatter_id, formatter.content, formatter.description]
       );
       console.log(`  ✓ ${formatter.formatter_id}`);
