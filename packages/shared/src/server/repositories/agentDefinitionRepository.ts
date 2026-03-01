@@ -161,6 +161,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         userPromptTemplate: update.userPromptTemplate !== undefined ? update.userPromptTemplate : current.userPromptTemplate,
         examples: toJsonParam(update.examples !== undefined ? update.examples : current.examples),
         evalRubric: update.evalRubric !== undefined ? update.evalRubric : current.evalRubric,
+        formatterIds: update.formatterIds !== undefined ? update.formatterIds : current.formatterIds,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -194,6 +195,7 @@ export class AgentDefinitionRepository extends BaseRepository {
         userPromptTemplate: version.userPromptTemplate,
         examples: toJsonParam(version.examples),
         evalRubric: version.evalRubric,
+        formatterIds: version.formatterIds,
       })
       .returningAll()
       .executeTakeFirstOrThrow();

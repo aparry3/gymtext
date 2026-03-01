@@ -8,6 +8,11 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+interface FormatterCacheEntry {
+  content: string;
+  expiresAt: number;
+}
+
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // =============================================================================
@@ -33,6 +38,11 @@ export interface AgentDefinitionServiceInstance {
   getAgentDefinitions(agentIds: string[]): Promise<Map<string, DbAgentConfig>>;
 
   /**
+   * Get formatter contents by IDs (cached)
+   */
+  getFormatterContents(formatterIds: string[]): Promise<string[]>;
+
+  /**
    * Invalidate cache for a specific agent
    */
   invalidateCache(agentId: string): void;
@@ -56,6 +66,7 @@ export function createAgentDefinitionService(
   repos: RepositoryContainer
 ): AgentDefinitionServiceInstance {
   const cache = new Map<string, CacheEntry>();
+  const formatterCache = new Map<string, FormatterCacheEntry>();
 
   /**
    * Convert database row to DbAgentConfig
@@ -71,6 +82,7 @@ export function createAgentDefinitionService(
     examples: (row.examples as unknown) ?? null,
     evalRubric: row.evalRubric ?? null,
     outputSchema: (row.outputSchema as unknown) ?? null,
+    formatterIds: (row.formatterIds as string[] | null) ?? null,
   });
 
   /**
@@ -156,12 +168,50 @@ export function createAgentDefinitionService(
       return result;
     },
 
+    async getFormatterContents(formatterIds: string[]): Promise<string[]> {
+      if (formatterIds.length === 0) return [];
+
+      const results: string[] = [];
+      const idsToFetch: string[] = [];
+
+      for (const id of formatterIds) {
+        const cached = formatterCache.get(id);
+        if (cached && cached.expiresAt > Date.now()) {
+          results.push(cached.content);
+        } else {
+          idsToFetch.push(id);
+        }
+      }
+
+      if (idsToFetch.length > 0) {
+        const formatters = await repos.formatter.getByIds(idsToFetch);
+        const formatterMap = new Map(formatters.map((f) => [f.formatterId, f.content]));
+
+        for (const id of idsToFetch) {
+          const content = formatterMap.get(id);
+          if (!content) {
+            throw new Error(
+              `Formatter not found: '${id}'. Seed formatters before use.`
+            );
+          }
+          formatterCache.set(id, {
+            content,
+            expiresAt: Date.now() + CACHE_TTL_MS,
+          });
+          results.push(content);
+        }
+      }
+
+      return results;
+    },
+
     invalidateCache(agentId: string): void {
       cache.delete(agentId);
     },
 
     clearCache(): void {
       cache.clear();
+      formatterCache.clear();
     },
   };
 }

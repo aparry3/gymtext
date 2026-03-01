@@ -47,7 +47,8 @@ export const up: Migration = async (db) => {
       user_prompt_template TEXT,
       examples JSONB,
       eval_rubric TEXT,
-      output_schema JSONB
+      output_schema JSONB,
+      formatter_ids TEXT[]
     )
   `.execute(db);
 
@@ -59,6 +60,17 @@ export const up: Migration = async (db) => {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_agent_definitions_active
     ON agent_definitions (is_active) WHERE is_active = true
+  `.execute(db);
+
+  // Create formatters table (shared prompt fragments referenced by agents)
+  console.log('Creating formatters table...');
+  await sql`
+    CREATE TABLE formatters (
+      formatter_id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      description TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
   `.execute(db);
 
   // =============================================================================
@@ -238,7 +250,8 @@ export const down: Migration = async (db) => {
   // This rollback is destructive - it drops tables and columns added by this migration
   // Recommend taking a backup before running this rollback
 
-  // Drop agent_definitions
+  // Drop formatters and agent_definitions
+  await sql`DROP TABLE IF EXISTS formatters CASCADE`.execute(db);
   await sql`DROP TABLE IF EXISTS agent_definitions CASCADE`.execute(db);
 
   // Remove messaging columns from users

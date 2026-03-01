@@ -32,27 +32,6 @@ Then output the full updated week dossier below the block.
 
 The output format is **identical to the create microcycle format** (including day fence delimiters) with these additions:
 
-### Day Fence Delimiters
-
-**CRITICAL:** Each training day MUST be wrapped in fence delimiters. The system uses these fences to parse individual days for merging. Without them, day content will be lost.
-
-**Open fence:** `=== DAYNAME - Date: Type ===`
-**Close fence:** `=== END DAYNAME ===`
-
-```
-=== MONDAY - February 23, 2026: Workout ===
-# MONDAY - February 23, 2026: Workout
-[full workout content]
-=== END MONDAY ===
-
-=== WEDNESDAY - February 25, 2026: Workout ===
-# WEDNESDAY - February 25, 2026: Workout
-[full workout content]
-=== END WEDNESDAY ===
-```
-
-Every training day section must have both an open and close fence. DAYNAME is uppercase. Type is the session type. The `# DAYNAME` heading is kept inside the fence for readability.
-
 ### Strikethrough Notation for Changes
 
 In the Schedule section, show original → new:

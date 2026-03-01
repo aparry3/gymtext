@@ -14,6 +14,7 @@ export interface SimpleAgentInvokeParams {
 export interface SimpleAgentRunnerDeps {
   agentDefinitionService: {
     getAgentDefinition: (agentId: string) => Promise<DbAgentConfig>;
+    getFormatterContents: (formatterIds: string[]) => Promise<string[]>;
   };
   toolRegistry: ToolRegistry;
   getServices: () => ToolServiceContainer;

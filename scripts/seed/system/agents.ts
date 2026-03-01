@@ -36,7 +36,28 @@ interface AgentDefinition {
   examples: Record<string, unknown> | null;
   eval_rubric: string | null;
   output_schema: Record<string, unknown> | null;
+  formatter_ids: string[] | null;
 }
+
+interface FormatterDefinition {
+  formatter_id: string;
+  content: string;
+  description: string | null;
+}
+
+const FORMATTERS_DIR = resolve(PROMPTS_DIR, 'formatters');
+
+function loadFormatter(filename: string): string {
+  return readFileSync(resolve(FORMATTERS_DIR, filename), 'utf-8').trim();
+}
+
+const DEFAULT_FORMATTERS: FormatterDefinition[] = [
+  {
+    formatter_id: 'dossier:day-fence',
+    content: loadFormatter('dossier-day-fence.md'),
+    description: 'Day fence delimiter format for microcycle and workout modification agents',
+  },
+];
 
 const DEFAULT_AGENTS: AgentDefinition[] = [
   // ─── Agents with canonical prompts in /prompts/*.md ───────────────────────
@@ -55,6 +76,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:generate',
@@ -70,6 +92,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:details',
@@ -151,6 +174,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'week:generate',
@@ -166,6 +190,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: ['dossier:day-fence'],
   },
   {
     agent_id: 'workout:format',
@@ -229,6 +254,7 @@ Only include fields that were explicitly mentioned.`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'messaging:plan-summary',
@@ -259,6 +285,7 @@ Create short, scannable messages that give users a clear view of their upcoming 
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'messaging:plan-ready',
@@ -288,6 +315,7 @@ Create exciting, motivating messages that get users pumped for their new trainin
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'program:parse',
@@ -326,6 +354,7 @@ Be flexible with input formats but output consistently.`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'blog:metadata',
@@ -369,6 +398,7 @@ Provide metadata as JSON:
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'workout:details',
@@ -838,6 +868,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:modify',
@@ -853,6 +884,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'workout:modify',
@@ -868,6 +900,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: ['dossier:day-fence'],
   },
   {
     agent_id: 'week:format',
@@ -903,6 +936,7 @@ Create a well-structured markdown document that clearly shows:
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'week:details',
@@ -1004,6 +1038,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:details',
@@ -1072,6 +1107,7 @@ Never make up information. If something isn't in the plan dossier, use reasonabl
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'profile:details',
@@ -1253,6 +1289,7 @@ Timeline of notable events — progress checks, constraint updates, program chan
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'chat:generate',
@@ -1268,6 +1305,7 @@ Timeline of notable events — progress checks, constraint updates, program chan
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
 ];
 
@@ -1282,6 +1320,23 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
   });
 
   try {
+    // Seed formatters first (agents may reference them)
+    console.log('Seeding formatters...');
+    for (const formatter of DEFAULT_FORMATTERS) {
+      await pool.query(
+        `
+        INSERT INTO formatters (formatter_id, content, description)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (formatter_id) DO UPDATE SET
+          content = EXCLUDED.content,
+          description = EXCLUDED.description
+        `,
+        [formatter.formatter_id, formatter.content, formatter.description]
+      );
+      console.log(`  ✓ ${formatter.formatter_id}`);
+    }
+    console.log(`✅ Seeded ${DEFAULT_FORMATTERS.length} formatters`);
+
     console.log(`Seeding agent definitions${overwrite ? ' (overwrite mode)' : ''}...`);
 
     for (const agent of DEFAULT_AGENTS) {
@@ -1302,9 +1357,10 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
           INSERT INTO agent_definitions (
             agent_id, system_prompt, model, max_tokens, temperature,
             max_iterations, description, is_active, tool_ids,
-            user_prompt_template, examples, eval_rubric, output_schema
+            user_prompt_template, examples, eval_rubric, output_schema,
+            formatter_ids
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
           )
           `,
           [
@@ -1321,6 +1377,7 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
             agent.examples ? JSON.stringify(agent.examples) : null,
             agent.eval_rubric,
             agent.output_schema ? JSON.stringify(agent.output_schema) : null,
+            agent.formatter_ids,
           ]
         );
         console.log(`  ↻ ${agent.description} (${agent.agent_id}) — new version inserted`);
@@ -1332,9 +1389,10 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
         INSERT INTO agent_definitions (
           agent_id, system_prompt, model, max_tokens, temperature,
           max_iterations, description, is_active, tool_ids,
-          user_prompt_template, examples, eval_rubric, output_schema
+          user_prompt_template, examples, eval_rubric, output_schema,
+          formatter_ids
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
         )
         `,
         [
@@ -1351,6 +1409,7 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
           agent.examples ? JSON.stringify(agent.examples) : null,
           agent.eval_rubric,
           agent.output_schema ? JSON.stringify(agent.output_schema) : null,
+          agent.formatter_ids,
         ]
       );
       console.log(`  ✓ ${agent.description} (${agent.agent_id})`);
