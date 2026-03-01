@@ -4,6 +4,7 @@ import type { MarkdownServiceInstance } from '../domain/markdown/markdownService
 import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 import { WELCOME_MESSAGE } from './messagingConstants';
 
 // =============================================================================
@@ -24,6 +25,7 @@ export interface OnboardingServiceInstance {
 export interface OnboardingServiceDeps {
   markdown: MarkdownServiceInstance;
   training: TrainingServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
   messagingOrchestrator: MessagingOrchestratorInstance;
   messagingAgent: MessagingAgentServiceInstance;
 }
@@ -37,6 +39,7 @@ export function createOnboardingService(
   const {
     markdown: markdownService,
     training: trainingService,
+    workoutInstance: workoutInstanceService,
     messagingOrchestrator,
     messagingAgent: messagingAgentService,
   } = deps;
@@ -59,11 +62,13 @@ export function createOnboardingService(
 
   const prepareWorkoutMessage = async (user: UserWithProfile): Promise<string> => {
     const targetDate = now(user.timezone).startOf('day');
-    const workout = await trainingService.prepareWorkoutForDate(user, targetDate);
-    if (!workout) throw new Error(`No workout found for user ${user.id} on ${targetDate.toISO()}`);
-    if (!workout.message) throw new Error(`No workout message found for ${workout.id}`);
-    console.log(`[Onboarding] Prepared workout message for ${user.id}`);
-    return workout.message;
+    const dateStr = targetDate.toISODate()!;
+    const existing = await workoutInstanceService.getByUserAndDate(user.id, dateStr);
+    if (!existing?.message) {
+      throw new Error(`No workout found for user ${user.id} on ${dateStr} — expected Step 5 to have created it`);
+    }
+    console.log(`[Onboarding] Using existing workout message for ${user.id}`);
+    return existing.message;
   };
 
   return {

@@ -253,7 +253,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const onboarding = createOnboardingService({
-    markdown, training,
+    markdown, training, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
   });

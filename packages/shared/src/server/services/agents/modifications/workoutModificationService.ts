@@ -138,7 +138,7 @@ export function createWorkoutModificationService(
             : DateTime.fromJSDate(targetDate, { zone: timezone }).hasSame(today, 'day');
 
           if (isToday) {
-            const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today);
+            const generatedWorkout = await trainingService.prepareWorkoutForDate(user, today, { weekContent: mergedContent ?? undefined });
             if (generatedWorkout?.message) {
               if (messagingOrchestrator) {
                 await messagingOrchestrator.queueMessage(user, { content: generatedWorkout.message }, 'daily');
