@@ -37,13 +37,11 @@ List the week's training days with session names and locations:
 - Any special considerations (e.g., "Last hard week before deload," "Peak mileage week: 52 miles")
 - Key equipment or constraint notes
 
-### Workout — [Day, Date]
-
 For each training day:
 
 **Header:**
 ```
-# Workout — Monday, February 16, 2026
+# MONDAY - February 16, 2026: Workout
 **Focus:** [Session focus from plan]
 **Location:** [Gym location]
 **Duration:** ~[Estimated minutes]

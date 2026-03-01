@@ -36,6 +36,13 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       // 1. Fetch agent config
       const config = await agentDefinitionService.getAgentDefinition(agentId);
 
+      // 1b. Resolve formatters and append to system prompt
+      let systemPrompt = config.systemPrompt;
+      if (config.formatterIds && config.formatterIds.length > 0) {
+        const formatterContents = await agentDefinitionService.getFormatterContents(config.formatterIds);
+        systemPrompt = systemPrompt + '\n\n' + formatterContents.join('\n\n');
+      }
+
       // 2. Resolve tools if present
       const user = params.params?.user as UserWithProfile | undefined;
       let tools;
@@ -65,7 +72,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       const context = params.context || [];
       const examples = config.examples as AgentExample[] | undefined;
       const messages = buildMessages({
-        systemPrompt: config.systemPrompt,
+        systemPrompt,
         userPrompt,
         context,
         examples: examples || undefined,
@@ -151,7 +158,6 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       // 7. Return
       return {
         response,
-        messages: accumulatedMessages,
       };
     },
   };

@@ -36,7 +36,28 @@ interface AgentDefinition {
   examples: Record<string, unknown> | null;
   eval_rubric: string | null;
   output_schema: Record<string, unknown> | null;
+  formatter_ids: string[] | null;
 }
+
+interface FormatterDefinition {
+  formatter_id: string;
+  content: string;
+  description: string | null;
+}
+
+const FORMATTERS_DIR = resolve(PROMPTS_DIR, 'formatters');
+
+function loadFormatter(filename: string): string {
+  return readFileSync(resolve(FORMATTERS_DIR, filename), 'utf-8').trim();
+}
+
+const DEFAULT_FORMATTERS: FormatterDefinition[] = [
+  {
+    formatter_id: 'dossier:day-fence',
+    content: loadFormatter('dossier-day-fence.md'),
+    description: 'Day fence delimiter format for microcycle and workout modification agents',
+  },
+];
 
 const DEFAULT_AGENTS: AgentDefinition[] = [
   // ─── Agents with canonical prompts in /prompts/*.md ───────────────────────
@@ -55,6 +76,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:generate',
@@ -70,6 +92,7 @@ const DEFAULT_AGENTS: AgentDefinition[] = [
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:details',
@@ -151,6 +174,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'week:generate',
@@ -166,6 +190,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: ['dossier:day-fence'],
   },
   {
     agent_id: 'workout:format',
@@ -178,21 +203,6 @@ Never make up information. If something isn't in the dossier, don't include it.`
     is_active: true,
     tool_ids: [],
     user_prompt_template: loadPrompt('04-workout-message-agent-USER.md'),
-    examples: null,
-    eval_rubric: null,
-    output_schema: null,
-  },
-  {
-    agent_id: 'week:modify',
-    system_prompt: loadPrompt('05-week-modify-agent.md'),
-    model: 'gpt-5-mini',
-    max_tokens: 32000,
-    temperature: 1.0,
-    max_iterations: 3,
-    description: 'Modifies an existing week in the training program based on user feedback',
-    is_active: true,
-    tool_ids: [],
-    user_prompt_template: loadPrompt('05-week-modify-agent-USER.md'),
     examples: null,
     eval_rubric: null,
     output_schema: null,
@@ -244,6 +254,7 @@ Only include fields that were explicitly mentioned.`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'messaging:plan-summary',
@@ -274,6 +285,7 @@ Create short, scannable messages that give users a clear view of their upcoming 
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'messaging:plan-ready',
@@ -303,6 +315,7 @@ Create exciting, motivating messages that get users pumped for their new trainin
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'program:parse',
@@ -341,6 +354,7 @@ Be flexible with input formats but output consistently.`,
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'blog:metadata',
@@ -384,6 +398,7 @@ Provide metadata as JSON:
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'workout:details',
@@ -853,60 +868,11 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:modify',
-    system_prompt: `You are a fitness plan modification agent. Your role is to modify a fitness plan at the mesocycle level based on user feedback or changes in circumstances.
-
-## Your Role
-1. Analyze the user's change request
-2. Determine what modifications are needed
-3. Update the plan while maintaining periodization integrity
-4. Log all changes with clear rationale
-
-## Types of Modifications
-
-### Phase Extension
-- User is making great progress
-- Wants to extend current phase before moving to next
-- Consider: progress to date, recovery quality, user goals
-
-### Goal Change
-- User has new goals (e.g., competition, weight change)
-- Needs program restructure
-- Consider: timeline, current position in program, feasibility
-
-### Volume/Intensity Adjustment
-- User feeling fatigued or wanting more volume
-- Needs modification while maintaining progression
-- Consider: recovery, injury history, timeline
-
-### Constraint Change
-- User's circumstances changed (gym closure, schedule change)
-- Needs adaptation to constraints
-- Consider: available equipment, time, location
-
-## Input Format
-You receive:
-- planDossier: Current fitness plan in markdown
-- changeRequest: What the user wants to change
-
-## Output Format
-Provide the modified plan in markdown format. Include:
-1. Revision summary at top
-2. Mesocycle table showing updated timeline
-3. Changes clearly marked with rationale
-4. LOG section documenting:
-   - Date
-   - User's reason
-   - Your decision
-   - Impact on program
-
-## Key Principles
-- Maintain periodization logic (progressive overload)
-- Don't break existing progressions
-- Consider the big picture (don't just say yes to everything)
-- Log decisions clearly for future reference`,
+    system_prompt: loadPrompt('07-plan-modify-agent.md'),
     model: 'gpt-5-mini',
     max_tokens: 32000,
     temperature: 1.0,
@@ -914,10 +880,27 @@ Provide the modified plan in markdown format. Include:
     description: 'Modifies the training program based on user feedback or changes in circumstances',
     is_active: true,
     tool_ids: [],
-    user_prompt_template: 'Modify the fitness plan based on the following change request: {changeRequest}. Use the current plan provided in context to understand the mesocycle structure and apply the requested changes while maintaining periodization integrity.',
+    user_prompt_template: loadPrompt('07-plan-modify-agent-USER.md'),
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
+  },
+  {
+    agent_id: 'workout:modify',
+    system_prompt: loadPrompt('06-workout-modify-agent.md'),
+    model: 'gpt-5-mini',
+    max_tokens: 32000,
+    temperature: 1.0,
+    max_iterations: 3,
+    description: 'Modifies workouts and weekly schedules within a week dossier',
+    is_active: true,
+    tool_ids: [],
+    user_prompt_template: loadPrompt('06-workout-modify-agent-USER.md'),
+    examples: null,
+    eval_rubric: null,
+    output_schema: null,
+    formatter_ids: ['dossier:day-fence'],
   },
   {
     agent_id: 'week:format',
@@ -953,6 +936,7 @@ Create a well-structured markdown document that clearly shows:
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
   {
     agent_id: 'week:details',
@@ -1054,6 +1038,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'plan:details',
@@ -1122,6 +1107,7 @@ Never make up information. If something isn't in the plan dossier, use reasonabl
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'profile:details',
@@ -1303,33 +1289,23 @@ Timeline of notable events — progress checks, constraint updates, program chan
       },
       additionalProperties: false,
     },
+    formatter_ids: null,
   },
   {
     agent_id: 'chat:generate',
-    system_prompt: `You are a helpful fitness coaching assistant. Your role is to:
-
-1. Answer questions about fitness, training, nutrition, and recovery
-2. Provide motivation and accountability
-3. Help users understand their training programs
-4. Offer modifications and alternatives when needed
-5. Be encouraging and supportive
-
-Always prioritize:
-- Safety and proper form
-- User's individual goals and constraints
-- Evidence-based information
-- Clear, actionable advice`,
+    system_prompt: loadPrompt('08-chat-agent.md'),
     model: 'gpt-5-mini',
     max_tokens: 32000,
     temperature: 1,
-    max_iterations: 1,
+    max_iterations: 3,
     description: 'Main chat agent for conversational responses',
     is_active: true,
-    tool_ids: [],
-    user_prompt_template: '{{message}}',
+    tool_ids: ['update_profile', 'get_workout', 'modify_workout', 'modify_plan'],
+    user_prompt_template: '{{input}}',
     examples: null,
     eval_rubric: null,
     output_schema: null,
+    formatter_ids: null,
   },
 ];
 
@@ -1344,6 +1320,23 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
   });
 
   try {
+    // Seed formatters first (agents may reference them)
+    console.log('Seeding formatters...');
+    for (const formatter of DEFAULT_FORMATTERS) {
+      await pool.query(
+        `
+        INSERT INTO formatters (formatter_id, content, description)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (formatter_id) DO UPDATE SET
+          content = EXCLUDED.content,
+          description = EXCLUDED.description
+        `,
+        [formatter.formatter_id, formatter.content, formatter.description]
+      );
+      console.log(`  ✓ ${formatter.formatter_id}`);
+    }
+    console.log(`✅ Seeded ${DEFAULT_FORMATTERS.length} formatters`);
+
     console.log(`Seeding agent definitions${overwrite ? ' (overwrite mode)' : ''}...`);
 
     for (const agent of DEFAULT_AGENTS) {
@@ -1364,9 +1357,10 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
           INSERT INTO agent_definitions (
             agent_id, system_prompt, model, max_tokens, temperature,
             max_iterations, description, is_active, tool_ids,
-            user_prompt_template, examples, eval_rubric, output_schema
+            user_prompt_template, examples, eval_rubric, output_schema,
+            formatter_ids
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
           )
           `,
           [
@@ -1383,6 +1377,7 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
             agent.examples ? JSON.stringify(agent.examples) : null,
             agent.eval_rubric,
             agent.output_schema ? JSON.stringify(agent.output_schema) : null,
+            agent.formatter_ids,
           ]
         );
         console.log(`  ↻ ${agent.description} (${agent.agent_id}) — new version inserted`);
@@ -1394,9 +1389,10 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
         INSERT INTO agent_definitions (
           agent_id, system_prompt, model, max_tokens, temperature,
           max_iterations, description, is_active, tool_ids,
-          user_prompt_template, examples, eval_rubric, output_schema
+          user_prompt_template, examples, eval_rubric, output_schema,
+          formatter_ids
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
         )
         `,
         [
@@ -1413,6 +1409,7 @@ export async function seedAgents(options?: SeedAgentsOptions): Promise<void> {
           agent.examples ? JSON.stringify(agent.examples) : null,
           agent.eval_rubric,
           agent.output_schema ? JSON.stringify(agent.output_schema) : null,
+          agent.formatter_ids,
         ]
       );
       console.log(`  ✓ ${agent.description} (${agent.agent_id})`);

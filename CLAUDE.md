@@ -278,7 +278,7 @@ Agent IDs are defined as constants in `packages/shared/src/server/agents/constan
 - Maps tool name strings (from DB `tool_ids`) to LangChain tool implementations
 - Tools registered in `agents/tools/definitions/` (e.g., `chatTools.ts`, `modificationTools.ts`)
 - Tools receive a `ToolExecutionContext` with user, message, and service access
-- Key tools: `update_profile`, `get_workout`, `make_modification`, `modify_workout`, `modify_week`, `modify_plan`
+- Key tools: `update_profile`, `get_workout`, `make_modification`, `modify_workout`, `modify_plan`
 
 ### AgentRunner
 

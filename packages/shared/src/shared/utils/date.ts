@@ -121,7 +121,7 @@ export function startOfDay(date: Date | string, timezone?: string): Date {
     throw new Error('Invalid date provided to startOfDay');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -138,7 +138,7 @@ export function endOfDay(date: Date | string, timezone?: string): Date {
     throw new Error('Invalid date provided to endOfDay');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -217,7 +217,7 @@ export function formatForUI(
   const parsed = parseDate(date);
   if (!parsed) return 'Invalid date';
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -250,7 +250,7 @@ export function formatRelative(date: Date | string): string {
   const parsed = parseDate(date);
   if (!parsed) return 'Invalid date';
 
-  const dt = DateTime.fromJSDate(parsed);
+  const dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   const nowDt = DateTime.now();
   const diff = dt.diff(nowDt, ['years', 'months', 'days', 'hours', 'minutes']).toObject();
 
@@ -304,7 +304,7 @@ export function formatForAI(date: Date | string, timezone: string): string {
   const parsed = parseDate(date);
   if (!parsed) return 'Invalid date';
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -334,7 +334,7 @@ export function formatForAICustom(
 
   const { includeDay = true, includeYear = true } = options;
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -400,8 +400,8 @@ export function isSameDay(date1: Date | string, date2: Date | string, timezone?:
 
   if (!parsed1 || !parsed2) return false;
 
-  let dt1 = DateTime.fromJSDate(parsed1);
-  let dt2 = DateTime.fromJSDate(parsed2);
+  let dt1 = DateTime.fromJSDate(parsed1, { zone: 'utc' });
+  let dt2 = DateTime.fromJSDate(parsed2, { zone: 'utc' });
 
   if (timezone && isValidTimezone(timezone)) {
     dt1 = dt1.setZone(timezone);
@@ -420,7 +420,7 @@ export function isToday(date: Date | string, timezone?: string): boolean {
   if (!parsed) return false;
 
   const nowDt = now(timezone);
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
 
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
@@ -437,7 +437,7 @@ export function isPast(date: Date | string, timezone?: string): boolean {
   if (!parsed) return false;
 
   const nowDt = now(timezone);
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
 
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
@@ -454,7 +454,7 @@ export function isFuture(date: Date | string, timezone?: string): boolean {
   if (!parsed) return false;
 
   const nowDt = now(timezone);
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
 
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
@@ -472,8 +472,8 @@ export function diffInDays(date1: Date | string, date2: Date | string): number {
 
   if (!parsed1 || !parsed2) return 0;
 
-  const dt1 = DateTime.fromJSDate(parsed1);
-  const dt2 = DateTime.fromJSDate(parsed2);
+  const dt1 = DateTime.fromJSDate(parsed1, { zone: 'utc' });
+  const dt2 = DateTime.fromJSDate(parsed2, { zone: 'utc' });
 
   return Math.round(dt1.diff(dt2, 'days').days);
 }
@@ -491,7 +491,7 @@ export function addDays(date: Date | string, days: number, timezone?: string): D
     throw new Error('Invalid date provided to addDays');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -523,7 +523,7 @@ export function getDayOfWeek(date: Date | string | undefined, timezone: string):
     if (!parsed) {
       throw new Error('Invalid date provided to getDayOfWeek');
     }
-    dt = DateTime.fromJSDate(parsed);
+    dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
     if (timezone && isValidTimezone(timezone)) {
       dt = dt.setZone(timezone);
     }
@@ -545,7 +545,7 @@ export function getWeekday(date: Date | string, timezone?: string): number {
     throw new Error('Invalid date provided to getWeekday');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -658,7 +658,7 @@ export function startOfWeek(date: Date | string, timezone?: string): Date {
     throw new Error('Invalid date provided to startOfWeek');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -676,7 +676,7 @@ export function endOfWeek(date: Date | string, timezone?: string): Date {
     throw new Error('Invalid date provided to endOfWeek');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -693,7 +693,7 @@ export function addWeeks(date: Date | string, weeks: number, timezone?: string):
     throw new Error('Invalid date provided to addWeeks');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -717,7 +717,7 @@ export function getNextWeekStart(date: Date | string, timezone?: string): Date {
     throw new Error('Invalid date provided to getNextWeekStart');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -734,8 +734,8 @@ export function diffInWeeks(date1: Date | string, date2: Date | string, timezone
 
   if (!parsed1 || !parsed2) return 0;
 
-  let dt1 = DateTime.fromJSDate(parsed1);
-  let dt2 = DateTime.fromJSDate(parsed2);
+  let dt1 = DateTime.fromJSDate(parsed1, { zone: 'utc' });
+  let dt2 = DateTime.fromJSDate(parsed2, { zone: 'utc' });
 
   if (timezone && isValidTimezone(timezone)) {
     dt1 = dt1.setZone(timezone);
@@ -754,7 +754,7 @@ export function getDayOfWeekName(date: Date | string, timezone?: string): string
     throw new Error('Invalid date provided to getDayOfWeekName');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }
@@ -772,7 +772,7 @@ export function toISODate(date: Date | string, timezone?: string): string {
     throw new Error('Invalid date provided to toISODate');
   }
 
-  let dt = DateTime.fromJSDate(parsed);
+  let dt = DateTime.fromJSDate(parsed, { zone: 'utc' });
   if (timezone && isValidTimezone(timezone)) {
     dt = dt.setZone(timezone);
   }

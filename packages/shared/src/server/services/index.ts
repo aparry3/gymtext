@@ -89,11 +89,7 @@ export type { ChatServiceInstance, ChatServiceDeps } from './orchestration/chatS
 // Agent Services
 // =============================================================================
 
-// Modification orchestration service
-export { createModificationService } from './orchestration/modificationService';
-export type { ModificationServiceInstance, ModificationServiceDeps } from './orchestration/modificationService';
-
-// Modification agent services (helpers)
+// Modification agent services
 export {
   createWorkoutModificationService,
   createPlanModificationService,
@@ -102,9 +98,7 @@ export type {
   WorkoutModificationServiceInstance,
   WorkoutModificationServiceDeps,
   ModifyWorkoutResult,
-  ModifyWeekResult,
   ModifyWorkoutParams,
-  ModifyWeekParams,
   PlanModificationServiceInstance,
   PlanModificationServiceDeps,
   ModifyPlanResult,

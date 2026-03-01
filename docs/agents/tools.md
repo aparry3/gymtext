@@ -16,7 +16,6 @@ Tools are registered once at startup in `agents/tools/definitions/index.ts`:
 export function registerAllTools(registry: ToolRegistry): void {
   registry.register(updateProfileTool);
   registry.register(modifyWorkoutTool);
-  registry.register(modifyWeekTool);
   registry.register(modifyPlanTool);
   registry.register(getWorkoutTool);
 }
@@ -24,7 +23,7 @@ export function registerAllTools(registry: ToolRegistry): void {
 
 ## Tool Definitions
 
-All 5 tools are defined in `agents/tools/definitions/chatTools.ts` and used exclusively by `chat:generate`.
+All 4 tools are defined in `agents/tools/definitions/chatTools.ts` and used exclusively by `chat:generate`.
 
 ### `update_profile` (Priority 1)
 
@@ -44,19 +43,10 @@ All 5 tools are defined in `agents/tools/definitions/chatTools.ts` and used excl
 
 ### `modify_workout` (Priority 3)
 
-- **Purpose**: Modify a single day's workout based on user request
-- **Schema**: `{ message: string }` — the modification request
+- **Purpose**: Modify workouts or restructure weekly schedules within a week dossier
+- **Schema**: `{ message: string, changeRequest: string, targetDay?: string, targetWeek?: string }` — request + optional targeting
 - **Returns**: Modification confirmation with details
 - **Delegates to**: `WorkoutModificationService.modifyWorkout()`
-- **Tool type**: `action`
-- **Side effect**: Sends immediate acknowledgment SMS via `queueMessage()`
-
-### `modify_week` (Priority 3)
-
-- **Purpose**: Restructure weekly training schedule
-- **Schema**: `{ message: string, targetDay: string, targetWeek?: string }` — request + targeting
-- **Returns**: Week modification confirmation
-- **Delegates to**: `WorkoutModificationService.modifyWeek()`
 - **Tool type**: `action`
 - **Side effect**: Sends immediate acknowledgment SMS via `queueMessage()`
 
@@ -98,7 +88,7 @@ Tools access services through a constrained interface (not the full ServiceConta
 ```typescript
 interface ToolServiceContainer {
   profile: { updateProfile(userId, message, previousMessages?) };
-  workoutModification: { modifyWorkout(params), modifyWeek(params) };
+  workoutModification: { modifyWorkout(params) };
   planModification: { modifyPlan(params) };
   training: { getOrGenerateWorkout(userId, timezone) };
   queueMessage(user, content, queueName);

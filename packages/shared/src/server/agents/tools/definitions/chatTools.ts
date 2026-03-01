@@ -24,7 +24,7 @@ Use this tool when the user shares PERMANENT information:
 DO NOT use for one-time requests ("switch today to legs") or questions.
 
 IMPORTANT: If user wants BOTH a preference AND a workout change, call BOTH tools.
-Example: "Add runs to my plan on Tues/Thurs" -> update_profile (preference) + modify_week or modify_plan (change)
+Example: "Add runs to my plan on Tues/Thurs" -> update_profile (preference) + modify_workout or modify_plan (change)
 
 All context is automatically provided - no parameters needed.`,
   schema: z.object({}),
@@ -40,64 +40,31 @@ All context is automatically provided - no parameters needed.`,
 
 export const modifyWorkoutTool: ToolDefinition = {
   name: 'modify_workout',
-  description: `Modify today's workout - same muscle group but different constraints.
+  description: `Modify workouts or restructure the weekly schedule within the current week dossier.
 
-Use this tool when the user wants to change TODAY'S workout:
-- Different exercises: "give me different back exercises"
-- Equipment constraints: "only dumbbells today", "no barbell"
-- Time constraints: "I only have 30 minutes"
-- Intensity changes: "make it lighter today", "I want something harder"
-- Muscle group swap: "can I do legs instead?"
+Use this tool for ANY workout or schedule change within a week:
+- **Single-day changes**: "give me different back exercises", "only dumbbells today", "I only have 30 minutes", "can I do legs instead?"
+- **Schedule rearrangement**: "move legs to Wednesday", "swap Monday and Thursday"
+- **Multi-day changes**: "I'm travelling Wed-Fri, make those rest days"
+- **Schedule around events**: "I have a game Saturday, make Friday light"
+- **Intensity/volume**: "make it lighter today", "I want something harder"
 
-This is the MOST COMMON modification. Use this for any single-day workout change.
-Do NOT use for schedule rearrangement (use modify_week) or program-level changes (use modify_plan).
+This is the MOST COMMON modification tool. Use it for any change within a week.
+Do NOT use for program-level changes (use modify_plan).
+
+You can optionally specify targetDay for schedule changes and targetWeek for next-week modifications.
+If the user says "next week" or is responding to their upcoming week overview, use targetWeek: "next".
 
 The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
   schema: z.object({
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, switching to legs!"'
     ),
-  }),
-  priority: 3,
-  execute: async (ctx, args): Promise<ToolResult> => {
-    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
-    const { now } = await import('@/shared/utils/date');
-    const timezone = ctx.user.timezone || 'America/New_York';
-    const todayDate = now(timezone).toJSDate();
-    const result = await ctx.services.workoutModification.modifyWorkout({
-      userId: ctx.user.id,
-      workoutDate: todayDate,
-      changeRequest: ctx.message,
-    });
-    return {
-      toolType: 'action',
-      response: result.modifications || 'Workout modified successfully.',
-      messages: result.messages,
-    };
-  },
-};
-
-export const modifyWeekTool: ToolDefinition = {
-  name: 'modify_week',
-  description: `Restructure the weekly schedule - move sessions, swap days, multi-day changes.
-
-Use this tool when the user wants to rearrange their WEEKLY SCHEDULE:
-- Move sessions: "move legs to Wednesday"
-- Swap days: "swap Monday and Thursday"
-- Multi-day changes: "I'm travelling Wed-Fri, make those rest days"
-- Schedule around events: "I have a game Saturday, make Friday light"
-
-You MUST specify which day is the target of the change.
-Use targetWeek to indicate whether the change applies to this week or next week.
-If the user says "next week" or is responding to their upcoming week overview, use targetWeek: "next".
-
-The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
-  schema: z.object({
-    message: z.string().describe(
-      'Brief acknowledgment to send immediately (1 sentence). Example: "Sure, moving legs to Wednesday!"'
+    changeRequest: z.string().describe(
+      'Clear, specific description of what to change and why. Synthesize the conversation into clear instructions — do NOT pass the raw user message. Include WHAT to change, WHERE (which day), WHY (user\'s reason), and any constraints.'
     ),
-    targetDay: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']).describe(
-      'The primary day being modified in the weekly schedule.'
+    targetDay: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']).optional().describe(
+      'The primary day being modified. Required for schedule rearrangements, optional for single-day changes (defaults to today).'
     ),
     targetWeek: z.enum(['current', 'next']).optional().default('current').describe(
       'Which week to modify. Use "next" if the user references next week or is responding to their upcoming week overview. Defaults to "current".'
@@ -105,26 +72,30 @@ The acknowledgment message is sent to the user immediately. Your final response 
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
-    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
+    const ackMessage = args.message as string;
+    await ctx.services.queueMessage(ctx.user, { content: ackMessage }, 'chat');
+
+    const { now, getNextWeekStart } = await import('@/shared/utils/date');
+    const timezone = ctx.user.timezone || 'America/New_York';
+    const todayDate = now(timezone).toJSDate();
+
     const targetWeek = (args.targetWeek as 'current' | 'next') ?? 'current';
     let weekStartDate: Date | undefined;
-
     if (targetWeek === 'next') {
-      const { now, getNextWeekStart } = await import('@/shared/utils/date');
-      const timezone = ctx.user.timezone || 'America/New_York';
-      const todayDate = now(timezone).toJSDate();
       weekStartDate = getNextWeekStart(todayDate, timezone);
     }
 
-    const result = await ctx.services.workoutModification.modifyWeek({
+    const result = await ctx.services.workoutModification.modifyWorkout({
       userId: ctx.user.id,
-      changeRequest: ctx.message,
+      workoutDate: todayDate,
+      changeRequest: (args.changeRequest as string) || ctx.message,
+      targetDay: args.targetDay as string | undefined,
       weekStartDate,
     });
     return {
       toolType: 'action',
-      response: result.modifications || 'Week schedule modified successfully.',
-      messages: result.messages,
+      response: result.modifications || 'Workout modified successfully.',
+      messages: [ackMessage, ...result.messages],
     };
   },
 };
@@ -139,25 +110,29 @@ Use this tool for changes that affect the ENTIRE TRAINING PROGRAM:
 - Goal changes: "I want to focus more on hypertrophy"
 - Adding modalities: "add 2 running days per week"
 
-Do NOT use for single-day workout changes (use modify_workout) or schedule rearrangement (use modify_week).
+Do NOT use for single-day workout changes or schedule rearrangement (use modify_workout).
 
 The acknowledgment message is sent to the user immediately. Your final response should summarize what changed, not repeat the acknowledgment.`,
   schema: z.object({
     message: z.string().describe(
       'Brief acknowledgment to send immediately (1 sentence). Example: "Got it, updating your program!"'
     ),
+    changeRequest: z.string().describe(
+      'Clear, specific description of what to change and why. Synthesize the conversation into clear instructions — do NOT pass the raw user message. Include WHAT to change (frequency, split, goals), WHY, and any constraints.'
+    ),
   }),
   priority: 3,
   execute: async (ctx, args): Promise<ToolResult> => {
-    await ctx.services.queueMessage(ctx.user, { content: args.message as string }, 'chat');
+    const ackMessage = args.message as string;
+    await ctx.services.queueMessage(ctx.user, { content: ackMessage }, 'chat');
     const result = await ctx.services.planModification.modifyPlan({
       userId: ctx.user.id,
-      changeRequest: ctx.message,
+      changeRequest: (args.changeRequest as string) || ctx.message,
     });
     return {
       toolType: 'action',
       response: result.modifications || 'Plan modified successfully.',
-      messages: result.messages,
+      messages: [ackMessage, ...result.messages],
     };
   },
 };

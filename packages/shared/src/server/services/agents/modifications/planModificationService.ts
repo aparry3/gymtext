@@ -1,3 +1,4 @@
+import { parseDossierResponse } from '@/server/agents/dossierParser';
 import type { UserServiceInstance } from '../../domain/user/userService';
 import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 import type { WorkoutModificationServiceInstance } from './workoutModificationService';
@@ -68,14 +69,19 @@ export function createPlanModificationService(
             context,
             params: { user },
           }),
-          workoutModificationService.modifyWeek({ userId, changeRequest }),
+          workoutModificationService.modifyWorkout({ userId, workoutDate: new Date(), changeRequest }),
         ]);
 
-        const modifiedPlanContent = planResult.response;
+        // Parse dossier response with changes metadata
+        const { changed, summary, dossierContent } = parseDossierResponse(planResult.response);
 
-        // Write new plan version via dossier service
-        await markdownService.createPlan(userId, modifiedPlanContent, new Date());
-        console.log('[MODIFY_PLAN] Saved new plan version');
+        // Only save if changed
+        if (changed && dossierContent) {
+          await markdownService.createPlan(userId, dossierContent, new Date());
+          console.log('[MODIFY_PLAN] Saved new plan version');
+        } else {
+          console.log('[MODIFY_PLAN] No plan changes detected');
+        }
 
         if (weekResult.success) {
           console.log('[MODIFY_PLAN] Week modification completed successfully');
@@ -85,8 +91,8 @@ export function createPlanModificationService(
 
         return {
           success: true,
-          wasModified: true,
-          modifications: `Plan modified: ${changeRequest}`,
+          wasModified: changed,
+          modifications: summary || `Plan modified: ${changeRequest}`,
           messages: weekResult.messages || [],
         };
       } catch (error) {

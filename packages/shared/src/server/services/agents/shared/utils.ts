@@ -19,7 +19,7 @@ export interface DomainResult {
 /**
  * Transform a domain-specific result to a standard ToolResult
  *
- * This utility converts service results (like ModifyWorkoutResult, ModifyWeekResult, etc.)
+ * This utility converts service results (like ModifyWorkoutResult, etc.)
  * into the standard ToolResult format that agents expect.
  *
  * @param result - Domain-specific result with success, messages, error, and modifications

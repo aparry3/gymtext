@@ -56,9 +56,7 @@ export interface ToolServiceContainer {
   };
   workoutModification: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string }) => Promise<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    modifyWeek: (params: { userId: string; changeRequest: string; weekStartDate?: Date }) => Promise<any>;
+    modifyWorkout: (params: { userId: string; workoutDate: Date; changeRequest: string; targetDay?: string; weekStartDate?: Date }) => Promise<any>;
   };
   planModification: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

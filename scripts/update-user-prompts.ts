@@ -46,12 +46,6 @@ Include warm-up, main workout, and cool down for each session.`,
 Use the standard message format: Session title, warm-up (brief), workout (sets×reps@weight), notes (1-2 sentences).
 Keep it concise and coach-like.`,
 
-  'week:modify': `Modify the existing microcycle based on:
-
-{{input}}
-
-Use the standard microcycle format. Show changes with strikethrough for original → new.
-Append a LOG section documenting this modification (date, context, changes, rationale).`,
 };
 
 const JSONB_COLS = new Set(['sub_agents', 'output_schema', 'validation_rules', 'examples']);

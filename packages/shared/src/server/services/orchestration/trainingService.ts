@@ -40,7 +40,7 @@ export interface TrainingServiceInstance {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prepareMicrocycleForDate(userId: string, planOrDate: any, dateOrTimezone?: any, timezone?: string): Promise<any>;
-  prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime): Promise<WorkoutData | null>;
+  prepareWorkoutForDate(user: UserWithProfile, targetDate: DateTime, options?: { weekContent?: string }): Promise<WorkoutData | null>;
   formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string>;
   regenerateWorkoutMessage(user: UserWithProfile, workout: WorkoutData): Promise<string>;
 }
@@ -213,7 +213,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
 
     async prepareWorkoutForDate(
       user: UserWithProfile,
-      targetDate: DateTime
+      targetDate: DateTime,
+      options?: { weekContent?: string }
     ): Promise<WorkoutData | null> {
       try {
         const timezone = user.timezone || 'America/New_York';
@@ -246,9 +247,11 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         if (previousWeek?.content) {
           context.push(`<Previous Week>${previousWeek.content}</Previous Week>`);
         }
-        if (microcycle.content) {
-          context.push(`<Week>${microcycle.content}</Week>`);
+        const weekContent = options?.weekContent ?? microcycle.content;
+        if (weekContent) {
+          context.push(`<Week>${weekContent}</Week>`);
         }
+        console.log('[TrainingService] Week content:', weekContent);
 
         const dayName = getDayOfWeekName(todayDate, timezone);
         const dateStr = targetDate.toISODate()!;

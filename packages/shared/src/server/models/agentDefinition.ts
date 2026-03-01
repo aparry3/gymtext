@@ -38,4 +38,6 @@ export interface DbAgentConfig {
   evalRubric: string | null;
   /** JSON Schema for structured output */
   outputSchema: unknown | null;
+  /** Formatter IDs to append to system prompt */
+  formatterIds: string[] | null;
 }

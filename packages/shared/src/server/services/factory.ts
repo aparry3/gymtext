@@ -35,7 +35,7 @@ import { createMessagingAgentService, type MessagingAgentServiceInstance } from 
 import { createWorkoutModificationService, type WorkoutModificationServiceInstance } from './agents/modifications/workoutModificationService';
 import { createPlanModificationService, type PlanModificationServiceInstance } from './agents/modifications/planModificationService';
 import { createTrainingService, type TrainingServiceInstance } from './orchestration/trainingService';
-import { createModificationService, type ModificationServiceInstance } from './orchestration/modificationService';
+
 import { createChatService, type ChatServiceInstance } from './orchestration/chatService';
 import { createExerciseResolutionService, type ExerciseResolutionServiceInstance } from './domain/exercise/exerciseResolutionService';
 import { createExerciseMetricsService, type ExerciseMetricsServiceInstance } from './domain/training/exerciseMetricsService';
@@ -86,7 +86,6 @@ export interface ServiceContainer {
   messagingAgent: MessagingAgentServiceInstance;
   workoutModification: WorkoutModificationServiceInstance;
   planModification: PlanModificationServiceInstance;
-  modification: ModificationServiceInstance;
   training: TrainingServiceInstance;
   programAgent: ProgramAgentServiceInstance;
   chat: ChatServiceInstance;
@@ -198,7 +197,6 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     profile: { updateProfile: (...args: Parameters<typeof profile.updateProfile>) => profile.updateProfile(...args) },
     workoutModification: {
       modifyWorkout: (...args: Parameters<typeof workoutModification.modifyWorkout>) => workoutModification.modifyWorkout(...args),
-      modifyWeek: (...args: Parameters<typeof workoutModification.modifyWeek>) => workoutModification.modifyWeek(...args),
     },
     planModification: {
       modifyPlan: (...args: Parameters<typeof planModification.modifyPlan>) => planModification.modifyPlan(...args),
@@ -255,7 +253,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const onboarding = createOnboardingService({
-    markdown, training,
+    markdown, training, workoutInstance,
     messagingOrchestrator: getMessagingOrchestrator(),
     messagingAgent,
   });
@@ -280,10 +278,6 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     user, markdown, workoutModification, agentRunner,
   });
 
-  const modification = createModificationService({
-    user, workoutModification, planModification,
-  });
-
   const chat = createChatService({
     message, user, markdown, agentRunner,
   });
@@ -299,7 +293,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     get messagingOrchestrator() { return getMessagingOrchestrator(); },
     dailyMessage, weeklyMessage, onboarding, onboardingCoordinator,
     messagingAgent, workoutModification, planModification,
-    modification, training, programAgent, chat,
+    training, programAgent, chat,
     programOwner, program, enrollment, programVersion,
     exerciseResolution, exerciseMetrics, blog, organization,
     agentDefinition, agentLog, markdown,
@@ -321,7 +315,7 @@ export type {
   ProgramOwnerAuthServiceInstance, MessagingOrchestratorInstance,
   DailyMessageServiceInstance, WeeklyMessageServiceInstance, OnboardingServiceInstance,
   OnboardingCoordinatorInstance, MessagingAgentServiceInstance,
-  WorkoutModificationServiceInstance, PlanModificationServiceInstance, ModificationServiceInstance,
+  WorkoutModificationServiceInstance, PlanModificationServiceInstance,
   TrainingServiceInstance, ProgramAgentServiceInstance, ProgramOwnerServiceInstance,
   ProgramServiceInstance, EnrollmentServiceInstance, ProgramVersionServiceInstance,
   ExerciseResolutionServiceInstance, ExerciseMetricsServiceInstance,
