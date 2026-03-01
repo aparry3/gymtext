@@ -19,10 +19,13 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  FileText,
+  Plus,
   RefreshCw,
   Save,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -39,8 +42,17 @@ interface Agent {
   max_iterations: number
   max_retries: number
   tool_ids: string[]
+  formatter_ids: string[]
   created_at?: string
   version_id?: number
+}
+
+interface FormatterData {
+  formatter_id: string
+  content: string
+  description: string | null
+  version_id: number
+  created_at: string
 }
 
 interface CategoryGroup {
@@ -244,6 +256,16 @@ export default function AgentsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [formData, setFormData] = useState<Partial<Agent>>({})
 
+  // Formatter state
+  const [formatters, setFormatters] = useState<FormatterData[]>([])
+  const [formattersExpanded, setFormattersExpanded] = useState(false)
+  const [selectedFormatterId, setSelectedFormatterId] = useState<string | null>(null)
+  const [formatterFormData, setFormatterFormData] = useState<{ content: string; description: string }>({ content: '', description: '' })
+  const [isFormatterSaving, setIsFormatterSaving] = useState(false)
+  const [formatterSaveSuccess, setFormatterSaveSuccess] = useState(false)
+  const [isCreatingFormatter, setIsCreatingFormatter] = useState(false)
+  const [newFormatterId, setNewFormatterId] = useState('')
+
   const fetchAgents = useCallback(async () => {
     setIsLoading(true)
     setError(null)
@@ -279,9 +301,22 @@ export default function AgentsPage() {
     }
   }, [])
 
+  const fetchFormatters = useCallback(async () => {
+    try {
+      const response = await fetch('/api/formatters')
+      const result = await response.json()
+      if (response.ok && result.success) {
+        setFormatters(result.data.formatters)
+      }
+    } catch {
+      // silently fail — formatters are supplementary
+    }
+  }, [])
+
   useEffect(() => {
     fetchAgents()
-  }, [fetchAgents])
+    fetchFormatters()
+  }, [fetchAgents, fetchFormatters])
 
   useEffect(() => {
     const agent = agents.find((entry) => entry.agent_id === selectedAgentId)
@@ -297,9 +332,20 @@ export default function AgentsPage() {
       max_iterations: agent.max_iterations,
       max_retries: agent.max_retries,
       tool_ids: agent.tool_ids || [],
+      formatter_ids: agent.formatter_ids || [],
       description: agent.description || '',
     })
   }, [selectedAgentId, agents])
+
+  // Load formatter form data when selecting a formatter
+  useEffect(() => {
+    const formatter = formatters.find((f) => f.formatter_id === selectedFormatterId)
+    if (!formatter) return
+    setFormatterFormData({
+      content: formatter.content,
+      description: formatter.description || '',
+    })
+  }, [selectedFormatterId, formatters])
 
   const categoryGroups = useMemo(() => groupAgentsByCategory(agents), [agents])
 
@@ -340,6 +386,7 @@ export default function AgentsPage() {
           max_iterations: formData.max_iterations,
           description: formData.description,
           tool_ids: formData.tool_ids,
+          formatter_ids: formData.formatter_ids,
         }),
       })
 
@@ -370,6 +417,89 @@ export default function AgentsPage() {
     setFormData((previous) => ({ ...previous, [field]: value }))
   }
 
+  const handleFormatterSave = async () => {
+    if (!selectedFormatterId) return
+
+    setIsFormatterSaving(true)
+    setFormatterSaveSuccess(false)
+
+    try {
+      const response = await fetch(`/api/formatters/${selectedFormatterId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: formatterFormData.content,
+          description: formatterFormData.description || null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to save formatter')
+      }
+
+      // Refresh formatters list
+      await fetchFormatters()
+
+      setFormatterSaveSuccess(true)
+      setTimeout(() => setFormatterSaveSuccess(false), 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save formatter')
+    } finally {
+      setIsFormatterSaving(false)
+    }
+  }
+
+  const handleFormatterDelete = async () => {
+    if (!selectedFormatterId) return
+    if (!confirm(`Deactivate formatter "${selectedFormatterId}"?`)) return
+
+    try {
+      const response = await fetch(`/api/formatters/${selectedFormatterId}`, { method: 'DELETE' })
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to delete formatter')
+      }
+
+      setSelectedFormatterId(null)
+      await fetchFormatters()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete formatter')
+    }
+  }
+
+  const handleCreateFormatter = async () => {
+    const id = newFormatterId.trim()
+    if (!id) return
+
+    try {
+      const response = await fetch('/api/formatters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formatter_id: id,
+          content: '# New Formatter\n\nEdit content here.',
+          description: null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to create formatter')
+      }
+
+      setNewFormatterId('')
+      setIsCreatingFormatter(false)
+      await fetchFormatters()
+      setSelectedFormatterId(id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create formatter')
+    }
+  }
+
   return (
     <div className="h-[calc(100dvh-4rem)] md:h-[100dvh] min-h-0 bg-gradient-to-br from-slate-50 via-white to-sky-50/40 flex flex-col overflow-hidden">
       <div className="px-3 md:px-5 py-3 border-b border-slate-200/70 bg-white/90 backdrop-blur-sm">
@@ -384,7 +514,7 @@ export default function AgentsPage() {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" onClick={fetchAgents} disabled={isLoading}>
+          <Button variant="outline" size="sm" onClick={() => { fetchAgents(); fetchFormatters() }} disabled={isLoading}>
             <RefreshCw className={cn('w-4 h-4 mr-2', isLoading && 'animate-spin')} />
             Refresh
           </Button>
@@ -435,10 +565,10 @@ export default function AgentsPage() {
                         return (
                           <button
                             key={agent.agent_id}
-                            onClick={() => setSelectedAgentId(agent.agent_id)}
+                            onClick={() => { setSelectedAgentId(agent.agent_id); setSelectedFormatterId(null) }}
                             className={cn(
                               'w-full rounded-lg border px-3 py-2 text-left transition-all',
-                              selectedAgentId === agent.agent_id
+                              selectedAgentId === agent.agent_id && !selectedFormatterId
                                 ? 'border-sky-300 bg-sky-100/70 shadow-sm'
                                 : 'border-transparent bg-white hover:border-slate-200 hover:bg-slate-100/80'
                             )}
@@ -454,10 +584,156 @@ export default function AgentsPage() {
                   )}
                 </div>
               ))}
+
+              {/* Formatters section */}
+              <div className="border-t border-slate-200 pt-3 mt-3">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 overflow-hidden">
+                  <button
+                    onClick={() => setFormattersExpanded(!formattersExpanded)}
+                    className="w-full px-3 py-2.5 flex items-center text-left hover:bg-slate-100/80 transition-colors"
+                  >
+                    {formattersExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-slate-500 mr-2" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-500 mr-2" />
+                    )}
+                    <FileText className="w-3.5 h-3.5 text-slate-500 mr-1.5" />
+                    <span className="text-sm font-medium text-slate-800">Formatters</span>
+                    <span className="ml-auto text-xs text-slate-500">{formatters.length}</span>
+                  </button>
+
+                  {formattersExpanded && (
+                    <div className="p-2 pt-0 space-y-1.5">
+                      {formatters.map((formatter) => (
+                        <button
+                          key={formatter.formatter_id}
+                          onClick={() => { setSelectedFormatterId(formatter.formatter_id); setSelectedAgentId(null) }}
+                          className={cn(
+                            'w-full rounded-lg border px-3 py-2 text-left transition-all',
+                            selectedFormatterId === formatter.formatter_id
+                              ? 'border-amber-300 bg-amber-50 shadow-sm'
+                              : 'border-transparent bg-white hover:border-slate-200 hover:bg-slate-100/80'
+                          )}
+                        >
+                          <div className="text-sm font-semibold text-slate-900 truncate">{formatter.formatter_id}</div>
+                          {formatter.description && (
+                            <div className="text-xs text-slate-500 truncate mt-0.5">{formatter.description}</div>
+                          )}
+                        </button>
+                      ))}
+
+                      {isCreatingFormatter ? (
+                        <div className="flex gap-1.5 mt-1">
+                          <Input
+                            value={newFormatterId}
+                            onChange={(e) => setNewFormatterId(e.target.value)}
+                            placeholder="formatter-id"
+                            className="h-8 text-xs bg-white"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleCreateFormatter()
+                              if (e.key === 'Escape') { setIsCreatingFormatter(false); setNewFormatterId('') }
+                            }}
+                          />
+                          <Button size="sm" className="h-8 px-2" onClick={handleCreateFormatter}>
+                            <Check className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setIsCreatingFormatter(true)}
+                          className="w-full rounded-lg border border-dashed border-slate-300 px-3 py-2 text-left text-xs text-slate-500 hover:border-slate-400 hover:text-slate-700 transition-colors flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3 h-3" />
+                          New Formatter
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </aside>
 
-          {selectedAgent && (
+          {/* Formatter editor panel */}
+          {selectedFormatterId && (
+            <div className="flex-1 min-h-0 p-3 md:p-4 overflow-hidden">
+              <div className="h-full rounded-2xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] flex flex-col overflow-hidden">
+                <div className="px-4 md:px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-white to-amber-50/70 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-4 h-4 text-amber-600" />
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Formatter</p>
+                    </div>
+                    <h2 className="text-lg md:text-xl font-semibold text-slate-900 truncate">{selectedFormatterId}</h2>
+                    {(() => {
+                      const f = formatters.find((x) => x.formatter_id === selectedFormatterId)
+                      return f ? (
+                        <p className="text-xs text-slate-500 mt-1">Version {f.version_id} · {new Date(f.created_at).toLocaleString()}</p>
+                      ) : null
+                    })()}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleFormatterDelete}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={handleFormatterSave}
+                      disabled={isFormatterSaving}
+                      className={cn(
+                        'min-w-[112px] bg-amber-600 hover:bg-amber-700 text-white',
+                        formatterSaveSuccess && 'bg-emerald-600 hover:bg-emerald-700'
+                      )}
+                    >
+                      {isFormatterSaving ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : formatterSaveSuccess ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Saved
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+                    <Input
+                      value={formatterFormData.description}
+                      onChange={(e) => setFormatterFormData((prev) => ({ ...prev, description: e.target.value }))}
+                      placeholder="Short description of this formatter"
+                      className="bg-white"
+                    />
+                  </div>
+
+                  <MarkdownPromptEditor
+                    label="Content"
+                    value={formatterFormData.content}
+                    onChange={(value) => setFormatterFormData((prev) => ({ ...prev, content: value }))}
+                    minHeight={400}
+                    placeholder="Formatter content (markdown)..."
+                    defaultMode="split"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Agent editor panel */}
+          {selectedAgent && !selectedFormatterId && (
             <div className="flex-1 min-h-0 p-3 md:p-4 overflow-hidden">
               <div className="h-full rounded-2xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] flex flex-col overflow-hidden">
                 <div className="px-4 md:px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-white to-sky-50/70 flex items-center justify-between gap-4">
@@ -629,6 +905,25 @@ export default function AgentsPage() {
                             className="bg-white"
                           />
                           <p className="text-xs text-slate-500 mt-1">Comma-separated list of tools enabled for this agent</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1.5">Formatter IDs</label>
+                          <Input
+                            value={(formData.formatter_ids || []).join(', ')}
+                            onChange={(e) =>
+                              handleInputChange(
+                                'formatter_ids',
+                                e.target.value
+                                  .split(',')
+                                  .map((id) => id.trim())
+                                  .filter(Boolean)
+                              )
+                            }
+                            placeholder="formatter1, formatter2"
+                            className="bg-white"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Comma-separated formatter IDs appended to system prompt</p>
                         </div>
 
                         <div className="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-1">

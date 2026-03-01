@@ -63,14 +63,22 @@ export const up: Migration = async (db) => {
   `.execute(db);
 
   // Create formatters table (shared prompt fragments referenced by agents)
+  // Append-only versioned like agent_definitions
   console.log('Creating formatters table...');
   await sql`
     CREATE TABLE formatters (
-      formatter_id TEXT PRIMARY KEY,
+      version_id SERIAL PRIMARY KEY,
+      formatter_id TEXT NOT NULL,
       content TEXT NOT NULL,
       description TEXT,
+      is_active BOOLEAN NOT NULL DEFAULT true,
       created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
+  `.execute(db);
+
+  await sql`
+    CREATE INDEX idx_formatters_formatter_id_version
+    ON formatters (formatter_id, version_id DESC)
   `.execute(db);
 
   // =============================================================================

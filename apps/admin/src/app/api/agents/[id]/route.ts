@@ -13,6 +13,7 @@ type DbAgent = {
   maxTokens: number
   maxIterations: number
   toolIds: string[] | null
+  formatterIds: string[] | null
   createdAt: Date
   versionId: number
 }
@@ -42,6 +43,7 @@ function transformAgent(agent: DbAgent) {
     max_iterations: agent.maxIterations,
     max_retries: 3,
     tool_ids: agent.toolIds || [],
+    formatter_ids: agent.formatterIds || [],
     sub_agents: null,
     output_schema: null,
     validation_rules: null,
@@ -137,6 +139,7 @@ export async function PUT(
       description,
       user_prompt_template,
       tool_ids,
+      formatter_ids,
       examples: rawExamples,
       eval_rubric,
     } = body;
@@ -169,6 +172,7 @@ export async function PUT(
         description: description !== undefined ? description : existing.description,
         userPromptTemplate: user_prompt_template !== undefined ? user_prompt_template : existing.userPromptTemplate,
         toolIds: tool_ids !== undefined ? tool_ids : existing.toolIds,
+        formatterIds: formatter_ids !== undefined ? formatter_ids : existing.formatterIds,
         examples: examples !== undefined ? examples : existing.examples,
         evalRubric: eval_rubric !== undefined ? eval_rubric : existing.evalRubric,
         isActive: existing.isActive,
@@ -238,6 +242,7 @@ export async function DELETE(
         description: existing.description,
         userPromptTemplate: existing.userPromptTemplate,
         toolIds: existing.toolIds,
+        formatterIds: existing.formatterIds,
         examples: existing.examples,
         evalRubric: existing.evalRubric,
         isActive: false,
