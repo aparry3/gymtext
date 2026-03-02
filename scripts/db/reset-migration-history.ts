@@ -14,7 +14,7 @@ import { Pool } from 'pg';
  * Usage: pnpm db:reset-migrations
  */
 
-const CONSOLIDATED_MIGRATION_NAME = '20260117000000_consolidated_schema';
+const CONSOLIDATED_MIGRATION_NAME = '20260222134212_new_agent_system';
 
 // Get database URL
 const databaseUrl = process.env.DATABASE_URL;
