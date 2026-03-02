@@ -12,6 +12,7 @@
  *   source .env.local   && pnpm db:anonymize --dry-run
  *   source .env.local   && pnpm db:anonymize --keep 5
  *   source .env.local   && pnpm db:anonymize --skip-recreate
+ *   source .env.staging && pnpm db:anonymize --skip-recreate --clean-target
  *
  * Env vars:
  *   READONLY_PROD_DB_URL — read-only prod connection (source)
@@ -45,6 +46,7 @@ function getFlagValue(name: string, defaultValue: string): string {
 
 const DRY_RUN = getFlag('dry-run');
 const SKIP_RECREATE = getFlag('skip-recreate');
+const CLEAN_TARGET = getFlag('clean-target');
 const KEEP_COUNT = parseInt(getFlagValue('keep', '15'), 10);
 
 // ---------------------------------------------------------------------------
@@ -109,6 +111,60 @@ function newId(oldId: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// FK constraint helpers (Neon doesn't allow session_replication_role or
+// disabling system triggers, so we drop/recreate FK constraints instead)
+// ---------------------------------------------------------------------------
+
+interface SavedFk {
+  table_name: string;
+  constraint_name: string;
+  definition: string;
+}
+
+let savedFks: SavedFk[] = [];
+
+async function dropForeignKeys(db: Kysely<any>) {
+  // Save all FK constraint definitions so we can recreate them later
+  const fks = await sql<SavedFk>`
+    SELECT
+      c.conrelid::regclass::text AS table_name,
+      c.conname AS constraint_name,
+      pg_get_constraintdef(c.oid) AS definition
+    FROM pg_constraint c
+    JOIN pg_namespace n ON n.oid = c.connamespace
+    WHERE c.contype = 'f' AND n.nspname = 'public'
+  `.execute(db);
+
+  savedFks = fks.rows;
+  console.log(`  Dropping ${savedFks.length} FK constraints...`);
+
+  for (const fk of savedFks) {
+    await sql`${sql.raw(`ALTER TABLE ${fk.table_name} DROP CONSTRAINT "${fk.constraint_name}"`)}`.execute(db);
+  }
+}
+
+async function restoreForeignKeys(db: Kysely<any>) {
+  console.log(`  Restoring ${savedFks.length} FK constraints...`);
+  let restored = 0;
+  const failed: string[] = [];
+
+  for (const fk of savedFks) {
+    try {
+      await sql`${sql.raw(`ALTER TABLE ${fk.table_name} ADD CONSTRAINT "${fk.constraint_name}" ${fk.definition}`)}`.execute(db);
+      restored++;
+    } catch (err: any) {
+      failed.push(`${fk.table_name}.${fk.constraint_name}: ${err.message}`);
+    }
+  }
+
+  console.log(`  Restored ${restored}/${savedFks.length} FK constraints`);
+  if (failed.length > 0) {
+    console.warn(`  Failed to restore ${failed.length} constraints:`);
+    for (const f of failed) console.warn(`    ${f}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Database recreation
 // ---------------------------------------------------------------------------
 
@@ -146,10 +202,72 @@ async function recreateDatabase() {
 }
 
 // ---------------------------------------------------------------------------
+// Clean target (drop all tables in public schema)
+// ---------------------------------------------------------------------------
+
+async function cleanTarget() {
+  banner('Clean target: drop all tables in public schema');
+
+  if (DRY_RUN) {
+    console.log('[dry-run] Would drop all tables in public schema');
+    return;
+  }
+
+  const client = new Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+
+    // Drop all objects in public schema without dropping the schema itself.
+    // This preserves schema ownership and privileges (required for Neon).
+    await client.query(`
+      DO $$ DECLARE r RECORD;
+      BEGIN
+        -- tables (includes sequences owned by columns via CASCADE)
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+          EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+        END LOOP;
+        -- standalone sequences
+        FOR r IN (SELECT sequencename FROM pg_sequences WHERE schemaname = 'public') LOOP
+          EXECUTE 'DROP SEQUENCE IF EXISTS public.' || quote_ident(r.sequencename) || ' CASCADE';
+        END LOOP;
+        -- views
+        FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'public') LOOP
+          EXECUTE 'DROP VIEW IF EXISTS public.' || quote_ident(r.viewname) || ' CASCADE';
+        END LOOP;
+        -- functions (skip extension-owned)
+        FOR r IN (
+          SELECT p.oid::regprocedure AS sig
+          FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid
+          WHERE n.nspname = 'public'
+            AND NOT EXISTS (
+              SELECT 1 FROM pg_depend d
+              WHERE d.objid = p.oid AND d.deptype = 'e'
+            )
+        ) LOOP
+          EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig || ' CASCADE';
+        END LOOP;
+        -- custom types / enums
+        FOR r IN (
+          SELECT t.typname
+          FROM pg_type t JOIN pg_namespace n ON t.typnamespace = n.oid
+          WHERE n.nspname = 'public' AND t.typtype IN ('e', 'c')
+        ) LOOP
+          EXECUTE 'DROP TYPE IF EXISTS public.' || quote_ident(r.typname) || ' CASCADE';
+        END LOOP;
+      END $$;
+    `);
+    console.log('All objects in public schema dropped');
+  } finally {
+    await client.end();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Dump & restore
 // ---------------------------------------------------------------------------
 
-function dumpAndRestore() {
+async function dumpAndRestore() {
   banner('Dump production and restore to target');
 
   if (DRY_RUN) {
@@ -164,10 +282,35 @@ function dumpAndRestore() {
   );
 
   console.log('Restoring to target database...');
-  execSync(
-    `pg_restore --dbname="${DATABASE_URL}" --jobs=4 --no-owner --no-privileges "${DUMP_PATH}"`,
-    { stdio: 'inherit' },
-  );
+  try {
+    execSync(
+      `pg_restore --dbname="${DATABASE_URL}" --jobs=4 --no-owner --no-privileges "${DUMP_PATH}"`,
+      { stdio: 'inherit' },
+    );
+  } catch (err: any) {
+    // pg_restore exits 1 for non-fatal warnings (e.g. "extension already exists").
+    // Only swallow exit-code 1; anything else is a real failure.
+    if (err.status !== 1) throw err;
+    console.log('pg_restore exited with warnings (exit code 1) — continuing');
+  }
+
+  // Verify restore actually created tables
+  const client = new Client({ connectionString: DATABASE_URL });
+  try {
+    await client.connect();
+    const res = await client.query(
+      `SELECT count(*)::int AS n FROM pg_tables WHERE schemaname = 'public'`,
+    );
+    const tableCount = res.rows[0]?.n ?? 0;
+    console.log(`Restore verification: ${tableCount} tables in public schema`);
+    if (tableCount === 0) {
+      throw new Error(
+        'pg_restore produced 0 tables — check DATABASE_URL and pg_restore output above',
+      );
+    }
+  } finally {
+    await client.end();
+  }
 
   console.log('Dump & restore complete');
 }
@@ -207,9 +350,6 @@ async function selectAndPruneUsers(db: Kysely<any>, count: number) {
     console.error('No users found in database');
     exit(1);
   }
-
-  // Disable FK constraints
-  await sql`SET session_replication_role = replica`.execute(db);
 
   // Delete user-related data for non-selected users
   const userScopedTables: { table: string; col: string }[] = [
@@ -267,9 +407,6 @@ async function selectAndPruneUsers(db: Kysely<any>, count: number) {
     WHERE actor_client_id IS NOT NULL
       AND actor_client_id != ALL(${keepIds}::uuid[])
   `.execute(db);
-
-  // Re-enable FK constraints
-  await sql`SET session_replication_role = DEFAULT`.execute(db);
 
   console.log('\nUser pruning complete');
 }
@@ -406,8 +543,6 @@ async function anonymizeDatabase(db: Kysely<any>) {
   // Phase 3: Disable FK constraints and apply all changes
   // ------------------------------------------------------------------
   console.log('\nPhase 3: Applying ID remaps...');
-
-  await sql`SET session_replication_role = replica`.execute(db);
 
   // Helper: remap a PK column for a table
   async function remapPk(table: string) {
@@ -748,11 +883,6 @@ async function anonymizeDatabase(db: Kysely<any>) {
   await anonymizeJsonColumn('profile_updates', 'patch');
   await anonymizeJsonColumn('messages', 'metadata');
 
-  // ------------------------------------------------------------------
-  // Re-enable FK constraints
-  // ------------------------------------------------------------------
-  await sql`SET session_replication_role = DEFAULT`.execute(db);
-
   console.log('\nAnonymization complete');
 }
 
@@ -768,6 +898,7 @@ export async function runAnonymize() {
   console.log(`Target DB: ${DB_NAME}`);
   console.log(`Keep users: ${KEEP_COUNT}`);
   console.log(`Skip recreate: ${SKIP_RECREATE}`);
+  console.log(`Clean target: ${CLEAN_TARGET}`);
 
   const startTime = Date.now();
 
@@ -776,20 +907,29 @@ export async function runAnonymize() {
     await recreateDatabase();
   } else {
     console.log('\nSkipping database recreation (--skip-recreate)');
+    if (CLEAN_TARGET) {
+      await cleanTarget();
+    }
   }
 
   // Step 2: Dump prod and restore
-  dumpAndRestore();
+  await dumpAndRestore();
 
   // Step 3-4: Select users, prune, anonymize
+  // Explicitly set search_path to public — Neon may default to the role's schema.
   const pool = new Pool({ connectionString: DATABASE_URL, max: 5 });
+  pool.on('connect', (client) => {
+    client.query('SET search_path TO public');
+  });
   const db = new Kysely<any>({
     dialect: new PostgresDialect({ pool }),
   });
 
   try {
+    await dropForeignKeys(db);
     await selectAndPruneUsers(db, KEEP_COUNT);
     await anonymizeDatabase(db);
+    await restoreForeignKeys(db);
   } finally {
     await db.destroy();
   }

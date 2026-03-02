@@ -34,6 +34,7 @@
     "db:anonymize": "source .env.local && tsx scripts/db/anonymize.ts",
     "db:anonymize:staging": "source .env.staging && tsx scripts/db/anonymize.ts",
     "db:anonymize:dry": "source .env.local && tsx scripts/db/anonymize.ts --dry-run",
+    "db:anonymize:dump": "source .env.local && tsx scripts/db/create-anonymized-dump.ts",
     "test:migration": "source .env.local && tsx scripts/db/reset-from-main.ts",
     "sms:test": "source .env.local && tsx scripts/sms-test.ts",
     "local:sms": "node tools/local-sms-cli/dist/index.js",
