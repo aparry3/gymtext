@@ -23,6 +23,9 @@ export const AGENTS = {
   PLAN_DETAILS: 'plan:details',
   BLOG_METADATA: 'blog:metadata',
   PROFILE_DETAILS: 'profile:details',
+  MIGRATE_PROFILE: 'migrate:profile',
+  MIGRATE_PLAN: 'migrate:plan',
+  MIGRATE_WEEK: 'migrate:week',
 } as const;
 
 export type AgentId = (typeof AGENTS)[keyof typeof AGENTS];
