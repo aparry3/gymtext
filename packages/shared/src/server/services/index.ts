@@ -140,3 +140,13 @@ export type {
   CreateOrganizationInput,
   UpdateOrganizationInput,
 } from './domain/organization/organizationService';
+
+// Regeneration agent service
+export { createRegenerationService } from './agents/regeneration';
+export type {
+  RegenerationServiceInstance,
+  RegenerationServiceDeps,
+  RegenerationStep,
+  RegenerationResult,
+  BulkRegenerationResult,
+} from './agents/regeneration';
