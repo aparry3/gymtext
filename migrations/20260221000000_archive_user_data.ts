@@ -30,9 +30,8 @@ export const up: Migration = async (db) => {
   const profileCount = await sql<{ count: string }>`SELECT COUNT(*) as count FROM _deprecated_profiles`.execute(db);
   console.log(`  Archived ${profileCount.rows[0]?.count} profiles`);
 
-  // Clear live profiles
-  await sql`TRUNCATE TABLE profiles CASCADE`.execute(db);
-  console.log('  Cleared live profiles table');
+  // Keep data in live tables — archive is backup only
+  console.log('  Keeping live profiles table intact (backup only)');
 
   // =============================================================================
   // 2. Archive fitness_plans
@@ -71,16 +70,8 @@ export const up: Migration = async (db) => {
   const workoutCount = await sql<{ count: string }>`SELECT COUNT(*) as count FROM _deprecated_workout_instances`.execute(db);
   console.log(`  Archived ${workoutCount.rows[0]?.count} workout_instances`);
 
-  // =============================================================================
-  // 5. Clear live tables (child → parent order)
-  // =============================================================================
-  console.log('Clearing live tables...');
-  await sql`TRUNCATE TABLE workout_instances CASCADE`.execute(db);
-  console.log('  Cleared workout_instances');
-  await sql`TRUNCATE TABLE microcycles CASCADE`.execute(db);
-  console.log('  Cleared microcycles');
-  await sql`TRUNCATE TABLE fitness_plans CASCADE`.execute(db);
-  console.log('  Cleared fitness_plans');
+  // Keep data in live tables — archive is backup only
+  console.log('  Keeping live tables intact (backup only)');
 
   console.log('ARCHIVE USER DATA migration complete!');
 };

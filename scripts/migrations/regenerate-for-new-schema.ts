@@ -18,9 +18,9 @@ import 'dotenv/config';
 import { Command } from 'commander';
 import { Kysely, PostgresDialect, CamelCasePlugin, sql } from 'kysely';
 import { Pool } from 'pg';
-import type { DB } from '@gymtext/shared/server/models';
-import { createServicesFromDb } from '@gymtext/shared/server/services/factory';
-import { AGENTS } from '@gymtext/shared/server/agents/constants';
+import type { DB } from '../../packages/shared/src/server/models/_types';
+import { createServicesFromDb } from '../../packages/shared/src/server/services/factory';
+import { AGENTS } from '../../packages/shared/src/server/agents/constants';
 
 // ============================================================================
 // CLI Configuration

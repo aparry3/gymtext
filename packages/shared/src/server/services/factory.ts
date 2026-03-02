@@ -46,6 +46,7 @@ import { createAgentLogService, type AgentLogServiceInstance } from './domain/ag
 import { createMarkdownService, type MarkdownServiceInstance } from './domain/markdown/markdownService';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
+import { createRegenerationService, type RegenerationServiceInstance } from './agents/regeneration';
 import { ToolRegistry, registerAllTools } from '@/server/agents/tools';
 import { createSimpleAgentRunner, type SimpleAgentRunnerInstance } from '@/server/agents/runner';
 import { createWorkoutInstanceRepository, type WorkoutInstanceRepository } from '@/server/repositories/workoutInstanceRepository';
@@ -100,6 +101,7 @@ export interface ServiceContainer {
   agentDefinition: AgentDefinitionServiceInstance;
   agentLog: AgentLogServiceInstance;
   markdown: MarkdownServiceInstance;
+  regeneration: RegenerationServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
   toolRegistry: ToolRegistry;
 }
@@ -237,6 +239,10 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     shortLink,
   });
 
+  const regeneration = createRegenerationService({
+    user, markdown, training, agentRunner,
+  });
+
   const programAgent = createProgramAgentService(agentRunner);
   const messagingAgent = createMessagingAgentService(agentRunner);
 
@@ -296,7 +302,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     training, programAgent, chat,
     programOwner, program, enrollment, programVersion,
     exerciseResolution, exerciseMetrics, blog, organization,
-    agentDefinition, agentLog, markdown,
+    agentDefinition, agentLog, markdown, regeneration,
     agentRunner, toolRegistry,
   };
 }
@@ -320,5 +326,6 @@ export type {
   ProgramServiceInstance, EnrollmentServiceInstance, ProgramVersionServiceInstance,
   ExerciseResolutionServiceInstance, ExerciseMetricsServiceInstance,
   BlogServiceInstance, OrganizationServiceInstance, AgentDefinitionServiceInstance,
-  AgentLogServiceInstance, MarkdownServiceInstance, SimpleAgentRunnerInstance,
+  AgentLogServiceInstance, MarkdownServiceInstance, RegenerationServiceInstance,
+  SimpleAgentRunnerInstance,
 };

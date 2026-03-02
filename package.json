@@ -43,7 +43,7 @@
     "backup:local": "source .env.local && ./scripts/backup-db.sh",
     "backup:prod": "source .env.production && ./scripts/backup-db.sh",
     "migrate:training": "tsx scripts/migrations/regenerate-training-data.ts",
-    "migrate:regenerate": "source .env.local && tsx scripts/migrations/regenerate-for-new-schema.ts",
+    "migrate:regenerate": "tsx scripts/migrations/regenerate-for-new-schema.ts",
     "migrate:prompts": "tsx scripts/update-agent-prompts.ts",
     "agent:upsert": "source .env.local && tsx scripts/agent-definition.ts upsert",
     "agent:get": "source .env.local && tsx scripts/agent-definition.ts get",
