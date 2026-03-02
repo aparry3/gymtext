@@ -52,6 +52,9 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
   const [hasProfile, setHasProfile] = useState(false)
   const [isRegeneratingProfile, setIsRegeneratingProfile] = useState(false)
   const [profileExecutionTime, setProfileExecutionTime] = useState<number | null>(null)
+  const [isRegeneratingAll, setIsRegeneratingAll] = useState(false)
+  const [regenerateResults, setRegenerateResults] = useState<Record<string, { regenerated: boolean; error?: string }> | null>(null)
+  const [regenerateTime, setRegenerateTime] = useState<number | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -163,6 +166,38 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
     }
   }
 
+  const handleRegenerateAll = async () => {
+    if (!window.confirm('Regenerate profile, plan, and week for this user? This uses AI agents and may take a minute.')) {
+      return
+    }
+
+    setIsRegeneratingAll(true)
+    setRegenerateResults(null)
+    setRegenerateTime(null)
+
+    try {
+      const response = await fetch(`/api/users/${userId}/regenerate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to regenerate')
+      }
+
+      setRegenerateResults(result.data)
+      setRegenerateTime(result.executionTimeMs)
+      fetchData()
+    } catch (err) {
+      console.error('Error regenerating:', err)
+      alert(err instanceof Error ? err.message : 'Failed to regenerate')
+    } finally {
+      setIsRegeneratingAll(false)
+    }
+  }
+
   const handleDelete = async (entityType: EntityType, entityId: string, entityName: string) => {
     const confirmMessage = entityType === 'microcycle'
       ? `Delete ${entityName}? This will also delete all workouts in this microcycle.`
@@ -207,6 +242,47 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Regenerate All Section */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">
+          Regenerate Fitness Data
+        </h3>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Re-runs the AI pipeline to convert existing profile, plan, and week into the current dossier format.
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateAll}
+              disabled={isRegeneratingAll}
+            >
+              <RefreshIcon className={`h-4 w-4 mr-2 ${isRegeneratingAll ? 'animate-spin' : ''}`} />
+              {isRegeneratingAll ? 'Regenerating...' : 'Regenerate All'}
+            </Button>
+            {regenerateTime !== null && (
+              <span className="text-xs text-muted-foreground">
+                {(regenerateTime / 1000).toFixed(1)}s
+              </span>
+            )}
+          </div>
+          {regenerateResults && (
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(regenerateResults).map(([step, result]) => (
+                <Badge
+                  key={step}
+                  variant={result.regenerated ? 'default' : 'outline'}
+                  className={`text-xs ${result.regenerated ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                >
+                  {step}: {result.regenerated ? '✓' : result.error || '✗'}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
       {/* Profile Section */}
       <Card className="p-6">
         <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wide">

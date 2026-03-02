@@ -32,6 +32,7 @@ function AdminUsersPageContent() {
   const [forceImmediate, setForceImmediate] = useState(false)
   const [isTriggeringDaily, setIsTriggeringDaily] = useState(false)
   const [isTriggeringWeekly, setIsTriggeringWeekly] = useState(false)
+  const [isRegeneratingAll, setIsRegeneratingAll] = useState(false)
   const [triggerResult, setTriggerResult] = useState<{ type: string; message: string } | null>(null)
 
   // Parse initial filters from search params
@@ -145,6 +146,43 @@ function AdminUsersPageContent() {
     }
   }, [forceImmediate])
 
+  const handleRegenerateAll = useCallback(async () => {
+    if (!window.confirm('Regenerate fitness data (profile, plan, week) for ALL users with profiles? This will take a while.')) {
+      return
+    }
+
+    setIsRegeneratingAll(true)
+    setTriggerResult(null)
+
+    try {
+      const response = await fetch('/api/users/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to regenerate')
+      }
+
+      const { total, success, skipped, failed } = result.data
+      const timeMin = (result.executionTimeMs / 60000).toFixed(1)
+      setTriggerResult({
+        type: failed > 0 ? 'error' : 'success',
+        message: `Regeneration complete: ${success}/${total} succeeded, ${failed} failed, ${skipped} skipped (${timeMin}min)`,
+      })
+    } catch (err) {
+      console.error('Failed to regenerate all users:', err)
+      setTriggerResult({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to regenerate',
+      })
+    } finally {
+      setIsRegeneratingAll(false)
+      setTimeout(() => setTriggerResult(null), 15000)
+    }
+  }, [])
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="space-y-6">
@@ -179,6 +217,16 @@ function AdminUsersPageContent() {
               >
                 <CalendarIcon className={`h-4 w-4 ${isTriggeringWeekly ? 'animate-pulse' : ''}`} />
                 <span className="hidden sm:inline">{isTriggeringWeekly ? 'Triggering...' : 'Weekly Cron'}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerateAll}
+                disabled={isRegeneratingAll}
+                className="gap-2"
+              >
+                <RefreshIcon className={`h-4 w-4 ${isRegeneratingAll ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isRegeneratingAll ? 'Regenerating...' : 'Regenerate All'}</span>
               </Button>
             </div>
           }
@@ -344,6 +392,12 @@ const ActivityIcon = ({ className }: { className?: string }) => (
 const SendIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+  </svg>
+)
+
+const RefreshIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
   </svg>
 )
 

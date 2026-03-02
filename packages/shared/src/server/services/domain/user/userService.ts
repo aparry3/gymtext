@@ -32,6 +32,7 @@ export interface UserServiceInstance {
   listUsersForAdmin(filters: UserFilters & { page?: number; pageSize?: number; sort?: UserSort }): Promise<AdminUsersResponse>;
   getUserForAdmin(id: string): Promise<AdminUserDetailResponse>;
   deleteUser(id: string): Promise<boolean>;
+  getUserIdsWithProfiles(): Promise<string[]>;
 }
 
 /**
@@ -300,6 +301,10 @@ export function createUserService(repos: RepositoryContainer): UserServiceInstan
       });
 
       return result || false;
+    },
+
+    async getUserIdsWithProfiles(): Promise<string[]> {
+      return repos.profile.getAllUsersWithProfiles();
     },
   };
 }
