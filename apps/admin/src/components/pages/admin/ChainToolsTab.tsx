@@ -187,8 +187,8 @@ export function ChainToolsTab({ userId }: ChainToolsTabProps) {
         throw new Error(result.error || 'Failed to regenerate')
       }
 
-      setRegenerateResults(result.data)
-      setRegenerateTime(result.executionTimeMs)
+      setRegenerateResults(null)
+      setRegenerateTime(null)
       fetchData()
     } catch (err) {
       console.error('Error regenerating:', err)

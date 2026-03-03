@@ -60,12 +60,13 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
 
       // 3. Build user prompt
       let userPrompt = params.input || '';
-      if (config.userPromptTemplate) {
+      const template = params.userPromptTemplate || config.userPromptTemplate;
+      if (template) {
         const templateData: Record<string, unknown> = {
           input: params.input || '',
           ...(params.params || {}),
         };
-        userPrompt = resolveTemplate(config.userPromptTemplate, templateData);
+        userPrompt = resolveTemplate(template, templateData);
       }
 
       // 4. Build messages

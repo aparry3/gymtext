@@ -165,11 +165,9 @@ function AdminUsersPageContent() {
         throw new Error(result.error || 'Failed to regenerate')
       }
 
-      const { total, success, skipped, failed } = result.data
-      const timeMin = (result.executionTimeMs / 60000).toFixed(1)
       setTriggerResult({
-        type: failed > 0 ? 'error' : 'success',
-        message: `Regeneration complete: ${success}/${total} succeeded, ${failed} failed, ${skipped} skipped (${timeMin}min)`,
+        type: 'success',
+        message: result.message || 'Regeneration queued',
       })
     } catch (err) {
       console.error('Failed to regenerate all users:', err)

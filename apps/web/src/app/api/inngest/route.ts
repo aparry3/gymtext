@@ -30,6 +30,7 @@ import {
   onboardUserFunction,
   processNextQueuedMessageFunction,
   sendQueuedMessageFunction,
+  regenerateUserFunction,
 } from '@/server/inngest/functions';
 import { retryMessageFunction } from '@/server/inngest/functions/retryMessage';
 
@@ -43,5 +44,6 @@ export const { GET, POST, PUT } = serve({
     onboardUserFunction,
     processNextQueuedMessageFunction,
     sendQueuedMessageFunction,
+    regenerateUserFunction,
   ],
 });

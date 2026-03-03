@@ -9,6 +9,7 @@ export interface SimpleAgentInvokeParams {
   params?: Record<string, unknown>;
   previousMessages?: Message[];
   context?: string[];
+  userPromptTemplate?: string;
 }
 
 export interface SimpleAgentRunnerDeps {

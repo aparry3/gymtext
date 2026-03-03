@@ -4,16 +4,39 @@
  * Agent service that re-runs the AI pipeline to convert existing
  * profile/plan/week data into the current dossier format.
  *
- * Unlike ProfileService or PlanModificationService, this service
- * skips side effects (Inngest events, parallel workout modifications)
- * that are unnecessary during bulk data migration.
+ * Uses the same agents as the normal pipeline (profile:update, plan:generate,
+ * week:generate) but overrides the user prompt template to say "convert this
+ * existing content" instead of "create new content." This keeps regeneration
+ * always in sync with the parent agent's format instructions.
  */
+import { AGENTS } from '@/server/agents/constants';
 import { parseDossierResponse } from '@/server/agents/dossierParser';
-import { formatForAI } from '@/shared/utils/date';
+import { formatForAI, now as nowFn } from '@/shared/utils/date';
 import type { MarkdownServiceInstance } from '../../domain/markdown/markdownService';
 import type { UserServiceInstance } from '../../domain/user/userService';
-import type { TrainingServiceInstance } from '../../orchestration/trainingService';
+import type { WorkoutInstanceServiceInstance } from '../../domain/training/workoutInstanceService';
 import type { SimpleAgentRunnerInstance } from '@/server/agents/runner';
+
+// =============================================================================
+// Regeneration Prompt Overrides
+// =============================================================================
+
+const REGEN_PROFILE_PROMPT =
+  'Convert this existing fitness profile into the updated format described in your instructions. ' +
+  'Preserve all data exactly — only restructure and reformat.\n\n{{input}}';
+
+const REGEN_PLAN_PROMPT =
+  'Convert this existing training plan into the updated format described in your instructions. ' +
+  'Preserve all data exactly — only restructure and reformat.\n\n{{input}}';
+
+const REGEN_WEEK_PROMPT =
+  'Convert this existing weekly microcycle into the updated format described in your instructions. ' +
+  'Preserve all data exactly — only restructure and reformat.\n\n{{input}}';
+
+const REGEN_WORKOUT_DETAILS_PROMPT =
+  'Extract structured workout details from this workout message. ' +
+  'The message was sent to a user via SMS and contains the full workout. ' +
+  'Convert it into the blocks + items JSON format described in your instructions.\n\n{{input}}';
 
 // =============================================================================
 // Types
@@ -30,9 +53,10 @@ export interface RegenerationResult {
   profile?: RegenerationStepResult;
   plan?: RegenerationStepResult;
   week?: RegenerationStepResult;
+  workouts?: RegenerationStepResult;
 }
 
-export type RegenerationStep = 'profile' | 'plan' | 'week';
+export type RegenerationStep = 'profile' | 'plan' | 'week' | 'workouts';
 
 export interface RegenerationServiceInstance {
   regenerateUser(userId: string, steps?: RegenerationStep[]): Promise<RegenerationResult>;
@@ -50,18 +74,18 @@ export interface BulkRegenerationResult {
 export interface RegenerationServiceDeps {
   user: UserServiceInstance;
   markdown: MarkdownServiceInstance;
-  training: TrainingServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
 }
 
 // =============================================================================
 // Factory
 // =============================================================================
 
-const ALL_STEPS: RegenerationStep[] = ['profile', 'plan', 'week'];
+const ALL_STEPS: RegenerationStep[] = ['profile', 'plan', 'week', 'workouts'];
 
 export function createRegenerationService(deps: RegenerationServiceDeps): RegenerationServiceInstance {
-  const { user: userService, markdown: markdownService, training: trainingService, agentRunner } = deps;
+  const { user: userService, markdown: markdownService, agentRunner, workoutInstance: workoutInstanceService } = deps;
 
   async function regenerateProfile(userId: string, timezone: string): Promise<RegenerationStepResult> {
     const user = await userService.getUser(userId);
@@ -70,9 +94,9 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
     const existingProfile = await markdownService.getProfile(userId) ?? '';
     const currentDate = formatForAI(new Date(), timezone);
 
-    const profileResult = await agentRunner.invoke('profile:update', {
+    const profileResult = await agentRunner.invoke(AGENTS.PROFILE_UPDATE, {
       input: existingProfile || 'Regenerate profile from existing data.',
-      context: existingProfile ? [`<Profile>${existingProfile}</Profile>`] : [],
+      userPromptTemplate: REGEN_PROFILE_PROMPT,
       params: { user, currentDate },
     });
 
@@ -83,7 +107,7 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
     }
 
     // Extract details in parallel with save
-    const detailsPromise = agentRunner.invoke('profile:details', {
+    const detailsPromise = agentRunner.invoke(AGENTS.PROFILE_DETAILS, {
       input: updatedProfile,
       params: { user },
     })
@@ -117,11 +141,12 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
     const profileDossier = await markdownService.getProfile(userId);
     const context: string[] = [];
     if (profileDossier) context.push(`<Profile>${profileDossier}</Profile>`);
-    const planContent = existingPlan.content || existingPlan.description || '';
-    if (planContent) context.push(`<Plan>${planContent}</Plan>`);
 
-    const planResult = await agentRunner.invoke('plan:modify', {
-      input: 'Reformat this plan to match the current dossier structure. Preserve all training decisions, modifications, and periodization.',
+    const planContent = existingPlan.content || existingPlan.description || '';
+
+    const planResult = await agentRunner.invoke(AGENTS.PLAN_GENERATE, {
+      input: planContent,
+      userPromptTemplate: REGEN_PLAN_PROMPT,
       context,
       params: { user },
     });
@@ -132,7 +157,7 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
       return { regenerated: false, error: 'No content returned from agent' };
     }
 
-    const detailsResult = await agentRunner.invoke('plan:details', {
+    const detailsResult = await agentRunner.invoke(AGENTS.PLAN_DETAILS, {
       input: updatedPlan,
       context,
       params: { user },
@@ -153,9 +178,102 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
     return { regenerated: true, planId: savedPlan.id };
   }
 
-  async function regenerateWeek(userId: string, timezone: string): Promise<RegenerationStepResult> {
-    const weekResult = await trainingService.prepareMicrocycleForDate(userId, new Date(), timezone);
-    return { regenerated: true, wasCreated: weekResult.wasCreated };
+  async function regenerateWeek(userId: string): Promise<RegenerationStepResult> {
+    const user = await userService.getUser(userId);
+    if (!user) return { regenerated: false, error: 'User not found' };
+
+    const existingWeek = await markdownService.getWeek(userId);
+    if (!existingWeek) {
+      return { regenerated: false, error: 'No existing week found' };
+    }
+
+    const profileDossier = await markdownService.getProfile(userId);
+    const planDossier = await markdownService.getPlan(userId);
+    const context: string[] = [];
+    if (profileDossier) context.push(`<Profile>${profileDossier}</Profile>`);
+    if (planDossier?.content) context.push(`<Plan>${planDossier.content}</Plan>`);
+
+    const weekContent = existingWeek.content || '';
+
+    const weekResult = await agentRunner.invoke(AGENTS.WEEK_GENERATE, {
+      input: weekContent,
+      userPromptTemplate: REGEN_WEEK_PROMPT,
+      context,
+      params: { user },
+    });
+
+    const { dossierContent: updatedWeek } = parseDossierResponse(weekResult.response);
+
+    if (!updatedWeek) {
+      return { regenerated: false, error: 'No content returned from agent' };
+    }
+
+    // Run week:format and week:details in parallel (mirrors trainingService pattern)
+    const weekContext = [...context, `<Week>${updatedWeek}</Week>`];
+
+    const [formatResult, detailsResult] = await Promise.all([
+      agentRunner.invoke(AGENTS.WEEK_FORMAT, {
+        input: updatedWeek,
+        context: weekContext,
+        params: { user },
+      }),
+      agentRunner.invoke(AGENTS.WEEK_DETAILS, {
+        input: updatedWeek,
+        context: weekContext,
+        params: { user },
+      })
+        .then((r) => JSON.parse(r.response) as Record<string, unknown>)
+        .catch((error) => {
+          console.error('[REGENERATION] Failed to generate week details:', error);
+          return undefined;
+        }),
+    ]);
+
+    const weekMessage = formatResult.response;
+
+    const planId = planDossier?.id;
+    if (!planId) {
+      return { regenerated: false, error: 'No plan found for week creation' };
+    }
+
+    await markdownService.createWeek(
+      userId,
+      planId,
+      updatedWeek,
+      existingWeek.startDate || new Date(),
+      { message: weekMessage, details: detailsResult }
+    );
+
+    return { regenerated: true, wasCreated: true };
+  }
+
+  async function regenerateWorkout(userId: string, timezone: string): Promise<RegenerationStepResult> {
+    const todayDt = nowFn(timezone);
+    const todayStr = todayDt.toFormat('yyyy-MM-dd');
+
+    const workout = await workoutInstanceService.getByUserAndDate(userId, todayStr);
+    if (!workout || !workout.message) {
+      return { regenerated: false, error: 'No workout or message for today' };
+    }
+
+    const user = await userService.getUser(userId);
+    if (!user) return { regenerated: false, error: 'User not found' };
+
+    const detailsResult = await agentRunner.invoke(AGENTS.WORKOUT_DETAILS, {
+      input: workout.message,
+      userPromptTemplate: REGEN_WORKOUT_DETAILS_PROMPT,
+      params: { user },
+    });
+
+    const details = JSON.parse(detailsResult.response) as Record<string, unknown>;
+
+    await workoutInstanceService.upsert({
+      clientId: userId,
+      date: todayStr,
+      details,
+    });
+
+    return { regenerated: true };
   }
 
   return {
@@ -193,11 +311,22 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
       if (steps.includes('week')) {
         try {
           console.log(`[REGENERATION] Starting week for user ${userId}`);
-          results.week = await regenerateWeek(userId, timezone);
+          results.week = await regenerateWeek(userId);
           console.log(`[REGENERATION] Week done for user ${userId}:`, results.week.regenerated);
         } catch (error) {
           console.error(`[REGENERATION] Week error for user ${userId}:`, error);
           results.week = { regenerated: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
+      }
+
+      if (steps.includes('workouts')) {
+        try {
+          console.log(`[REGENERATION] Starting workouts for user ${userId}`);
+          results.workouts = await regenerateWorkout(userId, timezone);
+          console.log(`[REGENERATION] Workouts done for user ${userId}:`, results.workouts.regenerated);
+        } catch (error) {
+          console.error(`[REGENERATION] Workouts error for user ${userId}:`, error);
+          results.workouts = { regenerated: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       }
 

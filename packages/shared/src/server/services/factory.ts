@@ -240,7 +240,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
   });
 
   const regeneration = createRegenerationService({
-    user, markdown, training, agentRunner,
+    user, markdown, agentRunner, workoutInstance,
   });
 
   const programAgent = createProgramAgentService(agentRunner);

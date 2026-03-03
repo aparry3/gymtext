@@ -1,19 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getAdminContext } from '@/lib/context';
+import { inngest } from '@gymtext/shared/server/connections/inngest/client';
 import type { RegenerationStep } from '@gymtext/shared/server';
 
 /**
  * POST /api/users/[id]/regenerate
  *
- * Regenerates profile/plan/week for a single user using the dossier pipeline.
+ * Queues regeneration of profile/plan/week for a single user via Inngest.
  * Body: { steps?: ("profile" | "plan" | "week")[] } — defaults to all steps.
  */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const startTime = Date.now();
-
   try {
     const { id: userId } = await params;
     if (!userId) {
@@ -27,14 +25,14 @@ export async function POST(
       // Empty body is fine
     }
 
-    const { services } = await getAdminContext();
-    const results = await services.regeneration.regenerateUser(userId, body.steps);
-    const executionTimeMs = Date.now() - startTime;
+    await inngest.send({
+      name: 'user/regeneration.requested',
+      data: { userId, steps: body.steps },
+    });
 
     return NextResponse.json({
       success: true,
-      data: results,
-      executionTimeMs,
+      message: 'Regeneration queued',
     });
   } catch (error) {
     console.error('[REGENERATE] Error:', error);
