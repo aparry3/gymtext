@@ -8,7 +8,7 @@ export function MikeyHero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/coaches/mikey-swiercz/Hopkins-LB-OG.jpeg"
+          src="/coaches/coach-swiercz/Hopkins-LB-OG.jpeg"
           alt="Mikey Swiercz at Johns Hopkins"
           fill
           className="object-cover opacity-40"

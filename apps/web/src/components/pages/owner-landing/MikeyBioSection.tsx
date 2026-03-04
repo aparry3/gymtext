@@ -14,7 +14,7 @@ export function MikeyBioSection({ owner }: MikeyBioSectionProps) {
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#002D72]/10 rounded-full blur-3xl"></div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform duration-500 aspect-[4/5]">
               <Image
-                src="/coaches/mikey-swiercz/Hopkins-Cp.JPG"
+                src="/coaches/coach-swiercz/Hopkins-Cp.JPG"
                 alt={owner.displayName}
                 fill
                 className="object-cover"
