@@ -65,6 +65,12 @@ export { ToolRegistry } from './tools';
 export type { ToolDefinition, ToolExecutionContext } from './tools';
 
 // ============================================
+// Eval System
+// ============================================
+export { evaluateLog } from './evals';
+export type { EvalResult, EvalDimensionScore, EvalOutput } from './evals';
+
+// ============================================
 // Agent Runner
 // ============================================
 export { createSimpleAgentRunner } from './runner';

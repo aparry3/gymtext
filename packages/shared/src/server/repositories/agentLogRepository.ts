@@ -26,8 +26,6 @@ export class AgentLogRepository extends BaseRepository {
   async updateEval(
     logId: string,
     evalData: {
-      evalPrompt: string;
-      evalModel: string;
       evalResult: Json;
       evalScore: number;
     }
@@ -35,8 +33,6 @@ export class AgentLogRepository extends BaseRepository {
     await this.db
       .updateTable('agentLogs')
       .set({
-        evalPrompt: evalData.evalPrompt,
-        evalModel: evalData.evalModel,
         evalResult: JSON.stringify(evalData.evalResult),
         evalScore: String(evalData.evalScore),
       })

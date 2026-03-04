@@ -27,15 +27,11 @@ export interface EvalResult {
 }
 
 /**
- * Full eval output including metadata (used internally, not all stored in eval_result)
+ * Full eval output returned from evaluateLog
  */
 export interface EvalOutput {
   /** The structured dimension scores */
   result: EvalResult;
   /** Weighted overall score (0-10) */
   overallScore: number;
-  /** Which model performed the eval */
-  evalModel: string;
-  /** The prompt sent to the judge */
-  evalPrompt: string;
 }

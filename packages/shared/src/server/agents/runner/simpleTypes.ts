@@ -2,8 +2,8 @@ import type { Message } from '../types';
 import type { ToolRegistry } from '../tools/toolRegistry';
 import type { ToolServiceContainer } from '../tools/types';
 import type { NewAgentLog } from '@/server/models/agentLog';
-import type { DbAgentConfig } from '@/server/models/agentDefinition';
-import type { EvalServiceInstance } from '@/server/services/domain/agents/evalService';
+import type { JsonValue } from '@/server/models/_types';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 
 export interface SimpleAgentInvokeParams {
   input?: string;
@@ -14,16 +14,13 @@ export interface SimpleAgentInvokeParams {
 }
 
 export interface SimpleAgentRunnerDeps {
-  agentDefinitionService: {
-    getAgentDefinition: (agentId: string) => Promise<DbAgentConfig>;
-    getFormatterContents: (formatterIds: string[]) => Promise<string[]>;
-  };
+  agentDefinitionService: AgentDefinitionServiceInstance;
   toolRegistry: ToolRegistry;
   getServices: () => ToolServiceContainer;
   agentLogRepository?: {
     log: (entry: NewAgentLog) => Promise<string | null>;
+    updateEval: (logId: string, evalData: { evalResult: JsonValue; evalScore: number }) => Promise<void>;
   };
-  evalService?: EvalServiceInstance;
 }
 
 export interface SimpleAgentRunnerInstance {
