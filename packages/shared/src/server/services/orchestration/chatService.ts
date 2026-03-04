@@ -92,7 +92,11 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
         ]);
 
         // Build context strings
+        const today = now(timezone);
+        const todayContext = `Today is ${today.toFormat('EEEE, MMMM d, yyyy')} (${today.toFormat('h:mm a')} ${timezone})`;
+
         const dossierContext: string[] = [];
+        dossierContext.push(`<Today>${todayContext}</Today>`);
         if (profileDossier) {
           dossierContext.push(`<Profile>${profileDossier}</Profile>`);
         }

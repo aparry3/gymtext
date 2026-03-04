@@ -38,11 +38,11 @@ export const retryMessageFunction = inngest.createFunction(
   },
   { event: 'message/delivery-failed' },
   async ({ event, step }) => {
-    const { messageId, userId, error } = event.data;
+    const { messageId, clientId, error } = event.data;
 
     console.log('[Inngest Retry] Starting retry process:', {
       messageId,
-      userId,
+      clientId,
       error,
     });
 
@@ -56,12 +56,12 @@ export const retryMessageFunction = inngest.createFunction(
       // If this is a 21610 (user unsubscribed) error, cancel their subscription
       if (isUnsubscribedError(error)) {
         console.log('[Inngest Retry] User has unsubscribed (21610), canceling subscription:', {
-          userId,
+          clientId,
           messageId,
         });
         try {
-          await services.subscription.immediatelyCancelSubscription(userId);
-          console.log('[Inngest Retry] Subscription canceled for unsubscribed user:', userId);
+          await services.subscription.immediatelyCancelSubscription(clientId);
+          console.log('[Inngest Retry] Subscription canceled for unsubscribed user:', clientId);
         } catch (cancelError) {
           console.error('[Inngest Retry] Failed to cancel subscription for unsubscribed user:', cancelError);
         }
@@ -143,16 +143,16 @@ export const retryMessageFunction = inngest.createFunction(
     const retryResult = await step.run('retry-send-message', async () => {
       const messageRepo = new MessageRepository(postgresDb);
 
-      const user = await services.user.getUser(userId);
+      const user = await services.user.getUser(clientId);
       if (!user) {
-        throw new Error(`User ${userId} not found`);
+        throw new Error(`User ${clientId} not found`);
       }
 
       const message = messageCheck.message;
 
       console.log('[Inngest Retry] Retrying message send:', {
         messageId,
-        userId,
+        clientId,
         attempt: currentAttempt + 1,
       });
 
