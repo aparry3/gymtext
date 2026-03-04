@@ -91,7 +91,7 @@ export class EventLogRepository extends BaseRepository {
       .orderBy('createdAt', 'asc')
       .execute();
 
-    return results.map(this.mapToEventLog);
+    return (results as any[]).map(this.mapToEventLog);
   }
 
   /**
@@ -128,7 +128,7 @@ export class EventLogRepository extends BaseRepository {
     }
 
     const results = await query.execute();
-    return results.map(this.mapToEventLog);
+    return (results as any[]).map(this.mapToEventLog);
   }
 
   /**
@@ -143,7 +143,7 @@ export class EventLogRepository extends BaseRepository {
       .limit(limit)
       .execute();
 
-    return results.map(this.mapToEventLog);
+    return (results as any[]).map(this.mapToEventLog);
   }
 
   /**

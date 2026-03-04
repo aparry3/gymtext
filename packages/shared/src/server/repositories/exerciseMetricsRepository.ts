@@ -85,7 +85,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return this.mapToUserExerciseMetric(result);
+    return this.mapToUserExerciseMetric(result as any);
   }
 
   /**
@@ -98,7 +98,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .selectAll()
       .execute();
 
-    return results.map((r) => this.mapToUserExerciseMetric(r));
+    return results.map((r) => this.mapToUserExerciseMetric(r as any));
   }
 
   /**
@@ -115,7 +115,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .selectAll()
       .executeTakeFirst();
 
-    return result ? this.mapToUserExerciseMetric(result) : undefined;
+    return result ? this.mapToUserExerciseMetric(result as any) : undefined;
   }
 
   /**
@@ -133,7 +133,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .selectAll()
       .execute();
 
-    return results.map((r) => this.mapToUserExerciseMetric(r));
+    return results.map((r) => this.mapToUserExerciseMetric(r as any));
   }
 
   /**
@@ -153,7 +153,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       .selectAll()
       .execute();
 
-    return results.map((r) => this.mapToUserExerciseMetric(r));
+    return results.map((r) => this.mapToUserExerciseMetric(r as any));
   }
 
   /**
@@ -184,7 +184,7 @@ export class ExerciseMetricsRepository extends BaseRepository {
       ])
       .execute();
 
-    return results.map((r) => ({
+    return results.map((r: any) => ({
       ...this.mapToUserExerciseMetric(r),
       exerciseName: r.exerciseName,
     }));

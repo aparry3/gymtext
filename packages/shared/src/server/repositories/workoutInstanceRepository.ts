@@ -157,7 +157,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
     id: string,
     data: Partial<NewWorkoutInstance>
   ): Promise<WorkoutInstance | undefined> {
-    const updateData = {
+    const updateData: any = {
       ...data,
       updatedAt: new Date()
     };

@@ -114,7 +114,7 @@ export const retryMessageFunction = inngest.createFunction(
     }
 
     // Step 2: Wait with backoff (if not first retry)
-    const currentAttempt = messageCheck.attempts;
+    const currentAttempt = messageCheck.attempts as number;
     const retryIndex = currentAttempt - 1; // 0-based index for RETRY_DELAYS
 
     if (retryIndex > 0 && retryIndex < RETRY_DELAYS.length) {
@@ -148,7 +148,7 @@ export const retryMessageFunction = inngest.createFunction(
         throw new Error(`User ${userId} not found`);
       }
 
-      const message = messageCheck.message;
+      const message = messageCheck.message as any;
 
       console.log('[Inngest Retry] Retrying message send:', {
         messageId,

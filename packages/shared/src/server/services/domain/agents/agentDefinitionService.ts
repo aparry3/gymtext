@@ -129,7 +129,7 @@ export function createAgentDefinitionService(
       );
     }
 
-    const config = toDbAgentConfig(definition);
+    const config = toDbAgentConfig(definition as any);
     const entry: CacheEntry = {
       data: config,
       raw: definition,
@@ -189,7 +189,7 @@ export function createAgentDefinitionService(
         const definitions = await repos.agentDefinition.getByIds(idsToFetch);
 
         for (const definition of definitions) {
-          const config = toDbAgentConfig(definition);
+          const config = toDbAgentConfig(definition as any);
 
           // Update cache with full row
           cache.set(definition.agentId, {

@@ -113,7 +113,6 @@ export class UserRepository extends BaseRepository {
     const total = Number(totalResult?.count || 0);
 
     const usersRows = await query
-      // @ts-expect-error dynamic orderBy
       .orderBy(`users.${sortField}`, sortDir === 'asc' ? 'asc' : 'desc')
       .offset((page - 1) * pageSize)
       .limit(pageSize)
