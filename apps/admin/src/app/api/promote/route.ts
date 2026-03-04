@@ -135,13 +135,13 @@ export async function GET() {
 
     const ctKey = (ct: { contextType: string; variant: string }) =>
       `${ct.contextType}|${ct.variant}`;
-    const prodCtMap = new Map(prodContextTemplates.map((ct) => [ctKey(ct), ct]));
-    const sbCtMap = new Map(sbContextTemplates.map((ct) => [ctKey(ct), ct]));
+    const prodCtMap = new Map((prodContextTemplates as Array<{ contextType: string; variant: string }>).map((ct) => [ctKey(ct), ct]));
+    const sbCtMap = new Map((sbContextTemplates as Array<{ contextType: string; variant: string }>).map((ct) => [ctKey(ct), ct]));
 
     const extKey = (e: { agentId: string; extensionType: string; extensionKey: string }) =>
       `${e.agentId}|${e.extensionType}|${e.extensionKey}`;
-    const prodExtMap = new Map(prodAgentExts.map((e) => [extKey(e), e]));
-    const sbExtMap = new Map(sbAgentExts.map((e) => [extKey(e), e]));
+    const prodExtMap = new Map((prodAgentExts as Array<{ agentId: string; extensionType: string; extensionKey: string }>).map((e) => [extKey(e), e]));
+    const sbExtMap = new Map((sbAgentExts as Array<{ agentId: string; extensionType: string; extensionKey: string }>).map((e) => [extKey(e), e]));
 
     // Diff agent definitions
     const allAgentIds = new Set([
@@ -169,8 +169,8 @@ export async function GET() {
 
     // Diff context templates
     const allCtKeys = new Set([
-      ...sbContextTemplates.map(ctKey),
-      ...prodContextTemplates.map(ctKey),
+      ...(sbContextTemplates as Array<{ contextType: string; variant: string }>).map(ctKey),
+      ...(prodContextTemplates as Array<{ contextType: string; variant: string }>).map(ctKey),
     ]);
     const contextTemplateDiffs: DiffItem[] = [];
     for (const key of allCtKeys) {
@@ -193,8 +193,8 @@ export async function GET() {
 
     // Diff agent extensions
     const allExtKeys = new Set([
-      ...sbAgentExts.map(extKey),
-      ...prodAgentExts.map(extKey),
+      ...(sbAgentExts as Array<{ agentId: string; extensionType: string; extensionKey: string }>).map(extKey),
+      ...(prodAgentExts as Array<{ agentId: string; extensionType: string; extensionKey: string }>).map(extKey),
     ]);
     const agentExtensionDiffs: DiffItem[] = [];
     for (const key of allExtKeys) {
