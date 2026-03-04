@@ -19,18 +19,17 @@ import { createDatabase } from '@gymtext/shared/server';
 import { createRepositories, type RepositoryContainer } from '@gymtext/shared/server';
 import { createServices, type ServiceContainer } from '@gymtext/shared/server';
 import type { Kysely } from 'kysely';
-import type { DB } from '@gymtext/shared/server';
 import { getSecrets } from './secrets';
 
 // Singleton caches for production
-let _db: Kysely<DB> | null = null;
+let _db: Kysely<any> | null = null;
 let _repos: RepositoryContainer | null = null;
 let _services: ServiceContainer | null = null;
 
 /**
  * Get the database connection (production only, cached)
  */
-export function getDb(): Kysely<DB> {
+export function getDb(): Kysely<any> {
   if (!_db) {
     const secrets = getSecrets();
     _db = createDatabase(secrets.database.url);

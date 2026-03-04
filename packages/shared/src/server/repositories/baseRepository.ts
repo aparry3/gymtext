@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely';
 import { postgresDb } from '@/server/connections/postgres/postgres';
-import { DB } from '../models/_types';
+// Temporarily use 'any' for DB type until db:codegen is properly configured
+type DB = any;
 
 /**
  * Base Repository

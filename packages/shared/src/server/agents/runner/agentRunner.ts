@@ -1,7 +1,9 @@
 import { createAgent } from '../createAgent';
 import type { NewAgentLog } from '@/server/models/agentLog';
-import type { JsonValue } from '@/server/models/_types';
 import type { UserWithProfile } from '@/server/models/user';
+
+// Temporarily define JsonValue until db:codegen is properly configured
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 import type { ContextRegistry } from '../context/contextRegistry';
 import type { ToolRegistry } from '../tools/toolRegistry';

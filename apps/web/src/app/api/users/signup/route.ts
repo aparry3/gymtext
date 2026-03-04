@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getServices, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
+import type { User } from '@/server/models/user';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 import { isProductionEnvironment } from '@/shared/config/public';
@@ -108,7 +109,7 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
  */
 async function handleUnsubscribedUserSignup(
   services: ServiceContainer,
-  existingUser: { id: string; stripeCustomerId: string | null; name: string; phoneNumber: string },
+  existingUser: User,
   formData: Record<string, unknown>
 ) {
   // Update existing user with new form data
@@ -151,7 +152,7 @@ async function handleUnsubscribedUserSignup(
  */
 async function handleSubscribedUserReOnboard(
   services: ServiceContainer,
-  existingUser: { id: string },
+  existingUser: User,
   formData: Record<string, unknown>
 ) {
   // Update user with new form data
