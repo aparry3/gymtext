@@ -1,9 +1,8 @@
 import type { Message } from '../types';
 import type { ToolRegistry } from '../tools/toolRegistry';
 import type { ToolServiceContainer } from '../tools/types';
-import type { NewAgentLog } from '@/server/models/agentLog';
-import type { JsonValue } from '@/server/models/_types';
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
+import type { AgentLogServiceInstance } from '@/server/services/domain/agents/agentLogService';
 
 export interface SimpleAgentInvokeParams {
   input?: string;
@@ -17,10 +16,7 @@ export interface SimpleAgentRunnerDeps {
   agentDefinitionService: AgentDefinitionServiceInstance;
   toolRegistry: ToolRegistry;
   getServices: () => ToolServiceContainer;
-  agentLogRepository?: {
-    log: (entry: NewAgentLog) => Promise<string | null>;
-    updateEval: (logId: string, evalData: { evalResult: JsonValue; evalScore: number }) => Promise<void>;
-  };
+  agentLogService?: AgentLogServiceInstance;
 }
 
 export interface SimpleAgentRunnerInstance {

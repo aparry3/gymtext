@@ -28,7 +28,7 @@ import { evaluateLog } from '../evals';
  * 7. Return { response, messages }
  */
 export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgentRunnerInstance {
-  const { agentDefinitionService, toolRegistry, getServices, agentLogRepository } = deps;
+  const { agentDefinitionService, toolRegistry, getServices, agentLogService } = deps;
 
   return {
     async invoke(agentId: string, params: SimpleAgentInvokeParams) {
@@ -141,7 +141,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
       };
 
       // 6. Log (fire-and-forget) + async eval
-      if (agentLogRepository) {
+      if (agentLogService) {
         const durationMs = Date.now() - startTime;
         const logEntry: NewAgentLog = {
           agentId,
@@ -152,12 +152,12 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
           durationMs,
           metadata: logMetadata as JsonValue,
         };
-        agentLogRepository.log(logEntry).then((logId) => {
+        agentLogService.log(logEntry).then((logId) => {
           // Fire eval async after logging succeeds
-          if (logId && agentLogRepository) {
+          if (logId && agentLogService) {
             evaluateLog(logEntry, config).then((evalResult) => {
               if (evalResult) {
-                agentLogRepository.updateEval(logId, {
+                agentLogService.updateEval(logId, {
                   evalResult: evalResult.result as unknown as JsonValue,
                   evalScore: evalResult.overallScore,
                 });
