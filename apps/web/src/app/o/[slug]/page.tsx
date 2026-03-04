@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
     };
   }
 
-  if (slug === 'mikeyswiercz') {
+  if (slug === 'coachswiercz') {
     return {
       title: 'Train with Mikey Swiercz | GymText',
       description:
@@ -71,7 +71,7 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
     return <ClatcheyLandingPage owner={owner} />;
   }
 
-  if (slug === 'mikeyswiercz') {
+  if (slug === 'coachswiercz') {
     return <MikeyLandingPage owner={owner} />;
   }
 
