@@ -26,7 +26,7 @@ import { resolveTemplate } from '../templateUtils/templateEngine';
  * 7. Return { response, messages }
  */
 export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgentRunnerInstance {
-  const { agentDefinitionService, toolRegistry, getServices, agentLogRepository } = deps;
+  const { agentDefinitionService, toolRegistry, getServices, agentLogRepository, evalService } = deps;
 
   return {
     async invoke(agentId: string, params: SimpleAgentInvokeParams) {
@@ -138,7 +138,7 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         params: sanitizeParams(params.params),
       };
 
-      // 6. Log (fire-and-forget)
+      // 6. Log (fire-and-forget) + async eval
       if (agentLogRepository) {
         const durationMs = Date.now() - startTime;
         agentLogRepository.log({
@@ -149,6 +149,13 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
           response: response as unknown as JsonValue,
           durationMs,
           metadata: logMetadata as JsonValue,
+        }).then((logId) => {
+          // Fire eval async after logging succeeds
+          if (logId && evalService) {
+            evalService.evaluateLog(logId).catch((err) => {
+              console.error(`[SimpleAgentRunner] Eval failed for ${agentId} log ${logId}:`, err);
+            });
+          }
         }).catch((err) => {
           console.error(`[SimpleAgentRunner] Log failed for ${agentId}:`, err);
         });

@@ -3,6 +3,7 @@ import type { ToolRegistry } from '../tools/toolRegistry';
 import type { ToolServiceContainer } from '../tools/types';
 import type { NewAgentLog } from '@/server/models/agentLog';
 import type { DbAgentConfig } from '@/server/models/agentDefinition';
+import type { EvalServiceInstance } from '@/server/services/domain/agents/evalService';
 
 export interface SimpleAgentInvokeParams {
   input?: string;
@@ -22,6 +23,7 @@ export interface SimpleAgentRunnerDeps {
   agentLogRepository?: {
     log: (entry: NewAgentLog) => Promise<string | null>;
   };
+  evalService?: EvalServiceInstance;
 }
 
 export interface SimpleAgentRunnerInstance {

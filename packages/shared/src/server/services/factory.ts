@@ -43,6 +43,7 @@ import { createBlogService, type BlogServiceInstance } from './domain/blog/blogS
 import { createOrganizationService, type OrganizationServiceInstance } from './domain/organization/organizationService';
 import { createAgentDefinitionService, type AgentDefinitionServiceInstance } from './domain/agents/agentDefinitionService';
 import { createAgentLogService, type AgentLogServiceInstance } from './domain/agents/agentLogService';
+import { createEvalService, type EvalServiceInstance } from './domain/agents/evalService';
 import { createMarkdownService, type MarkdownServiceInstance } from './domain/markdown/markdownService';
 import { createProgramAgentService, type ProgramAgentServiceInstance } from './agents/programs';
 import { createProfileService, type ProfileServiceInstance } from './agents/profile';
@@ -100,6 +101,7 @@ export interface ServiceContainer {
   organization: OrganizationServiceInstance;
   agentDefinition: AgentDefinitionServiceInstance;
   agentLog: AgentLogServiceInstance;
+  eval: EvalServiceInstance;
   markdown: MarkdownServiceInstance;
   regeneration: RegenerationServiceInstance;
   agentRunner: SimpleAgentRunnerInstance;
@@ -222,12 +224,18 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     queueMessage: (...args: Parameters<ReturnType<typeof getMessagingOrchestrator>['queueMessage']>) => getMessagingOrchestrator().queueMessage(...args),
   });
 
+  const evalService = createEvalService({
+    agentLogRepository: repos.agentLog,
+    agentDefinitionService: agentDefinition as AgentDefinitionServiceInstance,
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const agentRunner = createSimpleAgentRunner({
     agentDefinitionService: agentDefinition as any,
     toolRegistry,
     getServices: buildToolServices,
     agentLogRepository: repos.agentLog,
+    evalService,
   });
 
   // Phase 4: Training and orchestration services
@@ -302,7 +310,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     training, programAgent, chat,
     programOwner, program, enrollment, programVersion,
     exerciseResolution, exerciseMetrics, blog, organization,
-    agentDefinition, agentLog, markdown, regeneration,
+    agentDefinition, agentLog, eval: evalService, markdown, regeneration,
     agentRunner, toolRegistry,
   };
 }
