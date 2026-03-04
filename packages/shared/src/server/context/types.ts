@@ -7,7 +7,9 @@
  */
 import type { Kysely } from 'kysely';
 import type Stripe from 'stripe';
-import type { DB } from '@/server/models/_types';
+// import type { DB } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type DB = any;
 import type { ITwilioClient } from '../connections/twilio/factory';
 
 /**

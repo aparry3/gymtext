@@ -8,7 +8,9 @@
  */
 import { Kysely, PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Pool } from 'pg';
-import type { DB } from '@/server/models/_types';
+// import type { DB } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type DB = any;
 
 // Cache pools by connection string to avoid creating new pools for same env
 const poolCache = new Map<string, Pool>();

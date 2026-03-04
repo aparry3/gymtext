@@ -1,6 +1,8 @@
 import { createAgent } from '../createAgent';
 import type { NewAgentLog } from '@/server/models/agentLog';
-import type { JsonValue } from '@/server/models/_types';
+// import type { JsonValue } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type JsonValue = any;
 import type { UserWithProfile } from '@/server/models/user';
 import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
 import type { ContextRegistry } from '../context/contextRegistry';

@@ -1,5 +1,7 @@
 import { BaseRepository } from '@/server/repositories/baseRepository';
-import type { MessageQueues } from '@/server/models/_types';
+// import type { MessageQueues } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type MessageQueues = any;
 import type { Insertable, Selectable, Updateable } from 'kysely';
 
 export type MessageQueue = Selectable<MessageQueues>;

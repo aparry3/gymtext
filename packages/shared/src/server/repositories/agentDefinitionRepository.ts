@@ -4,7 +4,9 @@ import type {
   NewAgentDefinition,
   AgentDefinitionUpdate,
 } from '@/server/models/agentDefinition';
-import type { Json } from '@/server/models/_types';
+// import type { Json } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type Json = any;
 
 /**
  * Ensure a JSON column value is a string so the pg driver doesn't

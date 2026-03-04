@@ -1,6 +1,8 @@
 import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
-import { DB } from '@/server/models/_types';
+// import { DB } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type DB = any;
 import { Microcycle, MicrocycleModel } from '@/server/models/microcycle';
 
 /**

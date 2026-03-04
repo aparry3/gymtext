@@ -1,4 +1,6 @@
-import { Microcycles } from '@/server/models/_types';
+// import { Microcycles } from '@/server/models/_types';
+// Temporary stub until DATABASE_URL is configured in Vercel for db:codegen
+type Microcycles = any;
 
 // Re-export schema types from shared
 export * from '@/shared/types/microcycle';
