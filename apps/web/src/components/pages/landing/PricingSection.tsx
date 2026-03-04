@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { trackCTAClicked } from '@/lib/analytics';
 
 const BENEFITS = [
   'Personalized daily workouts',
@@ -56,6 +57,7 @@ export function PricingSection() {
 
               <Link
                 href="/start"
+                onClick={() => trackCTAClicked('pricing', 'Get Started')}
                 className="mt-8 block w-full bg-[#1B81FF] hover:bg-[#1468CC] text-white py-4 rounded-xl font-bold text-center text-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-[#1B81FF]/20"
               >
                 Get Started

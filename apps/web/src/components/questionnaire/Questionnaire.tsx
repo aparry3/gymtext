@@ -6,10 +6,22 @@
  * Main orchestrator component for the full-page questionnaire flow.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import type { QuestionnaireQuestion } from '@/lib/questionnaire/types';
 import { useQuestionnaire, clearQuestionnaireState } from '@/lib/questionnaire/useQuestionnaire';
+import {
+  trackQuestionnaireStarted,
+  trackQuestionnaireStepViewed,
+  trackQuestionnaireStepCompleted,
+  trackQuestionnaireBackClicked,
+  trackQuestionnaireAbandoned,
+  trackQuestionnaireCompleted,
+  trackQuestionnaireError,
+  trackSignupSubmitted,
+  trackCheckoutRedirect,
+  identifyUser,
+} from '@/lib/analytics';
 import { QuestionnaireProgress } from './QuestionnaireProgress';
 import { QuestionCard } from './QuestionCard';
 import { SingleSelectQuestion } from './questions/SingleSelectQuestion';
@@ -44,12 +56,94 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
     canGoBack,
     isComplete,
     hasValidAnswer,
+    wasRestored,
   } = useQuestionnaire({ programId, questions });
+
+  // ─── Analytics: track start ─────────────────────────────────────────
+  const hasTrackedStart = useRef(false);
+  const questionnaireStartTime = useRef(Date.now());
+
+  useEffect(() => {
+    if (!hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      questionnaireStartTime.current = Date.now();
+      trackQuestionnaireStarted({
+        programId,
+        programName,
+        totalQuestions,
+        wasRestored,
+      });
+    }
+  }, [programId, programName, totalQuestions, wasRestored]);
+
+  // ─── Analytics: track step views & time ─────────────────────────────
+  const stepStartTime = useRef(Date.now());
+  const prevIndex = useRef(currentIndex);
+
+  useEffect(() => {
+    if (!currentQuestion) return;
+
+    // Track time on previous step (if this isn't the first render)
+    if (prevIndex.current !== currentIndex && prevIndex.current >= 0) {
+      const prevQuestion = questions[prevIndex.current];
+      if (prevQuestion) {
+        trackQuestionnaireStepCompleted({
+          stepIndex: prevIndex.current,
+          stepId: prevQuestion.id,
+          stepType: prevQuestion.type,
+          timeOnStepSeconds: Math.round((Date.now() - stepStartTime.current) / 1000),
+        });
+      }
+    }
+
+    stepStartTime.current = Date.now();
+    prevIndex.current = currentIndex;
+
+    trackQuestionnaireStepViewed({
+      stepIndex: currentIndex,
+      stepId: currentQuestion.id,
+      stepType: currentQuestion.type,
+      totalQuestions,
+    });
+  }, [currentIndex, currentQuestion, totalQuestions, questions]);
+
+  // ─── Analytics: track abandonment ───────────────────────────────────
+  const currentIndexRef = useRef(currentIndex);
+  const currentQuestionRef = useRef(currentQuestion);
+  currentIndexRef.current = currentIndex;
+  currentQuestionRef.current = currentQuestion;
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (currentQuestionRef.current) {
+        trackQuestionnaireAbandoned({
+          lastStepIndex: currentIndexRef.current,
+          lastStepId: currentQuestionRef.current.id,
+          totalQuestions,
+          completionPercentage: Math.round((currentIndexRef.current / totalQuestions) * 100),
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [totalQuestions]);
 
   const handleConsentChange = (sms: boolean, terms: boolean) => {
     setSmsConsent(sms);
     setTermsConsent(terms);
   };
+
+  // ─── Analytics-instrumented navigation ──────────────────────────────
+  const handleBack = useCallback(() => {
+    const fromIndex = currentIndex;
+    goBack();
+    // goBack is async via setState, so we estimate the destination
+    trackQuestionnaireBackClicked({
+      fromStepIndex: fromIndex,
+      toStepIndex: Math.max(0, fromIndex - 1),
+    });
+  }, [currentIndex, goBack]);
 
   const handleNext = () => {
     if (isComplete && hasValidAnswer) {
@@ -63,10 +157,24 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
     setIsSubmitting(true);
     setError(null);
 
+    // Track questionnaire completion
+    trackQuestionnaireCompleted({
+      programId,
+      totalQuestions,
+      totalTimeSeconds: Math.round((Date.now() - questionnaireStartTime.current) / 1000),
+    });
+
     try {
       // Transform answers to match signup API
       const phoneDigits = (answers.phone as string) || '';
       const phoneNumber = phoneDigits.startsWith('+1') ? phoneDigits : `+1${phoneDigits}`;
+
+      // Identify user by phone number for PostHog
+      identifyUser(phoneNumber, {
+        name: answers.name as string,
+        messaging_provider: messagingProvider,
+        ...(programId && { program_id: programId }),
+      });
 
       // Extract program-specific answers
       const programAnswers: Record<string, string | string[]> = {};
@@ -118,6 +226,12 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         ...(Object.keys(programAnswers).length > 0 && { programAnswers }),
       };
 
+      // Track signup submission
+      trackSignupSubmitted({
+        hasProgram: !!programId,
+        messagingProvider,
+      });
+
       const response = await fetch('/api/users/signup', {
         method: 'POST',
         headers: {
@@ -136,11 +250,21 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       // Clear localStorage on success
       clearQuestionnaireState();
 
+      // Track checkout redirect
+      if (checkoutUrl) {
+        trackCheckoutRedirect();
+      }
+
       // Redirect to Stripe checkout or /me
       window.location.href = checkoutUrl || redirectUrl;
     } catch (err) {
       console.error('Signup error:', err);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      trackQuestionnaireError({
+        stepId: currentQuestion?.id || 'unknown',
+        errorMessage,
+      });
+      setError(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -242,7 +366,7 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
           {/* Back button - left */}
           <button
             type="button"
-            onClick={goBack}
+            onClick={handleBack}
             disabled={!canGoBack}
             className={`
               rounded-full p-2 transition-opacity
