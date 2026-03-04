@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ClatcheyLandingPage } from '@/components/pages/owner-landing/ClatcheyLandingPage';
+import { MikeyLandingPage } from '@/components/pages/owner-landing/MikeyLandingPage';
 import './clatchey.css';
+import './mikey.css';
 
 interface OwnerLandingPageProps {
   params: Promise<{ slug: string }>;
@@ -39,6 +41,20 @@ export async function generateMetadata({ params }: OwnerLandingPageProps): Promi
     };
   }
 
+  if (slug === 'mikeyswiercz') {
+    return {
+      title: 'Train with Mikey Swiercz | GymText',
+      description:
+        'Get training from former All-American and National Champion Mikey Swiercz. Johns Hopkins All-Decade team, U.S. Open Cup champion. Workouts delivered via SMS.',
+      openGraph: {
+        title: 'Train with Mikey Swiercz | GymText',
+        description:
+          'Get training from former All-American and National Champion Mikey Swiercz. Johns Hopkins All-Decade team, U.S. Open Cup champion.',
+        type: 'website',
+      },
+    };
+  }
+
   return {
     title: `Train with ${owner.displayName} | GymText`,
     description: `Get personalized training from ${owner.displayName} delivered via SMS.`,
@@ -52,9 +68,15 @@ export default async function OwnerLandingPage({ params }: OwnerLandingPageProps
     notFound();
   }
 
+  // For now, only render specific coach landing pages
   if (slug === 'coachclatchey') {
     return <ClatcheyLandingPage />;
   }
 
+  if (slug === 'mikeyswiercz') {
+    return <MikeyLandingPage />;
+  }
+
+  // Future: Support different owner templates based on ownerType
   notFound();
 }
