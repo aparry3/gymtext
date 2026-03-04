@@ -179,8 +179,9 @@ export function createFitnessProfileService(
       });
     },
 
-    async getProfileHistory(userId: string, limit: number = 10) {
-      return await repos.profile.getProfileHistory(userId, limit);
+    async getProfileHistory(userId: string, limit: number = 10): Promise<Array<{ profile: string; createdAt: Date }>> {
+      const profiles = await repos.profile.getProfileHistory(userId, limit);
+      return profiles.map(p => ({ profile: p.profile, createdAt: p.createdAt }));
     },
 
     async saveProfileWithStructured(
