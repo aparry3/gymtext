@@ -1,8 +1,8 @@
 import type { Message } from '../types';
 import type { ToolRegistry } from '../tools/toolRegistry';
 import type { ToolServiceContainer } from '../tools/types';
-import type { NewAgentLog } from '@/server/models/agentLog';
-import type { DbAgentConfig } from '@/server/models/agentDefinition';
+import type { AgentDefinitionServiceInstance } from '@/server/services/domain/agents/agentDefinitionService';
+import type { AgentLogServiceInstance } from '@/server/services/domain/agents/agentLogService';
 
 export interface SimpleAgentInvokeParams {
   input?: string;
@@ -13,15 +13,10 @@ export interface SimpleAgentInvokeParams {
 }
 
 export interface SimpleAgentRunnerDeps {
-  agentDefinitionService: {
-    getAgentDefinition: (agentId: string) => Promise<DbAgentConfig>;
-    getFormatterContents: (formatterIds: string[]) => Promise<string[]>;
-  };
+  agentDefinitionService: AgentDefinitionServiceInstance;
   toolRegistry: ToolRegistry;
   getServices: () => ToolServiceContainer;
-  agentLogRepository?: {
-    log: (entry: NewAgentLog) => Promise<string | null>;
-  };
+  agentLogService?: AgentLogServiceInstance;
 }
 
 export interface SimpleAgentRunnerInstance {

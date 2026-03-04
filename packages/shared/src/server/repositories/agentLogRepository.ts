@@ -1,5 +1,6 @@
 import { BaseRepository } from './baseRepository';
 import type { NewAgentLog, AgentLog } from '@/server/models/agentLog';
+import type { Json } from '@/server/models/_types';
 
 /**
  * AgentLogRepository - Data access layer for agent invocation logs
@@ -8,6 +9,37 @@ import type { NewAgentLog, AgentLog } from '@/server/models/agentLog';
  * for review, debugging, and evaluation.
  */
 export class AgentLogRepository extends BaseRepository {
+  /**
+   * Get a single agent log by ID
+   */
+  async getById(id: string): Promise<AgentLog | undefined> {
+    return this.db
+      .selectFrom('agentLogs')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
+  /**
+   * Update eval results on an agent log
+   */
+  async updateEval(
+    logId: string,
+    evalData: {
+      evalResult: Json;
+      evalScore: number;
+    }
+  ): Promise<void> {
+    await this.db
+      .updateTable('agentLogs')
+      .set({
+        evalResult: JSON.stringify(evalData.evalResult),
+        evalScore: String(evalData.evalScore),
+      })
+      .where('id', '=', logId)
+      .execute();
+  }
+
   /**
    * Log an agent invocation (fire-and-forget, catches errors silently)
    */

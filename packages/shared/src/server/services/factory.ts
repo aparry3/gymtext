@@ -227,7 +227,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     agentDefinitionService: agentDefinition as any,
     toolRegistry,
     getServices: buildToolServices,
-    agentLogRepository: repos.agentLog,
+    agentLogService: agentLog,
   });
 
   // Phase 4: Training and orchestration services

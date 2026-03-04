@@ -1,5 +1,6 @@
 import type { UserWithProfile } from '@/server/models/user';
 import type { JsonValue } from '@/server/models/_types';
+import type { NewAgentLog } from '@/server/models/agentLog';
 import type { AgentExample } from '../types';
 import type { ToolExecutionContext } from '../tools/types';
 import type {
@@ -11,6 +12,7 @@ import { initializeModel } from '../models';
 import { executeToolLoop } from '../toolExecutor';
 import { buildMessages } from '../utils';
 import { resolveTemplate } from '../templateUtils/templateEngine';
+import { evaluateLog } from '../evals';
 
 /**
  * Simplified AgentRunner - no context registry, no sub-agents, no validation,
@@ -26,7 +28,7 @@ import { resolveTemplate } from '../templateUtils/templateEngine';
  * 7. Return { response, messages }
  */
 export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgentRunnerInstance {
-  const { agentDefinitionService, toolRegistry, getServices, agentLogRepository } = deps;
+  const { agentDefinitionService, toolRegistry, getServices, agentLogService } = deps;
 
   return {
     async invoke(agentId: string, params: SimpleAgentInvokeParams) {
@@ -138,10 +140,10 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         params: sanitizeParams(params.params),
       };
 
-      // 6. Log (fire-and-forget)
-      if (agentLogRepository) {
+      // 6. Log (fire-and-forget) + async eval
+      if (agentLogService) {
         const durationMs = Date.now() - startTime;
-        agentLogRepository.log({
+        const logEntry: NewAgentLog = {
           agentId,
           model: config.model,
           messages: messages as unknown as JsonValue,
@@ -149,6 +151,21 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
           response: response as unknown as JsonValue,
           durationMs,
           metadata: logMetadata as JsonValue,
+        };
+        agentLogService.log(logEntry).then((logId) => {
+          // Fire eval async after logging succeeds
+          if (logId && agentLogService) {
+            evaluateLog(logEntry, config).then((evalResult) => {
+              if (evalResult) {
+                agentLogService.updateEval(logId, {
+                  evalResult: evalResult.result as unknown as JsonValue,
+                  evalScore: evalResult.overallScore,
+                });
+              }
+            }).catch((err) => {
+              console.error(`[SimpleAgentRunner] Eval failed for ${agentId} log ${logId}:`, err);
+            });
+          }
         }).catch((err) => {
           console.error(`[SimpleAgentRunner] Log failed for ${agentId}:`, err);
         });
