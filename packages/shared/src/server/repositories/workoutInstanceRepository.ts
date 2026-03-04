@@ -16,7 +16,6 @@ export interface WorkoutInstanceRow {
   message: string | null;
   details: Record<string, unknown> | null;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface CreateWorkoutInstanceInput {
@@ -52,7 +51,7 @@ export class WorkoutInstanceRepository extends BaseRepository {
         details: details ? JSON.stringify(details) : null,
       })
       .onConflict((oc) => {
-        const updateSet: Record<string, unknown> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+        const updateSet: Record<string, unknown> = {};
         if (message !== undefined) updateSet.message = message ?? null;
         if (details !== undefined) updateSet.details = JSON.stringify(details);
         return oc.columns(['clientId', 'date']).doUpdateSet(updateSet);
@@ -67,7 +66,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       message: result.message,
       details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
   }
 
@@ -90,7 +88,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       message: result.message,
       details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
   }
 
@@ -114,7 +111,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       message: result.message,
       details: result.details as Record<string, unknown> | null,
       createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
   }
 
@@ -144,7 +140,6 @@ export class WorkoutInstanceRepository extends BaseRepository {
       message: r.message,
       details: r.details as Record<string, unknown> | null,
       createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
     }));
   }
 

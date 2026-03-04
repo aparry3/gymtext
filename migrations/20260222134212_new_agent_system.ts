@@ -116,8 +116,10 @@ export const up: Migration = async (db) => {
   // 3. Simplify profiles table
   // =============================================================================
   console.log('Simplifying profiles...');
+  await sql`DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles`.execute(db);
   await sql`ALTER TABLE profiles DROP COLUMN IF EXISTS structured`.execute(db);
   await sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS details JSONB`.execute(db);
+  await sql`UPDATE profiles SET details = NULL`.execute(db);
 
   // =============================================================================
   // 4. Simplify fitness_plans table (dossier-based)
@@ -140,6 +142,12 @@ export const up: Migration = async (db) => {
     await sql`UPDATE fitness_plans SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
   }
 
+  // Null out old-format details before dropping columns (trigger references updated_at)
+  await sql`UPDATE fitness_plans SET details = NULL`.execute(db);
+
+  // Drop trigger that references updated_at before dropping the column
+  await sql`DROP TRIGGER IF EXISTS update_fitness_plans_updated_at ON fitness_plans`.execute(db);
+
   // Drop unused columns
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS current_state`.execute(db);
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS personalization_snapshot`.execute(db);
@@ -150,7 +158,6 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS updated_at`.execute(db);
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS published_at`.execute(db);
   await sql`ALTER TABLE fitness_plans DROP COLUMN IF EXISTS program_id`.execute(db);
-
   await sql`CREATE INDEX IF NOT EXISTS idx_fitness_plans_user_latest ON fitness_plans(client_id, created_at DESC)`.execute(db);
 
   // =============================================================================
@@ -176,6 +183,12 @@ export const up: Migration = async (db) => {
     await sql`UPDATE microcycles SET content = description WHERE content IS NULL AND description IS NOT NULL`.execute(db);
   }
 
+  // Null out old-format details before dropping columns (trigger references updated_at)
+  await sql`UPDATE microcycles SET details = NULL`.execute(db);
+
+  // Drop trigger that references updated_at before dropping the column
+  await sql`DROP TRIGGER IF EXISTS update_microcycles_updated_at ON microcycles`.execute(db);
+
   // Drop unused columns
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS absolute_week`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS days`.execute(db);
@@ -184,7 +197,6 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS is_active`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS updated_at`.execute(db);
   await sql`ALTER TABLE microcycles DROP COLUMN IF EXISTS end_date`.execute(db);
-
   await sql`CREATE INDEX IF NOT EXISTS idx_microcycles_user_latest ON microcycles(client_id, created_at DESC)`.execute(db);
   await sql`CREATE INDEX IF NOT EXISTS idx_microcycles_user_date ON microcycles(client_id, start_date DESC)`.execute(db);
 
@@ -204,8 +216,12 @@ export const up: Migration = async (db) => {
 
   // Keep client_id (project convention — all user FKs are client_id)
 
-  // Merge structured data into details where details is null
-  await sql`UPDATE workout_instances SET details = structured WHERE details IS NULL AND structured IS NOT NULL`.execute(db);
+  // Drop trigger before updates to avoid issues with dropped columns
+  await sql`DROP TRIGGER IF EXISTS update_workout_instances_updated_at ON workout_instances`.execute(db);
+
+  // Make details nullable (old schema had NOT NULL) and null out old-format data
+  await sql`ALTER TABLE workout_instances ALTER COLUMN details DROP NOT NULL`.execute(db);
+  await sql`UPDATE workout_instances SET details = NULL`.execute(db);
 
   // Drop unused columns
   await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS microcycle_id`.execute(db);
@@ -217,21 +233,21 @@ export const up: Migration = async (db) => {
   await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS completed_at`.execute(db);
   await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS tags`.execute(db);
 
-  // Make details nullable (old schema had NOT NULL)
-  await sql`ALTER TABLE workout_instances ALTER COLUMN details DROP NOT NULL`.execute(db);
+  // Drop updated_at (workouts use upserts, created_at is sufficient)
+  await sql`ALTER TABLE workout_instances DROP COLUMN IF EXISTS updated_at`.execute(db);
 
   // Deduplicate: keep the most recent workout per (client_id, date), delete older duplicates
   await sql`
     DELETE FROM workout_instances w
     USING (
-      SELECT client_id, date, MAX(updated_at) as max_updated
+      SELECT client_id, date, MAX(created_at) as max_created
       FROM workout_instances
       GROUP BY client_id, date
       HAVING COUNT(*) > 1
     ) dupes
     WHERE w.client_id = dupes.client_id
       AND w.date = dupes.date
-      AND w.updated_at < dupes.max_updated
+      AND w.created_at < dupes.max_created
   `.execute(db);
 
   // Add unique constraint on (client_id, date)
@@ -304,6 +320,7 @@ export const down: Migration = async (db) => {
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS description TEXT`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS goal TEXT`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS session_type VARCHAR(50)`.execute(db);
+  await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`.execute(db);
   await sql`ALTER TABLE workout_instances ADD COLUMN IF NOT EXISTS microcycle_id UUID REFERENCES microcycles(id) ON DELETE SET NULL`.execute(db);
 
   console.log('Rollback complete!');

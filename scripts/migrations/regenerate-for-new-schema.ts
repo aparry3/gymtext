@@ -1,11 +1,10 @@
 /**
  * Data Regeneration Script for New Agent System
  *
- * Reads old-format data from _deprecated_* archive tables, converts dossiers
- * to new format via migration agents, extracts structured details via detail agents,
- * and writes the results to the new-schema live tables.
+ * Reads existing text data from live tables (profile, content, message fields),
+ * runs it through detail-extraction agents, and writes structured `details` back.
  *
- * Workouts are skipped — they generate on-demand in the new system.
+ * Entities with non-null details are skipped (idempotent).
  *
  * Usage:
  *   pnpm migrate:regenerate                         # All active users
@@ -35,7 +34,7 @@ interface MigrationOptions {
 const program = new Command();
 program
   .name('regenerate-for-new-schema')
-  .description('Convert old-format dossiers to new format for active users')
+  .description('Regenerate structured details from text fields for active users')
   .option('-p, --phone <phone>', 'Target a single user by phone number')
   .option('--dry-run', 'Read and convert but do not write to database')
   .option('--list', 'List users that would be processed, then exit')
@@ -77,42 +76,35 @@ interface UserRow {
   timezone: string;
 }
 
-interface DeprecatedProfile {
+interface ProfileRow {
   id: string;
-  client_id: string;
-  profile: string;
-  structured: unknown;
-  created_at: Date;
+  clientId: string;
+  profile: string | null;
+  details: unknown;
 }
 
-interface DeprecatedPlan {
+interface PlanRow {
   id: string;
-  client_id: string;
-  description: string | null;
-  start_date: Date;
-  structured: unknown;
-  created_at: Date;
+  clientId: string;
+  content: string | null;
+  startDate: Date;
+  details: unknown;
 }
 
-interface DeprecatedMicrocycle {
+interface MicrocycleRow {
   id: string;
-  client_id: string;
-  description: string | null;
-  start_date: Date;
-  structured: unknown;
-  created_at: Date;
+  clientId: string;
+  content: string | null;
+  startDate: Date;
+  details: unknown;
 }
 
-/**
- * Check if archive tables exist
- */
-async function archiveTablesExist(): Promise<boolean> {
-  const result = await sql<{ exists: boolean }>`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables WHERE table_name = '_deprecated_profiles'
-    ) as exists
-  `.execute(db);
-  return result.rows[0]?.exists ?? false;
+interface WorkoutRow {
+  id: string;
+  clientId: string;
+  date: string;
+  message: string | null;
+  details: unknown;
 }
 
 /**
@@ -140,11 +132,11 @@ async function getActiveUsers(): Promise<UserRow[]> {
 }
 
 /**
- * Get latest deprecated profile for a user
+ * Get latest profile for a user (null details = needs regeneration)
  */
-async function getDeprecatedProfile(userId: string): Promise<DeprecatedProfile | null> {
-  const result = await sql<DeprecatedProfile>`
-    SELECT * FROM _deprecated_profiles
+async function getProfile(userId: string): Promise<ProfileRow | null> {
+  const result = await sql<ProfileRow>`
+    SELECT id, client_id, profile, details FROM profiles
     WHERE client_id = ${userId}
     ORDER BY created_at DESC
     LIMIT 1
@@ -153,11 +145,11 @@ async function getDeprecatedProfile(userId: string): Promise<DeprecatedProfile |
 }
 
 /**
- * Get latest deprecated plan for a user
+ * Get latest plan for a user
  */
-async function getDeprecatedPlan(userId: string): Promise<DeprecatedPlan | null> {
-  const result = await sql<DeprecatedPlan>`
-    SELECT * FROM _deprecated_fitness_plans
+async function getPlan(userId: string): Promise<PlanRow | null> {
+  const result = await sql<PlanRow>`
+    SELECT id, client_id, content, start_date, details FROM fitness_plans
     WHERE client_id = ${userId}
     ORDER BY created_at DESC
     LIMIT 1
@@ -166,11 +158,11 @@ async function getDeprecatedPlan(userId: string): Promise<DeprecatedPlan | null>
 }
 
 /**
- * Get latest deprecated microcycle for a user
+ * Get latest microcycle for a user
  */
-async function getDeprecatedMicrocycle(userId: string): Promise<DeprecatedMicrocycle | null> {
-  const result = await sql<DeprecatedMicrocycle>`
-    SELECT * FROM _deprecated_microcycles
+async function getMicrocycle(userId: string): Promise<MicrocycleRow | null> {
+  const result = await sql<MicrocycleRow>`
+    SELECT id, client_id, content, start_date, details FROM microcycles
     WHERE client_id = ${userId}
     ORDER BY created_at DESC
     LIMIT 1
@@ -179,13 +171,15 @@ async function getDeprecatedMicrocycle(userId: string): Promise<DeprecatedMicroc
 }
 
 /**
- * Check if user already has new-format data (idempotency check)
+ * Get all workouts with null details for a user
  */
-async function userHasNewData(userId: string): Promise<boolean> {
-  const result = await sql<{ count: string }>`
-    SELECT COUNT(*) as count FROM profiles WHERE client_id = ${userId}
+async function getWorkoutsNeedingDetails(userId: string): Promise<WorkoutRow[]> {
+  const result = await sql<WorkoutRow>`
+    SELECT id, client_id, date, message, details FROM workout_instances
+    WHERE client_id = ${userId} AND details IS NULL AND message IS NOT NULL
+    ORDER BY date DESC
   `.execute(db);
-  return parseInt(result.rows[0]?.count ?? '0', 10) > 0;
+  return result.rows;
 }
 
 // ============================================================================
@@ -199,6 +193,7 @@ interface ProcessingResult {
   profile?: boolean;
   plan?: boolean;
   week?: boolean;
+  workouts?: number;
   error?: string;
   reason?: string;
 }
@@ -210,139 +205,129 @@ async function processUser(
 ): Promise<ProcessingResult> {
   const shortId = user.id.substring(0, 8);
   const label = `[${index}/${total}] ${shortId} (${user.name})`;
+  const userParams = { user: { id: user.id, name: user.name, timezone: user.timezone } };
 
   try {
-    // Idempotency check
-    if (await userHasNewData(user.id)) {
-      console.log(`  ${label}: [ALREADY MIGRATED] -> Skipped`);
-      return { status: 'skipped', userId: user.id, userName: user.name, reason: 'Already has new-format data' };
+    const profile = await getProfile(user.id);
+    const plan = await getPlan(user.id);
+    const microcycle = await getMicrocycle(user.id);
+    const workouts = await getWorkoutsNeedingDetails(user.id);
+
+    const needsProfile = profile?.profile && !profile.details;
+    const needsPlan = plan?.content && !plan.details;
+    const needsWeek = microcycle?.content && !microcycle.details;
+    const needsWorkouts = workouts.length > 0;
+
+    if (!needsProfile && !needsPlan && !needsWeek && !needsWorkouts) {
+      console.log(`  ${label}: [UP TO DATE] -> Skipped`);
+      return { status: 'skipped', userId: user.id, userName: user.name, reason: 'All details already populated' };
     }
 
-    const oldProfile = await getDeprecatedProfile(user.id);
-    const oldPlan = await getDeprecatedPlan(user.id);
-    const oldMicrocycle = await getDeprecatedMicrocycle(user.id);
-
-    if (!oldProfile && !oldPlan && !oldMicrocycle) {
-      console.log(`  ${label}: [NO OLD DATA] -> Skipped`);
-      return { status: 'skipped', userId: user.id, userName: user.name, reason: 'No deprecated data found' };
-    }
-
-    console.log(`  ${label}: [PROCESSING] profile=${!!oldProfile} plan=${!!oldPlan} week=${!!oldMicrocycle}`);
+    console.log(`  ${label}: [PROCESSING] profile=${!!needsProfile} plan=${!!needsPlan} week=${!!needsWeek} workouts=${workouts.length}`);
 
     let profileDone = false;
     let planDone = false;
-    let planId: string | undefined;
     let weekDone = false;
+    let workoutsDone = 0;
 
     // --- Profile ---
-    if (oldProfile?.profile) {
-      console.log(`  ${label}: Converting profile...`);
-      const convertResult = await agentRunner.invoke(AGENTS.MIGRATE_PROFILE, {
-        input: oldProfile.profile,
-        params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
-      });
-      const newProfileText = convertResult.response;
-
-      // Extract structured details
+    if (needsProfile && profile) {
+      console.log(`  ${label}: Generating profile details...`);
       let profileDetails: Record<string, unknown> | undefined;
       try {
         const detailsResult = await agentRunner.invoke(AGENTS.PROFILE_DETAILS, {
-          input: newProfileText,
-          params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
+          input: profile.profile!,
+          params: userParams,
         });
         profileDetails = JSON.parse(detailsResult.response);
       } catch (err) {
         console.warn(`  ${label}: Warning - failed to extract profile details: ${err}`);
       }
 
-      if (!isDryRun) {
+      if (!isDryRun && profileDetails) {
         await sql`
-          INSERT INTO profiles (id, client_id, profile, details, created_at)
-          VALUES (gen_random_uuid(), ${user.id}, ${newProfileText}, ${profileDetails ? JSON.stringify(profileDetails) : null}::jsonb, NOW())
+          UPDATE profiles SET details = ${JSON.stringify(profileDetails)}::jsonb
+          WHERE id = ${profile.id}::uuid
         `.execute(db);
       }
       profileDone = true;
-      console.log(`  ${label}: Profile ${isDryRun ? 'would be' : ''} saved`);
+      console.log(`  ${label}: Profile details ${isDryRun ? 'would be' : ''} saved`);
     }
 
     // --- Plan ---
-    if (oldPlan?.description) {
-      console.log(`  ${label}: Converting plan...`);
-      const convertResult = await agentRunner.invoke(AGENTS.MIGRATE_PLAN, {
-        input: oldPlan.description,
-        params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
-      });
-      const newPlanText = convertResult.response;
-
-      // Extract structured details
+    if (needsPlan && plan) {
+      console.log(`  ${label}: Generating plan details...`);
       let planDetails: Record<string, unknown> | undefined;
       try {
         const detailsResult = await agentRunner.invoke(AGENTS.PLAN_DETAILS, {
-          input: newPlanText,
-          params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
+          input: plan.content!,
+          params: userParams,
         });
         planDetails = JSON.parse(detailsResult.response);
       } catch (err) {
         console.warn(`  ${label}: Warning - failed to extract plan details: ${err}`);
       }
 
-      if (!isDryRun) {
-        const planResult = await sql<{ id: string }>`
-          INSERT INTO fitness_plans (id, client_id, legacy_client_id, content, description, start_date, details, created_at)
-          VALUES (gen_random_uuid(), ${user.id}, ${user.id}, ${newPlanText}, ${newPlanText}, ${oldPlan.start_date.toISOString()}::date, ${planDetails ? JSON.stringify(planDetails) : null}::jsonb, NOW())
-          RETURNING id
+      if (!isDryRun && planDetails) {
+        await sql`
+          UPDATE fitness_plans SET details = ${JSON.stringify(planDetails)}::jsonb
+          WHERE id = ${plan.id}::uuid
         `.execute(db);
-        planId = planResult.rows[0]?.id;
       }
       planDone = true;
-      console.log(`  ${label}: Plan ${isDryRun ? 'would be' : ''} saved`);
+      console.log(`  ${label}: Plan details ${isDryRun ? 'would be' : ''} saved`);
     }
 
-    // --- Microcycle ---
-    if (oldMicrocycle?.description) {
-      console.log(`  ${label}: Converting week...`);
-      const convertResult = await agentRunner.invoke(AGENTS.MIGRATE_WEEK, {
-        input: oldMicrocycle.description,
-        params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
-      });
-      const newWeekText = convertResult.response;
-
-      // Extract structured details
+    // --- Microcycle (Week) ---
+    if (needsWeek && microcycle) {
+      console.log(`  ${label}: Generating week details...`);
       let weekDetails: Record<string, unknown> | undefined;
       try {
         const detailsResult = await agentRunner.invoke(AGENTS.WEEK_DETAILS, {
-          input: newWeekText,
-          params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
+          input: microcycle.content!,
+          params: userParams,
         });
         weekDetails = JSON.parse(detailsResult.response);
       } catch (err) {
         console.warn(`  ${label}: Warning - failed to extract week details: ${err}`);
       }
 
-      // Generate formatted message
-      let weekMessage: string | undefined;
-      try {
-        const formatResult = await agentRunner.invoke(AGENTS.WEEK_FORMAT, {
-          input: newWeekText,
-          params: { user: { id: user.id, name: user.name, timezone: user.timezone } },
-        });
-        weekMessage = formatResult.response;
-      } catch (err) {
-        console.warn(`  ${label}: Warning - failed to format week message: ${err}`);
-      }
-
-      if (!isDryRun) {
-        const refPlanId = planId ?? null;
+      if (!isDryRun && weekDetails) {
         await sql`
-          INSERT INTO microcycles (id, client_id, plan_id, content, start_date, details, message, created_at)
-          VALUES (gen_random_uuid(), ${user.id}, ${refPlanId}::uuid, ${newWeekText}, ${oldMicrocycle.start_date.toISOString()}::timestamp, ${weekDetails ? JSON.stringify(weekDetails) : null}::jsonb, ${weekMessage ?? null}, NOW())
+          UPDATE microcycles SET details = ${JSON.stringify(weekDetails)}::jsonb
+          WHERE id = ${microcycle.id}::uuid
         `.execute(db);
       }
       weekDone = true;
-      console.log(`  ${label}: Week ${isDryRun ? 'would be' : ''} saved`);
+      console.log(`  ${label}: Week details ${isDryRun ? 'would be' : ''} saved`);
     }
 
-    console.log(`  ${label}: Done (profile=${profileDone}, plan=${planDone}, week=${weekDone})`);
+    // --- Workouts ---
+    if (needsWorkouts) {
+      console.log(`  ${label}: Generating details for ${workouts.length} workout(s)...`);
+      for (const workout of workouts) {
+        try {
+          const detailsResult = await agentRunner.invoke(AGENTS.WORKOUT_DETAILS, {
+            input: workout.message!,
+            params: userParams,
+          });
+          const details = JSON.parse(detailsResult.response);
+
+          if (!isDryRun) {
+            await sql`
+              UPDATE workout_instances SET details = ${JSON.stringify(details)}::jsonb
+              WHERE id = ${workout.id}::uuid
+            `.execute(db);
+          }
+          workoutsDone++;
+        } catch (err) {
+          console.warn(`  ${label}: Warning - failed workout ${workout.id}: ${err}`);
+        }
+      }
+      console.log(`  ${label}: ${workoutsDone}/${workouts.length} workout details ${isDryRun ? 'would be' : ''} saved`);
+    }
+
+    console.log(`  ${label}: Done (profile=${profileDone}, plan=${planDone}, week=${weekDone}, workouts=${workoutsDone})`);
     return {
       status: 'success',
       userId: user.id,
@@ -350,6 +335,7 @@ async function processUser(
       profile: profileDone,
       plan: planDone,
       week: weekDone,
+      workouts: workoutsDone,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -389,7 +375,7 @@ async function processBatch(users: UserRow[], startIndex: number): Promise<Proce
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Data Migration: Convert Dossiers to New Schema Format');
+  console.log('Data Regeneration: Populate Details from Text Fields');
   console.log('='.repeat(60));
 
   if (targetPhone) {
@@ -404,13 +390,6 @@ async function main() {
     console.log('MODE: LIST ONLY\n');
   } else {
     console.log('MODE: LIVE (will write to database)\n');
-  }
-
-  // Verify archive tables exist
-  if (!(await archiveTablesExist())) {
-    console.error('ERROR: _deprecated_* archive tables not found.');
-    console.error('Run the archive migration first: pnpm migrate:latest');
-    process.exit(1);
   }
 
   // Get active users
@@ -453,7 +432,7 @@ async function main() {
   const errors = allResults.filter((r) => r.status === 'failed' && r.error);
 
   console.log('\n' + '='.repeat(60));
-  console.log('Migration Complete!');
+  console.log('Regeneration Complete!');
   console.log('='.repeat(60));
   console.log(`  Success: ${successCount}`);
   console.log(`  Skipped: ${skippedCount}`);
@@ -474,6 +453,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Migration failed:', err);
+  console.error('Regeneration failed:', err);
   process.exit(1);
 });
