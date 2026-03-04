@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { getServices, type ServiceContainer } from '@/lib/context';
 import { inngest } from '@/server/connections/inngest/client';
 import type { SignupData } from '@/server/repositories/onboardingRepository';
-import type { User } from '@/server/models/user';
+import type { User } from '@gymtext/shared/server';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 import { isProductionEnvironment } from '@/shared/config/public';
