@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { trackCTAClicked } from '@/lib/analytics';
 
 interface HeroSectionProps {
   onScrollToSection?: (id: string) => void;
@@ -64,6 +65,7 @@ export function HeroSection({ onScrollToSection }: HeroSectionProps) {
         <div className="flex flex-col sm:flex-row items-center md:items-start gap-3 md:gap-4 w-full sm:w-auto">
           <Link
             href="/start"
+            onClick={() => trackCTAClicked('hero', 'Start Training')}
             className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
           >
             Start Training <ArrowRight size={18} className="md:w-5 md:h-5" />

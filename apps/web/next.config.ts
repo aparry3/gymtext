@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   // Enable transpiling of shared package
   transpilePackages: ["@gymtext/shared"],
 
+  // PostHog reverse proxy — avoids ad blockers killing analytics
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+    ];
+  },
+
   // Exclude packages with WASM from bundling - load at runtime from node_modules
   serverExternalPackages: ["@dqbd/tiktoken"],
 

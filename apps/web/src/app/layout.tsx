@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
+import { PostHogProvider } from "@/providers/PostHogProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -45,7 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} ${oswald.variable}`}>{children}</body>
+      <body className={`${inter.className} ${oswald.variable}`}>
+        <PostHogProvider>{children}</PostHogProvider>
+      </body>
     </html>
   );
 }

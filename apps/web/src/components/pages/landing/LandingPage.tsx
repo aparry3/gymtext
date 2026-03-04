@@ -11,10 +11,16 @@ import { FeaturesSection } from '@/components/pages/landing/FeaturesSection';
 import { PricingSection } from '@/components/pages/landing/PricingSection';
 import { CTASection } from '@/components/pages/landing/CTASection';
 import { FooterSection } from '@/components/pages/landing/FooterSection';
+import { TrackedSection } from '@/components/pages/landing/TrackedSection';
+import { useScrollDepth } from '@/hooks/useScrollDepth';
+import { trackCTAClicked, trackNavClicked } from '@/lib/analytics';
 
 export function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Track scroll depth milestones (25%, 50%, 75%, 100%)
+  useScrollDepth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +32,7 @@ export function LandingPage() {
 
   const scrollToSection = (id: string) => {
     setIsMobileMenuOpen(false);
+    trackNavClicked(id);
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -89,6 +96,7 @@ export function LandingPage() {
             </Link>
             <Link
               href="/start"
+              onClick={() => trackCTAClicked('navbar', 'Start Training')}
               className="bg-[#1B81FF] hover:bg-[#1468CC] text-white px-5 py-2 rounded-full font-semibold transition-all"
             >
               Start Training
@@ -140,6 +148,7 @@ export function LandingPage() {
             </Link>
             <Link
               href="/start"
+              onClick={() => trackCTAClicked('mobile-menu', 'Start Training')}
               className="bg-[#1B81FF] text-white px-6 py-4 rounded-xl font-bold text-center w-full"
             >
               Start Training
@@ -148,12 +157,24 @@ export function LandingPage() {
         )}
       </nav>
 
-      <HeroSection onScrollToSection={scrollToSection} />
-      <SMSPreviewSection />
-      <HowItWorksSection />
-      <FeaturesSection />
-      <PricingSection />
-      <CTASection />
+      <TrackedSection name="hero">
+        <HeroSection onScrollToSection={scrollToSection} />
+      </TrackedSection>
+      <TrackedSection name="demo">
+        <SMSPreviewSection />
+      </TrackedSection>
+      <TrackedSection name="how-it-works">
+        <HowItWorksSection />
+      </TrackedSection>
+      <TrackedSection name="features">
+        <FeaturesSection />
+      </TrackedSection>
+      <TrackedSection name="pricing">
+        <PricingSection />
+      </TrackedSection>
+      <TrackedSection name="cta">
+        <CTASection />
+      </TrackedSection>
       <FooterSection />
     </main>
   );
