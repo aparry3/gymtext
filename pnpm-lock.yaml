@@ -6,7 +6,6 @@ settings:
 
 overrides:
   zod: 3.25.67
-  server-only: file:scripts/stubs/server-only
 
 importers:
 
