@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "db:codegen": "kysely-codegen --dialect postgres --camel-case --out-file ./src/server/models/_types/index.ts --exclude-pattern '^kysely_' --log-level info --type-only-imports"
+    "db:codegen": "./scripts/db-codegen.sh"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.21",
