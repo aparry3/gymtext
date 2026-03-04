@@ -50,7 +50,7 @@ export function MikeyCTA() {
 
             <div className="bg-gray-100 relative h-48 md:h-full md:min-h-[400px] order-1 md:order-2">
               <Image
-                src="/coaches/coach-swiercz/Hopkins-Shot.JPG"
+                src="/coaches/coach-swiercz/Hopkins-Shot.jpeg"
                 alt="Mikey Swiercz in action"
                 fill
                 className="object-cover"
