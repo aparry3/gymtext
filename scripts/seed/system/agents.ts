@@ -188,7 +188,7 @@ Never make up information. If something isn't in the dossier, don't include it.`
     tool_ids: [],
     user_prompt_template: loadPrompt('03-microcycle-agent-USER.md'),
     examples: null,
-    eval_rubric: null,
+    eval_rubric: loadPrompt('eval-rubric-week-generate.md'),
     output_schema: null,
     formatter_ids: ['dossier:day-fence'],
   },
