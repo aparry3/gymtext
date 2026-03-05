@@ -19,24 +19,23 @@ What to evaluate:
 - Respects constraints (schedule, equipment, injuries, lifestyle)
 - Philosophy explains WHY this program fits this user (not a generic template)
 
-2. Exercise Selection & Programming (Weight: 0.25)
-- Score 10: Exercise selection and programming perfectly fit the user's needs and preferences
-- Score 8-9: Good with minor issues (e.g., one exercise doesn't quite fit the user's context)
-- Score 5-7: Acceptable but with notable problems (e.g., missing a key movement pattern, ignores preferences)
-- Score 3-4: Poor selection (wrong exercises for the goal, ignores constraints or preferences)
-- Score 0-2: Fundamentally wrong (e.g., prescribes barbell squats despite active knee injury)
+2. Training Structure & Focus (Weight: 0.25)
+- Score 10: Plan clearly defines training focuses, movement patterns, and session goals without over-prescribing specific exercises
+- Score 8-9: Good structure with minor issues (e.g., one session's focus is vague)
+- Score 5-7: Acceptable but either too prescriptive (listing specific exercises/sets/reps) or too vague (no clear focus per session)
+- Score 3-4: Poor structure (sessions lack clear purpose, or plan prescribes full exercise lists that belong at the week level)
+- Score 0-2: No meaningful structure or completely exercise-prescriptive when it shouldn't be
 
 What to evaluate:
-- Exercises fit the user's context and preferences:
-  - Some users want the same exercises weekly (consistency, tracking progress)
-  - Some users want variety (boredom prevention, cross-training, well-rounded fitness)
-  - Advanced users may need specific exercises for weak points
-  - Beginners may need simple, foundational movements
-- Exercises match the stated focus (e.g., "Pull Day" has pulling movements)
-- Sets, reps, and rest periods match the goal (hypertrophy vs. strength vs. conditioning vs. endurance)
-- Respects injury notes and physical constraints (e.g., goblet squat instead of barbell squat if knee issues)
-- Equipment constraints are honored (no exercises requiring unavailable equipment)
-- Specificity level matches user's needs (prescriptive when appropriate, flexible when appropriate)
+- Plan describes WHAT to focus on, not HOW (specific exercises are decided at week generation):
+  - Movement patterns and motions ("hip hinge focus", "horizontal pressing", "posterior chain")
+  - Training areas and goals ("upper body hypertrophy", "speed work", "core stability")
+  - Session themes ("heavy compound day", "conditioning and mobility", "tempo runs")
+- Does NOT prescribe specific exercises, sets, reps, or rest periods (those belong in weekly plans)
+  - Exception: programs that genuinely require exercise specificity (e.g., powerlifting mentioning the big 3 lifts)
+- Each session/day has a clear purpose that connects to the overall goal
+- Respects injury notes and constraints at the structural level (e.g., "avoid heavy axial loading" rather than "do goblet squats instead of barbell squats")
+- Equipment constraints are acknowledged in the structure (e.g., "bodyweight-only sessions" if no gym access)
 
 3. Progression & Structure (Weight: 0.25)
 - Score 10: Perfect progression strategy that fits the user's goal and experience level
@@ -47,14 +46,14 @@ What to evaluate:
 
 What to evaluate:
 - Progression strategy matches the goal and experience level:
-  - Strength programs: periodized phases (accumulation → intensification), deload weeks
+  - Strength programs: phased progression with intensity/volume shifts, deload weeks when appropriate
   - Beginners: habit building with gradual increases, no complex periodization needed
-  - Shredding/cutting: consistent volume, progressive overload where appropriate
-  - Runners: mileage buildup, tempo work, race taper (NOT deload weeks)
+  - Shredding/cutting: consistent volume, progressive challenge where appropriate
+  - Runners: mileage buildup, tempo work, race taper
   - General fitness: sustainable progression that prevents plateaus
-- Progression method is clear and actionable (how to add weight/reps/volume/distance)
-- Structure is appropriate for the user (complex for advanced, simple for beginners)
-- Deload/recovery strategy is included ONLY when appropriate for the goal
+- Progression is described at the plan level (overall trajectory, phase goals) — not exercise-level detail
+- Structure complexity matches the user (simple for beginners, phased for advanced)
+- Deload/recovery strategy is included ONLY when appropriate for the goal and activity type
 - For non-periodized programs: steady-state or autoregulated approach is clear
 
 4. Clarity & Communication (Weight: 0.10)
@@ -66,7 +65,7 @@ What to evaluate:
 
 What to evaluate:
 - Program Philosophy is concise (3-5 sentences) and explains WHY/HOW
-- Weekly Pattern is clearly structured (Day — Session Name, Focus, Volume)
+- Weekly Pattern is clearly structured (Day — Session Name, Focus)
 - Progression Strategy is actionable and specific
 - Phase Cycling explains how phases connect
 - Professional tone, no fluff, scannable formatting
@@ -80,7 +79,7 @@ What to evaluate:
 
 What to evaluate:
 - Program reflects specific profile details (equipment, preferences, constraints)
-- Exercise rationale is provided for non-obvious choices (injury prevention, weak point work)
+- Training focus rationale is provided for non-obvious choices (injury accommodations, weak point emphasis)
 - Includes user-specific notes (e.g., "Friday is always lightest before Saturday long run" for runners)
 - Not a generic template — clearly tailored to this individual
 - Modification History section is included (empty for new programs)
