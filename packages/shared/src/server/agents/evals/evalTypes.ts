@@ -9,6 +9,8 @@
  * Score for a single evaluation dimension
  */
 export interface EvalDimensionScore {
+  /** Name of the dimension being scored */
+  name: string;
   /** Weight of this dimension (0.0-1.0, all weights should sum to 1.0) */
   weight: number;
   /** Score for this dimension (0-10) */
@@ -21,9 +23,7 @@ export interface EvalDimensionScore {
  * Structured eval result stored in agent_logs.eval_result
  */
 export interface EvalResult {
-  dimensions: {
-    [dimensionName: string]: EvalDimensionScore;
-  };
+  dimensions: EvalDimensionScore[];
 }
 
 /**

@@ -6,6 +6,7 @@
  *   pnpm signup --persona marcus-johnson    # Example
  *   pnpm signup --all                       # Create all test users
  *   pnpm signup --list                      # List available personas
+ *   pnpm signup --file path/to/signup.json  # Create user from raw signup JSON
  *
  * Flow:
  *   1. Load persona JSON
@@ -125,6 +126,67 @@ async function deleteExistingUser(pool: Pool, phone: string): Promise<string | n
 /**
  * Build the signup request body matching what the UI sends
  */
+function loadRawSignupFile(filePath: string): Record<string, unknown> {
+  const resolved = resolve(filePath);
+  try {
+    return JSON.parse(readFileSync(resolved, 'utf-8'));
+  } catch (err: any) {
+    throw new Error(`Failed to read signup file ${resolved}: ${err.message}`);
+  }
+}
+
+async function createUserFromFile(pool: Pool, filePath: string): Promise<string> {
+  const payload = loadRawSignupFile(filePath);
+  const name = (payload.name as string) || 'Unknown';
+  const phone = payload.phoneNumber as string;
+
+  if (!phone) {
+    throw new Error('Signup JSON must include a "phoneNumber" field');
+  }
+
+  console.log(`\n🔧 Creating user: ${name} (from ${filePath})`);
+
+  // Clean up existing user
+  const existingId = await deleteExistingUser(pool, phone);
+  if (existingId) {
+    console.log(`  ✅ Cleaned up existing user`);
+  }
+
+  // Hit the signup endpoint
+  console.log(`  📡 POST ${BASE_URL}/api/users/signup`);
+  const response = await fetch(`${BASE_URL}/api/users/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await response.json();
+
+  if (!response.ok || !body.success) {
+    throw new Error(
+      `Signup API failed (${response.status}): ${body.message || JSON.stringify(body)}`
+    );
+  }
+
+  console.log(`  ✅ Signup API responded successfully`);
+
+  if (body.checkoutUrl) console.log(`  📎 Checkout URL: ${body.checkoutUrl}`);
+  if (body.redirectUrl) console.log(`  📎 Redirect URL: ${body.redirectUrl}`);
+
+  // Look up created user
+  const userResult = await pool.query('SELECT id FROM users WHERE phone_number = $1', [phone]);
+
+  if (userResult.rows.length === 0) {
+    throw new Error(`User not found in DB after signup API call for ${phone}`);
+  }
+
+  const userId = userResult.rows[0].id;
+  console.log(`  ✅ User created: ${userId}`);
+  console.log(`  ⏳ Onboarding job triggered — messages will send once plan is generated`);
+
+  return userId;
+}
+
 function buildSignupPayload(persona: Persona): Record<string, unknown> {
   return {
     // User data
@@ -209,12 +271,14 @@ async function main() {
 
 Usage:
   pnpm signup --persona <persona-id>    Create a single test user via signup API
+  pnpm signup --file <path.json>        Create user from raw signup JSON file
   pnpm signup --all                     Create all test users
   pnpm signup --list                    List available personas
 
 Examples:
   pnpm signup --persona sarah-chen
   pnpm signup --persona marcus-johnson
+  pnpm signup --file scripts/aaron-signup.json
   pnpm signup --all
 
 Requires:
@@ -229,9 +293,11 @@ Requires:
     process.exit(0);
   }
 
-  // Parse --persona flag
+  // Parse flags
+  const fileIdx = args.indexOf('--file');
+  const filePath = fileIdx >= 0 ? args[fileIdx + 1] : null;
   const personaIdx = args.indexOf('--persona');
-  const personaId = personaIdx >= 0 ? args[personaIdx + 1] : (!args.includes('--all') ? args[0] : null);
+  const personaId = personaIdx >= 0 ? args[personaIdx + 1] : (!args.includes('--all') && !filePath ? args[0] : null);
 
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
@@ -273,6 +339,10 @@ Requires:
         console.log(`  ✅ ${r.name.padEnd(22)} ${r.id.padEnd(20)} ${r.userId}`);
       }
       console.log(`\n  Total: ${results.length} users created`);
+      console.log(`\n  Watch messages: pnpm local:sms`);
+    } else if (filePath) {
+      const userId = await createUserFromFile(pool, filePath);
+      console.log(`\n✅ Done! User ID: ${userId}`);
       console.log(`\n  Watch messages: pnpm local:sms`);
     } else {
       if (!personaId) {
