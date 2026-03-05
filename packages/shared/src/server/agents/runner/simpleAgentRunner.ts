@@ -13,6 +13,7 @@ import { executeToolLoop } from '../toolExecutor';
 import { buildMessages } from '../utils';
 import { resolveTemplate } from '../templateUtils/templateEngine';
 import { evaluateLog } from '../evals';
+import { now } from '@/shared/utils/date';
 
 /**
  * Simplified AgentRunner - no context registry, no sub-agents, no validation,
@@ -71,8 +72,11 @@ export function createSimpleAgentRunner(deps: SimpleAgentRunnerDeps): SimpleAgen
         userPrompt = resolveTemplate(template, templateData);
       }
 
-      // 4. Build messages
-      const context = params.context || [];
+      // 4. Build messages — auto-inject today's date as first context item
+      const timezone = user?.timezone || 'America/New_York';
+      const todayDt = now(timezone);
+      const todayContext = `<Today>Today is ${todayDt.toFormat('EEEE, MMMM d, yyyy')} (${todayDt.toFormat('h:mm a')} ${timezone})</Today>`;
+      const context = [todayContext, ...(params.context || [])];
       const examples = config.examples as AgentExample[] | undefined;
       const messages = buildMessages({
         systemPrompt,

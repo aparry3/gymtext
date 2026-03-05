@@ -91,12 +91,8 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
           markdownService.getWeekForDate(user.id, todayDate),
         ]);
 
-        // Build context strings
-        const today = now(timezone);
-        const todayContext = `Today is ${today.toFormat('EEEE, MMMM d, yyyy')} (${today.toFormat('h:mm a')} ${timezone})`;
-
+        // Build context strings (date is auto-injected by SimpleAgentRunner)
         const dossierContext: string[] = [];
-        dossierContext.push(`<Today>${todayContext}</Today>`);
         if (profileDossier) {
           dossierContext.push(`<Profile>${profileDossier}</Profile>`);
         }

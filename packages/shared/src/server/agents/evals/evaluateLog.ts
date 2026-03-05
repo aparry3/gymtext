@@ -23,14 +23,15 @@ import { z } from 'zod';
 // ─── Zod schema for structured output ───────────────────────────────────────
 
 const evalDimensionSchema = z.object({
+  name: z.string().describe('Name of the dimension being scored'),
   weight: z.number().min(0).max(1).describe('Weight of this dimension (0.0-1.0)'),
   score: z.number().min(0).max(10).describe('Score for this dimension (0-10)'),
   notes: z.string().describe('Feedback/reasoning for this score'),
 });
 
 const evalResultSchema = z.object({
-  dimensions: z.record(z.string(), evalDimensionSchema)
-    .describe('Dimension-level scores keyed by dimension name'),
+  dimensions: z.array(evalDimensionSchema)
+    .describe('Dimension-level scores'),
 });
 
 // ─── Default eval model ─────────────────────────────────────────────────────
@@ -126,7 +127,7 @@ Score this output according to the rubric.`;
 }
 
 function calculateOverallScore(result: EvalResult): number {
-  const dimensions = Object.values(result.dimensions);
+  const dimensions = result.dimensions;
   if (dimensions.length === 0) return 0;
 
   const totalWeight = dimensions.reduce((sum, d) => sum + d.weight, 0);
