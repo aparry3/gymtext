@@ -35,10 +35,12 @@ export function formatSignupDataForLLM(data: SignupData): string {
   const trainingSubsections: string[] = [];
 
   // Schedule & Availability
-  if (data.desiredDaysPerWeek) {
-    const freq = `- Desired training frequency: ${getDaysPerWeekDescription(data.desiredDaysPerWeek)}`;
+  if (data.desiredDaysPerWeek || data.availabilityElaboration?.trim()) {
+    const freq = data.desiredDaysPerWeek
+      ? `- Desired training frequency: ${getDaysPerWeekDescription(data.desiredDaysPerWeek)}`
+      : '';
     const elaboration = data.availabilityElaboration?.trim()
-      ? `\n- Additional details: ${data.availabilityElaboration.trim()}`
+      ? `${freq ? '\n' : ''}- Additional details: ${data.availabilityElaboration.trim()}`
       : '';
     trainingSubsections.push(`### Schedule & Availability\n${freq}${elaboration}`);
   }
@@ -117,6 +119,8 @@ function getEquipmentDescription(equipment: string): string {
     barbell: 'Barbell',
     resistance_bands: 'Resistance bands',
     pull_up_bar: 'Pull-up bar',
+    kettlebells: 'Kettlebells',
+    cable_machine: 'Cable machine',
     cardio_equipment: 'Cardio equipment',
     full_gym: 'Full gym access',
   };

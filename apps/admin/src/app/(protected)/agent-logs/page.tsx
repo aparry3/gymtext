@@ -1,18 +1,15 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { ArrowLeft, Copy, Check } from 'lucide-react';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Pagination } from '@/components/ui/pagination';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -167,11 +164,40 @@ function JsonTree({ data }: { data: unknown }) {
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [text]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded hover:bg-muted-foreground/10 text-muted-foreground transition-colors"
+      title="Copy to clipboard"
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <div className="prose prose-sm max-w-none dark:prose-invert p-4 bg-muted rounded-lg [&_pre]:bg-background [&_pre]:border [&_code]:text-xs [&_table]:text-sm">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    </div>
+  );
+}
+
 function SmartContent({ value }: { value: unknown }) {
   if (typeof value === 'string') {
     const parsed = tryParseJson(value);
     if (parsed) return <JsonTree data={parsed} />;
-    return <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">{value}</pre>;
+    return <MarkdownContent content={value} />;
   }
   if (typeof value === 'object' && value !== null) {
     return <JsonTree data={value} />;
@@ -319,41 +345,49 @@ function MessageContent({ content }: { content: string }) {
       </div>
     );
   }
-  return <pre className="text-sm whitespace-pre-wrap p-3 bg-muted/50">{content}</pre>;
+  return (
+    <div className="bg-muted/50">
+      <MarkdownContent content={content} />
+    </div>
+  );
 }
 
-function LogDetailDialog({
+function LogDetailView({
   log,
-  open,
-  onOpenChange,
+  onBack,
 }: {
-  log: AgentLogEntry | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  log: AgentLogEntry;
+  onBack: () => void;
 }) {
-  if (!log) return null;
-
   const messages = parseMessages(log.messages);
 
+  const getResponseText = (): string => {
+    if (typeof log.response === 'string') return log.response;
+    if (log.response != null) return JSON.stringify(log.response, null, 2);
+    return '';
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="space-y-6">
+        <div>
+          <Button variant="ghost" size="sm" onClick={onBack} className="mb-4 -ml-2">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to logs
+          </Button>
+          <div className="flex items-center gap-3">
             <Badge variant="outline">{log.agentId}</Badge>
-            {log.model && (
-              <Badge variant="secondary">{log.model}</Badge>
-            )}
+            {log.model && <Badge variant="secondary">{log.model}</Badge>}
             {log.durationMs !== null && (
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {formatDuration(log.durationMs)}
               </span>
             )}
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
             {formatTimestamp(log.createdAt)}
           </p>
-        </DialogHeader>
+        </div>
 
         <Tabs defaultValue="messages">
           <TabsList>
@@ -365,9 +399,14 @@ function LogDetailDialog({
           </TabsList>
 
           <TabsContent value="input">
-            <pre className="text-sm whitespace-pre-wrap bg-muted p-4 rounded-lg">
-              {log.input || '(no input)'}
-            </pre>
+            <div className="relative">
+              <div className="absolute top-2 right-2 z-10">
+                <CopyButton text={log.input || ''} />
+              </div>
+              {log.input ? <SmartContent value={log.input} /> : (
+                <p className="text-sm text-muted-foreground p-4">(no input)</p>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="messages">
@@ -388,6 +427,9 @@ function LogDetailDialog({
                           {msg.section}
                         </span>
                       )}
+                      <div className="ml-auto">
+                        <CopyButton text={msg.content} />
+                      </div>
                     </div>
                     <MessageContent content={msg.content} />
                   </div>
@@ -397,7 +439,12 @@ function LogDetailDialog({
           </TabsContent>
 
           <TabsContent value="response">
-            <SmartContent value={log.response} />
+            <div className="relative">
+              <div className="absolute top-2 right-2 z-10">
+                <CopyButton text={getResponseText()} />
+              </div>
+              <SmartContent value={log.response} />
+            </div>
           </TabsContent>
 
           {log.metadata != null ? (
@@ -431,8 +478,8 @@ function LogDetailDialog({
             </TabsContent>
           ) : null}
         </Tabs>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 
@@ -446,7 +493,6 @@ export default function AgentLogsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [agentIdFilter, setAgentIdFilter] = useState<string>('all');
   const [selectedLog, setSelectedLog] = useState<AgentLogEntry | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchLogs = useCallback(
     async (agentId: string, page: number) => {
@@ -498,7 +544,6 @@ export default function AgentLogsPage() {
 
   const handleRowClick = useCallback((log: AgentLogEntry) => {
     setSelectedLog(log);
-    setDialogOpen(true);
   }, []);
 
   const handleClearLogs = useCallback(async () => {
@@ -517,6 +562,10 @@ export default function AgentLogsPage() {
       console.error('Error clearing agent logs:', err);
     }
   }, [total, fetchLogs, agentIdFilter]);
+
+  if (selectedLog) {
+    return <LogDetailView log={selectedLog} onBack={() => setSelectedLog(null)} />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -700,12 +749,6 @@ export default function AgentLogsPage() {
           />
         )}
 
-        {/* Detail Dialog */}
-        <LogDetailDialog
-          log={selectedLog}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-        />
       </div>
     </div>
   );
