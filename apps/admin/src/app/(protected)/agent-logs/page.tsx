@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 import { ArrowLeft, Copy, Check } from 'lucide-react';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -187,8 +188,24 @@ function CopyButton({ text }: { text: string }) {
 
 function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none dark:prose-invert p-4 bg-muted rounded-lg [&_pre]:bg-background [&_pre]:border [&_code]:text-xs [&_table]:text-sm">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    <div className="
+      prose prose-sm max-w-none dark:prose-invert p-4 bg-muted rounded-lg
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h1:text-xl prose-h1:border-b prose-h1:pb-2 prose-h1:mb-4
+      prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
+      prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2
+      prose-p:leading-relaxed prose-p:my-2
+      prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5
+      prose-strong:font-semibold prose-strong:text-foreground
+      prose-code:text-xs prose-code:font-mono prose-code:bg-background prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:border prose-code:before:content-none prose-code:after:content-none
+      [&_pre]:bg-background [&_pre]:border [&_pre]:rounded-lg [&_pre]:my-3
+      [&_pre_code]:bg-transparent [&_pre_code]:border-0 [&_pre_code]:p-0 [&_pre_code]:text-xs
+      prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:rounded-r-lg prose-blockquote:py-1 prose-blockquote:px-4
+      prose-table:text-sm [&_th]:bg-muted-foreground/10 [&_th]:px-3 [&_th]:py-1.5 [&_td]:px-3 [&_td]:py-1.5
+      prose-hr:my-4
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+    ">
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{content}</ReactMarkdown>
     </div>
   );
 }

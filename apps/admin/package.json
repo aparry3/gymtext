@@ -27,6 +27,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
+    "highlight.js": "^11.11.1",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.331.0",
     "next": "16.0.7",
@@ -36,12 +37,14 @@
     "react-hook-form": "^7.50.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.6.0",
+    "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
