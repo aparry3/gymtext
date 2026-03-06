@@ -44,7 +44,7 @@ export function BroadcastMessageDialog({ open, onOpenChange, onSuccess }: Broadc
   useEffect(() => {
     if (!open) return;
     setIsLoadingUsers(true);
-    fetch('/api/users?pageSize=1000')
+    fetch('/api/users?pageSize=1000&hasSubscription=true')
       .then((res) => res.json())
       .then((data) => {
         if (data.success !== false) {

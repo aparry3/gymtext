@@ -20,7 +20,11 @@ export async function GET(request: Request) {
     if (searchParams.get('hasProfile') !== null) {
       filters.hasProfile = searchParams.get('hasProfile') === 'true';
     }
-    
+
+    if (searchParams.get('hasSubscription') !== null) {
+      filters.hasSubscription = searchParams.get('hasSubscription') === 'true';
+    }
+
     if (searchParams.get('gender')) {
       filters.gender = searchParams.get('gender')!;
     }

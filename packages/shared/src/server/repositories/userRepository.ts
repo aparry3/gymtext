@@ -13,6 +13,7 @@ export class UserRepository extends BaseRepository {
     q?: string;
     status?: string;
     hasProfile?: boolean;
+    hasSubscription?: boolean;
     hasPlan?: boolean;
     createdFrom?: string;
     createdTo?: string;
@@ -72,6 +73,18 @@ export class UserRepository extends BaseRepository {
       );
     }
 
+    // hasSubscription filter checks for active/cancel_pending subscriptions
+    if (params.hasSubscription === true) {
+      query = query.where((eb) =>
+        eb.exists(
+          eb.selectFrom('subscriptions')
+            .whereRef('subscriptions.clientId', '=', 'users.id')
+            .where('subscriptions.status', 'in', ['active', 'cancel_pending'])
+            .select('subscriptions.id')
+        )
+      );
+    }
+
     let countBuilder = this.db
       .selectFrom('users');
 
@@ -103,6 +116,18 @@ export class UserRepository extends BaseRepository {
               .whereRef('profiles.clientId', '=', 'users.id')
               .select('profiles.id')
           )
+        )
+      );
+    }
+
+    // hasSubscription filter checks for active/cancel_pending subscriptions
+    if (params.hasSubscription === true) {
+      countBuilder = countBuilder.where((eb) =>
+        eb.exists(
+          eb.selectFrom('subscriptions')
+            .whereRef('subscriptions.clientId', '=', 'users.id')
+            .where('subscriptions.status', 'in', ['active', 'cancel_pending'])
+            .select('subscriptions.id')
         )
       );
     }
