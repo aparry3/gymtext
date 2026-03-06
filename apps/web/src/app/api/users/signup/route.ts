@@ -76,6 +76,7 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
   console.log('[Signup] Creating user with basic info');
   const user = await services.user.createUser({
     name: formData.name as string,
+    email: formData.email as string,
     phoneNumber: formData.phoneNumber as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
     gender: formData.gender as string | undefined,
@@ -94,6 +95,7 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
   console.log('[Signup] Creating Stripe customer');
   const customer = await stripe.customers.create({
     name: user.name,
+    email: formData.email as string,
     phone: user.phoneNumber,
     metadata: {
       userId: user.id,
@@ -124,6 +126,7 @@ async function handleUnsubscribedUserSignup(
   console.log('[Signup] Updating existing user info');
   await services.user.updateUser(existingUser.id, {
     name: formData.name as string,
+    email: formData.email as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
     gender: formData.gender as string | undefined,
     timezone: formData.timezone as string,
@@ -141,6 +144,7 @@ async function handleUnsubscribedUserSignup(
     console.log('[Signup] Creating Stripe customer for existing user');
     const customer = await stripe.customers.create({
       name: formData.name as string,
+      email: formData.email as string,
       phone: existingUser.phoneNumber,
       metadata: {
         userId: existingUser.id,
@@ -172,6 +176,7 @@ async function handleSubscribedUserReOnboard(
   console.log('[Signup] Updating subscribed user info');
   await services.user.updateUser(existingUser.id, {
     name: formData.name as string,
+    email: formData.email as string,
     age: formData.age ? parseInt(formData.age as string, 10) : undefined,
     gender: formData.gender as string | undefined,
     timezone: formData.timezone as string,

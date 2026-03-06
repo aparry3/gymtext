@@ -4,7 +4,7 @@
  * Types for the full-page clickthrough signup questionnaire.
  */
 
-export type QuestionType = 'select' | 'multiselect' | 'text' | 'phone' | 'boolean';
+export type QuestionType = 'select' | 'multiselect' | 'text' | 'phone' | 'boolean' | 'time';
 
 export interface QuestionOption {
   /** Value stored in answers */
@@ -67,6 +67,7 @@ export interface QuestionnaireAnswers {
   trainingLocation: string;
   equipment: string[];
   name: string;
+  email: string;
   phoneNumber: string;
   // Program-specific answers
   programAnswers?: Record<string, string | string[]>;

@@ -22,6 +22,14 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     source: 'base',
   },
   {
+    id: 'email',
+    questionText: "What's your email?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your email address',
+    source: 'base',
+  },
+  {
     id: 'age',
     questionText: "What's your age?",
     type: 'text',
@@ -155,6 +163,14 @@ export const baseQuestions: QuestionnaireQuestion[] = [
     parentId: 'location',
   },
   {
+    id: 'sendTime',
+    questionText: 'When should we send your workouts?',
+    type: 'time',
+    required: true,
+    helpText: "We'll text you at this time each day",
+    source: 'base',
+  },
+  {
     id: 'phone',
     questionText: "What's your phone number?",
     type: 'phone',
@@ -180,6 +196,14 @@ export const programBaseQuestions: QuestionnaireQuestion[] = [
     source: 'base',
   },
   {
+    id: 'email',
+    questionText: "What's your email?",
+    type: 'text',
+    required: true,
+    placeholder: 'Enter your email address',
+    source: 'base',
+  },
+  {
     id: 'age',
     questionText: "What's your age?",
     type: 'text',
@@ -198,6 +222,14 @@ export const programBaseQuestions: QuestionnaireQuestion[] = [
       { value: 'other', label: 'Other' },
       { value: 'prefer_not_to_say', label: 'Prefer not to say' },
     ],
+    source: 'base',
+  },
+  {
+    id: 'sendTime',
+    questionText: 'When should we send your workouts?',
+    type: 'time',
+    required: true,
+    helpText: "We'll text you at this time each day",
     source: 'base',
   },
   {
