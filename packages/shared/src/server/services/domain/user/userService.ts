@@ -207,6 +207,7 @@ export function createUserService(repos: RepositoryContainer): UserServiceInstan
         const repoParams = {
           q: restFilters.search,
           hasProfile: restFilters.hasProfile,
+          hasSubscription: restFilters.hasSubscription,
           createdFrom: restFilters.createdAfter,
           createdTo: restFilters.createdBefore,
           page,

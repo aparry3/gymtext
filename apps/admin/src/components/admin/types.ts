@@ -59,6 +59,7 @@ export interface UserFilters {
   search?: string;
   hasEmail?: boolean;
   hasProfile?: boolean;
+  hasSubscription?: boolean;
   gender?: string;
   timezone?: string;
   isActive?: boolean;
