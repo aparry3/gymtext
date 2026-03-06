@@ -16,6 +16,7 @@ import { SingleSelectQuestion } from './questions/SingleSelectQuestion';
 import { MultiSelectQuestion } from './questions/MultiSelectQuestion';
 import { TextInputQuestion } from './questions/TextInputQuestion';
 import { BooleanQuestion } from './questions/BooleanQuestion';
+import { TimeSelectorQuestion } from './questions/TimeSelectorQuestion';
 
 interface QuestionnaireProps {
   programId?: string;
@@ -30,8 +31,6 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
   // Track consent separately from questionnaire answers
   const [smsConsent, setSmsConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
-  const [messagingProvider, setMessagingProvider] = useState<'sms' | 'whatsapp'>('sms');
-
   const {
     currentQuestion,
     currentIndex,
@@ -80,9 +79,10 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
       const formData = {
         // User info
         name: answers.name as string,
+        email: answers.email as string,
         phoneNumber,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        preferredSendHour: 8,
+        preferredSendHour: answers.sendTime ? parseInt(answers.sendTime as string, 10) : 6,
         gender: (answers.gender as string) || 'prefer_not_to_say',
         ...(answers.age && { age: parseInt(answers.age as string, 10) }),
 
@@ -111,7 +111,6 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
         // SMS consent (from phone question checkboxes)
         smsConsent,
         smsConsentedAt: smsConsent ? new Date().toISOString() : undefined,
-        preferredMessagingProvider: messagingProvider,
 
         // Program info
         ...(programId && { programId }),
@@ -183,8 +182,16 @@ export function Questionnaire({ programId, programName, ownerWordmarkUrl, questi
             isSubmit={isLastQuestion}
             isLoading={isSubmitting}
             onConsentChange={currentQuestion.type === 'phone' ? handleConsentChange : undefined}
-            messagingProvider={messagingProvider}
-            onMessagingProviderChange={setMessagingProvider}
+          />
+        );
+
+      case 'time':
+        return (
+          <TimeSelectorQuestion
+            question={currentQuestion}
+            value={currentValue as string | undefined}
+            onChange={(v) => setAnswer(v)}
+            onNext={handleNext}
           />
         );
 

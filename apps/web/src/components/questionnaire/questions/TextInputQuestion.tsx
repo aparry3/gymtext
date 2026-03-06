@@ -20,8 +20,6 @@ interface TextInputQuestionProps {
   isSubmit?: boolean;
   isLoading?: boolean;
   onConsentChange?: (smsConsent: boolean, termsConsent: boolean) => void;
-  messagingProvider?: 'sms' | 'whatsapp';
-  onMessagingProviderChange?: (provider: 'sms' | 'whatsapp') => void;
 }
 
 /**
@@ -56,11 +54,10 @@ export function TextInputQuestion({
   isSubmit = false,
   isLoading = false,
   onConsentChange,
-  messagingProvider = 'sms',
-  onMessagingProviderChange,
 }: TextInputQuestionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isPhone = question.type === 'phone';
+  const isEmail = question.id === 'email';
   const [displayValue, setDisplayValue] = useState(isPhone ? formatPhoneNumber(value) : value);
   const [smsConsented, setSmsConsented] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -129,12 +126,12 @@ export function TextInputQuestion({
       <div>
         <input
           ref={inputRef}
-          type={isPhone ? 'tel' : 'text'}
+          type={isPhone ? 'tel' : isEmail ? 'email' : 'text'}
           value={displayValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={question.placeholder}
-          autoComplete={isPhone ? 'tel' : 'name'}
+          autoComplete={isPhone ? 'tel' : isEmail ? 'email' : 'name'}
           className={`
             w-full rounded-2xl border-2 bg-[hsl(var(--questionnaire-surface))] px-6 py-4
             text-lg text-[hsl(var(--questionnaire-foreground))]
@@ -149,66 +146,23 @@ export function TextInputQuestion({
       {/* Consent checkboxes - always shown for phone questions */}
       {isPhone && (
         <div className="flex flex-col gap-4">
-          {/* Messaging Provider Toggle */}
-          <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-[hsl(var(--questionnaire-foreground))]">
-              How would you like to receive your workouts?
-            </label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => onMessagingProviderChange?.('sms')}
-                className={`
-                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
-                  ${messagingProvider === 'sms'
-                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
-                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
-                  }
-                `}
-              >
-                SMS
-              </button>
-              <button
-                type="button"
-                onClick={() => onMessagingProviderChange?.('whatsapp')}
-                className={`
-                  flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-all
-                  ${messagingProvider === 'whatsapp'
-                    ? 'bg-[hsl(var(--questionnaire-accent))] text-white'
-                    : 'bg-[hsl(var(--questionnaire-surface))] text-[hsl(var(--questionnaire-foreground))] border-2 border-[hsl(var(--questionnaire-border))]'
-                  }
-                `}
-              >
-                WhatsApp
-              </button>
-            </div>
-          </div>
-
-          {/* SMS/WhatsApp Consent with full Twilio disclosures */}
+          {/* SMS Consent with full Twilio disclosures */}
           <label className="flex items-start gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={smsConsented}
               onChange={(e) => setSmsConsented(e.target.checked)}
-              className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))] 
-                       checked:bg-[hsl(var(--questionnaire-accent))] 
+              className="mt-1 h-5 w-5 shrink-0 rounded border-2 border-[hsl(var(--questionnaire-border))]
+                       checked:bg-[hsl(var(--questionnaire-accent))]
                        checked:border-[hsl(var(--questionnaire-accent))]
                        focus:ring-2 focus:ring-[hsl(var(--questionnaire-accent))] focus:ring-offset-2
                        transition-colors cursor-pointer"
             />
             <span className="text-sm text-[hsl(var(--questionnaire-muted-foreground))] leading-relaxed select-none">
-              {messagingProvider === 'whatsapp' ? (
-                <>
-                  I want to receive my daily workout reminders and training delivery via WhatsApp at the phone number provided. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to cancel.
-                </>
-              ) : (
-                <>
-                  By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText
-                  at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message
-                  and data rates may apply. Reply HELP for help or STOP to cancel. Your mobile information will not be shared
-                  with third parties.
-                </>
-              )}
+              By checking this box, I agree to receive recurring automated fitness and workout text messages from GymText
+              at the mobile number provided. You will receive daily workout messages. Message frequency may vary. Message
+              and data rates may apply. Reply HELP for help or STOP to cancel. Your mobile information will not be shared
+              with third parties.
             </span>
           </label>
 
