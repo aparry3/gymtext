@@ -51,16 +51,7 @@ export function createPlanModificationService(
         if (!currentPlan) return { success: false, messages: [], error: 'No fitness plan found. Please create a plan first.' };
 
         // Build context
-        const profileDossier = await markdownService.getProfile(userId);
-        const context: string[] = [];
-        if (profileDossier) {
-          context.push(`<Profile>${profileDossier}</Profile>`);
-        }
-        if (currentPlan.content) {
-          context.push(`<Plan>${currentPlan.content}</Plan>`);
-        } else if (currentPlan.description) {
-          context.push(`<Plan>${currentPlan.description}</Plan>`);
-        }
+        const context = await markdownService.getContext(userId, ['profile', 'plan']);
 
         // Run plan modification + week modification in parallel
         const [planResult, weekResult] = await Promise.all([

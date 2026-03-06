@@ -42,7 +42,7 @@ export interface ChatServiceDeps {
  * Create a ChatService instance with injected dependencies
  *
  * ChatService handles incoming SMS messages and generates AI-powered responses.
- * Context (profile, plan, week dossiers) is fetched and passed as XML-tagged strings.
+ * Context (profile, plan, week dossiers) is fetched via markdownService.getContext().
  */
 export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
   const {
@@ -81,29 +81,13 @@ export function createChatService(deps: ChatServiceDeps): ChatServiceInstance {
           ? user
           : await userService.getUser(user.id) || user;
 
-        // Fetch dossier context in parallel
+        // Fetch dossier context
         const timezone = user.timezone || 'America/New_York';
         const todayDate = now(timezone).toJSDate();
 
-        const [profileDossier, planDossier, weekDossier] = await Promise.all([
-          markdownService.getProfile(user.id),
-          markdownService.getPlan(user.id),
-          markdownService.getWeekForDate(user.id, todayDate),
-        ]);
-
-        // Build context strings (date is auto-injected by SimpleAgentRunner)
-        const dossierContext: string[] = [];
-        if (profileDossier) {
-          dossierContext.push(`<Profile>${profileDossier}</Profile>`);
-        }
-        if (planDossier?.content) {
-          dossierContext.push(`<Plan>${planDossier.content}</Plan>`);
-        } else if (planDossier?.description) {
-          dossierContext.push(`<Plan>${planDossier.description}</Plan>`);
-        }
-        if (weekDossier?.content) {
-          dossierContext.push(`<Week>${weekDossier.content}</Week>`);
-        }
+        const dossierContext = await markdownService.getContext(user.id, ['profile', 'plan', 'week'], {
+          date: todayDate,
+        });
 
         // Convert context messages to the agent message format
         const previousMessages = context.map(m => ({

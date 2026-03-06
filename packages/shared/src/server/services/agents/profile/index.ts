@@ -67,7 +67,7 @@ export function createProfileService(deps: ProfileServiceDeps): ProfileServiceIn
           // Profile agent - updates fitness profile dossier via simpleAgentRunner
           simpleAgentRunner.invoke('profile:update', {
             input: message,
-            context: currentProfile ? [`<Profile>${currentProfile}</Profile>`] : [],
+            context: currentProfile ? [`## Profile\n${currentProfile}`] : [],
             params: { user, currentDate },
             previousMessages: previousMsgs,
           }),
