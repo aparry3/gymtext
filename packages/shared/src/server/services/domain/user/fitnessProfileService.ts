@@ -87,7 +87,7 @@ export function createFitnessProfileService(
 
           const result = await agentRunner.invoke('profile:update', {
             input: message,
-            context: currentProfile ? [`<Profile>${currentProfile}</Profile>`] : [],
+            context: currentProfile ? [`## Profile\n${currentProfile}`] : [],
             params: { user, currentDate },
           });
 

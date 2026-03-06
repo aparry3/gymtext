@@ -80,16 +80,10 @@ export function createWorkoutModificationService(
         }
 
         // Build context — always include plan for broader reasoning
-        const profileDossier = await markdownService.getProfile(userId);
-        const context: string[] = [];
-        if (profileDossier) {
-          context.push(`<Profile>${profileDossier}</Profile>`);
-        }
-        const planDossier = await markdownService.getPlan(userId);
-        if (planDossier?.content) {
-          context.push(`<Plan>${planDossier.content}</Plan>`);
-        }
-        context.push(`<Week>${weekDossier.content}</Week>`);
+        const context = await markdownService.getContext(userId, ['profile', 'plan', 'week'], {
+          date: referenceDate,
+          timezone,
+        });
 
         // Format input: prepend day info if targeting a specific day
         let input: string;

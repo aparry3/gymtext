@@ -70,13 +70,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     async createFitnessPlan(user: UserWithProfile, _options?: { programId?: string; programVersionId?: string }): Promise<FitnessPlan> {
       console.log(`[TrainingService] Creating fitness plan for user ${user.id}`);
 
-      // Fetch profile dossier for context
-      const profileDossier = await markdownService.getProfile(user.id);
-
-      const context: string[] = [];
-      if (profileDossier) {
-        context.push(`<Profile>${profileDossier}</Profile>`);
-      }
+      // Fetch profile context
+      const context = await markdownService.getContext(user.id, ['profile']);
 
       // Generate plan via AI agent
       const result = await simpleAgentRunner.invoke('plan:generate', {
@@ -147,18 +142,8 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
         throw new Error(`[TrainingService] No fitness plan found for user: ${userId}`);
       }
 
-      // Fetch profile dossier for context
-      const profileDossier = await markdownService.getProfile(userId);
-
-      const context: string[] = [];
-      if (profileDossier) {
-        context.push(`<Profile>${profileDossier}</Profile>`);
-      }
-      if (plan.content) {
-        context.push(`<Plan>${plan.content}</Plan>`);
-      } else if (plan.description) {
-        context.push(`<Plan>${plan.description}</Plan>`);
-      }
+      // Fetch profile and plan context
+      const context = await markdownService.getContext(userId, ['profile', 'plan']);
 
       // Generate week dossier via AI agent
       const weekStart = DateTime.fromJSDate(targetDate, { zone: timezone }).startOf('week');
@@ -171,8 +156,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       const weekContent = result.response;
 
       // Run week:format and week:details in parallel (mirrors workout pattern)
-      const weekContext = [...context];
-      weekContext.push(`<Week>${weekContent}</Week>`);
+      const weekContext = [...context, `## Week\n${weekContent}`];
 
       const [formatResult, detailsResult] = await Promise.all([
         simpleAgentRunner.invoke('week:format', {
@@ -227,30 +211,10 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
           return null;
         }
 
-        // Fetch profile, plan, and previous week for richer context
-        const [profileDossier, plan, previousWeek] = await Promise.all([
-          markdownService.getProfile(user.id),
-          markdownService.getPlan(user.id),
-          markdownService.getWeekForDate(
-            user.id,
-            DateTime.fromJSDate(microcycle.startDate, { zone: timezone }).minus({ weeks: 1 }).toJSDate()
-          ),
-        ]);
-
-        const context: string[] = [];
-        if (profileDossier) {
-          context.push(`<Profile>${profileDossier}</Profile>`);
-        }
-        if (plan?.content) {
-          context.push(`<Plan>${plan.content}</Plan>`);
-        }
-        if (previousWeek?.content) {
-          context.push(`<Previous Week>${previousWeek.content}</Previous Week>`);
-        }
         const weekContent = options?.weekContent ?? microcycle.content;
-        if (weekContent) {
-          context.push(`<Week>${weekContent}</Week>`);
-        }
+        const context = await markdownService.getContext(user.id, ['week'], {
+          weekContentOverride: weekContent ?? undefined,
+        });
         console.log('[TrainingService] Week content:', weekContent);
 
         const dayName = getDayOfWeekName(todayDate, timezone);
@@ -318,12 +282,7 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
     },
 
     async formatWeekMessage(user: UserWithProfile, weekContent: string): Promise<string> {
-      const profileDossier = await markdownService.getProfile(user.id);
-
-      const context: string[] = [];
-      if (profileDossier) {
-        context.push(`<Profile>${profileDossier}</Profile>`);
-      }
+      const context = await markdownService.getContext(user.id, ['profile']);
 
       const result = await simpleAgentRunner.invoke('week:format', {
         input: weekContent,
@@ -338,36 +297,13 @@ export function createTrainingService(deps: TrainingServiceDeps): TrainingServic
       user: UserWithProfile,
       workout: WorkoutData
     ): Promise<string> {
-      // Fetch context
       const timezone = user.timezone || 'America/New_York';
       const workoutDate = parseDate(workout.date)!;
-      const [profileDossier, plan, weekDossier] = await Promise.all([
-        markdownService.getProfile(user.id),
-        markdownService.getPlan(user.id),
-        markdownService.getWeekForDate(user.id, workoutDate),
-      ]);
 
-      // Fetch previous week if we have a current week
-      const previousWeek = weekDossier
-        ? await markdownService.getWeekForDate(
-            user.id,
-            DateTime.fromJSDate(weekDossier.startDate, { zone: timezone }).minus({ weeks: 1 }).toJSDate()
-          )
-        : null;
-
-      const context: string[] = [];
-      if (profileDossier) {
-        context.push(`<Profile>${profileDossier}</Profile>`);
-      }
-      if (plan?.content) {
-        context.push(`<Plan>${plan.content}</Plan>`);
-      }
-      if (previousWeek?.content) {
-        context.push(`<Previous Week>${previousWeek.content}</Previous Week>`);
-      }
-      if (weekDossier?.content) {
-        context.push(`<Week>${weekDossier.content}</Week>`);
-      }
+      const context = await markdownService.getContext(user.id, ['week'], {
+        date: workoutDate,
+        timezone,
+      });
 
       const dayName = getDayOfWeekName(workoutDate, timezone);
       const workoutISODate = toISODate(workoutDate, timezone);

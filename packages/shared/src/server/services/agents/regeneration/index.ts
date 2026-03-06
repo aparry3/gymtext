@@ -138,9 +138,7 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
       return { regenerated: false, error: 'No existing plan found' };
     }
 
-    const profileDossier = await markdownService.getProfile(userId);
-    const context: string[] = [];
-    if (profileDossier) context.push(`<Profile>${profileDossier}</Profile>`);
+    const context = await markdownService.getContext(userId, ['profile']);
 
     const planContent = existingPlan.content || existingPlan.description || '';
 
@@ -187,11 +185,7 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
       return { regenerated: false, error: 'No existing week found' };
     }
 
-    const profileDossier = await markdownService.getProfile(userId);
-    const planDossier = await markdownService.getPlan(userId);
-    const context: string[] = [];
-    if (profileDossier) context.push(`<Profile>${profileDossier}</Profile>`);
-    if (planDossier?.content) context.push(`<Plan>${planDossier.content}</Plan>`);
+    const context = await markdownService.getContext(userId, ['profile', 'plan']);
 
     const weekContent = existingWeek.content || '';
 
@@ -209,7 +203,7 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
     }
 
     // Run week:format and week:details in parallel (mirrors trainingService pattern)
-    const weekContext = [...context, `<Week>${updatedWeek}</Week>`];
+    const weekContext = [...context, `## Week\n${updatedWeek}`];
 
     const [formatResult, detailsResult] = await Promise.all([
       agentRunner.invoke(AGENTS.WEEK_FORMAT, {
@@ -231,7 +225,8 @@ export function createRegenerationService(deps: RegenerationServiceDeps): Regene
 
     const weekMessage = formatResult.response;
 
-    const planId = planDossier?.id;
+    const planForId = await markdownService.getPlan(userId);
+    const planId = planForId?.id;
     if (!planId) {
       return { regenerated: false, error: 'No plan found for week creation' };
     }
