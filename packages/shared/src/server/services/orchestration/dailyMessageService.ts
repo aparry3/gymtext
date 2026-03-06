@@ -8,6 +8,7 @@ import type { MessagingOrchestratorInstance, QueuedMessageContent } from './mess
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { TrainingServiceInstance, WorkoutData } from './trainingService';
 import type { MessageServiceInstance } from '../domain/messaging/messageService';
+import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
 
 interface MessageResult {
   success: boolean;
@@ -63,6 +64,7 @@ export interface DailyMessageServiceDeps {
   dayConfig: DayConfigServiceInstance;
   training: TrainingServiceInstance;
   message: MessageServiceInstance;
+  workoutInstance: WorkoutInstanceServiceInstance;
 }
 
 /**
@@ -80,6 +82,7 @@ export function createDailyMessageService(
     dayConfig: dayConfigService,
     training: trainingService,
     message: messageService,
+    workoutInstance: workoutInstanceService,
   } = deps;
 
   return {
@@ -200,8 +203,14 @@ export function createDailyMessageService(
       }
     },
 
-    async getTodaysWorkout(_userId: string, _date: Date): Promise<WorkoutData | null> {
-      // Workouts are now generated on-demand, no stored instances to look up
+    async getTodaysWorkout(userId: string, date: Date): Promise<WorkoutData | null> {
+      const dateStr = DateTime.fromJSDate(date).toISODate();
+      if (!dateStr) return null;
+
+      const existing = await workoutInstanceService.getByUserAndDate(userId, dateStr);
+      if (existing?.message) {
+        return { id: existing.id, message: existing.message, date: existing.date };
+      }
       return null;
     },
 

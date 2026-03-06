@@ -12,6 +12,7 @@
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
+        "APP_ENV",
         "DATABASE_URL",
         "SANDBOX_DATABASE_URL",
         "SESSION_ENCRYPTION_KEY",

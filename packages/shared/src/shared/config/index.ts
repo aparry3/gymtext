@@ -102,3 +102,15 @@ export function getAdminConfig(): AdminConfig {
 export function getUrlsConfig(): UrlsConfig {
   return getConfig().urls;
 }
+
+/**
+ * Check if a phone number is allowed to receive real SMS in the current environment.
+ * - Production: all numbers allowed
+ * - Non-production (staging/dev): only ADMIN_PHONE_NUMBERS allowed
+ */
+export function isSmsAllowedNumber(phoneNumber: string): boolean {
+  const { environment } = getConfig();
+  if (environment === 'production') return true;
+  const { phoneNumbers } = getAdminConfig();
+  return phoneNumbers.includes(phoneNumber);
+}

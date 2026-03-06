@@ -8,10 +8,9 @@ export type Environment = 'development' | 'staging' | 'production';
  */
 export function getEnvironment(): Environment {
   const appEnv = process.env.APP_ENV;
-  const nodeEnv = process.env.NODE_ENV;
 
+  if (appEnv === 'production') return 'production';
   if (appEnv === 'staging') return 'staging';
-  if (nodeEnv === 'production') return 'production';
   return 'development';
 }
 
