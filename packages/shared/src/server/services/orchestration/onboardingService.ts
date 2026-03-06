@@ -5,7 +5,7 @@ import type { TrainingServiceInstance } from './trainingService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { MessagingAgentServiceInstance } from '../agents/messaging/messagingAgentService';
 import type { WorkoutInstanceServiceInstance } from '../domain/training/workoutInstanceService';
-import { WELCOME_MESSAGE } from './messagingConstants';
+import { WELCOME_MESSAGE, CHECKOUT_REMINDER_MESSAGE } from './messagingConstants';
 
 // =============================================================================
 // Factory Pattern (Recommended)
@@ -114,16 +114,20 @@ export function createOnboardingService(
     },
 
     async sendWelcomeMessage(user: UserWithProfile): Promise<void> {
-      console.log(`[Onboarding] Sending welcome message to ${user.id}`);
+      console.log(`[Onboarding] Sending welcome messages to ${user.id}`);
       try {
+        // Send two Twilio-compliant messages immediately after signup
         await messagingOrchestrator.queueMessages(
           user,
-          [{ content: WELCOME_MESSAGE }],
+          [
+            { content: WELCOME_MESSAGE },
+            { content: CHECKOUT_REMINDER_MESSAGE }
+          ],
           'onboarding'
         );
-        console.log(`[Onboarding] Queued welcome message for ${user.id}`);
+        console.log(`[Onboarding] Queued welcome and checkout reminder messages for ${user.id}`);
       } catch (error) {
-        console.error(`[Onboarding] Failed to queue welcome message for ${user.id}:`, error);
+        console.error(`[Onboarding] Failed to queue welcome messages for ${user.id}:`, error);
         // Don't throw - welcome message failure shouldn't block signup
       }
     },

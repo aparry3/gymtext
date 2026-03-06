@@ -3,4 +3,7 @@
  */
 
 export const WELCOME_MESSAGE =
-  "Welcome to GymText! Ready to transform your fitness? We'll be texting you daily workouts starting soon. Msg & data rates may apply. Reply STOP to opt out.";
+  "Welcome to GymText! We're excited to go on this fitness journey with you. Message and data rates may apply. Reply STOP to cancel.";
+
+export const CHECKOUT_REMINDER_MESSAGE =
+  "Finish checking out and we will get your fitness program over to you.";
