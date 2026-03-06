@@ -1,4 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+/**
+ * GET /api/auth/logout
+ *
+ * Clear the user session cookie and redirect.
+ * Used by server components that can't delete cookies directly.
+ */
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const redirectTo = searchParams.get('redirect') || '/start';
+  const response = NextResponse.redirect(new URL(redirectTo, request.url));
+  response.cookies.delete('gt_user_session');
+  return response;
+}
 
 /**
  * POST /api/auth/logout

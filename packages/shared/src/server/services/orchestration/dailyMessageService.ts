@@ -7,6 +7,7 @@ import type { UserServiceInstance } from '../domain/user/userService';
 import type { MessagingOrchestratorInstance, QueuedMessageContent } from './messagingOrchestrator';
 import type { DayConfigServiceInstance } from '../domain/calendar/dayConfigService';
 import type { TrainingServiceInstance, WorkoutData } from './trainingService';
+import type { MessageServiceInstance } from '../domain/messaging/messageService';
 
 interface MessageResult {
   success: boolean;
@@ -61,6 +62,7 @@ export interface DailyMessageServiceDeps {
   messagingOrchestrator: MessagingOrchestratorInstance;
   dayConfig: DayConfigServiceInstance;
   training: TrainingServiceInstance;
+  message: MessageServiceInstance;
 }
 
 /**
@@ -77,6 +79,7 @@ export function createDailyMessageService(
     messagingOrchestrator,
     dayConfig: dayConfigService,
     training: trainingService,
+    message: messageService,
   } = deps;
 
   return {
@@ -94,7 +97,20 @@ export function createDailyMessageService(
           return { scheduled: 0, failed: 0, duration: Date.now() - startTime, errors: [] };
         }
 
-        const usersToSchedule = candidateUsers;
+        // Filter out users who already have a daily message queued today (per-user timezone)
+        const userDatePairs = candidateUsers.map(user => {
+          const userNow = now(user.timezone);
+          const todayStart = userNow.startOf('day').toJSDate();
+          const todayEnd = userNow.startOf('day').plus({ days: 1 }).toJSDate();
+          return { userId: user.id, startOfDay: todayStart, endOfDay: todayEnd };
+        });
+
+        const alreadySentIds = await messageService.findUserIdsWithOutboundMessagesForDates(
+          userDatePairs
+        );
+
+        const usersToSchedule = candidateUsers.filter(u => !alreadySentIds.has(u.id));
+        console.log(`[DailyMessageService] Filtered ${candidateUsers.length - usersToSchedule.length} users who already received today's message`);
 
         console.log(`[DailyMessageService] Scheduling ${usersToSchedule.length} users`);
 
@@ -210,6 +226,16 @@ export function createDailyMessageService(
             eligible: false,
             reason: `Current local time (${localHour}:00) is before preferred send hour (${user.preferredSendHour}:00)`,
           };
+        }
+
+        // Check if user already has a daily message queued today
+        const todayStart = userNow.startOf('day').toJSDate();
+        const todayEnd = userNow.startOf('day').plus({ days: 1 }).toJSDate();
+        const alreadySentIds = await messageService.findUserIdsWithOutboundMessagesForDates(
+          [{ userId, startOfDay: todayStart, endOfDay: todayEnd }]
+        );
+        if (alreadySentIds.has(userId)) {
+          return { eligible: false, reason: 'User already has a daily message queued for today' };
         }
 
         return { eligible: true, reason: 'User is eligible for daily message' };

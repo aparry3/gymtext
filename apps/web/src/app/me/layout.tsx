@@ -36,14 +36,16 @@ export default async function MeLayout({ children }: MeLayoutProps) {
   try {
     const services = getServices();
     const result = await services.user.getUserForAdmin(userId);
-    if (result?.user) {
-      userName = result.user.name || 'User';
-      // Try to extract program type from fitness profile or plan
-      // For now, use a placeholder - this will be enhanced when we have structured plan data
-      programType = 'Strength + Lean Build';
+    if (!result?.user) {
+      redirect('/api/auth/logout?redirect=/start');
     }
+    userName = result.user.name || 'User';
+    programType = 'Strength + Lean Build';
   } catch (error) {
-    console.error('Error fetching user for sidebar:', error);
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error; // Re-throw Next.js internal errors (redirect, notFound, etc.)
+    }
+    redirect('/api/auth/logout?redirect=/start');
   }
 
   return (
