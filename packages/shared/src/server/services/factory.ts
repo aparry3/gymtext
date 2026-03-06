@@ -250,7 +250,7 @@ export function createServices(repos: RepositoryContainer, clients?: ExternalCli
     user,
     messagingOrchestrator: getMessagingOrchestrator(),
     dayConfig, training,
-    message,
+    message, workoutInstance,
   });
 
   const weeklyMessage = createWeeklyMessageService({
