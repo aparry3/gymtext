@@ -76,6 +76,9 @@ export interface MessageServiceInstance {
   updateProviderMessageId(messageId: string, providerMessageId: string): Promise<Message>;
   markCancelled(messageId: string): Promise<Message>;
   findStuckMessages(cutoffDate: Date, limit?: number): Promise<Message[]>;
+  findUserIdsWithOutboundMessagesForDates(
+    userDatePairs: Array<{ userId: string; startOfDay: Date; endOfDay: Date }>
+  ): Promise<Set<string>>;
 }
 
 /**
@@ -264,6 +267,12 @@ export function createMessageService(
 
     async findStuckMessages(cutoffDate: Date, limit: number = 100): Promise<Message[]> {
       return await repos.message.findStuckMessages(cutoffDate, limit);
+    },
+
+    async findUserIdsWithOutboundMessagesForDates(
+      userDatePairs: Array<{ userId: string; startOfDay: Date; endOfDay: Date }>
+    ): Promise<Set<string>> {
+      return await repos.message.findUserIdsWithOutboundMessagesForDates(userDatePairs);
     },
   };
 

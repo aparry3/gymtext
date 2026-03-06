@@ -328,6 +328,36 @@ export class MessageRepository extends BaseRepository {
   }
 
   /**
+   * Find user IDs that have outbound messages within their timezone-specific "today" window.
+   * Used for deduplication of daily messages across cron runs.
+   */
+  async findUserIdsWithOutboundMessagesForDates(
+    userDatePairs: Array<{ userId: string; startOfDay: Date; endOfDay: Date }>
+  ): Promise<Set<string>> {
+    if (userDatePairs.length === 0) return new Set();
+
+    const foundIds = new Set<string>();
+
+    for (const { userId, startOfDay, endOfDay } of userDatePairs) {
+      const entry = await this.db
+        .selectFrom('messages')
+        .select('clientId')
+        .where('clientId', '=', userId)
+        .where('direction', '=', 'outbound')
+        .where('createdAt', '>=', startOfDay)
+        .where('createdAt', '<', endOfDay)
+        .limit(1)
+        .executeTakeFirst();
+
+      if (entry) {
+        foundIds.add(entry.clientId);
+      }
+    }
+
+    return foundIds;
+  }
+
+  /**
    * Find messages stuck in 'queued' or 'sent' status older than the cutoff date
    * These are messages that never received delivery confirmation from Twilio
    */
