@@ -57,7 +57,10 @@
     "agent:update-user-prompts": "source .env.local && tsx scripts/update-user-prompts.ts",
     "agent:update-user-prompts:dry": "source .env.local && tsx scripts/update-user-prompts.ts --dry-run",
     "fixture:capture": "source .env.local && tsx scripts/fixtures/capture.ts",
-    "fixture:run": "source .env.local && tsx scripts/fixtures/run.ts"
+    "fixture:run": "source .env.local && tsx scripts/fixtures/run.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.1",
