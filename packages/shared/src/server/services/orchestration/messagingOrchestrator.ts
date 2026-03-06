@@ -1,7 +1,7 @@
 import { UserWithProfile } from '../../models/user';
 import { Message, MessageDeliveryStatus } from '../../models/message';
 import { inngest } from '../../connections/inngest/client';
-import { messagingClient, getMessagingClientByProvider } from '../../connections/messaging';
+import { messagingClient, getSafeMessagingClient } from '../../connections/messaging';
 import { MessageProvider, type MessagingProvider } from '../../connections/messaging/types';
 import { getMessagingConfig } from '@/shared/config';
 import { isMessageTooLong, getSmsMaxLength } from '../../utils/smsValidation';
@@ -343,8 +343,8 @@ export function createMessagingOrchestrator(
       }
 
       try {
-        // Get the appropriate messaging client
-        const client = getMessagingClientByProvider(messageProvider);
+        // Get the appropriate messaging client (with SMS allowlist guard)
+        const client = getSafeMessagingClient(messageProvider, user.phoneNumber);
         
         // Send via provider
         const result = await client.sendMessage(user, content, mediaUrls);
@@ -483,9 +483,9 @@ export function createMessagingOrchestrator(
         templateVariables = meta.templateVariables;
       }
 
-      // Get the provider for this message, respecting local config override
+      // Get the provider for this message, respecting local config override and SMS allowlist
       const messageProvider = resolveProvider(message.provider as MessagingProvider | undefined);
-      const client = getMessagingClientByProvider(messageProvider);
+      const client = getSafeMessagingClient(messageProvider, user.phoneNumber);
 
       console.log(`[MessagingOrchestrator] Sending queued message ${message.id} via ${messageProvider}`);
 

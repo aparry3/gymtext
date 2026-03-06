@@ -10,7 +10,7 @@ import { MessageProvider } from './types';
 import { twilioMessagingClient } from './twilioClient';
 import { localMessagingClient } from './localClient';
 import { createWhatsAppCloudClient } from './whatsappCloudClient';
-import { getMessagingConfig } from '@/shared/config';
+import { getMessagingConfig, isSmsAllowedNumber } from '@/shared/config';
 
 // Lazy-loaded WhatsApp Cloud client (only created when needed)
 let whatsappClientInstance: IMessagingClient | null = null;
@@ -56,6 +56,19 @@ export function getMessagingClientByProvider(provider: MessagingProvider): IMess
     default:
       throw new Error(`Unknown messaging provider: ${provider}`);
   }
+}
+
+/**
+ * Get a messaging client with SMS allowlist guardrails.
+ * In non-production environments, redirects non-admin phone numbers to the local provider
+ * to prevent accidental real SMS sends on staging/preview deployments.
+ */
+export function getSafeMessagingClient(provider: MessagingProvider, phoneNumber: string): IMessagingClient {
+  if (!isSmsAllowedNumber(phoneNumber)) {
+    console.warn(`[MessagingFactory] BLOCKED: SMS to ${phoneNumber} redirected to local provider (non-production environment)`);
+    return localMessagingClient;
+  }
+  return getMessagingClientByProvider(provider);
 }
 
 // Export the default client as a singleton

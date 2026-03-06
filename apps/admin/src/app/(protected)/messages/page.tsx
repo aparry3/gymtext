@@ -6,6 +6,8 @@ import { useEnvironment } from '@/context/EnvironmentContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { MessagesFilters } from '@/components/admin/MessagesFilters';
 import { MessagesTable } from '@/components/admin/MessagesTable';
+import { BroadcastMessageDialog } from '@/components/admin/BroadcastMessageDialog';
+import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +21,7 @@ import type {
 function AdminMessagesPageContent() {
   const searchParams = useSearchParams();
   const { mode } = useEnvironment();
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [messages, setMessages] = useState<AdminMessageItem[]>([]);
   const [stats, setStats] = useState<MessageStats>({
     totalMessages: 0,
@@ -135,6 +138,17 @@ function AdminMessagesPageContent() {
             subtitle={`${stats.totalMessages} total messages`}
             onRefresh={handleRefresh}
             isLoading={isLoading}
+            actions={
+              <Button onClick={() => setBroadcastOpen(true)}>
+                Send Broadcast
+              </Button>
+            }
+          />
+
+          <BroadcastMessageDialog
+            open={broadcastOpen}
+            onOpenChange={setBroadcastOpen}
+            onSuccess={handleRefresh}
           />
 
           {/* Stats Cards */}
