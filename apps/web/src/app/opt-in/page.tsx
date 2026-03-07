@@ -74,7 +74,8 @@ export default function OptInPage() {
                 mobile number provided. You will receive daily workout messages.
                 Message frequency may vary. Message and data rates may apply.
                 Reply HELP for help or STOP to cancel. Your mobile information
-                will not be shared with third parties.&quot;
+                will not be shared with third parties. Consent is not required
+                to make a purchase.&quot;
               </blockquote>
               <p className="mb-4 text-muted-foreground leading-relaxed">
                 You must also agree to our{' '}
