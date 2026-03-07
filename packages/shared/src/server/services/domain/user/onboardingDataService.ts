@@ -13,6 +13,7 @@ export interface OnboardingDataServiceInstance {
   getStatus(clientId: string): Promise<OnboardingStatus | null>;
   findByClientId(clientId: string): Promise<OnboardingRecord | null>;
   getSignupData(userId: string): Promise<SignupData | null>;
+  upsertSignupData(userId: string, signupData: Partial<SignupData>): Promise<OnboardingRecord>;
   clearSignupData(userId: string): Promise<OnboardingRecord>;
   markMessagesSent(userId: string): Promise<OnboardingRecord>;
   hasMessagesSent(userId: string): Promise<boolean>;
@@ -60,6 +61,11 @@ export function createOnboardingDataService(repos: RepositoryContainer): Onboard
 
     async getSignupData(userId: string): Promise<SignupData | null> {
       return await repos.onboarding.getSignupData(userId);
+    },
+
+    async upsertSignupData(userId: string, signupData: Partial<SignupData>): Promise<OnboardingRecord> {
+      console.log(`[OnboardingDataService] Upserting signup data for user ${userId}`);
+      return await repos.onboarding.upsertSignupData(userId, signupData);
     },
 
     async clearSignupData(userId: string): Promise<OnboardingRecord> {
