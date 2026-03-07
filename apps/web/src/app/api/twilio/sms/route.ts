@@ -6,6 +6,7 @@ import { getTwilioSecrets } from '@/server/config';
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
 const START_KEYWORDS = ['START', 'UNSTOP', 'RESUME'];
+const HELP_KEYWORDS = ['HELP', 'INFO', 'SUPPORT'];
 
 function isStopCommand(message: string): boolean {
   const normalized = message.trim().toUpperCase();
@@ -15,6 +16,11 @@ function isStopCommand(message: string): boolean {
 function isStartCommand(message: string): boolean {
   const normalized = message.trim().toUpperCase();
   return START_KEYWORDS.includes(normalized);
+}
+
+function isHelpCommand(message: string): boolean {
+  const normalized = message.trim().toUpperCase();
+  return HELP_KEYWORDS.includes(normalized);
 }
 
 export async function POST(req: NextRequest) {
@@ -127,6 +133,30 @@ export async function POST(req: NextRequest) {
       await services.messagingOrchestrator.sendImmediate(userWithProfile, confirmationMessage);
 
       // Return empty TwiML (confirmation sent separately)
+      twiml.message('');
+      return new NextResponse(twiml.toString(), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/xml',
+        },
+      });
+    }
+
+    // Handle HELP command - provide support info (10DLC compliance)
+    if (isHelpCommand(incomingMessage)) {
+      await services.message.storeInboundMessage({
+        clientId: user.id,
+        from,
+        to,
+        content: incomingMessage,
+        twilioData: body,
+      });
+
+      const helpMessage =
+        'GymText - Personalized workout messages. Email support@gymtext.co or visit gymtext.co/help. STOP to cancel. Msg & data rates may apply.';
+
+      await services.messagingOrchestrator.sendImmediate(userWithProfile, helpMessage);
+
       twiml.message('');
       return new NextResponse(twiml.toString(), {
         status: 200,
