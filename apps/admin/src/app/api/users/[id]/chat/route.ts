@@ -46,6 +46,36 @@ export async function POST(
     const adminFrom = user.phoneNumber; // Simulating user's phone
     const adminTo = getTwilioSecrets().phoneNumber || '+10000000000'; // Simulating our number
 
+    // Handle keyword commands (STOP/START/HELP) before ingesting
+    const keywordResult = await services.message.handleKeyword({
+      user: userWithProfile,
+      content: message,
+      from: adminFrom,
+      to: adminTo,
+      twilioData: {
+        MessageSid: `admin-${Date.now()}`,
+        From: adminFrom,
+        To: adminTo,
+        Body: message,
+      },
+    });
+    if (keywordResult.handled) {
+      await services.message.storeOutboundMessage({
+        clientId: user.id,
+        to: adminFrom,
+        content: keywordResult.responseMessage!,
+        deliveryStatus: 'delivered',
+        messageType: 'keyword',
+      });
+      return NextResponse.json({
+        success: true,
+        data: {
+          keyword: keywordResult.keyword,
+          responseMessage: keywordResult.responseMessage,
+        },
+      });
+    }
+
     // Use MessageService to ingest the message (async via Inngest)
     // This matches the production SMS flow for accurate testing
     const result = await services.message.ingestMessage({
