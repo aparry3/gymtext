@@ -73,7 +73,8 @@ export interface MessagingOrchestratorInstance {
     user: UserWithProfile,
     content: string,
     mediaUrls?: string[],
-    provider?: MessagingProvider
+    provider?: MessagingProvider,
+    messageType?: string
   ): Promise<SendResult>;
 
   /**
@@ -324,10 +325,11 @@ export function createMessagingOrchestrator(
       user: UserWithProfile,
       content: string,
       mediaUrls?: string[],
-      provider?: MessagingProvider
+      provider?: MessagingProvider,
+      messageType?: string
     ): Promise<SendResult> {
       const messageProvider = resolveProvider(provider, user.preferredMessagingProvider);
-      
+
       // Store the message first
       const message = await messageService.storeOutboundMessage({
         clientId: user.id,
@@ -336,6 +338,7 @@ export function createMessagingOrchestrator(
         provider: messageProvider,
         metadata: mediaUrls ? { mediaUrls } : undefined,
         deliveryStatus: 'sent',
+        messageType,
       });
 
       if (!message) {

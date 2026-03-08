@@ -15,6 +15,7 @@ export interface StoreInboundMessageParams {
   to: string;
   content: string;
   twilioData?: Record<string, unknown>;
+  messageType?: string;
 }
 
 /**
@@ -29,6 +30,7 @@ export interface StoreOutboundMessageParams {
   providerMessageId?: string;
   metadata?: Record<string, unknown>;
   deliveryStatus?: MessageDeliveryStatus;
+  messageType?: string;
 }
 
 /**
@@ -101,7 +103,7 @@ export function createMessageService(
 ): MessageServiceInstance {
   const instance: MessageServiceInstance = {
     async storeInboundMessage(params: StoreInboundMessageParams): Promise<Message | null> {
-      const { clientId, from, to, content, twilioData } = params;
+      const { clientId, from, to, content, twilioData, messageType = 'conversation' } = params;
 
       const message = await repos.message.create({
         clientId: clientId,
@@ -112,6 +114,7 @@ export function createMessageService(
         provider: 'twilio',
         providerMessageId: (twilioData?.MessageSid as string) || null,
         metadata: (twilioData || {}) as Json,
+        messageType,
       });
 
       return message;
@@ -127,6 +130,7 @@ export function createMessageService(
         providerMessageId,
         metadata,
         deliveryStatus = 'queued',
+        messageType = 'conversation',
       } = params;
 
       const user = await deps.user.getUser(clientId);
@@ -146,6 +150,7 @@ export function createMessageService(
         deliveryStatus,
         deliveryAttempts: deliveryStatus === 'queued' ? 0 : 1,
         lastDeliveryAttemptAt: deliveryStatus === 'queued' ? null : new Date(),
+        messageType,
       });
 
       return message;

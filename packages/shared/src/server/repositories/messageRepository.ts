@@ -44,6 +44,7 @@ export class MessageRepository extends BaseRepository {
       .selectFrom('messages')
       .selectAll()
       .where('clientId', '=', clientId)
+      .where('messageType', '=', 'conversation')
       .orderBy('createdAt', 'desc')
       .limit(limit)
       .execute();
