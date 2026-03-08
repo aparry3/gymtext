@@ -69,7 +69,7 @@ export { createMessagingAgentService } from './agents/messaging/messagingAgentSe
 export type { UserServiceInstance, CreateUserRequest } from './domain/user/userService';
 export type { FitnessProfileServiceInstance, ProfileUpdateResult } from './domain/user/fitnessProfileService';
 export type { OnboardingDataServiceInstance } from './domain/user/onboardingDataService';
-export type { MessageServiceInstance, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
+export type { MessageServiceInstance, KeywordResult, IngestMessageParams, IngestMessageResult, StoreInboundMessageParams } from './domain/messaging/messageService';
 export type { QueueServiceInstance } from './domain/messaging/queueService';
 export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanService';
 
