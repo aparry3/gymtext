@@ -190,6 +190,11 @@ export function createDailyMessageService(
           }
         }
 
+        if (user.messagingOptIn !== true) {
+          console.log(`[DailyMessageService] Skipping SMS for user ${user.id} - no SMS consent`);
+          return { success: true, userId: user.id };
+        }
+
         const queuedMessages: QueuedMessageContent[] = [{ content: workoutMessage, mediaUrls }];
 
         // Use messagingOrchestrator instead of messageQueueService

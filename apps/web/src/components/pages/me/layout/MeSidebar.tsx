@@ -15,6 +15,7 @@ import {
   Home,
   BookOpen,
   User,
+  Settings,
   LogOut,
   Menu,
   ArrowLeft,
@@ -40,6 +41,12 @@ const getNavItems = (basePath: string) => [
   { href: `${basePath}/program`, label: 'Program', icon: BookOpen },
   { href: `${basePath}/profile`, label: 'Profile', icon: User },
 ];
+
+const getBottomNavItem = (basePath: string) => ({
+  href: `${basePath}/account`,
+  label: 'Account',
+  icon: Settings,
+});
 
 function NavItem({
   href,
@@ -89,6 +96,7 @@ function SidebarContent({
   adminBackUrl?: string;
 }) {
   const navItems = getNavItems(basePath);
+  const accountItem = getBottomNavItem(basePath);
   const initials = user.name
     ?.split(' ')
     .map((n) => n[0])
@@ -148,6 +156,15 @@ function SidebarContent({
 
       {/* User section */}
       <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
+        <div className="mb-3">
+          <NavItem
+            href={accountItem.href}
+            label={accountItem.label}
+            icon={accountItem.icon}
+            isActive={currentPath.startsWith(accountItem.href)}
+            onClick={onNavClick}
+          />
+        </div>
         <div className="flex items-center gap-3 mb-3">
           <Avatar size="sm">
             <AvatarFallback className="bg-[hsl(var(--sidebar-muted))] text-[hsl(var(--sidebar-foreground))] text-xs">

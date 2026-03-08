@@ -110,7 +110,7 @@ export function TextInputQuestion({
 
   const hasValidInput = question.required ? (isPhone ? getPhoneDigits(value).length === 10 : value.trim().length > 0) : true;
   // For phone questions, require both consent checkboxes to be checked
-  const canContinue = hasValidInput && (isPhone ? smsConsented && termsAccepted : true);
+  const canContinue = hasValidInput && (isPhone ? termsAccepted : true);
 
   return (
     <div className="flex flex-col gap-6">

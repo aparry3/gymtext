@@ -173,6 +173,28 @@ export class OnboardingRepository extends BaseRepository {
     return result?.signupData as SignupData ?? null;
   }
 
+  async upsertSignupData(clientId: string, signupData: Partial<SignupData>): Promise<OnboardingRecord> {
+    const existingRecord = await this.findByClientId(clientId);
+
+    if (!existingRecord) {
+      await this.create(clientId, signupData);
+      return await this.markCompleted(clientId);
+    }
+
+    const currentSignupData = (existingRecord.signupData as SignupData | null) ?? {};
+    const nextSignupData = JSON.parse(JSON.stringify({
+      ...currentSignupData,
+      ...signupData,
+    }));
+
+    return await this.db
+      .updateTable('userOnboarding')
+      .set({ signupData: nextSignupData })
+      .where('clientId', '=', clientId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
   /**
    * Clear signup data (cleanup after profile creation)
    */

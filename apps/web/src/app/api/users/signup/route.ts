@@ -84,6 +84,12 @@ async function handleNewUserSignup(services: ServiceContainer, formData: Record<
     preferredSendHour: formData.preferredSendHour as number,
   });
 
+  // Persist SMS consent
+  await services.user.updateUser(user.id, {
+    messagingOptIn: formData.smsConsent === true,
+    messagingOptInDate: formData.smsConsent ? new Date() : null,
+  });
+
   console.log(`[Signup] User created: ${user.id}`);
 
   // In dev mode, skip Stripe entirely
@@ -131,6 +137,8 @@ async function handleUnsubscribedUserSignup(
     gender: formData.gender as string | undefined,
     timezone: formData.timezone as string,
     preferredSendHour: formData.preferredSendHour as number,
+    messagingOptIn: formData.smsConsent === true,
+    messagingOptInDate: formData.smsConsent ? new Date() : null,
   });
 
   // In dev mode, skip Stripe entirely
@@ -181,6 +189,8 @@ async function handleSubscribedUserReOnboard(
     gender: formData.gender as string | undefined,
     timezone: formData.timezone as string,
     preferredSendHour: formData.preferredSendHour as number,
+    messagingOptIn: formData.smsConsent === true,
+    messagingOptInDate: formData.smsConsent ? new Date() : null,
   });
 
   // Reset onboarding record with new signup data
@@ -256,6 +266,12 @@ async function handleDevModeSignup(
   });
 
   console.log('[Signup] Test subscription created');
+
+  // Persist SMS consent
+  await services.user.updateUser(userId, {
+    messagingOptIn: formData.smsConsent === true,
+    messagingOptInDate: formData.smsConsent ? new Date() : null,
+  });
 
   // Send welcome message if user consented to SMS
   if (formData.smsConsent) {
