@@ -249,6 +249,26 @@ export default function OptInPage() {
                   </a>
                 </li>
               </ul>
+              <p className="mb-4 text-muted-foreground leading-relaxed">
+                If you change your mind, you can re-subscribe at any time by
+                texting <strong>START</strong> to our number. You will receive a
+                confirmation message and your service will resume.
+              </p>
+
+              <div className="my-6 flex justify-center">
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/start-resubscribe.png"
+                    alt="User texting START to GymText and receiving a reactivation confirmation message"
+                    width={350}
+                    height={700}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    Re-subscribing by texting START
+                  </figcaption>
+                </figure>
+              </div>
             </section>
 
             {/* How to Get Help */}
@@ -272,6 +292,21 @@ export default function OptInPage() {
                   </a>
                 </li>
               </ul>
+
+              <div className="my-6 flex justify-center">
+                <figure className="overflow-hidden rounded-lg border border-gray-200">
+                  <Image
+                    src="/compliance/help-response.png"
+                    alt="User texting HELP to GymText and receiving support information"
+                    width={350}
+                    height={700}
+                    className="mx-auto w-full max-w-xs"
+                  />
+                  <figcaption className="bg-gray-50 px-4 py-2 text-center text-xs text-muted-foreground">
+                    HELP keyword response
+                  </figcaption>
+                </figure>
+              </div>
             </section>
 
             {/* Privacy & Data Sharing */}

@@ -75,7 +75,7 @@ export type { FitnessPlanServiceInstance } from './domain/training/fitnessPlanSe
 
 export type { MicrocycleServiceInstance } from './domain/training/microcycleService';
 export type { ProgressServiceInstance, ProgressInfo } from './domain/training/progressService';
-export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './domain/subscription/subscriptionService';
+export type { SubscriptionServiceInstance, SubscriptionStatus, CancelResult, ReactivateResult, ProcessUnsubscribeResult, ProcessResubscribeResult } from './domain/subscription/subscriptionService';
 export type { DayConfigServiceInstance } from './domain/calendar/dayConfigService';
 export type { ShortLinkServiceInstance } from './domain/links/shortLinkService';
 export type { ReferralServiceInstance } from './domain/referral/referralService';

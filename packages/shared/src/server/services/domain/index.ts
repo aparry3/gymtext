@@ -40,7 +40,7 @@ export { createSubscriptionService } from './subscription/subscriptionService';
 export { createShortLinkService } from './links/shortLinkService';
 export { createReferralService } from './referral/referralService';
 export { createDayConfigService } from './calendar/dayConfigService';
-export type { SubscriptionServiceInstance, CancelResult, ReactivateResult } from './subscription/subscriptionService';
+export type { SubscriptionServiceInstance, SubscriptionStatus, CancelResult, ReactivateResult, ProcessUnsubscribeResult, ProcessResubscribeResult } from './subscription/subscriptionService';
 export type { ShortLinkServiceInstance } from './links/shortLinkService';
 export type { ReferralServiceInstance } from './referral/referralService';
 export type { DayConfigServiceInstance } from './calendar/dayConfigService';
