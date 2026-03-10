@@ -15,7 +15,7 @@ export const STOP_ERROR =
 
 // START/opt-in responses
 export const START_REACTIVATED =
-  "Welcome back to GymText! Your subscription has been reactivated. You'll receive your next workout soon. Msg & data rates may apply. Reply HELP for support or STOP to opt out.";
+  "Welcome back to GymText! Your subscription has been reactivated. You'll receive your next workout soon.";
 export const START_ALREADY_ACTIVE =
   "Your subscription is already active! Reply with any question to continue. Msg & data rates may apply.";
 export const START_REQUIRES_NEW_SUB =
