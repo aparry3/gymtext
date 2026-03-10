@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { CheckCircle2, Loader2, MessageSquare, Shield, User } from 'lucide-react';
+import { useMemo, useState, useCallback } from 'react';
+import { AlertTriangle, CheckCircle2, Clock, Loader2, MessageSquare, RefreshCw, Shield, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimeSelector } from '@/components/ui/TimeSelector';
@@ -20,9 +20,12 @@ export interface AccountSettingsData {
   smsConsentedAt: string | null;
 }
 
+type SubscriptionStatus = 'active' | 'cancel_pending' | 'canceled' | 'none';
+
 interface AccountSettingsViewProps {
   userId: string;
   initialData: AccountSettingsData;
+  subscriptionStatus: SubscriptionStatus;
 }
 
 interface AccountFormState {
@@ -110,11 +113,17 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
   );
 }
 
-export function AccountSettingsView({ userId, initialData }: AccountSettingsViewProps) {
+export function AccountSettingsView({ userId, initialData, subscriptionStatus }: AccountSettingsViewProps) {
   const [form, setForm] = useState<AccountFormState>(() => buildFormState(initialData));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
+  const [unsubscribeError, setUnsubscribeError] = useState('');
+  const [unsubscribedPeriodEnd, setUnsubscribedPeriodEnd] = useState<string | null>(null);
+  const [isResubscribing, setIsResubscribing] = useState(false);
+  const [resubscribeError, setResubscribeError] = useState('');
+  const [resubscribed, setResubscribed] = useState(false);
 
   const primaryTimezoneLabel = useMemo(() => {
     const options = new Set([form.timezone, ...COMMON_TIMEZONES]);
@@ -162,6 +171,62 @@ export function AccountSettingsView({ userId, initialData }: AccountSettingsView
   const canSave = form.name.trim().length >= 2
     && getPhoneDigits(form.phoneNumber).length >= 10
     && form.timezone.trim().length > 0;
+
+  const handleUnsubscribe = useCallback(async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel your subscription? You will stop receiving workout messages.'
+    );
+    if (!confirmed) return;
+
+    setUnsubscribeError('');
+    setIsUnsubscribing(true);
+
+    try {
+      const response = await fetch(`/api/users/${userId}/unsubscribe`, {
+        method: 'POST',
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.message || 'Unable to cancel subscription.');
+      }
+
+      setUnsubscribedPeriodEnd(payload.periodEndDate || null);
+    } catch (err) {
+      setUnsubscribeError(err instanceof Error ? err.message : 'Unable to cancel subscription.');
+    } finally {
+      setIsUnsubscribing(false);
+    }
+  }, [userId]);
+
+  const handleResubscribe = useCallback(async () => {
+    setResubscribeError('');
+    setIsResubscribing(true);
+
+    try {
+      const response = await fetch(`/api/users/${userId}/resubscribe`, {
+        method: 'POST',
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.message || 'Unable to resubscribe.');
+      }
+
+      if (payload.checkoutUrl) {
+        window.location.href = payload.checkoutUrl;
+        return;
+      }
+
+      setResubscribed(true);
+    } catch (err) {
+      setResubscribeError(err instanceof Error ? err.message : 'Unable to resubscribe.');
+    } finally {
+      setIsResubscribing(false);
+    }
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
@@ -346,6 +411,142 @@ export function AccountSettingsView({ userId, initialData }: AccountSettingsView
             </section>
           </div>
         </form>
+
+        {resubscribed ? (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>Your subscription has been reactivated. Welcome back!</span>
+            </div>
+          </div>
+        ) : unsubscribedPeriodEnd ? (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>
+                Your subscription has been cancelled. You&apos;ll have access until {unsubscribedPeriodEnd}.
+                A confirmation has been sent to your phone.
+              </span>
+            </div>
+          </div>
+        ) : subscriptionStatus === 'active' ? (
+          <div className="mt-6">
+            <section className="rounded-[28px] border border-red-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="rounded-2xl bg-red-50 p-3 text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-stone-900">Cancel Subscription</h2>
+                  <p className="mt-1 text-sm text-stone-500">
+                    This will stop all workout messages. Your subscription will remain active until
+                    the end of your current billing period. You can resubscribe anytime by replying START.
+                  </p>
+                </div>
+              </div>
+
+              {unsubscribeError && (
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {unsubscribeError}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleUnsubscribe}
+                disabled={isUnsubscribing}
+                className="w-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {isUnsubscribing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Cancelling...
+                  </>
+                ) : (
+                  'Unsubscribe'
+                )}
+              </Button>
+            </section>
+          </div>
+        ) : subscriptionStatus === 'cancel_pending' ? (
+          <div className="mt-6">
+            <section className="rounded-[28px] border border-amber-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-stone-900">Cancellation Pending</h2>
+                  <p className="mt-1 text-sm text-stone-500">
+                    Your subscription is set to cancel at the end of your current billing period.
+                    You can resubscribe to keep receiving workout messages.
+                  </p>
+                </div>
+              </div>
+
+              {resubscribeError && (
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {resubscribeError}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleResubscribe}
+                disabled={isResubscribing}
+                className="w-full"
+              >
+                {isResubscribing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resubscribing...
+                  </>
+                ) : (
+                  'Resubscribe'
+                )}
+              </Button>
+            </section>
+          </div>
+        ) : (
+          <div className="mt-6">
+            <section className="rounded-[28px] border border-blue-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-stone-900">
+                    {subscriptionStatus === 'canceled' ? 'Resubscribe' : 'Subscribe'}
+                  </h2>
+                  <p className="mt-1 text-sm text-stone-500">
+                    Get personalized workout plans delivered daily via text message.
+                  </p>
+                </div>
+              </div>
+
+              {resubscribeError && (
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {resubscribeError}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleResubscribe}
+                disabled={isResubscribing}
+              >
+                {isResubscribing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  subscriptionStatus === 'canceled' ? 'Resubscribe' : 'Get Started'
+                )}
+              </Button>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );

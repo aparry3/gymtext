@@ -2,6 +2,15 @@ import Stripe from 'stripe';
 import { getStripeSecrets } from '@/server/config';
 import { getStripeConfig, getUrlsConfig } from '@/shared/config';
 import type { RepositoryContainer } from '../../../repositories/factory';
+import {
+  STOP_CONFIRMATION,
+  STOP_ALREADY_INACTIVE,
+  STOP_ERROR,
+  START_REACTIVATED,
+  START_ALREADY_ACTIVE,
+  START_REQUIRES_NEW_SUB,
+  START_ERROR,
+} from '../../orchestration/messagingConstants';
 
 const { secretKey } = getStripeSecrets();
 const stripe = new Stripe(secretKey, {
@@ -28,15 +37,35 @@ export interface ReactivateResult {
   error?: string;
 }
 
+export interface ProcessUnsubscribeResult {
+  success: boolean;
+  alreadyInactive: boolean;
+  responseMessage: string;
+  periodEndDate?: Date;
+}
+
+export interface ProcessResubscribeResult {
+  success: boolean;
+  responseMessage: string;
+  reactivated: boolean;
+  requiresNewSubscription: boolean;
+  checkoutUrl?: string;
+}
+
 /**
  * SubscriptionServiceInstance interface
  */
+export type SubscriptionStatus = 'active' | 'cancel_pending' | 'canceled' | 'none';
+
 export interface SubscriptionServiceInstance {
   cancelSubscription(userId: string): Promise<CancelResult>;
   immediatelyCancelSubscription(userId: string): Promise<ImmediateCancelResult>;
   reactivateSubscription(userId: string): Promise<ReactivateResult>;
+  processUnsubscribe(userId: string): Promise<ProcessUnsubscribeResult>;
+  processResubscribe(userId: string): Promise<ProcessResubscribeResult>;
   shouldReceiveMessages(userId: string): Promise<boolean>;
   hasActiveSubscription(userId: string): Promise<boolean>;
+  getSubscriptionStatus(userId: string): Promise<SubscriptionStatus>;
 }
 
 function isNonStripeSubscription(stripeSubscriptionId: string): boolean {
@@ -88,7 +117,7 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
     }
   };
 
-  return {
+  const service: SubscriptionServiceInstance = {
     async cancelSubscription(userId: string): Promise<CancelResult> {
       try {
         const subscription = await repos.subscription.getActiveSubscription(userId);
@@ -240,7 +269,91 @@ export function createSubscriptionService(repos: RepositoryContainer): Subscript
     async hasActiveSubscription(userId: string): Promise<boolean> {
       return await repos.subscription.hasActiveSubscription(userId);
     },
+
+    async getSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
+      const subscriptions = await repos.subscription.findByClientId(userId);
+      if (subscriptions.length === 0) return 'none';
+      const status = subscriptions[0].status;
+      if (status === 'active' || status === 'cancel_pending' || status === 'canceled') return status;
+      return 'none';
+    },
+
+    async processUnsubscribe(userId: string): Promise<ProcessUnsubscribeResult> {
+      const user = await repos.user.findById(userId);
+      if (!user) {
+        return { success: false, alreadyInactive: false, responseMessage: STOP_ERROR };
+      }
+
+      if (!user.messagingOptIn) {
+        return { success: true, alreadyInactive: true, responseMessage: STOP_ALREADY_INACTIVE };
+      }
+
+      await repos.user.update(userId, {
+        messagingOptIn: false,
+        messagingOptInDate: null,
+      });
+
+      const result = await service.cancelSubscription(userId);
+
+      if (result.success && result.periodEndDate) {
+        const formattedDate = result.periodEndDate.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+        });
+        return {
+          success: true,
+          alreadyInactive: false,
+          responseMessage: STOP_CONFIRMATION.replace('{periodEndDate}', formattedDate),
+          periodEndDate: result.periodEndDate,
+        };
+      } else if (result.error === 'No active subscription found') {
+        return { success: true, alreadyInactive: false, responseMessage: STOP_ALREADY_INACTIVE };
+      } else {
+        return { success: false, alreadyInactive: false, responseMessage: STOP_ERROR };
+      }
+    },
+
+    async processResubscribe(userId: string): Promise<ProcessResubscribeResult> {
+      const result = await service.reactivateSubscription(userId);
+
+      if (result.success && result.reactivated) {
+        await repos.user.update(userId, {
+          messagingOptIn: true,
+          messagingOptInDate: new Date(),
+        });
+        return {
+          success: true,
+          responseMessage: START_REACTIVATED,
+          reactivated: true,
+          requiresNewSubscription: false,
+        };
+      } else if (result.requiresNewSubscription && result.checkoutUrl) {
+        return {
+          success: true,
+          responseMessage: START_REQUIRES_NEW_SUB.replace('{checkoutUrl}', result.checkoutUrl),
+          reactivated: false,
+          requiresNewSubscription: true,
+          checkoutUrl: result.checkoutUrl,
+        };
+      } else if (result.success && !result.requiresNewSubscription && !result.reactivated) {
+        return {
+          success: true,
+          responseMessage: START_ALREADY_ACTIVE,
+          reactivated: false,
+          requiresNewSubscription: false,
+        };
+      } else {
+        return {
+          success: false,
+          responseMessage: START_ERROR,
+          reactivated: false,
+          requiresNewSubscription: false,
+        };
+      }
+    },
   };
+
+  return service;
 }
 
 // =============================================================================

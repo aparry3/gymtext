@@ -27,9 +27,10 @@ export default async function AccountPage() {
   }
 
   const services = getServices();
-  const [user, signupData] = await Promise.all([
+  const [user, signupData, subscriptionStatus] = await Promise.all([
     services.user.getUserById(userId),
     services.onboardingData.getSignupData(userId),
+    services.subscription.getSubscriptionStatus(userId),
   ]);
 
   if (!user) {
@@ -48,5 +49,5 @@ export default async function AccountPage() {
     smsConsentedAt: signupData?.smsConsentedAt ?? null,
   };
 
-  return <AccountSettingsView userId={userId} initialData={initialData} />;
+  return <AccountSettingsView userId={userId} initialData={initialData} subscriptionStatus={subscriptionStatus} />;
 }

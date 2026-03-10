@@ -6,16 +6,7 @@ import type { RepositoryContainer } from '../../../repositories/factory';
 import type { UserServiceInstance } from '../user/userService';
 import type { SubscriptionServiceInstance } from '../subscription/subscriptionService';
 import type { Json } from '../../../models/_types';
-import {
-  STOP_CONFIRMATION,
-  STOP_ALREADY_INACTIVE,
-  STOP_ERROR,
-  START_REACTIVATED,
-  START_ALREADY_ACTIVE,
-  START_REQUIRES_NEW_SUB,
-  START_ERROR,
-  HELP_MESSAGE,
-} from '../../orchestration/messagingConstants';
+import { HELP_MESSAGE } from '../../orchestration/messagingConstants';
 
 // Keywords for subscription management (case-insensitive)
 const STOP_KEYWORDS = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -161,30 +152,8 @@ export function createMessageService(
           clientId: user.id, from, to, content, twilioData, messageType: 'keyword',
         });
 
-        if (!user.messagingOptIn) {
-          return { handled: true, keyword: 'stop', responseMessage: STOP_ALREADY_INACTIVE };
-        }
-
-        await deps.user.updateUser(user.id, {
-          messagingOptIn: false,
-          messagingOptInDate: null,
-        });
-
-        const result = await deps.subscription.cancelSubscription(user.id);
-
-        let responseMessage: string;
-        if (result.success && result.periodEndDate) {
-          const formattedDate = result.periodEndDate.toLocaleDateString('en-US', {
-            month: 'long', day: 'numeric',
-          });
-          responseMessage = STOP_CONFIRMATION.replace('{periodEndDate}', formattedDate);
-        } else if (result.error === 'No active subscription found') {
-          responseMessage = STOP_ALREADY_INACTIVE;
-        } else {
-          responseMessage = STOP_ERROR;
-        }
-
-        return { handled: true, keyword: 'stop', responseMessage };
+        const result = await deps.subscription.processUnsubscribe(user.id);
+        return { handled: true, keyword: 'stop', responseMessage: result.responseMessage };
       }
 
       if (isStartCommand(content)) {
@@ -192,25 +161,8 @@ export function createMessageService(
           clientId: user.id, from, to, content, twilioData, messageType: 'keyword',
         });
 
-        await deps.user.updateUser(user.id, {
-          messagingOptIn: true,
-          messagingOptInDate: new Date(),
-        });
-
-        const result = await deps.subscription.reactivateSubscription(user.id);
-
-        let responseMessage: string;
-        if (result.success && result.reactivated) {
-          responseMessage = START_REACTIVATED;
-        } else if (result.requiresNewSubscription && result.checkoutUrl) {
-          responseMessage = START_REQUIRES_NEW_SUB.replace('{checkoutUrl}', result.checkoutUrl);
-        } else if (result.success && !result.requiresNewSubscription && !result.reactivated) {
-          responseMessage = START_ALREADY_ACTIVE;
-        } else {
-          responseMessage = START_ERROR;
-        }
-
-        return { handled: true, keyword: 'start', responseMessage };
+        const result = await deps.subscription.processResubscribe(user.id);
+        return { handled: true, keyword: 'start', responseMessage: result.responseMessage };
       }
 
       if (isHelpCommand(content)) {
